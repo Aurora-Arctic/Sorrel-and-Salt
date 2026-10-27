@@ -15,7 +15,7 @@ import {
   updateStock,
   workspaceIngredientFacets,
 } from '@/modules/ingredients';
-import { A, B, C, D, E, asUser } from '../../../support/as-user';
+import { A, B, D, E, asUser } from '../../../support/as-user';
 import { useTestDatabase } from '../../../support/db/database';
 import { insertCupboardEntry } from '../../../support/db/insert-cupboard-entry';
 import { insertIngredient } from '../../../support/db/insert-ingredient';
@@ -28,7 +28,9 @@ import { makeIngredient, makeVariant } from '../../../support/fixtures';
 // entry through the row's overrides, removing it from the cupboard, Make It
 // Ours, and its jars (claude-docs/db/workspace-compendium-entries.md, "When
 // the compendium retires the entry"). Coven W holds the entry; coven X holds
-// no row naming it. Every test retires the entry first.
+// no row naming it. Every test retires the entry first. No viewer case is
+// here: `assertMembership` refuses a viewer before the entry is read, so a
+// retired entry changes nothing the write paths' own viewer tests prove.
 
 let sql: postgres.Sql;
 useTestDatabase((client) => {
@@ -148,15 +150,6 @@ describe('annotating a retired entry', () => {
     expect(stored.label).toBeNull();
   });
 
-  it("refuses W's viewer by direct id, with W's row live", async () => {
-    await expectPreconditions();
-
-    await expect(annotate(asUser(C))).rejects.toBeInstanceOf(Forbidden);
-    const [stored] = await sql`
-      select label from workspace_compendium_entries where id = ${cupboardRowId}`;
-    expect(stored.label).toBeNull();
-  });
-
   it("refuses W once W's row is tombstoned", async () => {
     await softDelete('workspace_compendium_entries', cupboardRowId, A.id);
     await expectPreconditions(false);
@@ -196,13 +189,6 @@ describe('removing a retired entry from the cupboard', () => {
     await expectPreconditions();
   });
 
-  it("refuses W's viewer by direct id, with W's row live", async () => {
-    await expectPreconditions();
-
-    await expect(remove(asUser(C))).rejects.toBeInstanceOf(Forbidden);
-    await expectPreconditions();
-  });
-
   it('refuses W while W holds a jar of it, as for a live entry', async () => {
     await insertStock(
       sql,
@@ -221,14 +207,6 @@ describe('removing a retired entry from the cupboard', () => {
 });
 
 describe('Make It Ours on a retired entry', () => {
-  it("refuses W's viewer by direct id, with W's row live", async () => {
-    await expectPreconditions();
-
-    await expect(convert(asUser(C))).rejects.toBeInstanceOf(Forbidden);
-    const owns = await sql`select id from ingredients where workspace_id is not null`;
-    expect(owns).toHaveLength(0);
-  });
-
   it("lets W make it its own: a new entry takes the jars, W's row goes, the compendium row stays unwritten", async () => {
     const jarId = await insertStock(
       sql,
@@ -317,13 +295,6 @@ describe("a jar of a retired entry's form", () => {
     expect(await wJars()).toEqual([]);
 
     expect(await compendiumRows()).toEqual(before);
-  });
-
-  it("refuses W's viewer a new jar by direct id, with W's row live", async () => {
-    await expectPreconditions();
-
-    await expect(addJar(asUser(C))).rejects.toBeInstanceOf(Forbidden);
-    expect(await wJars()).toEqual([]);
   });
 
   it('refuses X each write by direct id, in its own coven and in W', async () => {
