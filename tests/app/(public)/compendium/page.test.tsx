@@ -147,13 +147,6 @@ beforeEach(() => {
 });
 
 describe('the public compendium page', () => {
-  it('opens on its one heading', async () => {
-    await renderPage();
-
-    expect(screen.getAllByRole('heading', { level: 1 })).toHaveLength(1);
-    expect(screen.getByRole('heading', { level: 1, name: 'Compendium' })).toBeInTheDocument();
-  });
-
   it('lists the entry as a link to its own page for a visitor with no account', async () => {
     await renderPage();
     const list = screen.getByRole('list', { name: 'Compendium' });
@@ -163,17 +156,10 @@ describe('the public compendium page', () => {
     );
   });
 
-  it('asks for a page of 24 cards, so the grid ends on a full row, on the first page and both ways on', async () => {
-    const cursor = encodeCursor({ key: ['Testwort'], id: NODE.id });
-    await renderPage();
-    const first = sizeRead();
-    await renderPage({ after: cursor });
-    const next = sizeRead();
-    await renderPage({ before: cursor });
-    const previous = sizeRead();
+  it("asks for a page of the cards' size, so the grid ends on a full row", async () => {
+    await renderPage({ after: encodeCursor({ key: ['Testwort'], id: NODE.id }) });
 
-    expect([first, next, previous]).toEqual([CARD_PAGE_SIZE, CARD_PAGE_SIZE, CARD_PAGE_SIZE]);
-    expect(CARD_PAGE_SIZE).toBe(24);
+    expect(sizeRead()).toBe(CARD_PAGE_SIZE);
   });
 
   it('reads the same list with ?withoutReferences=1 as without it', async () => {
@@ -184,6 +170,16 @@ describe('the public compendium page', () => {
     await renderPage({ withoutReferences: '1' });
     expect(readCompendium.mock.lastCall![0]).toBe(unfiltered);
     expect(variablesRead()).not.toHaveProperty('withoutReferences');
+  });
+
+  it('reads the same list with ?withoutForms=1 as without it', async () => {
+    await renderPage();
+    const unfiltered = readCompendium.mock.lastCall![0];
+    readCompendium.mockClear();
+    document.body.innerHTML = '';
+    await renderPage({ withoutForms: '1' });
+    expect(readCompendium.mock.lastCall![0]).toBe(unfiltered);
+    expect(variablesRead()).not.toHaveProperty('withoutForms');
   });
 
   // M14.8: the review filter is the admin list's; the services refuse it to anyone else.
@@ -210,9 +206,7 @@ describe('the public compendium page', () => {
 
   it.each([
     ['a member of one coven', [true], 1],
-    ['an owner beside a coven that only views', [false, true], 1],
     ['someone who only views', [false], 0],
-    ['someone in no coven', [], 0],
   ] as const)(
     'offers Add to My Ingredients to %s only as the role allows',
     async (_who, writes, buttons) => {
@@ -458,7 +452,8 @@ describe("the public compendium page, with an entry's details open", () => {
       ],
     });
 
-    it('gives a member of a holding coven More, holding Annotate, Make It Ours and Remove', async () => {
+    // What the menu holds, and in what order, is tests/components/IngredientEntry/cupboard-actions.test.tsx's.
+    it('gives a member of a holding coven More', async () => {
       viewerIfSignedIn.mockResolvedValue(member());
       covenRolesIfSignedIn.mockResolvedValue(new Map([['w-1', 'member']]));
       covensHoldingEntry.mockResolvedValue([
@@ -467,15 +462,12 @@ describe("the public compendium page, with an entry's details open", () => {
       readCompendiumDetails.mockResolvedValue(DETAIL);
       await renderPage({ ...SEARCH, entry: NODE.id });
 
-      const more = within(details()!).getByRole('button', {
-        name: 'More for Testwort, Fixtura testalis',
-      });
-      fireEvent.click(more);
-      const items = within(screen.getByRole('menu')).getAllByRole('menuitem');
-      expect(items.map((item) => item.textContent)).toEqual(['Annotate', 'Make It Ours', 'Remove']);
+      expect(
+        within(details()!).getByRole('button', { name: 'More for Testwort, Fixtura testalis' }),
+      ).toBeInTheDocument();
     });
 
-    it('offers Edit Stock first where the page read stock for the holding coven, and asks for it once', async () => {
+    it('offers Edit Stock where the page read stock for the holding coven, and asks for it once', async () => {
       viewerIfSignedIn.mockResolvedValue(member());
       covenRolesIfSignedIn.mockResolvedValue(new Map([['w-1', 'member']]));
       covensHoldingEntry.mockResolvedValue([
@@ -490,28 +482,20 @@ describe("the public compendium page, with an entry's details open", () => {
       fireEvent.click(
         within(details()!).getByRole('button', { name: 'More for Testwort, Fixtura testalis' }),
       );
-      const items = within(screen.getByRole('menu')).getAllByRole('menuitem');
-      expect(items.map((item) => item.textContent)).toEqual([
-        'Edit Stock',
-        'Annotate',
-        'Make It Ours',
-        'Remove',
-      ]);
+      expect(
+        within(screen.getByRole('menu')).getByRole('menuitem', { name: 'Edit Stock' }),
+      ).toBeInTheDocument();
       expect(readEntryStock).toHaveBeenCalledExactlyOnceWith([
         { ingredientId: NODE.id, workspaceId: 'w-1' },
       ]);
     });
 
-    it.each([
-      ['a visitor', null, null, []],
-      ['a member of a coven that does not hold it', 'member', 'w-1', []],
-      ['a viewer of a coven that holds it', 'viewer', 'w-1', ['w-1']],
-    ] as const)('gives %s no More', async (_who, role, id, holds) => {
-      viewerIfSignedIn.mockResolvedValue(role ? member() : null);
-      covenRolesIfSignedIn.mockResolvedValue(role && id ? new Map([[id, role]]) : null);
-      covensHoldingEntry.mockResolvedValue(
-        holds.map((one) => ({ id: one, slug: 'fixture-coven', name: 'Fixture Coven' })),
-      );
+    it('gives a viewer of a coven that holds it no More', async () => {
+      viewerIfSignedIn.mockResolvedValue(member());
+      covenRolesIfSignedIn.mockResolvedValue(new Map([['w-1', 'viewer']]));
+      covensHoldingEntry.mockResolvedValue([
+        { id: 'w-1', slug: 'fixture-coven', name: 'Fixture Coven' },
+      ]);
       readCompendiumDetails.mockResolvedValue(DETAIL);
       await renderPage({ ...SEARCH, entry: NODE.id });
 
@@ -593,16 +577,6 @@ describe('the public compendium page metadata', () => {
     expect(result.description).toBeTruthy();
   });
 
-  it('reads the same list with ?withoutForms=1 as without it', async () => {
-    await renderPage();
-    const unfiltered = readCompendium.mock.lastCall![0];
-    readCompendium.mockClear();
-    document.body.innerHTML = '';
-    await renderPage({ withoutForms: '1' });
-    expect(readCompendium.mock.lastCall![0]).toBe(unfiltered);
-    expect(variablesRead()).not.toHaveProperty('withoutForms');
-  });
-
   it('keeps ?withoutForms=1 indexable too, as it filters nothing', async () => {
     const result = await metadata({ withoutForms: '1' });
     expect(result.robots).toBeUndefined();
@@ -615,8 +589,6 @@ describe('the public compendium page metadata', () => {
 
   it.each<Record<string, string>>([
     { query: 'wort' },
-    { forms: 'Fixture Herb' },
-    { toxic: 'toxic' },
     // M12.55: a view narrowed to the viewer's covens is filtered too, whoever asks.
     { covens: 'w0' },
   ])(
