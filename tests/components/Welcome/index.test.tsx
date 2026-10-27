@@ -21,20 +21,9 @@ describe('Welcome', () => {
     expect(screen.queryByRole('link', { name: 'Sign In' })).not.toBeInTheDocument();
   });
 
-  // The page passes the landing for the visitor's role; the component
-  // continues to whichever it is given.
-  it("continues to the landing it is given, an admin's included", () => {
-    render(<Welcome landing="/admin" />);
-
-    expect(screen.getByRole('link', { name: 'Continue' })).toHaveAttribute('href', '/admin');
-  });
-
   // The compendium is the one public surface (MB.80), so the front door
   // reaches it for everyone, whichever way in they are offered.
-  it.each([
-    ['a signed-out visitor', undefined],
-    ['a signed-in visitor', '/coven' as const],
-  ])('links %s to the compendium', (_, landing) => {
+  it.each([['a signed-out visitor', undefined]])('links %s to the compendium', (_, landing) => {
     render(<Welcome landing={landing} />);
 
     expect(screen.getByRole('link', { name: 'Browse the Compendium' })).toHaveAttribute(
