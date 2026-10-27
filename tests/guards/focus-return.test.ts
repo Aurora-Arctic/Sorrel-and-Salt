@@ -33,6 +33,11 @@ const ALLOWED: Record<string, { calls: number; reason: string }> = {
     reason:
       'a question over a modal body, not a modal: it takes the focus to its safe answer and gives it back to the field the question interrupted, inside the modal that stays open',
   },
+  'src/components/Modal/discard.tsx': {
+    calls: 1,
+    reason:
+      'the focus going in, not back: the page Discard Changes dialog puts it on Keep Editing, the safe answer, as it opens; Modal has no initial-focus prop, and its own first-field focus keeps a focus its contents placed',
+  },
   'src/components/UserList/confirmed-action.tsx': {
     calls: 1,
     reason:
