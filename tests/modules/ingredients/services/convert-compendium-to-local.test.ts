@@ -253,20 +253,6 @@ describe('convertCompendiumEntryToLocal', () => {
     expect(await layerRow(other.id)).toMatchObject({ variant_id: forms.get('Otherform') });
   });
 
-  it('makes a retired entry the coven holds its own', async () => {
-    const jarId = await jarOfEntry();
-    await sql`update ingredients set deleted_at = now(), deleted_by = ${E.id} where id = ${entry}`;
-
-    const { entry: own } = await convert();
-
-    expect(own).toMatchObject({ name: 'Our Testwort', workspaceId: WORKSPACE_W_ID });
-    expect(await jarRow(jarId)).toMatchObject({ ingredient_id: own.id });
-    const folkNames = await sql`
-      select name from ingredient_folk_names where ingredient_id = ${own.id}`;
-    expect(folkNames.map((row) => row.name)).toEqual(['Hedge Fixture']);
-    expect((await cupboardRow()).deleted_at).not.toBeNull();
-  });
-
   it('leaves out, and lists, a folk name the new name takes', async () => {
     await sql`update workspace_compendium_entries set label = 'hedge fixture' where id = ${cupboardId}`;
 

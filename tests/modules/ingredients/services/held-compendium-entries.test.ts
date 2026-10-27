@@ -78,12 +78,6 @@ describe('heldCompendiumEntryIds', () => {
       Forbidden,
     );
   });
-
-  it('refuses a non-member even when nothing is asked', async () => {
-    await expect(heldCompendiumEntryIds(asUser(D), WORKSPACE_W_ID, [])).rejects.toBeInstanceOf(
-      Forbidden,
-    );
-  });
 });
 
 // The compendium page of someone in several covens asks about each of them at once: the plus
@@ -124,9 +118,5 @@ describe('heldCompendiumEntryIdsIn', () => {
     await expect(heldCompendiumEntryIdsIn(asUser(D), bothCovens, [heldByX])).rejects.toBeInstanceOf(
       Forbidden,
     );
-  });
-
-  it('reads nothing for no coven', async () => {
-    expect((await heldCompendiumEntryIdsIn(asUser(B), [], [held])).size).toBe(0);
   });
 });

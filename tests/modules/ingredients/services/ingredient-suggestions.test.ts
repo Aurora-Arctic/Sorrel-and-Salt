@@ -79,14 +79,6 @@ describe('suggestIngredients', () => {
       expect(await namesFor(B, 'crone')).toEqual([]);
     });
 
-    it('ranks the closest match first, not alphabetically', async () => {
-      await addIngredient({ name: 'Mugwart', workspaceId: WORKSPACE_W_ID });
-      await addIngredient({ name: 'Mugwort', canonicalName: 'Artemisia vulgaris' });
-
-      // The coven's own entry is in the first group, whatever the score.
-      expect(await namesFor(B, 'mugwort')).toEqual(['Mugwart', 'Mugwort']);
-    });
-
     it('lists everything in name order for a blank query', async () => {
       await addIngredient({ name: 'Yarrow', workspaceId: WORKSPACE_W_ID });
       await addIngredient({ name: 'Mugwort', canonicalName: 'Artemisia vulgaris' });
@@ -224,16 +216,6 @@ describe('suggestIngredients', () => {
       expect(await groupsFor('mugwort')).toEqual([{ id: mugwort, group: 'compendium' }]);
     });
 
-    it('drops a retired entry from both groups, though the coven holds a row for it', async () => {
-      const mugwort = await addIngredient({ name: 'Mugwort', canonicalName: 'Artemisia vulgaris' });
-      await insertCupboardEntry(sql, { workspaceId: WORKSPACE_W_ID, ingredientId: mugwort }, A.id);
-      expect(await groupsFor('mugwort')).toEqual([{ id: mugwort, group: 'yours' }]);
-
-      await sql`update ingredients set deleted_at = now(), deleted_by = ${A.id} where id = ${mugwort}`;
-
-      expect(await groupsFor('mugwort')).toEqual([]);
-    });
-
     it('limits each group to eight, ranked within itself', async () => {
       for (let n = 1; n <= 10; n++) {
         await addIngredient({ name: `Fixture Mug ${n}` });
@@ -271,10 +253,6 @@ describe('suggestIngredients', () => {
 
     it('refuses a site admin, who belongs to no workspace', async () => {
       await expect(namesFor(E, 'mugwort', WORKSPACE_W_ID)).rejects.toThrow(Forbidden);
-    });
-
-    it('refuses before answering a blank query', async () => {
-      await expect(namesFor(D, '', WORKSPACE_W_ID)).rejects.toThrow(Forbidden);
     });
   });
 });

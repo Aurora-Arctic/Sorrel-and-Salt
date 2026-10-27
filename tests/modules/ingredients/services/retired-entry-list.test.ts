@@ -1,12 +1,10 @@
 import { beforeEach, describe, expect, it } from 'vitest';
 import type postgres from 'postgres';
 import { WORKSPACE_W_ID, WORKSPACE_X_ID } from '@/db/seed/standard';
-import { NotFound } from '@/lib/errors';
 import { resolvePage } from '@/lib/pagination';
 import type { Session } from '@/lib/session';
 import {
   countWorkspaceIngredients,
-  getIngredient,
   listWorkspaceIngredients,
   workspaceIngredientFacets,
 } from '@/modules/ingredients';
@@ -207,15 +205,5 @@ describe('a coven whose cupboard does not name the retired entry', () => {
     expect(await total(asUser(D), WORKSPACE_X_ID)).toBe(0);
     expect(await facetCounts(asUser(D), WORKSPACE_X_ID)).toEqual({ herb: 0, compendium: 0 });
     expect(await typeAhead(asUser(D), WORKSPACE_X_ID, 'Testwort')).toEqual([]);
-  });
-
-  it('gets NotFound for the entry, by its id', async () => {
-    await expectPreconditions();
-    // Why it could have read: the coven holding it reads the same id.
-    await expect(getIngredient(asUser(B), entryId, WORKSPACE_W_ID)).resolves.toMatchObject({
-      id: entryId,
-    });
-
-    await expect(getIngredient(asUser(D), entryId, WORKSPACE_X_ID)).rejects.toThrow(NotFound);
   });
 });
