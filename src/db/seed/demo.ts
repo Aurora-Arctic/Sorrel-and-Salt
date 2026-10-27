@@ -829,7 +829,7 @@ export const DEMO_SPELLS: SeedSpell[] = [
     intent: 'Meet the parts of yourself you would rather not.',
     jarSize: null,
     sealWaxColor: null,
-    moonPhase: 'Dark',
+    moonPhase: 'Dark Moon',
     dayOfWeek: null,
     note: null,
     status: 'draft',
