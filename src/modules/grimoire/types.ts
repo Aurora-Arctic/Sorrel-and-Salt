@@ -1,9 +1,13 @@
 import type { IngredientRow } from '@/db/repository';
+import type { IngredientVariantRow } from '@/modules/ingredients';
 import type { spellSteps } from './schema/spell-steps';
-import type { spells } from './schema/spells';
+import type { GRIMOIRE_ORDERS, spells } from './schema/spells';
 
 /** `'draft' | 'complete'`, read off the column rather than restated. */
 export type SpellStatus = (typeof spells.$inferSelect)['status'];
+
+/** How a grimoire page is ordered: `'UPDATED_DESC' | 'CREATED_DESC' | 'TITLE_ASC'`. */
+export type GrimoireOrder = (typeof GRIMOIRE_ORDERS)[number];
 
 /** `'private' | 'workspace'`, read off the column rather than restated. */
 export type SpellVisibility = (typeof spells.$inferSelect)['visibility'];
@@ -55,8 +59,21 @@ export type SpellStepUpdate = SpellStepInput;
 /** The ingredient a linked step names, with whether it has been deleted since. */
 export type SpellStepIngredient = IngredientRow & { deleted: boolean };
 
-/** A step with its ingredient resolved, or `null` for an instruction or a one-off row. */
-export type SpellStepView = SpellStepRow & { ingredient: SpellStepIngredient | null };
+/** The form a linked step lays, with whether it has been deleted since (M10.9). */
+export type SpellStepVariant = IngredientVariantRow & { deleted: boolean };
+
+/**
+ * A step with its ingredient and the form it lays resolved, each `null` for
+ * an instruction or a one-off row. Each is kept when deleted since, and says
+ * so: the ingredient whether it or only its form went, the form either way.
+ */
+export type SpellStepView = SpellStepRow & {
+  ingredient: SpellStepIngredient | null;
+  variant: SpellStepVariant | null;
+};
 
 /** One spell, with its steps in order. */
 export type SpellDetail = { spell: SpellRow; steps: SpellStepView[] };
+
+/** What a spell's batched fields are keyed by: the spell, and the coven it is asked about in. */
+export type SpellKey = Pick<SpellRow, 'id' | 'workspaceId'>;

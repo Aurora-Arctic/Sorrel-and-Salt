@@ -862,8 +862,14 @@ type Query {
     first: Int
     after: String
   ): QueryWorkspaceIngredientsConnection!
-  grimoire(workspaceId: ID!, first: Int, after: String): QueryGrimoireConnection! # workspace-visible + own private spells
-  spell(id: ID!): Spell
+  grimoire(
+    workspaceId: ID!
+    orderBy: GrimoireOrder! = UPDATED_DESC
+    status: SpellStatus
+    first: Int
+    after: String
+  ): QueryGrimoireConnection! # workspace-visible + own private spells; status filters in SQL
+  spell(id: ID!, workspaceId: ID!): Spell! # NOT_FOUND for a spell this reader may not see
 }
 
 # Mutations return the entity; a delete returns the deleted id, since a
@@ -1201,6 +1207,12 @@ enum FormGroupIcon {
   curio
 }
 
+enum GrimoireOrder {
+  UPDATED_DESC # last edited first, the default
+  CREATED_DESC # newest first
+  TITLE_ASC # by title, untitled spells last
+}
+
 enum Nomenclature {
   botanical
   fungal
@@ -1216,6 +1228,7 @@ type Spell {
   title: String!
   intent: String
   visibility: SpellVisibility! # private | workspace
+  status: SpellStatus! # draft | complete
   categories: [Category!]! # assigned intent
   derivedCategories: [Category!]! # union across linked ingredients; a custom row contributes none
   categoryGaps: CategoryComparison! # intended-not-present, present-not-intended
@@ -1224,12 +1237,18 @@ type Spell {
   audit: AuditInfo!
 }
 
+type CategoryComparison {
+  intendedNotPresent: [Category!]! # assigned, but carried by no ingredient in the spell
+  presentNotIntended: [Category!]! # carried by an ingredient in the spell, but not assigned
+}
+
 type SpellStep {
+  id: ID!
   position: Int!
   body: String # the instruction; null on an ingredient-only step
-  ingredient: Ingredient # null on a custom, one-off row (MB.40) and on an instruction-only step
+  ingredient: Ingredient # kept once deleted (M5.3); null on a custom, one-off row (MB.40) and on an instruction-only step
   name: String # the ingredient's display label when linked; the custom name otherwise; null on an instruction-only step
-  variant: IngredientVariant # the form laid, on a linked row (MB.215)
+  variant: IngredientVariant # the form laid, on a linked row (MB.215); null once that form alone is deleted
   form: String # the variant's form when linked; the custom row's free text otherwise
   quantity: Float
   unit: InventoryUnit # M9.2's inventory_unit enum

@@ -20,6 +20,7 @@ import type { references } from '../../modules/ingredients/schema/references';
 import type { workspaceCompendiumEntries } from '../../modules/ingredients/schema/workspace-compendium-entries';
 import type { retiredIngredientSlugs } from '../../modules/ingredients/schema/retired-ingredient-slugs';
 import type { spellSteps } from '../../modules/grimoire/schema/spell-steps';
+import type { GRIMOIRE_ORDERS, spells } from '../../modules/grimoire/schema/spells';
 import type { Membership, WorkspaceRole } from '@/modules/coven';
 import type { Curator, SiteAdmin } from '@/modules/identity';
 import type { Cursor, PageRequest } from '../../lib/types';
@@ -1105,6 +1106,13 @@ export interface SiteInvitationFilter {
   email?: string;
   /** Only the invitations that lapse within this many hours of the database's `now()`. */
   expiresWithinHours?: number;
+}
+
+/** How a page of the grimoire is ordered and narrowed (M10.9). */
+export interface GrimoireQuery {
+  order: (typeof GRIMOIRE_ORDERS)[number];
+  /** Only the spells of this status; absent means both. */
+  status?: (typeof spells.$inferSelect)['status'];
 }
 
 /** What the admin user list is narrowed by (MB.52). Each part is optional, and absent means no filter. */

@@ -19,10 +19,11 @@ NULL` ANDed onto whatever `where` the caller supplied — or the caller's
   filter, so a second bypass is a decision argued for in the diff, not a
   convenience appearing quietly beside an import.
 
-There are five such hatches, from four decisions. The first is what a spell
+There are six such hatches, from four decisions. The first is what a spell
 holds: `findIngredientsInSpellsIncludingSoftDeleted` and
 `findManyOfSpellIngredientsIncludingSoftDeleted` (M5.3) read an ingredient
-past its tombstone, and nothing else past one, for a member who may read a spell
+past its tombstone, and `findFormsInSpellsIncludingSoftDeleted` (M10.9) its
+forms past theirs, and nothing else past one, for a member who may read a spell
 holding it (["What a spell holds"](spell-visibility.md#what-a-spell-holds-m53)).
 The second, decided by MB.138 and built by MB.140, is the ingredient a
 substitute links: `findSubstitutesIncludingSoftDeleted` reads it past its

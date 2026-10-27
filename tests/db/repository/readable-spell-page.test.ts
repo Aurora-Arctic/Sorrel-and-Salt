@@ -1,0 +1,246 @@
+import { beforeEach, describe, expect, it } from 'vitest';
+import type postgres from 'postgres';
+import {
+  findGrimoirePage,
+  findManyInSpells,
+  findOneSpell,
+  findPageInReadableSpells,
+  type GrimoireQuery,
+} from '@/db/repository';
+import { WORKSPACE_W_ID, WORKSPACE_X_ID } from '@/db/seed/standard';
+import { type Membership, assertMembership } from '@/modules/coven';
+import type { SpellVisibility } from '@/modules/grimoire';
+import { spellSteps } from '@/modules/grimoire/schema/spell-steps';
+import { GRIMOIRE_ORDERS, spells } from '@/modules/grimoire/schema/spells';
+import { A, B, D, asUser } from '../../support/as-user';
+import { useTestDatabase } from '../../support/db/database';
+import { insertSpell } from '../../support/db/insert-spell';
+import { makeSpell } from '../../support/fixtures';
+import type { Cursor, PageRequest } from '@/lib/types';
+
+// M10.9: the cursor-page reader for spells and the tables hung off a spell,
+// `findPageInReadableSpells`. It ANDs `readableSpells` (M10.6) itself, so a
+// page can only ever hold what the direct-id read would return: the coven's
+// shared spells and this reader's own private ones (DESIGN.md §5, CLAUDE.md
+// rule 7). Every refusal first proves the row is there and its author pages it.
+
+let sql: postgres.Sql;
+useTestDatabase((client) => {
+  sql = client;
+});
+
+beforeEach(async () => {
+  await sql`truncate spells cascade`;
+});
+
+type User = typeof A;
+
+const FIRST_PAGE: PageRequest = { limit: 100, inverted: false };
+
+const proofFor = (user: User, workspaceId: string = WORKSPACE_W_ID): Promise<Membership> =>
+  assertMembership(asUser(user), workspaceId, { spell: ['read'] });
+
+const spellBy = (
+  author: User,
+  title: string,
+  visibility: SpellVisibility,
+  workspaceId: string = WORKSPACE_W_ID,
+): Promise<string> =>
+  insertSpell(
+    sql,
+    makeSpell({ title, visibility, workspaceId, steps: [{ body: `${title}, stirred.` }] }),
+    author.id,
+  );
+
+const spellPage = async (membership: Membership) =>
+  (await findPageInReadableSpells(membership, spells, [spells.title], FIRST_PAGE)).map(
+    (entry) => entry.node.title,
+  );
+
+const stepPage = async (membership: Membership) =>
+  // Every fixture step sits at place 1 of its own spell, so the order is the
+  // id's and the bodies are compared as a set.
+  (await findPageInReadableSpells(membership, spellSteps, [spellSteps.layerOrder], FIRST_PAGE))
+    .map((entry) => entry.node.body)
+    .sort();
+
+describe('findPageInReadableSpells', () => {
+  let bPrivate: string;
+
+  beforeEach(async () => {
+    await spellBy(A, 'Ash Ward', 'workspace');
+    await spellBy(A, 'Birch Charm', 'private');
+    bPrivate = await spellBy(B, 'Cedar Knot', 'private');
+    await spellBy(D, 'Damson Seal', 'workspace', WORKSPACE_X_ID);
+  });
+
+  it('pages the coven’s shared spells and the reader’s own private ones, and nothing else', async () => {
+    // The precondition: B's private spell and X's shared spell are there, and
+    // each is paged by someone the rule admits.
+    expect(await spellPage(await proofFor(B))).toEqual(['Ash Ward', 'Cedar Knot']);
+    expect(await spellPage(await proofFor(D, WORKSPACE_X_ID))).toEqual(['Damson Seal']);
+
+    expect(await spellPage(await proofFor(A))).toEqual(['Ash Ward', 'Birch Charm']);
+  });
+
+  it('refuses B’s private spell to A by direct id as well as from the page', async () => {
+    const owner = await proofFor(A);
+    expect(await findOneSpell(await proofFor(B), bPrivate)).toMatchObject({ id: bPrivate });
+
+    await expect(findOneSpell(owner, bPrivate)).resolves.toBeUndefined();
+    const page = await findPageInReadableSpells(owner, spells, [spells.title], FIRST_PAGE);
+    expect(page.map((entry) => entry.node.id)).not.toContain(bPrivate);
+  });
+
+  it('pages a spell-scoped table only under the spells the reader may read', async () => {
+    expect(await stepPage(await proofFor(B))).toEqual([
+      'Ash Ward, stirred.',
+      'Cedar Knot, stirred.',
+    ]);
+    expect(await stepPage(await proofFor(D, WORKSPACE_X_ID))).toEqual(['Damson Seal, stirred.']);
+
+    expect(await stepPage(await proofFor(A))).toEqual([
+      'Ash Ward, stirred.',
+      'Birch Charm, stirred.',
+    ]);
+  });
+
+  it('leaves out a soft-deleted spell and a soft-deleted step', async () => {
+    const owner = await proofFor(A);
+    expect(await spellPage(owner)).toEqual(['Ash Ward', 'Birch Charm']);
+
+    await sql`update spells set deleted_at = now(), deleted_by = ${A.id} where title = 'Ash Ward'`;
+    await sql`
+      update spell_steps set deleted_at = now(), deleted_by = ${A.id}
+      where body = 'Birch Charm, stirred.'`;
+
+    expect(await spellPage(owner)).toEqual(['Birch Charm']);
+    expect(await stepPage(owner)).toEqual([]);
+  });
+
+  it('continues from a cursor under the same rule', async () => {
+    const owner = await proofFor(A);
+    const [first, ...rest] = await findPageInReadableSpells(owner, spells, [spells.title], {
+      limit: 1,
+      inverted: false,
+    });
+    expect(first.node.title).toBe('Ash Ward');
+    expect(rest).toEqual([]);
+
+    const next = await findPageInReadableSpells(owner, spells, [spells.title], {
+      limit: 10,
+      inverted: false,
+      after: first.cursor,
+    });
+    expect(next.map((entry) => entry.node.title)).toEqual(['Birch Charm']);
+  });
+});
+
+describe('findGrimoirePage', () => {
+  /**
+   * Sets spells' stamps, the `updated_at` trigger off so the value holds. One
+   * statement, so spells stamped together share `now()` to the microsecond.
+   */
+  const stamp = (ids: string | string[], created: string, updated: string) =>
+    sql.begin(async (tx) => {
+      await tx`alter table spells disable trigger set_updated_at`;
+      await tx`
+        update spells
+        set created_at = now() - ${created}::interval, updated_at = now() - ${updated}::interval
+        where id in ${sql([ids].flat())}`;
+    });
+
+  /** Three of A's shared spells whose three orders all differ, and B's private one. */
+  async function grimoire() {
+    const birch = await spellBy(A, 'Birch Charm', 'workspace');
+    const alder = await spellBy(A, 'Alder Jar', 'workspace');
+    const cedar = await spellBy(A, 'Cedar Knot', 'workspace');
+    const hidden = await spellBy(B, 'Ash Ward', 'private');
+    // Before the stamps, which the trigger would otherwise overwrite.
+    await sql`update spells set status = 'complete' where id in ${sql([birch, cedar])}`;
+    await stamp(birch, '4 days', '1 day');
+    await stamp(alder, '3 days', '3 days');
+    await stamp(cedar, '2 days', '2 days');
+    // The precondition: B reads their own spell, which A's pages leave out.
+    expect(await findOneSpell(await proofFor(B), hidden)).toMatchObject({ id: hidden });
+    return { birch, alder, cedar };
+  }
+
+  const pageOf = async (query: GrimoireQuery, page: PageRequest = FIRST_PAGE) =>
+    (await findGrimoirePage(await proofFor(A), page, query)).map((entry) => entry.node.id);
+
+  it.each([
+    ['UPDATED_DESC', ['birch', 'cedar', 'alder']],
+    ['CREATED_DESC', ['cedar', 'alder', 'birch']],
+    ['TITLE_ASC', ['alder', 'birch', 'cedar']],
+  ] as const)('pages the readable spells in %s order', async (order, expected) => {
+    const ids = await grimoire();
+
+    expect(await pageOf({ order })).toEqual(expected.map((name) => ids[name]));
+  });
+
+  it.each(GRIMOIRE_ORDERS)(
+    'pages spells that tie on every %s key once each, by id, one at a time',
+    async (order) => {
+      const tied: string[] = [];
+      for (let i = 0; i < 3; i++) tied.push(await spellBy(A, 'Testing Jar', 'workspace'));
+      await stamp(tied, '1 day', '1 day');
+
+      const walked: string[] = [];
+      let after: Cursor | undefined;
+      for (;;) {
+        const [entry, ...rest] = await findGrimoirePage(
+          await proofFor(A),
+          { limit: 1, inverted: false, after },
+          { order },
+        );
+        expect(rest).toEqual([]);
+        if (!entry) break;
+        walked.push(entry.node.id);
+        after = entry.cursor;
+      }
+
+      expect(walked).toEqual(await pageOf({ order }));
+      expect(walked).toEqual([...tied].sort());
+    },
+  );
+
+  it.each([
+    ['complete', ['birch', 'cedar']],
+    ['draft', ['alder']],
+    [undefined, ['birch', 'cedar', 'alder']],
+  ] as const)('keeps only the spells of status %s, in SQL', async (status, expected) => {
+    const ids = await grimoire();
+
+    expect(await pageOf({ order: 'UPDATED_DESC', status })).toEqual(
+      expected.map((name) => ids[name]),
+    );
+  });
+});
+
+describe('findManyInSpells', () => {
+  it('reads the rows of every readable spell named, and none of a spell the reader may not read, named by id', async () => {
+    const shared = await spellBy(A, 'Ash Ward', 'workspace');
+    const own = await spellBy(A, 'Birch Charm', 'private');
+    const bPrivate = await spellBy(B, 'Cedar Knot', 'private');
+    const elsewhere = await spellBy(D, 'Damson Seal', 'workspace', WORKSPACE_X_ID);
+    // The precondition: B reads their own spell's step, D theirs.
+    expect(await findManyInSpells(await proofFor(B), spellSteps, [bPrivate])).toHaveLength(1);
+    expect(
+      await findManyInSpells(await proofFor(D, WORKSPACE_X_ID), spellSteps, [elsewhere]),
+    ).toHaveLength(1);
+
+    const rows = await findManyInSpells(await proofFor(A), spellSteps, [
+      shared,
+      own,
+      bPrivate,
+      elsewhere,
+    ]);
+
+    expect(rows.map((row) => row.spellId).sort()).toEqual([shared, own].sort());
+  });
+
+  it('reads nothing for no ids', async () => {
+    expect(await findManyInSpells(await proofFor(A), spellSteps, [])).toEqual([]);
+  });
+});

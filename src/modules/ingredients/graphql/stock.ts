@@ -18,7 +18,7 @@ import { IngredientRef, IngredientVariantRef } from './ingredient';
 // (claude-docs/graphql/schema.md, "Stock: InventoryItem, Ingredient.stock and
 // the three stock writes").
 
-const InventoryUnitEnum = builder.enumType('InventoryUnit', { values: UNITS });
+export const InventoryUnitEnum = builder.enumType('InventoryUnit', { values: UNITS });
 
 const UnitDimensionEnum = builder.enumType('UnitDimension', {
   description: 'What a unit measures; conversion stays inside one.',

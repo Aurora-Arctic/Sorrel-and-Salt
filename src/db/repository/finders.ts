@@ -2,8 +2,10 @@ import { and, eq, inArray, type SQL } from 'drizzle-orm';
 import type { PgTable } from 'drizzle-orm/pg-core';
 import type { Membership } from '@/modules/coven';
 import type { Cursor, PageCount, PageEntry, PageRequest } from '../../lib/types';
+import { spells } from '../../modules/grimoire/schema/spells';
 import { notSoftDeleted, readableInTiers, scopedTo } from './predicates';
-import { pageBounds, selectFrom } from './select';
+import { existsIn, pageBounds, selectFrom } from './select';
+import { readableSpells } from './spells';
 import type {
   Identified,
   Keyset,
@@ -13,6 +15,7 @@ import type {
   PageOrder,
   Slugged,
   SortPart,
+  SpellScoped,
   Unscoped,
   WorkspaceScoped,
   ReadRow,
@@ -176,6 +179,45 @@ export function findPageCountInTiers<
   where?: SQL,
 ): Promise<PageCount> {
   return readCount(table, readableInTiers(memberships, table), order, start, where);
+}
+
+/**
+ * The same, for `spells` or a table hung off a spell by `spell_id`
+ * (`spell_steps`, M13.6's workings): only rows of spells this member may
+ * read, under M10.6's `readableSpells` — the coven's shared spells and the
+ * reader's own private ones. The rule is ANDed here rather than left to a
+ * caller's `where`, so a private spell never reaches a page (CLAUDE.md
+ * rule 7). A child table has no `workspace_id`, so its coven and visibility
+ * both come from the parent spell through a correlated `EXISTS`, as in
+ * `findManyInSpell`.
+ */
+export function findPageInReadableSpells<
+  TTable extends PgTable & Identified & (typeof spells | (SpellScoped & Unscoped)),
+  Carried extends object,
+>(
+  membership: Membership,
+  table: TTable,
+  order: PageOrder<Carried>,
+  page: PageRequest,
+  where?: SQL,
+): Promise<PageEntry<ReadRow<TTable>, Carried>[]> {
+  return readPage(
+    table,
+    and(readableSpellRows(membership, table), notSoftDeleted(table)),
+    order,
+    page,
+    where,
+  );
+}
+
+/** `readableSpells` for `spells` itself, or through the parent spell for a `spell_id` table. */
+function readableSpellRows(
+  membership: Membership,
+  table: typeof spells | SpellScoped,
+): SQL | undefined {
+  if (table === spells) return readableSpells(membership);
+  const child = table as SpellScoped;
+  return existsIn(spells, and(eq(spells.id, child.spellId), readableSpells(membership)));
 }
 
 /**

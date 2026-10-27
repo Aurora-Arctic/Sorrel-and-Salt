@@ -11,6 +11,11 @@ export const spellStatus = pgEnum('spell_status', ['draft', 'complete']);
 // does not: `public`.
 export const spellVisibility = pgEnum('spell_visibility', ['private', 'workspace']);
 
+// Not a column: the orders a grimoire page takes (M10.9), kept here so the
+// GraphQL enum and the repository read one list. Last edited first is the
+// default; claude-docs/graphql/schema.md, "The grimoire", says what each does.
+export const GRIMOIRE_ORDERS = ['UPDATED_DESC', 'CREATED_DESC', 'TITLE_ASC'] as const;
+
 // The grimoire: what a workspace makes (claude-docs/db/grimoire.md, "The grimoire").
 export const spells = pgTable('spells', {
   id: idColumn(),

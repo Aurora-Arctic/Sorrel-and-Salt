@@ -18,7 +18,7 @@ path — a seed, a fixture, a service that never mentions visibility — joins t
 shared grimoire. The failure mode of the other default is silent: a spell
 nobody but its author can see, in a coven that cannot tell it is missing.
 
-### Reading: one predicate, five finders, and why the generic ones refuse
+### Reading: one predicate, nine finders, and why the generic ones refuse
 
 `readableSpells(membership)` is the predicate, and the only one: the coven from
 the proof, `deleted_at IS NULL`, and `visibility = 'workspace' OR created_by =
@@ -33,15 +33,19 @@ so a service has nothing to do with a condition. It builds that condition and
 runs nothing, which `tests/db/repository/readable-spells-predicate.test.ts`
 shows with the database client replaced by one that throws.
 
-Five finders in `spells.ts` read through it:
+Nine finders read through it, seven of them in `spells.ts`:
 
-| Finder                                                                             | Reads                                                                  |
-| ---------------------------------------------------------------------------------- | ---------------------------------------------------------------------- |
-| `findManySpells(membership)`                                                       | every spell of the coven this member may read                          |
-| `findOneSpell(membership, spellId)`                                                | one by id, `undefined` when it is another's private spell              |
-| `findManyInSpell(membership, table, spellId)`                                      | a spell's rows in `spell_steps` or `spell_categories`                  |
-| `findIngredientsInSpellsIncludingSoftDeleted(membership, ingredientIds)`           | the ingredients a readable spell holds ("What a spell holds", below)   |
-| `findManyOfSpellIngredientsIncludingSoftDeleted(membership, table, ingredientIds)` | those ingredients' folk names or category links, through the one above |
+| Finder                                                                             | Reads                                                                          |
+| ---------------------------------------------------------------------------------- | ------------------------------------------------------------------------------ |
+| `findManySpells(membership)`                                                       | every spell of the coven this member may read                                  |
+| `findOneSpell(membership, spellId)`                                                | one by id, `undefined` when it is another's private spell                      |
+| `findManyInSpell(membership, table, spellId)`                                      | a spell's rows in `spell_steps` or `spell_categories`                          |
+| `findManyInSpells(membership, table, spellIds)`                                    | the same for many spells in one statement, a loader's batch (M10.9)            |
+| `findPageInReadableSpells(membership, table, order, page, where?)` (`finders.ts`)  | a cursor page of `spells` or a `spell_id` table (M10.9)                        |
+| `findGrimoirePage(membership, page, query)` (`grimoire.ts`)                        | the grimoire's page in `query.order`, of `query.status`, through the one above |
+| `findIngredientsInSpellsIncludingSoftDeleted(membership, ingredientIds)`           | the ingredients a readable spell holds ("What a spell holds", below)           |
+| `findManyOfSpellIngredientsIncludingSoftDeleted(membership, table, ingredientIds)` | those ingredients' folk names or category links, through the one above         |
+| `findFormsInSpellsIncludingSoftDeleted(membership, ingredientIds)`                 | those ingredients' forms, deleted or not (M10.9)                               |
 
 **Proved as one matrix, held by one guard (M10.6).**
 `tests/db/repository/readable-spells.test.ts` runs every relationship against
@@ -96,32 +100,37 @@ toward the spell's derived categories, its safety notes still warning. The
 data already holds that — `spell_steps` points at the row, its foreign
 key is `NO ACTION`, and a soft delete touches no layer. What would lose it is
 the read, since every other finder filters a deleted ingredient and `existsIn`
-filters a deleted parent by construction. So two finders in `spells.ts` are
+filters a deleted parent by construction. So three finders in `spells.ts` are
 named exceptions to CLAUDE.md rule 4, each ending `…IncludingSoftDeleted` so
 the call site says what it is:
 
-| Finder                                                                             | Reads                                                                                 |
-| ---------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------- |
-| `findIngredientsInSpellsIncludingSoftDeleted(membership, ingredientIds)`           | the ingredients among the ids that a spell this member may read holds, deleted or not |
-| `findManyOfSpellIngredientsIncludingSoftDeleted(membership, table, ingredientIds)` | the live folk names or category links of those ingredients                            |
+| Finder                                                                             | Reads                                                                                    |
+| ---------------------------------------------------------------------------------- | ---------------------------------------------------------------------------------------- |
+| `findIngredientsInSpellsIncludingSoftDeleted(membership, ingredientIds)`           | the ingredients among the ids that a spell this member may read holds, deleted or not    |
+| `findManyOfSpellIngredientsIncludingSoftDeleted(membership, table, ingredientIds)` | the live folk names or category links of those ingredients                               |
+| `findFormsInSpellsIncludingSoftDeleted(membership, ingredientIds)`                 | the forms of those ingredients, deleted or not, so a step keeps the form it laid (M10.9) |
 
-**Only the ingredient's tombstone is skipped.** The spell must be readable and
+**Only the ingredient's tombstone is skipped, and the form's.** The spell must be readable and
 live (`readableSpells`), and the layer live (`existsIn` over
 `spell_steps`, which filters a removed layer by construction). The ingredient must be in the compendium
 or the proof's coven: a layer's foreign key checks the id alone, so a W spell
 linking X's ingredient is a row the schema accepts and the finder withholds. A
 child's own tombstone still filters, so a folk name removed before the delete
-stays removed. The children's finder reaches its parents through the first —
+stays removed. The forms are the one child read past its own tombstone,
+through the third finder, so a step whose form alone was deleted still shows
+it; a deleted form's category pairs need no hatch, since
+`ingredient_categories` has no `deleted_at` and a form's soft delete leaves them.
+The two children's finders reach their parents through the first —
 two statements rather than one — because a deleted parent's tier cannot be
 tested through `existsIn`, and a raw subquery is what MB.100 removed.
 
-Both take ingredient ids rather than a spell id. The layers come from
+All three take ingredient ids rather than a spell id. The layers come from
 `findManyInSpell`, and their `ingredientId`s batch into the first, which is
 the loader key M10.9's resolution needs; a custom layer names no ingredient to
 ask about. `findManyOfIngredients` refuses `spell_steps` at compile time
 since M5.3: the table carries an `ingredient_id`, and read through a
 compendium entry it would have been every coven's layers of that entry,
-private spells included. The soft-delete guard pins both hatches' shape
+private spells included. The soft-delete guard pins all three hatches' shape
 (["Soft-delete filtering"](soft-delete.md)); the argument, and v2's revision-pinned layers,
 are [`m5.3-spells-keep-deleted-ingredients.md`](../design-decisions/m5.3-spells-keep-deleted-ingredients.md).
 

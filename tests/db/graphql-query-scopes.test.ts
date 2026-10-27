@@ -182,6 +182,19 @@ const PROBES: Record<string, ScopeProbe> = {
     variables: { workspaceId: WORKSPACE_W_ID },
     outcome: 'refuses',
   },
+  grimoire: {
+    source: `query ($workspaceId: ID!) {
+      grimoire(workspaceId: $workspaceId, first: 1) { edges { node { id } } }
+    }`,
+    variables: { workspaceId: WORKSPACE_W_ID },
+    outcome: 'refuses',
+  },
+  spell: {
+    source:
+      'query ($id: ID!, $workspaceId: ID!) { spell(id: $id, workspaceId: $workspaceId) { id } }',
+    variables: { id: NOWHERE, workspaceId: WORKSPACE_W_ID },
+    outcome: 'refuses',
+  },
   deitySuggestions: suggestion('deitySuggestions'),
   formSuggestions: suggestion('formSuggestions'),
   celestialBodySuggestions: suggestion('celestialBodySuggestions'),
@@ -271,6 +284,20 @@ const NULL_WORKSPACE_PROBES: Record<string, ScopeProbe> = {
       workspaceIngredientFacets(workspaceId: $workspaceId) { forms { value count } }
     }`,
     variables: { workspaceId: null },
+    outcome: 'invalid',
+  },
+  // A spell is always some coven's (M10.9).
+  grimoire: {
+    source: `query ($workspaceId: ID!) {
+      grimoire(workspaceId: $workspaceId, first: 1) { edges { node { id } } }
+    }`,
+    variables: { workspaceId: null },
+    outcome: 'invalid',
+  },
+  spell: {
+    source:
+      'query ($id: ID!, $workspaceId: ID!) { spell(id: $id, workspaceId: $workspaceId) { id } }',
+    variables: { id: NOWHERE, workspaceId: null },
     outcome: 'invalid',
   },
 };
