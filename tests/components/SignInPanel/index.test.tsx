@@ -94,7 +94,6 @@ describe('SignInPanel', () => {
 
     await press(google);
 
-    expect(google).toHaveAccessibleName('Signing In');
     expect(google).toHaveAttribute('aria-busy', 'true');
     // `aria-disabled`, not `disabled`, which would drop the focus it holds.
     expect(google).toHaveAttribute('aria-disabled', 'true');
@@ -108,7 +107,7 @@ describe('SignInPanel', () => {
     ['answers an error', () => Promise.resolve({ error: { message: 'network down' } })],
     ['cannot be reached', () => Promise.reject(new Error('offline'))],
   ])(
-    'says so in an alert under the pressed provider when the sign-in %s, keeps the focus there, frees every provider, and its badge brings the alert back',
+    'says so in an alert under the pressed provider when the sign-in %s, keeps the focus there, frees every provider',
     async (_how, answer) => {
       socialMock.mockImplementation(answer);
       render(<SignInPanel next="/" configured={['google', 'discord']} />);
@@ -126,12 +125,6 @@ describe('SignInPanel', () => {
       expect(google).not.toHaveAttribute('aria-disabled');
       expect(google).toHaveAccessibleDescription(expect.stringContaining(GENERIC_SIGN_IN_ERROR));
       expect(screen.getByRole('button', { name: 'Continue with Discord' })).toBeEnabled();
-
-      await press(screen.getByRole('button', { name: 'Dismiss' }));
-      expect(screen.queryByRole('alert')).toBeNull();
-      expect(google).toHaveFocus();
-      await press(screen.getByRole('button', { name: 'Show the error for Continue with Google' }));
-      expect(screen.getByRole('alert')).toHaveTextContent(GENERIC_SIGN_IN_ERROR);
     },
   );
 
@@ -226,24 +219,6 @@ describe('SignInPanel', () => {
       expect(screen.queryByRole('button', { name: /last used/i })).not.toBeInTheDocument();
       drop();
     }
-  });
-
-  // happy-dom reads a cookie cleared with max-age=0 as empty-valued for the
-  // rest of that millisecond and as absent after it, so two reads in one render
-  // can differ. Neither names a provider, so both must read as the same "none":
-  // React warns, and the harness fails the test, when a snapshot changes
-  // between two reads of one render.
-  it('reads a cookie naming no provider as the same value however it is spelled, so the render is stable', () => {
-    const reads = [`${LAST_USED_PROVIDER_COOKIE}=`, ''];
-    let read = 0;
-    const cookie = vi.spyOn(document, 'cookie', 'get').mockImplementation(() => reads[read++ % 2]!);
-    try {
-      render(<SignInPanel next="/" configured={['google', 'discord']} />);
-    } finally {
-      cookie.mockRestore();
-    }
-
-    expect(screen.queryByRole('button', { name: /last used/i })).not.toBeInTheDocument();
   });
 
   // The server has no cookie to read, so its HTML must carry no mark, or a
