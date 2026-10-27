@@ -672,6 +672,12 @@ standard package rather than a bespoke one, the task's preference
   talk over the lift, so that one report is left unsaid. The region and the
   instructions take their ids from `useId`, since dnd-kit's own counter
   would number a server render and the browser's apart.
+- **Shared with the spell builder's steps** (M10.16): the sensors, the
+  keyboard target with its collision detection, the handle's instructions and
+  this wording live in [`src/lib/sortable`](../../src/lib/sortable/index.ts),
+  decided in the Wave 13 review. Each list keeps its own layout, sorting
+  strategy and arrow keys: the chips flow in a wrapping row, the steps stand
+  in a column ([spell-builder.md](spell-builder.md), "Reordering").
 
 ## A qualifier
 

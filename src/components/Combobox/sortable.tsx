@@ -1,21 +1,21 @@
 'use client';
 
 import {
-  type Announcements,
-  closestCenter,
-  type CollisionDetection,
   DndContext,
   type DragEndEvent,
   type DragStartEvent,
   type KeyboardCoordinateGetter,
-  KeyboardSensor,
-  PointerSensor,
   type UniqueIdentifier,
-  useSensor,
-  useSensors,
 } from '@dnd-kit/core';
 import { arrayMove, SortableContext, type SortingStrategy, useSortable } from '@dnd-kit/sortable';
 import { type ReactElement, useId, useRef } from 'react';
+import {
+  MOVE_KEYS,
+  SORTABLE_INSTRUCTIONS,
+  useKeyboardTarget,
+  useSortableAnnouncements,
+  useSortableSensors,
+} from '@/lib/sortable';
 import { ComboboxEntry } from './entry';
 import { flow, originOf, placeFor, shapeOf } from './flow';
 import type { ComboboxSortableEntriesProps, ComboboxSortableEntry, FlowShape } from './types';
@@ -27,19 +27,10 @@ import type { ComboboxSortableEntriesProps, ComboboxSortableEntry, FlowShape } f
 // Enter, moves it with the arrows, Home and End, and puts it down with Space
 // or Enter, or back with Escape. The chips making way are laid out as the
 // wrapping row will lay them out (flow.ts). Each step is said in dnd-kit's
-// live region, worded here, and the focus stays on the moved chip's handle.
+// live region, and the focus stays on the moved chip's handle. The sensors,
+// the keyboard's target and the wording are shared with the spell builder's
+// steps (src/lib/sortable).
 // See claude-docs/components/combobox.md, "A sortable list".
-
-// What the handle's description says, read once its name has been.
-const INSTRUCTIONS =
-  'Press Space or Enter to pick it up, the arrow keys to move it, and Space or Enter to put it down, or Escape to cancel.';
-
-// Far enough that a press, which focuses the handle and opens its tooltip,
-// is never taken for a drag.
-const DRAG_DISTANCE_PX = 4;
-
-// The keys that move a lifted chip, besides those that lift and put it down.
-const MOVE_KEYS = new Set(['ArrowLeft', 'ArrowRight', 'ArrowUp', 'ArrowDown', 'Home', 'End']);
 
 /** One chip, given its place in the sortable list. */
 function SortableEntry({ id, ...entry }: ComboboxSortableEntry): ReactElement {
@@ -57,14 +48,11 @@ export function ComboboxSortableEntries({
   const indexOf = (key: UniqueIdentifier) => ids.indexOf(String(key));
   const valueOf = (key: UniqueIdentifier) => entries[indexOf(key)]?.value;
   const at = (key: UniqueIdentifier) => `position ${indexOf(key) + 1} of ${entries.length}`;
-  // Whether the lifted chip has left its own place yet: dnd-kit reports it
-  // over that place as soon as it is lifted, which would talk over the lift.
-  const moved = useRef(false);
   const list = useRef<HTMLUListElement | null>(null);
   // The row's shape, measured as a move starts, while it is in progress.
   const shape = useRef<FlowShape | null>(null);
   // The place a key last moved the lifted chip to, which is what it is over.
-  const target = useRef<UniqueIdentifier | null>(null);
+  const { target, collisionDetection } = useKeyboardTarget();
 
   const widthsOf = (rects: { width: number }[], order: number[]) =>
     order.map((index) => rects[index]?.width ?? 0);
@@ -114,17 +102,7 @@ export function ComboboxSortableEntries({
     return { x: slot.left, y: slot.top };
   };
 
-  const sensors = useSensors(
-    useSensor(PointerSensor, { activationConstraint: { distance: DRAG_DISTANCE_PX } }),
-    useSensor(KeyboardSensor, { coordinateGetter }),
-  );
-
-  // A keyboard move is over the place its key chose, not whichever box its
-  // chip's centre is nearest; a pointer's is over the nearest.
-  const collisionDetection: CollisionDetection = (args) =>
-    args.pointerCoordinates === null && target.current !== null
-      ? [{ id: target.current }]
-      : closestCenter(args);
+  const sensors = useSortableSensors(coordinateGetter);
 
   const onDragStart = ({ active }: DragStartEvent) => {
     target.current = active.id;
@@ -141,27 +119,7 @@ export function ComboboxSortableEntries({
     shape.current = null;
   };
 
-  // By the entry's text and its place, rather than dnd-kit's default, which
-  // names the id: a field array's key means nothing to the person moving it.
-  const announcements: Announcements = {
-    onDragStart: ({ active }) => {
-      moved.current = false;
-      return `Picked up ${valueOf(active.id)}, at ${at(active.id)}.`;
-    },
-    onDragOver: ({ active, over }) => {
-      if (!moved.current && over?.id === active.id) return undefined;
-      moved.current = true;
-      return over
-        ? `${valueOf(active.id)} moved to ${at(over.id)}.`
-        : `${valueOf(active.id)} is over no place in the list.`;
-    },
-    onDragEnd: ({ active, over }) =>
-      over
-        ? `${valueOf(active.id)} put down at ${at(over.id)}.`
-        : `${valueOf(active.id)} put back at ${at(active.id)}.`,
-    onDragCancel: ({ active }) =>
-      `Move cancelled. ${valueOf(active.id)} is back at ${at(active.id)}.`,
-  };
+  const announcements = useSortableAnnouncements({ nameOf: valueOf, placeOf: at });
 
   const onDragEnd = ({ active, over }: DragEndEvent) => {
     settle();
@@ -173,7 +131,10 @@ export function ComboboxSortableEntries({
       id={id}
       sensors={sensors}
       collisionDetection={collisionDetection}
-      accessibility={{ announcements, screenReaderInstructions: { draggable: INSTRUCTIONS } }}
+      accessibility={{
+        announcements,
+        screenReaderInstructions: { draggable: SORTABLE_INSTRUCTIONS },
+      }}
       onDragStart={onDragStart}
       onDragEnd={onDragEnd}
       onDragCancel={settle}
