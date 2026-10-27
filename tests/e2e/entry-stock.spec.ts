@@ -6,7 +6,6 @@ import { signInAgainAs } from './session';
 import {
   compendiumVariant,
   insertStock,
-  localIngredient,
   markDocument,
   seedCoven,
   stillSameDocument,
@@ -17,9 +16,9 @@ import {
 // The entry page's Stock section (M12.29). Story 24 walks Edit Stock from the card and
 // Quick Look; no story walks it from the entry's own page, so this gate does: a shelf of
 // jars, one per form, with each held jar's amount (a low or empty one's a tip button), Edit Stock in
-// the heading and
-// on a jar by keyboard, a viewer's page without them, and nothing of another coven's jars
-// or of an entry the coven lacks.
+// the heading and on a jar by keyboard, and nothing of another coven's jars. An own entry's
+// jar, a viewer's page without Edit Stock, and an unheld entry with no Stock section are the
+// entry page test's (tests/app/(shell)/coven/ingredient.test.tsx).
 
 test.beforeAll(async () => {
   await recreateE2eDatabase();
@@ -41,20 +40,11 @@ test('a coven’s entry pages list its jars under Stock, and Edit Stock in the h
 }) => {
   const coven = await seedCoven(page, 'Fixture Coven Entry Stock', 'entry-stock.test', {
     A: 'owner',
-    C: 'viewer',
   });
   const other = await seedCoven(page, 'Fixture Coven Elsewhere', 'entry-stock-other.test', {
     D: 'owner',
   });
-  const { rosemary, testwort, unheld } = await withSql(async (sql) => {
-    const testwort = await localIngredient(sql, coven.id, coven.users.A);
-    await insertStock(
-      sql,
-      coven.id,
-      testwort,
-      { quantity: 4, unit: 'piece', threshold: 3 },
-      coven.users.A,
-    );
+  const { rosemary } = await withSql(async (sql) => {
     const herb = await compendiumVariant(sql, 'Rosemary', 'Herb');
     const oil = await compendiumVariant(sql, 'Rosemary', 'Oil');
     await insertStock(
@@ -65,8 +55,7 @@ test('a coven’s entry pages list its jars under Stock, and Edit Stock in the h
       coven.users.A,
     );
     await insertStock(sql, coven.id, oil, { quantity: 0, unit: 'ml', threshold: 5 }, coven.users.A);
-    // The other coven's jars: one of the same compendium entry, and one of an entry this
-    // coven does not hold, each an amount the coven's own lines never read.
+    // The other coven's jar of the same compendium entry, an amount the coven's own lines never read.
     await insertStock(
       sql,
       other.id,
@@ -74,21 +63,7 @@ test('a coven’s entry pages list its jars under Stock, and Edit Stock in the h
       { quantity: 999, unit: 'g', threshold: 1 },
       other.users.D,
     );
-    const [lavender] = await sql<{ ingredient_id: string; id: string }[]>`
-      select v.ingredient_id, v.id from ingredient_variants v
-      join ingredients i on i.id = v.ingredient_id
-      where i.workspace_id is null and i.deleted_at is null and v.deleted_at is null
-        and i.name <> 'Rosemary'
-      order by i.name limit 1`;
-    const unheld = { ingredientId: lavender.ingredient_id, variantId: lavender.id };
-    await insertStock(
-      sql,
-      other.id,
-      unheld,
-      { quantity: 777, unit: 'g', threshold: 1 },
-      other.users.D,
-    );
-    return { rosemary: herb.ingredientId, testwort: testwort.ingredientId, unheld };
+    return { rosemary: herb.ingredientId };
   });
   const pageOf = (id: string) => `/coven/${coven.slug}/ingredients/${id}`;
   await signInAgainAs(page, coven.users.A);
@@ -150,29 +125,5 @@ test('a coven’s entry pages list its jars under Stock, and Edit Stock in the h
     await page.setViewportSize({ width: 375, height: 812 });
     await assertNoSidewaysScroll(page, { restore: true });
     await assertNoAccessibilityViolations(page);
-  });
-
-  await test.step('an own entry shelves its jar, with no tip button above the threshold', async () => {
-    await page.goto(pageOf(testwort));
-    await expect(lineOf(page, 'Root')).toContainText('4 piece');
-    await expect(lowAmount(lineOf(page, 'Root'))).toHaveCount(0);
-    await expect(outAmount(lineOf(page, 'Root'))).toHaveCount(0);
-    await expect(stockEditor(stockOf(page), 'Testwort').open).toBeVisible();
-  });
-
-  await test.step('a compendium entry the coven does not hold has no Stock section', async () => {
-    await page.goto(pageOf(unheld.ingredientId));
-    // Why it could have one: the page is the coven's, and another coven holds a jar of it.
-    await expect(page.getByRole('heading', { level: 1 })).toBeVisible();
-    await expect(page.getByRole('region', { name: 'Details' })).toBeVisible();
-    await expect(stockOf(page)).toHaveCount(0);
-    await expect(page.getByText('777')).toHaveCount(0);
-  });
-
-  await test.step('a viewer sees the jars and no Edit Stock, on the heading or a jar', async () => {
-    await signInAgainAs(page, coven.users.C);
-    await page.goto(pageOf(rosemary));
-    await expect(lineOf(page, 'Herb')).toContainText('50 g');
-    await expect(stockOf(page).getByRole('button', { name: /^Edit Stock/ })).toHaveCount(0);
   });
 });
