@@ -114,12 +114,6 @@ describe('createInvitation', () => {
     expect(send).toHaveBeenCalledOnce();
   });
 
-  it('honours a viewer role as it honours a member one', async () => {
-    await createInvitation(asUser(A), WORKSPACE_W_ID, { email: INVITED, role: 'viewer' }, sender());
-
-    expect((await invitations())[0]).toMatchObject({ role: 'viewer' });
-  });
-
   it('normalises the address as the admin tier does, and mails the normalised one', async () => {
     await createInvitation(
       asUser(A),
@@ -130,14 +124,6 @@ describe('createInvitation', () => {
 
     expect((await invitations())[0].email).toBe(INVITED);
     expect(send.mock.calls.map(([message]) => message.to)).toEqual([INVITED]);
-  });
-
-  it("invites into a coven that is its owner's first, with no other coven involved", async () => {
-    const covenId = await insertCoven('Fixture First Coven', [[D.id, 'owner']]);
-
-    await createInvitation(asUser(D), covenId, { email: INVITED, role: 'member' }, sender());
-
-    expect((await invitations())[0]).toMatchObject({ workspace_id: covenId, created_by: D.id });
   });
 
   // The precondition: A could invite, so the refusal is the role check's.

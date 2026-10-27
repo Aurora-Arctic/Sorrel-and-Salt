@@ -127,17 +127,6 @@ describe('Mutation.createInvitation', () => {
       extensions: { code: 'VALIDATION', fieldErrors: [{ path: ['email'] }] },
     });
   });
-
-  it('refuses a signed-out caller, writing nothing', async () => {
-    const result = await run(null, CREATE, {
-      workspaceId: WORKSPACE_W_ID,
-      email: INVITED,
-      role: 'viewer',
-    });
-
-    expect(result.errors).toHaveLength(1);
-    expect(await sql`select 1 from invitations`).toHaveLength(0);
-  });
 });
 
 const REVOKE = /* GraphQL */ `

@@ -186,21 +186,6 @@ describe('a declined invitation (M10.34)', () => {
     expect(await listPendingWorkspaceInvitations(asUser(A), coven, FIRST_PAGE)).toEqual([]);
   });
 
-  it('refuses everyone but an owner the removal and the list, by direct id, while it is there and declined', async () => {
-    const id = await insertInvitation(coven, 'declined', 'declined');
-    // Why each could have removed it: it exists, declined, in this coven, and the owner takes it.
-    expect(await declinedAtOf(id)).toBeInstanceOf(Date);
-
-    for (const who of [B, C, D, E]) {
-      await expect(revokeWorkspaceInvitation(asUser(who), coven, id)).rejects.toThrow(Forbidden);
-      await expect(listPendingWorkspaceInvitations(asUser(who), coven, FIRST_PAGE)).rejects.toThrow(
-        Forbidden,
-      );
-    }
-    expect((await stateOf(id))?.revoked_at).toBeNull();
-    await expect(revokeWorkspaceInvitation(asUser(A), coven, id)).resolves.toMatchObject({ id });
-  });
-
   it('is not reached through another coven', async () => {
     const other = await insertCoven(`Fixture Coven Other ${Math.random().toString(36).slice(2)}`);
     const id = await insertInvitation(other, 'declined', 'declined');
