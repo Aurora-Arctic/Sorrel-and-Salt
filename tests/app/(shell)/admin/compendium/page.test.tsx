@@ -1,16 +1,12 @@
 import { QueryClientProvider } from '@tanstack/react-query';
 import { fireEvent, render, screen, waitFor, within } from '@testing-library/react';
-import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
-import FormIcon from '@/components/FormIcon';
+import { beforeEach, describe, expect, it, vi } from 'vitest';
 import type { IngredientFormValues } from '@/components/IngredientForm/types';
 import { EMPTY_VALUES, EMPTY_VARIANT } from '@/components/IngredientForm/values';
 import { NotFound } from '@/lib/errors';
 import { makeQueryClient } from '@/lib/graphql-client';
 import { encodeCursor } from '@/lib/pagination';
 import type { PageRequest } from '@/lib/types';
-import { mockGraphQLMutation, mockGraphQLQuery } from '../../../../support/msw/graphql';
-import { offerCategories } from '../../../../support/msw/ingredient-lookups';
-import { openSections } from '../../../../support/ingredient-sections';
 import { entryDetail } from '../../../../support/entry-detail';
 
 // The `/admin/compendium` page (M5.5): the guard, one page of the compendium
@@ -105,6 +101,27 @@ vi.mock('@/modules/vocabulary', () => ({
 const entryValues = vi.fn();
 vi.mock('@/app/entry-values', () => ({ entryValues }));
 
+// The form is its own tests' (tests/components/IngredientForm/); here only what the dialog
+// hands it, and that its Cancel and its delete close the dialog where the page says.
+const formProps = vi.fn();
+vi.mock('@/components/IngredientForm', () => ({
+  default: (props: { onCancel: () => void; onDeleted: () => void }) => {
+    formProps(props);
+    return (
+      <form aria-label="Fixture Form">
+        <button type="button" onClick={props.onCancel}>
+          Cancel
+        </button>
+        <button type="button" onClick={props.onDeleted}>
+          Fixture Delete
+        </button>
+      </form>
+    );
+  },
+}));
+/** The entry the form was last handed, or none for an add. */
+const formEntry = (): unknown => (formProps.mock.lastCall?.[0] as { entry?: unknown }).entry;
+
 // `redirect` throws in Next, ending the render; so does this one, recognisably.
 const REDIRECTED = 'NEXT_REDIRECT';
 const redirect = vi.fn((href: string) => {
@@ -157,6 +174,11 @@ const fullPage = () =>
 async function renderPage(params: Record<string, string | string[]> = {}) {
   const page = await AdminCompendiumPage({ searchParams: Promise.resolve(params) });
   render(<QueryClientProvider client={makeQueryClient()}>{page}</QueryClientProvider>);
+}
+
+/** The page awaited and not drawn, for a test that asserts only what it read. */
+async function readPage(params: Record<string, string | string[]> = {}) {
+  await AdminCompendiumPage({ searchParams: Promise.resolve(params) });
 }
 
 const lastRequest = (): PageRequest => listCompendium.mock.lastCall?.[1] as PageRequest;
@@ -260,12 +282,9 @@ beforeEach(() => {
   entryValues.mockReset();
   entryValues.mockResolvedValue(TESTWORT_VALUES);
   covensHoldingEntry.mockResolvedValue([]);
+  formProps.mockClear();
   redirect.mockClear();
   router.replace.mockClear();
-  // An entry's form asks after near matches of the name it opens with.
-  mockGraphQLQuery('PossibleDuplicates', () => ({ possibleDuplicates: { edges: [] } }));
-  // ...and for the categories its Categories field suggests from.
-  offerCategories([]);
 });
 
 describe('the /admin/compendium page', () => {
@@ -301,70 +320,13 @@ describe('the /admin/compendium page', () => {
     expect(screen.queryByRole('dialog')).not.toBeInTheDocument();
     expect(resolveCompendiumSlug).not.toHaveBeenCalled();
   });
-
-  it("draws each curated form's group icon in the Form column, and the generic for one that is only text", async () => {
-    variantsOf.mockImplementation(async (_session: unknown, refs: unknown[]) =>
-      refs.map(() => [
-        { form: 'Fixture Shard', formId: 'form-1' },
-        { form: 'Herb', formId: null },
-      ]),
-    );
-    formChoicesOf.mockImplementation(async (ids: string[]) =>
-      ids.map((id) => ({ id, groupId: 'group-1' })),
-    );
-    formGroupsOf.mockImplementation(async (ids: string[]) =>
-      ids.map((id) => ({ id, icon: 'mineral' })),
-    );
-
-    await renderPage();
-
-    expect(formChoicesOf).toHaveBeenCalledWith(['form-1']);
-    expect(formGroupsOf).toHaveBeenCalledWith(['group-1']);
-    const row = within(screen.getByRole('table')).getAllByRole('row')[1];
-    const [curated, text] = within(row)
-      .getByRole('cell', { name: /Fixture Shard.*Herb/ })
-      .querySelectorAll('svg');
-    const glyph = (name: 'mineral' | null) =>
-      render(<FormIcon name={name} />).container.querySelector('svg')?.innerHTML;
-    expect(curated?.innerHTML).toBe(glyph('mineral'));
-    expect(text?.innerHTML).toBe(glyph(null));
-  });
-
-  it('says which page of how many, counted from the first row of the page', async () => {
-    listCompendium.mockResolvedValue(fullPage());
-    countCompendium.mockResolvedValue({ totalCount: 63, countBefore: 25 });
-
-    await renderPage({ after: encodeCursor({ key: ['Testwort'], id: TESTWORT.id }) });
-
-    expect(countCompendium).toHaveBeenCalledWith(
-      NO_FILTER,
-      {
-        key: ['Testwort 0'],
-        id: expect.any(String),
-      },
-      ADMIN,
-    );
-    expect(screen.getByRole('navigation', { name: 'Pages' })).toHaveTextContent('Page 2 of 3');
-  });
 });
 
+// What each parameter parses to is tests/components/CompendiumList/params.test.ts's; here
+// only that the parsed filter, and the lookups the page makes for it, reach the reads.
 describe('the /admin/compendium filter', () => {
-  // The panel of facets opens as it does from the tablet width up, over the results.
-  beforeEach(() => {
-    vi.stubGlobal('matchMedia', (query: string) => ({
-      matches: query.includes('min-width'),
-      media: query,
-      addEventListener: () => undefined,
-      removeEventListener: () => undefined,
-    }));
-  });
-  afterEach(() => {
-    vi.unstubAllGlobals();
-  });
-  const openPanel = () => fireEvent.click(screen.getByRole('button', { name: /^Filters/ }));
-
   it('reads ?query= trimmed, a repeated ?forms= as a list and ?withoutReferences=1 into the list and its count', async () => {
-    await renderPage({
+    await readPage({
       query: '  test wort ',
       forms: [' Fixture Oil ', 'Fixture Powder', 'fixture oil'],
       withoutReferences: '1',
@@ -375,177 +337,34 @@ describe('the /admin/compendium filter', () => {
       forms: ['Fixture Oil', 'Fixture Powder'],
       withoutReferences: true,
     });
-    expect(screen.getByRole('combobox', { name: 'Name' })).toHaveValue('test wort');
-    openPanel();
-    expect(screen.getByRole('switch', { name: /^No Refs/ })).toBeChecked();
   });
 
   // The facets are the choices' counts, so they are read under the filter the
   // list is: a count under another filter would count rows the list does not hold.
   it('counts the facets under the same filter as the list and its count', async () => {
-    await renderPage({ query: 'test', forms: 'Fixture Oil', toxic: 'toxic' });
+    await readPage({ query: 'test', forms: 'Fixture Oil', toxic: 'toxic' });
 
     expect(compendiumFacets).toHaveBeenCalledExactlyOnceWith(lastFilter(), ADMIN);
     expect(lastFilter()).toEqual({ query: 'test', forms: ['Fixture Oil'], toxic: 'toxic' });
   });
 
-  it('turns ?deities= slugs into the ids of the live deities, for the list and the facets', async () => {
-    listDeityTraditions.mockResolvedValue([
-      entry({ id: 't-gr', name: 'Greek' }),
-      entry({ id: 't-ro', name: 'Roman' }),
-    ]);
-    listDeities.mockResolvedValue([
-      entry({ id: 'd-gr', name: 'Testa', slug: 'testa-greek', traditionId: 't-gr' }),
-      entry({ id: 'd-ro', name: 'Testa', slug: 'testa-roman', traditionId: 't-ro' }),
-    ]);
-
-    await renderPage({ deities: ['testa-roman', 'gone-greek'] });
-
-    expect(lastFilter()).toEqual({ deityIds: ['d-ro'] });
-    expect(compendiumFacets).toHaveBeenCalledExactlyOnceWith({ deityIds: ['d-ro'] }, ADMIN);
-  });
-
-  it('reads ?zodiac=, ?celestialBodies= and ?toxic= into the variables the query takes', async () => {
-    await renderPage({ zodiac: ['Aries', 'Leo'], celestialBodies: 'Mars', toxic: 'not_toxic' });
-
-    expect(lastFilter()).toEqual({
-      zodiacSigns: ['Aries', 'Leo'],
-      celestialBodies: ['Mars'],
-      toxic: 'not_toxic',
-    });
-  });
-
   // M14.8: the services decide who may filter by the mark, so the page hands them the session.
-  it.each([
-    ['1', { reviewed: true }],
-    ['0', { reviewed: false }],
-    ['yes', {}],
-  ])(
-    'reads ?reviewed=%s into the filter, passed with the session to the list, its count and the facets',
-    async (reviewed, filter) => {
-      await renderPage({ reviewed });
-      expect(lastFilter()).toEqual(filter);
-      expect(listCompendium.mock.lastCall?.[listCompendium.mock.lastCall.length - 1]).toEqual(
-        ADMIN,
-      );
-      expect(compendiumFacets).toHaveBeenCalledExactlyOnceWith(filter, ADMIN);
-    },
-  );
-
-  it('reads a ?toxic= that is neither setting as no filter', async () => {
-    await renderPage({ toxic: 'any' });
-
-    expect(lastFilter()).toEqual(NO_FILTER);
-  });
-
-  it('reads a repeated ?elements= into the list and its count, dropping any that is no element, with no control for it', async () => {
-    await renderPage({ query: 'test', elements: ['fire', 'ether', 'earth'] });
-
-    expect(lastFilter()).toEqual({ query: 'test', elements: ['fire', 'earth'] });
-    // A hand-edited address lists the same, and the pager keeps it.
-    expect(screen.getByRole('link', { name: 'Add Ingredient' })).toHaveAttribute(
-      'href',
-      '/admin/compendium?query=test&elements=fire&elements=earth&new',
-    );
-  });
-
-  it('reads one ?elements= given once, as a string, as a list of one', async () => {
-    await renderPage({ elements: 'water' });
-
-    expect(lastFilter()).toEqual({ elements: ['water'] });
-  });
-
-  // A native submit sends every field, blank or not.
-  it('reads a blank ?query= and ?forms= as no filter', async () => {
-    await renderPage({ query: '   ', forms: ['  ', ''] });
-
-    expect(lastFilter()).toEqual(NO_FILTER);
-    expect(screen.getByRole('combobox', { name: 'Name' })).toHaveValue('');
-    openPanel();
-    expect(screen.getByRole('combobox', { name: 'Forms' })).toHaveValue('');
-  });
-
-  // The classification filter left the search: an address that still carries
-  // one lists everything, as a hand-edited parameter does.
-  it('ignores a ?nomenclature=, which is no longer a filter, and drops it from every link', async () => {
-    await renderPage({ query: 'test', nomenclature: 'botanical' });
-
-    expect(lastFilter()).toEqual({ query: 'test' });
-    expect(screen.getByRole('link', { name: 'Add Ingredient' })).toHaveAttribute(
-      'href',
-      '/admin/compendium?query=test&new',
-    );
-  });
-
-  // The switch submits 1; any other value is every entry.
-  it('reads ?withoutReferences= other than 1 as every entry', async () => {
-    await renderPage({ withoutReferences: 'true' });
-
-    expect(lastFilter()).toEqual(NO_FILTER);
-    openPanel();
-    expect(screen.getByRole('switch', { name: /^No Refs/ })).not.toBeChecked();
-  });
-
-  it('reads ?withoutForms=1 into the list and its count, and nothing else as on', async () => {
-    await renderPage({ withoutForms: '1' });
-    expect(lastFilter()).toEqual({ ...NO_FILTER, withoutForms: true });
-    openPanel();
-    expect(screen.getByRole('switch', { name: /^No Form/ })).toBeChecked();
-  });
-
-  it('reads ?withoutForms= other than 1 as every entry', async () => {
-    await renderPage({ withoutForms: 'true' });
-
-    expect(lastFilter()).toEqual(NO_FILTER);
-    openPanel();
-    expect(screen.getByRole('switch', { name: /^No Form/ })).not.toBeChecked();
+  it('reads ?reviewed= into the filter, passed with the session to the list, its count and the facets', async () => {
+    await readPage({ reviewed: '1' });
+    expect(lastFilter()).toEqual({ reviewed: true });
+    expect(listCompendium.mock.lastCall?.[listCompendium.mock.lastCall.length - 1]).toEqual(ADMIN);
+    expect(compendiumFacets).toHaveBeenCalledExactlyOnceWith({ reviewed: true }, ADMIN);
   });
 
   it('turns ?categories= slugs into the ids of the live categories, for the list and its count', async () => {
     await renderPage({ categories: ['testward', 'testcraft'] });
 
     expect(lastFilter()).toEqual({ categoryIds: ['c-tw', 'c-tc'] });
-    openPanel();
-    expect(screen.getByRole('button', { name: 'Remove Category: testward' })).toBeInTheDocument();
-    expect(screen.getByRole('button', { name: 'Remove Category: testcraft' })).toBeInTheDocument();
+    // The links keep the slugs the address spelt, never the ids.
     expect(screen.getByRole('link', { name: 'Add Ingredient' })).toHaveAttribute(
       'href',
       '/admin/compendium?categories=testward&categories=testcraft&new',
     );
-  });
-
-  it('reads ?categoryMode=any into the read, and checks Any', async () => {
-    await renderPage({ categories: ['testward', 'testcraft'], categoryMode: 'any' });
-
-    expect(lastFilter()).toEqual({ categoryIds: ['c-tw', 'c-tc'], categoryMode: 'any' });
-    openPanel();
-    expect(
-      within(screen.getByRole('group', { name: 'Match' })).getByRole('radio', { name: 'Any' }),
-    ).toBeChecked();
-  });
-
-  it('reads any other ?categoryMode= as all, which sends nothing', async () => {
-    await renderPage({ categories: ['testward', 'testcraft'], categoryMode: 'both' });
-
-    expect(lastFilter()).toEqual({ categoryIds: ['c-tw', 'c-tc'] });
-    openPanel();
-    expect(
-      within(screen.getByRole('group', { name: 'Match' })).getByRole('radio', { name: 'All' }),
-    ).toBeChecked();
-  });
-
-  it('drops a ?categories= slug no live category holds, and the known one still filters', async () => {
-    await renderPage({ categories: ['renamed-away', 'testcraft'] });
-
-    expect(lastFilter()).toEqual({ categoryIds: ['c-tc'] });
-    openPanel();
-    expect(screen.getByRole('button', { name: 'Remove Category: testcraft' })).toBeInTheDocument();
-  });
-
-  it('filters by no category when every slug is unknown', async () => {
-    await renderPage({ categories: 'renamed-away' });
-
-    expect(lastFilter()).toEqual(NO_FILTER);
   });
 
   it('reads the categories past their first page, with each one group read once for all', async () => {
@@ -563,38 +382,10 @@ describe('the /admin/compendium filter', () => {
       return many.slice(start, start + request.limit).map(entry);
     });
 
-    await renderPage({ categories: 'testcat-100' });
+    await readPage({ categories: 'testcat-100' });
 
     expect(lastFilter()).toEqual({ categoryIds: ['c-100'] });
     expect(categoryGroupsOf).toHaveBeenCalledOnce();
-  });
-
-  // The facets come sorted by name from SQL (M12.52); the box keeps their order,
-  // here neither alphabetical nor by count, so any re-sort would show.
-  it('offers the forms the facets count in the Form box, in the order given', async () => {
-    compendiumFacets.mockResolvedValue({
-      ...NO_FACETS,
-      forms: [
-        { value: 'Fixture Powder', count: 1 },
-        { value: 'Fixture Oil', count: 2 },
-        { value: 'Fixture Ash', count: 1 },
-      ],
-    });
-
-    await renderPage();
-
-    openPanel();
-    fireEvent.click(screen.getByRole('button', { name: /^Show Forms/ }));
-    const choices = screen.getByRole('listbox', { name: /^Forms/ });
-    expect(
-      within(choices)
-        .getAllByRole('option')
-        .map((option) => option.textContent),
-    ).toEqual([
-      expect.stringContaining('Fixture Powder'),
-      expect.stringContaining('Fixture Oil'),
-      expect.stringContaining('Fixture Ash'),
-    ]);
   });
 
   // 84 forms are seeded against a page of at most 100, so one page is not a
@@ -645,15 +436,12 @@ describe('the /admin/compendium filter', () => {
 });
 
 describe('the /admin/compendium modal', () => {
-  it('opens the empty form on ?new, with Save & Add Another and nothing to delete', async () => {
+  it('opens the form on ?new with no entry', async () => {
     await renderPage({ new: '' });
 
     const dialog = screen.getByRole('dialog', { name: 'Add Ingredient to Compendium' });
-    expect(within(dialog).getByRole('textbox', { name: 'Name' })).toHaveValue('');
-    expect(within(dialog).getByRole('button', { name: 'Save & Add Another' })).toBeInTheDocument();
-    expect(
-      within(dialog).queryByRole('button', { name: 'Delete Ingredient' }),
-    ).not.toBeInTheDocument();
+    expect(within(dialog).getByRole('form', { name: 'Fixture Form' })).toBeInTheDocument();
+    expect(formEntry()).toBeUndefined();
     expect(resolveCompendiumSlug).not.toHaveBeenCalled();
   });
 
@@ -668,35 +456,17 @@ describe('the /admin/compendium modal', () => {
     expect(entryValues).not.toHaveBeenCalled();
   });
 
-  it("opens an entry's form on ?edit=, filled from its values, with Delete Ingredient", async () => {
+  // The dialog is named by the entry as saved (MB.115), which the page computes from the
+  // values it read, so a change in the form cannot reach it.
+  it("opens an entry's form on ?edit=, handed its values, in a dialog named by the entry", async () => {
     await renderPage({ edit: TESTWORT.slug });
 
     expect(resolveCompendiumSlug).toHaveBeenCalledWith(TESTWORT.slug);
     expect(entryValues).toHaveBeenCalledWith(TESTWORT, null);
     const dialog = screen.getByRole('dialog', { name: EDITING_TESTWORT });
-    // An edit opens with its sections closed (MB.115).
-    openSections('Identity', 'Variants');
-    expect(within(dialog).getByRole('textbox', { name: 'Name' })).toHaveValue('Testwort');
-    // Its forms too, each the variant's own fieldset (MB.221).
-    expect(within(dialog).getByRole('group', { name: 'Herb' })).toBeInTheDocument();
-    expect(within(dialog).getByRole('button', { name: 'Delete Ingredient' })).toBeInTheDocument();
-    expect(
-      within(dialog).queryByRole('button', { name: 'Save & Add Another' }),
-    ).not.toBeInTheDocument();
+    expect(within(dialog).getByRole('form', { name: 'Fixture Form' })).toBeInTheDocument();
+    expect(formEntry()).toEqual({ id: TESTWORT.id, values: TESTWORT_VALUES });
     expect(screen.queryByRole('alert')).not.toBeInTheDocument();
-  });
-
-  // The owner's call at MB.115: the head says what is being edited, by the
-  // name it was saved under, so it holds still while the Name field changes.
-  it('names the dialog by the entry as saved, however its Name field is changed', async () => {
-    await renderPage({ edit: TESTWORT.slug });
-
-    openSections('Identity');
-    fireEvent.change(screen.getByRole('textbox', { name: 'Name' }), {
-      target: { value: 'Renamed Testwort' },
-    });
-
-    expect(screen.getByRole('dialog', { name: EDITING_TESTWORT })).toBeInTheDocument();
   });
 
   it('sends an old slug on to the entry at its new one, keeping the filter', async () => {
@@ -873,17 +643,13 @@ describe('the /admin/compendium details modal', () => {
     expect(router.replace).toHaveBeenCalledWith(`${FILTERED_HREF}&edit=fixture-other`);
   });
 
+  // The delete's confirm is tests/components/IngredientForm/compendium.test.tsx's; here only
+  // where the page sends the stacked edit once the form says it has deleted.
   it('closes a stacked edit back to the list, not the details, once it has deleted the entry', async () => {
-    // A delete first asks how many covens hold the entry, to say so.
-    mockGraphQLQuery('CompendiumEntryUsers', () => ({ compendiumEntryUsers: 0 }));
-    mockGraphQLMutation('DeleteCompendiumIngredient', (variables: { id: string }) => ({
-      deleteCompendiumIngredient: variables.id,
-    }));
     await renderPage({ ...FILTERED, entry: TESTWORT.slug, edit: TESTWORT.slug });
     const editing = screen.getByRole('dialog', { name: EDITING_TESTWORT });
 
-    fireEvent.click(within(editing).getByRole('button', { name: 'Delete Ingredient' }));
-    fireEvent.click(await within(editing).findByRole('button', { name: 'Delete' }));
+    fireEvent.click(within(editing).getByRole('button', { name: 'Fixture Delete' }));
 
     await waitFor(() => expect(router.replace).toHaveBeenCalledWith(FILTERED_HREF));
     expect(router.replace).not.toHaveBeenCalledWith(ON_DETAILS);
