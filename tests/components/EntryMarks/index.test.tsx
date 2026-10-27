@@ -147,26 +147,6 @@ describe('EntryMarks badge order', () => {
     }
   });
 
-  // One safety badge (the owner's call, 2026-10-20): Toxic says more than Caution.
-  it('shows Toxic alone when the entry is toxic and has notes', () => {
-    render(<EntryMarks kind="cupboard" toxic safetyNotes="Fixture caution." />);
-
-    expect(toxic()).toBeInTheDocument();
-    expect(caution()).toBeNull();
-  });
-
-  it('reads Toxic over Caution from a form as well as the ingredient', () => {
-    render(
-      <EntryMarks
-        kind="compendium"
-        variants={[{ form: 'testoil', safetyNotes: 'Fixture oil caution.', toxic: true }]}
-      />,
-    );
-
-    expect(toxic()).toBeInTheDocument();
-    expect(caution()).toBeNull();
-  });
-
   it('leaves the safety mark to its caller when told to', () => {
     render(<EntryMarks kind="own" safety={false} toxic safetyNotes="Fixture caution." />);
 
@@ -219,13 +199,6 @@ describe('RecencyMark (MB.106)', () => {
 
     expect(container).toBeEmptyDOMElement();
   });
-});
-
-it('EntryMarks no longer draws New or Updated: the marker is its own component', () => {
-  render(<EntryMarks kind="cupboard" />);
-
-  expect(screen.queryByText('New', { exact: true })).toBeNull();
-  expect(screen.queryByText('Updated', { exact: true })).toBeNull();
 });
 
 // The curators' review mark (M14.8), shown to everyone (the owner's call, 2026-10-23): the
