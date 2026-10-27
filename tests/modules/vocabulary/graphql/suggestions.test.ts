@@ -1,5 +1,6 @@
-import { beforeAll, beforeEach, describe, expect, it } from 'vitest';
-import postgres from 'postgres';
+import { beforeEach, describe, expect, it } from 'vitest';
+import type postgres from 'postgres';
+import { useTestDatabase } from '../../../support/db/database';
 import { WORKSPACE_W_ID } from '@/db/seed/standard';
 import type { Session } from '@/lib/session';
 import { A, B, E, asUser } from '../../../support/as-user';
@@ -16,9 +17,7 @@ import type { AstrologySuggestionConnection } from './types';
 
 let sql: ReturnType<typeof postgres>;
 
-beforeAll(() => {
-  sql = postgres(process.env.DATABASE_URL as string);
-});
+useTestDatabase((client) => (sql = client));
 
 beforeEach(async () => {
   await sql`truncate ingredients cascade`;

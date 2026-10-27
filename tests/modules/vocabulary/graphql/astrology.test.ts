@@ -1,5 +1,6 @@
-import { beforeAll, beforeEach, describe, expect, it } from 'vitest';
-import postgres from 'postgres';
+import { beforeEach, describe, expect, it } from 'vitest';
+import type postgres from 'postgres';
+import { useTestDatabase } from '../../../support/db/database';
 import { slugify } from '@/lib/slugify';
 import { E, asUser } from '../../../support/as-user';
 import { insertIngredient } from '../../../support/db/insert-ingredient';
@@ -19,9 +20,7 @@ import type { AstrologyValueConnection, AstrologyValueNode } from './types';
 
 let sql: ReturnType<typeof postgres>;
 
-beforeAll(() => {
-  sql = postgres(process.env.DATABASE_URL as string);
-});
+useTestDatabase((client) => (sql = client));
 
 const VOCABULARIES = [
   {

@@ -1,5 +1,6 @@
-import { beforeAll, beforeEach, describe, expect, it } from 'vitest';
-import postgres from 'postgres';
+import { beforeEach, describe, expect, it } from 'vitest';
+import type postgres from 'postgres';
+import { useTestDatabase } from '../../../support/db/database';
 import { CELESTIAL_BODIES } from '@/db/seed/astrology';
 import { WORKSPACE_W_ID, WORKSPACE_X_ID } from '@/db/seed/standard';
 import { Forbidden, InvalidCursor } from '@/lib/errors';
@@ -25,9 +26,7 @@ import type { Suggest } from './types';
 
 let sql: ReturnType<typeof postgres>;
 
-beforeAll(() => {
-  sql = postgres(process.env.DATABASE_URL as string);
-});
+useTestDatabase((client) => (sql = client));
 
 beforeEach(async () => {
   await sql`truncate ingredients cascade`;

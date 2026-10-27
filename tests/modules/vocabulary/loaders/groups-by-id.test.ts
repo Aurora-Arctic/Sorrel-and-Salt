@@ -1,5 +1,6 @@
-import { beforeAll, beforeEach, describe, expect, it, vi } from 'vitest';
-import postgres from 'postgres';
+import { beforeEach, describe, expect, it, vi } from 'vitest';
+import type postgres from 'postgres';
+import { useTestDatabase } from '../../../support/db/database';
 import { buildLoaders } from '@/graphql/loaders';
 import { NotFound } from '@/lib/errors';
 import { categoryGroupsById } from '@/modules/vocabulary';
@@ -20,9 +21,7 @@ const LOADERS = { categoryGroupsById };
 
 let sql: ReturnType<typeof postgres>;
 
-beforeAll(() => {
-  sql = postgres(process.env.DATABASE_URL as string);
-});
+useTestDatabase((client) => (sql = client));
 
 beforeEach(() => {
   repository.findManyByIds.mockClear();

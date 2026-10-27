@@ -1,5 +1,6 @@
-import { afterEach, beforeAll, beforeEach, describe, expect, it, vi } from 'vitest';
-import postgres from 'postgres';
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
+import type postgres from 'postgres';
+import { useTestDatabase } from '../../../support/db/database';
 import { NotFound } from '@/lib/errors';
 import { categoryGroupsOf } from '@/modules/vocabulary';
 import { A } from '../../../support/as-user';
@@ -21,9 +22,7 @@ const ABSENT = '99999999-9999-9999-9999-999999999999';
 
 let sql: ReturnType<typeof postgres>;
 
-beforeAll(() => {
-  sql = postgres(process.env.DATABASE_URL as string);
-});
+useTestDatabase((client) => (sql = client));
 
 beforeEach(() => {
   repository.findManyByIds.mockClear();

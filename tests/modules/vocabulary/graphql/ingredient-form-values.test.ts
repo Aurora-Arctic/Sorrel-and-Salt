@@ -1,5 +1,6 @@
 import { beforeAll, beforeEach, describe, expect, it, vi } from 'vitest';
-import postgres from 'postgres';
+import type postgres from 'postgres';
+import { useTestDatabase } from '../../../support/db/database';
 import { createLoaders } from '@/graphql/loaders';
 import type { Session } from '@/lib/session';
 import { formSlug } from '@/lib/slugify';
@@ -38,9 +39,7 @@ vi.mock('@/db/repository', async (importOriginal) => {
 
 let sql: ReturnType<typeof postgres>;
 
-beforeAll(() => {
-  sql = postgres(process.env.DATABASE_URL as string);
-});
+useTestDatabase((client) => (sql = client));
 
 beforeEach(() => {
   repository.findManyByIds.mockClear();
