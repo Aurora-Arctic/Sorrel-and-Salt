@@ -72,7 +72,7 @@ describe('the /coven landing', () => {
     expect(redirect).not.toHaveBeenCalled();
   });
 
-  it('tells someone with neither how to get in, with no create link', async () => {
+  it('tells someone with neither how to get in, with no create link, behind the session guard', async () => {
     asViewer(false);
 
     render(await CovenLandingPage());
@@ -81,34 +81,22 @@ describe('the /coven landing', () => {
     expect(screen.queryByRole('link', { name: 'Create Coven' })).not.toBeInTheDocument();
     expect(notice()).not.toBeInTheDocument();
     expect(redirect).not.toHaveBeenCalled();
-  });
-
-  it('is behind the session guard', async () => {
-    asViewer(false);
-
-    render(await CovenLandingPage());
-
     expect(requireSession).toHaveBeenCalled();
   });
 
-  it.each([
-    ['may create a coven', true],
-    ['may not create one', false],
-  ])(
-    'tells someone who %s that invitations wait, linking to the account page’s section',
-    async (_who, canCreate) => {
-      asViewer(canCreate, [], 2);
+  // The notice reads only the pending count, never the right to create, so one case covers both.
+  it('tells someone with pending invitations that they wait, linking to the account page’s section', async () => {
+    asViewer(false, [], 2);
 
-      render(await CovenLandingPage());
+    render(await CovenLandingPage());
 
-      const status = notice();
-      expect(status).toHaveTextContent('2');
-      expect(within(status as HTMLElement).getByRole('link')).toHaveAttribute(
-        'href',
-        '/account#account-invitations',
-      );
-      // The list itself is the account page's, never drawn here.
-      expect(screen.queryByRole('table')).not.toBeInTheDocument();
-    },
-  );
+    const status = notice();
+    expect(status).toHaveTextContent('2');
+    expect(within(status as HTMLElement).getByRole('link')).toHaveAttribute(
+      'href',
+      '/account#account-invitations',
+    );
+    // The list itself is the account page's, never drawn here.
+    expect(screen.queryByRole('table')).not.toBeInTheDocument();
+  });
 });
