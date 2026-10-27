@@ -888,7 +888,8 @@ type Mutation {
   addIngredientToWorkspace(workspaceId: ID!, variantId: ID!, input: StockInput!): InventoryItem! # stock is of one form (MB.215); refused beside variantId when the coven holds that form already (M9.3)
   updateStock(workspaceId: ID!, id: ID!, input: StockInput!): InventoryItem! # a field left out keeps its value, null clears it (M9.3)
   deleteStock(workspaceId: ID!, id: ID!): ID! # a soft delete of the jar; the entry stays (M9.4)
-  createSpell(workspaceId: ID!, input: SpellInput!): Spell!
+  createSpell(workspaceId: ID!, input: SpellInput!): Spell! # every field nullable: a draft needs nothing, a complete spell a title; steps is the recipe in order (M10.10)
+  updateSpell(workspaceId: ID!, id: ID!, input: UpdateSpellInput!): Spell! # a field left out keeps its value, null clears it; steps, when given, is the whole recipe; expectedRevision must be sent, null writes regardless, a stale one is STALE_WRITE; visibility only widens (M10.10)
   setSpellVisibility(id: ID!, visibility: SpellVisibility!): Spell! # private -> workspace only
   createInvitation(workspaceId: ID!, email: String!, role: InvitableRole!): Invitation! # the link is mailed; no response carries it
   acceptInvitation(token: String!): Invitation! # either tier (MB.202); the session's verified email must match the invitation's, and the page lands by tier
@@ -1226,8 +1227,12 @@ enum Nomenclature {
 
 type Spell {
   id: ID!
-  title: String!
+  title: String # null on a draft not yet named (M13.15)
   intent: String
+  jarSize: String
+  sealWaxColor: String
+  moonPhase: String
+  dayOfWeek: String
   visibility: SpellVisibility! # private | workspace
   status: SpellStatus! # draft | complete
   categories: [Category!]! # assigned intent
@@ -1235,6 +1240,7 @@ type Spell {
   categoryGaps: CategoryComparison! # intended-not-present, present-not-intended
   note: String
   steps: [SpellStep!]! # in position order: the recipe (story 80)
+  revision: Int! # raised by one on every save; a save names the one it read (M13.15)
   audit: AuditInfo!
 }
 
@@ -1249,7 +1255,7 @@ type SpellStep {
   body: String # the instruction; null on an ingredient-only step
   ingredient: Ingredient # kept once deleted (M5.3); null on a custom, one-off row (MB.40) and on an instruction-only step
   name: String # the ingredient's display label when linked; the custom name otherwise; null on an instruction-only step
-  variant: IngredientVariant # the form laid, on a linked row (MB.215); null once that form alone is deleted
+  variant: IngredientVariant # the form laid, on a linked row (MB.215); still answered once that form alone is deleted (M10.9)
   form: String # the variant's form when linked; the custom row's free text otherwise
   quantity: Float
   unit: InventoryUnit # M9.2's inventory_unit enum

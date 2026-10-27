@@ -1043,7 +1043,7 @@ hold `NOT_FOUND`, and a taken label or an own entry of the same identity
 ([`db/workspace-compendium-entries.md`](../db/workspace-compendium-entries.md),
 "Converting a compendium entry into our own").
 
-### The grimoire: `Spell`, `grimoire` and `spell`
+### The grimoire: `Spell`, `grimoire`, `spell` and the two saves
 
 The coven's spells as the API reads them (M10.9), registered by `grimoire` in
 `graphql/spell.ts` over `services/spell-reads.ts`. Every read asks the proof
@@ -1081,7 +1081,8 @@ never reaches a resolver: it is left out of a list in SQL, and by id it is
   `SpellStatus` and `SpellVisibility` enums built from the columns, and three
   lists that each load through a loader ([`loaders.md`](loaders.md)). Its
   `title` is nullable, because a draft may go untitled until it is complete
-  (M13.15). The lists:
+  (M13.15), and `revision` is the count a save names (M10.10, below). The
+  lists:
   - `steps` (`stepsBySpell`): every live step in recipe order, instructions
     and one-off rows included.
   - `categories` (`assignedCategoriesBySpell`): the categories the author
@@ -1105,6 +1106,27 @@ never reaches a resolver: it is left out of a list in SQL, and by id it is
   `quantity` is a `Float`, turned from Postgres's `numeric` text, and `unit`
   the stock's `InventoryUnit` enum.
 
+- **`createSpell(workspaceId, input: SpellInput)`** and
+  **`updateSpell(workspaceId, id, input: UpdateSpellInput)`** (M10.10) save a
+  spell's fields and its recipe, over `services/spells.ts`. Both answer the
+  `Spell`, and both clear that spell's three loaders first, so the answer's
+  steps and categories are the ones just written, even in a request that read
+  them before the save.
+  - `steps` is a list of `SpellStepInput`, the whole recipe in order. A step
+    with an `id` is a saved step, kept; one without is new; a saved step left
+    out is removed. On `updateSpell`, leaving `steps` out leaves the recipe
+    as it is. [`db/grimoire.md`](../db/grimoire.md), "Saving a recipe", has
+    the rules and the checks.
+  - Every other field is nullable. On `updateSpell`, a field left out keeps
+    its value, and null clears it. A `status`, `visibility` or `steps` sent
+    as null is read as left out, since none of the three can be cleared.
+  - `expectedRevision` is the revision the save was written against. GraphQL
+    cannot require a field that may be null, so the schema has it as a
+    nullable `Int`, and the service refuses a save that leaves it out as
+    `VALIDATION`. Null writes whatever the revision is. A revision no longer
+    current is `STALE_WRITE`, with `extensions.currentRevision`.
+  - A viewer is `FORBIDDEN`; a spell the caller cannot read is `NOT_FOUND`.
+
 A page of spells with all three lists costs the same reads as one spell: the
 page, then eight batched reads (three for the steps, two for the assigned
 categories, three for the derived ones), plus one membership check per coven
@@ -1116,7 +1138,9 @@ fields, the gaps both ways, the refusal codes by direct id, the paging, the
 `orderBy` and `status` arguments, and the
 read count for a page of one and of four. Which reader sees which spell is
 `services/spell-reads.test.ts`'s, and the loaders' read counts
-`loaders/spell-children.test.ts`'s.
+`loaders/spell-children.test.ts`'s. The saves' transport half is
+`tests/modules/grimoire/graphql/spell-saves.test.ts`: the answer and its
+revision, the loaders cleared, the nulls, and one refusal per code.
 
 ### The compendium mutations
 

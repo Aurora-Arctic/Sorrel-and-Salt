@@ -200,7 +200,7 @@ included.
 
 | Call                               | Does                                                                           |
 | ---------------------------------- | ------------------------------------------------------------------------------ |
-| `createSpell` / `updateSpell`      | write the spell's own fields; `updateSpell` never changes the visibility       |
+| `createSpell` / `updateSpell`      | write the spell and its whole recipe; `updateSpell` widens visibility only     |
 | `listSpells` / `getSpell`          | read through `findManySpells` / `findOneSpell`; `getSpell` adds the steps      |
 | `addSpellStep` / `updateSpellStep` | write a one-off ingredient or an instruction, only on a spell the caller reads |
 
@@ -211,5 +211,10 @@ the spell read is what makes it writable exactly when its spell is readable.
 
 `getSpell` resolves each linked step's ingredient through
 `findIngredientsInSpellsIncludingSoftDeleted` and marks one deleted since with
-`deleted: true`. Linking a step to an ingredient, with the tier check that
-goes with it, and the list's paging are M10.10 and M10.9.
+`deleted: true`. The list's paging is M10.9's. M10.10's saves link a step to
+an ingredient, checking the link only when it is new: a step may lay a live
+form of a live ingredient in the compendium or this coven, and a saved step
+whose ingredient was deleted since keeps it. `updateSpell` changes the
+visibility under the same one-way rule as `setSpellVisibility`, through the
+same check (`services/visibility-rule.ts`), so a save cannot make a shared
+spell private. [grimoire.md](grimoire.md), "Saving a recipe", has the rest.
