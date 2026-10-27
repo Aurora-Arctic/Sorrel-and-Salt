@@ -1,6 +1,6 @@
 import { act, fireEvent, render, screen, within } from '@testing-library/react';
 import { type ReactElement, useEffect, useState } from 'react';
-import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
+import { afterEach, beforeEach, describe, expect, it, onTestFinished, vi } from 'vitest';
 import { QueryClientProvider } from '@tanstack/react-query';
 import CompendiumListBase from '@/components/CompendiumList';
 import IngredientSearch from '@/components/IngredientSearch';
@@ -1022,6 +1022,24 @@ describe('CompendiumList filter', () => {
     // The sentence is the status outside the search landmark, where the comboboxes keep theirs.
     const sentence = () => listStatus()[0];
 
+    // The typing runs on a 16ms interval, a render a tick. On real timers a test sat through the
+    // whole animation, some seventy renders of the list, and in a loaded full run, where a render
+    // takes hundreds of milliseconds, that outran the 20s timeout. On a fake clock the line types
+    // only when the test advances it.
+    const typingClock = () => {
+      vi.useFakeTimers({ toFake: ['setTimeout', 'clearTimeout', 'setInterval', 'clearInterval'] });
+      onTestFinished(() => {
+        vi.useRealTimers();
+      });
+    };
+    // The old line backspaced, then the new one typed in full. The ticks write the line to a ref and
+    // the render only shows it, so a phase runs to its end in one act and renders once; the next
+    // phase's interval starts from that render, so each phase takes its own act.
+    const typeOut = async () => {
+      await act(() => vi.advanceTimersByTimeAsync(1500));
+      await act(() => vi.advanceTimersByTimeAsync(1500));
+    };
+
     it('names a chosen deity, with its tradition only when another deity shares the name', () => {
       const { rerender } = render(
         <CompendiumList
@@ -1135,6 +1153,7 @@ describe('CompendiumList filter', () => {
     );
 
     it('types the sentence when a filter is applied', async () => {
+      typingClock();
       render(
         <Navigating push={router.push}>
           <CompendiumList {...props({ filter: SEARCHED })} />
@@ -1164,6 +1183,7 @@ describe('CompendiumList filter', () => {
     // The search is applied from the name just typed, not yet from the address, so the filter the
     // page still shows is the previous search: the typed line must name the new term, not that one.
     it('names the term being searched, not the previous one, while the search is on its way', async () => {
+      typingClock();
       render(
         <Navigating push={router.push}>
           <CompendiumList {...props({ filter: { ...SEARCHED, query: 'oldwort' } })} />
@@ -1177,11 +1197,13 @@ describe('CompendiumList filter', () => {
       expect(pushed().get('query')).toBe('newwort');
       expect(typing()).toBe(true);
       // The old line is backspaced first (MB.270), so the new term is typed after it.
-      await waitFor(() => expect(typedLine()).toContain('newwort'), { timeout: 3000 });
+      await typeOut();
+      expect(typedLine()).toContain('newwort');
       expect(typedLine()).not.toContain('oldwort');
     });
 
     it('drops the previous term from the typed line when the search is cleared', async () => {
+      typingClock();
       render(
         <Navigating push={router.push}>
           <CompendiumList {...props({ filter: { ...SEARCHED, query: 'oldwort' } })} />
@@ -1196,9 +1218,8 @@ describe('CompendiumList filter', () => {
       expect(typing()).toBe(true);
       // The old line is backspaced before the lead is typed (MB.270): once the lead is whole, the
       // line holds no term.
-      await waitFor(() => expect(typedLine()).toContain('Searching for ingredients'), {
-        timeout: 3000,
-      });
+      await typeOut();
+      expect(typedLine()).toContain('Searching for ingredients');
       expect(typedLine()).not.toContain('matching');
     });
 
@@ -1213,6 +1234,7 @@ describe('CompendiumList filter', () => {
 
     // A facet changed in the panel is on the address being opened, not on the page being left.
     it('names the facets being searched with while the search is on its way', async () => {
+      typingClock();
       render(
         <Navigating push={router.push}>
           <CompendiumList {...props({ filter: SEARCHED })} />
@@ -1231,6 +1253,7 @@ describe('CompendiumList filter', () => {
     });
 
     it('drops a facet being removed from the typed sentence, and names the new term and facet', async () => {
+      typingClock();
       render(
         <Navigating push={router.push}>
           <CompendiumList {...props({ filter: { ...SEARCHED, query: 'oldwort' } })} />
@@ -1247,7 +1270,8 @@ describe('CompendiumList filter', () => {
       expect(pushed().get('query')).toBe('newwort');
       expect(pushed().has('categories')).toBe(false);
       expect(typing()).toBe(true);
-      await waitFor(() => expect(typedSentence()).toContain('newwort'), { timeout: 3000 });
+      await typeOut();
+      expect(typedSentence()).toContain('newwort');
       expect(typedSentence()).toContain('without references');
       expect(typedSentence()).not.toContain('oldwort');
       expect(typedSentence()).not.toContain('testcraft');
