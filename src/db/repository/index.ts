@@ -47,6 +47,7 @@ export {
   findCompendiumReview,
   findOneIngredient,
   findReadableVariant,
+  findReadableVariants,
   findSimilarIngredients,
   findSubstitutesIncludingSoftDeleted,
   findWorkspaceIngredientByIdentity,
@@ -69,6 +70,7 @@ export {
   findStockById,
   findStockByIds,
   findStockOfIngredients,
+  findStockOfVariants,
 } from './stock';
 export { findManyReferences, findReferenceSuggestions, findReferencesOf } from './references';
 export {

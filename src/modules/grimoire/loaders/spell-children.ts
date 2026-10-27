@@ -1,4 +1,5 @@
 import { defineSignedInLoader } from '../../../graphql/loaders/define-loader';
+import type { Built } from '../../../graphql/loaders/types';
 import { assignedCategoriesOf, derivedCategoriesOf, stepsOfSpells } from '../services/spell-reads';
 import type { CategoryRow } from '@/modules/vocabulary';
 import type { SpellKey, SpellStepView } from '../types';
@@ -26,3 +27,21 @@ export const derivedCategoriesBySpell = defineSignedInLoader<SpellKey, CategoryR
   derivedCategoriesOf,
   byId,
 );
+
+/**
+ * Drops the request's cached steps and categories of the spell a save
+ * answered, so a later read in the same request sees the save.
+ */
+export function clearSpell(
+  loaders: Built<{
+    stepsBySpell: typeof stepsBySpell;
+    assignedCategoriesBySpell: typeof assignedCategoriesBySpell;
+    derivedCategoriesBySpell: typeof derivedCategoriesBySpell;
+  }>,
+  spell: SpellKey,
+): void {
+  const key = { id: spell.id, workspaceId: spell.workspaceId };
+  loaders.stepsBySpell.clear(key);
+  loaders.assignedCategoriesBySpell.clear(key);
+  loaders.derivedCategoriesBySpell.clear(key);
+}

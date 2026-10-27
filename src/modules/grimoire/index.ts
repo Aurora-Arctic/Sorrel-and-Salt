@@ -10,6 +10,7 @@ export type {
   GrimoireOrder,
   SpellInput,
   SpellKey,
+  SpellRecipeStep,
   SpellRow,
   SpellStepInput,
   SpellStepIngredient,

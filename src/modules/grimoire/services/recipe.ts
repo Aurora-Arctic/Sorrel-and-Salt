@@ -1,0 +1,209 @@
+import 'server-only';
+import { findReadableVariants, type AuditWriter } from '../../../db/repository';
+import { spellSteps } from '../schema/spell-steps';
+import { ValidationError } from '../../../lib/errors';
+import type { ValidationIssue } from '../../../lib/types';
+import type { Membership } from '@/modules/coven';
+import { jarsOfForms, unitConvert } from '@/modules/ingredients';
+import type { Unit } from '../../ingredients/schema/units';
+import type { SpellStepRow } from '../types';
+import type { z } from 'zod';
+import type { SpellStepInput } from '../validation/spell-step';
+
+// How a save writes a spell's recipe (M10.10): the steps a member sends are
+// the whole recipe, in order, so a step's place is its index, a saved step
+// left out is removed, and a step with no id is new. claude-docs/db/grimoire.md,
+// "Saving a recipe", says why each part is the way it is.
+
+type ParsedStep = z.output<typeof SpellStepInput>;
+
+/** The step row's own columns as a save writes them: every one stated, so a field left out is cleared. */
+function stepColumns(step: ParsedStep, place: number) {
+  return {
+    body: step.body ?? null,
+    ingredientId: step.ingredientId ?? null,
+    variantId: step.variantId ?? null,
+    name: step.name ?? null,
+    form: step.form ?? null,
+    // The column is `numeric`, which the driver reads and writes as text.
+    quantity: step.quantity == null ? null : String(step.quantity),
+    unit: step.unit ?? null,
+    note: step.note ?? null,
+    // `layer_order` is the old name of `position`, written alike until M13.9
+    // drops it (the schema's comment says why).
+    position: place,
+    layerOrder: place,
+  };
+}
+
+/** Whether writing `columns` would leave `row` as it is. */
+function unchanged(columns: ReturnType<typeof stepColumns>, row: SpellStepRow): boolean {
+  return Object.entries(columns).every(([key, value]) => {
+    const stored = row[key as keyof typeof columns];
+    // `2` and the stored `2.000` are one quantity.
+    if (key === 'quantity')
+      return (value == null ? null : Number(value)) === (stored == null ? null : Number(stored));
+    return value === stored;
+  });
+}
+
+/** Whether the step lays a different ingredient, form or custom name than the row. */
+function identityChanged(step: ParsedStep, row: SpellStepRow): boolean {
+  return (
+    (step.ingredientId ?? null) !== row.ingredientId ||
+    (step.variantId ?? null) !== row.variantId ||
+    (step.name?.toLowerCase() ?? null) !== (row.name?.toLowerCase() ?? null)
+  );
+}
+
+/**
+ * Refuses, before anything is written, a step that names a saved step this
+ * spell has no live row for, and a link the coven may not lay: a form that is
+ * not live, of an ingredient that is not live in the compendium or this
+ * coven, or of another ingredient than the step names. A saved step whose
+ * link is unchanged is not checked again, so a step laying an ingredient
+ * deleted since keeps it (claude-docs/db/spell-visibility.md, "What a spell
+ * holds").
+ *
+ * @throws {ValidationError} at each offending step's `id` or `ingredientId`.
+ */
+export async function checkRecipe(
+  membership: Membership,
+  steps: readonly ParsedStep[],
+  existing: readonly SpellStepRow[],
+): Promise<void> {
+  const saved = new Map(existing.map((row) => [row.id, row]));
+  const issues: ValidationIssue[] = [];
+
+  const toCheck: { index: number; step: ParsedStep }[] = [];
+  steps.forEach((step, index) => {
+    const row = step.id == null ? undefined : saved.get(step.id);
+    if (step.id != null && !row) {
+      issues.push({ path: ['steps', index, 'id'], message: 'This step is not one of the spell’s' });
+      return;
+    }
+    if (step.variantId != null && (!row || identityChanged(step, row))) {
+      toCheck.push({ index, step });
+    }
+  });
+
+  const readable = await findReadableVariants(
+    [membership],
+    toCheck.map(({ step }) => step.variantId as string),
+  );
+  const ingredientOf = new Map(readable.map((variant) => [variant.id, variant.ingredientId]));
+  for (const { index, step } of toCheck) {
+    if (ingredientOf.get(step.variantId as string) !== step.ingredientId) {
+      issues.push({
+        path: ['steps', index, 'ingredientId'],
+        message: 'Choose an ingredient from the list',
+      });
+    }
+  }
+
+  issues.push(...(await unmeasurableSteps(membership, steps, saved)));
+  if (issues.length > 0) throw new ValidationError(issues);
+}
+
+/**
+ * Whether an amount in `unit` can be taken out of a jar kept in `jarUnit`:
+ * `unitConvert` accepts the pair, which it does within weight and within
+ * volume, or the two are one count unit, since `unitConvert` refuses every
+ * count pair and a working subtracts a count without it (M13.5).
+ */
+function measurable(unit: Unit, jarUnit: Unit): boolean {
+  return unit === jarUnit || unitConvert(1, unit, jarUnit).ok;
+}
+
+/**
+ * Story 77 (M13.2): a step laying a form the coven holds a jar of, in a unit
+ * that jar cannot be measured in, so a working could not take it out of stock.
+ * One read for every step's jar, under the caller's proof, so only this
+ * coven's live jars count. A custom step, a step with no unit, a form with no
+ * jar and a jar with no unit are not checked; nor is a saved step whose form
+ * and unit are unchanged, so a jar whose unit changed after the spell was
+ * saved does not refuse its next save (the working warns of it instead).
+ */
+async function unmeasurableSteps(
+  membership: Membership,
+  steps: readonly ParsedStep[],
+  saved: ReadonlyMap<string, SpellStepRow>,
+): Promise<ValidationIssue[]> {
+  const toMeasure = steps.flatMap((step, index) => {
+    if (step.variantId == null || step.unit == null) return [];
+    const row = step.id == null ? undefined : saved.get(step.id);
+    if (row && row.variantId === step.variantId && row.unit === step.unit) return [];
+    return [{ index, variantId: step.variantId, unit: step.unit }];
+  });
+  if (toMeasure.length === 0) return [];
+
+  const jars = await jarsOfForms(membership, [...new Set(toMeasure.map((step) => step.variantId))]);
+  const jarUnitOf = new Map(jars.map((jar) => [jar.variantId, jar.unit]));
+  return toMeasure.flatMap(({ index, variantId, unit }) => {
+    const jarUnit = jarUnitOf.get(variantId);
+    if (jarUnit == null || measurable(unit, jarUnit)) return [];
+    return [
+      {
+        path: ['steps', index, 'unit'],
+        message: 'Choose a unit your coven’s stock of this can be measured in',
+      },
+    ];
+  });
+}
+
+/**
+ * Writes the recipe `steps` over the spell's live `existing` steps, inside the
+ * caller's transaction. Every unique index over a jar's live steps is checked
+ * row by row, so a step that changes its place or what it lays is first moved
+ * aside to a place and an identity no other step holds, and only then given
+ * its own. Call `checkRecipe` first.
+ */
+export async function writeRecipe(
+  write: AuditWriter,
+  spellId: string,
+  steps: readonly ParsedStep[],
+  existing: readonly SpellStepRow[],
+): Promise<void> {
+  const kept = new Set(steps.flatMap((step) => (step.id == null ? [] : [step.id])));
+  await write.softDeleteByIds(
+    spellSteps,
+    existing.filter((row) => !kept.has(row.id)).map((row) => row.id),
+  );
+
+  const saved = new Map(existing.map((row) => [row.id, row]));
+  const moves = steps.flatMap((step, index) => {
+    const row = step.id == null ? undefined : saved.get(step.id);
+    return row ? [{ step, row, place: index + 1 }] : [];
+  });
+
+  // Aside: a negative place no live step holds, and for a step changing what
+  // it lays, a custom name only it could have, which every CHECK accepts.
+  for (const { step, row, place } of moves) {
+    const moving = row.position !== place || row.layerOrder !== place;
+    const relinking = identityChanged(step, row);
+    if (!moving && !relinking) continue;
+    await write.updateById(spellSteps, row.id, {
+      position: -place,
+      layerOrder: -place,
+      ...(relinking && {
+        ingredientId: null,
+        variantId: null,
+        name: `moving ${row.id}`,
+        form: null,
+      }),
+    });
+  }
+
+  // A step the save leaves exactly as it was is not written, so its
+  // `updated_*` stamps go on saying who last changed it.
+  for (const { step, row, place } of moves) {
+    const columns = stepColumns(step, place);
+    if (unchanged(columns, row)) continue;
+    await write.updateById(spellSteps, row.id, columns);
+  }
+
+  for (const [index, step] of steps.entries()) {
+    if (step.id != null) continue;
+    await write.insert(spellSteps, { ...stepColumns(step, index + 1), spellId });
+  }
+}

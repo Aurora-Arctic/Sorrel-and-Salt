@@ -794,6 +794,9 @@ type Mutation {
   """A null workspaceId writes the compendium's, under the admin proof."""
   createReference(input: ReferenceInput!, workspaceId: ID): Reference!
 
+  """Writes a new spell and its recipe in one save."""
+  createSpell(input: SpellInput!, workspaceId: ID!): Spell!
+
   """
   Creates a coven with the caller as its owner. Refused for a user who may not create one.
   """
@@ -974,6 +977,11 @@ type Mutation {
 
   """Reaches every row citing it; nothing deletes a reference in v1."""
   updateReference(id: ID!, input: ReferenceInput!, workspaceId: ID): Reference!
+
+  """
+  Saves a spell's fields and, when given, its whole recipe, against the revision it was read at.
+  """
+  updateSpell(id: ID!, input: UpdateSpellInput!, workspaceId: ID!): Spell!
 
   """Changes a jar: a field left out keeps its value, and null clears it."""
   updateStock(id: ID!, input: StockInput!, workspaceId: ID!): InventoryItem!
@@ -1729,6 +1737,7 @@ type Spell {
   """What the spell intends: the categories its author assigned."""
   categories: [Category!]!
   categoryGaps: CategoryComparison!
+  dayOfWeek: String
 
   """
   What the spell is made of: every category its linked ingredients and their forms carry. A one-off row contributes none.
@@ -1736,7 +1745,15 @@ type Spell {
   derivedCategories: [Category!]!
   id: ID!
   intent: String
+  jarSize: String
+  moonPhase: String
   note: String
+
+  """
+  Raised by one on every save; a save names the revision it was written against (M13.15).
+  """
+  revision: Int!
+  sealWaxColor: String
   status: SpellStatus!
 
   """The recipe: every step in position order, instructions included."""
@@ -1747,6 +1764,24 @@ type Spell {
   """
   title: String
   visibility: SpellVisibility!
+}
+
+"""A new spell: a draft needs nothing but its status."""
+input SpellInput {
+  dayOfWeek: String
+  intent: String
+  jarSize: String
+  moonPhase: String
+  note: String
+  sealWaxColor: String
+  status: SpellStatus
+
+  """The recipe, in order."""
+  steps: [SpellStepInput!]
+
+  """Required once the status is complete."""
+  title: String
+  visibility: SpellVisibility
 }
 
 enum SpellStatus {
@@ -1781,6 +1816,25 @@ type SpellStep {
 
   """The form laid, on a linked step, still shown once deleted since."""
   variant: IngredientVariant
+}
+
+"""
+One step of a recipe: an instruction, an ingredient, or both. The ingredient is linked (ingredientId with variantId) or written for this jar (name, with form).
+"""
+input SpellStepInput {
+  body: String
+  form: String
+
+  """A saved step this one is; left out, the step is new."""
+  id: ID
+  ingredientId: ID
+  name: String
+  note: String
+  quantity: Float
+  unit: InventoryUnit
+
+  """The form laid; set exactly when ingredientId is."""
+  variantId: ID
 }
 
 """Who reads a spell: its author alone, or every member of its coven."""
@@ -1876,6 +1930,33 @@ enum UnitDimension {
 input UpdateJarInput {
   id: ID!
   input: StockInput!
+}
+
+"""
+Changes a spell: a field left out keeps its value, and null clears it. Visibility only widens.
+"""
+input UpdateSpellInput {
+  dayOfWeek: String
+
+  """
+  Required, though it may be null: the revision this save was written against, which a newer one refuses. Null writes regardless.
+  """
+  expectedRevision: Int
+  intent: String
+  jarSize: String
+  moonPhase: String
+  note: String
+  sealWaxColor: String
+  status: SpellStatus
+
+  """
+  The whole recipe, in order: a saved step left out is removed. Left out, the recipe is unchanged.
+  """
+  steps: [SpellStepInput!]
+
+  """Required once the status is complete."""
+  title: String
+  visibility: SpellVisibility
 }
 
 type User {

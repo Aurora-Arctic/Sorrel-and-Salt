@@ -34,7 +34,8 @@ contracts it, three things from before stay:
   `layer_order` alone and a `NOT NULL` would refuse its inserts; `0083` filled
   `position` from `layer_order` for the rows already there.
 - **`spells.instructions`**, the old name of `spells.note`, filled into it by
-  `0083`. The code writes `note` alone from M10.5 on.
+  `0083`. The saves write `note` alone and leave `instructions` as it was
+  ("Saving a recipe" below).
 
 `tests/db/schema-drift.test.ts` lists all three in `PENDING_DROPS`.
 
@@ -96,6 +97,83 @@ of range by a scratch offset, then each to its new one. The schema test pins
 both — the sweep is refused by the position index, and the two-step move reorders
 the steps and leaves no tombstone — so the constraint the reorder has to work
 within is written down before the reorder is.
+
+### Saving a recipe (M10.10)
+
+`createSpell` and `updateSpell` (`src/modules/grimoire/services/spells.ts`)
+take the recipe as **one ordered list of steps**, and
+`src/modules/grimoire/services/recipe.ts` writes it. A step's place is its
+index in the list, written to `position` and `layer_order` alike. The list is
+the whole recipe:
+
+- **A step with an `id` is a saved step, kept.** The id must name one of this
+  spell's live steps, or the save is refused with a `VALIDATION` error at
+  `steps[i].id`, so a save cannot reach another spell's step or bring a
+  removed one back.
+- **A step with no `id` is new**, and is inserted.
+- **A saved step left out of the list is removed**, as a soft delete. So one
+  save can add, remove and reorder steps together.
+- **`updateSpell` with no `steps` at all leaves the recipe as it is**, while an
+  empty list removes every step. The rest of the input reads the same way: a
+  field left out keeps its value, and null clears it.
+
+The checks, before anything is written:
+
+- **The Zod schema** (`src/modules/grimoire/validation/spell.ts`) refuses a
+  step that names both an ingredient and a custom name, or neither and no
+  instruction, and a recipe that names one form, one custom name or one step id
+  twice. Each of those would otherwise reach a unique index as a bare database
+  error.
+- **A link is checked only when it is new.** A new step, or a kept step whose
+  ingredient or form changed, must name a live form of a live ingredient in the
+  compendium or this coven, and the form must belong to the ingredient named
+  beside it. Anything else is `VALIDATION` at `steps[i].ingredientId`, not
+  `NOT_FOUND`, because it is a field of the form the member can correct. A
+  kept step whose link did not change is not checked again, so a step laying
+  an ingredient deleted since survives the save ("What a spell holds" in
+  [spell-visibility.md](spell-visibility.md)).
+- **A step's unit must fit the coven's jar of its form (M13.2, story 77).** A
+  jar is a stock row: what the coven holds of one form, counted in one unit.
+  When the coven holds a live jar of the form a step lays, the step's unit must
+  be one `unitConvert` can turn into the jar's unit (any weight against a
+  weight jar, any volume against a volume jar) or, for a count unit (`piece`,
+  `drop`, `pinch`), exactly the jar's unit. For example, a `tsp` step against a
+  jar in `ml` saves, while a `g` step against it, or a `pinch` step against a
+  jar in `piece`, is refused with a `VALIDATION` error at `steps[i].unit`.
+  Without this, making the spell could not take the step out of stock.
+  - Not checked: a custom step, a form the coven holds no live jar of, a step
+    or a jar with no unit, and a kept step whose form and unit did not change.
+  - The jars are read in one query for every linked form in the recipe,
+    through `jarsOfForms` in `@/modules/ingredients`, under the caller's
+    `Membership`, so only the caller's coven's jars are read. Every role that
+    writes a spell may also read stock.
+  - A jar whose unit changes after the spell is saved does not block a later
+    save of that step. Warning about that drift is M13.5's job, when a
+    working takes the spell out of stock.
+
+The write, inside one `withAudit` transaction:
+
+1. The removed steps are soft-deleted first, which frees their places and
+   their ingredients for the steps that follow.
+2. **Every kept step that moves, or changes what it lays, is first moved
+   aside**: to a negative place, and, if it changes what it lays, to no
+   ingredient and a custom name made from its own id. Each unique index is
+   checked row by row, so without this a swap of two steps' places or
+   ingredients would collide halfway through (the reorder constraint in
+   "Position is the identity" above).
+3. Each kept step is then written with its final columns. **A step the save
+   leaves exactly as it was is not written**, so its `updated_by` and
+   `updated_at` go on saying who last changed it.
+4. The new steps are inserted.
+
+`updateSpell` writes the spell row through `updateRevisioned` with the
+`expectedRevision` the caller sends ("Revision (M13.15)" above). Null writes
+whatever the revision is. A revision that is no longer current throws
+`StaleWrite`, answered on the wire as `STALE_WRITE` with the current revision,
+and nothing is written. Over GraphQL the field must be sent, even as null: a
+save that leaves it out is refused as `VALIDATION`, so a client that forgets
+it cannot overwrite another member's save. A visibility in the input follows
+the one-way rule of [spell-visibility.md](spell-visibility.md).
 
 ### Custom ingredients (MB.40)
 
@@ -171,8 +249,8 @@ whole number that starts at 1 and goes up by exactly one on every UPDATE of the
 row. Autosave (M13.14, claude-docs/design-decisions/m13.14-autosave.md) sends
 the revision it last read with each save, so a save made against a row that
 someone else has changed since can be refused rather than overwrite their
-work. M13.15 adds the column only; the check that refuses a stale save is a
-later task's.
+work. M13.15 added the column only; M10.10's `updateSpell` is the first save
+that checks it ("Saving a recipe" below).
 
 - **The database moves it, not the service.** A BEFORE UPDATE trigger,
   `bump_revision`, sets `NEW.revision := OLD.revision + 1` on every row
@@ -286,8 +364,8 @@ joined to their `spell_categories` pairs and each pair's live category,
   no v1 feature lists spells by ingredient, so the asymmetry is §5's rather than
   an oversight.
 
-Both tables are inert until Wave 13. Nothing queries them until M10.5's service
-and M10.10's mutations land — the table-task-then-behaviour-task rule, the
+Both tables were inert until Wave 13. Nothing queried them until M10.5's service
+and M10.10's mutations landed — the table-task-then-behaviour-task rule, the
 reason the DDL could be constrained at Wave 3 while the tables were empty, and
 the reason MB.40 could reshape `spell_ingredients` in Wave 4, and MB.110 in
 Wave 8, as a contract migration against zero rows rather than as a retrofit

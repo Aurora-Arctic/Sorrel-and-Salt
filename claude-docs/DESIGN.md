@@ -487,7 +487,7 @@ A stock row is of one form: `variantId` is `NOT NULL`, since a jar of Rosemary h
 
 `lowStockThreshold` is written onto the row at creation with a dimension-appropriate default (3 for count, 10 g for weight, 15 ml for volume, converted into the row's unit), not left null and defaulted at read time.
 
-**`spells`** — `id`, `workspaceId`, `title`, `intent`, `jarSize`, `sealWaxColor`, `moonPhase`, `dayOfWeek`, `note`, `status` (`draft` | `complete`), `visibility` (`private` | `workspace`, default `workspace`), `revision`, + audit. `title` is nullable while the spell is a draft, because it is saved as it is typed before it has a name, and `CHECK (status <> 'complete' OR title IS NOT NULL)` requires it to complete (M13.15); a draft with no title reads as "Untitled Spell". `revision` is a counter, `integer NOT NULL DEFAULT 1`, that the shared trigger function `bump_revision()` raises by one on every update; a write that names the revision it read is refused when the row has moved on, which is how two people editing one spell are told apart (story 81, M13.14 to M13.19; [`m13.14-autosave.md`](design-decisions/m13.14-autosave.md)). `note` is a free-text line on the spell as a whole; the ritual itself is its steps, below (story 80, M13.1). Until M13.9 the table also keeps `instructions`, the old name of `note`, which the code writes as well, because the deploy before M13.1 still reads it ([`m13.1-spell-steps.md`](design-decisions/m13.1-spell-steps.md)).
+**`spells`** — `id`, `workspaceId`, `title`, `intent`, `jarSize`, `sealWaxColor`, `moonPhase`, `dayOfWeek`, `note`, `status` (`draft` | `complete`), `visibility` (`private` | `workspace`, default `workspace`), `revision`, + audit. `title` is nullable while the spell is a draft, because it is saved as it is typed before it has a name, and `CHECK (status <> 'complete' OR title IS NOT NULL)` requires it to complete (M13.15); a draft with no title reads as "Untitled Spell". `revision` is a counter, `integer NOT NULL DEFAULT 1`, that the shared trigger function `bump_revision()` raises by one on every update; a write that names the revision it read is refused when the row has moved on, which is how two people editing one spell are told apart (story 81, M13.14 to M13.19; [`m13.14-autosave.md`](design-decisions/m13.14-autosave.md)). `note` is a free-text line on the spell as a whole; the ritual itself is its steps, below (story 80, M13.1). Until M13.9 the table also keeps `instructions`, the old name of `note`; the code writes `note` alone and leaves `instructions` as it was ([`m13.1-spell-steps.md`](design-decisions/m13.1-spell-steps.md)).
 
 **Visibility.** A `workspace` spell is readable by every member, viewers included. A `private` spell is readable only by its author — against owners too. Owners and members create and edit; viewers create and edit nothing, including private spells.
 
@@ -889,7 +889,8 @@ type Mutation {
   addIngredientToWorkspace(workspaceId: ID!, variantId: ID!, input: StockInput!): InventoryItem! # stock is of one form (MB.215); refused beside variantId when the coven holds that form already (M9.3)
   updateStock(workspaceId: ID!, id: ID!, input: StockInput!): InventoryItem! # a field left out keeps its value, null clears it (M9.3)
   deleteStock(workspaceId: ID!, id: ID!): ID! # a soft delete of the jar; the entry stays (M9.4)
-  createSpell(workspaceId: ID!, input: SpellInput!): Spell!
+  createSpell(workspaceId: ID!, input: SpellInput!): Spell! # every field nullable: a draft needs nothing, a complete spell a title; steps is the recipe in order (M10.10)
+  updateSpell(workspaceId: ID!, id: ID!, input: UpdateSpellInput!): Spell! # a field left out keeps its value, null clears it; steps, when given, is the whole recipe; expectedRevision must be sent, null writes regardless, a stale one is STALE_WRITE; visibility only widens (M10.10)
   setSpellVisibility(id: ID!, visibility: SpellVisibility!): Spell! # private -> workspace only
   createInvitation(workspaceId: ID!, email: String!, role: InvitableRole!): Invitation! # the link is mailed; no response carries it
   acceptInvitation(token: String!): Invitation! # either tier (MB.202); the session's verified email must match the invitation's, and the page lands by tier
@@ -1227,8 +1228,12 @@ enum Nomenclature {
 
 type Spell {
   id: ID!
-  title: String!
+  title: String # null on a draft not yet named (M13.15)
   intent: String
+  jarSize: String
+  sealWaxColor: String
+  moonPhase: String
+  dayOfWeek: String
   visibility: SpellVisibility! # private | workspace
   status: SpellStatus! # draft | complete
   categories: [Category!]! # assigned intent
@@ -1236,6 +1241,7 @@ type Spell {
   categoryGaps: CategoryComparison! # intended-not-present, present-not-intended
   note: String
   steps: [SpellStep!]! # in position order: the recipe (story 80)
+  revision: Int! # raised by one on every save; a save names the one it read (M13.15)
   audit: AuditInfo!
 }
 
@@ -1250,7 +1256,7 @@ type SpellStep {
   body: String # the instruction; null on an ingredient-only step
   ingredient: Ingredient # kept once deleted (M5.3); null on a custom, one-off row (MB.40) and on an instruction-only step
   name: String # the ingredient's display label when linked; the custom name otherwise; null on an instruction-only step
-  variant: IngredientVariant # the form laid, on a linked row (MB.215); null once that form alone is deleted
+  variant: IngredientVariant # the form laid, on a linked row (MB.215); still answered once that form alone is deleted (M10.9)
   form: String # the variant's form when linked; the custom row's free text otherwise
   quantity: Float
   unit: InventoryUnit # M9.2's inventory_unit enum
@@ -1477,7 +1483,7 @@ Modern module system throughout — `@use '../../scss/variables' as *;`, never t
 
 ### Notes — deferred to v2
 
-Stories 35–46 covered the three-tier experience-notes system. They move to v2 with the rest of the notes subsystem (§13). Story numbers are **not** reused: the grimoire stories keep their original 47–56, story 57 (MB.40) took the next free number rather than one of the twelve, and 58–62 (M2.9: email verification, changing an email, granting admin, the ledger, inviting an admin) followed the same way, as their own list because Prettier renumbers a list from its first item, and 63 (MB.80: the public compendium) the same way after them, and 64 (MB.151: references) after it, and 80 (a spell's steps) and 81 (autosave) after them, so a v1 count is 54 stories (1–34, 47–64, 80, 81).
+Stories 35–46 covered the three-tier experience-notes system. They move to v2 with the rest of the notes subsystem (§13). Story numbers are **not** reused: the grimoire stories keep their original 47–56, story 57 (MB.40) took the next free number rather than one of the twelve, and 58–62 (M2.9: email verification, changing an email, granting admin, the ledger, inviting an admin) followed the same way, as their own list because Prettier renumbers a list from its first item, and 63 (MB.80: the public compendium) the same way after them, and 64 (MB.151: references) after it, and 77 (step units), 80 (a spell's steps) and 81 (autosave) after them, so a v1 count is 55 stories (1–34, 47–64, 77, 80, 81).
 
 ### Grimoire
 
@@ -1508,6 +1514,10 @@ Stories 35–46 covered the three-tier experience-notes system. They move to v2 
 ### References (MB.151)
 
 64. As a reader of the compendium, see where an entry's information came from, so that I can judge a claim and read further.
+
+### Step units (M13.2)
+
+77. Give a step that lays a form my coven holds stock of a unit that stock can be measured in (any weight against weight, any volume against volume, the same unit for a count), so that making the spell can take it out of stock.
 
 ### Spell steps (M13.1)
 
