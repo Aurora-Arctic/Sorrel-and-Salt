@@ -1597,7 +1597,7 @@ test(
 );
 ```
 
-A story whose page does not exist yet is a `test.fixme` whose body is the intended flow; the task that builds the page unskips it. `npm run test:stories` runs only this suite and prints a checklist of which stories pass, read from the tags — a live progress report against §10 rather than a coverage percentage. A flaky story reads as failing. The suite runs as the `stories` job of the PR gate, `pr-gate.yml`, on the gate's images and beside its other jobs, and is never a required check.
+A story whose page does not exist yet is a `test.fixme` whose body is the intended flow; the task that builds the page unskips it. `npm run test:stories` runs only this suite and prints a checklist of which stories pass, read from the tags — a live progress report against §10 rather than a coverage percentage. A flaky story (failed, then passed on retry) is listed as flaky and stays unticked: it does not count as passing. The suite runs as the `stories` job of the PR gate, `pr-gate.yml`, on the gate's images and beside its other jobs, and is never a required check.
 
 Story coverage is tracked separately from the 80% line threshold, because they measure different things: one asks whether the code is exercised, the other whether the product does what was specified. Service rules keep their own Vitest tests (direct-id refusals with their preconditions); a story test proves the flow, not the rule.
 

@@ -89,7 +89,8 @@ export function formatChecklist(checklist: Checklist): string {
     lines.push(section);
     for (const { id, title, status, flaky } of entries) {
       const box = status === 'passed' ? 'x' : ' ';
-      const suffix = status === 'failed' && flaky ? ' — FAILING (flaky)' : SUFFIX[status];
+      const suffix =
+        status === 'failed' && flaky ? ' — FLAKY (failed, then passed on retry)' : SUFFIX[status];
       lines.push(`  [${box}] Story ${id}: ${title}${suffix}`);
     }
   }

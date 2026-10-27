@@ -31,7 +31,7 @@ A full run holds at most 97 connections — twelve workers at most, each an app 
 
 ## Acceptance — `npm run test:stories` (M9.1)
 
-`npm run test:stories` runs the browser flows in `tests/e2e/stories/` on `playwright.stories.config.ts`, outside coverage, and prints a checklist of the v1 stories read from DESIGN.md §10, each status folded from the `@story-N` tags of the tests that walk it; a flaky story reads as failing, and the suite runs as the PR gate's `stories` job, never a required check. [`testing/acceptance.md`](testing/acceptance.md)
+`npm run test:stories` runs the browser flows in `tests/e2e/stories/` on `playwright.stories.config.ts`, outside coverage, and prints a checklist of the v1 stories read from DESIGN.md §10, each status folded from the `@story-N` tags of the tests that walk it; a flaky story is listed as flaky and stays unticked, never counted as passing, and the suite runs as the PR gate's `stories` job, never a required check. [`testing/acceptance.md`](testing/acceptance.md)
 
 ## Acting as a fixture user, and asserting a refusal (M1.26)
 

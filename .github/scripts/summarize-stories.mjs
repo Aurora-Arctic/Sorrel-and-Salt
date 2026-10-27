@@ -50,7 +50,8 @@ for (const [section, entries] of sections) {
   lines.push(`**${section}**`, '');
   for (const { id, title, status, flaky } of entries) {
     const box = status === 'passed' ? 'x' : ' ';
-    const suffix = status === 'failed' && flaky ? ' — **failing** (flaky)' : SUFFIX[status];
+    const suffix =
+      status === 'failed' && flaky ? ' — **flaky** (failed, then passed on retry)' : SUFFIX[status];
     lines.push(`- [${box}] Story ${id}: ${title}${suffix}`);
   }
   lines.push('');

@@ -67,7 +67,8 @@ function observe(test: TestCase, result: FullResult): Pick<StoryObservation, 'st
     case 'unexpected':
       return { state: 'failed' };
     // A story that passed only on a retry has a bug to fix. Retries stay on so
-    // the run completes and the flake shows its trace, but it reads as failing.
+    // the run completes and the flake shows its trace, but it counts as failed:
+    // the checklist lists it as flaky and leaves its box unticked.
     case 'flaky':
       return { state: 'failed', flaky: true };
     case 'skipped':
