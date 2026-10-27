@@ -3,7 +3,14 @@ import { findManyInSpell, findManySpells, findOneSpell, withAudit } from '../../
 import { spells } from '../schema/spells';
 import { spellSteps } from '../schema/spell-steps';
 import { stepsInSpells } from './step-views';
+import { checkRecipe, writeRecipe } from './recipe';
+import { assertWidens } from './visibility-rule';
+import {
+  SpellInput as SpellInputSchema,
+  UpdateSpellInput as UpdateSpellInputSchema,
+} from '../validation/spell';
 import { NotFound } from '../../../lib/errors';
+import { parseInput } from '../../../lib/validation';
 import type { Session } from '../../../lib/session';
 import { assertMembership, type Membership } from '@/modules/coven';
 import type {
@@ -29,11 +36,47 @@ async function readableSpell(membership: Membership, spellId: string): Promise<S
   return spell;
 }
 
+/** The spell row's own columns a save names: `note` written beside the old `instructions`. */
+function spellColumns(input: {
+  title?: string | null;
+  intent?: string | null;
+  jarSize?: string | null;
+  sealWaxColor?: string | null;
+  moonPhase?: string | null;
+  dayOfWeek?: string | null;
+  note?: string | null;
+  status?: SpellRow['status'];
+  visibility?: SpellRow['visibility'];
+}) {
+  const { title, intent, jarSize, sealWaxColor, moonPhase, dayOfWeek, note, status, visibility } =
+    input;
+  const columns = {
+    title,
+    intent,
+    jarSize,
+    sealWaxColor,
+    moonPhase,
+    dayOfWeek,
+    note,
+    status,
+    visibility,
+  };
+  // Left out is unchanged: a key whose value is `undefined` is not written.
+  const named = Object.fromEntries(
+    Object.entries(columns).filter(([, value]) => value !== undefined),
+  ) as Partial<typeof columns>;
+  // `instructions` is the old name of `note`, kept until M13.9 drops it; the
+  // deploy before this one still reads it (the schema's comment says more).
+  return note === undefined ? named : { ...named, instructions: note };
+}
+
 /**
- * Makes a spell in the coven. It starts a draft, and shared unless the author
- * says `private`.
+ * Makes a spell in the coven, with its recipe. It starts a draft, and shared
+ * unless the author says `private`. Only a complete spell needs a title.
  *
  * @throws {Forbidden} the caller may not write this coven's grimoire.
+ * @throws {ValidationError} the input breaks a rule, or a step links an
+ * ingredient this coven may not lay.
  */
 export async function createSpell(
   session: Session,
@@ -41,18 +84,27 @@ export async function createSpell(
   input: SpellInput,
 ): Promise<SpellRow> {
   const membership = await assertMembership(session, workspaceId, { spell: ['create'] });
-  const [spell] = await withAudit(session, (write) =>
-    write.insertInWorkspace(membership, spells, input),
-  );
-  return spell;
+  const parsed = parseInput(SpellInputSchema, input);
+  await checkRecipe(membership, parsed.steps, []);
+  return withAudit(session, async (write) => {
+    const [spell] = await write.insertInWorkspace(membership, spells, spellColumns(parsed));
+    await writeRecipe(write, spell.id, parsed.steps, []);
+    return spell;
+  });
 }
 
 /**
- * Edits a spell's own fields. Never its visibility, which only
- * `setSpellVisibility` changes, and never its steps.
+ * Saves a spell: the fields it names, each left out unchanged, and when it
+ * names its steps, the whole recipe in order. A save written against a
+ * revision the spell has moved past is refused, and null overwrites (M13.15).
+ * Visibility only widens, as `setSpellVisibility` holds it.
  *
- * @throws {Forbidden} the caller may not write this coven's grimoire.
+ * @throws {Forbidden} the caller may not write this coven's grimoire, or the
+ * save narrows a shared spell.
  * @throws {NotFound} no such spell here, or none this caller may read.
+ * @throws {ValidationError} the input breaks a rule, names a step this spell
+ * has no live row for, or links an ingredient this coven may not lay.
+ * @throws {StaleWrite} `expectedRevision` is not the spell's revision.
  */
 export async function updateSpell(
   session: Session,
@@ -61,11 +113,26 @@ export async function updateSpell(
   input: SpellUpdate,
 ): Promise<SpellRow> {
   const membership = await assertMembership(session, workspaceId, { spell: ['update'] });
-  await readableSpell(membership, spellId);
-  const [spell] = await withAudit(session, (write) =>
-    write.updateByIdInWorkspace(membership, spells, spellId, input),
-  );
-  return spell;
+  const parsed = parseInput(UpdateSpellInputSchema, input);
+  const current = await readableSpell(membership, spellId);
+  if (parsed.visibility) assertWidens(current.visibility, parsed.visibility);
+
+  const existing = parsed.steps ? await findManyInSpell(membership, spellSteps, spellId) : [];
+  if (parsed.steps) await checkRecipe(membership, parsed.steps, existing);
+
+  return withAudit(session, async (write) => {
+    const [spell] = await write.updateRevisioned(
+      membership,
+      spells,
+      spellId,
+      parsed.expectedRevision,
+      spellColumns(parsed),
+    );
+    // Read a moment ago, so only a delete in between leaves nothing here.
+    if (!spell) throw new NotFound('No such spell in this coven');
+    if (parsed.steps) await writeRecipe(write, spellId, parsed.steps, existing);
+    return spell;
+  });
 }
 
 /**

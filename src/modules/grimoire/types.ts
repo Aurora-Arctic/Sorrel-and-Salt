@@ -2,6 +2,12 @@ import type { IngredientRow } from '@/db/repository';
 import type { IngredientVariantRow } from '@/modules/ingredients';
 import type { spellSteps } from './schema/spell-steps';
 import type { GRIMOIRE_ORDERS, spells } from './schema/spells';
+import type { z } from 'zod';
+import type {
+  SpellInput as SpellInputSchema,
+  UpdateSpellInput as UpdateSpellInputSchema,
+} from './validation/spell';
+import type { SpellStepInput as SpellRecipeStepSchema } from './validation/spell-step';
 
 /** `'draft' | 'complete'`, read off the column rather than restated. */
 export type SpellStatus = (typeof spells.$inferSelect)['status'];
@@ -18,31 +24,28 @@ export type SpellRow = typeof spells.$inferSelect;
 export type SpellStepRow = typeof spellSteps.$inferSelect;
 
 /**
- * What a member writes when making a spell. Only the title is required. The
- * audit columns, the coven and the author come from the session and the proof,
- * never from here.
+ * What a member writes when making a spell: every field optional while it is a
+ * draft, a title required to complete it, and the recipe as one ordered list
+ * of steps. The schema in validation/spell.ts is the statement; this is its
+ * input side. The audit columns, the coven and the author come from the
+ * session and the proof, never from here.
  */
-export type SpellInput = {
-  title: string;
-  intent?: string | null;
-  jarSize?: string | null;
-  sealWaxColor?: string | null;
-  moonPhase?: string | null;
-  dayOfWeek?: string | null;
-  note?: string | null;
-  status?: SpellRow['status'];
-  visibility?: SpellVisibility;
-};
+export type SpellInput = z.input<typeof SpellInputSchema>;
 
 /**
- * What an edit may change. Visibility is not here: `setSpellVisibility` owns
- * it, because the change is one-way.
+ * A save of a spell: the same fields, each left out unchanged, the recipe
+ * whole when given, and the revision the save was written against (null
+ * overwrites).
  */
-export type SpellUpdate = Partial<Omit<SpellInput, 'visibility'>>;
+export type SpellUpdate = z.input<typeof UpdateSpellInputSchema>;
+
+/** One step of a recipe as a save sends it: a saved one names its `id`. */
+export type SpellRecipeStep = z.input<typeof SpellRecipeStepSchema>;
 
 /**
- * A step that is a one-off ingredient or an instruction. Linking a step to an
- * ingredient is M10.10's, with the tier check that goes with it.
+ * A step `addSpellStep` adds: a one-off ingredient or an instruction. A step
+ * that links an ingredient is written by a save (`createSpell`,
+ * `updateSpell`), which checks the link's tier.
  */
 export type SpellStepInput = {
   name?: string | null;

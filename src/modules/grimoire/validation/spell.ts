@@ -19,6 +19,12 @@ const SpellFields = z.object({
   // Optional here, required once the spell is complete (see `titleRule`). A
   // blank title is no title, as `optionalText` reads it.
   title: optionalText(),
+  // What the spell is for, and the jar it is made in: free text, member-written (§5).
+  intent: optionalText(),
+  jarSize: optionalText(),
+  sealWaxColor: optionalText(),
+  moonPhase: optionalText(),
+  dayOfWeek: optionalText(),
   // `public` is deferred with the notes subsystem (§13).
   visibility: z.enum(VISIBILITIES, { error: 'Choose private or workspace' }).optional(),
   // Left out means the column's default (a draft) on create, and unchanged on
@@ -29,6 +35,40 @@ const SpellFields = z.object({
   // The recipe, in order: a step's place is its index.
   steps: z.array(SpellStepInput).default([]),
 });
+
+type StepIdentity = {
+  id?: string | null;
+  variantId?: string | null;
+  ingredientId?: string | null;
+  name?: string | null;
+};
+
+// Mirrors the two unique indexes over a jar's live layers, one form per jar
+// and one custom name per jar, case aside (spell_steps_spell_id_variant_id_unique,
+// spell_steps_spell_id_custom_name_unique), and refuses a step named twice:
+// each would otherwise reach the user as a database error.
+function distinctSteps(spell: { steps?: StepIdentity[] }, context: z.RefinementCtx) {
+  const seen = { id: new Set<string>(), variantId: new Set<string>(), name: new Set<string>() };
+  const flag = (index: number, field: string, message: string) =>
+    context.addIssue({ code: 'custom', path: ['steps', index, field], message });
+  spell.steps?.forEach((step, index) => {
+    if (step.id != null) {
+      if (seen.id.has(step.id)) flag(index, 'id', 'This step is already in the recipe');
+      seen.id.add(step.id);
+    }
+    if (step.variantId != null) {
+      if (seen.variantId.has(step.variantId)) {
+        flag(index, 'variantId', 'This form is already in the jar; give it one step with a note');
+      }
+      seen.variantId.add(step.variantId);
+    }
+    if (step.ingredientId == null && step.name != null) {
+      const name = step.name.toLowerCase();
+      if (seen.name.has(name)) flag(index, 'name', 'This ingredient is already in the jar');
+      seen.name.add(name);
+    }
+  });
+}
 
 // Mirrors M13.15's CHECK, `status <> 'complete' OR title IS NOT NULL`, so the
 // database never refuses what validation passed. A draft saved as the member
@@ -46,17 +86,24 @@ function titleRule(
   }
 }
 
-export const SpellInput = SpellFields.superRefine(titleRule);
+export const SpellInput = SpellFields.superRefine(titleRule).superRefine(distinctSteps);
 
 // An update also says which revision of the spell it was written against, so
 // a save over someone else's change is caught (claude-docs/design-decisions/
 // m13.14-plan.md, "Server contract"). Null overwrites without checking: the
 // "Keep My Version" path. Required, never left out by accident. Revisions
 // count from 1.
+//
+// An update is partial: a field left out is unchanged and a null clears it.
+// The steps are the whole recipe when given, so a step left out of them is
+// removed, and left out altogether they are unchanged.
 export const UpdateSpellInput = SpellFields.extend({
+  steps: z.array(SpellStepInput).optional(),
   expectedRevision: z
     .number({ error: 'Expected revision must be a number or null' })
     .int({ error: 'Expected revision must be a whole number' })
     .positive({ error: 'Expected revision must be at least 1' })
     .nullable(),
-}).superRefine(titleRule);
+})
+  .superRefine(titleRule)
+  .superRefine(distinctSteps);

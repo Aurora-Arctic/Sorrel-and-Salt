@@ -24,6 +24,10 @@ const present = (message: string) => requiredText(message).nullish();
 
 export const SpellStepInput = z
   .object({
+    // The step this one is, on an update: kept where it is given, a new step
+    // where it is absent, and a saved step left out of the list is removed
+    // (claude-docs/db/grimoire.md, "Saving a recipe").
+    id: z.guid({ error: 'This step is not one of the spell’s' }).nullish(),
     // What to do at this step.
     body: present('Write the instruction, or remove it'),
     // A linked ingredient and the form of it laid, or a name written for this

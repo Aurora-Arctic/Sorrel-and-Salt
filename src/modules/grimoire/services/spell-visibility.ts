@@ -1,7 +1,8 @@
 import 'server-only';
 import { findOneSpell, withAudit } from '../../../db/repository';
 import { spells } from '../schema/spells';
-import { Forbidden, NotFound } from '../../../lib/errors';
+import { NotFound } from '../../../lib/errors';
+import { assertWidens } from './visibility-rule';
 import type { Session } from '../../../lib/session';
 import { assertMembership } from '@/modules/coven';
 import type { SpellVisibility } from '../types';
@@ -33,12 +34,7 @@ export async function setSpellVisibility(
   const spell = await findOneSpell(membership, spellId);
   if (!spell) throw new NotFound('No such spell in this coven');
 
-  if (spell.visibility === 'workspace' && visibility === 'private') {
-    throw new Forbidden(
-      'This spell has been shared with the coven and cannot be made private again. ' +
-        'Delete it instead if it should not be there.',
-    );
-  }
+  assertWidens(spell.visibility, visibility);
 
   const [updated] = await withAudit(session, (write) =>
     write.updateByIdInWorkspace(membership, spells, spellId, { visibility }),

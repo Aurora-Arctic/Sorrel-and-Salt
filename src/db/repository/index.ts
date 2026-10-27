@@ -47,6 +47,7 @@ export {
   findCompendiumReview,
   findOneIngredient,
   findReadableVariant,
+  findReadableVariants,
   findSimilarIngredients,
   findSubstitutesIncludingSoftDeleted,
   findWorkspaceIngredientByIdentity,

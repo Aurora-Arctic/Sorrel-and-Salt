@@ -11,6 +11,7 @@ export type {
   SpellDetail,
   SpellInput,
   SpellKey,
+  SpellRecipeStep,
   SpellRow,
   SpellStepInput,
   SpellStepIngredient,
