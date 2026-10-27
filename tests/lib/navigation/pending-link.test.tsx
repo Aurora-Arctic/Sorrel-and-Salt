@@ -115,17 +115,14 @@ describe('PendingLink', () => {
     expect(state).toEqual({ busy: true, target: COVEN_TABLE });
   });
 
-  it.each([
-    ['ctrlKey', { ctrlKey: true }],
-    ['metaKey', { metaKey: true }],
-    ['shiftKey', { shiftKey: true }],
-    ['the middle button', { button: 1 }],
-  ] as const)('leaves a press with %s to the browser', async (_, init) => {
+  // Which presses are left to the browser is opensElsewhere's (tests/lib/opens-elsewhere.test.ts);
+  // one row proves the link asks it.
+  it('leaves a press with Ctrl held to the browser', async () => {
     renderLink();
 
     let unhandled = false;
     await act(async () => {
-      unhandled = fireEvent.click(link(), init);
+      unhandled = fireEvent.click(link(), { ctrlKey: true });
     });
 
     expect(unhandled).toBe(true);

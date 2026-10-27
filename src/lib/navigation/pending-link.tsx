@@ -3,6 +3,7 @@
 import Link from 'next/link';
 import type { ComponentProps, MouseEvent, ReactElement } from 'react';
 import type { NavigationTarget } from './types';
+import { opensElsewhere } from '../opens-elsewhere';
 import { LinkPendingContext } from './link-pending';
 import { usePendingNavigation } from './use-navigation';
 
@@ -28,9 +29,7 @@ export function PendingLink({
   const handleClick = (event: MouseEvent<HTMLAnchorElement>) => {
     onClick?.(event);
     if (event.defaultPrevented || typeof href !== 'string') return;
-    if (event.button !== 0 || event.ctrlKey || event.metaKey || event.shiftKey || event.altKey) {
-      return;
-    }
+    if (opensElsewhere(event)) return;
     if ((target && target !== '_self') || rest.download !== undefined) return;
     event.preventDefault();
     navigate(href, {
