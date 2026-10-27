@@ -230,6 +230,19 @@ a PR for five forms:
   deliberately inside the rule, which means a changed index predicate — Drizzle
   emits `DROP INDEX` + `CREATE INDEX` for one — costs an acknowledgement line
   saying the rebuild is intentional.
+
+  `0084_spells-revision-and-draft-title.sql` (M13.15) is the example of both
+  widening forms passing with no sidecar. It drops `NOT NULL` from
+  `spells.title`, and adds `revision` as `NOT NULL` with `DEFAULT 1`, so
+  the deploy before it, which never names `revision`, still inserts. A
+  widened column is safe for the old deploy's writes, but not always for its
+  reads: after 0084 a row may hold a null title, which the old deploy's
+  GraphQL `Spell.title` declares non-null, so an untitled spell would fail
+  that deploy's grimoire read. That was acceptable here because nothing could
+  write an untitled spell when it landed: no screen and no mutation saved a
+  spell yet. A widening migration under a live writer needs the reader made
+  tolerant first, in an earlier release.
+
 - **`RENAME`** (column or table). An index rename is caught too, though it
   cannot break a rollback; Drizzle never emits one.
 - **`ALTER COLUMN ... TYPE`**, flagged whenever present — telling narrowing

@@ -19,10 +19,10 @@ const newestFirst = (column: typeof spells.updatedAt | typeof spells.createdAt):
 /**
  * The grimoire's orders, each a cursor key that the page's id follows, so
  * spells tied on every part still page once each. Every part must be NOT
- * NULL, because the cursor compares the key as one row value. A title is NOT
- * NULL today, but M13.15 lets a draft go untitled, so `TITLE_ASC` sorts on
- * "is it untitled" first — untitled spells last — then on the title with a
- * null read as empty, rather than on the bare column.
+ * NULL, because the cursor compares the key as one row value. A draft may
+ * have no title (M13.15), so `TITLE_ASC` sorts on "is it untitled" first —
+ * untitled spells last — then on the title with a null read as empty, rather
+ * than on the bare column.
  */
 const GRIMOIRE_ORDER: Record<GrimoireQuery['order'], readonly SortPart[]> = {
   UPDATED_DESC: [newestFirst(spells.updatedAt)],

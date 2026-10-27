@@ -100,7 +100,11 @@ export const SpellRef = builder.objectRef<SpellRow>('Spell').implement({
   description: "A coven's working: what it intends, and the recipe that makes it.",
   fields: (t) => ({
     id: t.exposeID('id'),
-    title: t.exposeString('title'),
+    title: t.exposeString('title', {
+      nullable: true,
+      description:
+        'Null on a draft not yet named: only a complete spell must carry a title (M13.15).',
+    }),
     intent: t.exposeString('intent', { nullable: true }),
     visibility: t.expose('visibility', { type: SpellVisibilityEnum }),
     status: t.expose('status', { type: SpellStatusEnum }),

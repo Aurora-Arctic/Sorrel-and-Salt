@@ -6,8 +6,8 @@ DESIGN.md §5's two grimoire tables; `0014_cooing_bug.sql` is the migration, and
 What a workspace _makes_, as against what exists (the compendium) and what it
 holds (`inventory_items`).
 
-- **`spells`** — §5's columns, with the full six-column audit spread. Stories
-  47 and 50's table.
+- **`spells`** — §5's columns, with the full six-column audit spread, and a
+  `revision` counter ("Revision (M13.15)" below). Stories 47 and 50's table.
 - **`spell_steps`** — §5's columns, `ingredientId` nullable, with the
   full six-column audit spread: soft-deleted (MB.110), keyed on the surrogate `id`,
   with `(spell_id, position)` unique among live rows. Stories 50, 57 and 80's
@@ -164,6 +164,42 @@ once for every partial unique index (MB.226). What Wave 13 inherits — the Zod 
 skip in derived categories, no suppression, no held/not-held, no safety source
 — is written into each task's criteria rather than left to be remembered.
 
+### Revision (M13.15)
+
+`0084_spells-revision-and-draft-title.sql` gives every spell a `revision`: a
+whole number that starts at 1 and goes up by exactly one on every UPDATE of the
+row. Autosave (M13.14, claude-docs/design-decisions/m13.14-autosave.md) sends
+the revision it last read with each save, so a save made against a row that
+someone else has changed since can be refused rather than overwrite their
+work. M13.15 adds the column only; the check that refuses a stale save is a
+later task's.
+
+- **The database moves it, not the service.** A BEFORE UPDATE trigger,
+  `bump_revision`, sets `NEW.revision := OLD.revision + 1` on every row
+  updated. No code path can forget it, and a value an UPDATE sets for
+  `revision` itself is overwritten. One function serves every table: a table
+  that takes the column adds its own trigger line in its own migration, as each
+  audited table does for `set_updated_at`.
+- **It counts writes, not changes.** An UPDATE that leaves every value as it
+  was still moves it. A save that changed nothing has still written after
+  whatever another editor read.
+- **`set_updated_at()` leaves it out of its comparison.** Postgres runs a
+  table's BEFORE triggers in name order, so `bump_revision` runs before
+  `set_updated_at`. Without the exclusion, every UPDATE would look like a
+  change, and MB.106's rule that an UPDATE changing nothing keeps
+  `updated_at` and `updated_by` would stop holding on spells. 0084 redefines
+  `set_updated_at()` with `revision` beside `updated_at` and `updated_by`
+  in the list of columns it ignores.
+- **The helper is `revisionColumn()`**, beside `auditColumns` in
+  `src/modules/identity/schema/users.ts`, so a later table takes the same
+  column definition. It is named `revision` rather than `version`, because
+  v2's edit history keeps "version" for a saved snapshot a person can open, and
+  a counter that moves on every autosave is not that
+  (claude-docs/design-decisions/m13.14-autosave.md, "`revision`, not
+  `version`").
+- **Guards:** `tests/db/revision-trigger.test.ts` fails a table that carries
+  the column without the trigger, and proves the counter's behaviour.
+
 ### The rest of the calls, and the ones not made
 
 - **`status` is a `spell_status` enum defaulting to `draft`**, on the column
@@ -173,9 +209,14 @@ skip in derived categories, no suppression, no held/not-held, no safety source
   viewer-approval workflow adds `proposed` and `approved` to this same column in
   v2 — `ALTER TYPE ... ADD VALUE` is expand-only, where widening a CHECK
   re-validates every existing row.
-- **`title` is the only required field on a spell.** §8's acceptance example
-  creates one with a workspace and a title and nothing else, and a draft is the
-  state a spell is saved in _before_ it is finished. `intent`, `jarSize`,
+- **A spell needs a title only once it is complete.** M10.2 shipped `title`
+  as `NOT NULL`, the only required field. M13.15 dropped the `NOT NULL`,
+  because autosave writes the row on the first keystroke, before the member may
+  have named the spell. The CHECK `spells_complete_has_title`,
+  `status <> 'complete' OR title IS NOT NULL`, keeps the rule that a finished
+  spell has a name, in the table, so no code path can complete an untitled
+  spell. `src/modules/grimoire/validation/spell.ts` states the same rule for
+  the form. `intent`, `jarSize`,
   `sealWaxColor`, `moonPhase`, `dayOfWeek` and `note` are all nullable
   free text — §5's rule that a vocabulary a member writes is text, and there is
   no curated list of moon phases or wax colours anywhere in the design to make a
@@ -192,9 +233,9 @@ skip in derived categories, no suppression, no held/not-held, no safety source
 - **No `unitDimension` and no dimension CHECK on `spell_steps`.** §5 names
   neither on this table, the dimension is derivable through `src/modules/ingredients/schema/units.ts`,
   and the query that groups stock by dimension has no counterpart here.
-- **No index and no CHECK on `spells`**, beyond the primary key's. §5 names
-  none, the grimoire's own lookups are M10.9's, and a spell title is not unique
-  — two workings may share a name in one coven.
+- **No index on `spells`**, beyond the primary key's, and one CHECK, the
+  title rule above. §5 names no index, the grimoire's own lookups are M10.9's,
+  and a spell title is not unique — two workings may share a name in one coven.
 - **No reverse index on `spell_steps`.** §5 asks for one on
   `ingredient_categories` ("what is in this category") and asks for none here;
   no v1 feature lists spells by ingredient, so the asymmetry is §5's rather than
@@ -213,6 +254,7 @@ ingredients sit at depth 1, without `NOT NULL` an unordered row inserts, with
 the key repointed at `inventory_items` a stock-only id is accepted, without the
 composite key the same ingredient joins a spell twice, without the default a new
 spell's status comes back null, and without `NOT NULL` on `title` a nameless
-spell is recorded. MB.110's were checked the same way: with
+spell is recorded. M13.15 has since let a draft go nameless on purpose; its
+CHECK is proved by `tests/modules/grimoire/schema/spells-schema.test.ts`. MB.110's were checked the same way: with
 `deleted_at IS NULL` stripped from the layer index or the ingredient index, a
 removed layer's depth or ingredient stays reserved.

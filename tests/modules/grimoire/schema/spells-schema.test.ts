@@ -8,6 +8,7 @@ import { FIXTURE_USERS, WORKSPACE_W_ID, WORKSPACE_X_ID } from '@/db/seed/standar
 
 // §5's columns, `visibility` included as of M10.3 — claude-docs/db/grimoire.md,
 // "The grimoire". `note` replaces `instructions`, both held until M13.9.
+// `revision` is the counter a save names to detect a clash (M13.15).
 const OWN_COLUMNS = [
   'id',
   'workspace_id',
@@ -21,6 +22,7 @@ const OWN_COLUMNS = [
   'instructions',
   'status',
   'visibility',
+  'revision',
 ];
 
 describe('spells schema', () => {
@@ -159,5 +161,52 @@ describe('spells table', () => {
     // 22P02 is invalid_text_representation — the enum refusing the cast.
     expect(status.code).toBe('22P02');
     expect(visibility.code).toBe('22P02');
+  });
+});
+
+// M13.15: autosave writes a draft on the first keystroke, before the member
+// may have named it, so a title is required only to complete a spell
+// (claude-docs/db/grimoire.md, "The grimoire").
+describe('a spell with no title', () => {
+  const CHECK_COMPLETE_HAS_TITLE = 'spells_complete_has_title';
+
+  async function untitled(status: 'draft' | 'complete'): Promise<string> {
+    const [inserted] = await sql`
+      insert into spells (workspace_id, title, status, created_by, updated_by)
+      values (${COVEN}, null, ${status}::spell_status, ${AUTHOR}, ${AUTHOR})
+      returning id
+    `;
+    return inserted.id as string;
+  }
+
+  it('inserts as a draft', async () => {
+    const id = await untitled('draft');
+
+    const [row] = await sql`select title, status::text from spells where id = ${id}`;
+
+    expect(row).toEqual({ title: null, status: 'draft' });
+  });
+
+  it('is refused as complete', async () => {
+    // Why the refusal is the title's: the same row with a title completes.
+    await cast('complete');
+
+    const error = await failureOf(untitled('complete'));
+
+    // 23514 is check_violation.
+    expect(error.code).toBe('23514');
+    expect(error.constraint_name).toBe(CHECK_COMPLETE_HAS_TITLE);
+  });
+
+  it('cannot be completed while it has none, and can once named', async () => {
+    const id = await untitled('draft');
+
+    const error = await failureOf(sql`update spells set status = 'complete' where id = ${id}`);
+
+    expect(error.code).toBe('23514');
+    expect(error.constraint_name).toBe(CHECK_COMPLETE_HAS_TITLE);
+    await sql`update spells set title = 'Hearth Guard', status = 'complete' where id = ${id}`;
+    const [row] = await sql`select status::text from spells where id = ${id}`;
+    expect(row.status).toBe('complete');
   });
 });
