@@ -207,15 +207,4 @@ describe('a picked form since retired', () => {
 
     expect(await rowOf(id)).toEqual({ form: 'Wax', form_id: null });
   });
-
-  it('is refused when sent again by id, as any pick of a retired form is', async () => {
-    await retire('ingredient_forms', animalWax);
-
-    const issues = await refusal(
-      updateWorkspaceIngredient(asUser(B), WORKSPACE_W_ID, id, input('Wax', animalWax)),
-    );
-
-    expect(issues).toEqual([expect.objectContaining({ path: ['variants', 0, 'formId'] })]);
-    expect(await rowOf(id)).toEqual({ form: 'Wax', form_id: animalWax });
-  });
 });

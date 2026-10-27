@@ -49,48 +49,24 @@ const bodies = async () => [
 ];
 
 describe('M12.2: what the public files list', () => {
-  it('lists the live compendium entry, and leaves out a removed one and a coven ingredient', async () => {
-    const { rows } = await seedWorld();
+  // What the read lists, its description included, is compendium-slugs.test.ts's,
+  // and how a link is written is tests/app/ai-discovery.test.ts's: this holds
+  // that the files list only what the public read answers.
+  it('lists the live compendium entry and names no removed entry, coven, coven ingredient, admin or API path', async () => {
+    const { rows, coven } = await seedWorld();
     const bySlug = (name: string) => rows.find((row) => row.name === name)!;
     // Both unwanted rows exist, one soft-deleted and one in a workspace.
     expect(bySlug('Fixture Removed').deleted_at).not.toBeNull();
     expect(bySlug('Fixture Coven Own').workspace_id).toBe(WORKSPACE_W_ID);
-
-    const text = await (await llms()).text();
-    const links = [...text.matchAll(/\]\((\S+?)\)/g)].map((match) => match[1]);
-
-    expect(links).toContain(`${SITE_ORIGIN}/compendium`);
-    expect(links).toContain(`${SITE_ORIGIN}/compendium/ingredients/${bySlug('Fixture Kept').slug}`);
-    expect(links.filter((url) => url.includes('/ingredients/'))).toHaveLength(1);
-    expect(text).not.toContain(bySlug('Fixture Removed').slug);
-    expect(text).not.toContain(bySlug('Fixture Coven Own').slug);
-    expect(text).not.toContain('Fixture Coven Own');
-  });
-
-  it("notes a link with the entry's stored description, and only that entry's", async () => {
-    await insertIngredient(
-      sql,
-      makeIngredient({
-        name: 'Fixture Described',
-        nomenclature: 'none',
-        description: 'A fixture herb.',
-      }),
-      A.id,
-    );
-    await seed('Fixture Bare');
-
-    const lines = (await (await llms()).text()).split('\n');
-    const line = (name: string) => lines.find((l) => l.startsWith(`- [${name}]`))!;
-
-    expect(line('Fixture Described')).toMatch(/\): A fixture herb\.$/);
-    expect(line('Fixture Bare')).toMatch(/\)$/);
-  });
-
-  it('names no coven, admin or API path, nor the coven, in any file', async () => {
-    const { coven } = await seedWorld();
     expect(coven.name.length).toBeGreaterThan(0);
 
+    expect(await (await llms()).text()).toContain(
+      `${SITE_ORIGIN}/compendium/ingredients/${bySlug('Fixture Kept').slug})`,
+    );
     for (const body of await bodies()) {
+      expect(body).not.toContain(bySlug('Fixture Removed').slug);
+      expect(body).not.toContain(bySlug('Fixture Coven Own').slug);
+      expect(body).not.toContain('Fixture Coven Own');
       expect(body).not.toContain('/coven');
       expect(body).not.toContain('/admin');
       expect(body).not.toContain(coven.name);
@@ -104,13 +80,5 @@ describe('M12.2: what the public files list', () => {
         );
       }
     }
-  });
-
-  it('answers a repeat read from the cache, as the sitemap does', async () => {
-    await seed('Fixture Kept');
-    await llms();
-    await seed('Fixture Later');
-
-    expect(await (await llms()).text()).not.toContain('Fixture Later');
   });
 });

@@ -65,30 +65,32 @@ describe('applyCupboardEntry', () => {
     expect(applyCupboardEntry(COMPENDIUM, undefined)).toEqual(COMPENDIUM);
   });
 
-  it.each(COLUMNS)("reads the compendium's $column while $override is null", ({ column }) => {
-    expect(applyCupboardEntry(COMPENDIUM, cupboardEntry())[column]).toEqual(COMPENDIUM[column]);
+  // One case per rule, each over every column at once: the merge is one line
+  // per column, so a single row of each would leave the other lines unread.
+  it("reads the compendium's columns while every override is null", () => {
+    expect(applyCupboardEntry(COMPENDIUM, cupboardEntry())).toEqual(COMPENDIUM);
   });
 
-  it.each(COLUMNS)(
-    "reads the coven's $override over $column once set",
-    ({ override, column, set }) => {
-      const merged = applyCupboardEntry(COMPENDIUM, cupboardEntry({ [override]: set }));
+  it("reads the coven's overrides over the compendium's columns once set", () => {
+    const overrides = Object.fromEntries(COLUMNS.map(({ override, set }) => [override, set]));
+    const merged = applyCupboardEntry(COMPENDIUM, cupboardEntry(overrides));
 
+    for (const { column, set } of COLUMNS) {
       expect(merged[column]).toEqual(set);
       // Precondition: the compendium said something else.
       expect(COMPENDIUM[column]).not.toEqual(set);
-    },
-  );
+    }
+  });
 
-  it.each(LISTS)(
-    'reads an empty $override as cleared, not as the compendium’s',
-    ({ override, column }) => {
-      const merged = applyCupboardEntry(COMPENDIUM, cupboardEntry({ [override]: [] }));
+  it('reads an empty list override as cleared, not as the compendium’s', () => {
+    const overrides = Object.fromEntries(LISTS.map(({ override }) => [override, []]));
+    const merged = applyCupboardEntry(COMPENDIUM, cupboardEntry(overrides));
 
+    for (const { column } of LISTS) {
       expect(merged[column]).toEqual([]);
       expect(COMPENDIUM[column]).not.toEqual([]);
-    },
-  );
+    }
+  });
 
   it('leaves the inherited fields, the tier and the id as the compendium has them', () => {
     const merged = applyCupboardEntry(

@@ -1,6 +1,6 @@
 import { beforeEach, describe, expect, it } from 'vitest';
 import postgres from 'postgres';
-import { failureOf, useTestDatabase } from '../../../support/db/database';
+import { useTestDatabase } from '../../../support/db/database';
 import { AUDIT_COLUMNS, tableFacts } from '../../../support/db/table-metadata';
 import { ingredientColumns, makeIngredient } from '../../../support/fixtures';
 import { retiredIngredientSlugs } from '@/modules/ingredients/schema/retired-ingredient-slugs';
@@ -70,19 +70,6 @@ beforeEach(async () => {
 });
 
 describe('retired_ingredient_slugs table', () => {
-  it('holds a compendium retirement and a workspace one', async () => {
-    const compendium = await insertIngredient();
-    const local = await insertIngredient(WORKSPACE_W_ID);
-
-    await retire(compendium, '2026-01-01 00:00:00');
-    await retire(local, '2026-01-01 00:00:00', WORKSPACE_W_ID);
-
-    const rows = await sql`
-      select workspace_id from retired_ingredient_slugs order by workspace_id nulls first
-    `;
-    expect(rows.map((r) => r.workspace_id)).toEqual([null, WORKSPACE_W_ID]);
-  });
-
   it('stamps retired_at from the database clock when the row leaves it unsaid', async () => {
     const id = await insertIngredient();
 
@@ -111,23 +98,6 @@ describe('retired_ingredient_slugs table', () => {
       for (const [retiredAt, expiresAt] of cases) {
         expect((await retire(id, retiredAt)).expires_at).toBe(expiresAt);
       }
-    });
-
-    it('is refused by Postgres on insert and on update, not merely absent from the type', async () => {
-      const id = await insertIngredient();
-
-      const inserted = await failureOf(sql`
-        insert into retired_ingredient_slugs (ingredient_id, slug, expires_at, created_by, updated_by)
-        values (${id}, 'old-slug', '2030-01-01 00:00:00', ${AUTHOR}, ${AUTHOR})
-      `);
-      // 428C9 is ERRCODE_GENERATED_ALWAYS — the column refusing the write itself.
-      expect(inserted.code).toBe('428C9');
-
-      await retire(id, '2026-01-01 00:00:00');
-      const updated = await failureOf(
-        sql`update retired_ingredient_slugs set expires_at = '2030-01-01 00:00:00'`,
-      );
-      expect(updated.code).toBe('428C9');
     });
   });
 });

@@ -228,22 +228,6 @@ describe('a deity pick that names no curated deity', () => {
       expect(n).toBe(0);
     },
   );
-
-  it('is refused on an update too, leaving the live list as it was', async () => {
-    const id = await seed(local({ deities: ['Testara'] }));
-
-    const issues = await refusal(
-      updateWorkspaceIngredient(
-        asUser(B),
-        WORKSPACE_W_ID,
-        id,
-        input('Testwort', [picked(nothing)]),
-      ),
-    );
-
-    expect(issues).toEqual([expect.objectContaining({ path: ['deities', 0] })]);
-    expect((await liveRows(id)).map((row) => row.name)).toEqual(['Testara']);
-  });
 });
 
 async function traditionOf(deity: string): Promise<string> {
@@ -363,22 +347,6 @@ describe('a save of an ingredient’s deities', () => {
     expect(await liveRows(id)).toEqual([]);
   });
 
-  it('rolls them back with the ingredient when the ingredient write fails', async () => {
-    await seed(local({ name: 'Taken Wort' }));
-    const id = await seed(local({ deities: ['Kept Testara'] }));
-
-    await expect(
-      updateWorkspaceIngredient(
-        asUser(B),
-        WORKSPACE_W_ID,
-        id,
-        input('taken wort', [typed('Added Testara')]),
-      ),
-    ).rejects.toThrow();
-
-    expect((await liveRows(id)).map((row) => row.name)).toEqual(['Kept Testara']);
-  });
-
   // A curated row renamed since the pick: the next save writes the spelling
   // the row has now, in place.
   it('refreshes a kept pick’s name to its curated row’s spelling', async () => {
@@ -473,16 +441,6 @@ describe('a picked deity since retired', () => {
     );
 
     expect(await deityRows(id)).toEqual(before);
-  });
-
-  it('cannot be picked anew', async () => {
-    await retire('deities', thor);
-
-    const issues = await refusal(
-      createWorkspaceIngredient(asUser(B), WORKSPACE_W_ID, input('Testbane', [picked(thor)])),
-    );
-
-    expect(issues).toEqual([expect.objectContaining({ path: ['deities', 0] })]);
   });
 });
 

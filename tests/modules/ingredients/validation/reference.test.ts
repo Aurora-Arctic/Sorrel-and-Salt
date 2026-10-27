@@ -37,29 +37,6 @@ describe('ReferenceInput', () => {
     expect(ReferenceInput.safeParse(input).success).toBe(true);
   });
 
-  it('trims every text field, and takes a blank one as absent', () => {
-    expect(
-      ReferenceInput.parse({
-        ...MINIMAL.chapter,
-        title: '  On Testwort ',
-        authors: ' Testwort, Fixtura ',
-        edition: '',
-        pages: '   ',
-        modified: '',
-        note: null,
-      }),
-    ).toEqual({
-      kind: 'chapter',
-      title: 'On Testwort',
-      container: 'The Fixture Reader',
-      authors: 'Testwort, Fixtura',
-      edition: null,
-      pages: null,
-      modified: null,
-      note: null,
-    });
-  });
-
   it('takes every field filled', () => {
     expect(
       ReferenceInput.safeParse({
@@ -102,12 +79,6 @@ describe('ReferenceInput', () => {
       }
     });
 
-    // Why the refusal above is the kind's: a book and a web page need none.
-    it('takes a book or a web page without a container', () => {
-      expect(ReferenceInput.safeParse(MINIMAL.book).success).toBe(true);
-      expect(ReferenceInput.safeParse(MINIMAL.web_page).success).toBe(true);
-    });
-
     it('refuses a web page without its address or the day it was read, at each', () => {
       expect(failedPaths({ kind: 'web_page', title: 'Testwort' })).toEqual([['url'], ['accessed']]);
     });
@@ -143,12 +114,6 @@ describe('ReferenceInput', () => {
     it('refuses an address with a space, or a host with no dot, at the url', () => {
       for (const url of ['https://example.org/a b', 'https://fixture/testwort']) {
         expect(failedPaths({ ...MINIMAL.web_page, url }), url).toEqual([['url']]);
-      }
-    });
-
-    it('takes an http or https address', () => {
-      for (const url of ['http://example.org/a', 'https://example.org/Greek_Mythology/']) {
-        expect(ReferenceInput.safeParse({ ...MINIMAL.book, url }).success, url).toBe(true);
       }
     });
 

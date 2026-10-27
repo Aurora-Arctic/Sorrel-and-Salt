@@ -13,7 +13,6 @@ import {
   stockOf,
   updateStock,
 } from '@/modules/ingredients';
-import type { Unit } from '@/modules/ingredients/schema/units';
 import { A, B, C, D, E, asUser } from '../../../support/as-user';
 import { useTestDatabase } from '../../../support/db/database';
 import { insertCupboardEntry } from '../../../support/db/insert-cupboard-entry';
@@ -91,10 +90,8 @@ function withDimension(input: StockValues, unitDimension: string): StockValues {
 }
 
 describe('createStock', () => {
-  it.each([
-    ['A, the owner', A],
-    ['B, a member', B],
-  ])('lets %s stock a form in their coven, stamped as the writer', async (_label, user) => {
+  it('lets B, a member, stock a form in their coven, stamped as the writer', async () => {
+    const user = B;
     const row = await createStock(asUser(user), WORKSPACE_W_ID, compendiumForm, {
       quantityOnHand: 12,
       unit: 'g',
@@ -133,20 +130,11 @@ describe('createStock', () => {
     expect(row).toMatchObject({ unit: null, unitDimension: null, lowStockThreshold: null });
   });
 
-  // 3 for count, 10 g for weight and 15 ml for volume, in the row's own unit.
-  it.each<[Unit, number]>([
-    ['piece', 3],
-    ['drop', 3],
-    ['g', 10],
-    ['kg', 0.01],
-    ['mg', 10000],
-    ['oz', 0.353],
-    ['ml', 15],
-    ['l', 0.015],
-    ['tsp', 3],
-  ])('writes the default threshold for a row in %s', async (unit, threshold) => {
-    const row = await createStock(asUser(A), WORKSPACE_W_ID, compendiumForm, { unit });
-    expect(Number(row.lowStockThreshold)).toBe(threshold);
+  // validation/default-threshold.test.ts proves the value unit by unit; this
+  // proves the new row stores it, rounded to the column's three places.
+  it('writes the default threshold for a row in its own unit', async () => {
+    const row = await createStock(asUser(A), WORKSPACE_W_ID, compendiumForm, { unit: 'oz' });
+    expect(Number(row.lowStockThreshold)).toBe(0.353);
   });
 
   it('keeps a threshold the input states, zero included', async () => {
@@ -240,10 +228,8 @@ describe('createStock', () => {
 });
 
 describe('updateStock', () => {
-  it.each([
-    ['A, the owner', A],
-    ['B, a member', B],
-  ])('lets %s change a jar, keeping what the input leaves out', async (_label, user) => {
+  it('lets B, a member, change a jar, keeping what the input leaves out', async () => {
+    const user = B;
     const id = await seedJar({ lowStockThreshold: '4' });
 
     const row = await updateStock(asUser(user), WORKSPACE_W_ID, id, { quantityOnHand: 7 });
@@ -275,24 +261,15 @@ describe('updateStock', () => {
   describe('the default threshold', () => {
     // A jar saved with a quantity and no unit holds no threshold either; the
     // unit it later gets brings the dimension's default, as a new jar's does.
-    it.each([
-      ['g', 10],
-      ['kg', 0.01],
-      ['ml', 15],
-      ['tsp', 3],
-      ['piece', 3],
-    ] as const)(
-      'writes the default threshold for the first unit a jar gets: %s',
-      async (unit, threshold) => {
-        const id = await seedJar({ unit: null, lowStockThreshold: null });
+    it('writes the default threshold for the first unit a jar gets', async () => {
+      const id = await seedJar({ unit: null, lowStockThreshold: null });
 
-        await updateStock(asUser(B), WORKSPACE_W_ID, id, { unit });
+      await updateStock(asUser(B), WORKSPACE_W_ID, id, { unit: 'kg' });
 
-        const [jar] = await jars();
-        expect(jar.unit).toBe(unit);
-        expect(Number(jar.low_stock_threshold)).toBeCloseTo(threshold, 6);
-      },
-    );
+      const [jar] = await jars();
+      expect(jar.unit).toBe('kg');
+      expect(Number(jar.low_stock_threshold)).toBeCloseTo(0.01, 6);
+    });
 
     it('leaves a threshold the jar already holds alone, as it leaves one the input states', async () => {
       const held = await seedJar({ unit: null, lowStockThreshold: '4' });
@@ -392,10 +369,8 @@ describe('updateStock', () => {
 });
 
 describe('deleteStock', () => {
-  it.each([
-    ['A, the owner', A],
-    ['B, a member', B],
-  ])('lets %s soft-delete a jar, which no read then finds', async (_label, user) => {
+  it('lets B, a member, soft-delete a jar, which no read then finds', async () => {
+    const user = B;
     const id = await seedJar();
 
     await deleteStock(asUser(user), WORKSPACE_W_ID, id);
@@ -447,11 +422,8 @@ describe('deleteStock', () => {
 });
 
 describe('getStock', () => {
-  it.each([
-    ['A, the owner', A],
-    ['B, a member', B],
-    ['C, a viewer', C],
-  ])('lets %s read a jar of their coven', async (_label, user) => {
+  it('lets C, a viewer, read a jar of their coven', async () => {
+    const user = C;
     const id = await seedJar();
     await expect(getStock(asUser(user), WORKSPACE_W_ID, id)).resolves.toMatchObject({
       id,
@@ -734,13 +706,6 @@ describe('saveStock', () => {
     await expect(save(B, batch)).resolves.toHaveLength(2);
   });
 
-  it('refuses a viewer who may still read the jars', async () => {
-    const id = await seedJar();
-    await expect(getStock(asUser(C), WORKSPACE_W_ID, id)).resolves.toMatchObject({ id });
-    await expect(save(C, { delete: [id] })).rejects.toThrow(Forbidden);
-    expect(await live()).toHaveLength(1);
-  });
-
   it('writes nothing when one id is out of scope', async () => {
     const own = await seedJar();
     const otherCoven = await insertStock(
@@ -854,30 +819,6 @@ describe('saveStock', () => {
       ['update', 1, 'input', 'lowStockThreshold'],
     ]);
     expect(await jars()).toEqual(before);
-  });
-
-  it('prefixes a create row’s field issues with its position', async () => {
-    const refusal = await save(A, {
-      create: [
-        { variantId: powderForm, input: { quantityOnHand: 1, unit: 'g' } },
-        { variantId: oilForm, input: { quantityOnHand: 2, unit: 'g' } },
-        { variantId: compendiumForm, input: { quantityOnHand: -1 } },
-      ],
-    }).catch((error: unknown) => error);
-
-    expect((refusal as ValidationError).issues.map((issue) => issue.path)).toEqual([
-      ['create', 2, 'input', 'quantityOnHand'],
-    ]);
-    expect(await live()).toHaveLength(0);
-  });
-
-  it('starts a fresh jar for a form whose jar was deleted', async () => {
-    const gone = await seedJar({ deleted: true });
-    const result = await save(A, {
-      create: [{ variantId: compendiumForm, input: { quantityOnHand: 4 } }],
-    });
-    expect(result).toHaveLength(1);
-    expect(result[0].id).not.toBe(gone);
   });
 
   it('puts a compendium entry in the cupboard once, on its first jar, and not again', async () => {

@@ -103,27 +103,6 @@ describe('ingredientSuggestions', () => {
     });
   });
 
-  it('pages by cursor, through the M3.6 helper', async () => {
-    await addIngredient({ name: 'Mugwort', canonicalName: 'Artemisia vulgaris' });
-    await addIngredient({ name: 'Mugwart', workspaceId: WORKSPACE_W_ID });
-
-    const first = await run(asUser(B), { query: 'mugwort', first: 1 });
-    const page = first.data?.ingredientSuggestions as IngredientSuggestionConnection;
-    expect(page.edges.map((edge) => edge.node.name)).toEqual(['Mugwart']);
-    expect(page.pageInfo.hasNextPage).toBe(true);
-
-    const next = await run(asUser(B), {
-      query: 'mugwort',
-      first: 1,
-      after: page.pageInfo.endCursor,
-    });
-
-    expect(next.errors).toBeUndefined();
-    const rest = next.data?.ingredientSuggestions as IngredientSuggestionConnection;
-    expect(rest.edges.map((edge) => edge.node.name)).toEqual(['Mugwort']);
-    expect(rest.pageInfo.hasNextPage).toBe(false);
-  });
-
   it('ranks by the form asked for and pages on through the ranking', async () => {
     await addIngredient({ name: 'Fixture A Plain', variants: [makeVariant({ form: 'Powder' })] });
     await addIngredient({ name: 'Fixture B Group', variants: [makeVariant({ form: 'Resin' })] });

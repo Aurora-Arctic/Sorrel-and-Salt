@@ -1177,7 +1177,8 @@ writes' half: the input left short refused before any resolver runs, the
 loaders cleared between two updates, `endRedirect` reaching the update's
 service, one `NOT_FOUND` for the update and the delete, and one `VALIDATION`
 for the create. A non-admin at the `admin` scope is the sweep's; who the
-service refuses, and every collision, are `services/compendium-entries.test.ts`'s.
+service refuses is `services/compendium-entries.test.ts`'s, and every collision
+is `services/compendium-entry-slugs.test.ts`'s.
 
 ### Promoting a common name: `promoteFolkName`
 
