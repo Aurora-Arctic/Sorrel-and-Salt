@@ -76,8 +76,7 @@ by tier and identity, so the extra entries make none of them ambiguous.
   claw). It stays an own stub beside them, with no cupboard row, for a member
   to declare it to be one of the five. Until M12.28 retires the hiding rule it
   also still replaces all five in the lists, and its page shows three links
-  then "See All 5" (`tests/db/seed/demo.test.ts` pins that none of the five is
-  in the cupboard).
+  then "See All 5" (none of the five is in the cupboard).
 - **One custom, one-off layer** (MB.40, story 57): "Dust from the front step",
   `form` `dust`, no `ingredient_id`, sitting between two linked layers in the
   same jar. It is never an `ingredients` row anywhere, and `dust` is nowhere in
@@ -129,7 +128,7 @@ volume and count are all there. A jar that sets no threshold gets its unit's
 default, from `defaultThreshold` in
 `src/modules/ingredients/validation/default-threshold.ts`, the rule `createStock`
 reads too, so the seed carries no second table of values. Every compendium entry
-stocked is in W's cupboard (`tests/db/seed/demo.test.ts` holds it). The
+stocked is in W's cupboard. The
 `minimal` scenario writes no stock.
 
 Idempotency is the pair the live-unique index guards, W and the variant,

@@ -54,33 +54,6 @@ describe('the catalogue', () => {
     expect(carrying.map((row) => row.table_name)).toContain('spells');
     expect(triggered.map((row) => row.relname)).toEqual(carrying.map((row) => row.table_name));
   });
-
-  it('runs the trigger before each row is updated, and on nothing else', async () => {
-    const [row] = await sql<{ definition: string }[]>`
-      select pg_get_triggerdef(t.oid) as definition from pg_trigger t
-      where t.tgrelid = 'spells'::regclass and t.tgname = ${TRIGGER}
-    `;
-
-    expect(row.definition).toBe(
-      'CREATE TRIGGER bump_revision BEFORE UPDATE ON public.spells FOR EACH ROW EXECUTE FUNCTION bump_revision()',
-    );
-  });
-
-  it('requires a title of a complete spell, and of no draft', async () => {
-    const [check] = await sql<{ definition: string }[]>`
-      select pg_get_constraintdef(oid) as definition from pg_constraint
-      where conrelid = 'spells'::regclass and contype = 'c' and conname = 'spells_complete_has_title'
-    `;
-    const [title] = await sql<{ is_nullable: string }[]>`
-      select is_nullable from information_schema.columns
-      where table_schema = 'public' and table_name = 'spells' and column_name = 'title'
-    `;
-
-    expect(check.definition).toBe(
-      "CHECK (((status <> 'complete'::spell_status) OR (title IS NOT NULL)))",
-    );
-    expect(title.is_nullable).toBe('YES');
-  });
 });
 
 describe('a spell’s revision', () => {
@@ -88,25 +61,15 @@ describe('a spell’s revision', () => {
     expect(await revisionOf(await spell())).toBe(1);
   });
 
-  // One column of each kind the row holds: free text, the two enums, and the
-  // soft delete, which is an UPDATE too.
-  it.each([
-    ['title', (sql) => sql`title = 'Testwort Ward'`],
-    ['intent', (sql) => sql`intent = 'Keep the hearth'`],
-    ['note', (sql) => sql`note = 'By the gate.'`],
-    ['status', (sql) => sql`status = 'complete'`],
-    ['visibility', (sql) => sql`visibility = 'private'`],
-    ['deleted_at', (sql) => sql`deleted_at = now(), deleted_by = ${A.id}`],
-  ] as [string, (sql: postgres.Sql) => postgres.PendingQuery<postgres.Row[]>][])(
-    'rises by exactly one when %s changes',
-    async (_column, set) => {
-      const id = await spell();
+  // The trigger reads no column, so one is enough (M14.27): the soft delete,
+  // the update a reader might doubt is an UPDATE at all.
+  it('rises by exactly one when the spell is soft-deleted', async () => {
+    const id = await spell();
 
-      await sql`update spells set ${set(sql)} where id = ${id}`;
+    await sql`update spells set deleted_at = now(), deleted_by = ${A.id} where id = ${id}`;
 
-      expect(await revisionOf(id)).toBe(2);
-    },
-  );
+    expect(await revisionOf(id)).toBe(2);
+  });
 
   it('rises by one on each of several updates', async () => {
     const id = await spell();

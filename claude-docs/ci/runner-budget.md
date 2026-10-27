@@ -178,8 +178,29 @@ fails the others.
   for every job, so each completes under its own name. A single part is never
   path-skipped: the merge needs all three blobs and fails when one is missing.
 - **`npm run test:coverage` is unchanged** for local use: one run, one lock.
-- **Next lever: sharding `vitest-dom`.** `dom` is the long pole. Once this PR's
-  run has measured the four wall times, a matrix over `--shard 1/2` and
-  `--shard 2/2` (blob names carrying the shard) cuts it with no test change;
-  the merge job takes any number of blobs. `vitest-db` is not worth sharding,
-  because each shard would build its own template database.
+
+### Measured: the first gate run of the split
+
+Run 40562273451, 27 October 2026, with the images already cached (the image
+pulls took 14 s and 21 s):
+
+| Job              | Wall time |
+| ---------------- | --------- |
+| `vitest-node`    | 1m 37s    |
+| `vitest-dom`     | 3m 38s    |
+| `vitest-db`      | 3m 56s    |
+| `vitest` (merge) | 53s       |
+
+The three parts started together at 18:42:16 and the merge ended at 18:47:08,
+so the required check took 4m 52s from the caller job's start. The single job
+it replaced took 6m 34s (`design-decisions/m14.27-test-audit.md`, section 8).
+
+**Conclusion: `vitest-db` is the critical path, not `vitest-dom`.** The audit
+expected `dom` to be the long pole, but `db` finished 18 s after it. Sharding
+`vitest-dom` (`--shard 1/2` and `2/2`, with the shard in the blob name; the
+merge job takes any number of blobs) would shorten a job that is not the
+slowest, so it buys nothing yet. `vitest-db` is not worth sharding, because
+each shard would build its own template database. What shortens it is the db
+lane's cuts of the two seed tests, `tests/db/seed/index.test.ts` (48s on the
+old job) and `tests/db/seed/compendium.test.ts` (40s). Re-measure after those
+merge, then decide on sharding `dom`.

@@ -265,7 +265,9 @@ describe('Grimoire — the spell and what it is made of', () => {
     }
   });
 
-  describe('writes, through the one grimoire service that exists (setSpellVisibility)', () => {
+  // One grimoire write stands for the rest here; each grimoire service's own
+  // cross-coven refusals are in tests/modules/grimoire/services/.
+  describe('writes, through a grimoire service (setSpellVisibility)', () => {
     it('throws Forbidden for D rather than widening the spell', async () => {
       const spellId = await seedSpell();
 
@@ -320,7 +322,8 @@ describe('E’s and F’s site roles carry no bypass and no penalty from the mem
       (session, { stockId }) =>
         updateStock(session, WORKSPACE_W_ID, stockId, { quantityOnHand: 0 }),
     ],
-    // The grimoire's reads have no service yet: the proof is what they take.
+    // The proof the grimoire's reads take; readSpell and listGrimoire refuse D
+    // themselves in tests/modules/grimoire/services/spell-reads.test.ts.
     [
       'the proof W’s spells are read under',
       (session) => assertMembership(session, WORKSPACE_W_ID, { spell: ['read'] }),
