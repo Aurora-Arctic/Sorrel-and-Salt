@@ -229,7 +229,7 @@ describe('IngredientForm', () => {
         // None picked is sent as none, which an update needs to clear them.
         categoryIds: [],
         references: [],
-        // Its forms alone, never a top-level form (MB.221): variants.test.tsx's.
+        // Its forms alone, never a top-level form (MB.221): variants-field.test.tsx's.
         variants: [],
       });
     });

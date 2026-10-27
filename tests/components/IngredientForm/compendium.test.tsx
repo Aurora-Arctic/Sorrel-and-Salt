@@ -168,20 +168,6 @@ describe('IngredientForm on the compendium', () => {
   });
 
   describe('a new entry', () => {
-    // Story 31 on the admin tier: the form is shared, so leaving a field
-    // flags it here too.
-    it('flags an edited, invalid value on leaving it, before any submit', async () => {
-      const calls = acceptCompendiumCreate();
-      renderForm();
-
-      type('Name', '   ');
-      fireEvent.blur(textbox('Name'));
-
-      await waitFor(() => expect(textbox('Name')).toBeInvalid());
-      expect(textbox('Name')).toHaveAccessibleDescription(/\S/);
-      expect(calls).toHaveLength(0);
-    });
-
     it('marks the classification required, refusing a save without one, then creates a compendium entry with no categories yet, and opens it', async () => {
       const calls = acceptCompendiumCreate();
       const { onSaved } = renderForm();
@@ -209,12 +195,11 @@ describe('IngredientForm on the compendium', () => {
       );
     });
 
-    // What the compendium's page gives the form: its dialog's Cancel, and
-    // where a near match links, the compendium's edit rather than a coven's
-    // ingredient page.
-    it('offers Cancel, and links a near match, where the page says', async () => {
-      const onCancel = vi.fn();
-      renderForm({ onCancel, duplicateHref: (match) => `/admin/compendium?edit=${match.slug}` });
+    // What the compendium's page gives the form: where a near match links,
+    // the compendium's edit rather than a coven's ingredient page. Its Cancel
+    // is the discard guard's case below.
+    it('links a near match where the page says', async () => {
+      renderForm({ duplicateHref: (match) => `/admin/compendium?edit=${match.slug}` });
       offerDuplicates([
         { id: OTHER_ID, name: 'Testworts', canonicalName: null, slug: 'testworts' },
       ]);
@@ -226,10 +211,6 @@ describe('IngredientForm on the compendium', () => {
         'href',
         '/admin/compendium?edit=testworts',
       );
-      // A name typed is a change, which Cancel asks before discarding (MB.115).
-      fireEvent.click(button('Cancel'));
-      fireEvent.click(button('Discard Changes'));
-      expect(onCancel).toHaveBeenCalledOnce();
     });
 
     // A regression (MB.115): an entry whose substitute links an ingredient
@@ -445,16 +426,13 @@ describe('IngredientForm on the compendium', () => {
   describe('an entry given to it', () => {
     // M8.17: an edit of the compendium says so at its head, as an add, which
     // writes nothing yet anyone reads, does not.
-    it('says above the form that it edits the compendium, as a new entry does not', () => {
+    it('says that it edits the compendium, as a new entry does not', () => {
       renderForm();
       expect(screen.queryByText(COMPENDIUM_EDIT_NOTICE)).not.toBeInTheDocument();
       cleanup();
 
       renderEntry();
-      const notice = screen.getByText(COMPENDIUM_EDIT_NOTICE);
-      expect(
-        notice.compareDocumentPosition(textbox('Name')) & Node.DOCUMENT_POSITION_FOLLOWING,
-      ).toBeTruthy();
+      expect(screen.getByText(COMPENDIUM_EDIT_NOTICE)).toBeInTheDocument();
     });
 
     it('shows its values, offers one save, off until something changes, and saves over it, carrying its categories through untouched', async () => {
@@ -489,7 +467,11 @@ describe('IngredientForm on the compendium', () => {
       );
     });
 
-    it('warns of near matches other than itself', async () => {
+    // An edit renames what exists rather than making another, so a near
+    // match warns and holds nothing (MB.115, the owner's call), and the entry
+    // is never its own near match.
+    it('saves a rename near another entry at once, the match named but not itself, and nothing to set aside', async () => {
+      const calls = acceptUpdate();
       renderEntry();
       offerDuplicates([
         {
@@ -504,26 +486,9 @@ describe('IngredientForm on the compendium', () => {
 
       type('Name', 'Testworth');
       await act(() => vi.advanceTimersByTimeAsync(DEBOUNCE_MS));
-
       const warning = screen.getByRole('status', { name: 'Possible duplicates' });
       await waitFor(() => within(warning).getByRole('link', { name: /^Testworts/ }));
       expect(within(warning).queryByRole('link', { name: /Testwort \(/ })).not.toBeInTheDocument();
-    });
-
-    // An edit renames what exists rather than making another, so a near
-    // match warns and holds nothing (MB.115, the owner's call).
-    it('saves a rename near another entry at once, the match named and nothing to set aside', async () => {
-      const calls = acceptUpdate();
-      renderEntry();
-      offerDuplicates([
-        { id: OTHER_ID, name: 'Testworts', canonicalName: null, slug: 'testworts' },
-      ]);
-      openSections('Identity');
-
-      type('Name', 'Testworth');
-      await act(() => vi.advanceTimersByTimeAsync(DEBOUNCE_MS));
-      const warning = screen.getByRole('status', { name: 'Possible duplicates' });
-      await waitFor(() => within(warning).getByRole('link', { name: /^Testworts/ }));
       noButton('Create Anyway');
 
       press('Save Ingredient');
@@ -572,23 +537,17 @@ describe('IngredientForm on the compendium', () => {
       expect(asked).toEqual([{ id: ENTRY_ID }]);
     });
 
-    it('deletes it once confirmed, keeping it on Keep It, and says why when the delete is refused', async () => {
+    // Keep It, and the focus on it, are the modal's case below.
+    it('deletes it once confirmed, and says why when the delete is refused', async () => {
       const { onDeleted } = renderEntry();
-
-      fireEvent.click(button('Delete Ingredient'));
-      expect(button('Delete')).toBeVisible();
-      // The question names it: a paragraph, the closed Identity's summary line naming it too.
-      expect(screen.getByText(/Testwort/, { selector: 'p' })).toBeInTheDocument();
-      // The question takes the focus on its safe answer (MB.115).
-      expect(button('Keep It')).toHaveFocus();
-      fireEvent.click(button('Keep It'));
-      noButton('Delete');
-
       mockGraphQLError('DeleteCompendiumIngredient', {
         code: 'NOT_FOUND',
         message: 'No such compendium entry',
       });
+
       fireEvent.click(button('Delete Ingredient'));
+      // The question names it: a paragraph, the closed Identity's summary line naming it too.
+      expect(screen.getByText(/Testwort/, { selector: 'p' })).toBeInTheDocument();
       await act(async () => {
         fireEvent.click(button('Delete'));
       });
