@@ -604,9 +604,8 @@ viewer may write to; a coven they may only read is never one. With one
 destination the control is a plain button. With two or more it is a split
 button: the main part opens the default destination, and a chevron (`Choose
 Where to Add`, `aria-haspopup="menu"`) opens a menu listing every
-destination by name, the compendium first (`add-ingredient-menu.tsx`; the
-repo had no ARIA menu, so it is written there with arrow keys, Escape and a
-press outside). The default is, on `/admin/*`, the compendium for a curator;
+destination by name, the compendium first (`add-ingredient-menu.tsx`, a
+`MenuButton` with the chevron as its icon). The default is, on `/admin/*`, the compendium for a curator;
 otherwise the coven the address names, else the first coven they may write to.
 Choosing the compendium is a `navigate` (`usePendingNavigation`) to `/admin/compendium?new` (the
 admin layout’s route-modal provider sits below the shell, so the button cannot

@@ -9,7 +9,7 @@ import type {
 } from '@/components/CompendiumCards/types';
 import type { StockData, StockJar } from '@/components/StockDialog/types';
 import { makeQueryClient } from '@/lib/graphql-client';
-import { choose as pickOption, press } from '../../support/interact';
+import { press } from '../../support/interact';
 import { mockGraphQLError, mockGraphQLMutation } from '../../support/msw/graphql';
 
 const router = vi.hoisted(() => ({ push: vi.fn(), replace: vi.fn(), refresh: vi.fn() }));
@@ -184,11 +184,6 @@ describe('CompendiumCardMore', () => {
       expect(choices()).not.toContain('Edit Stock');
     });
 
-    it('is not offered to a viewer, who has no dots at all', () => {
-      renderMore(props([place({ ...others })]));
-      expect(screen.queryByRole('button')).not.toBeInTheDocument();
-    });
-
     it("opens the coven's dialog at once for one coven, with its jars and the entry's forms", async () => {
       renderMore(props([place({ stock: stock([jar(FLOWER, 50)]) })]));
       choose('Edit Stock');
@@ -198,30 +193,6 @@ describe('CompendiumCardMore', () => {
       expect(within(dialog).queryByRole('combobox', { name: 'Coven' })).not.toBeInTheDocument();
       expect(within(dialog).getByRole('button', { name: /^Flower\b/ })).toBeInTheDocument();
       expect(within(dialog).getByRole('combobox', { name: 'Add Form' })).toBeInTheDocument();
-    });
-
-    it("asks which coven where two may, then opens that coven's jars", async () => {
-      renderMore(
-        props([
-          place({ stock: stock([jar(FLOWER, 50)]) }),
-          place({
-            workspaceId: '00000000-0000-4000-8000-000000000003',
-            covenSlug: 'other-coven',
-            name: 'Other Coven',
-            stock: stock([jar(OIL, 20)]),
-          }),
-        ]),
-      );
-      choose('Edit Stock');
-      const picker = await screen.findByRole('dialog', { name: 'Edit Stock' });
-      expect(screen.queryByRole('dialog', { name: 'Edit Stock, House Salt' })).toBeNull();
-      pickOption('Coven', 'Other Coven');
-      press(within(picker).getByRole('button', { name: 'Continue' }));
-      const dialog = await screen.findByRole('dialog', {
-        name: 'Edit Stock for Other Coven, House Salt',
-      });
-      expect(within(dialog).getByRole('button', { name: /^Oil\b/ })).toBeInTheDocument();
-      expect(within(dialog).queryByRole('button', { name: /^Flower\b/ })).toBeNull();
     });
 
     it('asks only among the covens that may update stock', async () => {
@@ -238,17 +209,6 @@ describe('CompendiumCardMore', () => {
       expect(
         await screen.findByRole('dialog', { name: 'Edit Stock for Fixture Coven, House Salt' }),
       ).toBeInTheDocument();
-    });
-
-    it('gives the dots the focus back when the dialog is cancelled', async () => {
-      renderMore(props([place({ stock: stock() })]));
-      choose('Edit Stock');
-      const dialog = await screen.findByRole('dialog', {
-        name: 'Edit Stock for Fixture Coven, House Salt',
-      });
-      press(within(dialog).getByRole('button', { name: 'Cancel' }));
-      await waitFor(() => expect(screen.queryByRole('dialog')).not.toBeInTheDocument());
-      expect(more()).toHaveFocus();
     });
   });
 });

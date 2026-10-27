@@ -103,6 +103,11 @@ export type MenuButtonProps = MenuButtonChoices & {
    */
   icon?: ReactElement;
   /**
+   * The menu's accessible name, where it is not the button's: the bar's chevron is "Choose
+   * Where to Add" and its menu "Add Ingredient To". Left out, the menu takes the label.
+   */
+  menuLabel?: string;
+  /**
    * A state the caller's stylesheet draws the button from, set as its `data-state`: the
    * compendium card's plus says `added` while its check shows after an add (M9.12). Left out,
    * the button has none.

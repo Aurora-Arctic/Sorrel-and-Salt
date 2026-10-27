@@ -1,8 +1,7 @@
 @use '../../scss/variables' as *;
 @use '../../scss/mixins' as *;
 
-// The menu as the bar's Add Ingredient menu draws it (app-shell's
-// `.app-shell__menu`). Where it sits is the script's, on Floating UI: hung
+// The menu, the bar's Add Ingredient menu among its callers. Where it sits is the script's, on Floating UI: hung
 // from the button's end edge, below it or above, fixed (index.tsx).
 // claude-docs/components/menu-button.md.
 

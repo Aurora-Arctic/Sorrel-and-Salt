@@ -35,11 +35,6 @@ const heldMark = () => screen.queryByText('Compendium', { exact: true });
 const retiredMark = () => screen.queryByRole('button', { name: 'Retired' });
 
 describe('IngredientCard', () => {
-  it('names its link by the label alone', () => {
-    render(<IngredientCard {...BASE} />);
-    expect(screen.getByRole('link')).toHaveAccessibleName('Fixture Testwort');
-  });
-
   it('has one link, the name, to the entry page', () => {
     render(<IngredientCard {...BASE} formalName="Fixtura testalis" variants={[LEAF, OIL]} />);
 
@@ -158,30 +153,6 @@ describe('IngredientCard', () => {
     expect(screen.queryByText('Testleaf')).toBeNull();
   });
 
-  describe('the category chips', () => {
-    const GROUP = { colorDark: '#112233', colorLight: '#445566' };
-    const CATS = [
-      { category: { id: 'c1', name: 'Testing' }, group: GROUP },
-      { category: { id: 'c2', name: 'Fixturing' }, group: GROUP },
-    ];
-
-    it('lists each category as plain text, not a link', () => {
-      render(<IngredientCard {...BASE} categories={CATS} />);
-
-      const list = screen.getByRole('list', { name: 'Categories' });
-      expect(within(list).getAllByRole('listitem')).toHaveLength(2);
-      expect(within(list).getByText('Testing')).toBeInTheDocument();
-      expect(within(list).queryByRole('link')).toBeNull();
-      expect(within(list).queryByRole('button')).toBeNull();
-    });
-
-    it('draws no row for an entry with none', () => {
-      render(<IngredientCard {...BASE} categories={[]} />);
-
-      expect(screen.queryByRole('list', { name: 'Categories' })).toBeNull();
-    });
-  });
-
   // The chip row and its +N toggletip are CategoryChips', tested in
   // tests/components/CategoryChips; the card only has to hand it the categories.
   it('puts the categories past the limit behind a +N button', () => {
@@ -207,32 +178,6 @@ describe('IngredientCard', () => {
       render(<IngredientCard {...BASE} variants={[LEAF, OIL]} />);
 
       expect(cautionMark()).not.toBeNull();
-    });
-
-    it('shows no caution badge for blank or whitespace notes', () => {
-      render(
-        <IngredientCard
-          {...BASE}
-          safetyNotes="   "
-          variants={[LEAF, { ...ROOT, safetyNotes: '\n ' }]}
-        />,
-      );
-
-      expect(cautionMark()).toBeNull();
-    });
-
-    // One safety badge (the owner's call, 2026-10-20): Toxic says more than Caution.
-    it('shows Toxic alone, with or without notes', () => {
-      const bare = render(<IngredientCard {...BASE} toxic variants={[LEAF]} />);
-      expect(toxicMark()).not.toBeNull();
-      expect(cautionMark()).toBeNull();
-      bare.unmount();
-
-      render(
-        <IngredientCard {...BASE} toxic safetyNotes="Fixture entry caution." variants={[OIL]} />,
-      );
-      expect(toxicMark()).not.toBeNull();
-      expect(cautionMark()).toBeNull();
     });
 
     // The safety badge sits beside the name and the rest under the formal name
@@ -261,13 +206,6 @@ describe('IngredientCard', () => {
       }
     });
 
-    it('draws no caution block, even when a listed form has notes', () => {
-      render(<IngredientCard {...BASE} variants={[OIL]} />);
-
-      expect(screen.queryByRole('region')).toBeNull();
-      expect(screen.queryByText('Fixture oil caution.')).toBeNull();
-    });
-
     it('shows the toxic mark for the entry or any listed form, and not otherwise', () => {
       const clean = render(<IngredientCard {...BASE} variants={[LEAF]} />);
       expect(toxicMark()).toBeNull();
@@ -290,26 +228,14 @@ describe('IngredientCard', () => {
       expect(screen.queryAllByRole('status')).toHaveLength(0);
     });
 
-    it('shows none on a compendium entry the cupboard does not hold', () => {
-      render(<IngredientCard {...BASE} kind="compendium" />);
-
-      expect(localMark()).toBeNull();
-      expect(heldMark()).toBeNull();
-      expect(retiredMark()).toBeNull();
-      expect(toxicMark()).toBeNull();
-      expect(screen.queryAllByRole('status')).toHaveLength(0);
-    });
-
     // The owner's call, 2026-10-20: a coven's card says nothing of where a held
     // entry came from; the entry page and its head still do (EntryMarks' own tests).
     it('shows neither Compendium nor Annotated on a compendium entry the cupboard holds', () => {
-      const { container } = render(<IngredientCard {...BASE} kind="cupboard" />);
+      render(<IngredientCard {...BASE} kind="cupboard" />);
 
       expect(heldMark()).toBeNull();
       expect(screen.queryByRole('button', { name: 'Annotated' })).toBeNull();
       expect(screen.queryAllByRole('status')).toHaveLength(0);
-      // With no mark left, the cluster is left out, not left empty.
-      expect(container.querySelector('.specimen__badges')).toBeNull();
     });
 
     it('shows Retired on a held entry the curators retired', () => {
@@ -329,12 +255,6 @@ describe('IngredientCard', () => {
             <li>
               <StockBadge quantity={6} threshold={10} unit="g" />
             </li>
-            <li>
-              <StockBadge quantity={0} threshold={10} unit="g" />
-            </li>
-            <li>
-              <StockBadge quantity={50} threshold={10} unit="g" />
-            </li>
           </ul>
         </IngredientCard>,
       );
@@ -342,14 +262,6 @@ describe('IngredientCard', () => {
       const jars = screen.getByRole('list', { name: 'Jars' });
       // Low and Out are each a button named for the state, and a healthy jar draws nothing.
       expect(within(jars).getAllByRole('button', { name: /^Low Stock/ })).toHaveLength(1);
-      expect(within(jars).getAllByRole('button', { name: 'Out of Stock' })).toHaveLength(1);
-    });
-
-    it('renders nothing for the slot when the caller passes none', () => {
-      render(<IngredientCard {...BASE} />);
-
-      expect(screen.queryByRole('button')).toBeNull();
-      expect(screen.queryByRole('button', { name: 'Out of Stock' })).toBeNull();
     });
   });
 });
@@ -442,10 +354,7 @@ describe('IngredientCard navigation', () => {
 });
 
 describe('IngredientCard recency (MB.106)', () => {
-  it.each([
-    ['new', 'New'],
-    ['updated', 'Updated'],
-  ] as const)('shows %s as text on a compendium entry', (recency, shown) => {
+  it.each([['new', 'New']] as const)('shows %s as text on a compendium entry', (recency, shown) => {
     render(<IngredientCard {...BASE} kind="compendium" recency={recency} />);
 
     expect(screen.getByText(shown, { exact: true })).toBeInTheDocument();

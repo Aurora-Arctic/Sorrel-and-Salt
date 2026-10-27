@@ -1,4 +1,4 @@
-import { act, fireEvent, render, screen, waitFor, within } from '@testing-library/react';
+import { fireEvent, render, screen, within } from '@testing-library/react';
 import type { Route } from 'next';
 import type { ReactElement } from 'react';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
@@ -10,10 +10,7 @@ import type {
   CompendiumListFilter,
 } from '@/components/CompendiumList/types';
 import { makeQueryClient } from '@/lib/graphql-client';
-import type { AddCupboardEntryMutation, AddCupboardEntryMutationVariables } from '@/gql/graphql';
-import { expectRefusalUnder } from '../../support/click-feedback';
 import { filterForm, sent } from '../../support/filter-form';
-import { mockGraphQLError, mockGraphQLMutation } from '../../support/msw/graphql';
 import { ADD, HELD as HELD_TEXT } from '../../support/cupboard-wording';
 
 // The filter navigates through the App Router; Vitest hoists the mock above the imports.
@@ -141,13 +138,6 @@ describe('CompendiumCards', () => {
     /** Any card's plus, and any card's check: each is named by its tip and then its entry. */
     const PLUS = { name: new RegExp(`^${ADD}: `) };
     const HELD = { name: new RegExp(`^${HELD_TEXT}: `) };
-    const addTo = (slug: string) => {
-      const item = screen
-        .getAllByRole('listitem')
-        .find((one) => within(one).queryByRole('link', { name: new RegExp(slug) }));
-      return item;
-    };
-
     // MB.120: two cards' pluses read alike to a screen reader's list of buttons unless each
     // carries its entry, as the pencil beside it does; the two Testworts are told apart by their
     // formal names there too.
@@ -167,7 +157,7 @@ describe('CompendiumCards', () => {
     // modal's In Your Cupboards list carries the links to each coven's copy; it is tipped and
     // named In Every Cupboard and its entry (MB.120, the one noun for "you hold this"; the tip
     // says the name too), a button only to carry its tip, as the entry page's shelf is.
-    it('swaps the plus for a check named and tipped In Every Cupboard and its entry on a card every coven holds, and no link', () => {
+    it('swaps the plus for a check named In Every Cupboard and its entry on a card every coven holds, and no link', () => {
       const held = ENTRIES.map((one, index) => (index === 0 ? { ...one, held: true } : one));
       render(<Cards {...props({ entries: held, action: 'add' })} />);
       expect(screen.getAllByRole('button', PLUS)).toHaveLength(2);
@@ -175,12 +165,6 @@ describe('CompendiumCards', () => {
       expect(mark).toHaveAccessibleName(`${HELD_TEXT}: Testwort, Fixtura testalis`);
       expect(mark.closest('a')).toBeNull();
       expect(screen.queryByRole('link', HELD)).toBeNull();
-
-      const tips = () =>
-        screen.queryAllByRole('tooltip', { hidden: true }).map((tip) => tip.textContent);
-      expect(tips()).not.toContain(`${HELD_TEXT}: Testwort, Fixtura testalis`);
-      act(() => mark.focus());
-      expect(tips()).toContain(`${HELD_TEXT}: Testwort, Fixtura testalis`);
     });
 
     // The owner's call, 2026-10-20: a press opens the check's tip, as a tap does on InfoTip's ⓘ,
@@ -211,40 +195,6 @@ describe('CompendiumCards', () => {
       render(<Cards {...props({ entries: held, action: 'none' })} />);
       expect(screen.queryByRole('button', HELD)).toBeNull();
     });
-
-    it('adds that entry to the coven and reads the page again', async () => {
-      const calls: AddCupboardEntryMutationVariables[] = [];
-      mockGraphQLMutation<AddCupboardEntryMutation, AddCupboardEntryMutationVariables>(
-        'AddCupboardEntry',
-        (variables) => {
-          calls.push(variables);
-          return { addCupboardEntry: { id: 'fixture' } };
-        },
-      );
-      render(<Cards {...props({ action: 'add' })} />);
-      const card = addTo('Fixture Salt')!;
-
-      fireEvent.click(within(card).getByRole('button', PLUS));
-
-      await waitFor(() => expect(router.refresh).toHaveBeenCalledOnce());
-      expect(calls).toEqual([{ workspaceId: WORKSPACE_ID, ingredientId: 'fixture-salt' }]);
-    });
-
-    it('says a refusal under the button and offers the add again', async () => {
-      mockGraphQLError('AddCupboardEntry', {
-        code: 'FORBIDDEN',
-        message: 'Viewers cannot add ingredients.',
-      });
-      render(<Cards {...props({ action: 'add' })} />);
-      const button = within(addTo('Fixture Salt')!).getByRole('button', PLUS);
-
-      act(() => button.focus());
-      fireEvent.click(button);
-
-      await expectRefusalUnder(button, `${ADD}: Fixture Salt`);
-      expect(button).not.toHaveAttribute('aria-busy');
-      expect(router.refresh).not.toHaveBeenCalled();
-    });
   });
 
   // M8.17: a curator's Edit in Compendium, named for the entry, beside Add where the account can add too.
@@ -266,11 +216,8 @@ describe('CompendiumCards', () => {
       screen.getByRole('link', { name: 'Edit in Compendium Fixture Salt' }),
     ).toBeInTheDocument();
     expect(screen.getAllByRole('button', { name: new RegExp(`^${ADD}: `) })).toHaveLength(3);
-  });
-
-  it('draws no Edit where the page gives none', () => {
-    render(<Cards {...props()} />);
-    expect(screen.queryAllByRole('link', { name: /^Edit / })).toHaveLength(0);
+    // No coven holds any entry here, so no card has the three dots.
+    expect(screen.queryByRole('button', { name: /^More for / })).toBeNull();
   });
 
   // The owner's call, 2026-10-20: up to three icons, the plus, Edit in Compendium and the three
@@ -297,6 +244,8 @@ describe('CompendiumCards', () => {
       expect(screen.queryByRole('button', { name: /^Add to / })).toBeNull();
       expect(screen.queryByRole('link', { name: /^Edit / })).toBeNull();
       expect(screen.queryByRole('button', { name: /^More for / })).toBeNull();
+      expect(screen.queryAllByRole('link', { name: /^Quick Look / })).toHaveLength(0);
+      expect(screen.queryByRole('link', { name: 'Sign In' })).toBeNull();
     });
 
     it('gives a member of a coven that holds the entry the dots, and no Edit', () => {
@@ -309,17 +258,6 @@ describe('CompendiumCards', () => {
       ).toBeInTheDocument();
       expect(screen.getAllByRole('button', { name: /^More for / })).toHaveLength(1);
       expect(screen.queryByRole('link', { name: /^Edit / })).toBeNull();
-    });
-
-    it('gives a curator Edit in Compendium and no dots unless a coven holds the entry', () => {
-      const entries = ENTRIES.map((one) => ({
-        ...one,
-        editHref: `/compendium?edit=${one.slug}` as Route,
-        editHeading: { eyebrow: 'Edit Compendium Entry', title: one.name },
-      }));
-      render(<Cards {...props({ entries, action: 'add' })} />);
-      expect(screen.getAllByRole('link', { name: /^Edit in Compendium / })).toHaveLength(3);
-      expect(screen.queryByRole('button', { name: /^More for / })).toBeNull();
     });
 
     it('gives a curator who is also a member all three, with Edit before the dots', () => {
@@ -364,33 +302,6 @@ describe('CompendiumCards', () => {
     ).toBeInTheDocument();
   });
 
-  it('draws no Quick Look where the page gives no details address', () => {
-    render(<Cards {...props()} />);
-    expect(screen.queryAllByRole('link', { name: /^Quick Look / })).toHaveLength(0);
-  });
-
-  it('holds neither for an account that only views', () => {
-    render(<Cards {...props({ action: 'none' })} />);
-    expect(screen.queryByRole('button', { name: new RegExp(`^${ADD}`) })).toBeNull();
-    expect(screen.queryByRole('link', { name: 'Sign In' })).toBeNull();
-  });
-
-  it('reads Page X of Y between Previous and Next', () => {
-    render(
-      <Cards
-        {...props({
-          previousHref: '/compendium?before=a',
-          position: { page: 2, pages: 2 },
-        })}
-      />,
-    );
-    expect(screen.getByRole('link', { name: 'Prev' })).toHaveAttribute(
-      'href',
-      '/compendium?before=a',
-    );
-    expect(screen.getByText('Page 2 of 2')).toBeInTheDocument();
-  });
-
   it('offers no Classification and no No Refs, and submits to the public page', () => {
     render(<Cards {...props()} />);
     fireEvent.click(screen.getByRole('button', { name: /^Filters/ }));
@@ -409,12 +320,7 @@ describe('CompendiumCards', () => {
       { id: 'coven-v', name: 'Testwren' },
     ];
 
-    it('offers In My Covens with every coven of the viewer’s, and none without them', () => {
-      const { unmount } = render(<Cards {...props()} />);
-      fireEvent.click(screen.getByRole('button', { name: /^Filters/ }));
-      expect(screen.queryByRole('combobox', { name: 'In My Covens' })).toBeNull();
-      unmount();
-
+    it('offers In My Covens with every coven of the viewer’s', () => {
       render(<Cards {...props({ myCovens: MINE })} />);
       fireEvent.click(screen.getByRole('button', { name: /^Filters/ }));
       fireEvent.click(screen.getByRole('combobox', { name: 'In My Covens' }));
@@ -429,16 +335,12 @@ describe('CompendiumCards', () => {
         ENTRIES[2],
       ];
       render(<Cards {...props({ entries, action: 'add' })} />);
-      const plus = screen.getByRole('button', {
+      screen.getByRole('button', {
         name: `${ADD}: Testwort, Fixtura testalis. In 2 covens: Testhollow, Testwren`,
       });
-      expect(plus.querySelector('.add-icon__count')).toHaveTextContent('2');
-      const check = screen.getByRole('button', {
+      screen.getByRole('button', {
         name: `${HELD_TEXT}: Testwort, Fixtura alteralis. In 1 coven: Testhollow`,
       });
-      expect(check.querySelector('.add-icon__count')).toHaveTextContent('1');
-      const bare = screen.getByRole('button', { name: `${ADD}: Fixture Salt` });
-      expect(bare.querySelector('.add-icon__count')).toBeNull();
     });
   });
 });

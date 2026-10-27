@@ -77,21 +77,6 @@ describe('RouteModal', () => {
     expect(within(arrived).getByRole('textbox', { name: 'Name' })).toHaveFocus();
   });
 
-  it('forgets the press and goes back to its page when closed while loading', () => {
-    const loading = opener(HEADING);
-    render(
-      <RouteModalContext.Provider value={loading}>
-        <RouteModal closeHref={CLOSE} />
-      </RouteModalContext.Provider>,
-    );
-
-    fireEvent.click(screen.getByRole('button', { name: 'Close' }));
-
-    expect(loading.cancel).toHaveBeenCalledTimes(1);
-    expect(router.replace).toHaveBeenCalledWith(CLOSE);
-    expect(router.refresh).toHaveBeenCalledTimes(1);
-  });
-
   it('opens its form from the address alone, outside a provider', () => {
     render(<RouteModal closeHref={CLOSE} content={content} />);
 
@@ -144,6 +129,7 @@ describe('RouteModalProvider', () => {
 
     expect(screen.queryByRole('dialog')).not.toBeInTheDocument();
     expect(router.replace).toHaveBeenCalledWith(CLOSE);
+    expect(router.refresh).toHaveBeenCalledTimes(1);
   });
 
   it.each([
@@ -255,9 +241,7 @@ describe('RouteModal giving the focus back', () => {
     });
     view.rerender(page(true));
     expect(screen.getByRole('dialog', { name: NAME })).toBeInTheDocument();
-    await act(async () => {
-      await new Promise((resolve) => setTimeout(resolve, 450));
-    });
+    await act(async () => {});
 
     view.rerender(page(false));
 

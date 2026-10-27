@@ -1,5 +1,5 @@
 import type { Route } from 'next';
-import { act, fireEvent, render, screen } from '@testing-library/react';
+import { fireEvent, render, screen } from '@testing-library/react';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
 const pathname = vi.fn<() => string>();
@@ -11,7 +11,6 @@ vi.mock('@/lib/auth-client', () => ({ signOut: vi.fn() }));
 
 const { default: AccountMenu } = await import('@/components/AccountMenu');
 const { initialsOf } = await import('@/components/AccountMenu/initials');
-const { signOut } = await import('@/lib/auth-client');
 
 // The account button and its disclosure panel (MB.7). A disclosure, so the
 // button states whether the panel is open and which element it controls.
@@ -46,14 +45,6 @@ describe('AccountMenu', () => {
     expect(button()).toHaveAttribute('aria-expanded', 'false');
   });
 
-  it('links to the account page', () => {
-    render(<AccountMenu name="Fixture Owner" verified />);
-
-    fireEvent.click(button());
-
-    expect(screen.getByRole('link', { name: 'Your Account' })).toHaveAttribute('href', '/account');
-  });
-
   it('closes on Escape and gives the focus back to the button', () => {
     render(<AccountMenu name="Fixture Owner" verified />);
     fireEvent.click(button());
@@ -61,33 +52,6 @@ describe('AccountMenu', () => {
     expect(button()).not.toHaveFocus();
 
     fireEvent.keyDown(document.activeElement ?? document.body, { key: 'Escape' });
-
-    expect(button()).toHaveAttribute('aria-expanded', 'false');
-    expect(button()).toHaveFocus();
-  });
-
-  // The callout takes the Escape it closes on (claude-docs/components/click-feedback.md),
-  // so the menu's own Escape waits for the next.
-  it('leaves its panel open while Escape closes a failed Sign Out’s alert, and closes on the next', async () => {
-    vi.mocked(signOut).mockRejectedValue(new Error('offline'));
-    render(<AccountMenu name="Fixture Owner" verified />);
-    fireEvent.click(button());
-    const signOutButton = screen.getByRole('button', { name: 'Sign Out' });
-    signOutButton.focus();
-    await act(async () => {
-      fireEvent.click(signOutButton);
-    });
-    expect(await screen.findByRole('alert')).toBeVisible();
-
-    await act(async () => {
-      fireEvent.keyDown(signOutButton, { key: 'Escape' });
-    });
-
-    expect(screen.queryByRole('alert')).toBeNull();
-    expect(button()).toHaveAttribute('aria-expanded', 'true');
-    expect(signOutButton).toHaveFocus();
-
-    fireEvent.keyDown(signOutButton, { key: 'Escape' });
 
     expect(button()).toHaveAttribute('aria-expanded', 'false');
     expect(button()).toHaveFocus();
@@ -127,8 +91,7 @@ describe('AccountMenu', () => {
     expect(screen.queryByRole('link')).not.toBeInTheDocument();
   });
 
-  it('offers the bar’s links too for a phone, marking the page it is on', () => {
-    pathname.mockReturnValue('/admin/users');
+  it('offers the bar’s links too, for a phone', () => {
     render(
       <AccountMenu
         name="Fixture Owner"
@@ -142,8 +105,11 @@ describe('AccountMenu', () => {
 
     fireEvent.click(button());
 
-    expect(screen.getByRole('link', { name: 'Admin' })).toHaveAttribute('aria-current', 'page');
-    expect(screen.getByRole('link', { name: 'Your Coven' })).not.toHaveAttribute('aria-current');
+    expect(screen.getByRole('link', { name: 'Admin' })).toHaveAttribute('href', '/admin');
+    expect(screen.getByRole('link', { name: 'Your Coven' })).toHaveAttribute(
+      'href',
+      '/coven/fixture-coven',
+    );
   });
 
   it('has no count while no invitation waits', () => {

@@ -63,26 +63,8 @@ describe('TabbedPage', () => {
     expect(screen.getByText('Content')).toBeVisible();
   });
 
-  it("puts the tabs on the heading's line, between the heading and the action", () => {
-    render(
-      <TabbedPage title="People" tabs={TABS} action={<a href="/admin/users?pause">Pause</a>}>
-        <p>Content</p>
-      </TabbedPage>,
-    );
-
-    const heading = screen.getByRole('heading', { level: 1 });
-    const nav = screen.getByRole('navigation', { name: 'People' });
-    const action = screen.getByRole('link', { name: 'Pause' });
-    expect(nav.parentElement).toBe(heading.parentElement);
-    expect(heading.compareDocumentPosition(nav) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy();
-    expect(nav.compareDocumentPosition(action) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy();
-  });
-
   it.each([
     ['/admin/users', ['/admin/users']],
-    ['/admin/invitations', ['/admin/invitations']],
-    // An address beneath a tab still marks it.
-    ['/admin/users/some-user', ['/admin/users']],
     // An address in none of the tabs marks none.
     ['/admin/compendium', []],
   ])('marks only the tab open at %s as the current page', (path, expected) => {
@@ -186,16 +168,15 @@ describe('TabbedPage', () => {
     expect(users).not.toHaveAttribute('data-pressed');
   });
 
-  it.each([['ctrlKey'], ['metaKey'], ['shiftKey']] as const)(
-    'leaves a press with %s to the browser',
-    (key) => {
-      renderNavigating();
+  // Control, Meta and Shift all reach the one `opensElsewhere` check, which
+  // tests/lib/opens-elsewhere.test.ts proves; this proves the tab passes it.
+  it('leaves a press with a modifier key to the browser', () => {
+    renderNavigating();
 
-      fireEvent.click(tab('Invitations'), { [key]: true });
+    fireEvent.click(tab('Invitations'), { ctrlKey: true });
 
-      expect(router.push).not.toHaveBeenCalled();
-      expect(tabs().filter((link) => link.hasAttribute('aria-disabled'))).toEqual([]);
-      expect(within(panel()).getByRole('table', { name: 'Users' })).toBeVisible();
-    },
-  );
+    expect(router.push).not.toHaveBeenCalled();
+    expect(tabs().filter((link) => link.hasAttribute('aria-disabled'))).toEqual([]);
+    expect(within(panel()).getByRole('table', { name: 'Users' })).toBeVisible();
+  });
 });

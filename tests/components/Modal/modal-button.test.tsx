@@ -30,21 +30,11 @@ describe('ModalButton', () => {
     expect(trigger()).not.toHaveFocus();
   });
 
-  it.each([
-    [
-      'its Close button',
-      () => fireEvent.click(within(dialog()).getByRole('button', { name: 'Close' })),
-    ],
-    ['Escape', () => fireEvent(dialog(), new Event('cancel', { cancelable: true }))],
-    [
-      'its contents’ own close',
-      () => fireEvent.click(within(dialog()).getByRole('button', { name: 'Done' })),
-    ],
-  ])('gives the focus back to the button when closed by %s', async (_way, closeIt) => {
+  it('gives the focus back to the button when closed', async () => {
     open();
     expect(trigger()).not.toHaveFocus();
 
-    closeIt();
+    fireEvent.click(within(dialog()).getByRole('button', { name: 'Close' }));
 
     await waitFor(() => expect(screen.queryByRole('dialog')).toBeNull());
     expect(trigger()).toHaveFocus();

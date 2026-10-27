@@ -1,4 +1,4 @@
-import { fireEvent, render, screen, waitFor, within } from '@testing-library/react';
+import { act, fireEvent, render, screen, waitFor, within } from '@testing-library/react';
 import axe from 'axe-core';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 import type { ShellViewer, ShellWorkspace } from '@/lib/types';
@@ -287,52 +287,12 @@ describe('AddIngredientButton', () => {
       expect(within(menuOf()).queryByRole('separator')).toBeNull();
     });
 
-    it('roves through the groups as one list, never stopping on a heading', () => {
-      pathname.mockReturnValue('/compendium');
-      draw(ADMIN, [FIXTURE]);
-      fireEvent.click(chevron());
-      const [first, second] = within(menuOf()).getAllByRole('menuitem');
-      expect(first).toHaveFocus();
-
-      fireEvent.keyDown(first!, { key: 'ArrowDown' });
-      expect(second).toHaveFocus();
-      expect(second).toHaveTextContent('to Fixture Coven');
-    });
-
-    it('roves with the arrow keys', () => {
-      draw(MEMBER, [FIXTURE, TESTWORT]);
-      fireEvent.click(chevron());
-      const [first, second] = within(menuOf()).getAllByRole('menuitem');
-      expect(first).toHaveFocus();
-
-      fireEvent.keyDown(first!, { key: 'ArrowDown' });
-      expect(second).toHaveFocus();
-      fireEvent.keyDown(second!, { key: 'ArrowDown' });
-      expect(first).toHaveFocus();
-      fireEvent.keyDown(first!, { key: 'ArrowUp' });
-      expect(second).toHaveFocus();
-    });
-
-    it('closes on Escape, the focus back on the chevron', () => {
-      draw(MEMBER, [FIXTURE, TESTWORT]);
-      fireEvent.click(chevron());
-      fireEvent.keyDown(within(menuOf()).getAllByRole('menuitem')[0]!, { key: 'Escape' });
-
-      expect(screen.queryByRole('menu')).toBeNull();
-      expect(chevron()).toHaveFocus();
-    });
-
-    it('closes on a press outside', () => {
-      draw(MEMBER, [FIXTURE, TESTWORT]);
-      fireEvent.click(chevron());
-      fireEvent.pointerDown(document.body);
-
-      expect(screen.queryByRole('menu')).toBeNull();
-    });
-
     it('has no accessibility violations with the menu open', async () => {
       const { container } = draw(MEMBER, [FIXTURE, TESTWORT]);
-      fireEvent.click(chevron());
+      // Async, so the menu's placement (Floating UI) settles inside act.
+      await act(async () => {
+        fireEvent.click(chevron());
+      });
 
       const { violations } = await axe.run(container);
       expect(violations).toEqual([]);

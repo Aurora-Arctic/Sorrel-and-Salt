@@ -1,6 +1,10 @@
 import { act, fireEvent, render, screen } from '@testing-library/react';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
-import ListFrame, { ListBody, useListNavigation } from '@/components/ListFrame';
+import ListFrame, {
+  ListBody,
+  ListNavigationContext,
+  useListNavigation,
+} from '@/components/ListFrame';
 import { Navigating } from '../../support/navigating';
 
 // A soft navigation runs through the App Router; Vitest hoists the mock above the imports.
@@ -64,5 +68,25 @@ describe('ListFrame, paging', () => {
     document.body.innerHTML = '';
     await pressAndArrive('Filter');
     expect(router.push).toHaveBeenCalledWith('/list?q=a');
+  });
+});
+
+// The loading status stands in for the content while a page is on its way
+// (moved from IngredientCardList's file, which only passes `shape="cards"`).
+describe('ListBody, pending', () => {
+  it('shows the loading status, and not the content, while a page is on its way', () => {
+    render(
+      <ListNavigationContext.Provider
+        value={{ pending: true, searching: false, go: () => undefined }}
+      >
+        <ListFrame>
+          <ListBody shape="cards">
+            <p>Fixture content</p>
+          </ListBody>
+        </ListFrame>
+      </ListNavigationContext.Provider>,
+    );
+    expect(screen.getByRole('status')).toBeTruthy();
+    expect(screen.queryByText('Fixture content')).toBeNull();
   });
 });

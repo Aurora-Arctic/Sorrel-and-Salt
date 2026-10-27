@@ -11,7 +11,6 @@ vi.mock('next/navigation', () => ({
 
 const { usePendingNavigation } = await import('@/lib/navigation');
 const { default: SectionBody } = await import('@/components/SectionBody');
-const { default: AdminNav } = await import('@/components/AdminNav');
 
 // A section's page under its context row, the coven's here (M12.33): while a navigation whose
 // target is the coven region is on its way, the old coven's page is taken
@@ -42,7 +41,6 @@ function renderBody() {
     <Navigating push={router.push} arrives={arrives}>
       <Go name="Switch" target={{ region: 'coven', shape: 'cards' }} />
       <Go name="Leave" target={{ region: 'main', shape: 'page' }} />
-      <Go name="Admin" target={{ region: 'admin', shape: 'table' }} />
       <Go name="Filter" />
       <Go name="Home" target={{ region: 'coven', shape: 'page', frame: 'with-nav' }} />
       <SectionBody region="coven" className="coven-layout">
@@ -98,10 +96,9 @@ describe('SectionBody', () => {
     expect(screen.queryByRole('status')).not.toBeInTheDocument();
   });
 
-  // Admin: another section's, whose own body answers it.
   // Leave: the site nav's, whose skeleton fills the whole of the shell's body.
   // Filter: one within the page, whose own control and list show the wait.
-  it.each(['Leave', 'Admin', 'Filter'])(
+  it.each(['Leave', 'Filter'])(
     'leaves the page in place for a navigation not aimed at it (%s)',
     async (name) => {
       renderBody();
@@ -115,7 +112,7 @@ describe('SectionBody', () => {
 });
 
 // The admin area's body, under its own context row: a move between admin pages
-// swaps the page and leaves the row, and its nav, standing.
+// swaps the page and leaves the row standing.
 describe('SectionBody for the admin area', () => {
   const renderAdmin = () => {
     const arrives = new Promise<void>((resolve) => {
@@ -123,8 +120,7 @@ describe('SectionBody for the admin area', () => {
     });
     return render(
       <Navigating push={router.push} arrives={arrives}>
-        <AdminNav managesPeople />
-        <Go name="Coven" target={{ region: 'coven', shape: 'cards' }} />
+        <Go name="Forms" target={{ region: 'admin', shape: 'table' }} />
         <SectionBody region="admin" className="page-column">
           <main>
             <ul aria-label="Categories">
@@ -136,30 +132,19 @@ describe('SectionBody for the admin area', () => {
     );
   };
 
-  it('answers a link of the admin nav by taking the page away and keeping the nav', async () => {
+  it('answers an admin-region navigation by taking the page away', async () => {
     renderAdmin();
 
-    await act(async () => {
-      fireEvent.click(screen.getByRole('link', { name: 'Forms' }));
-    });
+    await press('Forms');
 
     expect(router.push).toHaveBeenCalledTimes(1);
     expect(screen.queryByRole('list', { name: 'Categories' })).not.toBeInTheDocument();
     expect(screen.getAllByRole('status')).toHaveLength(1);
-    expect(screen.getByRole('navigation', { name: 'Admin' })).toBeInTheDocument();
-  });
-
-  it('ignores a navigation aimed at the coven', async () => {
-    renderAdmin();
-
-    await press('Coven');
-
-    expect(screen.getByRole('list', { name: 'Categories' })).toBeInTheDocument();
   });
 
   // The skeleton does not vanish when the page arrives: it stays over it, out of
   // the way of assistive technology and the pointer, for the length of the fade
-  // (200ms, \`arrived\`), then goes (M12.33).
+  // (200ms, `arrived`), then goes (M12.33); the timing is SkeletonFade's own proof.
   describe('when the page arrives', () => {
     beforeEach(() => {
       vi.useFakeTimers({ toFake: ['setTimeout', 'clearTimeout'] });
@@ -186,20 +171,6 @@ describe('SectionBody for the admin area', () => {
       expect(screen.queryByRole('status')).not.toBeInTheDocument();
       expect(screen.queryByRole('heading', { level: 1 })).not.toBeInTheDocument();
       expect(screen.getAllByRole('main')).toHaveLength(1);
-
-      await act(async () => vi.advanceTimersByTime(199));
-      expect(overlay(container)).not.toBeNull();
-      await act(async () => vi.advanceTimersByTime(1));
-      expect(overlay(container)).toBeNull();
-      expect(oldPage()).toBeInTheDocument();
-    });
-
-    it('leaves nothing to fade for a navigation that drew no skeleton', async () => {
-      const { container } = renderBody();
-      await press('Filter');
-      await act(async () => arrive());
-      expect(overlay(container)).toBeNull();
-      expect(oldPage()).toBeInTheDocument();
     });
   });
 });

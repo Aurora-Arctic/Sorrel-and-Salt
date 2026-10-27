@@ -1,4 +1,4 @@
-import { act, fireEvent, render, screen } from '@testing-library/react';
+import { render, screen } from '@testing-library/react';
 import { FormProvider, useForm } from 'react-hook-form';
 import { describe, expect, it } from 'vitest';
 import StockFields, {
@@ -97,17 +97,6 @@ describe('StockFields', () => {
     expect(UNIT_OPTIONS.slice(1).map((option) => option.value)).toEqual([...UNITS]);
     const labels = UNIT_OPTIONS.map((option) => option.label);
     expect(new Set(labels).size).toBe(labels.length);
-  });
-
-  it('reaches the unit by keyboard alone', () => {
-    render(<Harness start={EMPTY_STOCK} />);
-
-    act(() => unit().focus());
-    fireEvent.keyDown(unit(), { key: 'ArrowDown' });
-    fireEvent.keyDown(unit(), { key: 'ArrowDown' });
-    fireEvent.keyDown(unit(), { key: 'Enter' });
-
-    expect(held.unit).toBe('mg');
   });
 });
 

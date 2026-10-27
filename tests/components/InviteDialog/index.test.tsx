@@ -84,16 +84,14 @@ describe('InviteDialog', () => {
     expect(send()).toBeEnabled();
   });
 
-  it.each([
-    ['no @', 'ada.example.test'],
-    ['no domain dot', 'ada@example'],
-    ['a space in it', 'ada lovelace@example.test'],
-    ['a domain no mailbox can exist under', 'ada@example.invalid'],
-  ])('refuses an address with %s before anything is sent', async (_why, address) => {
+  // The shape of an address is src/lib/email-address.ts's, proved in
+  // tests/lib/email-address.test.ts; this is the form's wiring of it, through
+  // a domain no mailbox can exist under.
+  it('refuses an address the format rule rejects before anything is sent', async () => {
     const calls = mockSending();
     open();
 
-    type(address);
+    type('ada@example.invalid');
     fireEvent.click(send());
 
     await waitFor(() => expect(emailField()).toHaveAttribute('aria-invalid', 'true'));
@@ -125,15 +123,7 @@ describe('InviteDialog', () => {
     expect(within(dialog()).queryByRole('option', { name: /Owner/ })).toBeNull();
   });
 
-  // The line is the group's description, so a screen reader reads it with the
-  // group; its words are the owner's to change.
-  it('explains beside the roles where ownership is granted instead', () => {
-    open();
-
-    expect(within(dialog()).getByRole('group', { name: 'Role' })).toHaveAccessibleDescription(/\S/);
-  });
-
-  it('sends the address, trimmed, with the chosen role for this coven', async () => {
+  it('sends the address, trimmed, with the chosen role for this coven, then says so and refreshes the page behind it', async () => {
     const calls = mockSending();
     open();
 
@@ -141,18 +131,8 @@ describe('InviteDialog', () => {
     fireEvent.click(within(dialog()).getByRole('radio', { name: /Member/ }));
     fireEvent.click(send());
 
-    await screen.findByRole('status');
-    expect(calls).toEqual([{ workspaceId: WORKSPACE, email: 'ada@example.test', role: 'member' }]);
-  });
-
-  it('says the invitation was sent, naming the address, and refreshes the page behind it', async () => {
-    mockSending();
-    open();
-
-    type('ada@example.test');
-    fireEvent.click(send());
-
     const sent = await screen.findByRole('status');
+    expect(calls).toEqual([{ workspaceId: WORKSPACE, email: 'ada@example.test', role: 'member' }]);
     expect(sent).toHaveTextContent('ada@example.test');
     expect(router.refresh).toHaveBeenCalledTimes(1);
     // The form is replaced by the confirmation, so nothing can be sent twice.
@@ -196,25 +176,6 @@ describe('InviteDialog', () => {
 
     await waitFor(() => expect(screen.queryByRole('dialog')).toBeNull());
     expect(trigger()).toHaveFocus();
-  });
-
-  it('closes on Escape with nothing typed, and gives the focus back to Invite', async () => {
-    open();
-
-    fireEvent(dialog(), new Event('cancel', { cancelable: true }));
-
-    await waitFor(() => expect(screen.queryByRole('dialog')).toBeNull());
-    expect(trigger()).toHaveFocus();
-  });
-
-  it('closes from Cancel and from Close with nothing typed', async () => {
-    open();
-    fireEvent.click(within(dialog()).getByRole('button', { name: 'Cancel' }));
-    await waitFor(() => expect(screen.queryByRole('dialog')).toBeNull());
-
-    fireEvent.click(trigger());
-    fireEvent.click(within(dialog()).getByRole('button', { name: 'Close' }));
-    await waitFor(() => expect(screen.queryByRole('dialog')).toBeNull());
   });
 
   // The guard's own shape is tests/components/Modal's; this is its wiring here.

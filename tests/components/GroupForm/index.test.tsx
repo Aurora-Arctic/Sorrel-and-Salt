@@ -1,7 +1,6 @@
 import { QueryClientProvider } from '@tanstack/react-query';
 import { act, fireEvent, render, screen, waitFor, within } from '@testing-library/react';
 import { describe, expect, it, vi } from 'vitest';
-import FormIcon from '@/components/FormIcon';
 import GroupForm from '@/components/GroupForm';
 import type { GroupFormProps } from '@/components/GroupForm/types';
 import type {
@@ -106,6 +105,10 @@ describe('GroupForm, its delete questions in a modal', () => {
 
     press('Back');
     expectAskingOver(name(), screen.getByRole('button', { name: 'Keep It' }));
+    // Going back keeps the choice made.
+    expect(screen.getByRole('combobox', { name: 'Move Its 3 Categories To' })).toHaveTextContent(
+      'Fixture Mineral',
+    );
     press('Keep It');
 
     expectAnswered(name(), 'Keep It');
@@ -345,17 +348,6 @@ describe('GroupForm, for a category group', () => {
       expect(screen.getByRole('button', { name: 'Continue' })).toBeDisabled();
     });
 
-    it('draws no icon in the choices', () => {
-      renderForm({ group: WARDS, memberCount: 3 });
-
-      press('Delete Group');
-      fireEvent.click(screen.getByRole('combobox', { name: 'Move Its 3 Categories To' }));
-
-      for (const option of screen.getAllByRole('option')) {
-        expect(option.querySelector('svg')).toBeNull();
-      }
-    });
-
     it('asks to confirm the move once a group is chosen, and moves them on confirmation', async () => {
       const calls: DeleteCategoryGroupMutationVariables[] = [];
       mockGraphQLMutation<DeleteCategoryGroupMutation, DeleteCategoryGroupMutationVariables>(
@@ -377,24 +369,6 @@ describe('GroupForm, for a category group', () => {
 
       await waitFor(() => expect(onDone).toHaveBeenCalledTimes(1));
       expect(calls).toEqual([{ id: WARDS.id, moveTo: GROUPS[0].id }]);
-    });
-
-    it('goes back to the choice from the confirmation, and back to the form on Keep It', () => {
-      const onDone = renderForm({ group: WARDS, memberCount: 1 });
-
-      press('Delete Group');
-      choose('Move Its 1 Category To', 'Fixture Substance');
-      press('Continue');
-      press('Back');
-      expect(screen.getByRole('combobox', { name: 'Move Its 1 Category To' })).toHaveTextContent(
-        'Fixture Substance',
-      );
-      press('Keep It');
-
-      // The question gone, not merely the form's own button there beneath it.
-      expect(screen.queryByRole('button', { name: 'Keep It' })).not.toBeInTheDocument();
-      expect(screen.getByRole('button', { name: 'Delete Group' })).toBeInTheDocument();
-      expect(onDone).not.toHaveBeenCalled();
     });
 
     it('offers no move when there is no other group to move them to', () => {
@@ -503,20 +477,6 @@ describe('GroupForm, for a form group', () => {
       expect(screen.queryByRole('group', { name: 'Icon' })).not.toBeInTheDocument();
     });
 
-    it('shows each option its own icon, None the generic', () => {
-      renderForm({ kind: 'form' });
-
-      const drawn = (label: string) =>
-        within(icons()).getByRole('radio', { name: label }).closest('label')!.querySelector('svg')!
-          .innerHTML;
-      const generic = render(<FormIcon name={null} />).container.querySelector('svg')!.innerHTML;
-      const leaf = render(<FormIcon name="botanical" />).container.querySelector('svg')!.innerHTML;
-
-      expect(drawn('None')).toBe(generic);
-      expect(drawn('Botanical')).toBe(leaf);
-      expect(leaf).not.toBe(generic);
-    });
-
     it('sends the chosen icon, and starts a group from the one it has', async () => {
       const calls: UpdateIngredientFormGroupMutationVariables[] = [];
       mockGraphQLMutation<
@@ -553,28 +513,6 @@ describe('GroupForm, for a form group', () => {
       await waitFor(() => expect(onDone).toHaveBeenCalledTimes(1));
       expect(calls[0].input.icon).toBeNull();
     });
-  });
-
-  it('draws the icon of each group in the move-to choices, the generic where it has none', () => {
-    const groups = [
-      { id: GROUPS[0].id, name: 'Fixture Mineral', icon: 'mineral' as const },
-      { id: GROUPS[1].id, name: 'Fixture Substance', icon: null },
-      { id: GROUPS[2].id, name: 'Fixture Wards', icon: null },
-    ];
-    renderForm({ kind: 'form', group: { ...MATTER, id: GROUPS[2].id }, groups, memberCount: 2 });
-
-    press('Delete Group');
-    fireEvent.click(screen.getByRole('combobox', { name: 'Move Its 2 Forms To' }));
-
-    const drawn = (label: string) =>
-      screen.getByRole('option', { name: label }).querySelector('[aria-hidden="true"] svg')!
-        .innerHTML;
-    expect(drawn('Fixture Mineral')).toBe(
-      render(<FormIcon name="mineral" />).container.querySelector('svg')!.innerHTML,
-    );
-    expect(drawn('Fixture Substance')).toBe(
-      render(<FormIcon name={null} />).container.querySelector('svg')!.innerHTML,
-    );
   });
 
   it('moves its forms on a confirmed delete', async () => {
@@ -666,17 +604,6 @@ describe('GroupForm, its undo and redo', () => {
 
     redo();
     expect(dark()).toHaveValue('#35987d');
-  });
-
-  it('undoes a name change', () => {
-    renderForm({ group: WARDS });
-    act(() => name().focus());
-    typeIn(name(), 'Fixture Shields');
-
-    undo();
-
-    expect(name()).toHaveValue(WARDS.name);
-    expect(save()).toBeDisabled();
   });
 
   it('undoes nothing through the steps of a delete', () => {

@@ -1,7 +1,7 @@
 import type { Route } from 'next';
 import { act, fireEvent, render, screen, within } from '@testing-library/react';
 import type { ReactElement } from 'react';
-import { beforeEach, describe, expect, it, vi } from 'vitest';
+import { beforeEach, describe, expect, it, onTestFinished, vi } from 'vitest';
 import { QueryClientProvider } from '@tanstack/react-query';
 import CovenCards from '@/components/CovenCards';
 import type { CovenCardEntry, CovenCardsProps } from '@/components/CovenCards/types';
@@ -151,21 +151,12 @@ describe('CovenCards', () => {
 
     const look = screen.getByRole('link', { name: 'Quick Look Fixture Salt' });
     expect(look).toHaveAttribute('href', '/coven/fixture-coven/ingredients?entry=e2');
-    // A press with a modifier is the browser's: a new tab at that address.
-    expect(fireEvent.click(look, { ctrlKey: true })).toBe(true);
-    expect(screen.queryByRole('dialog')).not.toBeInTheDocument();
-
     await act(async () => {
       fireEvent.click(look);
     });
 
     expect(router.push.mock.lastCall?.[0]).toBe('/coven/fixture-coven/ingredients?entry=e2');
     expect(screen.getByRole('dialog', { name: 'Ingredient, Fixture Salt' })).toBeInTheDocument();
-  });
-
-  it('draws a jar line for each jar an entry holds', () => {
-    render(<Cards {...props()} />);
-    expect(screen.getAllByText(/Fixture Herb/)).toHaveLength(1);
   });
 
   it('draws no forms line, the jar lines standing in its place', () => {
@@ -189,12 +180,6 @@ describe('CovenCards', () => {
     const pencils = within(list).getAllByRole('button', { name: /^Edit Stock/ });
     expect(pencils).toHaveLength(1);
     expect(pencils[0]).toHaveAccessibleName('Edit Stock, Testwort');
-
-    fireEvent.click(pencils[0]!);
-    const dialog = screen.getByRole('dialog', { name: 'Edit Stock, Testwort' });
-    expect(within(dialog).getByRole('spinbutton', { name: 'Quantity, Fixture Herb' })).toHaveValue(
-      3,
-    );
   });
 
   it("puts Edit Stock first in a card's foot, before Edit", () => {
@@ -371,6 +356,12 @@ describe('CovenCards', () => {
   // The page still shows the previous search while the next one is read; the sentence typed out
   // in the meantime names the coven facets of the address being opened, and none of the old ones.
   it("types the sentence from the coven's own facets of the search being opened", async () => {
+    // The line types on a 16 ms tick (SearchSentence); on the real clock the case took 20 s. Only
+    // the timers are faked, as in CompendiumList/index.test.tsx, so the line types as the test advances it.
+    vi.useFakeTimers({ toFake: ['setTimeout', 'clearTimeout', 'setInterval', 'clearInterval'] });
+    onTestFinished(() => {
+      vi.useRealTimers();
+    });
     mockGraphQLQuery('CovenFacetCounts', () => ({
       workspaceIngredientFacets: {
         forms: [],
@@ -400,6 +391,9 @@ describe('CovenCards', () => {
     const pushed = new URL(router.push.mock.lastCall![0], 'http://localhost').searchParams;
     expect(pushed.get('lowStockOnly')).not.toBeNull();
     expect(pushed.get('inStock')).toBeNull();
+    // The old line backspaced, then the new one typed in full: two phases, each its own act.
+    await act(() => vi.advanceTimersByTimeAsync(1500));
+    await act(() => vi.advanceTimersByTimeAsync(1500));
     // The sentence is typed out, hidden from assistive technology, while the search is on its way.
     const typed = screen
       .getAllByRole('group', { hidden: true })
@@ -407,20 +401,5 @@ describe('CovenCards', () => {
     expect(typed).toBeDefined();
     expect(typed!.textContent).toContain('low or out of stock');
     expect(typed!.textContent).not.toContain('in stock');
-  });
-
-  it('reads Page X of Y between Previous and Next', () => {
-    render(
-      <Cards
-        {...props({
-          previousHref: '/coven/fixture-coven/ingredients?before=a' as Route,
-          position: { page: 2, pages: 2 },
-        })}
-      />,
-    );
-    expect(screen.getByRole('link', { name: 'Prev' })).toHaveAttribute(
-      'href',
-      '/coven/fixture-coven/ingredients?before=a',
-    );
   });
 });

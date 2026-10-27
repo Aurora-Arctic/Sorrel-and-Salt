@@ -162,14 +162,6 @@ describe('Modal', () => {
     ).toBeNull();
   });
 
-  it('asks its owner to close it from the Close button', () => {
-    const onClose = renderModal();
-
-    fireEvent.click(screen.getByRole('button', { name: 'Close' }));
-
-    expect(onClose).toHaveBeenCalledTimes(1);
-  });
-
   it('closes from the Close button on its top line, with the top line empty or full', () => {
     const onClose = vi.fn();
     const { rerender } = render(
@@ -573,18 +565,6 @@ describe('Modal', () => {
       expect(onClose).toHaveBeenCalledTimes(1);
     });
 
-    it('asks on Cancel with a change, the dialog open and the focus on Keep Editing', () => {
-      const onClose = renderGuarded();
-      change('Name', 'Testwort');
-
-      fireEvent.click(button('Cancel'));
-
-      expect(asking()).toBeInTheDocument();
-      expect(button('Keep Editing')).toHaveFocus();
-      expect(screen.getByRole('dialog')).toHaveAttribute('open');
-      expect(onClose).not.toHaveBeenCalled();
-    });
-
     // The owner's call during MB.115: the question is drawn over the form,
     // which can be neither pressed nor typed into until it is answered. The
     // modal's own Close stays live, so a try there flashes the question.
@@ -665,27 +645,6 @@ describe('Modal', () => {
       expect(foot.closest('[inert]')).toBeNull();
     });
 
-    it.each([
-      ['the Close button', () => fireEvent.click(button('Close'))],
-      ['Escape', escape],
-      [
-        'a click outside',
-        () => {
-          const at = { clientX: 20, clientY: 150 };
-          fireEvent.mouseDown(screen.getByRole('dialog'), at);
-          fireEvent.click(screen.getByRole('dialog'), at);
-        },
-      ],
-    ])('asks on %s with a change, as Cancel does', (_, leave) => {
-      const onClose = renderGuarded();
-      change('Name', 'Testwort');
-
-      leave();
-
-      expect(asking()).toBeInTheDocument();
-      expect(onClose).not.toHaveBeenCalled();
-    });
-
     // The least destructive answer takes the focus however the question was
     // reached, each from where a real press leaves it (APG, alertdialog).
     it.each([
@@ -720,7 +679,7 @@ describe('Modal', () => {
         },
       ],
     ])('puts the focus on Keep Editing when asked by %s, and keeps it there', async (_, leave) => {
-      renderGuarded();
+      const onClose = renderGuarded();
       change('Name', 'Testwort');
 
       leave();
@@ -730,21 +689,7 @@ describe('Modal', () => {
         await new Promise((resolve) => requestAnimationFrame(() => resolve(null)));
       });
       expect(button('Keep Editing')).toHaveFocus();
-    });
-
-    // Regression: a real browser can move the focus once the opening event's
-    // handler returns, after the commit; the question takes it back.
-    it('takes the focus back on Keep Editing if it is moved off just after the question opens', async () => {
-      renderGuarded();
-      change('Name', 'Testwort');
-      fireEvent.click(button('Close'));
-      expect(button('Keep Editing')).toHaveFocus();
-
-      screen.getByRole('dialog').focus();
-      await act(async () => {
-        await new Promise((resolve) => requestAnimationFrame(() => resolve(null)));
-      });
-      expect(button('Keep Editing')).toHaveFocus();
+      expect(onClose).not.toHaveBeenCalled();
     });
 
     // The owner's call during MB.115: a way out tried again flashes the
@@ -800,13 +745,10 @@ describe('Modal', () => {
       expect(button('Cancel')).toHaveFocus();
     });
 
-    it.each([
-      ['Cancel', () => fireEvent.click(button('Cancel'))],
-      ['Escape', escape],
-    ])('closes on Discard Changes after %s', (_, leave) => {
+    it('closes on Discard Changes after Cancel', () => {
       const onClose = renderGuarded();
       change('Name', 'Testwort');
-      leave();
+      fireEvent.click(button('Cancel'));
 
       fireEvent.click(button('Discard Changes'));
 

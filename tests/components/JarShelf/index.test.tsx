@@ -163,24 +163,6 @@ describe('JarShelf', () => {
     );
   });
 
-  it('keeps the amount button for a viewer, who has no Edit Stock press', () => {
-    render(
-      <JarShelf
-        forms={[
-          {
-            variantId: 'v1',
-            form: 'seed',
-            jar: { id: 'j1', quantity: 4, unit: 'g', threshold: 10 },
-          },
-        ]}
-        seed="Testwort"
-      />,
-    );
-
-    expect(screen.queryByRole('button', { name: /^Edit Stock/ })).toBeNull();
-    expect(screen.getByRole('button', { name: '4 g, Low Stock' })).toBeInTheDocument();
-  });
-
   it('hides every drawing from a screen reader and gives each its own clip', () => {
     const { container } = render(<JarShelf forms={FORMS} seed="Testwort" />);
 

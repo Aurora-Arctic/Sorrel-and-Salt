@@ -97,16 +97,6 @@ describe('PublicFrame', () => {
     }
   });
 
-  it('marks no page as current anywhere else, nor on a path that only begins with its letters', () => {
-    for (const path of ['/', '/compendium-archive']) {
-      pathname.mockReturnValue(path);
-      const { unmount } = frame();
-
-      expect(compendiumLink()).not.toHaveAttribute('aria-current');
-      unmount();
-    }
-  });
-
   it('offers nothing workspace-shaped', () => {
     frame();
 

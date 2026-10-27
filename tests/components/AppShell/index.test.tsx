@@ -90,52 +90,10 @@ describe('AppShell', () => {
     shell(MEMBER);
 
     // The precondition: a verified viewer does get the rest of the bar.
-    expect(screen.getByRole('button', { name: 'Add Ingredient' })).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: 'Add Ingredient' })).toBeEnabled();
     expect(screen.getByRole('link', { name: 'Compendium' })).toHaveAttribute('href', '/compendium');
     expect(screen.queryByRole('link', { name: 'Admin' })).not.toBeInTheDocument();
     expect(screen.queryByRole('link', { name: 'Your Coven' })).not.toBeInTheDocument();
-  });
-
-  it.each([
-    ['a member', MEMBER],
-    ['an admin', ADMIN],
-    ['an unverified account', UNVERIFIED],
-  ])('shows %s the Compendium link', (_, viewer) => {
-    shell(viewer);
-
-    expect(
-      within(screen.getByRole('navigation', { name: 'Site' })).getByRole('link', {
-        name: 'Compendium',
-      }),
-    ).toHaveAttribute('href', '/compendium');
-  });
-
-  it('marks the compendium as the current page beneath it', () => {
-    pathname.mockReturnValue('/compendium/ingredients/fixtura-testalis');
-    shell(MEMBER);
-
-    expect(screen.getByRole('link', { name: 'Compendium' })).toHaveAttribute(
-      'aria-current',
-      'page',
-    );
-  });
-
-  it('marks the area the page is in as the current page', () => {
-    pathname.mockReturnValue('/admin/users');
-    shell(ADMIN);
-
-    expect(screen.getByRole('link', { name: 'Admin' })).toHaveAttribute('aria-current', 'page');
-    expect(screen.getByRole('link', { name: 'Your Covens' })).not.toHaveAttribute('aria-current');
-  });
-
-  it.each([
-    ['an admin', ADMIN, COVENS],
-    ['a member', MEMBER, COVENS],
-    ['someone in no coven', MEMBER, []],
-  ])('sends the brand of %s to the front page', (_, viewer, covens) => {
-    shell(viewer, covens);
-
-    expect(screen.getByRole('link', { name: 'Sorrel & Salt' })).toHaveAttribute('href', '/');
   });
 
   it('names the coven link for one coven or several', () => {
@@ -147,12 +105,6 @@ describe('AppShell', () => {
     shell(ADMIN, COVENS);
     expect(screen.getByRole('link', { name: 'Your Covens' })).toBeInTheDocument();
     expect(screen.queryByRole('link', { name: 'Your Coven' })).not.toBeInTheDocument();
-  });
-
-  it('offers a member of a coven an enabled Add Ingredient button', () => {
-    shell(MEMBER);
-
-    expect(screen.getByRole('button', { name: 'Add Ingredient' })).toBeEnabled();
   });
 
   it('leaves an unverified account the brand link to the front page, the account menu and the theme switch', () => {

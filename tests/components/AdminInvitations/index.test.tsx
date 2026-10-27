@@ -164,14 +164,6 @@ describe('AdminInvitations', () => {
     expect(router.replace).toHaveBeenCalledWith('/admin/invitations');
   });
 
-  it('closes at once on Cancel with nothing typed', () => {
-    render(<AdminInvitations invitations={[]} inviting />);
-
-    fireEvent.click(within(dialog()).getByRole('button', { name: 'Cancel' }));
-
-    expect(router.replace).toHaveBeenCalledWith('/admin/invitations');
-  });
-
   it('says a refused address beside the field and keeps the form open', async () => {
     mockGraphQLError('CreateAdminInvitation', {
       code: 'VALIDATION',

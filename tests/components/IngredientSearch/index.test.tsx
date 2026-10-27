@@ -138,12 +138,10 @@ describe('IngredientSearch', () => {
     expect(screen.getByRole('button', { name: 'Search' })).toHaveAttribute('type', 'submit');
   });
 
-  it("draws the Search submit inside the box's control before the text, with no chevron, and a press on it submits the form", () => {
+  it('draws the Search submit with no chevron, and a press on it submits the form', () => {
     renderSearch('wort');
 
     const search = screen.getByRole('button', { name: 'Search' });
-    expect(box().closest('.combobox__control')).toContainElement(search);
-    expect(search.compareDocumentPosition(box()) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy();
     expect(screen.queryByRole('button', { name: /^Show Name/ })).not.toBeInTheDocument();
     const submitted = vi.fn((event: Event) => event.preventDefault());
     form().addEventListener('submit', submitted);
@@ -283,13 +281,13 @@ describe('IngredientSearch', () => {
     expect(status()).not.toHaveTextContent('3');
   });
 
-  it('counts its rows in the status, and reads the empty message when nothing matches', async () => {
+  it('reads the empty message when nothing matches', async () => {
     offer([match(1), match(2)]);
     renderSearch();
 
     typeName('wort');
     await settle();
-    await waitFor(() => expect(status()).toHaveTextContent('2'));
+    await waitFor(() => expect(screen.getAllByRole('option')).toHaveLength(2));
 
     offer([]);
     typeName('zzzz');

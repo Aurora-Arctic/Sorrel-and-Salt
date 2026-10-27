@@ -38,16 +38,9 @@ describe('RadioGroupField, strip', () => {
     expect(within(group).getByRole('radio', { name: 'None' })).not.toBeChecked();
   });
 
-  it("draws each segment's icon, outside the radio's name, and keeps the group's note", () => {
+  it("keeps the group's note as its description", () => {
     render(<Harness />);
 
-    const mark = screen
-      .getByRole('radio', { name: 'Mineral' })
-      .closest('label')!
-      .querySelector('svg')!;
-    expect(mark.innerHTML).toBe(
-      render(<FormIcon name="mineral" />).container.querySelector('svg')!.innerHTML,
-    );
     expect(screen.getByRole('group', { name: 'Icon' })).toHaveAccessibleDescription();
   });
 
@@ -110,16 +103,7 @@ describe('RadioGroupField, segmented', () => {
     expect(within(group).getByRole('radio', { name: 'Any' })).toBeChecked();
     expect(within(group).getByRole('radio', { name: 'Toxic 4' })).toBeInTheDocument();
     expect(within(group).getByRole('radio', { name: 'Not Toxic 8' })).toBeInTheDocument();
-  });
-
-  it('changes the choice on a click, and submits it under the group name', () => {
-    render(<Segmented />);
-
-    fireEvent.click(screen.getByRole('radio', { name: 'Toxic 4' }));
-
-    expect(screen.getByRole('radio', { name: 'Toxic 4' })).toBeChecked();
-    expect(screen.getByRole('radio', { name: 'Any' })).not.toBeChecked();
-    expect(screen.getByRole('radio', { name: 'Toxic 4' })).toHaveAttribute('name', 'toxic');
+    expect(within(group).getByRole('radio', { name: 'Any' })).toHaveAttribute('name', 'toxic');
   });
 
   it('names a segment by its label alone when it has no count', () => {

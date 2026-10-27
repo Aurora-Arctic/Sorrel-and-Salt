@@ -162,28 +162,18 @@ describe('CreateWorkspaceForm', () => {
     const link = () => screen.getByRole('button', { name: 'Compendium' });
     const asking = () => screen.queryByRole('dialog', { name: 'Discard Changes?' });
 
-    it('asks before a link or a tab close leaves a typed name, and goes on Discard Changes', () => {
+    // The guard's shape (Keep Editing, Discard Changes, a dialog outside the
+    // form) is proved once at tests/components/Modal/discard.test.tsx; this is
+    // the form's wiring of it.
+    it('holds a link and a tab close once a name is typed', () => {
       renderOnPage();
-      fireEvent.click(link());
-      expect(push).toHaveBeenCalledExactlyOnceWith('/compendium');
-      expect(unload()).toBe(false);
-      push.mockClear();
-
       fireEvent.change(nameField(), { target: { value: 'Fixture Coven' } });
+
       expect(unload()).toBe(true);
       fireEvent.click(link());
-      // A dialog of its own, not a card in the page's form.
+
       expect(asking()).toBeInTheDocument();
-      expect(asking()!.closest('form')).toBeNull();
       expect(push).not.toHaveBeenCalled();
-
-      fireEvent.click(screen.getByRole('button', { name: 'Keep Editing' }));
-      expect(asking()).toBeNull();
-      expect(nameField()).toHaveValue('Fixture Coven');
-
-      fireEvent.click(link());
-      fireEvent.click(screen.getByRole('button', { name: 'Discard Changes' }));
-      expect(push).toHaveBeenCalledExactlyOnceWith('/compendium');
     });
 
     it('lands in the new coven without asking', async () => {

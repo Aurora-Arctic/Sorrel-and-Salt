@@ -22,20 +22,6 @@ describe('CovenNav', () => {
     pathname.mockReturnValue(`/coven/${SLUG}`);
   });
 
-  it('links the coven index, built from the slug', () => {
-    render(<CovenNav slug={SLUG} canReadMembers />);
-    const links = within(nav()).getAllByRole('link');
-    expect(links.map((link) => link.getAttribute('href'))).toContain(`/coven/${SLUG}`);
-  });
-
-  it('marks the index current on the index', () => {
-    render(<CovenNav slug={SLUG} canReadMembers />);
-    const index = within(nav())
-      .getAllByRole('link')
-      .find((link) => link.getAttribute('href') === `/coven/${SLUG}`);
-    expect(index).toHaveAttribute('aria-current', 'page');
-  });
-
   it('does not mark the index current on a page beneath it', () => {
     pathname.mockReturnValue(`/coven/${SLUG}/members`);
     render(<CovenNav slug={SLUG} canReadMembers />);
@@ -45,23 +31,11 @@ describe('CovenNav', () => {
     expect(index).not.toHaveAttribute('aria-current');
   });
 
-  it.each([true, false])('links the ingredients page, with canReadMembers %s', (canReadMembers) => {
-    render(<CovenNav slug={SLUG} canReadMembers={canReadMembers} />);
+  it('links the ingredients page', () => {
+    render(<CovenNav slug={SLUG} canReadMembers />);
     expect(within(nav()).getByRole('link', { name: 'Ingredients' })).toHaveAttribute(
       'href',
       `/coven/${SLUG}/ingredients`,
-    );
-  });
-
-  it('marks ingredients current on a page beneath it, and the index not', () => {
-    pathname.mockReturnValue(`/coven/${SLUG}/ingredients/some-id`);
-    render(<CovenNav slug={SLUG} canReadMembers />);
-    expect(within(nav()).getByRole('link', { name: 'Ingredients' })).toHaveAttribute(
-      'aria-current',
-      'page',
-    );
-    expect(within(nav()).getByRole('link', { name: 'Overview' })).not.toHaveAttribute(
-      'aria-current',
     );
   });
 

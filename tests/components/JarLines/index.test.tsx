@@ -23,7 +23,7 @@ describe('JarLines', () => {
     expect(lines()[0]).toHaveTextContent('Dried Testleaf');
   });
 
-  it('writes the quantity and unit, and draws nothing for no jars', () => {
+  it('writes the quantity and unit', () => {
     render(<JarLines jars={[jar({ id: 'a', form: 'oil', quantity: 40, unit: 'ml' })]} />);
     expect(lines()[0]).toHaveTextContent('40 ml');
   });

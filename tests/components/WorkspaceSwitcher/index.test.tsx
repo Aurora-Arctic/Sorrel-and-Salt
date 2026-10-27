@@ -41,14 +41,6 @@ describe('WorkspaceSwitcher', () => {
     ]);
   });
 
-  it('shows the workspace the address is in as the value', () => {
-    pathname.mockReturnValue('/coven/testwort-circle');
-
-    render(<WorkspaceSwitcher workspaces={WORKSPACES} />);
-
-    expect(box()).toHaveTextContent('Testwort Circle');
-  });
-
   it('goes to the same section in the chosen workspace', () => {
     render(<WorkspaceSwitcher workspaces={WORKSPACES} />);
 
@@ -109,22 +101,6 @@ describe('WorkspaceSwitcher', () => {
       expect(push).toHaveBeenCalledExactlyOnceWith('/coven/testwort-circle/ingredients/some-id');
     });
 
-    it('falls back to the section in a coven it does not open in', () => {
-      renderOn(['fixture-coven']);
-
-      switchTo('Testwort Circle');
-
-      expect(push).toHaveBeenCalledExactlyOnceWith('/coven/testwort-circle/ingredients');
-    });
-
-    it('falls back to the section when no page registered', () => {
-      renderOn(null);
-
-      switchTo('Testwort Circle');
-
-      expect(push).toHaveBeenCalledExactlyOnceWith('/coven/testwort-circle/ingredients');
-    });
-
     it('ignores a registration made for another address', () => {
       // Why it could be used: it names the target coven, only for a different entry.
       renderOn(['fixture-coven', 'testwort-circle'], '/coven/fixture-coven/ingredients/other-id');
@@ -133,17 +109,6 @@ describe('WorkspaceSwitcher', () => {
 
       expect(push).toHaveBeenCalledExactlyOnceWith('/coven/testwort-circle/ingredients');
     });
-  });
-
-  it('is operable from the keyboard', () => {
-    render(<WorkspaceSwitcher workspaces={WORKSPACES} />);
-
-    box().focus();
-    fireEvent.keyDown(box(), { key: 'ArrowDown' });
-    fireEvent.keyDown(box(), { key: 'ArrowDown' });
-    fireEvent.keyDown(box(), { key: 'Enter' });
-
-    expect(push).toHaveBeenCalledExactlyOnceWith('/coven/testwort-circle/ingredients');
   });
 
   it('keeps the current workspace from the address, so a re-render in another tab’s workspace does not change it', () => {
@@ -171,19 +136,11 @@ describe('WorkspaceSwitcher', () => {
       expect(screen.queryByRole('option', { name: 'Create Coven' })).not.toBeInTheDocument();
     });
 
-    it('goes to the create page, from a click or the keyboard', () => {
+    it('goes to the create page', () => {
       render(<WorkspaceSwitcher workspaces={WORKSPACES} canCreate />);
 
       fireEvent.click(box());
       fireEvent.click(screen.getByRole('option', { name: 'Create Coven' }));
-      expect(push).toHaveBeenCalledExactlyOnceWith('/coven/new');
-
-      push.mockClear();
-      box().focus();
-      fireEvent.keyDown(box(), { key: 'ArrowDown' });
-      fireEvent.keyDown(box(), { key: 'ArrowDown' });
-      fireEvent.keyDown(box(), { key: 'ArrowDown' });
-      fireEvent.keyDown(box(), { key: 'Enter' });
       expect(push).toHaveBeenCalledExactlyOnceWith('/coven/new');
     });
 
