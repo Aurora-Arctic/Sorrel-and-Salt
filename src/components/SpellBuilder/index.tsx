@@ -20,8 +20,10 @@ import Notice from '../Notice';
 import { DAYS_OF_THE_WEEK, MOON_PHASES } from './constants';
 import { SpellSuggestField } from './suggest-field';
 import { SpellInput } from '@/modules/grimoire/validation/spell';
+import { SpellVisibilityField } from './visibility-field';
 import type {
   SpellBuilderField,
+  SpellBuilderInput,
   SpellBuilderProps,
   SpellBuilderSpell,
   SpellBuilderValues,
@@ -49,6 +51,7 @@ const CreateSpellDocument = graphql(`
       moonPhase
       dayOfWeek
       note
+      visibility
     }
   }
 `);
@@ -65,6 +68,7 @@ const UpdateSpellDocument = graphql(`
       moonPhase
       dayOfWeek
       note
+      visibility
     }
   }
 `);
@@ -79,17 +83,19 @@ const FIELDS: readonly SpellBuilderField[] = [
   'note',
 ];
 
-/** The fields as the save sends them: trimmed, and null for blank, as the schema reads them. */
-type SpellBuilderInput = Record<SpellBuilderField, string | null>;
-
 const isField = (key: unknown): key is SpellBuilderField =>
   FIELDS.includes(key as SpellBuilderField);
 
 /** The form's values for a spell: none for a new one, and blank for a field it has not set. */
 function valuesOf(spell?: Partial<SpellBuilderSpell>): SpellBuilderValues {
-  return Object.fromEntries(
-    FIELDS.map((field) => [field, spell?.[field] ?? '']),
-  ) as SpellBuilderValues;
+  return {
+    ...(Object.fromEntries(FIELDS.map((field) => [field, spell?.[field] ?? ''])) as Record<
+      SpellBuilderField,
+      string
+    >),
+    // A new spell is the coven's unless chosen otherwise (§5).
+    visibility: spell?.visibility ?? 'workspace',
+  };
 }
 
 /**
@@ -158,9 +164,13 @@ const SpellBuilder = ({ workspaceId, spell }: SpellBuilderProps): ReactElement =
   const send = async (values: SpellBuilderInput): Promise<void> => {
     // Only the builder's fields: the schema's defaults (an empty recipe)
     // would otherwise replace a saved spell's steps.
-    const input = Object.fromEntries(
-      FIELDS.map((field) => [field, values[field] ?? null]),
-    ) as SpellBuilderInput;
+    const input = {
+      ...(Object.fromEntries(FIELDS.map((field) => [field, values[field] ?? null])) as Record<
+        SpellBuilderField,
+        string | null
+      >),
+      visibility: values.visibility,
+    };
     try {
       const answer = await save.mutateAsync(input);
       setSaved({ id: answer.id, revision: answer.revision });
@@ -229,6 +239,7 @@ const SpellBuilder = ({ workspaceId, spell }: SpellBuilderProps): ReactElement =
             placeholder="Add a note"
             multiline
           />
+          <SpellVisibilityField created={saved !== null} save={send} />
           <FormActions noun="Spell" dirty={dirty} submitting={isSubmitting} />
           {discard.asking && <DiscardQuestion guard={discard} />}
         </form>

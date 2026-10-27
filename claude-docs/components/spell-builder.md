@@ -6,18 +6,17 @@ day of the week and note. It is a client component. The new-spell page,
 `/coven/[slug]/grimoire/new`, draws it empty, reached from New Spell at the
 Grimoire's heading, which only an owner or a member is shown; M13.10's edit page,
 `/coven/[slug]/grimoire/[id]/edit`, will draw it with a saved spell. The
-recipe's steps (M10.15, M10.16, M13.3), visibility (M10.13), intent categories
-(M10.14) and Mark Complete (M10.20) are later tasks that extend it. There is
+recipe's steps (M10.15, M10.16, M13.3), intent categories (M10.14) and Mark Complete (M10.20) are later tasks that extend it. There is
 no `instructions` field: the ritual is the spell's steps (M13.1).
 
 ## Props
 
 `SpellBuilderProps` (`types.ts`):
 
-| Prop          | What it is                                                                                                       |
-| ------------- | ---------------------------------------------------------------------------------------------------------------- |
-| `workspaceId` | The coven the spell belongs to, sent with every save                                                             |
-| `spell`       | Optional: a saved spell, its `id`, `revision` and the seven fields (null for one not set). Without it, all empty |
+| Prop          | What it is                                                                                                                     |
+| ------------- | ------------------------------------------------------------------------------------------------------------------------------ |
+| `workspaceId` | The coven the spell belongs to, sent with every save                                                                           |
+| `spell`       | Optional: a saved spell, its `id`, `revision`, `visibility` and the seven fields (null for one not set). Without it, all empty |
 
 ## Saving
 
@@ -37,7 +36,8 @@ no `instructions` field: the ritual is the spell's steps (M13.1).
   set to the revision the last save answered. Opened with a `spell`, every
   Save is an update. This is the shape M13.17's autosave adapter takes.
 - **What it sends.** The seven fields, trimmed, and null for a blank one, so
-  an emptied field is cleared rather than left as it was. Only these seven:
+  an emptied field is cleared rather than left as it was, and `visibility`
+  (below). Only these:
   the schema's default empty `steps` is never sent, so a save from here
   cannot replace a saved spell's recipe.
 - **After a save the form starts again from the answer**, so Save goes
@@ -45,6 +45,38 @@ no `instructions` field: the ritual is the spell's steps (M13.1).
   `/coven/[slug]/grimoire/new` after a create: there is no page for one spell
   to go to until MB.6 and M13.10, so reloading the page opens an empty
   builder, and the saved spell is listed under the grimoire's Drafts tab.
+
+## Visibility
+
+Who can see the spell (M10.13): `SpellVisibilityField`, in
+`visibility-field.tsx`, drawn after Note. It is a `RadioGroupField`
+([`field.md`](field.md)) with the legend Visibility and two choices, each with
+a line saying what it means: **Coven** (`workspace`), which every member of
+the coven can see, and **Only Me** (`private`), which only its author can.
+The rule it follows is DESIGN.md §5's: visibility only widens.
+
+- **A new spell** opens on Coven, the database's default, and either may be
+  chosen. The choice goes out with the first save. A choice alone is not
+  something to save: Save Spell stays disabled until a field holds
+  something, and the discard question does not ask about it.
+- **A saved private spell** keeps both choices open. Choosing Coven asks
+  "Share With the Coven?" (`ConfirmQuestion`, Share or Keep It Private), and
+  Share saves the whole form with `visibility: workspace` at once, so the
+  spell is shared in one action. Any other unsaved changes go with it, which
+  the question says. A refusal lands in the `Notice` and the spell stays
+  private.
+- **A spell shared with the coven** shows the control disabled, with the
+  group's note: "Shared with the coven, so it cannot be made private again.
+  Duplicate makes a private copy." Duplicate is M13.20. A new spell saved for
+  the coven shuts the control the same way, as soon as the save answers.
+
+Which state shows is read from the form's starting values (the last save's)
+and whether the spell has been created, so the builder passes only
+`created` and its `send`. Every save carries the visibility the form holds.
+A save from a stale page, after the spell was shared elsewhere, therefore
+says `private` and is refused by the service (`assertWidens`, M10.6); the
+refusal's words, which explain the rule and name Delete, show in the
+`Notice`, never a bare "Forbidden".
 
 ## Two error surfaces
 
@@ -129,7 +161,9 @@ tokens is the grimoire's design review's.
 ## Stories
 
 `index.stories.tsx`, titled "Grimoire / Spell Builder": `States`, with a
-control that chooses Empty, Title Typed, Saved Spell or Refused After Saving,
+control that chooses Empty, Title Typed, Saved Spell (shared with the coven,
+its visibility shut), Private Spell, Share Question, Phase Outside the List
+or Refused After Saving,
 inside the app shell and the page's frame and heading.
 
 ## Testing
@@ -140,7 +174,11 @@ empty fields and no Instructions box, no Cancel, nothing to save until a
 field holds something, a draft saved with its intent alone, the trimmed
 values sent, Save busy then disabled, a second save as an update at the
 revision, a saved spell opened and an emptied field cleared, both error
-surfaces, and the discard question. The page is
+surfaces, and the discard question. `visibility-field.test.tsx` covers the
+visibility control: Coven by default and sent with a create, Only Me sent and
+left open, a choice alone not saveable, the share question kept and
+confirmed, a refused share, a refused narrowing shown in the notice, and the
+control shut with its reason on a shared spell. The page is
 `tests/app/(shell)/coven/[slug]/grimoire/new/page.test.tsx`: the builder for an
 owner and a member, and the 404 for a viewer. Story 47 in
 `tests/e2e/stories/06-grimoire.spec.ts` walks it in a browser.

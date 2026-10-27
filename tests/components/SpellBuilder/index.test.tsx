@@ -50,6 +50,7 @@ function saved(id: string, revision: number, input: CreateSpellMutationVariables
     moonPhase: input.moonPhase ?? null,
     dayOfWeek: input.dayOfWeek ?? null,
     note: input.note ?? null,
+    visibility: input.visibility ?? 'workspace',
   };
 }
 
@@ -148,6 +149,7 @@ describe('SpellBuilder', () => {
         moonPhase: null,
         dayOfWeek: null,
         note: null,
+        visibility: 'workspace',
       },
     });
   });
@@ -174,6 +176,7 @@ describe('SpellBuilder', () => {
       moonPhase: 'Waxing gibbous',
       dayOfWeek: 'Monday',
       note: 'Kept on the sill',
+      visibility: 'workspace',
     });
   });
 
@@ -229,6 +232,7 @@ describe('SpellBuilder', () => {
         moonPhase: null,
         dayOfWeek: 'Monday',
         note: null,
+        visibility: 'workspace',
       },
     });
 
@@ -253,6 +257,7 @@ describe('SpellBuilder', () => {
         moonPhase: null,
         dayOfWeek: 'Monday',
         note: null,
+        visibility: 'workspace',
         expectedRevision: 4,
       },
     });
@@ -388,6 +393,7 @@ describe('SpellBuilder', () => {
           moonPhase: 'Full',
           dayOfWeek: 'saturday',
           note: null,
+          visibility: 'workspace',
         },
       });
 
