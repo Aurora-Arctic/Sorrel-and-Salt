@@ -1,21 +1,29 @@
-import { createHash } from 'node:crypto';
-import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
-import type postgres from 'postgres';
+import { beforeEach, describe, expect, it } from 'vitest';
 import { withAudit } from '@/db/repository';
 import { WORKSPACE_W_ID } from '@/db/seed/standard';
 import { Forbidden, NotFound } from '@/lib/errors';
 import {
   acceptInvitation,
-  acceptInvitationById,
-  declineInvitationById,
   invitationStanding,
   pauseAdminRoleChanges,
   resumeAdminRoleChanges,
 } from '@/modules/identity';
 import { A, E, asUser } from '../../../support/as-user';
-import { useTestDatabase } from '../../../support/db/database';
 import { asManualFix } from '../../../support/db/privileges';
-import type { InvitationFixture, InvitationStateRow, PrivilegeChangeRow, RoleRow } from './types';
+import type postgres from 'postgres';
+import {
+  AS_GRANTEE,
+  AS_PRIMARY,
+  AS_STRANGER,
+  GRANTEE,
+  INVITED,
+  PRIMARY,
+  PRIMARY_EMAIL,
+  STRANGER,
+  TOKEN,
+  sha256,
+  setUpInvitationAcceptance,
+} from '../../../support/db/invitation-acceptance';
 
 // MB.70: the one accept service, `acceptInvitation(session, token)`, with the
 // site tier's branch; M7.5 adds the workspace's. Holding the token names the
@@ -27,103 +35,8 @@ import type { InvitationFixture, InvitationStateRow, PrivilegeChangeRow, RoleRow
 // records it (claude-docs/auth/admin-users.md, "Inviting an admin").
 
 let sql: postgres.Sql;
-useTestDatabase((client) => {
+const { invite, invitation, roleOf, ledger } = setUpInvitationAcceptance((client) => {
   sql = client;
-});
-
-const DOMAIN = '@invitation-acceptance.test';
-const PRIMARY = '00000000-0000-0000-0000-0000000000c1';
-const GRANTEE = '00000000-0000-0000-0000-0000000000c2';
-const STRANGER = '00000000-0000-0000-0000-0000000000c3';
-const PRIMARY_EMAIL = `primary${DOMAIN}`;
-const INVITED = `grantee${DOMAIN}`;
-const AS_PRIMARY = { id: PRIMARY, role: 'admin' as const };
-const AS_GRANTEE = { id: GRANTEE, role: 'user' as const };
-const AS_STRANGER = { id: STRANGER, role: 'user' as const };
-const TOKEN = 'fixture-token-cccccccccccccccccccccccccccccccc';
-
-const sha256 = (value: string) => createHash('sha256').update(value).digest('hex');
-
-async function insertUser(
-  id: string,
-  email: string,
-  role: 'user' | 'curator' | 'admin',
-  verified = true,
-) {
-  await asManualFix(sql, async (tx) => {
-    await tx`
-      insert into users (id, name, email, email_verified, role, can_create_workspace, created_by, updated_by)
-      values (${id}, 'Fixture Person', ${email}, ${verified}, ${role}, ${role !== 'user'}, ${id}, ${id})
-    `;
-  });
-}
-
-/** A site-tier invitation unless a workspace is named, pending unless a stamp is given. */
-async function invite(fixture: InvitationFixture = {}): Promise<string> {
-  const {
-    email = INVITED,
-    token = TOKEN,
-    createdBy = E.id,
-    note = 'Curates the resins',
-    workspaceId = null,
-    role = null,
-    siteRole = workspaceId ? null : 'admin',
-    expired = false,
-    revoked = false,
-    accepted = false,
-  } = fixture;
-  const [row] = await sql`
-    insert into invitations (email, token_hash, note, workspace_id, role, site_role, created_by,
-      updated_by, expires_at, revoked_at, accepted_at, accepted_by)
-    values (${email}, ${sha256(token)}, ${note}, ${workspaceId}, ${role}, ${siteRole}, ${createdBy}, ${createdBy},
-      ${expired ? sql`now() - interval '1 second'` : sql`now() + interval '7 days'`},
-      ${revoked ? sql`now()` : null}, ${accepted ? sql`now()` : null}, ${accepted ? STRANGER : null})
-    returning id
-  `;
-  return row.id as string;
-}
-
-async function invitation(): Promise<InvitationStateRow> {
-  const [row] = await sql<InvitationStateRow[]>`
-    select id, workspace_id, role::text, email, token_hash, note, accepted_at, accepted_by,
-      revoked_at, expires_at, created_by, updated_by
-    from invitations
-  `;
-  return row;
-}
-
-async function roleOf(id: string): Promise<RoleRow> {
-  const [row] = await sql<RoleRow[]>`
-    select role::text, can_create_workspace, updated_by from users where id = ${id}
-  `;
-  return row;
-}
-
-async function ledger(): Promise<PrivilegeChangeRow[]> {
-  return sql<PrivilegeChangeRow[]>`
-    select user_id, privilege::text, change::text, via::text, note, created_by, created_at
-    from user_privilege_changes order by privilege
-  `;
-}
-
-beforeEach(async () => {
-  await sql`truncate invitations`;
-  await sql`truncate admin_role_change_pauses`;
-  await sql`truncate user_privilege_changes`;
-  await sql`delete from workspace_members where user_id in (${GRANTEE}, ${STRANGER})`;
-  await sql`delete from users where email like ${`%${DOMAIN}`}`;
-  await asManualFix(sql, async (tx) => {
-    await tx`update users set role = 'admin', can_create_workspace = true where id = ${E.id}`;
-  });
-  await insertUser(PRIMARY, PRIMARY_EMAIL, 'admin');
-  await insertUser(GRANTEE, INVITED, 'user');
-  await insertUser(STRANGER, `stranger${DOMAIN}`, 'user');
-  await sql`truncate user_privilege_changes`;
-  vi.stubEnv('ADMIN_BOOTSTRAP_EMAIL', PRIMARY_EMAIL);
-});
-
-afterEach(() => {
-  vi.unstubAllEnvs();
 });
 
 describe('acceptInvitation, on the site tier', () => {
@@ -610,243 +523,5 @@ describe('while admin changes are paused', () => {
       acceptedAt: expect.any(Date),
     });
     expect(await roleOf(GRANTEE)).toMatchObject({ role: 'admin' });
-  });
-});
-
-// M10.32: the landing's accept, by the id `/coven` lists. The same checks and
-// the same acceptance as the token's, over a read that is the session's own:
-// each refusal sits beside the call that succeeds once its refusing fact is
-// gone, so the fact is what refused.
-describe('acceptInvitationById (M10.32)', () => {
-  // An earlier test in this file deletes the coven and leaves it so.
-  beforeEach(async () => {
-    await sql`update workspaces set deleted_at = null, deleted_by = null where id = ${WORKSPACE_W_ID}`;
-  });
-
-  const memberRows = (userId: string) =>
-    sql`select role::text, deleted_at, invited_by from workspace_members
-      where workspace_id = ${WORKSPACE_W_ID} and user_id = ${userId}`;
-  const stateOf = async (id: string) =>
-    (await sql`select accepted_at, accepted_by from invitations where id = ${id}`)[0]!;
-  const inviteToW = (fixture: InvitationFixture = {}) =>
-    invite({ workspaceId: WORKSPACE_W_ID, role: 'member', createdBy: A.id, ...fixture });
-
-  it('seats the verified holder at the invited role, stamps the invitation and records the sender and the grant', async () => {
-    const id = await inviteToW({ role: 'viewer' });
-    expect(await memberRows(GRANTEE)).toHaveLength(0);
-    expect((await roleOf(GRANTEE)).can_create_workspace).toBe(false);
-    expect((await stateOf(id)).accepted_at).toBeNull();
-
-    const accepted = await acceptInvitationById(asUser(AS_GRANTEE), id);
-
-    expect(accepted).toMatchObject({ id, workspaceId: WORKSPACE_W_ID, acceptedBy: GRANTEE });
-    expect(await memberRows(GRANTEE)).toMatchObject([
-      { role: 'viewer', deleted_at: null, invited_by: A.id },
-    ]);
-    expect(await stateOf(id)).toMatchObject({ accepted_by: GRANTEE });
-    expect(await roleOf(GRANTEE)).toMatchObject({ can_create_workspace: true });
-    expect(await ledger()).toMatchObject([
-      { user_id: GRANTEE, privilege: 'create_workspace', via: 'invitation', created_by: GRANTEE },
-    ]);
-  });
-
-  it('answers NotFound to an account the invitation was not sent to, which leaves it pending for the one it was', async () => {
-    const id = await inviteToW();
-    // Why the stranger could have accepted it: verified, signed in, and the id is right.
-    expect(await roleOf(STRANGER)).toMatchObject({ role: 'user' });
-    expect((await stateOf(id)).accepted_at).toBeNull();
-
-    await expect(acceptInvitationById(asUser(AS_STRANGER), id)).rejects.toThrow(NotFound);
-
-    expect((await stateOf(id)).accepted_at).toBeNull();
-    expect(await memberRows(STRANGER)).toHaveLength(0);
-    await expect(acceptInvitationById(asUser(AS_GRANTEE), id)).resolves.toMatchObject({ id });
-  });
-
-  // A sibling pending invitation stands in for "the same account, once the
-  // dead fact is gone": it is accepted by id while the dead one is refused.
-  it.each([['revoked', { revoked: true }]] as const)(
-    'answers Forbidden to one %s, seating no one',
-    async (_what, state) => {
-      const dead = await inviteToW({ token: 'fixture-token-dead', ...state });
-      const pending = await inviteToW({ token: 'fixture-token-pending' });
-
-      await expect(acceptInvitationById(asUser(AS_GRANTEE), dead)).rejects.toThrow(Forbidden);
-      expect(await memberRows(GRANTEE)).toHaveLength(0);
-      expect((await roleOf(GRANTEE)).can_create_workspace).toBe(false);
-
-      await expect(acceptInvitationById(asUser(AS_GRANTEE), pending)).resolves.toMatchObject({
-        id: pending,
-      });
-      expect(await memberRows(GRANTEE)).toHaveLength(1);
-    },
-  );
-
-  it('answers Forbidden to a second use of the same id', async () => {
-    const id = await inviteToW();
-    await acceptInvitationById(asUser(AS_GRANTEE), id);
-
-    await expect(acceptInvitationById(asUser(AS_GRANTEE), id)).rejects.toThrow(Forbidden);
-  });
-
-  it('answers NotFound for a deleted coven’s invitation, and accepts while the coven is live', async () => {
-    const id = await inviteToW();
-    await sql`update workspaces set deleted_at = now(), deleted_by = ${A.id} where id = ${WORKSPACE_W_ID}`;
-    try {
-      await expect(acceptInvitationById(asUser(AS_GRANTEE), id)).rejects.toThrow(NotFound);
-      expect((await stateOf(id)).accepted_at).toBeNull();
-    } finally {
-      await sql`update workspaces set deleted_at = null, deleted_by = null where id = ${WORKSPACE_W_ID}`;
-    }
-
-    await expect(acceptInvitationById(asUser(AS_GRANTEE), id)).resolves.toMatchObject({ id });
-  });
-
-  it('answers NotFound for an admin invitation’s id, granting and recording nothing, and its link then accepts', async () => {
-    const id = await invite();
-    // Why the id could have admitted: pending, to this verified address, and a site tier a link accepts.
-    expect(await invitationStanding(asUser(AS_GRANTEE), TOKEN)).toEqual({
-      acceptable: true,
-      tier: 'site',
-      siteRole: 'admin',
-    });
-
-    await expect(acceptInvitationById(asUser(AS_GRANTEE), id)).rejects.toThrow(NotFound);
-
-    expect(await roleOf(GRANTEE)).toMatchObject({ role: 'user', can_create_workspace: false });
-    expect(await ledger()).toEqual([]);
-    expect((await stateOf(id)).accepted_at).toBeNull();
-
-    await acceptInvitation(asUser(AS_GRANTEE), TOKEN);
-    expect(await roleOf(GRANTEE)).toMatchObject({ role: 'admin' });
-  });
-
-  it('answers NotFound for a malformed or an unknown id, without a database error', async () => {
-    await inviteToW();
-
-    for (const id of ['not-a-uuid', '', '00000000-0000-4000-8000-000000000000']) {
-      await expect(acceptInvitationById(asUser(AS_GRANTEE), id)).rejects.toThrow(NotFound);
-    }
-  });
-});
-
-// M10.34: the account page's Decline. The same checks as the accept by id,
-// over the session's own read, so each refusal sits beside the call that
-// succeeds once its refusing fact is gone. A decline seats no one and grants
-// nothing; it kills the invitation, which its link and both accepts then refuse.
-describe('declineInvitationById (M10.34)', () => {
-  beforeEach(async () => {
-    await sql`update workspaces set deleted_at = null, deleted_by = null where id = ${WORKSPACE_W_ID}`;
-  });
-
-  const memberRows = (userId: string) =>
-    sql`select role::text from workspace_members
-      where workspace_id = ${WORKSPACE_W_ID} and user_id = ${userId}`;
-  const stateOf = async (id: string) =>
-    (await sql`select accepted_at, declined_at, revoked_at from invitations where id = ${id}`)[0]!;
-  const inviteToW = (fixture: InvitationFixture = {}) =>
-    invite({ workspaceId: WORKSPACE_W_ID, role: 'member', createdBy: A.id, ...fixture });
-
-  it('stamps the invitation declined, seating no one and granting no creation flag', async () => {
-    const id = await inviteToW();
-    expect((await stateOf(id)).declined_at).toBeNull();
-
-    const declined = await declineInvitationById(asUser(AS_GRANTEE), id);
-
-    expect(declined).toMatchObject({ id, workspaceId: WORKSPACE_W_ID, acceptedAt: null });
-    expect(declined.declinedAt).toBeInstanceOf(Date);
-    expect(declined.updatedBy).toBe(GRANTEE);
-    expect(await stateOf(id)).toMatchObject({ accepted_at: null, revoked_at: null });
-    expect((await stateOf(id)).declined_at).toBeInstanceOf(Date);
-    expect(await memberRows(GRANTEE)).toHaveLength(0);
-    expect((await roleOf(GRANTEE)).can_create_workspace).toBe(false);
-    expect(await ledger()).toEqual([]);
-  });
-
-  it('answers NotFound to an account the invitation was not sent to, which leaves it pending for the one it was', async () => {
-    const id = await inviteToW();
-    // Why the stranger could have declined it: verified, signed in, and the id is right.
-    expect(await roleOf(STRANGER)).toMatchObject({ role: 'user' });
-    expect((await stateOf(id)).declined_at).toBeNull();
-
-    await expect(declineInvitationById(asUser(AS_STRANGER), id)).rejects.toThrow(NotFound);
-
-    expect((await stateOf(id)).declined_at).toBeNull();
-    await expect(declineInvitationById(asUser(AS_GRANTEE), id)).resolves.toMatchObject({ id });
-  });
-
-  it('answers NotFound for a malformed or an unknown id, without a database error', async () => {
-    await inviteToW();
-
-    for (const id of ['not-a-uuid', '', '00000000-0000-4000-8000-000000000000']) {
-      await expect(declineInvitationById(asUser(AS_GRANTEE), id)).rejects.toThrow(NotFound);
-    }
-  });
-
-  // A sibling pending invitation stands in for "the same account, once the
-  // dead fact is gone": it is declined while the dead one is refused.
-  it.each([['revoked', { revoked: true }]] as const)(
-    'answers Forbidden to one %s, stamping nothing',
-    async (_what, state) => {
-      const dead = await inviteToW({ token: 'fixture-token-dead', ...state });
-      const pending = await inviteToW({ token: 'fixture-token-pending' });
-
-      await expect(declineInvitationById(asUser(AS_GRANTEE), dead)).rejects.toThrow(Forbidden);
-      expect((await stateOf(dead)).declined_at).toBeNull();
-
-      await expect(declineInvitationById(asUser(AS_GRANTEE), pending)).resolves.toMatchObject({
-        id: pending,
-      });
-    },
-  );
-
-  it('answers Forbidden to a second decline of the same id, which keeps the first stamp', async () => {
-    const id = await inviteToW();
-    const first = await declineInvitationById(asUser(AS_GRANTEE), id);
-    const stamped = (await stateOf(id)).declined_at as Date;
-
-    await expect(declineInvitationById(asUser(AS_GRANTEE), id)).rejects.toThrow(Forbidden);
-
-    expect(stamped.getTime()).toBe(first.declinedAt?.getTime());
-    expect((await stateOf(id)).declined_at).toEqual(stamped);
-  });
-
-  describe('a declined invitation', () => {
-    it('reports its link declined, whatever else is true of it', async () => {
-      const id = await inviteToW();
-      expect(await invitationStanding(asUser(AS_GRANTEE), TOKEN)).toMatchObject({
-        acceptable: true,
-        tier: 'workspace',
-      });
-
-      await declineInvitationById(asUser(AS_GRANTEE), id);
-
-      expect(await invitationStanding(asUser(AS_GRANTEE), TOKEN)).toMatchObject({
-        acceptable: false,
-        reason: 'declined',
-      });
-      // The invitee's answer beats the owner's Remove that may follow it, and the clock.
-      await sql`update invitations set revoked_at = now(), expires_at = now() - interval '1 day' where id = ${id}`;
-      expect(await invitationStanding(asUser(AS_GRANTEE), TOKEN)).toMatchObject({
-        reason: 'declined',
-      });
-    });
-
-    it('refuses the accept by link and the accept by id with Forbidden, seating no one', async () => {
-      const id = await inviteToW();
-      const sibling = await inviteToW({ token: 'fixture-token-sibling' });
-      await declineInvitationById(asUser(AS_GRANTEE), id);
-
-      await expect(acceptInvitation(asUser(AS_GRANTEE), TOKEN)).rejects.toThrow(Forbidden);
-      await expect(acceptInvitationById(asUser(AS_GRANTEE), id)).rejects.toThrow(Forbidden);
-
-      expect(await memberRows(GRANTEE)).toHaveLength(0);
-      expect((await roleOf(GRANTEE)).can_create_workspace).toBe(false);
-      expect((await stateOf(id)).accepted_at).toBeNull();
-      // Why they could have accepted: the same account takes a pending sibling by id.
-      await expect(acceptInvitationById(asUser(AS_GRANTEE), sibling)).resolves.toMatchObject({
-        id: sibling,
-      });
-    });
   });
 });
