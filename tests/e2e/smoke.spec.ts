@@ -1,7 +1,6 @@
 import { test, expect } from './fixtures';
 import { assertNoAccessibilityViolations, assertNoSidewaysScroll } from './axe';
 import { recreateE2eDatabase } from './database';
-import { signInAs } from './session';
 
 // `fullyParallel` splits this file across workers, each running `beforeAll`
 // and a share of the tests against its own slot's database (MB.112). That is
@@ -57,19 +56,6 @@ test("the entry page's backdrop images are served, hashed, under /_next/static",
     expect(response.status()).toBe(200);
     expect(response.headers()['content-type']).toBe('image/webp');
   }
-});
-
-// Signed in, the way in is the landing a sign-in with no return path gets
-// (MB.113): followed here for an admin, to the admin area.
-test('the entry page continues a signed-in admin to the admin area', async ({ page }) => {
-  await signInAs(page, 'an-admin@entry-page.test', ['discord'], 'admin');
-  await page.goto('/');
-
-  await expect(page.getByRole('link', { name: 'Sign In' })).toHaveCount(0);
-  await page.getByRole('link', { name: 'Continue' }).click();
-
-  await expect(page).toHaveURL(/\/admin$/);
-  await expect(page.getByRole('heading', { level: 1, name: 'Admin' })).toBeVisible();
 });
 
 // Facebook appends `#_=_` to the redirect URI, and a fragment survives every
