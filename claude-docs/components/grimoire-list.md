@@ -59,8 +59,10 @@ variables, so a search and its categories live in the address and combine.
 - **The title search.** The search box is `IngredientSearch`'s, labelled Title, with the
   same submit behaviour as the ingredients page. It matches title and intent, from two
   characters (M10.11's floor in the query). Its suggestions come from the coven's spells on
-  this tab, by title. Picking a suggestion applies its title as the search; it does not open
-  the spell, since the spell has no page until MB.6.
+  this tab, by title. Until MB.6, picking a suggestion applies its title as the search, since
+  the spell has no page to open. MB.6 makes a pick open the spell's recipe page through
+  `IngredientSearch`'s `pickHref`, as a pick on the coven's Ingredients page opens the
+  entry's page.
 - **The Categories panel.** The panel is `FacetShell` holding the shared `CategoryLine`
   ([`facet-panel.md`](facet-panel.md)): the category picker and its Match chip, nothing
   else. Each category shows how many spells on this tab, under the search, the viewer can
@@ -84,7 +86,8 @@ variables, so a search and its categories live in the address and combine.
   Which one is the search sentence's own test (`hasFilter`), so the two never disagree.
   Neither offers a first spell: the builder is M10.12's.
 
-- **No link yet.** A card does not open its spell until MB.6 builds the spell's page.
+- **No link yet.** A card does not open its spell until MB.6 builds the spell's page and
+  adds the link.
 - **Visibility is the query's.** The page lists what the `grimoire` query returns: every
   workspace-visible spell and the viewer's own private ones, filtered in SQL. Nothing here
   filters after fetching.
