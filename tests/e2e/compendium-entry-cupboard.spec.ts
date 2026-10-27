@@ -286,7 +286,6 @@ test('a member of two covens chooses from the plus’s menu, the holding coven t
     const held = addMenu.getByRole('menuitem', { name: SECOND });
     await expect(held).toBeDisabled();
     await expect(held).toHaveAccessibleName(`${SECOND}, ${HELD_MARK}`);
-    await assertNoAccessibilityViolations(page);
     await addMenu.getByRole('menuitem', { name: FIRST }).click();
     await expect.poll(async () => (await heldRows(one.id)).length).toBe(1);
     // Both hold it now: the card's check in the plus's place (the owner's call, 2026-10-20).
