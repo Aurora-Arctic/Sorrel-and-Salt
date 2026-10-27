@@ -3,6 +3,8 @@ import { sessionOf } from '../../../graphql/context-helpers';
 import { AuditInfo } from '../../../graphql/schema/audit';
 import { compareSpellCategories } from '../categories/compare';
 import { listGrimoire, readSpell } from '../services/spell-reads';
+import { createSpell, updateSpell } from '../services/spells';
+import { clearSpell } from '../loaders/spell-children';
 import { GRIMOIRE_ORDERS, spellStatus, spellVisibility } from '../schema/spells';
 import type { SpellRow, SpellStepView } from '../types';
 import { IngredientRef, IngredientVariantRef, InventoryUnitEnum } from '@/modules/ingredients';
@@ -106,6 +108,10 @@ export const SpellRef = builder.objectRef<SpellRow>('Spell').implement({
         'Null on a draft not yet named: only a complete spell must carry a title (M13.15).',
     }),
     intent: t.exposeString('intent', { nullable: true }),
+    jarSize: t.exposeString('jarSize', { nullable: true }),
+    sealWaxColor: t.exposeString('sealWaxColor', { nullable: true }),
+    moonPhase: t.exposeString('moonPhase', { nullable: true }),
+    dayOfWeek: t.exposeString('dayOfWeek', { nullable: true }),
     visibility: t.expose('visibility', { type: SpellVisibilityEnum }),
     status: t.expose('status', { type: SpellStatusEnum }),
     categories: t.field({
@@ -143,6 +149,10 @@ export const SpellRef = builder.objectRef<SpellRow>('Spell').implement({
       description: 'The recipe: every step in position order, instructions included.',
       resolve: (spell, _args, { loaders }) => loaders.stepsBySpell.load(key(spell)),
     }),
+    revision: t.exposeInt('revision', {
+      description:
+        'Raised by one on every save; a save names the revision it was written against (M13.15).',
+    }),
     audit: t.field({ type: AuditInfo, resolve: (spell) => spell }),
   }),
 });
@@ -177,5 +187,127 @@ builder.queryField('spell', (t) =>
     },
     resolve: (_root, { id, workspaceId }, context) =>
       readSpell(sessionOf(context), workspaceId, id),
+  }),
+);
+
+// The saves (M10.10). Each sends the whole recipe as one ordered list, so a
+// step's place is its index; claude-docs/graphql/schema.md, "The grimoire",
+// says how a step is kept, added and removed.
+
+const SpellStepInputRef = builder.inputType('SpellStepInput', {
+  description:
+    'One step of a recipe: an instruction, an ingredient, or both. The ingredient is linked (ingredientId with variantId) or written for this jar (name, with form).',
+  fields: (t) => ({
+    id: t.id({ description: 'A saved step this one is; left out, the step is new.' }),
+    body: t.string(),
+    ingredientId: t.id(),
+    variantId: t.id({ description: 'The form laid; set exactly when ingredientId is.' }),
+    name: t.string(),
+    form: t.string(),
+    quantity: t.float(),
+    unit: t.field({ type: InventoryUnitEnum }),
+    note: t.string(),
+  }),
+});
+
+// Both saves take every spell field, each nullable: only a complete spell
+// must carry a title, which the service checks.
+const SpellInputRef = builder.inputType('SpellInput', {
+  description: 'A new spell: a draft needs nothing but its status.',
+  fields: (t) => ({
+    title: t.string({ description: 'Required once the status is complete.' }),
+    intent: t.string(),
+    jarSize: t.string(),
+    sealWaxColor: t.string(),
+    moonPhase: t.string(),
+    dayOfWeek: t.string(),
+    note: t.string(),
+    status: t.field({ type: SpellStatusEnum }),
+    visibility: t.field({ type: SpellVisibilityEnum }),
+    steps: t.field({ type: [SpellStepInputRef], description: 'The recipe, in order.' }),
+  }),
+});
+
+const UpdateSpellInputRef = builder.inputType('UpdateSpellInput', {
+  description:
+    'Changes a spell: a field left out keeps its value, and null clears it. Visibility only widens.',
+  fields: (t) => ({
+    title: t.string({ description: 'Required once the status is complete.' }),
+    intent: t.string(),
+    jarSize: t.string(),
+    sealWaxColor: t.string(),
+    moonPhase: t.string(),
+    dayOfWeek: t.string(),
+    note: t.string(),
+    status: t.field({ type: SpellStatusEnum }),
+    visibility: t.field({ type: SpellVisibilityEnum }),
+    steps: t.field({
+      type: [SpellStepInputRef],
+      description:
+        'The whole recipe, in order: a saved step left out is removed. Left out, the recipe is unchanged.',
+    }),
+    // Nullable, since null is an answer, but never optional: GraphQL cannot
+    // say "present, maybe null", so the service's schema refuses a save that
+    // leaves it out, and a client that forgets it overwrites nobody's save.
+    expectedRevision: t.int({
+      description:
+        'Required, though it may be null: the revision this save was written against, which a newer one refuses. Null writes regardless.',
+    }),
+  }),
+});
+
+/**
+ * A status, visibility or recipe sent as null, read as left out: none of the
+ * three can be cleared, and GraphQL lets any nullable input field be null.
+ */
+function unstated<T extends { status?: unknown; visibility?: unknown; steps?: unknown }>(input: T) {
+  return {
+    status: input.status ?? undefined,
+    visibility: input.visibility ?? undefined,
+    steps: input.steps ?? undefined,
+  } as { [K in 'status' | 'visibility' | 'steps']: NonNullable<T[K]> | undefined };
+}
+
+builder.mutationField('createSpell', (t) =>
+  t.field({
+    type: SpellRef,
+    description: 'Writes a new spell and its recipe in one save.',
+    args: {
+      workspaceId: t.arg.id({ required: true }),
+      input: t.arg({ type: SpellInputRef, required: true }),
+    },
+    authScopes: { signedIn: true },
+    resolve: async (_root, { workspaceId, input }, { loaders, ...context }) => {
+      const spell = await createSpell(sessionOf(context), workspaceId, {
+        ...input,
+        ...unstated(input),
+      });
+      clearSpell(loaders, spell);
+      return spell;
+    },
+  }),
+);
+
+builder.mutationField('updateSpell', (t) =>
+  t.field({
+    type: SpellRef,
+    description:
+      "Saves a spell's fields and, when given, its whole recipe, against the revision it was read at.",
+    args: {
+      workspaceId: t.arg.id({ required: true }),
+      id: t.arg.id({ required: true }),
+      input: t.arg({ type: UpdateSpellInputRef, required: true }),
+    },
+    authScopes: { signedIn: true },
+    resolve: async (_root, { workspaceId, id, input }, { loaders, ...context }) => {
+      const spell = await updateSpell(sessionOf(context), workspaceId, id, {
+        ...input,
+        ...unstated(input),
+        // Passed as sent, absent included, for the schema to refuse.
+        expectedRevision: input.expectedRevision as number | null,
+      });
+      clearSpell(loaders, spell);
+      return spell;
+    },
   }),
 );

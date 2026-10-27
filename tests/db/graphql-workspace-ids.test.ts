@@ -66,6 +66,8 @@ let removableEntryId: string;
 let ownableEntryId: string;
 // A shared spell of W, which the spell probe reads.
 let spellId: string;
+// A spell of W of its own, which the update probe saves.
+let updatableSpellId: string;
 
 beforeAll(async () => {
   const sql = postgres(process.env.DATABASE_URL as string);
@@ -156,6 +158,11 @@ beforeAll(async () => {
     makeSpell({ workspaceId: WORKSPACE_W_ID, visibility: 'workspace' }),
     A.id,
   );
+  updatableSpellId = await insertSpell(
+    sql,
+    makeSpell({ workspaceId: WORKSPACE_W_ID, visibility: 'workspace' }),
+    A.id,
+  );
   await sql.end();
 });
 
@@ -221,6 +228,17 @@ const PROBES: Record<string, WorkspaceIdProbe> = {
     source:
       'query ($workspaceId: ID!, $id: ID!) { spell(workspaceId: $workspaceId, id: $id) { id } }',
     variables: () => ({ id: spellId }),
+  },
+  createSpell: {
+    source: `mutation ($workspaceId: ID!) {
+      createSpell(workspaceId: $workspaceId, input: {}) { id }
+    }`,
+  },
+  updateSpell: {
+    source: `mutation ($workspaceId: ID!, $id: ID!) {
+      updateSpell(workspaceId: $workspaceId, id: $id, input: { expectedRevision: null, note: "Saved" }) { id }
+    }`,
+    variables: () => ({ id: updatableSpellId }),
   },
   createWorkspaceIngredient: {
     source: `mutation ($workspaceId: ID!, $input: IngredientInput!) {

@@ -215,3 +215,40 @@ describe('UpdateSpellInput', () => {
     ).toBe(false);
   });
 });
+
+describe('a recipe’s steps, taken together', () => {
+  const OTHER_VARIANT = '33333333-3333-4333-8333-333333333333';
+  const STEP = '44444444-4444-4444-8444-444444444444';
+  const pathsOf = (steps: unknown[]) =>
+    SpellInput.safeParse({ steps }).error?.issues.map((issue) => issue.path);
+
+  it('refuses one form laid twice, mirroring spell_steps_spell_id_variant_id_unique', () => {
+    const linked = { ingredientId: INGREDIENT, variantId: VARIANT };
+    expect(
+      pathsOf([linked, { ingredientId: INGREDIENT, variantId: OTHER_VARIANT }]),
+    ).toBeUndefined();
+    expect(pathsOf([linked, { body: 'Stir' }, linked])).toEqual([['steps', 2, 'variantId']]);
+  });
+
+  it('refuses one custom name twice, case aside, mirroring spell_steps_spell_id_custom_name_unique', () => {
+    expect(pathsOf([{ name: 'Testwort' }, { name: 'Testroot' }])).toBeUndefined();
+    expect(pathsOf([{ name: 'Testwort' }, { name: 'TESTWORT', form: 'oil' }])).toEqual([
+      ['steps', 1, 'name'],
+    ]);
+  });
+
+  it('refuses one saved step named twice', () => {
+    expect(
+      pathsOf([
+        { id: STEP, body: 'One' },
+        { id: STEP, body: 'Two' },
+      ]),
+    ).toEqual([['steps', 1, 'id']]);
+  });
+
+  it('leaves an update’s recipe unchanged when it names no steps, and empties it when they are []', () => {
+    expect(UpdateSpellInput.parse({ expectedRevision: 1 }).steps).toBeUndefined();
+    expect(UpdateSpellInput.parse({ expectedRevision: 1, steps: [] }).steps).toEqual([]);
+    expect(SpellInput.parse({}).steps).toEqual([]);
+  });
+});

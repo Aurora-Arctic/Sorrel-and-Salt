@@ -170,8 +170,8 @@ expectedRevision, values)` in `src/db/repository/write.ts`, for a table that
   carrying `currentRevision`. A caller that reads `GraphQLClientError` reads it
   unchanged. The hook pauses on it rather than retrying.
 
-No mutation uses the write yet: M10.10's `updateSpell` is the first, and
-M13.18 builds the conflict path end to end on it.
+M10.10's `updateSpell` is the first mutation that uses the write, and M13.18
+builds the conflict path end to end on it.
 
 ## Tests
 
