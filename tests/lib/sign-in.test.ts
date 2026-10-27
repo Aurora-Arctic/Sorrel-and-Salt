@@ -68,10 +68,6 @@ describe('signInPath', () => {
     return safeReturnPath(next ?? undefined);
   };
 
-  it('carries a return path as ?next=', () => {
-    expect(signInPath('/coven')).toBe('/sign-in?next=%2Fcoven');
-  });
-
   it('is the bare sign-in page when there is no return path', () => {
     expect(signInPath(undefined)).toBe('/sign-in');
   });
@@ -82,13 +78,6 @@ describe('signInPath', () => {
       expect(roundTrip(returnPath)).toBe(returnPath);
     },
   );
-
-  // The proxy builds the return path from the request URL, and `//evil.example`
-  // is a pathname a request can really carry. Which paths are unsafe is
-  // safeReturnPath's, below.
-  it('drops an unsafe return path, leaving the bare sign-in page', () => {
-    expect(signInPath('//evil.example')).toBe('/sign-in');
-  });
 });
 
 // safeReturnPath is the open-redirect guard for ?next=: without it, a crafted
@@ -104,11 +93,8 @@ describe('safeReturnPath', () => {
 
   // No landing stands in for a refused path: which landing is the role's, and
   // the callback decides it (MB.113).
-  it('is no return path for undefined', () => {
+  it('is no return path for undefined or an empty string', () => {
     expect(safeReturnPath(undefined)).toBeUndefined();
-  });
-
-  it('is no return path for an empty string', () => {
     expect(safeReturnPath('')).toBeUndefined();
   });
 

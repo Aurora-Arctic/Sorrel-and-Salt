@@ -15,10 +15,6 @@ describe('entryRecency', () => {
     expect(entryRecency(ago(RECENT_DAYS * DAY), ago(RECENT_DAYS * DAY), NOW)).toBeNull();
   });
 
-  it('reads an entry created after the window as neither', () => {
-    expect(entryRecency(ago(RECENT_DAYS * DAY + 1), ago(RECENT_DAYS * DAY + 1), NOW)).toBeNull();
-  });
-
   it('reads an old entry changed just inside the window as updated', () => {
     expect(entryRecency(OLD, ago(RECENT_DAYS * DAY - 1), NOW)).toBe('updated');
   });

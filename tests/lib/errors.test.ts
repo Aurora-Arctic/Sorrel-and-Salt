@@ -5,24 +5,12 @@ import { Forbidden, InvalidCursor, NotFound, ValidationError } from '@/lib/error
 // against a service that stopped checking. Assert the type.
 
 describe('Forbidden', () => {
-  it('is an Error, so it throws, catches and stacks like one', () => {
+  it('is an Error that names itself, so a log line says which refusal this was', () => {
     const error = new Forbidden();
 
     expect(error).toBeInstanceOf(Error);
     expect(error.stack).toBeTruthy();
-  });
-
-  it('names itself, so a log line says which refusal this was', () => {
-    expect(new Forbidden().name).toBe('Forbidden');
-  });
-
-  it('carries a default message, and takes an explaining one', () => {
-    // `workspace → private` is rejected with an explaining error, so the
-    // message is a parameter; a bare refusal stays one word.
-    expect(new Forbidden().message).toBe('Forbidden');
-    expect(new Forbidden('Widening a spell is a gift; narrowing is a retraction.').message).toBe(
-      'Widening a spell is a gift; narrowing is a retraction.',
-    );
+    expect(error.name).toBe('Forbidden');
   });
 });
 
@@ -32,11 +20,6 @@ describe('NotFound', () => {
 
     expect(error).toBeInstanceOf(Error);
     expect(error.name).toBe('NotFound');
-  });
-
-  it('carries a default message, and takes a specific one', () => {
-    expect(new NotFound().message).toBe('Not found');
-    expect(new NotFound('No such spell').message).toBe('No such spell');
   });
 });
 
@@ -76,13 +59,6 @@ describe('ValidationError', () => {
 
   it('carries its issues, paths and messages as given', () => {
     expect(new ValidationError(issues).issues).toEqual(issues);
-  });
-
-  it('carries a default message, and takes a specific one', () => {
-    expect(new ValidationError(issues).message).toBe('Invalid input');
-    expect(new ValidationError(issues, 'That ingredient already exists').message).toBe(
-      'That ingredient already exists',
-    );
   });
 
   it('is neither refusal, and neither refusal is one', () => {

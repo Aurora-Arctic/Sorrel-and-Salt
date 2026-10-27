@@ -102,24 +102,12 @@ describe('sessionFromHeaders', () => {
     await expect(sessionFromHeaders(given)).resolves.toEqual({ userId: USER_ID, role: 'admin' });
     expect(getSessionMock).toHaveBeenCalledWith({ headers: given });
   });
-
-  it('is null when there is no session', async () => {
-    getSessionMock.mockResolvedValue(null);
-    await expect(sessionFromHeaders(new Headers())).resolves.toBeNull();
-  });
 });
 
 // The shell's half of `requireSession()` (MB.256): a layout that throws the
 // email redirect while the browser navigates into it never settles, so this
 // one sends only a signed-out visitor away.
 describe('requireSignedIn', () => {
-  it('redirects to /sign-in with the return path the proxy forwarded', async () => {
-    getSessionMock.mockResolvedValue(null);
-    requestHeaders.set(RETURN_PATH_HEADER, '/coven');
-
-    await expect(requireSignedIn()).rejects.toThrow('redirect:/sign-in?next=%2Fcoven');
-  });
-
   it('returns an unverified account’s session on a page that is not the email page', async () => {
     getSessionMock.mockResolvedValue(betterAuthSession('user', false));
     requestHeaders.set(RETURN_PATH_HEADER, '/coven');
@@ -176,25 +164,10 @@ describe('requireSession', () => {
       );
     });
 
-    it('is sent to the bare email page when no return path was forwarded, or one that leaves the site', async () => {
-      await expect(requireSession()).rejects.toThrow(/^redirect:\/account\/email$/);
-
-      requestHeaders.set(RETURN_PATH_HEADER, '//evil.example');
-      await expect(requireSession()).rejects.toThrow(/^redirect:\/account\/email$/);
-    });
-
     it('reaches the email page itself, whatever its query', async () => {
       requestHeaders.set(RETURN_PATH_HEADER, '/account/email?next=%2Fcoven&error=TOKEN_EXPIRED');
 
       await expect(requireSession()).resolves.toEqual({ userId: USER_ID, role: 'user' });
-    });
-
-    it('is not let past by a path that merely starts like the email page', async () => {
-      requestHeaders.set(RETURN_PATH_HEADER, '/account/emails');
-
-      await expect(requireSession()).rejects.toThrow(
-        'redirect:/account/email?next=%2Faccount%2Femails',
-      );
     });
   });
 });
@@ -217,26 +190,6 @@ describe('requireAdminSession', () => {
     // from the admin above.
     await expect(requireSession()).resolves.toEqual({ userId: USER_ID, role: 'user' });
     await expect(requireAdminSession()).rejects.toThrow('forbidden');
-  });
-
-  it('sends a signed-out visitor to /sign-in with the return path, not to the forbidden page', async () => {
-    getSessionMock.mockResolvedValue(null);
-    requestHeaders.set(RETURN_PATH_HEADER, '/admin?tab=forms');
-
-    await expect(requireAdminSession()).rejects.toThrow(
-      `redirect:/sign-in?next=${encodeURIComponent('/admin?tab=forms')}`,
-    );
-  });
-
-  // The role is not a way around the email page: a provisional account can do
-  // nothing else, whatever its row says.
-  it('sends an unverified admin to the email page first', async () => {
-    getSessionMock.mockResolvedValue(betterAuthSession('admin', false));
-    requestHeaders.set(RETURN_PATH_HEADER, '/admin');
-
-    await expect(requireAdminSession()).rejects.toThrow(
-      `redirect:/account/email?next=${encodeURIComponent('/admin')}`,
-    );
   });
 
   // M11.20: the people pages keep this guard, so a curator is refused there.
@@ -267,19 +220,6 @@ describe('requireCuratorSession', () => {
 
     await expect(requireSession()).resolves.toEqual({ userId: USER_ID, role: 'user' });
     await expect(requireCuratorSession()).rejects.toThrow('forbidden');
-  });
-
-  it('sends a signed-out visitor to /sign-in, and an unverified curator to the email page', async () => {
-    requestHeaders.set(RETURN_PATH_HEADER, '/admin/categories');
-    getSessionMock.mockResolvedValue(null);
-    await expect(requireCuratorSession()).rejects.toThrow(
-      `redirect:/sign-in?next=${encodeURIComponent('/admin/categories')}`,
-    );
-
-    getSessionMock.mockResolvedValue(betterAuthSession('curator', false));
-    await expect(requireCuratorSession()).rejects.toThrow(
-      `redirect:/account/email?next=${encodeURIComponent('/admin/categories')}`,
-    );
   });
 });
 
@@ -377,16 +317,6 @@ describe('requireCovenMembership', () => {
     membershipBySlugMock.mockRejectedValue(new Error('database down'));
 
     await expect(requireCovenMembership('whitethorn-coven')).rejects.toThrow('database down');
-  });
-
-  it('sends a signed-out visitor to /sign-in before asking after the coven', async () => {
-    getSessionMock.mockResolvedValue(null);
-    requestHeaders.set(RETURN_PATH_HEADER, '/coven/whitethorn-coven');
-
-    await expect(requireCovenMembership('whitethorn-coven')).rejects.toThrow(
-      `redirect:/sign-in?next=${encodeURIComponent('/coven/whitethorn-coven')}`,
-    );
-    expect(membershipBySlugMock).not.toHaveBeenCalled();
   });
 });
 

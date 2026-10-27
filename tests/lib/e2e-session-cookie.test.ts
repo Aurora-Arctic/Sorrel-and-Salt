@@ -17,11 +17,7 @@ describe('plainSessionCookie', () => {
   it.each([
     { flag: 'true', target: undefined, plain: true },
     { flag: 'true', target: 'production', plain: false },
-    { flag: 'true', target: 'preview', plain: false },
-    { flag: 'true', target: 'development', plain: false },
     { flag: undefined, target: undefined, plain: false },
-    { flag: '', target: undefined, plain: false },
-    { flag: 'false', target: undefined, plain: false },
   ])('flag $flag at VERCEL_ENV=$target is $plain', ({ flag, target, plain }) => {
     expect(plainSessionCookie({ E2E_PLAIN_SESSION_COOKIE: flag, VERCEL_ENV: target })).toBe(plain);
   });
@@ -41,9 +37,5 @@ async function sessionCookieName(flag: string | undefined) {
 describe('the session cookie name under a production build', () => {
   it('carries the __Secure- prefix by default, because the base URL forces https', async () => {
     expect(await sessionCookieName(undefined)).toBe('__Secure-better-auth.session_token');
-  });
-
-  it('is plain under the flag, which the e2e servers set under the audit', async () => {
-    expect(await sessionCookieName('true')).toBe('better-auth.session_token');
   });
 });

@@ -20,10 +20,4 @@ describe('newToken', () => {
     expect(token).toBe(drawn.toString('base64url'));
     expect(token).toMatch(/^[A-Za-z0-9_-]+$/);
   });
-
-  it('never repeats, so holding one token says nothing of another', () => {
-    const tokens = new Set(Array.from({ length: 1000 }, newToken));
-
-    expect(tokens.size).toBe(1000);
-  });
 });

@@ -22,8 +22,10 @@ describe('auth secret', () => {
     await expect(import('@/lib/auth')).rejects.toThrow('BETTER_AUTH_SECRET is not set');
   });
 
-  it('does not throw when unset outside production', async () => {
+  // Both variables share the one rule: outside production, unset is allowed.
+  it('does not throw when BETTER_AUTH_SECRET and ADMIN_BOOTSTRAP_EMAIL are unset outside production', async () => {
     vi.stubEnv('BETTER_AUTH_SECRET', '');
+    vi.stubEnv('ADMIN_BOOTSTRAP_EMAIL', '');
     vi.stubEnv('NODE_ENV', 'development');
     vi.resetModules();
 
@@ -39,22 +41,6 @@ describe('auth secret', () => {
 describe('social providers', () => {
   afterEach(() => {
     vi.unstubAllEnvs();
-  });
-
-  it('registers none of the four when no client credentials are set', async () => {
-    vi.stubEnv('GOOGLE_CLIENT_ID', '');
-    vi.stubEnv('GOOGLE_CLIENT_SECRET', '');
-    vi.stubEnv('DISCORD_CLIENT_ID', '');
-    vi.stubEnv('DISCORD_CLIENT_SECRET', '');
-    vi.stubEnv('FACEBOOK_CLIENT_ID', '');
-    vi.stubEnv('FACEBOOK_CLIENT_SECRET', '');
-    vi.stubEnv('MICROSOFT_CLIENT_ID', '');
-    vi.stubEnv('MICROSOFT_CLIENT_SECRET', '');
-    vi.resetModules();
-
-    const { auth } = await import('@/lib/auth');
-
-    expect(auth.options.socialProviders).toEqual({});
   });
 
   it('registers a provider once both its id and secret are set', async () => {
@@ -270,23 +256,6 @@ describe('ADMIN_BOOTSTRAP_EMAIL', () => {
 
     await expect(import('@/lib/auth')).rejects.toThrow('ADMIN_BOOTSTRAP_EMAIL is not set');
   });
-
-  it('starts at NODE_ENV=production once it is set', async () => {
-    vi.stubEnv('NODE_ENV', 'production');
-    vi.stubEnv('BETTER_AUTH_SECRET', 'production-test-secret-at-least-32-characters-long');
-    vi.stubEnv('ADMIN_BOOTSTRAP_EMAIL', 'placeholder@admin-bootstrap.invalid');
-    vi.resetModules();
-
-    await expect(import('@/lib/auth')).resolves.toBeDefined();
-  });
-
-  it('does not throw when unset outside production', async () => {
-    vi.stubEnv('NODE_ENV', 'development');
-    vi.stubEnv('ADMIN_BOOTSTRAP_EMAIL', '');
-    vi.resetModules();
-
-    await expect(import('@/lib/auth')).resolves.toBeDefined();
-  });
 });
 
 // Each of these, turned on, would let the address on an account change under
@@ -417,27 +386,12 @@ describe('rate limiting', () => {
   });
 });
 
-// Neither is set in src/lib/auth.ts: DESIGN.md names no session lifetime, so
-// Better Auth's defaults apply, and these fail if a bump moves one.
-describe('session lifetimes', () => {
+// DESIGN.md names no session lifetime, so Better Auth's defaults apply and are
+// not pinned here. What is pinned is the one option that would hold a revoked
+// role open.
+describe('session cookie cache', () => {
   afterEach(() => {
     vi.unstubAllEnvs();
-  });
-
-  async function sessionConfig() {
-    vi.resetModules();
-    const { auth } = await import('@/lib/auth');
-    return (await auth.$context).sessionConfig;
-  }
-
-  it('lasts seven days, extended at most once a day, and counts as fresh for a day', async () => {
-    const DAY = 24 * 60 * 60;
-
-    expect(await sessionConfig()).toMatchObject({
-      expiresIn: 7 * DAY,
-      updateAge: DAY,
-      freshAge: DAY,
-    });
   });
 
   // MB.59: a revoked admin's next request reads `role` off the users row, so

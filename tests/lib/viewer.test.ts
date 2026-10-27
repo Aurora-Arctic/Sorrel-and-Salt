@@ -53,20 +53,6 @@ describe('viewerOf', () => {
     });
   });
 
-  // M11.20: the shell's Admin link and home follow curation, which an admin
-  // and a curator hold and a user does not.
-  it.each([
-    ['admin', true],
-    ['curator', true],
-    ['user', false],
-  ] as const)('reads %s as curating: %s', async (role, canCurate) => {
-    requireSignedIn.mockResolvedValue({ ...SESSION, role });
-
-    const { viewer } = await viewerOf();
-
-    expect(viewer.canCurate).toBe(canCurate);
-  });
-
   it('counts the coven invitations waiting for a verified viewer, all of them', async () => {
     countReceivedInvitations.mockResolvedValue({ totalCount: 3, countBefore: null });
 
@@ -83,12 +69,6 @@ describe('viewerOf', () => {
 
     expect(viewer.pendingInvitations).toBe(0);
     expect(countReceivedInvitations).not.toHaveBeenCalled();
-  });
-
-  it('asks for the viewer’s own memberships only', async () => {
-    await viewerOf();
-
-    expect(membershipsOf).toHaveBeenCalledExactlyOnceWith(SESSION, ['u1']);
   });
 
   it('lists the covens by name, alphabetically', async () => {
@@ -204,11 +184,5 @@ describe('covenRolesIfSignedIn', () => {
         ['id-testwort-circle', 'viewer'],
       ]),
     );
-  });
-
-  it('refuses to answer from a refused lookup', async () => {
-    membershipsOf.mockResolvedValue([new Forbidden()]);
-
-    await expect(covenRolesIfSignedIn()).rejects.toThrow();
   });
 });

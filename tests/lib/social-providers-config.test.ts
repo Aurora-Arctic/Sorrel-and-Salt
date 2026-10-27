@@ -5,47 +5,12 @@ import { afterEach, describe, expect, it, vi } from 'vitest';
 // lives, and .oxlintrc.json refuses it to any importer but
 // src/lib/auth.ts and a server component — this file is the third named
 // exception, the same shape as tests/db/test-database-isolation.test.ts's
-// exemption from the db-client boundary (CLAUDE.md rule 2).
-describe('clientCredentials', () => {
-  afterEach(() => {
-    vi.unstubAllEnvs();
-  });
-
-  // A half-set pair is configuredProviders' case below.
-  it('returns the pair once both are set', async () => {
-    vi.stubEnv('GOOGLE_CLIENT_ID', 'test-id');
-    vi.stubEnv('GOOGLE_CLIENT_SECRET', 'test-secret');
-    vi.resetModules();
-    // oxlint-disable-next-line no-restricted-imports
-    const { clientCredentials } = await import('@/lib/social-providers-config');
-
-    expect(clientCredentials('google')).toEqual({
-      clientId: 'test-id',
-      clientSecret: 'test-secret',
-    });
-  });
-});
-
+// exemption from the db-client boundary (CLAUDE.md rule 2). The pair itself and
+// the one-provider case are proved through the real registration in
+// tests/lib/auth.test.ts.
 describe('configuredProviders', () => {
   afterEach(() => {
     vi.unstubAllEnvs();
-  });
-
-  it('lists a provider only when both its id and secret are set', async () => {
-    vi.stubEnv('GOOGLE_CLIENT_ID', 'test-google-id');
-    vi.stubEnv('GOOGLE_CLIENT_SECRET', 'test-google-secret');
-    vi.stubEnv('DISCORD_CLIENT_ID', '');
-    vi.stubEnv('DISCORD_CLIENT_SECRET', '');
-    vi.stubEnv('FACEBOOK_CLIENT_ID', '');
-    vi.stubEnv('FACEBOOK_CLIENT_SECRET', '');
-    vi.stubEnv('MICROSOFT_CLIENT_ID', '');
-    vi.stubEnv('MICROSOFT_CLIENT_SECRET', '');
-    vi.resetModules();
-
-    // oxlint-disable-next-line no-restricted-imports
-    const { configuredProviders } = await import('@/lib/social-providers-config');
-
-    expect(configuredProviders()).toEqual(['google']);
   });
 
   it('excludes a provider with only an id or only a secret set', async () => {
