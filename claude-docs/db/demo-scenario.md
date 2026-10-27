@@ -23,8 +23,10 @@ nullable precisely so it does not have to be one.
 
 Beside the two jars, `demo` seeds 54 more spells in W (ids `…0003` to
 `…0056`) so the grimoire page (M10.11) has a real shelf to show. It pages 24
-cards at a time (`CARD_PAGE_SIZE`), and a member reads 26 complete spells and
-26 drafts, so both the Spells and the Drafts tabs run past one page.
+cards at a time (`CARD_PAGE_SIZE`). With the two jars W holds 56 spells, 28
+complete and 28 drafts. Four of them are private to Fixture B (below), so
+every other member reads 26 complete spells and 26 drafts, and B reads all 56.
+Both the Spells and the Drafts tabs run past one page for every member.
 
 - **Ranking titles.** Several titles share "Hearth" (Hearth Fire Blessing, Cold
   Hearth Cleansing, Banked Hearth Candle, Hearthstone Luck Charm and others),
