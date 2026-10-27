@@ -1,3 +1,4 @@
+import type { Route } from 'next';
 import type { ReactNode } from 'react';
 import type { FieldProps } from '../Field/types';
 
@@ -20,6 +21,35 @@ export interface SpellBuilderProps {
   workspaceId: string;
   /** A saved spell to edit; left out, the builder opens empty and its first save creates one. */
   spell?: SpellBuilderSpell;
+  /**
+   * Called with the spell the builder's first save created, whichever save
+   * that is: Save now, M13.17's autosave later. Not called when the save is
+   * the one Close asked for, which leaves the builder.
+   */
+  onCreated?: (spell: SpellBuilderSpell) => void;
+}
+
+/** What the address opens the builder's dialog on: a new spell (`?new=spell`), or a saved one (`?edit=<id>`). */
+export interface SpellDialogOpened {
+  /** The saved spell `?edit=<id>` names; left out for `?new=spell`. */
+  spell?: SpellBuilderSpell;
+}
+
+export interface SpellDialogProps {
+  /** The coven the spell is written in. */
+  workspaceId: string;
+  /**
+   * The grimoire tab it opened over, as it was, the dialog's parameter dropped. A new
+   * draft's first save moves to it with `edit=<id>` added.
+   */
+  closeHref: Route;
+  /** What the server read from the address; left out, it opens nothing. */
+  opened?: SpellDialogOpened;
+  /**
+   * Whether this member may create a spell. `?new=spell` opens the empty builder from the
+   * browser's address alone when true, before the server has read it.
+   */
+  canCreate: boolean;
 }
 
 export interface SpellSuggestFieldProps extends Pick<FieldProps, 'label' | 'hint'> {
@@ -33,4 +63,12 @@ export interface SpellSuggestFieldProps extends Pick<FieldProps, 'label' | 'hint
    * box; `null` for a value with none, such as one typed outside the list.
    */
   icon?: (value: string) => ReactNode;
+}
+
+/** The builder's save-on-close guard (`useSaveOnClose`), told how each save ended. */
+export interface SaveOnClose {
+  /** A save landed: closes the modal if Close was waiting on it, answering whether it did. */
+  saved: () => boolean;
+  /** A save was refused, or the fields did not pass: the modal stays open. */
+  refused: () => void;
 }

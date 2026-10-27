@@ -1,12 +1,11 @@
 import type { Route } from 'next';
-import IconTip, { PlusIcon } from '@/components/IconTip';
+import { RouteModalProvider } from '@/components/Modal/route-modal-provider';
 import TabbedPage from '@/components/TabbedPage';
 import type { PageTab } from '@/components/TabbedPage/types';
-import { covenTarget } from '@/lib/coven-path';
-import { PendingLink } from '@/lib/navigation';
 import { requireCovenMembership } from '@/lib/request-session';
 import { rolePermits } from '@/modules/coven';
 import type { CovenLayoutProps } from '../../types';
+import NewSpellAction from './new-spell-action';
 
 // The coven's Grimoire (M10.11): its spells, as two tabs, Spells (the complete ones) and
 // Drafts, each its own address, so the status is the tab rather than a filter
@@ -17,9 +16,10 @@ import type { CovenLayoutProps } from '../../types';
 //
 // New Spell (M10.12) stands at the heading line's end for a role that may create a spell, the
 // same on both tabs, so it is the page's action rather than a per-tab `@action` slot like the
-// members page's Invite. It wears the admin lists' Add look (`.add-action`: the labelled
-// button when wide, a plus with the label as its tip when narrow), but navigates to the
-// builder's page rather than opening a modal, so it is a plain `PendingLink`, not `AddAction`.
+// members page's Invite. It is the admin lists' Add (`AddAction`), opening the spell
+// builder's dialog under `?new=spell` over the open tab, which each tab draws (M10.12;
+// claude-docs/design-decisions/m10.12-spell-builder-modal.md). The layout is the
+// RouteModalProvider, so the dialog opens at once on the press and holds across the tabs.
 export default async function GrimoireLayout({ children, params }: CovenLayoutProps) {
   const { slug } = await params;
   const { membership } = await requireCovenMembership(slug);
@@ -32,24 +32,14 @@ export default async function GrimoireLayout({ children, params }: CovenLayoutPr
       shape: 'cards',
     },
   ];
-  const builder = `/coven/${slug}/grimoire/new` as Route;
   const action = rolePermits(membership.role, { spell: ['create'] }) ? (
-    <IconTip tip="New Spell">
-      <PendingLink
-        className="btn btn--solid add-action"
-        href={builder}
-        navigationTarget={covenTarget(builder)}
-      >
-        <span className="add-action__label">New Spell</span>
-        <span className="add-action__plus" aria-hidden="true">
-          <PlusIcon />
-        </span>
-      </PendingLink>
-    </IconTip>
+    <NewSpellAction />
   ) : undefined;
   return (
-    <TabbedPage title="Grimoire" tabs={tabs} action={action}>
-      {children}
-    </TabbedPage>
+    <RouteModalProvider>
+      <TabbedPage title="Grimoire" tabs={tabs} action={action}>
+        {children}
+      </TabbedPage>
+    </RouteModalProvider>
   );
 }

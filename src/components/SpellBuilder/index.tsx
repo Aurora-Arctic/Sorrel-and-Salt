@@ -14,10 +14,10 @@ import {
   TextField,
   useFormHistory,
 } from '../Field';
-import { DiscardQuestion, useDiscardGuard } from '../Modal';
 import MoonPhaseIcon from '../MoonPhaseIcon';
 import Notice from '../Notice';
 import { DAYS_OF_THE_WEEK, MOON_PHASES } from './constants';
+import { useSaveOnClose } from './save-on-close';
 import { SpellSuggestField } from './suggest-field';
 import { SpellInput } from '@/modules/grimoire/validation/spell';
 import type {
@@ -27,15 +27,18 @@ import type {
   SpellBuilderValues,
 } from './types';
 
-// The spell builder (M10.12): a spell's title, intent, jar and note, on the
-// new-spell page now and on the edit page once M13.10 opens it with a saved
-// spell. Moon phase and day of the week suggest a fixed list and still take
-// what is typed (./constants). No field is required: a draft may be saved
-// with any of them, and a title is asked for only when the spell is marked
-// complete (M10.20). Save creates the spell once and the builder then holds
-// its id and revision, so every later Save updates that spell, as the
-// autosave adapter will (claude-docs/design-decisions/m13.14-plan.md). A Back
-// link on the page, not Cancel, leaves it. See claude-docs/components/spell-builder.md.
+// The spell builder (M10.12): a spell's title, intent, jar and note, in a
+// modal over the grimoire (./spell-dialog.tsx), opened empty by New Spell and
+// on a saved spell by its Edit. Moon phase and day of the week suggest a
+// fixed list and still take what is typed (./constants). No field is
+// required: a draft may be saved with any of them, and a title is asked for
+// only when the spell is marked complete (M10.20). Save creates the spell
+// once and the builder then holds its id and revision, so every later Save
+// updates that spell, as the autosave adapter will
+// (claude-docs/design-decisions/m13.14-plan.md); `onCreated` hears of the
+// first, so the dialog's address can become the draft's. There is no Cancel:
+// Close saves what is unsaved, then closes (./save-on-close.ts). See
+// claude-docs/components/spell-builder.md.
 
 const CreateSpellDocument = graphql(`
   mutation CreateSpell($workspaceId: ID!, $input: SpellInput!) {
@@ -109,7 +112,7 @@ const resolver = zodResolver(SpellInput) as unknown as Resolver<
 const moonPhaseIcon = (phase: string): ReactElement | null =>
   (MOON_PHASES as readonly string[]).includes(phase) ? <MoonPhaseIcon phase={phase} /> : null;
 
-const SpellBuilder = ({ workspaceId, spell }: SpellBuilderProps): ReactElement => {
+const SpellBuilder = ({ workspaceId, spell, onCreated }: SpellBuilderProps): ReactElement => {
   // The spell this builder saves to: the one it opened, else the one its first save created.
   const [saved, setSaved] = useState(spell ? { id: spell.id, revision: spell.revision } : null);
   const methods = useForm<SpellBuilderValues, unknown, SpellBuilderInput>({
@@ -135,9 +138,8 @@ const SpellBuilder = ({ workspaceId, spell }: SpellBuilderProps): ReactElement =
     (field, index) => (typed[index] ?? '').trim() !== (defaultValues?.[field] ?? '').trim(),
   );
 
-  const discard = useDiscardGuard(dirty && !isSubmitting);
   const root = useRef<HTMLFormElement>(null);
-  const history = useFormHistory(methods, { root, enabled: !discard.asking });
+  const history = useFormHistory(methods, { root });
 
   const save = useMutation({
     mutationFn: async (input: SpellBuilderInput): Promise<SpellBuilderSpell> => {
@@ -154,7 +156,11 @@ const SpellBuilder = ({ workspaceId, spell }: SpellBuilderProps): ReactElement =
     },
   });
 
-  /** Saves the fields; a refusal lands beside its field, or above them all. */
+  /**
+   * Saves the fields; a refusal lands beside its field, or above them all.
+   * The one save every way in calls: Save, Close (`useSaveOnClose`) and
+   * M13.17's autosave.
+   */
   const send = async (values: SpellBuilderInput): Promise<void> => {
     // Only the builder's fields: the schema's defaults (an empty recipe)
     // would otherwise replace a saved spell's steps.
@@ -162,21 +168,29 @@ const SpellBuilder = ({ workspaceId, spell }: SpellBuilderProps): ReactElement =
       FIELDS.map((field) => [field, values[field] ?? null]),
     ) as SpellBuilderInput;
     try {
+      const created = saved === null;
       const answer = await save.mutateAsync(input);
       setSaved({ id: answer.id, revision: answer.revision });
       // What was saved is the new start: Save goes off until the next change.
       reset(valuesOf(answer));
+      // A Close waiting on this save closes now, and leaves the address be.
+      if (closeGuard.saved()) return;
+      if (created) onCreated?.(answer);
     } catch (error) {
+      closeGuard.refused();
       placeServerIssues(error, setError, ({ path: [field, ...rest] }) =>
         rest.length === 0 && isField(field) ? field : undefined,
       );
     }
   };
 
+  const submit = handleSubmit(send, () => closeGuard.refused());
+  const closeGuard = useSaveOnClose(dirty, isSubmitting, () => void submit());
+
   return (
     <FormProvider {...methods}>
       <FormHistoryContext.Provider value={history}>
-        <form ref={root} className="form" onSubmit={handleSubmit(send)} noValidate>
+        <form ref={root} className="form" onSubmit={submit} noValidate>
           <FormHistoryButtons />
           {errors.root?.message && <Notice kind="error">{errors.root.message}</Notice>}
           <TextField<SpellBuilderValues>
@@ -230,7 +244,6 @@ const SpellBuilder = ({ workspaceId, spell }: SpellBuilderProps): ReactElement =
             multiline
           />
           <FormActions noun="Spell" dirty={dirty} submitting={isSubmitting} />
-          {discard.asking && <DiscardQuestion guard={discard} />}
         </form>
       </FormHistoryContext.Provider>
     </FormProvider>

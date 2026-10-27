@@ -108,6 +108,13 @@ tester.run('long-form-guards-leaving', rules['long-form-guards-leaving'], {
       cwd: REPO_ROOT,
       code: 'export function SpellForm() { useDiscardGuard(dirty); return <form />; }',
     },
+    {
+      // The spell builder saves on close rather than asking (M10.12); its
+      // hook calls useLeaveGuard for the tab close.
+      filename: at('src/components/SpellForm/index.tsx'),
+      cwd: REPO_ROOT,
+      code: 'export function SpellForm() { useSaveOnClose(dirty, saving, submit); return <form />; }',
+    },
   ],
   invalid: [
     {

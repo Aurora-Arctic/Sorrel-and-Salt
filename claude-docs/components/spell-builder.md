@@ -2,11 +2,17 @@
 
 `src/components/SpellBuilder/` is the form that writes a spell's own fields
 (M10.12, story 47): its title, intent, jar size, seal wax colour, moon phase,
-day of the week and note. It is a client component. The new-spell page,
-`/coven/[slug]/grimoire/new`, draws it empty, reached from New Spell at the
-Grimoire's heading, which only an owner or a member is shown; M13.10's edit page,
-`/coven/[slug]/grimoire/[id]/edit`, will draw it with a saved spell. The
-recipe's steps (M10.15, M10.16, M13.3), visibility (M10.13), intent categories
+day of the week and note. It is a client component, drawn in a wide modal
+over the grimoire's list (`SpellDialog`, `spell-dialog.tsx`; the owner's call,
+2026-10-27, [`design-decisions/m10.12-spell-builder-modal.md`](../design-decisions/m10.12-spell-builder-modal.md)).
+The address opens it, as it opens Add Ingredient: `?new=spell` draws it empty,
+reached from New Spell at the Grimoire's heading, which only an owner or a
+member is shown, and `?edit=<id>` draws it with a saved spell, reached from a
+spell card's pencil and Quick Look's Edit (M13.10). There is no page of its
+own. New Spell's press writes `?new=spell` in the browser, with no server
+request, and the dialog draws the empty builder from the address itself, so
+it opens at its full size at once, with no skeleton before it
+([`modal.md`](modal.md), "A form the browser can draw skips the skeleton"). The recipe's steps (M10.15, M10.16, M13.3), visibility (M10.13), intent categories
 (M10.14) and Mark Complete (M10.20) are later tasks that extend it. There is
 no `instructions` field: the ritual is the spell's steps (M13.1).
 
@@ -29,8 +35,7 @@ no `instructions` field: the ritual is the spell's steps (M13.1).
   none, as the shared schema (`SpellInput`) reads them. The row is
   `FormActions` ([`field.md`](field.md)) with `noun="Spell"`: Save Spell,
   busy as Saving Spell with the spinner from the press to the answer. It has
-  no Cancel: the page's Back link leaves (the autosave plan,
-  [`design-decisions/m13.14-plan.md`](../design-decisions/m13.14-plan.md)).
+  no Cancel: the modal's Close leaves, saving first (see "Closing" below).
 - **Created once, then updated.** With no `spell`, the first Save calls
   `createSpell`. The builder then holds the new spell's id and revision, and
   every later Save calls `updateSpell` on that spell with `expectedRevision`
@@ -41,10 +46,14 @@ no `instructions` field: the ritual is the spell's steps (M13.1).
   the schema's default empty `steps` is never sent, so a save from here
   cannot replace a saved spell's recipe.
 - **After a save the form starts again from the answer**, so Save goes
-  disabled until the next change. The address stays at
-  `/coven/[slug]/grimoire/new` after a create: there is no page for one spell
-  to go to until MB.6 and M13.10, so reloading the page opens an empty
-  builder, and the saved spell is listed under the grimoire's Drafts tab.
+  disabled until the next change.
+- **The first save moves the address to the draft.** A create replaces
+  `?new=spell` with `?edit=<id>`, with `router.replace` so Back goes to the
+  grimoire rather than to an empty New Spell, and a reload opens the saved
+  draft. The builder reports the create through `onCreated`, whichever way the
+  save was made, so M13.17's autosave moves the address the same way. The
+  dialog keeps the same builder under the new address, so nothing typed is
+  lost. A create made by Close skips the move and closes.
 
 ## Two error surfaces
 
@@ -57,12 +66,17 @@ the `Notice` above the fields, in the server's words. The reading is
 `placeServerIssues`. Today no builder field has a rule the schema can break
 in the browser: the title rule needs `status: complete`, which M10.20 adds.
 
-## Leaving with unsaved changes
+## Closing
 
-`useDiscardGuard` with `DiscardQuestion`, as every long form has (M13.14): a
-tab close asks the browser's question, and a link asks "Discard Changes?".
-Nothing asks while a save is on its way, or once the changes are saved.
-Undo and redo are the shared `FormHistoryButtons` (M12.9).
+Close, Escape and a click outside the dialog save anything unsaved, then
+close, and ask nothing (`useSaveOnClose`, `save-on-close.ts`). This is the
+builder's exception to M13.14's Discard Changes question, by the owner's call
+on 2026-10-27: a spell's draft is kept, never thrown away. The close waits for
+the save. A refused save keeps the dialog open with the refusal in the
+`Notice`, so nothing typed is lost. With nothing unsaved, Close closes at once.
+Closing the tab or reloading still asks the browser's own question, which no
+page can answer by saving. Undo and redo are the shared `FormHistoryButtons`
+(M12.9).
 
 ## The fields
 
@@ -122,15 +136,16 @@ stored as typed: the columns are free text
 ## Styling
 
 No stylesheet and no wrapper: the `<form className="form">` sits straight in
-the page's column. The page uses `page-frame__section page-frame--narrow`
-inside the coven layout, the forms' width, left-aligned. Its look past the
-tokens is the grimoire's design review's.
+the body of a `size="wide"` `RouteModal` ([`modal.md`](modal.md)), which
+scrolls the form when it is taller than the screen. Its look past the tokens
+is the grimoire's design review's.
 
 ## Stories
 
 `index.stories.tsx`, titled "Grimoire / Spell Builder": `States`, with a
-control that chooses Empty, Title Typed, Saved Spell or Refused After Saving,
-inside the app shell and the page's frame and heading.
+control that chooses Empty, Title Typed, Saved Spell, Phase Outside the List
+or Refused After Saving, each in its `SpellDialog` over the app shell, with
+Open Again to look once more after Close.
 
 ## Testing
 
@@ -140,7 +155,14 @@ empty fields and no Instructions box, no Cancel, nothing to save until a
 field holds something, a draft saved with its intent alone, the trimmed
 values sent, Save busy then disabled, a second save as an update at the
 revision, a saved spell opened and an emptied field cleared, both error
-surfaces, and the discard question. The page is
-`tests/app/(shell)/coven/[slug]/grimoire/new/page.test.tsx`: the builder for an
-owner and a member, and the 404 for a viewer. Story 47 in
+surfaces. `tests/components/SpellBuilder/spell-dialog.test.tsx` covers the
+dialog: New Spell and Edit Spell's headings, the address moved once on the
+first save and never on a saved spell's, no Cancel, and Close closing at
+once, saving first with no question, or staying open on a refused save, and
+`?new=spell` opening the empty builder from the address alone for a role that
+may create a spell, and nothing for one that may not. The
+grimoire page's test,
+`tests/app/(shell)/coven/[slug]/grimoire/(list)/page.test.tsx`, covers which
+address opens which dialog for an owner and a member, and that a viewer's
+`?new=spell` or `?edit=<id>` opens nothing. Story 47 in
 `tests/e2e/stories/06-grimoire.spec.ts` walks it in a browser.

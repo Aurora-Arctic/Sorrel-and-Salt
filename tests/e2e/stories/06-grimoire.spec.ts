@@ -18,13 +18,16 @@ test.beforeAll(async () => {
 
 /**
  * The spell builder (M10.12), reached as a member reaches it: from the Grimoire, through the
- * New Spell at its heading, which only a role that may create a spell is shown.
+ * New Spell at its heading, which only a role that may create a spell is shown. It opens as a
+ * dialog over the grimoire under `?new=spell`, and the dialog is what it returns.
  */
-async function openBuilder(page: Page, slug: string): Promise<void> {
+async function openBuilder(page: Page, slug: string): Promise<Locator> {
   await page.goto(`/coven/${slug}/grimoire`);
   await page.getByRole('link', { name: 'New Spell' }).click();
-  await expect(page).toHaveURL(`/coven/${slug}/grimoire/new`);
-  await expect(page.getByRole('heading', { name: 'New Spell' })).toBeVisible();
+  await expect(page).toHaveURL(`/coven/${slug}/grimoire?new=spell`);
+  const dialog = page.getByRole('dialog', { name: 'New Spell' });
+  await expect(dialog).toBeVisible();
+  return dialog;
 }
 
 /** The builder's one ordered list of steps (M10.15, M10.16, M13.3). */
@@ -50,19 +53,29 @@ test('a member names a spell and states its intent', { tag: '@story-47' }, async
     B: 'member',
   });
   await signInAgainAs(page, coven.users.B);
-  await openBuilder(page, coven.slug);
-  const save = page.getByRole('button', { name: 'Save' });
+  const builder = await openBuilder(page, coven.slug);
+  const save = builder.getByRole('button', { name: 'Save' });
   await expect(save).toBeDisabled();
-  await page.getByRole('textbox', { name: 'Title' }).fill('Fixture Working');
-  await page.getByRole('textbox', { name: 'Intent' }).fill('To see clearly');
+  await builder.getByRole('textbox', { name: 'Title' }).fill('Fixture Working');
   await expect(save).toBeEnabled();
   await save.click();
-  // Saved: nothing left to save, so leaving asks nothing.
+  // Saved: nothing left to save, and the address now names the saved draft, so a reload or
+  // Back opens it rather than an empty form.
   await expect(save).toBeDisabled();
   await expect(save).not.toHaveAttribute('aria-busy', 'true');
-  // A new spell is a draft, listed under the grimoire's Drafts tab (M10.11).
-  await page.getByRole('link', { name: 'Back to Grimoire' }).click();
+  await expect(page).toHaveURL(new RegExp(`/coven/${coven.slug}/grimoire\\?edit=[0-9a-f-]{36}$`));
+  const draft = page.url();
+  // Close saves what is unsaved before it closes, and asks nothing.
+  await builder.getByRole('textbox', { name: 'Intent' }).fill('To see clearly');
+  await builder.getByRole('button', { name: 'Close' }).click();
   await expect(page).toHaveURL(`/coven/${coven.slug}/grimoire`);
+  await expect(page.getByRole('dialog')).toHaveCount(0);
+  await page.goto(draft);
+  const edit = page.getByRole('dialog', { name: 'Edit Spell, Fixture Working' });
+  await expect(edit.getByRole('textbox', { name: 'Intent' })).toHaveValue('To see clearly');
+  await edit.getByRole('button', { name: 'Close' }).click();
+  await expect(page).toHaveURL(`/coven/${coven.slug}/grimoire`);
+  // A new spell is a draft, listed under the grimoire's Drafts tab (M10.11).
   await page.getByRole('link', { name: 'Drafts' }).click();
   await expect(page).toHaveURL(`/coven/${coven.slug}/grimoire/drafts`);
   await expect(grimoireList(page).getByText('Fixture Working')).toBeVisible();

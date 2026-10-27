@@ -1,8 +1,10 @@
 import type { Meta, StoryObj } from '@storybook/nextjs-vite';
+import type { Route } from 'next';
 import type { ReactNode } from 'react';
 import { ShellFrame } from '../../../.storybook/shell-frame';
 import { setInputValue, submitForm, useSteps } from '../../../.storybook/press';
-import SpellBuilder from '.';
+import { Reopenable } from '../../../.storybook/reopenable';
+import SpellDialog from './spell-dialog';
 import type { SpellBuilderSpell } from './types';
 
 // Render-only; behaviour is asserted in tests/components/SpellBuilder. The
@@ -28,8 +30,9 @@ const SAVED: SpellBuilderSpell = {
   note: null,
 };
 
-// Inside the page's frame and head, as src/app/(shell)/coven/[slug]/grimoire/new/page.tsx
-// writes them, so the workshop shows what the page shows.
+// In its wide dialog over the grimoire, as the Grimoire's tabs open it under `?new=spell` or
+// `?edit=<id>` (src/components/SpellBuilder/spell-dialog.tsx), so the workshop shows
+// what the app shows. Close closes it, with Open Again to look once more.
 const Page = ({
   steps = [],
   spell,
@@ -39,14 +42,17 @@ const Page = ({
 }) => {
   useSteps(steps);
   return (
-    <ShellFrame area="coven" open="/coven/fixture-coven/grimoire/new">
-      <main className="page-frame__section page-frame--narrow">
-        <a href="/coven/fixture-coven/grimoire">Back to Grimoire</a>
-        <div className="header">
-          <h1>New Spell</h1>
-        </div>
-        <SpellBuilder workspaceId="fixture-coven" spell={spell} />
-      </main>
+    <ShellFrame area="coven" open="/coven/fixture-coven/grimoire">
+      <Reopenable>
+        {() => (
+          <SpellDialog
+            workspaceId="fixture-coven"
+            closeHref={'/coven/fixture-coven/grimoire' as Route}
+            opened={spell ? { spell } : {}}
+            canCreate
+          />
+        )}
+      </Reopenable>
     </ShellFrame>
   );
 };
@@ -60,7 +66,7 @@ const BUILDER_STATES: Record<string, ReactNode> = {
   // The usual visit: every field empty, nothing to save until one holds something.
   Empty: <Page />,
   'Title Typed': <Page steps={[typeTitle]} />,
-  // A saved spell, as M13.10's edit page will open it: its values, nothing to
+  // A saved spell, as its Edit opens it: its values, nothing to
   // save yet. Its moon phase is one of the eight, so the box draws its icon.
   'Saved Spell': <Page spell={SAVED} />,
   // A moon phase saved before the list existed: its words, with no icon.

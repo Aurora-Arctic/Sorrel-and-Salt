@@ -15,7 +15,6 @@ const push = vi.fn();
 vi.mock('next/navigation', () => ({ useRouter: () => ({ push, refresh: vi.fn() }) }));
 
 const { default: SpellBuilder } = await import('@/components/SpellBuilder');
-const { NavigationProvider, usePendingNavigation } = await import('@/lib/navigation');
 
 // The spell builder's title, intent and jar fields (M10.12, story 47). The
 // saves are answered by MSW in the shape /api/graphql answers, so a refusal is
@@ -107,12 +106,6 @@ describe('SpellBuilder', () => {
     }
     // The recipe's steps are M13.3's; a step's instruction is its own field there.
     expect(screen.queryByRole('textbox', { name: 'Instructions' })).toBeNull();
-  });
-
-  it('goes back by a link, not a Cancel button', () => {
-    renderBuilder();
-
-    expect(screen.queryByRole('button', { name: 'Cancel' })).toBeNull();
   });
 
   it('has nothing to save until a field holds something', () => {
@@ -398,54 +391,25 @@ describe('SpellBuilder', () => {
   });
 
   describe('guarding typed changes', () => {
-    /** A link elsewhere on the page, as the coven nav is. */
-    function Go() {
-      const navigation = usePendingNavigation();
-      return (
-        <button type="button" onClick={() => navigation.navigate('/coven/a/grimoire')}>
-          Grimoire
-        </button>
-      );
-    }
+    /** Whether closing the tab now would ask the browser's question. */
+    const tabCloseAsks = () => {
+      const event = new Event('beforeunload', { cancelable: true });
+      window.dispatchEvent(event);
+      return event.defaultPrevented;
+    };
 
-    const asking = () => screen.queryByRole('dialog', { name: 'Discard Changes?' });
-
-    it('asks before a link leaves unsaved changes', () => {
-      render(
-        <QueryClientProvider client={makeQueryClient()}>
-          <NavigationProvider>
-            <SpellBuilder workspaceId="w1" />
-            <Go />
-          </NavigationProvider>
-        </QueryClientProvider>,
-      );
-      type('Title', 'Fixture Working');
-
-      fireEvent.click(screen.getByRole('button', { name: 'Grimoire' }));
-
-      expect(asking()).toBeInTheDocument();
-      expect(push).not.toHaveBeenCalled();
-    });
-
-    it('lets a link go once the changes are saved', async () => {
+    it('has the browser ask before the tab closes on unsaved changes, and not once they are saved', async () => {
       acceptCreate();
-      render(
-        <QueryClientProvider client={makeQueryClient()}>
-          <NavigationProvider>
-            <SpellBuilder workspaceId="w1" />
-            <Go />
-          </NavigationProvider>
-        </QueryClientProvider>,
-      );
+      renderBuilder();
+      expect(tabCloseAsks()).toBe(false);
       type('Title', 'Fixture Working');
+
+      expect(tabCloseAsks()).toBe(true);
+
       submit();
       await waitFor(() => expect(save()).toBeDisabled());
       await waitFor(() => expect(save()).not.toHaveAttribute('aria-busy', 'true'));
-
-      fireEvent.click(screen.getByRole('button', { name: 'Grimoire' }));
-
-      expect(asking()).toBeNull();
-      expect(push).toHaveBeenCalledWith('/coven/a/grimoire');
+      expect(tabCloseAsks()).toBe(false);
     });
   });
 });

@@ -25,7 +25,8 @@ match comes first and that order breaks a tie (M10.9's `grimoire` query).
 The route group `src/app/(shell)/coven/[slug]/grimoire/(list)/` holds them. Its `layout.tsx`
 runs the membership guard (`requireCovenMembership`, which calls `requireSession()`) and
 draws the tab row, with New Spell at the heading's end for an owner or a member, the roles that
-may create a spell, linking to the builder at `/coven/[slug]/grimoire/new` (M10.12); a viewer
+may create a spell, opening the builder in a wide modal over the open tab at `?new=spell`, the
+tab, filter and page kept (M10.12; [`spell-builder.md`](spell-builder.md)); a viewer
 sees no New Spell; `page.tsx` and `drafts/page.tsx` set their titles and each call
 `grimoireTab()` (`grimoire-tab.tsx`) with its status. `grimoireTab` is an async function the
 page returns, rather than a component, so a page test can await the page whole. It reads the
