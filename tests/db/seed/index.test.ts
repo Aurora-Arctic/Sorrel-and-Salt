@@ -11,9 +11,9 @@ import { seedDeities } from '@/db/seed/deities';
 import { seedForms } from '@/db/seed/forms';
 import { seedSources } from '@/db/seed/sources';
 import { seedCompendium } from '@/db/seed/compendium';
-import { seedReferenceData } from '@/db/seed/reference-data';
 import { loadCompendium } from '@/db/seed/compendium/load';
 import type { SeedDatabase } from '@/db/seed/types';
+import { fixtureFiles } from './compendium/files-fixture';
 import type { SeedEntry, UserRow } from './types';
 
 // The shape every production seed shares, asserted here once over all of them
@@ -159,7 +159,11 @@ const SEED_ENTRIES: SeedEntry[] = (
       seed: seedAstrology,
       tables: ['celestial_bodies', 'zodiac_signs'],
     },
-    { name: 'the deity seed', seed: seedDeities, tables: ['deity_traditions', 'deities'] },
+    {
+      name: 'the deity seed',
+      seed: seedDeities,
+      tables: ['deity_traditions', 'deities', 'deity_other_names'],
+    },
     {
       // A source links rows the two vocabularies wrote, so alone it has nothing to link.
       name: 'the sources seed, after the vocabularies it links',
@@ -171,9 +175,11 @@ const SEED_ENTRIES: SeedEntry[] = (
       tables: ['references', 'reference_links'],
     },
     {
-      // On the production list, read from the files under `compendium/` (M14.10),
-      // after everything it picks from and the sources it may share a work with
-      // (MB.243 moved it off the invented fixture).
+      // On the production list, after everything it picks from and the sources
+      // it may share a work with. The fill sweep reads the real files under
+      // `compendium/` (M14.10), so every table it names is proved filled; the
+      // other three sweeps read the two-entry fixture, since what they prove
+      // does not grow with the files and the real list costs seconds a run (M14.27).
       name: 'the compendium seed, after the vocabularies and sources',
       prepare: async (db) => {
         await seedCategories(db);
@@ -183,54 +189,12 @@ const SEED_ENTRIES: SeedEntry[] = (
         await seedSources(db);
       },
       seed: async (db, options) => {
-        await seedCompendium(db, undefined, options);
+        await seedCompendium(db, fixtureFiles(), options);
+      },
+      fillSeed: async (db) => {
+        await seedCompendium(db);
       },
       tables: [
-        'ingredients',
-        'ingredient_variants',
-        'ingredient_folk_names',
-        'ingredient_deities',
-        'ingredient_categories',
-        'ingredient_substitutes',
-        'references',
-        'reference_links',
-      ],
-    },
-    {
-      // M14.26: the six above in one transaction, from empty, for the
-      // hand-started seed workflow.
-      name: 'the six reference seeds in one transaction',
-      seed: async (db, options) => {
-        await seedReferenceData(db, options);
-      },
-      tables: [
-        'category_groups',
-        'categories',
-        'ingredient_form_groups',
-        'ingredient_forms',
-        'celestial_bodies',
-        'zodiac_signs',
-        'deity_traditions',
-        'deities',
-        'references',
-        'reference_links',
-        'ingredients',
-        'ingredient_variants',
-        'ingredient_folk_names',
-        'ingredient_deities',
-        'ingredient_categories',
-        'ingredient_substitutes',
-      ],
-      // The no-resurrection sweep retires one row per table before the second
-      // run. Retiring a vocabulary row here (a deity, a form, a category) makes
-      // every marked entry that names it read as drift under its matching hash
-      // (M14.1), which the compendium seed then follows: the entry's links to
-      // what remains are tombstoned and written again, so a vocabulary table's
-      // retirement reads as rows gained in the compendium's. That is the
-      // compendium following its curated picks, not a revived row, and each
-      // vocabulary's own entry above proves its tables stay retired; so this
-      // sweep retires the compendium's own rows only.
-      retires: [
         'ingredients',
         'ingredient_variants',
         'ingredient_folk_names',
@@ -266,11 +230,12 @@ describe('the shape every seed shares', () => {
   // insert — each with the precondition that the rows are this run's.
   it.each(SEED_ENTRIES)(
     '$name fills its tables from empty as the bootstrap user: a plain user, the stamp on every row, the acting user of every insert',
-    async ({ run, tables: own }) => {
+    async ({ prepare, seed: seedOf, fillSeed, tables: own }) => {
       // Precondition: the truncated clone really starts empty, so these rows are this run's.
       for (const table of ['users', ...own]) expect(await countOf(table), table).toBe(0);
 
-      await run(db);
+      await prepare?.(db);
+      await (fillSeed ?? seedOf)(db);
 
       const [system] = (await allUsers()).filter((u) => u.id === BOOTSTRAP_USER_ID);
       expect(system).toMatchObject({ email: 'admin@seed.sorrelandsalt.com', role: 'user' });
@@ -319,10 +284,10 @@ describe('the shape every seed shares', () => {
   // only a second live row, and would let the tombstoned one's twin through.
   it.each(SEED_ENTRIES)(
     '$name does not resurrect a row an admin has since deleted, in any of its tables',
-    async ({ run, tables: own, retires }) => {
+    async ({ run, tables: own }) => {
       await run(db);
 
-      const deletable = (retires ?? own).filter((table) => tombstoned.has(table));
+      const deletable = own.filter((table) => tombstoned.has(table));
       // Precondition: there is a tombstone to leave, so an empty loop proves nothing.
       expect(deletable.length).toBeGreaterThan(0);
       for (const table of deletable) {

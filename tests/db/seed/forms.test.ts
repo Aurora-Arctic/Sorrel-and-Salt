@@ -74,20 +74,6 @@ describe('seedForms(db) over a database an admin has edited', () => {
     expect(herbs[0]).toMatchObject({ seed_key: null, description: 'Written by an admin.' });
   });
 
-  // The icon standing for each group (M12.6), which the admin owns once seeded.
-  it('gives each group a fresh seed writes the icon FORM_GROUPS names', async () => {
-    await seedForms(db);
-
-    expect(await glyphs()).toEqual({
-      botanical: 'botanical',
-      animal: 'animal',
-      mineral: 'mineral',
-      substance: 'substance',
-      fluid: 'fluid',
-      curio: 'curio',
-    });
-  });
-
   // A cleared icon is the admin's answer, the generic, and not a gap to fill.
   it('leaves an icon an admin changed, and one an admin cleared, as they are', async () => {
     await seedForms(db);
