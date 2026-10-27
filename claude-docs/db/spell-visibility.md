@@ -30,8 +30,8 @@ caller could pass that disagrees with the check that minted it — the argument
 repository's own finders, M13.5's and M13.6's workings among them, and not from
 the repository's `index.ts`: above the repository nothing builds SQL (MB.33),
 so a service has nothing to do with a condition. It builds that condition and
-runs nothing, which `tests/db/repository/readable-spells-predicate.test.ts`
-shows with the database client replaced by one that throws.
+runs nothing; what the condition admits is proved over every finder by
+`tests/db/repository/readable-spells.test.ts`.
 
 Nine finders read through it, seven of them in `spells.ts`:
 
