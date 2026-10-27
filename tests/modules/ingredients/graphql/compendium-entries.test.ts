@@ -23,8 +23,9 @@ import type { WorkspaceIngredientNode } from './types';
 // This file holds the transport's half (claude-docs/testing/layer-ownership.md):
 // the SDL's own refusals, the loaders cleared between two writes in one
 // request, `endRedirect` reaching the service, and one refusal per error code
-// per mutation, read as the browser reads it. Who is refused, and every
-// collision, are services/compendium-entries.test.ts's; a signed-out caller
+// per mutation, read as the browser reads it. Who is refused is
+// services/compendium-entries.test.ts's, and every collision
+// services/compendium-entry-slugs.test.ts's; a signed-out caller
 // and a non-admin at the `admin` scope are tests/db/graphql-query-scopes.test.ts's.
 
 let sql: postgres.Sql;
