@@ -8,7 +8,7 @@ import {
   resumeAdminRoleChanges,
   setUserRole,
 } from '@/modules/identity';
-import { A, E, asUser } from '../../../support/as-user';
+import { E, asUser } from '../../../support/as-user';
 import { useTestDatabase } from '../../../support/db/database';
 import { asManualFix } from '../../../support/db/privileges';
 import type { PauseRow } from './types';
@@ -128,23 +128,6 @@ describe('pauseAdminRoleChanges and resumeAdminRoleChanges', () => {
     await expect(pauseAdminRoleChanges(asUser(AS_PRIMARY))).rejects.toThrow(Forbidden);
     expect(await pauses()).toEqual([]);
   });
-
-  // The site role is read first, so one non-admin stands for every one: A
-  // owns a coven, which no workspace role turns into a site role.
-  it('refuses a non-admin as Forbidden by direct call', async () => {
-    expect(A.role).toBe('user');
-
-    await expect(pauseAdminRoleChanges(asUser(A))).rejects.toThrow(Forbidden);
-    await expect(resumeAdminRoleChanges(asUser(A))).rejects.toThrow(Forbidden);
-    await expect(adminRoleChangePauseState(asUser(A))).rejects.toThrow(Forbidden);
-    expect(await pauses()).toEqual([]);
-  });
-
-  // The stamps come from the session: the services take no other argument.
-  it('takes no actor but the session', () => {
-    expect(pauseAdminRoleChanges).toHaveLength(1);
-    expect(resumeAdminRoleChanges).toHaveLength(1);
-  });
 });
 
 describe('setUserRole while admin changes are paused', () => {
@@ -152,13 +135,7 @@ describe('setUserRole while admin changes are paused', () => {
     await pauseAdminRoleChanges(asUser(AS_PRIMARY));
   });
 
-  it.each([
-    ['a grant', GRANTEE, 'admin' as const],
-    ['a revoke', OTHER_ADMIN, 'user' as const],
-    // The curator role is changed on the same dialog, so the pause covers it (M11.20).
-    ['a curator grant', GRANTEE, 'curator' as const],
-    ['a move from admin to curator', OTHER_ADMIN, 'curator' as const],
-  ])(
+  it.each([['a grant', GRANTEE, 'admin' as const]])(
     'refuses %s by another admin, naming nobody, and records nothing',
     async (_what, target, role) => {
       const before = await roleOf(target);

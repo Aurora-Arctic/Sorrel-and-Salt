@@ -10,9 +10,9 @@ import type { SpellStepView } from '../types';
 
 /**
  * The live steps of each readable spell named, in recipe order, each with its
- * ingredient and the form it lays: `getSpell`'s steps and `Spell.steps`'
- * batch, read once for both (M10.9). Internal to the module, so not exported
- * from its index.
+ * ingredient and the form it lays: what `stepsOfSpells`, `Spell.steps`'
+ * batch, answers (M10.9). Internal to the module, so not exported from its
+ * index.
  *
  * A linked ingredient is read through the finder that keeps a deleted one,
  * and its forms through the one that keeps deleted forms, each marked

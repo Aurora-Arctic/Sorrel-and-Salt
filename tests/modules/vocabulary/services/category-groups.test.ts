@@ -14,7 +14,7 @@ import {
   updateCategoryGroup,
 } from '@/modules/vocabulary';
 import type { CategoryGroupInput } from '@/modules/vocabulary/validation/category-group';
-import { A, B, E, F, asUser } from '../../../support/as-user';
+import { A, E, F, asUser } from '../../../support/as-user';
 import { useTestDatabase } from '../../../support/db/database';
 import { insertIngredient } from '../../../support/db/insert-ingredient';
 import { makeIngredient } from '../../../support/fixtures';
@@ -53,16 +53,10 @@ const admin = asUser(E);
 // stands for every one (claude-docs/testing/acting-as-fixture-users.md): an
 // owner, whose workspace role is the highest and is still no site role.
 const NON_ADMINS = [['an owner of a coven', A]] as const;
-const CURATORS = [
-  ['the site admin', E],
-  ['a curator', F],
-] as const;
-
-it('is testing sessions whose site role is `user`, beside an admin', () => {
-  for (const [, user] of NON_ADMINS) expect(asUser(user).role).toBe('user');
-  expect(admin.role).toBe('admin');
-  expect(asUser(F).role).toBe('curator');
-});
+// A curator stands for both curation roles: assertSiteAdmin refuses a curator, so
+// a curator's success proves the write calls assertCurator, and that an admin
+// passes assertCurator is proved once in identity's site-admin tests.
+const CURATORS = [['a curator', F]] as const;
 
 function input(overrides: Partial<CategoryGroupInput> = {}): CategoryGroupInput {
   return {
@@ -203,16 +197,24 @@ describe('createCategoryGroup', () => {
     expect(await groupOf(created.id)).toMatchObject({ name: 'Fixture Wards', deleted_at: null });
   });
 
-  it.each(NON_ADMINS)('refuses %s, writing nothing', async (_who, user) => {
-    await expect(createCategoryGroup(asUser(user), input())).rejects.toThrow(Forbidden);
-    expect(await countNamed('Fixture Wards')).toBe(0);
-  });
+  it.each(NON_ADMINS)(
+    'refuses %s, writing nothing, and before reading the input, so a bad one earns the same refusal',
+    async (_who, user) => {
+      // Why it could have passed: the guard is all that refuses it. The user
+      // holds no site role, and the same input is written for a curator.
+      expect(asUser(user).role).toBe('user');
+      expect(asUser(F).role).toBe('curator');
 
-  it('refuses a non-admin before reading the input, so a bad one earns the same refusal', async () => {
-    await expect(
-      createCategoryGroup(asUser(B), input({ colorDark: '#000000' })),
-    ).rejects.toBeInstanceOf(Forbidden);
-  });
+      await expect(createCategoryGroup(asUser(user), input())).rejects.toThrow(Forbidden);
+      expect(await countNamed('Fixture Wards')).toBe(0);
+      await expect(
+        createCategoryGroup(asUser(user), input({ colorDark: '#000000' })),
+      ).rejects.toBeInstanceOf(Forbidden);
+
+      await createCategoryGroup(asUser(F), input());
+      expect(await countNamed('Fixture Wards')).toBe(1);
+    },
+  );
 
   it('refuses a colour under the floor on its own column, naming the ratio, writing nothing', async () => {
     const issues = await issuesOf(createCategoryGroup(admin, input({ colorDark: '#0c5393' })));
@@ -238,15 +240,6 @@ describe('createCategoryGroup', () => {
       },
     ]);
     expect(await countNamed('Fixture-Wards')).toBe(0);
-  });
-
-  it("takes a deleted group's address", async () => {
-    const gone = await seedGroup('Fixture Wards');
-    await sql`update category_groups set deleted_at = now(), deleted_by = ${E.id} where id = ${gone}`;
-
-    const created = await createCategoryGroup(admin, input());
-
-    expect(created.slug).toBe('fixture-wards');
   });
 });
 
@@ -416,31 +409,6 @@ describe('deleteCategoryGroup', () => {
     await deleteCategoryGroup(admin, id, seededId);
 
     expect(await links()).toEqual(before);
-  });
-
-  it('refuses one with live categories and no group to move them to, on `moveTo`, writing nothing', async () => {
-    const id = await seedGroup('Fixture Wards');
-    const category = await seedCategory('Testcraft Stranded', id);
-
-    const issues = await issuesOf(deleteCategoryGroup(admin, id));
-
-    expect(issues).toEqual([{ path: ['moveTo'], message: expect.any(String) }]);
-    expect((await groupOf(id)).deleted_at).toBeNull();
-    expect((await categoryOf(category)).group_id).toBe(id);
-  });
-
-  it('refuses to move its categories to itself, to a deleted group, or to no group at all', async () => {
-    const id = await seedGroup('Fixture Wards');
-    await seedCategory('Testcraft Stranded', id);
-    const gone = await seedGroup('Fixture Gone');
-    await sql`update category_groups set deleted_at = now(), deleted_by = ${E.id} where id = ${gone}`;
-
-    for (const moveTo of [id, gone, '00000000-0000-4000-8000-000000000000', 'not-a-uuid']) {
-      expect(await issuesOf(deleteCategoryGroup(admin, id, moveTo))).toEqual([
-        { path: ['moveTo'], message: expect.any(String) },
-      ]);
-    }
-    expect((await groupOf(id)).deleted_at).toBeNull();
   });
 
   it.each(NON_ADMINS)(

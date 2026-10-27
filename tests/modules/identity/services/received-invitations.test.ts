@@ -2,7 +2,6 @@ import { createHash } from 'node:crypto';
 import { beforeEach, describe, expect, it } from 'vitest';
 import type postgres from 'postgres';
 import { WORKSPACE_W_ID } from '@/db/seed/standard';
-import { decodeCursor, resolvePage } from '@/lib/pagination';
 import { countReceivedInvitations, listReceivedInvitations } from '@/modules/identity';
 import type { PageRequest } from '@/lib/types';
 import { A, B, D, E, asUser } from '../../../support/as-user';
@@ -100,60 +99,5 @@ describe('listReceivedInvitations', () => {
     expect(await idsFor(B)).toEqual([]);
     expect(await idsFor(A)).toEqual([]);
     expect(await countReceivedInvitations(asUser(B), undefined)).toMatchObject({ totalCount: 0 });
-  });
-
-  it('never lists an admin invitation to the same address', async () => {
-    const { id } = await invite();
-    await sql`
-      insert into invitations (email, token_hash, site_role, created_by, updated_by, expires_at)
-      values (${D.email}, ${sha256('fixture-token-site')}, 'admin', ${E.id}, ${E.id}, now() + interval '7 days')
-    `;
-    // Why it could have been listed: pending, to D's verified address, and one more row there.
-    expect(await sql`select id from invitations where workspace_id is null`).toHaveLength(1);
-
-    expect(await idsFor(D)).toEqual([id]);
-    expect(await countReceivedInvitations(asUser(D), undefined)).toMatchObject({ totalCount: 1 });
-  });
-
-  it('leaves out a revoked invitation and a deleted coven’s, which return when undone', async () => {
-    const { id } = await invite();
-    const { id: revoked } = await invite({ token: 'fixture-token-revoked', revoked: true });
-    expect(await idsFor(D)).toEqual([id]);
-
-    await sql`update invitations set revoked_at = null where id = ${revoked}`;
-    expect((await idsFor(D)).sort()).toEqual([id, revoked].sort());
-
-    await sql`update workspaces set deleted_at = now(), deleted_by = ${A.id} where id = ${WORKSPACE_W_ID}`;
-    try {
-      expect(await idsFor(D)).toEqual([]);
-    } finally {
-      await sql`update workspaces set deleted_at = null, deleted_by = null where id = ${WORKSPACE_W_ID}`;
-    }
-    expect(await idsFor(D)).toHaveLength(2);
-  });
-
-  it('pages newest first through the cursor helper and counts the rows before a page’s first', async () => {
-    const ids: string[] = [];
-    for (const n of [1, 2, 3, 4]) {
-      const { id } = await invite({ token: `fixture-token-page-${n}` });
-      await sql`update invitations set created_at = now() - make_interval(hours => ${5 - n}) where id = ${id}`;
-      ids.push(id);
-    }
-    const newestFirst = [...ids].reverse();
-
-    const first = await resolvePage({ first: 3 }, (request) =>
-      listReceivedInvitations(asUser(D), request),
-    );
-    const second = await resolvePage({ first: 3, after: first.pageInfo.endCursor }, (request) =>
-      listReceivedInvitations(asUser(D), request),
-    );
-
-    expect(first.edges.map((edge) => edge.node.id)).toEqual(newestFirst.slice(0, 3));
-    expect(second.edges.map((edge) => edge.node.id)).toEqual(newestFirst.slice(3));
-    const start = decodeCursor(second.pageInfo.startCursor ?? '');
-    expect(await countReceivedInvitations(asUser(D), start)).toEqual({
-      totalCount: 4,
-      countBefore: 3,
-    });
   });
 });

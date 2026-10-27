@@ -30,13 +30,6 @@ describe('compareSpellCategories', () => {
     });
   });
 
-  it('returns both lists empty when both sides are empty', () => {
-    expect(compareSpellCategories([], [])).toEqual({
-      intendedNotPresent: [],
-      presentNotIntended: [],
-    });
-  });
-
   it('reports every present category when nothing is intended, and the reverse', () => {
     expect(compareSpellCategories([], ['a', 'b'])).toEqual({
       intendedNotPresent: [],

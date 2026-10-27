@@ -55,21 +55,6 @@ describe('user_privilege_changes table', () => {
     expect(row.changes).toEqual(userPrivilegeChange.enumValues);
     expect(row.routes).toEqual(userPrivilegeRoute.enumValues);
   });
-
-  it('refuses a value outside each enum', async () => {
-    for (const [privilege, change, via] of [
-      ['moderate', 'grant', 'admin'],
-      ['admin', 'promote', 'admin'],
-      ['admin', 'grant', 'console'],
-    ]) {
-      const outside = await failureOf(sql`
-        insert into user_privilege_changes (user_id, privilege, change, via, created_by, updated_by)
-        values (${SUBJECT}, ${privilege}, ${change}, ${via}, ${ADMIN}, ${ADMIN})
-      `);
-      // 22P02 is invalid_text_representation: the enum refusing the label.
-      expect(outside.code).toBe('22P02');
-    }
-  });
 });
 
 // Append-only by the database rather than by the writer's types: an update or

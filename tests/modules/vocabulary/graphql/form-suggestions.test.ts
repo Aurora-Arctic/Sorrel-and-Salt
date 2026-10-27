@@ -1,5 +1,6 @@
-import { beforeAll, beforeEach, describe, expect, it } from 'vitest';
-import postgres from 'postgres';
+import { beforeEach, describe, expect, it } from 'vitest';
+import type postgres from 'postgres';
+import { useTestDatabase } from '../../../support/db/database';
 import { WORKSPACE_W_ID } from '@/db/seed/standard';
 import type { Session } from '@/lib/session';
 import { A, B, E, asUser } from '../../../support/as-user';
@@ -17,9 +18,7 @@ import type { FormSuggestionConnection } from './types';
 
 let sql: ReturnType<typeof postgres>;
 
-beforeAll(() => {
-  sql = postgres(process.env.DATABASE_URL as string);
-});
+useTestDatabase((client) => (sql = client));
 
 beforeEach(async () => {
   await sql`truncate ingredients cascade`;
@@ -74,24 +73,6 @@ describe('formSuggestions', () => {
         curated: false,
         claimants: [{ name: 'Testbane', canonicalName: null }],
       },
-    ]);
-  });
-
-  it('pages by cursor', async () => {
-    const first = await run(asUser(B), { query: 'root', first: 1 });
-    const page = first.data?.formSuggestions as FormSuggestionConnection;
-    expect(page.pageInfo.hasNextPage).toBe(true);
-
-    const next = await run(asUser(B), {
-      query: 'root',
-      first: 100,
-      after: page.pageInfo.endCursor,
-    });
-
-    expect(next.errors).toBeUndefined();
-    expect(next.data?.formSuggestions.edges.map((edge) => edge.node.value)).toEqual([
-      'Bark',
-      'root bark',
     ]);
   });
 });

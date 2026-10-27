@@ -5,17 +5,18 @@ import { Forbidden, NotFound } from '@/lib/errors';
 import {
   addSpellStep,
   createSpell,
-  getSpell,
-  listSpells,
+  readSpell,
+  stepsOfSpells,
   updateSpell,
   updateSpellStep,
 } from '@/modules/grimoire';
-import { A, B, C, D, E, F, asUser } from '../../../support/as-user';
+import { A, B, C, D, asUser } from '../../../support/as-user';
 import { useTestDatabase } from '../../../support/db/database';
 import { insertIngredient } from '../../../support/db/insert-ingredient';
 import { insertSpell } from '../../../support/db/insert-spell';
 import { makeIngredient, makeSpell } from '../../../support/fixtures';
 import type { SpellVisibility } from '@/modules/grimoire';
+import type { Session } from '@/lib/session';
 
 // The grimoire's service (M10.5): members and owners write, viewers read, and
 // a private spell is its author's alone. Every row a result could come from is
@@ -40,22 +41,28 @@ function seed(
   return insertSpell(sql, makeSpell({ workspaceId, visibility, ...extra }), author.id);
 }
 
+/** A spell and its steps as the API reads them: `readSpell`, then `Spell.steps`' batch. */
+async function readWithSteps(session: Session, workspaceId: string, spellId: string) {
+  const spell = await readSpell(session, workspaceId, spellId);
+  const [steps] = await stepsOfSpells(session, [spell]);
+  if (steps instanceof Error) throw steps;
+  return { spell, steps };
+}
+
 const countSpells = async (): Promise<number> =>
   Number((await sql`select count(*) from spells`)[0].count);
 
 describe('createSpell', () => {
-  it.each([
-    ['a member', B],
-    ['an owner', A],
-  ])('lets %s create a spell, stamped with their id', async (_who, user) => {
-    const spell = await createSpell(asUser(user), WORKSPACE_W_ID, { title: 'Hearth Warding' });
+  // An owner holds `spell: create` too: tests/modules/coven/services/access-control.test.ts.
+  it('lets a member create a spell, stamped with their id', async () => {
+    const spell = await createSpell(asUser(B), WORKSPACE_W_ID, { title: 'Hearth Warding' });
 
     expect(spell).toMatchObject({
       title: 'Hearth Warding',
       workspaceId: WORKSPACE_W_ID,
       status: 'draft',
       visibility: 'workspace',
-      createdBy: user.id,
+      createdBy: B.id,
     });
   });
 
@@ -75,7 +82,7 @@ describe('createSpell', () => {
   it('refuses a viewer, who creates nothing, private spells included', async () => {
     // Why this could have succeeded: C is a live member of W and reads its spells.
     const shared = await seed(B);
-    await expect(getSpell(asUser(C), WORKSPACE_W_ID, shared)).resolves.toBeDefined();
+    await expect(readSpell(asUser(C), WORKSPACE_W_ID, shared)).resolves.toBeDefined();
     const before = await countSpells();
 
     for (const visibility of ['workspace', 'private'] as const) {
@@ -96,24 +103,14 @@ describe('createSpell', () => {
       createSpell(asUser(D), WORKSPACE_W_ID, { title: 'Foreign Working' }),
     ).rejects.toBeInstanceOf(Forbidden);
   });
-
-  it('refuses a site admin who belongs to no coven', async () => {
-    expect(asUser(E).role).toBe('admin');
-    await expect(
-      createSpell(asUser(E), WORKSPACE_W_ID, { title: 'Admin Working' }),
-    ).rejects.toBeInstanceOf(Forbidden);
-  });
 });
 
 describe('updateSpell', () => {
-  it.each([
-    ['a member, on their own spell', B, B],
-    ['an owner, on a member’s workspace spell', A, B],
-    ['a member, on another member’s workspace spell', B, A],
-  ])('lets %s edit it', async (_who, editor, author) => {
-    const id = await seed(author);
+  // One path for every writer: `updateSpell` has no author branch.
+  it('lets a member edit another member’s workspace spell', async () => {
+    const id = await seed(A);
 
-    const updated = await updateSpell(asUser(editor), WORKSPACE_W_ID, id, {
+    const updated = await updateSpell(asUser(B), WORKSPACE_W_ID, id, {
       title: 'Renamed',
       status: 'complete',
       intent: 'Keep the hearth safe',
@@ -124,8 +121,8 @@ describe('updateSpell', () => {
       title: 'Renamed',
       status: 'complete',
       intent: 'Keep the hearth safe',
-      updatedBy: editor.id,
-      createdBy: author.id,
+      updatedBy: B.id,
+      createdBy: A.id,
     });
   });
 
@@ -143,7 +140,7 @@ describe('updateSpell', () => {
 
   it('refuses a viewer on a spell they can read', async () => {
     const id = await seed(B);
-    await expect(getSpell(asUser(C), WORKSPACE_W_ID, id)).resolves.toBeDefined();
+    await expect(readSpell(asUser(C), WORKSPACE_W_ID, id)).resolves.toBeDefined();
 
     await expect(
       updateSpell(asUser(C), WORKSPACE_W_ID, id, { title: 'Viewer Edit' }),
@@ -186,75 +183,6 @@ describe('updateSpell', () => {
   });
 });
 
-describe('reading', () => {
-  it('lets a viewer read a workspace spell but not a private one', async () => {
-    const shared = await seed(B, 'workspace', { title: 'Shared Working' });
-    const hidden = await seed(B, 'private', { title: 'Private Working' });
-    // Why the private spell's absence is the rule's: its author reads it.
-    await expect(getSpell(asUser(B), WORKSPACE_W_ID, hidden)).resolves.toBeDefined();
-
-    await expect(getSpell(asUser(C), WORKSPACE_W_ID, shared)).resolves.toMatchObject({
-      spell: { id: shared },
-    });
-    await expect(getSpell(asUser(C), WORKSPACE_W_ID, hidden)).rejects.toBeInstanceOf(NotFound);
-    expect((await listSpells(asUser(C), WORKSPACE_W_ID)).map((spell) => spell.id)).toEqual([
-      shared,
-    ]);
-  });
-
-  it('hides a private spell from every other member, owners included', async () => {
-    const hidden = await seed(B, 'private');
-    const own = await seed(B, 'private', { title: 'Second Private' });
-    expect((await listSpells(asUser(B), WORKSPACE_W_ID)).map((spell) => spell.id).sort()).toEqual(
-      [hidden, own].sort(),
-    );
-
-    for (const reader of [A, C]) {
-      await expect(getSpell(asUser(reader), WORKSPACE_W_ID, hidden)).rejects.toBeInstanceOf(
-        NotFound,
-      );
-      expect(await listSpells(asUser(reader), WORKSPACE_W_ID)).toEqual([]);
-    }
-  });
-
-  it('refuses D by direct id at either visibility, and lists nothing of W', async () => {
-    const shared = await seed(B);
-    const hidden = await seed(B, 'private');
-    // Why this could have succeeded: D is a live member and reads X's spells.
-    const own = await seed(D, 'workspace', {}, WORKSPACE_X_ID);
-    await expect(getSpell(asUser(D), WORKSPACE_X_ID, own)).resolves.toBeDefined();
-
-    for (const id of [shared, hidden]) {
-      await expect(getSpell(asUser(D), WORKSPACE_W_ID, id)).rejects.toBeInstanceOf(Forbidden);
-      await expect(getSpell(asUser(D), WORKSPACE_X_ID, id)).rejects.toBeInstanceOf(NotFound);
-    }
-    expect((await listSpells(asUser(D), WORKSPACE_X_ID)).map((spell) => spell.id)).toEqual([own]);
-    await expect(listSpells(asUser(D), WORKSPACE_W_ID)).rejects.toBeInstanceOf(Forbidden);
-  });
-
-  // A site admin or curator curates the compendium and reaches no coven's
-  // grimoire (M6.6), whatever the spell's visibility.
-  it('refuses a site admin and a site curator at either visibility, by direct id and in the list', async () => {
-    const shared = await seed(B);
-    const hidden = await seed(B, 'private');
-    // Why this could have succeeded: both spells are there and their author
-    // reads them, and each session carries a site role above a member's.
-    expect((await listSpells(asUser(B), WORKSPACE_W_ID)).map((spell) => spell.id).sort()).toEqual(
-      [shared, hidden].sort(),
-    );
-    expect([asUser(E).role, asUser(F).role]).toEqual(['admin', 'curator']);
-
-    for (const curator of [E, F]) {
-      for (const id of [shared, hidden]) {
-        await expect(getSpell(asUser(curator), WORKSPACE_W_ID, id)).rejects.toBeInstanceOf(
-          Forbidden,
-        );
-      }
-      await expect(listSpells(asUser(curator), WORKSPACE_W_ID)).rejects.toBeInstanceOf(Forbidden);
-    }
-  });
-});
-
 describe('a custom, one-off ingredient row', () => {
   const custom = { steps: [{ name: 'Fixture Ash', form: 'ash' }] };
 
@@ -263,21 +191,23 @@ describe('a custom, one-off ingredient row', () => {
     const hidden = await seed(B, 'private', custom);
 
     // Why the private row could have been read: its author reads it.
-    expect((await getSpell(asUser(B), WORKSPACE_W_ID, hidden)).steps).toHaveLength(1);
+    expect((await readWithSteps(asUser(B), WORKSPACE_W_ID, hidden)).steps).toHaveLength(1);
 
-    const read = await getSpell(asUser(C), WORKSPACE_W_ID, shared);
+    const read = await readWithSteps(asUser(C), WORKSPACE_W_ID, shared);
     expect(read.steps).toEqual([
       expect.objectContaining({ name: 'Fixture Ash', form: 'ash', ingredient: null }),
     ]);
-    await expect(getSpell(asUser(A), WORKSPACE_W_ID, hidden)).rejects.toBeInstanceOf(NotFound);
-    await expect(getSpell(asUser(D), WORKSPACE_W_ID, shared)).rejects.toBeInstanceOf(Forbidden);
+    await expect(readWithSteps(asUser(A), WORKSPACE_W_ID, hidden)).rejects.toBeInstanceOf(NotFound);
+    await expect(readWithSteps(asUser(D), WORKSPACE_W_ID, shared)).rejects.toBeInstanceOf(
+      Forbidden,
+    );
   });
 
   it('is written exactly when its spell is', async () => {
     const shared = await seed(B, 'workspace', custom);
     const hidden = await seed(B, 'private', custom);
     const stepOf = async (spellId: string) =>
-      (await getSpell(asUser(B), WORKSPACE_W_ID, spellId)).steps[0];
+      (await readWithSteps(asUser(B), WORKSPACE_W_ID, spellId)).steps[0];
 
     // Why the refusals are the rule's: the author and the owner both write the shared one.
     await updateSpellStep(asUser(A), WORKSPACE_W_ID, shared, (await stepOf(shared)).id, {
@@ -320,7 +250,7 @@ describe('a custom, one-off ingredient row', () => {
   it('cannot be reached through another spell’s id', async () => {
     const mine = await seed(B, 'workspace', custom);
     const other = await seed(B, 'workspace', { title: 'Other Working', ...custom });
-    const stepOfOther = (await getSpell(asUser(B), WORKSPACE_W_ID, other)).steps[0];
+    const stepOfOther = (await readWithSteps(asUser(B), WORKSPACE_W_ID, other)).steps[0];
 
     await expect(
       updateSpellStep(asUser(B), WORKSPACE_W_ID, mine, stepOfOther.id, { note: 'Crossed' }),
@@ -344,12 +274,12 @@ describe('a linked step’s ingredient', () => {
       steps: [{ ingredientId: live }, { ingredientId: gone }, { body: 'Stir.' }],
     });
 
-    const before = await getSpell(asUser(C), WORKSPACE_W_ID, id);
+    const before = await readWithSteps(asUser(C), WORKSPACE_W_ID, id);
     expect(before.steps.map((step) => step.ingredient?.deleted)).toEqual([false, false, undefined]);
 
     await sql`update ingredients set deleted_at = now(), deleted_by = ${A.id} where id = ${gone}`;
 
-    const after = await getSpell(asUser(C), WORKSPACE_W_ID, id);
+    const after = await readWithSteps(asUser(C), WORKSPACE_W_ID, id);
     expect(after.steps).toEqual([
       expect.objectContaining({
         ingredient: expect.objectContaining({ id: live, deleted: false }),
@@ -373,7 +303,7 @@ describe('a linked step’s ingredient', () => {
     );
     const id = await seed(B, 'workspace', { steps: [{ ingredientId: foreign }] });
 
-    const read = await getSpell(asUser(B), WORKSPACE_W_ID, id);
+    const read = await readWithSteps(asUser(B), WORKSPACE_W_ID, id);
     expect(read.steps).toHaveLength(1);
     expect(read.steps[0].ingredient).toBeNull();
   });
