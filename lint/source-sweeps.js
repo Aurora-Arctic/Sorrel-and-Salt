@@ -256,7 +256,7 @@ export const rules = {
       if (['src/components/Modal/modal.tsx', 'src/components/Modal/route-modal.tsx'].includes(file))
         return {};
       const ALLOWED = {
-        'src/components/FacetPanel/index.tsx': {
+        'src/components/FacetPanel/shell.tsx': {
           calls: 2,
           reason:
             'the Filters panel is a dialog of its own, not a Modal, open beside the page from the tablet width up: it gives the focus back to its button only when the focus was inside it',

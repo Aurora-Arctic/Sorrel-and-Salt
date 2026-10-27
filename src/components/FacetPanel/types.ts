@@ -1,3 +1,4 @@
+import type { ReactNode } from 'react';
 import type { CategoryMode, IngredientSource } from '@/modules/ingredients/schema/ingredient-enums';
 import type { CompendiumFacetCounts, ReviewSetting } from '../CompendiumList/types';
 
@@ -68,4 +69,20 @@ export interface FacetPanelProps {
    * is not drawn: a visitor signed out, a viewer in no coven, and the admin and coven lists.
    */
   covens?: readonly { id: string; name: string }[];
+}
+
+/** The Filters shell (M10.11): the button, Clear All and the panel, around a list's own filters. */
+export interface FacetShellProps {
+  /** How many filters are chosen, shown on the button; above nought, the bar's Clear All shows too. */
+  count: number;
+  /** Where the Clear All links go: the list with no filter chosen. */
+  clearHref: string;
+  /** Called once hydrated when the panel shuts, by whatever means other than Apply Filters (which submits the form) or Clear All: the caller applies what it holds. */
+  onApply?: () => void;
+  /** Called once hydrated when either Clear All is pressed: the caller empties what it holds and applies at once. Without it the links are plain. */
+  onClear?: () => void;
+  /** Joins the dialog's class. */
+  className?: string;
+  /** The filters, drawn between the panel's head and its Apply Filters, Close and Clear All. */
+  children: ReactNode;
 }
