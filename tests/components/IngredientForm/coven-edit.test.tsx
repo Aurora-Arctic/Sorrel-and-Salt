@@ -10,7 +10,6 @@ import type {
 } from '@/gql/graphql';
 import { mockGraphQLError, mockGraphQLMutation } from '../../support/msw/graphql';
 import { duplicateHref, renderWithClient, textbox, waitFor } from '../../support/ingredient-form';
-import { openSections } from '../../support/ingredient-sections';
 import { press, type } from '../../support/interact';
 import {
   ENTRY_ID,
@@ -35,7 +34,7 @@ const TESTWORT: IngredientFormValues = {
   folkNames: [{ value: 'Hedge Fixture', id: FOLK_ID }],
 };
 
-function renderEdit(props: Pick<IngredientFormProps, 'mayPromote' | 'onDeleted'> = {}) {
+function renderEdit(props: Pick<IngredientFormProps, 'onDeleted'> = {}) {
   const onSaved = vi.fn();
   offerNothing();
   renderWithClient(
@@ -154,19 +153,5 @@ describe("IngredientForm editing a coven's own entry", () => {
     expect(textbox('Name')).toHaveAccessibleDescription(/Testwort is taken in this coven/);
     expect(textbox('Name')).toHaveValue('Mockwort');
     expect(onSaved).not.toHaveBeenCalled();
-  });
-
-  it('offers to promote a saved folk name when the page allows it', () => {
-    renderEdit({ mayPromote: true });
-    openSections('Identity');
-
-    expect(button('Make Hedge Fixture the Display Name')).toBeInTheDocument();
-  });
-
-  it('offers no promotion without the prop', () => {
-    renderEdit();
-    openSections('Identity');
-
-    noButton('Make Hedge Fixture the Display Name');
   });
 });

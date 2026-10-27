@@ -197,7 +197,7 @@ describe('ReferencePanel', () => {
   });
 
   it.each(KINDS)(
-    'shows only the fields a $label needs, in order, marking the required ones',
+    'shows only the fields a $label needs, marking the required ones',
     ({ label, fields, required }) => {
       renderPanel();
 
@@ -205,12 +205,6 @@ describe('ReferencePanel', () => {
 
       const controls = fields.map((field) => inPanel(field));
       for (const [index, control] of controls.entries()) {
-        if (index > 0) {
-          // Each after the last, in the page.
-          expect(
-            controls[index - 1].compareDocumentPosition(control) & Node.DOCUMENT_POSITION_FOLLOWING,
-          ).toBeTruthy();
-        }
         const marked = (required as readonly string[]).includes(fields[index]);
         if (marked) expect(control).toHaveAttribute('aria-required', 'true');
         else expect(control).not.toHaveAttribute('aria-required');

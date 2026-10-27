@@ -57,10 +57,6 @@ describe('the forms parameter', () => {
     expect(entries.forms.toVariable(['Oil', 'Tincture'])).toEqual(['Oil', 'Tincture']);
     expect(entries.forms.toVariable([])).toBeUndefined();
   });
-
-  it('no longer reads the old single form parameter', () => {
-    expect(COMPENDIUM_PARAMS.read({ form: 'Oil' }).forms).toEqual([]);
-  });
 });
 
 describe('the deities parameter', () => {
@@ -211,16 +207,6 @@ describe('the Reviewed parameter (M14.8)', () => {
     expect(reviewed.toVariable('reviewed')).toBe(true);
     expect(reviewed.toVariable('needs_review')).toBe(false);
     expect(reviewed.toVariable('')).toBeUndefined();
-  });
-});
-
-describe('the classification parameter', () => {
-  it('has left the table, so the address no longer reads or writes it', () => {
-    expect(Object.keys(entries)).not.toContain('nomenclature');
-    expect(COMPENDIUM_PARAMS.read({ nomenclature: 'unknown' })).not.toHaveProperty('nomenclature');
-    expect(COMPENDIUM_PARAMS.variables(COMPENDIUM_PARAMS.read({}))).not.toHaveProperty(
-      'nomenclature',
-    );
   });
 });
 

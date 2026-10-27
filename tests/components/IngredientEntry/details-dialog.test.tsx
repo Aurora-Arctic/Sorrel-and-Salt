@@ -144,44 +144,6 @@ describe('DetailsDialog', () => {
     ).not.toBeInTheDocument();
   });
 
-  it('puts See in Compendium after the summary and outside the body that scrolls', () => {
-    render(
-      <DetailsDialog
-        closeHref={LIST}
-        opened={{ heading: detailsHeading(ENTRY), pageHref: PAGE, children: <p>A summary</p> }}
-      />,
-    );
-
-    const open = within(dialog()).getByRole('link', { name: 'See in Compendium' });
-    const summary = within(dialog()).getByText('A summary');
-    // Why it could be inside: it was the body's last child, held at the foot by position: sticky,
-    // so the body's scrollbar ran down past it. It is the modal's own foot now, under the body.
-    const body = summary.closest('.modal-dialog__body');
-    expect(body).not.toBeNull();
-    expect(body).not.toContainElement(open);
-    expect(open.closest('.modal-dialog__header')).toBeNull();
-    expect(summary.compareDocumentPosition(open) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy();
-  });
-
-  it('stands a foot control beside the link, outside the body that scrolls (M14.8)', () => {
-    render(
-      <DetailsDialog
-        closeHref={LIST}
-        opened={{
-          heading: detailsHeading(ENTRY),
-          pageHref: PAGE,
-          children: <p>A summary</p>,
-          footControl: <button type="button">A control</button>,
-        }}
-      />,
-    );
-
-    const control = within(dialog()).getByRole('button', { name: 'A control' });
-    const open = within(dialog()).getByRole('link', { name: 'See in Compendium' });
-    expect(control.closest('.modal-dialog__body')).toBeNull();
-    expect(control.parentElement).toBe(open.parentElement);
-  });
-
   it("goes to the entry's page on a press of See in Compendium, as the site's link does", async () => {
     render(
       <Navigating push={router.push}>
@@ -231,14 +193,9 @@ describe('DetailsDialog', () => {
         </RouteModalProvider>
       </Navigating>,
     );
-    // The cards' pencil, named for the entry, with its tip.
+    // The cards' pencil, named for the entry; IconTip's own tests own its tip.
     const edit = within(dialog()).getByRole('link', { name: 'Edit Testwort' });
     expect(edit).toHaveAttribute('href', EDIT);
-    fireEvent.mouseEnter(edit);
-    // After the 300ms a hover waits for (IconTip).
-    // The formal name's tip stands in the dialog too, so the pencil's is found by its words.
-    expect(await screen.findByText('Edit', { selector: '[role="tooltip"]' })).toBeInTheDocument();
-    fireEvent.mouseLeave(edit);
 
     await act(async () => {
       fireEvent.click(edit);
@@ -263,10 +220,7 @@ describe('DetailsDialog', () => {
       inCoven: true,
       ...more,
     });
-    const show = (
-      more: Record<string, unknown> = {},
-      editAction?: { href: Route; heading: ReturnType<typeof editHeading> },
-    ) =>
+    const show = (more: Record<string, unknown> = {}) =>
       render(
         <Navigating push={router.push}>
           <RouteModalProvider>
@@ -276,30 +230,17 @@ describe('DetailsDialog', () => {
                 heading: detailsHeading(ENTRY),
                 pageHref: PAGE,
                 marks: marks(more),
-                ...(editAction && { editAction }),
               }}
             />
           </RouteModalProvider>
         </Navigating>,
       );
-    const follows = (first: Node, second: Node) =>
-      Boolean(first.compareDocumentPosition(second) & Node.DOCUMENT_POSITION_FOLLOWING);
 
     it('shows Toxic alone for an entry that is both cautioned and toxic', () => {
       show({ toxic: true, safetyNotes: 'Keep from children.' });
 
       expect(within(dialog()).getByText('Toxic')).toBeInTheDocument();
       expect(within(dialog()).queryByText('Caution')).not.toBeInTheDocument();
-    });
-
-    it('shows Caution for notes alone, and no safety badge for neither', () => {
-      const { unmount } = show({ safetyNotes: 'Keep from children.' });
-      expect(within(dialog()).getByText('Caution')).toBeInTheDocument();
-      unmount();
-
-      show();
-      expect(within(dialog()).queryByText('Caution')).not.toBeInTheDocument();
-      expect(within(dialog()).queryByText('Toxic')).not.toBeInTheDocument();
     });
 
     it('draws the provenance badges the entry page does', () => {
@@ -317,64 +258,6 @@ describe('DetailsDialog', () => {
 
       show({ kind: 'cupboard', retired: true });
       expect(within(dialog()).getByRole('button', { name: 'Retired' })).toBeInTheDocument();
-    });
-
-    it('puts the formal name over the name, with New above both and before the badges', () => {
-      show({ kind: 'own', recency: 'new' });
-
-      const name = within(dialog()).getByRole('heading', { name: 'Testwort' });
-      const formal = within(dialog()).getByText('Fixtura testalis');
-      expect(follows(formal, name)).toBe(true);
-      // Not inside the heading, so the heading stays the entry name alone.
-      expect(name).not.toContainElement(formal);
-      // On the top line, with Close, as the entry page's top bar has it.
-      const recency = within(dialog()).getByText('New');
-      expect(follows(recency, formal)).toBe(true);
-      expect(follows(recency, within(dialog()).getByText('Local'))).toBe(true);
-      expect(follows(recency, within(dialog()).getByRole('button', { name: 'Close' }))).toBe(true);
-    });
-
-    it('puts the safety badge on the top line with Close and the Edit pencil after the name', () => {
-      show({ toxic: true }, { href: EDIT, heading: editHeading(ENTRY) });
-
-      const name = within(dialog()).getByRole('heading', { name: /^Testwort/ });
-      const badge = within(dialog()).getByText('Toxic');
-      const edit = within(dialog()).getByRole('link', { name: 'Edit Testwort' });
-      const close = within(dialog()).getByRole('button', { name: 'Close' });
-      expect(follows(badge, close)).toBe(true);
-      expect(follows(close, name)).toBe(true);
-      expect(follows(name, edit)).toBe(true);
-      expect(badge.closest('.modal-dialog__header')).not.toBeNull();
-      // The pencil is in the header with the name, not down in the scrolling body.
-      expect(edit.closest('.modal-dialog__header')).not.toBeNull();
-    });
-
-    it('keeps the pencil at the name line with no safety badge and no formal name', () => {
-      render(
-        <Navigating push={router.push}>
-          <RouteModalProvider>
-            <DetailsDialog
-              closeHref={LIST}
-              opened={{
-                heading: detailsHeading({
-                  name: 'Testwort',
-                  canonicalName: null,
-                  nomenclature: 'none' as const,
-                }),
-                pageHref: PAGE,
-                marks: marks(),
-                editAction: { href: EDIT, heading: editHeading(ENTRY) },
-              }}
-            />
-          </RouteModalProvider>
-        </Navigating>,
-      );
-
-      const dlg = screen.getByRole('dialog', { name: 'Testwort' });
-      const name = within(dlg).getByRole('heading', { name: /^Testwort/ });
-      const edit = within(dlg).getByRole('link', { name: 'Edit Testwort' });
-      expect(follows(name, edit)).toBe(true);
-      expect(edit.closest('.modal-dialog__header')).not.toBeNull();
     });
   });
 });

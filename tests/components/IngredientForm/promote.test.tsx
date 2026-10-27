@@ -156,7 +156,8 @@ describe('promoting a folk name in the compendium form', () => {
   });
 
   describe('on a clean form', () => {
-    it('asks first, and sends nothing on Cancel', async () => {
+    // Its Cancel is the question's own case, below.
+    it('asks first, sending nothing until it is answered', async () => {
       const sent = acceptPromote();
       renderForm();
 
@@ -165,9 +166,6 @@ describe('promoting a folk name in the compendium form', () => {
       expect(button('Promote')).toBeInTheDocument();
       noButton('Save & Promote');
       expect(button('Cancel')).toHaveFocus();
-      press('Cancel');
-
-      noButton('Promote');
       await act(async () => {});
       expect(sent.promotes).toHaveLength(0);
       expect(textbox('Name')).toHaveValue('Testwort');

@@ -29,6 +29,7 @@ export const DB_FREE = [
   'tests/modules/coven/services/access-control.test.ts',
   'tests/modules/identity/services/site-admin.test.ts',
   'tests/modules/identity/services/workshop-access.test.ts',
+  'tests/modules/ingredients/schema/ingredient-enums.test.ts',
   'tests/modules/ingredients/schema/units.test.ts',
   'tests/modules/ingredients/services/cupboard-entries.test.ts',
   'tests/modules/ingredients/units/**',

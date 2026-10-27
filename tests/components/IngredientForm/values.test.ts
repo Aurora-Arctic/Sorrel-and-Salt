@@ -9,12 +9,13 @@ import {
 } from '@/components/IngredientForm/values';
 
 // The ingredient form's resolver: what it adds over LocalIngredientInput,
-// whose own rules are ingredient.test.ts's. A variant's pick is not a field
-// of its own: the box that made it is its Form's, so the schema's issue with
-// the pick, or with its text, lands on that variant's `form` (MB.169,
-// MB.221). And the one mapping from an issue's path to a field, which the
-// server's issues go through. Pure functions, so called here rather than
-// reached through a render of the form.
+// whose own rules are
+// tests/modules/ingredients/validation/ingredient.test.ts's. A variant's
+// pick is not a field of its own: the box that made it is its Form's, so
+// the schema's issue with the pick, or with its text, lands on that
+// variant's `form` (MB.169, MB.221). And the one mapping from an issue's
+// path to a field, which the server's issues go through. Pure functions,
+// so called here rather than reached through a render of the form.
 
 const OPTIONS = { fields: {}, shouldUseNativeValidation: false };
 const SOURCE_ID = '9c8b7a6d-5e4f-4a3b-8c2d-1e0f9a8b7c6d';
