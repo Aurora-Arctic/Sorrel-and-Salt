@@ -206,11 +206,19 @@ describe('createIngredientFormGroup', () => {
   it.each(NON_ADMINS)(
     'refuses %s, writing nothing, and before reading the input, so a bad one earns the same refusal',
     async (_who, user) => {
+      // Why it could have passed: the guard is all that refuses it. The user
+      // holds no site role, and the same input is written for a curator.
+      expect(asUser(user).role).toBe('user');
+      expect(asUser(F).role).toBe('curator');
+
       await expect(createIngredientFormGroup(asUser(user), input())).rejects.toThrow(Forbidden);
       expect(await countNamed('Fixture Matter')).toBe(0);
       await expect(
         createIngredientFormGroup(asUser(user), input({ name: '  ' })),
       ).rejects.toBeInstanceOf(Forbidden);
+
+      await createIngredientFormGroup(asUser(F), input());
+      expect(await countNamed('Fixture Matter')).toBe(1);
     },
   );
 
