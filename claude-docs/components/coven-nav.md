@@ -48,7 +48,7 @@ use the same mapping. What the target does is
 ## Contracts
 
 - **Each later section is added by the task that builds its page.**
-  Ingredients (M9.6, added) and Grimoire (M10.11) each add their row to
+  Ingredients (M9.6, added) and Grimoire (M10.11, added) each add their row to
   `sections.ts` in their own PR, with the icon already drawn,
   because `typedRoutes`, Next's check that a link points at a built page,
   refuses a link to a route the build does not contain. The coven's four

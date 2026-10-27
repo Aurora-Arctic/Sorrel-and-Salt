@@ -7,6 +7,15 @@ forms, celestial bodies, zodiac, deities, elements, toxic, and for an admin the 
 A client component. The layout was signed off in
 [`m12.4-filter-layout`](../design-decisions/m12.4-filter-layout.md).
 
+## Its parts (M10.11)
+
+The panel is two parts, so a list with other facets can reuse them:
+
+- **`FacetShell`** (`shell.tsx`, `FacetShellProps`): the Filters button with its count, the quiet Clear All, and the dialog with its head and foot (Apply Filters, Close, Clear All), every contract below on opening, closing and applying. Its facets are its `children`.
+- **`CategoryLine`** (`category-line.tsx`, `CategoryLineProps`): the Categories line, the picker and its Match chip, which every list's filters share. Its `noun` ("an ingredient", "a spell") names what Match's tip counts. A choice without a `count` shows with no number, and is never hidden as a zero.
+
+`FacetPanel` itself is the ingredient content inside `FacetShell`: the Categories line and every facet after it. The grimoire's filter is `FacetShell` holding `CategoryLine` alone, without counts ([`grimoire-list.md`](grimoire-list.md)).
+
 ## Props
 
 `FacetPanelProps` (`types.ts`):
@@ -114,7 +123,7 @@ exported from `index.tsx`, and a test guards it against the Sass `$shell-tablet-
 
 `tests/components/FacetPanel/index.test.tsx`: the panel and its fields, the choice chips, the coven's
 Source, In Stock and Low Stock Only controls, the Toxic and Source fields when a count is zero, the
-phone sheet's slide, and the `WIDE` guard. The panel's placement under the search row is proved in
+phone sheet's slide, and the `WIDE` guard. The shell and the Categories line are proved through it, and the grimoire's use of them in `tests/components/GrimoireList/index.test.tsx`. The panel's placement under the search row is proved in
 the compendium page specs.
 
 ## Not here
