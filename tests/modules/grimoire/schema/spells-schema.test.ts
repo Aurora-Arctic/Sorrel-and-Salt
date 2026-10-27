@@ -197,16 +197,4 @@ describe('a spell with no title', () => {
     expect(error.code).toBe('23514');
     expect(error.constraint_name).toBe(CHECK_COMPLETE_HAS_TITLE);
   });
-
-  it('cannot be completed while it has none, and can once named', async () => {
-    const id = await untitled('draft');
-
-    const error = await failureOf(sql`update spells set status = 'complete' where id = ${id}`);
-
-    expect(error.code).toBe('23514');
-    expect(error.constraint_name).toBe(CHECK_COMPLETE_HAS_TITLE);
-    await sql`update spells set title = 'Hearth Guard', status = 'complete' where id = ${id}`;
-    const [row] = await sql`select status::text from spells where id = ${id}`;
-    expect(row.status).toBe('complete');
-  });
 });

@@ -1,12 +1,13 @@
-import { beforeAll, beforeEach, describe, expect, it } from 'vitest';
-import postgres from 'postgres';
+import { beforeEach, describe, expect, it } from 'vitest';
+import type postgres from 'postgres';
 import { findOneSpell, withAudit } from '@/db/repository';
 import { spells } from '@/modules/grimoire/schema/spells';
 import { WORKSPACE_W_ID, WORKSPACE_X_ID } from '@/db/seed/standard';
 import { Forbidden, NotFound } from '@/lib/errors';
 import { assertMembership } from '@/modules/coven';
 import { setSpellVisibility } from '@/modules/grimoire';
-import { A, B, C, D, E, asUser } from '../../../support/as-user';
+import { A, B, C, D, asUser } from '../../../support/as-user';
+import { useTestDatabase } from '../../../support/db/database';
 import { makeSpell } from '../../../support/fixtures';
 import type { SpellVisibility } from '@/modules/grimoire';
 
@@ -18,10 +19,9 @@ import type { SpellVisibility } from '@/modules/grimoire';
 //
 // B, a plain member, authors throughout; A, the owner, is the one refused.
 
-let sql: ReturnType<typeof postgres>;
-
-beforeAll(() => {
-  sql = postgres(process.env.DATABASE_URL as string);
+let sql: postgres.Sql;
+useTestDatabase((client) => {
+  sql = client;
 });
 
 beforeEach(async () => {
@@ -136,17 +136,17 @@ describe('setSpellVisibility', () => {
   });
 
   describe('restating the visibility a spell already has', () => {
-    for (const visibility of ['private', 'workspace'] as SpellVisibility[]) {
-      it(`leaves a ${visibility} spell ${visibility}`, async () => {
-        const spellId = await cast(B, visibility);
+    // Only workspace → workspace: it sits beside the refused narrowing. A
+    // private → private restate takes the same write as widening.
+    it('leaves a workspace spell workspace', async () => {
+      const spellId = await cast(B, 'workspace');
 
-        await expect(
-          setSpellVisibility(asUser(B), WORKSPACE_W_ID, spellId, visibility),
-        ).resolves.toMatchObject({ visibility });
+      await expect(
+        setSpellVisibility(asUser(B), WORKSPACE_W_ID, spellId, 'workspace'),
+      ).resolves.toMatchObject({ visibility: 'workspace' });
 
-        expect(await visibilityOf(spellId)).toBe(visibility);
-      });
-    }
+      expect(await visibilityOf(spellId)).toBe('workspace');
+    });
   });
 
   describe('who may reach the call at all', () => {
@@ -176,24 +176,6 @@ describe('setSpellVisibility', () => {
       await expect(
         setSpellVisibility(asUser(D), WORKSPACE_W_ID, spellId, 'workspace'),
       ).rejects.toBeInstanceOf(Forbidden);
-    });
-
-    // The service's one site-admin refusal; tests/db/workspace-isolation.test.ts
-    // sweeps it beside the coven's other entities.
-    it('refuses a site admin, who belongs to no coven, leaving the spell as it was', async () => {
-      const spellId = await cast(B, 'private');
-      // Why this could have succeeded: E's session says `admin`, and the
-      // author widens this very spell in the same breath.
-      expect(asUser(E).role).toBe('admin');
-
-      await expect(
-        setSpellVisibility(asUser(E), WORKSPACE_W_ID, spellId, 'workspace'),
-      ).rejects.toBeInstanceOf(Forbidden);
-      expect(await visibilityOf(spellId)).toBe('private');
-
-      await expect(
-        setSpellVisibility(asUser(B), WORKSPACE_W_ID, spellId, 'workspace'),
-      ).resolves.toBeDefined();
     });
 
     // The author rule needs no clause of its own: a private spell is not

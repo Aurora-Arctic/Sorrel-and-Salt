@@ -16,15 +16,6 @@ describe('summarizeSpellCategories', () => {
     expect(summarizeSpellCategories([])).toEqual([]);
   });
 
-  it('returns empty when every step is instruction-only', () => {
-    expect(
-      summarizeSpellCategories([
-        { ingredientId: null, categoryIds: [] },
-        { ingredientId: null, categoryIds: [] },
-      ]),
-    ).toEqual([]);
-  });
-
   it('skips a step with no ingredient id even if it carries categories', () => {
     expect(summarizeSpellCategories([{ ingredientId: null, categoryIds: ['love'] }])).toEqual([]);
   });

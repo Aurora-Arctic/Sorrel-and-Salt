@@ -1113,10 +1113,9 @@ field's path.
 
 `tests/modules/grimoire/graphql/spell.test.ts` holds the transport's half: the
 fields, the gaps both ways, the refusal codes by direct id, the paging, the
-`orderBy` and `status` arguments, and the
-read count for a page of one and of four. Which reader sees which spell is
-`services/spell-reads.test.ts`'s, and the loaders' read counts
-`loaders/spell-children.test.ts`'s.
+`orderBy` and `status` arguments, and the read count for a page of one and
+of four, which is also where the loaders' batching is proved. Which reader
+sees which spell is `services/spell-reads.test.ts`'s.
 
 ### The compendium mutations
 
