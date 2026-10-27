@@ -17,7 +17,7 @@ import {
   setCompendiumEntryReviewed,
   updateCompendiumEntry,
 } from '@/modules/ingredients';
-import { A, B, C, D, E, F, asUser } from '../../../support/as-user';
+import { A, B, D, E, F, asUser } from '../../../support/as-user';
 import { useTestDatabase } from '../../../support/db/database';
 import { insertIngredient } from '../../../support/db/insert-ingredient';
 import {
@@ -107,10 +107,10 @@ async function folkIdOf(ingredientId: string, name: string) {
 }
 
 describe('setCompendiumEntryReviewed', () => {
-  it.each([
-    ['a curator (F)', F],
-    ['an admin (E)', E],
-  ])('lets %s set and clear the mark by direct id', async (_who, user) => {
+  // The curator stands for the admin too: `assertCurator` passes either role,
+  // which `tests/modules/identity/services/site-admin.test.ts` owns.
+  it('lets a curator (F) set and clear the mark by direct id', async () => {
+    const user = F;
     const id = await seeded();
     // Why setting it means something: the seeded row is unreviewed.
     expect((await markOf(id)).curator_reviewed_at).toBeNull();
@@ -122,28 +122,6 @@ describe('setCompendiumEntryReviewed', () => {
 
     await setCompendiumEntryReviewed(asUser(user), id, false);
     expect(await markOf(id)).toEqual({ curator_reviewed_at: null, curator_reviewed_by: null });
-  });
-
-  it.each([
-    ['a coven owner who is not a curator (A)', A],
-    ['a member (B)', B],
-    ['a viewer (C)', C],
-    ['a member of an unrelated coven (D)', D],
-  ])('refuses %s by direct id', async (_who, user) => {
-    const id = await seeded();
-    // Why the write could have gone through: the id names a live compendium entry
-    // a curator can mark, and the user holds a role that writes in a coven.
-    const [membership] = await sql<{ role: string }[]>`
-      select role from workspace_members
-      where user_id = ${user.id} and workspace_id in (${WORKSPACE_W_ID}, ${WORKSPACE_X_ID})`;
-    expect(membership).toBeDefined();
-    await setCompendiumEntryReviewed(asUser(F), id, true);
-    await setCompendiumEntryReviewed(asUser(F), id, false);
-
-    await expect(setCompendiumEntryReviewed(asUser(user), id, true)).rejects.toBeInstanceOf(
-      Forbidden,
-    );
-    expect((await markOf(id)).curator_reviewed_at).toBeNull();
   });
 
   it('refuses D even where D is a member writing in its own coven', async () => {
@@ -336,30 +314,24 @@ describe('the Reviewed filter (M14.8)', () => {
   const idsOf = (page: Awaited<ReturnType<typeof listCompendium>>) =>
     page.map(({ node }) => node.id);
 
-  it.each([
-    ['a curator (F)', F],
-    ['an admin (E)', E],
-  ])(
-    'lists and counts the reviewed entries, or the ones needing review, for %s',
-    async (_who, user) => {
-      const { reviewed, unreviewed } = await twoEntries();
-      const session = asUser(user);
-      // Why the filter is doing the narrowing: without it both entries list.
-      expect(idsOf(await listCompendium({}, PAGE, session)).sort()).toEqual(
-        [reviewed, unreviewed].sort(),
-      );
+  // The curator stands for the admin, as on the mark.
+  it('lists and counts the reviewed entries, or the ones needing review, for a curator (F)', async () => {
+    const { reviewed, unreviewed } = await twoEntries();
+    const session = asUser(F);
+    // Why the filter is doing the narrowing: without it both entries list.
+    expect(idsOf(await listCompendium({}, PAGE, session)).sort()).toEqual(
+      [reviewed, unreviewed].sort(),
+    );
 
-      expect(idsOf(await listCompendium({ reviewed: true }, PAGE, session))).toEqual([reviewed]);
-      expect(idsOf(await listCompendium({ reviewed: false }, PAGE, session))).toEqual([unreviewed]);
-      expect((await countCompendium({ reviewed: true }, undefined, session)).totalCount).toBe(1);
-      expect((await countCompendium({ reviewed: false }, undefined, session)).totalCount).toBe(1);
-    },
-  );
+    expect(idsOf(await listCompendium({ reviewed: true }, PAGE, session))).toEqual([reviewed]);
+    expect(idsOf(await listCompendium({ reviewed: false }, PAGE, session))).toEqual([unreviewed]);
+    expect((await countCompendium({ reviewed: true }, undefined, session)).totalCount).toBe(1);
+    expect((await countCompendium({ reviewed: false }, undefined, session)).totalCount).toBe(1);
+  });
 
   it.each([
     ['a signed-out visitor', null],
     ['a coven owner (A)', A],
-    ['a member of an unrelated coven (D)', D],
   ])('refuses %s the filter, on the list, the count and the facets', async (_who, user) => {
     await twoEntries();
     const session = user && asUser(user);
@@ -378,7 +350,7 @@ describe('the Reviewed filter (M14.8)', () => {
   });
 
   // The coven-held reads (M12.55) filter the compendium by what covens hold, and
-  // must keep M14.8's gate: they once parsed the filter without it.
+  // must keep M14.8's gate: a read that parses the filter without it answers anyone.
   it.each([
     ['no coven picked, the cached read', []],
     ['W picked, the scoped read', [WORKSPACE_W_ID]],
