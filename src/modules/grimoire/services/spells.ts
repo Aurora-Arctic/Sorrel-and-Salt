@@ -1,13 +1,8 @@
 import 'server-only';
-import {
-  findIngredientsInSpellsIncludingSoftDeleted,
-  findManyInSpell,
-  findManySpells,
-  findOneSpell,
-  withAudit,
-} from '../../../db/repository';
+import { findManyInSpell, findManySpells, findOneSpell, withAudit } from '../../../db/repository';
 import { spells } from '../schema/spells';
 import { spellSteps } from '../schema/spell-steps';
+import { stepsInSpells } from './step-views';
 import { NotFound } from '../../../lib/errors';
 import type { Session } from '../../../lib/session';
 import { assertMembership, type Membership } from '@/modules/coven';
@@ -75,7 +70,8 @@ export async function updateSpell(
 
 /**
  * Every spell of the coven this caller may read: the shared ones and their own
- * private ones. Not paged: the paged list is M10.9's.
+ * private ones. Not paged, for a caller that needs them all; the API pages
+ * through `listGrimoire`.
  *
  * @throws {Forbidden} the caller is not a member of this coven.
  */
@@ -85,11 +81,8 @@ export async function listSpells(session: Session, workspaceId: string): Promise
 }
 
 /**
- * One spell with its live steps in order. A linked step carries its
- * ingredient, read through the finder that keeps a deleted one, marked
- * `deleted`: a spell records a working, so what went into the jar stays in it
- * (M5.3). A one-off row and an instruction have `ingredient: null`, and so
- * does a link to another coven's ingredient, which the finder withholds.
+ * One spell with its live steps in order, each with the ingredient and form
+ * it links, a deleted ingredient kept and marked (`stepsInSpells`).
  *
  * @throws {Forbidden} the caller is not a member of this coven.
  * @throws {NotFound} no such spell here, or none this caller may read.
@@ -102,18 +95,8 @@ export async function getSpell(
   const membership = await assertMembership(session, workspaceId, { spell: ['read'] });
   const spell = await readableSpell(membership, spellId);
 
-  const rows = await findManyInSpell(membership, spellSteps, spellId);
-  const linked = rows.flatMap((step) => (step.ingredientId === null ? [] : [step.ingredientId]));
-  const held = await findIngredientsInSpellsIncludingSoftDeleted(membership, [...new Set(linked)]);
-  const byId = new Map(held.map((row) => [row.id, row]));
-
-  const steps = rows
-    .sort((a, b) => (a.position ?? a.layerOrder) - (b.position ?? b.layerOrder))
-    .map((step) => {
-      const row = step.ingredientId === null ? undefined : byId.get(step.ingredientId);
-      return { ...step, ingredient: row ? { ...row, deleted: row.deletedAt !== null } : null };
-    });
-  return { spell, steps };
+  const stepsOf = await stepsInSpells(membership, [spellId]);
+  return { spell, steps: stepsOf(spellId) };
 }
 
 /**

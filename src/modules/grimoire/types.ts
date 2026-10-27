@@ -1,4 +1,5 @@
 import type { IngredientRow } from '@/db/repository';
+import type { IngredientVariantRow } from '@/modules/ingredients';
 import type { spellSteps } from './schema/spell-steps';
 import type { spells } from './schema/spells';
 
@@ -55,8 +56,19 @@ export type SpellStepUpdate = SpellStepInput;
 /** The ingredient a linked step names, with whether it has been deleted since. */
 export type SpellStepIngredient = IngredientRow & { deleted: boolean };
 
-/** A step with its ingredient resolved, or `null` for an instruction or a one-off row. */
-export type SpellStepView = SpellStepRow & { ingredient: SpellStepIngredient | null };
+/**
+ * A step with its ingredient and the form it lays resolved, each `null` for
+ * an instruction or a one-off row. The variant is read as its ingredient is,
+ * kept when the ingredient has been deleted since; a form deleted on its own
+ * reads `null`.
+ */
+export type SpellStepView = SpellStepRow & {
+  ingredient: SpellStepIngredient | null;
+  variant: IngredientVariantRow | null;
+};
 
 /** One spell, with its steps in order. */
 export type SpellDetail = { spell: SpellRow; steps: SpellStepView[] };
+
+/** What a spell's batched fields are keyed by: the spell, and the coven it is asked about in. */
+export type SpellKey = Pick<SpellRow, 'id' | 'workspaceId'>;

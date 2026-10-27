@@ -3,9 +3,11 @@
 // the module.
 export * from './services/spell-visibility';
 export * from './services/spells';
+export * from './services/spell-reads';
 export type {
   SpellDetail,
   SpellInput,
+  SpellKey,
   SpellRow,
   SpellStepInput,
   SpellStepIngredient,
