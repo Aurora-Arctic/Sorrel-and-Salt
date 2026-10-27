@@ -67,7 +67,8 @@ async function offered(page: Page, text: string): Promise<string[]> {
     listbox
       .getByRole('option')
       .first()
-      .or(page.getByText(/^No match for/)),
+      .or(page.getByText(/^No match for/))
+      .first(),
   ).toBeVisible();
   return (await listbox.count()) === 0 ? [] : listbox.getByRole('option').allTextContents();
 }
