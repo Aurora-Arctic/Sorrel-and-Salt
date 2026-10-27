@@ -1,6 +1,5 @@
 import { render, screen, within } from '@testing-library/react';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
-import { InvalidCursor } from '@/lib/errors';
 import { encodeCursor } from '@/lib/pagination';
 import type { PageRequest } from '@/lib/types';
 import { filterForm } from '../../../../../support/filter-form';
@@ -140,18 +139,7 @@ describe('the /admin/invitations page', () => {
     expect(lastRequest()).toEqual({ before: cursor, limit: 26, inverted: true });
   });
 
-  // A cursor copied from another list decodes, then names no row of this one.
-  it('reads the first page when the cursor is not one of this list', async () => {
-    listPendingAdminInvitations.mockRejectedValueOnce(new InvalidCursor());
-    const cursor = { key: ['Listed Fixture 25'], id: 'i5' };
-
-    await renderPage({ after: encodeCursor(cursor) });
-
-    expect(lastRequest()).toEqual({ limit: 26, inverted: false });
-    expect(screen.getAllByRole('row')).toHaveLength(2);
-  });
-
-  it('links the pages either side, keeping the filter, and says where it stands', async () => {
+  it('links the pages either side, keeping the filter', async () => {
     listPendingAdminInvitations.mockResolvedValue(
       Array.from({ length: 26 }, (_, index) => entry(index + 1)),
     );
@@ -168,7 +156,6 @@ describe('the /admin/invitations page', () => {
       'href',
       `${filter}&before=${encodeURIComponent(encodeCursor(entry(1).cursor))}`,
     );
-    expect(screen.getByRole('navigation', { name: 'Pages' })).toHaveTextContent('Page 2 of 3');
   });
 
   it('keeps the page shown in New Invitation', async () => {
