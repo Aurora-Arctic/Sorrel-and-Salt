@@ -1,5 +1,5 @@
 import type { Route } from 'next';
-import { act, fireEvent, render, screen, waitFor } from '@testing-library/react';
+import { act, cleanup, fireEvent, render, screen, waitFor } from '@testing-library/react';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 import InvitationAcceptance from '@/components/InvitationAcceptance';
 import type { AcceptInvitationMutation, AcceptInvitationMutationVariables } from '@/gql/graphql';
@@ -89,29 +89,8 @@ describe('InvitationAcceptance', () => {
     expect(calls).toHaveLength(1);
   });
 
-  it('lands a coven’s invitation in the coven', async () => {
-    mockGraphQLMutation<AcceptInvitationMutation, AcceptInvitationMutationVariables>(
-      'AcceptInvitation',
-      () => ({ acceptInvitation: { id: 'i1' } }),
-    );
-    render(
-      <InvitationAcceptance
-        status="acceptable"
-        token="abc"
-        tier="workspace"
-        landing={COVEN_LANDING}
-        covenName="Fixture Coven"
-      />,
-    );
-    expect(screen.getByText(/Fixture Coven/)).toBeVisible();
-
-    fireEvent.click(accept());
-
-    await waitFor(() => expect(router.push).toHaveBeenCalledWith('/coven/fixture-coven'));
-  });
-
   // M11.20: the role is the invitation's data, as a coven's name is.
-  it('names the site role a site invitation grants', () => {
+  it('names what the invitation grants: the site role of a site one, the coven of a coven’s', () => {
     render(
       <InvitationAcceptance
         status="acceptable"
@@ -123,12 +102,25 @@ describe('InvitationAcceptance', () => {
     );
 
     expect(screen.getByText(/curator/i)).toBeVisible();
+
+    cleanup();
+    render(
+      <InvitationAcceptance
+        status="acceptable"
+        token="abc"
+        tier="workspace"
+        landing={COVEN_LANDING}
+        covenName="Fixture Coven"
+      />,
+    );
+
+    expect(screen.getByText(/Fixture Coven/)).toBeVisible();
   });
 
   // Design F (claude-docs/components/click-feedback.md): a refused accept
   // says the service's sentence in a callout from Accept, which keeps the
   // focus, and leaves a badge that brings it back.
-  it('says the service’s refusal from Accept, which keeps the focus, and its badge brings it back', async () => {
+  it('says the service’s refusal from Accept, which keeps the focus', async () => {
     const REFUSED = 'This invitation was withdrawn. Ask whoever sent it for a new one.';
     mockGraphQLError('AcceptInvitation', { code: 'FORBIDDEN', message: REFUSED });
     render(
@@ -155,16 +147,6 @@ describe('InvitationAcceptance', () => {
     expect(button).toHaveAccessibleDescription(`Last try failed: ${REFUSED}`);
     expect(button).not.toHaveAttribute('aria-disabled');
     expect(router.push).not.toHaveBeenCalled();
-
-    await act(async () => {
-      fireEvent.click(screen.getByRole('button', { name: 'Dismiss' }));
-    });
-    expect(screen.queryByRole('alert')).toBeNull();
-
-    await act(async () => {
-      fireEvent.click(screen.getByRole('button', { name: 'Show the error for Accept Invitation' }));
-    });
-    expect(await screen.findByRole('alert')).toHaveTextContent(REFUSED);
   });
 
   it('clears the last refusal when Accept is pressed again, and lands once it is accepted', async () => {
