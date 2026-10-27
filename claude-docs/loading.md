@@ -304,17 +304,13 @@ shows its dot when either the hook or the enclosing context says pending.
 
 ### The guard
 
-`tests/guards/navigation.test.ts` fails when a file under `src/` outside
+The lint rule `sorrel/no-bare-router-navigation` (`lint/source-sweeps.js`) fails when a file under `src/` outside
 `src/lib/navigation/` calls `router.push`, `router.replace` or
 `router.refresh`, because a bare call moves the page with no signal. The match
 is by name: a receiver whose name ends in `router` (`router`, `appRouter`),
 so a router held under another name is not seen. Next's `<Link>` is not
-covered. Its baseline is now empty; a file that holds such a call fails in its
-own diff, and the fix is `usePendingNavigation`, not a new baseline entry. Were
-an entry ever added, a count that no longer matches would fail too, so the list
-could only shrink. A second test feeds the pattern a sample string with three
-calls and an `appRouter` call and expects four matches, so a loosened pattern
-fails.
+covered. Nothing is exempt: a file that holds such a call fails in its own diff, and the
+fix is `usePendingNavigation`.
 
 ### Adding a wait: the steps
 

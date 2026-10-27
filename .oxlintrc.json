@@ -86,10 +86,22 @@
     "sorrel/service-server-only": "error",
     "sorrel/route-allowlist": "error",
     "sorrel/pagination-helper": "error",
-    "sorrel/module-boundaries": "error"
+    "sorrel/module-boundaries": "error",
+    "sorrel/no-bare-router-navigation": "error",
+    "sorrel/form-shown-through-form-label": "error",
+    "sorrel/spell-visibility-read-in-one-place": "error",
+    "sorrel/compendium-review-mark-switch-only": "error",
+    "sorrel/modal-focus-return-through-modal": "error",
+    "sorrel/long-form-guards-leaving": "error"
   },
   "ignorePatterns": ["public", ".next", "out"],
   "overrides": [
+    {
+      "files": ["tests/e2e/**/*.spec.ts"],
+      "rules": {
+        "sorrel/e2e-chained-tests-serial": "error"
+      }
+    },
     {
       "files": [
         "next.config.ts",

@@ -45,13 +45,99 @@ permissions:
   pull-requests: write
 
 jobs:
-  vitest:
-    # GitHub's runner, like every other job: minutes are free and unlimited on
-    # a public repo. From MB.96 to M11.24 this job ran on a third-party runner
-    # whose free tier is metered and shared by the whole organisation, and the
-    # job sat at its edge. The work runs in `container:`, so the host's
-    # Ubuntu is only Docker and the runner agent. claude-docs/ci/runner-budget.md,
-    # "Runner budget".
+  # Three parts run side by side, then `vitest` merges them. claude-docs/ci/runner-budget.md,
+  # "Splitting the Vitest job". A part is never path-skipped: the thresholds
+  # cover the whole tree, so a missing part would fail the merge.
+  vitest-dom:
+    # The `dom` project (happy-dom). No Postgres service: nothing in it reaches a database.
+    runs-on: ubuntu-26.04
+    container:
+      image: ${{ inputs.image }}
+      credentials:
+        username: ${{ github.actor }}
+        password: ${{ secrets.GITHUB_TOKEN }}
+      # The image's default user cannot write the runner's file-commands
+      # directory; actions/checkout fails EACCES without it.
+      options: --user root
+    defaults:
+      run:
+        working-directory: /app
+        # A `container:` job defaults to sh, which has no `set -o pipefail`.
+        shell: bash
+    env:
+      # tests/support/db-global-setup.ts rewrites the database name per worker.
+      DATABASE_URL: postgres://sorrel:sorrel@postgres:5432/sorrel
+    steps:
+      - name: Checkout into /app
+        if: inputs.should-run
+        uses: Aurora-Arctic/Sorrel-and-Salt/.github/actions/checkout-to-app@main
+
+      # The blob reporter writes this part's results and its coverage map for
+      # the `vitest` job to merge. The 80% thresholds are switched off here and
+      # applied there: a part covers only its own projects' share of src/.
+      - name: Run vitest (dom)
+        if: inputs.should-run
+        run: |
+          set -o pipefail
+          echo "nproc: $(nproc)"
+          npx vitest run --project dom --coverage --reporter=blob --outputFile.blob=/app/.reports/blobs/blob-dom.json --coverage.thresholds.lines=0 --coverage.thresholds.functions=0 --coverage.thresholds.branches=0 --coverage.thresholds.statements=0
+
+      # A failing test still leaves a blob, so the merge job reports it.
+      - name: Upload blob
+        if: ${{ !cancelled() && inputs.should-run }}
+        uses: actions/upload-artifact@v7
+        with:
+          name: vitest-blob-dom
+          path: /app/.reports/blobs/
+          if-no-files-found: error
+          retention-days: 1
+
+  vitest-node:
+    # The `unit` and `rsc` projects (node). No Postgres service.
+    runs-on: ubuntu-26.04
+    container:
+      image: ${{ inputs.image }}
+      credentials:
+        username: ${{ github.actor }}
+        password: ${{ secrets.GITHUB_TOKEN }}
+      # The image's default user cannot write the runner's file-commands
+      # directory; actions/checkout fails EACCES without it.
+      options: --user root
+    defaults:
+      run:
+        working-directory: /app
+        # A `container:` job defaults to sh, which has no `set -o pipefail`.
+        shell: bash
+    env:
+      # tests/support/db-global-setup.ts rewrites the database name per worker.
+      DATABASE_URL: postgres://sorrel:sorrel@postgres:5432/sorrel
+    steps:
+      - name: Checkout into /app
+        if: inputs.should-run
+        uses: Aurora-Arctic/Sorrel-and-Salt/.github/actions/checkout-to-app@main
+
+      # The blob reporter writes this part's results and its coverage map for
+      # the `vitest` job to merge. The 80% thresholds are switched off here and
+      # applied there: a part covers only its own projects' share of src/.
+      - name: Run vitest (unit rsc)
+        if: inputs.should-run
+        run: |
+          set -o pipefail
+          echo "nproc: $(nproc)"
+          npx vitest run --project unit --project rsc --coverage --reporter=blob --outputFile.blob=/app/.reports/blobs/blob-node.json --coverage.thresholds.lines=0 --coverage.thresholds.functions=0 --coverage.thresholds.branches=0 --coverage.thresholds.statements=0
+
+      # A failing test still leaves a blob, so the merge job reports it.
+      - name: Upload blob
+        if: ${{ !cancelled() && inputs.should-run }}
+        uses: actions/upload-artifact@v7
+        with:
+          name: vitest-blob-node
+          path: /app/.reports/blobs/
+          if-no-files-found: error
+          retention-days: 1
+
+  vitest-db:
+    # The `db` and `db-mocking` projects, which build the template database (tests/support/db-global-setup.ts) against the Postgres service.
     runs-on: ubuntu-26.04
     container:
       image: ${{ inputs.image }}
@@ -92,24 +178,82 @@ jobs:
         if: inputs.should-run
         uses: Aurora-Arctic/Sorrel-and-Salt/.github/actions/checkout-to-app@main
 
-      # Coverage thresholds fail this command on the same exit path as a test.
-      - name: Run vitest
-        id: run
+      # The blob reporter writes this part's results and its coverage map for
+      # the `vitest` job to merge. The 80% thresholds are switched off here and
+      # applied there: a part covers only its own projects' share of src/.
+      - name: Run vitest (db db-mocking)
         if: inputs.should-run
         run: |
           set -o pipefail
-          # The db project runs cores - 1 workers; this puts the count in the log.
           echo "nproc: $(nproc)"
-          npm run test:coverage -- --reporter=default --reporter=json --outputFile=/app/vitest-results.json 2>&1 | tee /app/output.log
+          npx vitest run --project db --project db-mocking --coverage --reporter=blob --outputFile.blob=/app/.reports/blobs/blob-db.json --coverage.thresholds.lines=0 --coverage.thresholds.functions=0 --coverage.thresholds.branches=0 --coverage.thresholds.statements=0
+
+      # A failing test still leaves a blob, so the merge job reports it.
+      - name: Upload blob
+        if: ${{ !cancelled() && inputs.should-run }}
+        uses: actions/upload-artifact@v7
+        with:
+          name: vitest-blob-db
+          path: /app/.reports/blobs/
+          if-no-files-found: error
+          retention-days: 1
+
+  # The required check, "vitest / vitest": the caller's job name, a slash, this
+  # one. Keep this job named `vitest`; renaming it needs the ruleset changed.
+  vitest:
+    needs: [vitest-dom, vitest-node, vitest-db]
+    # Run after a failed part too, so the PR comment still appears.
+    if: ${{ !cancelled() }}
+    runs-on: ubuntu-26.04
+    container:
+      image: ${{ inputs.image }}
+      credentials:
+        username: ${{ github.actor }}
+        password: ${{ secrets.GITHUB_TOKEN }}
+      # The image's default user cannot write the runner's file-commands
+      # directory; actions/checkout fails EACCES without it.
+      options: --user root
+    defaults:
+      run:
+        working-directory: /app
+        # A `container:` job defaults to sh, which has no `set -o pipefail`.
+        shell: bash
+    steps:
+      - name: Checkout into /app
+        if: inputs.should-run
+        uses: Aurora-Arctic/Sorrel-and-Salt/.github/actions/checkout-to-app@main
+
+      - name: Download blobs
+        if: ${{ !cancelled() && inputs.should-run }}
+        uses: actions/download-artifact@v8
+        with:
+          pattern: vitest-blob-*
+          merge-multiple: true
+          path: /app/.reports/blobs
+
+      # Merges the three results into one run and applies the coverage
+      # thresholds over it. Exits non-zero on a failed test in any part, or
+      # when a part left no blob (it crashed before writing one).
+      - name: Run vitest
+        id: run
+        if: ${{ !cancelled() && inputs.should-run }}
+        run: |
+          set -o pipefail
+          ls /app/.reports/blobs
+          if [ "$(ls /app/.reports/blobs/blob-*.json | wc -l)" -ne 3 ]; then
+            echo "::error::A vitest part left no blob; see its job."
+            exit 1
+          fi
+          npx vitest run --mergeReports /app/.reports/blobs --coverage --reporter=default --reporter=json --outputFile=/app/vitest-results.json 2>&1 | tee /app/output.log
 
       - name: Summarize output
         id: summarize
-        if: always() && inputs.should-run
+        if: ${{ !cancelled() && inputs.should-run }}
         run: node .github/scripts/summarize-vitest.mjs
 
       # Not failure-only: a coverage report on every run.
       - name: Upload coverage artifact
-        if: always() && inputs.should-run
+        if: ${{ !cancelled() && inputs.should-run }}
         uses: actions/upload-artifact@v7
         with:
           name: vitest-coverage
@@ -117,7 +261,7 @@ jobs:
           retention-days: 7
 
       - name: Write job summary
-        if: always() && inputs.should-run
+        if: ${{ !cancelled() && inputs.should-run }}
         uses: ./.github/actions/job-summary
         with:
           check-name: Vitest

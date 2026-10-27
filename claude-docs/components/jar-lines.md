@@ -6,7 +6,7 @@
 
 `jars`: a list of plain data, `{ id, form, icon, quantity, unit, threshold }` (`types.ts`).
 
-- `form` is the variant's form as stored; the line writes it through `formLabel`, which `tests/guards/form-label.test.ts` holds.
+- `form` is the variant's form as stored; the line writes it through `formLabel`, which the lint rule `sorrel/form-shown-through-form-label` holds.
 - `icon` is the form group's icon or `null`; `FormIcon` draws the generic spoon for `null`.
 - `quantity`: a number is on hand, `0` is out, `null` is held but not measured and reads "Unmeasured".
 - `unit` follows the quantity; `threshold` only feeds the badge.

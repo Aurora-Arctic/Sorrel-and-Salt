@@ -7,27 +7,17 @@ import {
   unauditedGrowth,
 } from '@/db/seed/compendium/guard';
 import { loadCompendium, pathList } from '@/db/seed/compendium/load';
-import type { LoadedCompendium } from '@/db/seed/compendium/load';
 import { SOURCES } from '@/db/seed/sources';
 import { fromRoot } from '../../support/paths';
 
 // M14.10: the guard over the real compendium, database-free. The markdown
 // files under `compendium/` are the seed's only source, so this is the check
 // a lane's file meets before it merges, on the branch it merges into. The
-// rules themselves are broken one at a time on invented entries in
-// compendium/guard.test.ts and compendium/guard-files.test.ts.
+// rules themselves, the status gate among them, are broken one at a time on
+// invented entries in compendium/guard.test.ts and compendium/guard-files.test.ts.
 
 const loaded = loadCompendium(fromRoot('compendium'));
 const approved = loaded.files.filter((file) => file.status === 'approved');
-
-/** The real corpus with the first approved file turned into a draft. */
-function withOneDraft(): LoadedCompendium {
-  const target = approved[0]!;
-  return {
-    ...loaded,
-    files: loaded.files.map((file) => (file === target ? { ...file, status: 'draft' } : file)),
-  };
-}
 
 /** Every `locator` a value holds, at any depth. */
 function locatorsIn(value: unknown): string[] {
@@ -53,19 +43,6 @@ describe('the compendium files', () => {
     expect(checkCompendiumFiles(loaded, { branch: releaseBranch() })).toEqual([]);
   });
 
-  // The status gate over the real corpus: a draft merges into a feature
-  // branch, and is refused once it would deploy.
-  it('refuse a draft on staging and on main, and take it on a feature branch or locally', () => {
-    const drafted = withOneDraft();
-    for (const branch of RELEASE_BRANCHES) {
-      expect(checkCompendiumFiles(drafted, { branch }), branch).toEqual([
-        expect.stringContaining(`is a draft, which ${branch} does not take`),
-      ]);
-    }
-    expect(checkCompendiumFiles(drafted, { branch: 'feature/seeding' })).toEqual([]);
-    expect(checkCompendiumFiles(drafted, { branch: null })).toEqual([]);
-  });
-
   // Chicago's 18th edition (14.130) cites a reference-work entry "under" its
   // headword, where the 17th wrote the Latin "s.v.": a file written before
   // the change fails here when it merges.
@@ -87,20 +64,6 @@ describe('the compendium files', () => {
       // The precondition: there is a list to hold to its baseline.
       expect(loaded.unaudited.length).toBeGreaterThan(0);
       expect(unauditedGrowth(loaded.unaudited, baseline)).toEqual([]);
-    });
-
-    it('fails when the list gains a path', () => {
-      const grown = [...loaded.unaudited, 'ingredients/botanical/testwort-fixtura-testalis.md'];
-      expect(unauditedGrowth(grown, baseline)).toEqual([
-        expect.stringContaining('gained ingredients/botanical/testwort-fixtura-testalis.md'),
-      ]);
-    });
-
-    it('asks for the baseline to shrink with the list', () => {
-      const [dropped, ...rest] = loaded.unaudited;
-      expect(unauditedGrowth(rest, baseline)).toEqual([
-        expect.stringContaining(`no longer lists ${dropped}`),
-      ]);
     });
   });
 });

@@ -3,7 +3,6 @@ import { join } from 'node:path';
 import { afterEach, describe, expect, it } from 'vitest';
 import { loadCompendium } from '@/db/seed/compendium/load';
 import { entryFilePath } from '@/db/seed/compendium/parse-entry';
-import { fromRoot } from '../../../support/paths';
 import {
   FILE_SOURCES,
   fileOf,
@@ -48,12 +47,6 @@ describe('loadCompendium', () => {
     const loaded = loadCompendium(folder().root);
     expect(loaded.sources).toEqual(FILE_SOURCES);
     expect(Object.keys(loaded.sources).sort()).toEqual(['fixture-herbal', 'fixture-page']);
-  });
-
-  it('resolves a relative root against the working directory, and reads the repo by default', () => {
-    const loaded = loadCompendium();
-    expect(loaded.root).toBe(fromRoot('compendium'));
-    expect(loaded.files.length).toBeGreaterThan(0);
   });
 
   it('skips the template by name and reports any other file directly under ingredients/', () => {

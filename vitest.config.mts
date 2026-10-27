@@ -23,7 +23,6 @@ export const DB_FREE = [
   'tests/modules/**/validation/**',
   'tests/db/audit.test.ts',
   'tests/db/connection-url.test.ts',
-  'tests/db/repository/readable-spells-predicate.test.ts',
   'tests/db/seed/compendium-files.test.ts',
   'tests/db/seed/compendium/**',
   'tests/modules/coven/schema/workspaces-schema.test.ts',
