@@ -8,7 +8,7 @@ import { makeSpell } from '../support/fixtures';
 
 // M13.15: `revision` is a counter the database adds one to on every UPDATE,
 // so a save can name the revision it read and be refused if the row has moved
-// since (claude-docs/db/grimoire.md, "Revision"). One function,
+// since (claude-docs/db/grimoire.md, "Revision (M13.15)"). One function,
 // `bump_revision()`, and each table carrying the column adds its own trigger
 // line in its own migration, as `set_updated_at` does.
 

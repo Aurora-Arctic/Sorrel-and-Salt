@@ -1,5 +1,5 @@
 -- M13.15: a spell's draft may have no title, and every spell carries a
--- revision counter (claude-docs/db/grimoire.md, "Revision";
+-- revision counter (claude-docs/db/grimoire.md, "Revision (M13.15)";
 -- claude-docs/design-decisions/m13.14-autosave.md). Expand-only: it drops no
 -- object and narrows no column the deploy before it writes, so it needs no
 -- destructive-DDL acknowledgement. `DROP NOT NULL` widens, and the new column
