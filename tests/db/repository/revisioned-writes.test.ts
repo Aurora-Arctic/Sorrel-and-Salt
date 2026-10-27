@@ -45,7 +45,7 @@ const savedElsewhere = (id: string, title: string) =>
 async function save(id: string, expected: number | null, title: string) {
   const membership = await proofFor(A);
   return withAudit(asUser(A), (write) =>
-    write.updateRevisionedByIdInWorkspace(membership, spells, id, expected, { title }),
+    write.updateRevisioned(membership, spells, id, expected, { title }),
   );
 }
 
@@ -96,7 +96,7 @@ describe('updateRevisioned', () => {
     const membership = await proofFor(D, WORKSPACE_X_ID);
 
     const rows = await withAudit(asUser(D), (write) =>
-      write.updateRevisionedByIdInWorkspace(membership, spells, id, 1, { title: 'Foreign' }),
+      write.updateRevisioned(membership, spells, id, 1, { title: 'Foreign' }),
     );
 
     expect(rows).toEqual([]);

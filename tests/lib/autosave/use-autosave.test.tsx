@@ -224,15 +224,21 @@ describe('useAutosave when a save fails', () => {
     expect(save).toHaveBeenCalledTimes(1);
     await wait(1);
     expect(save).toHaveBeenCalledTimes(2);
+    // A retry wait is still saving, and `error` is kept for a save that has
+    // failed for good.
+    expect(result.current.status).toBe('saving');
+    expect(result.current.error).toBeNull();
 
     await wait(4999);
     expect(save).toHaveBeenCalledTimes(2);
     await wait(1);
     expect(save).toHaveBeenCalledTimes(3);
+    expect(result.current.error).toBeNull();
 
     await wait(14_999);
     expect(save).toHaveBeenCalledTimes(3);
     expect(result.current.status).toBe('saving');
+    expect(result.current.error).toBeNull();
     await wait(1);
     expect(save).toHaveBeenCalledTimes(4);
     expect(result.current.status).toBe('failed');
@@ -245,6 +251,8 @@ describe('useAutosave when a save fails', () => {
 
     save.mockResolvedValueOnce(confirmed(2) as never);
     act(() => result.current.retry());
+    expect(result.current.status).toBe('saving');
+    expect(result.current.error).toBeNull();
     await settle();
     expect(save).toHaveBeenCalledTimes(5);
     expect(save).toHaveBeenLastCalledWith({ title: 'Te' }, expect.anything());

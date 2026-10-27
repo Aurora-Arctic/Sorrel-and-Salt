@@ -31,10 +31,12 @@ It returns `status`, `savedAt`, `error`, `conflict`, `id`, and three actions:
 
 - `idle`: nothing has changed since the form opened, or since a reload.
 - `pending`: a change is waiting for its timer.
-- `saving`: a save is in flight, or waiting to retry one that failed. During a
-  retry wait `error` holds the failure.
+- `saving`: a save is in flight, or waiting to retry one that failed. `error`
+  stays `null` through the retry waits.
 - `saved`: the server has the latest value. `savedAt` says when.
-- `failed`: three retries failed. Autosave stops until `retry()`.
+- `failed`: three retries failed. Autosave stops until `retry()`. Only here is
+  `error` set, so `error` set always means the save has failed for good; a
+  conflict leaves it as it was.
 - `conflict`: someone else saved first. Autosave stops until `resolveConflict`.
 
 ### What it promises
@@ -118,12 +120,12 @@ words, so the component names no entity) and `onRetry`, `onReload` and
 | `idle`     | Nothing                                                                       |
 | `pending`  | The last "Saved" line, if any                                                 |
 | `saving`   | A spinner and "Saving…"                                                       |
-| `saved`    | "Saved 14:02", or "Draft saved 14:02"                                         |
+| `saved`    | "Saved 2:02 pm", or "Draft saved 2:02 pm"                                     |
 | `failed`   | "Couldn’t save." and a Retry button, as `role="alert"`, until a save succeeds |
 | `conflict` | A `caution` `Notice` with the message, Reload Latest and Keep My Version      |
 
 The time is `clockTime` from `src/components/LastEdit/relative.ts`: hours and
-minutes, 24-hour, in the viewer's time zone.
+minutes on a 12-hour clock with am or pm ("2:02 pm"), in the viewer's time zone.
 
 ### Announcing once per burst
 
@@ -144,7 +146,7 @@ notice's buttons, not by the output.
 
 A save that must not overwrite someone else's names the revision it read.
 
-- **The write**: `write.updateRevisionedByIdInWorkspace(membership, table, id,
+- **The write**: `write.updateRevisioned(membership, table, id,
 expectedRevision, values)` in `src/db/repository/write.ts`, for a table that
   satisfies `Revisioned` (it has a `revision` column; M13.15 added it to
   `spells`). The revision check is in the UPDATE's own WHERE, so two saves

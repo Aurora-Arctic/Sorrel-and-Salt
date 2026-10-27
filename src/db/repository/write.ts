@@ -80,7 +80,7 @@ function writerFor(tx: Transaction, session: AuditSession): AuditWriter {
   // refused write reads again, under FOR UPDATE, to tell a stale revision
   // from a row that is not there; the read takes the same `where`, so a row
   // the update could never have reached answers `[]` as an update does.
-  const updateRevisioned = async (
+  const updateAtRevision = async (
     table: PgTable & Identified & Revisioned,
     where: SQL | undefined,
     expectedRevision: number | null,
@@ -121,8 +121,8 @@ function writerFor(tx: Transaction, session: AuditSession): AuditWriter {
       update(table, values, and(scopedTo(membership, table), where)),
     updateByIdInWorkspace: (membership, table, id, values) =>
       update(table, values, inWorkspaceById(membership, table, id)),
-    updateRevisionedByIdInWorkspace: (membership, table, id, expectedRevision, values) =>
-      updateRevisioned(table, inWorkspaceById(membership, table, id), expectedRevision, values),
+    updateRevisioned: (membership, table, id, expectedRevision, values) =>
+      updateAtRevision(table, inWorkspaceById(membership, table, id), expectedRevision, values),
     softDelete,
     softDeleteByIds: (table, ids) =>
       ids.length === 0 ? Promise.resolve([]) : softDelete(table, inArray(table.id, [...ids])),

@@ -361,9 +361,7 @@ export interface AuditWriter {
    * this id answers `[]`, as the update above does, never `StaleWrite`, which
    * would tell another coven's reader that the row exists.
    */
-  updateRevisionedByIdInWorkspace<
-    TTable extends PgTable & WorkspaceScoped & Generic & Identified & Revisioned,
-  >(
+  updateRevisioned<TTable extends PgTable & WorkspaceScoped & Generic & Identified & Revisioned>(
     membership: Membership,
     table: TTable,
     id: string,

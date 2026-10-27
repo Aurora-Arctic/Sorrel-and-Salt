@@ -10,7 +10,7 @@ import { clockTime } from '@/components/LastEdit/relative';
 // alert with Retry that stays until a save succeeds, and a caution notice for
 // a conflict.
 
-/** 14:02 and some seconds on the reader's clock. */
+/** 2:02 pm and some seconds on the reader's clock. */
 const at = (minute: number, second = 0) => new Date(2026, 9, 27, 14, minute, second);
 
 function setup(props: Partial<SaveStatusProps> = {}) {
@@ -31,9 +31,11 @@ function setup(props: Partial<SaveStatusProps> = {}) {
 }
 
 describe('clockTime', () => {
-  it('reads the time of day as hours and minutes on a 24-hour clock', () => {
-    expect(clockTime(new Date(2026, 9, 27, 14, 2, 59))).toBe('14:02');
-    expect(clockTime(new Date(2026, 9, 27, 9, 5))).toBe('09:05');
+  it('reads the time of day as hours and minutes on a 12-hour clock, with am or pm', () => {
+    expect(clockTime(new Date(2026, 9, 27, 14, 2, 59))).toBe('2:02 pm');
+    expect(clockTime(new Date(2026, 9, 27, 23, 11))).toBe('11:11 pm');
+    expect(clockTime(new Date(2026, 9, 27, 9, 5))).toBe('9:05 am');
+    expect(clockTime(new Date(2026, 9, 27, 0, 30))).toBe('12:30 am');
   });
 });
 
@@ -47,28 +49,28 @@ describe('SaveStatus', () => {
 
     update({ status: 'saved', savedAt: at(2, 10) });
     expect(screen.queryByText('Saving…')).toBeNull();
-    expect(screen.getByRole('status')).toHaveTextContent('Saved 14:02');
+    expect(screen.getByRole('status')).toHaveTextContent('Saved 2:02 pm');
   });
 
   it('says Draft saved for a draft', () => {
     setup({ status: 'saved', savedAt: at(2), draft: true });
-    expect(screen.getByRole('status')).toHaveTextContent('Draft saved 14:02');
+    expect(screen.getByRole('status')).toHaveTextContent('Draft saved 2:02 pm');
   });
 
   it('announces the first save of a burst only, while the visible line keeps up', () => {
     const { update } = setup({ status: 'saved', savedAt: at(2, 10) });
-    expect(screen.getByRole('status')).toHaveTextContent('Saved 14:02');
+    expect(screen.getByRole('status')).toHaveTextContent('Saved 2:02 pm');
 
     // Another save 50 s on: the same burst.
     update({ status: 'saving' });
     update({ status: 'saved', savedAt: at(3, 0) });
-    expect(screen.getByText('Saved 14:03')).toBeInTheDocument();
-    expect(screen.getByRole('status')).toHaveTextContent('Saved 14:02');
+    expect(screen.getByText('Saved 2:03 pm')).toBeInTheDocument();
+    expect(screen.getByRole('status')).toHaveTextContent('Saved 2:02 pm');
 
     // A save more than the gap after the last opens a new burst.
     expect(BURST_GAP_MS).toBe(60_000);
     update({ status: 'saved', savedAt: at(5, 0) });
-    expect(screen.getByRole('status')).toHaveTextContent('Saved 14:05');
+    expect(screen.getByRole('status')).toHaveTextContent('Saved 2:05 pm');
   });
 
   it('shows Couldn’t save with Retry as an alert that stays until a save succeeds', () => {
@@ -87,7 +89,7 @@ describe('SaveStatus', () => {
     update({ status: 'saved', savedAt: at(2, 30) });
     expect(screen.queryByRole('alert')).toBeNull();
     // A save after a failure is news, even inside the gap.
-    expect(screen.getByRole('status')).toHaveTextContent('Saved 14:02');
+    expect(screen.getByRole('status')).toHaveTextContent('Saved 2:02 pm');
   });
 
   it('shows a conflict as a caution notice with Reload Latest and Keep My Version', () => {

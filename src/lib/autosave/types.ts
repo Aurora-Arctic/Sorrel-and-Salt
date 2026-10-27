@@ -45,7 +45,10 @@ export type AutosaveView = {
   status: AutosaveStatus;
   /** When the server last confirmed a save. */
   savedAt: Date | null;
-  /** The last save's error, kept through the retries until a save succeeds. */
+  /**
+   * Why the save failed for good: set at `failed` only, never during the
+   * retries, and cleared when a save is sent again.
+   */
   error: Error | null;
   conflict: AutosaveConflict | null;
   /** The id the last save returned. */

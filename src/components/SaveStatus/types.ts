@@ -6,7 +6,7 @@ export interface SaveStatusProps {
   status: AutosaveStatus;
   /** When the server last confirmed a save. */
   savedAt: Date | null;
-  /** True while the record is a draft: "Draft saved 14:02" rather than "Saved 14:02". */
+  /** True while the record is a draft: "Draft saved 2:02 pm" rather than "Saved 2:02 pm". */
   draft?: boolean;
   /** What a conflict says, naming the record: "This spell was changed elsewhere." */
   conflictMessage: ReactNode;
