@@ -28,20 +28,6 @@ export function parseStories(design: string): Story[] {
     .map((match) => ({ id: Number(match[1]), title: match[2] }));
 }
 
-/** "1–34, 47–57": the ids as runs, for a message that should not go stale. */
-export function describeRanges(ids: readonly number[]): string {
-  const runs: Array<[number, number]> = [];
-  for (const id of ids) {
-    const last = runs[runs.length - 1];
-    if (last && last[1] === id - 1) {
-      last[1] = id;
-    } else {
-      runs.push([id, id]);
-    }
-  }
-  return runs.map(([from, to]) => (from === to ? `${from}` : `${from}–${to}`)).join(', ');
-}
-
 export const V1_STORIES: readonly Story[] = parseStories(
   readFileSync(resolve(process.cwd(), 'claude-docs/DESIGN.md'), 'utf8'),
 );

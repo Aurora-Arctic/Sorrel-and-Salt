@@ -27,13 +27,6 @@ export const PROVIDER_CREDENTIALS: Readonly<Record<string, string>> = {
   MICROSOFT_TENANT_ID: '',
 };
 
-/** Registers all four providers with test credentials; call before importing `@/lib/auth`. */
-export function stubProviderCredentials(stubEnv: (name: string, value: string) => void): void {
-  for (const [name, value] of Object.entries(PROVIDER_CREDENTIALS)) {
-    stubEnv(name, value);
-  }
-}
-
 // An unsigned JWT: Google and Microsoft decode the id token they received from
 // their own token endpoint without re-verifying it, which is what makes the
 // code exchange, not the token's signature, the trust boundary here.
