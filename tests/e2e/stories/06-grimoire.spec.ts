@@ -408,7 +408,10 @@ test(
       stepList(page).getByRole('listitem').filter({ hasText: 'Testwort' }),
     ).toBeVisible();
     const save = page.getByRole('button', { name: 'Save' });
-    await save.click();
+    // The autosave may already have saved it by now, so the press is not waited for.
+    await expect(page.getByRole('status').filter({ hasText: /^Draft saved/ })).toBeVisible({
+      timeout: 15_000,
+    });
     await expect(save).toBeDisabled();
     await expect(save).not.toHaveAttribute('aria-busy', 'true');
     // Nowhere else: the coven's ingredients page does not list it.
