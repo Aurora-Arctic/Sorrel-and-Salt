@@ -19,7 +19,10 @@
     flex-direction: column;
   }
 
-  .ingredient-card {
+  // The grimoire lays its spell cards in this grid too (M10.11), and a spell card's foot
+  // sits at its bottom by the specimen's own `margin-top: auto` once the card fills its item.
+  .ingredient-card,
+  .spell-card {
     flex: 1 1 auto;
   }
 
