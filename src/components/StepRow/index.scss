@@ -103,7 +103,7 @@
   .step-row__fields {
     display: grid;
     grid-area: amount;
-    grid-template-columns: 6rem 8rem;
+    grid-template-columns: 7rem 8rem;
     gap: space(2);
   }
 
@@ -114,6 +114,19 @@
 
     grid-area: remove;
     margin-block-end: space(1);
+  }
+
+  // An open ingredient row's Remove is this up chevron instead, in the same place: it closes the row.
+  .step-row__close {
+    @include icon-button;
+    @include icon-button-edit;
+
+    grid-area: remove;
+    margin-block-end: space(1);
+
+    .chevron-icon {
+      transform: rotate(180deg);
+    }
   }
 }
 
@@ -169,7 +182,8 @@ $step-ink-drop: 0.05rem;
     }
 
     .step-row__edit,
-    .step-row__remove {
+    .step-row__remove,
+    .step-row__close {
       margin-block: calc(($step-line - $icon-size) / 2) 0;
     }
   }
@@ -177,7 +191,8 @@ $step-ink-drop: 0.05rem;
   .step-row__handle,
   .step-row__marks,
   .step-row__edit,
-  .step-row__remove {
+  .step-row__remove,
+  .step-row__close {
     position: relative;
     inset-block-start: $step-ink-drop;
   }
@@ -219,7 +234,7 @@ $step-ink-drop: 0.05rem;
   }
 
   .step-row__quantity {
-    flex: 0 0 6rem;
+    flex: 0 0 7rem;
   }
 
   .step-row__unit {
@@ -303,7 +318,8 @@ $step-ink-drop: 0.05rem;
     margin-block-start: 0;
   }
 
-  .step-row__remove {
+  .step-row__remove,
+  .step-row__close {
     margin-block-start: space(2) + ($step-line - $icon-size) / 2;
   }
 
@@ -363,7 +379,8 @@ $step-ink-drop: 0.05rem;
       margin-block-start: space(2);
     }
 
-    .step-row__remove {
+    .step-row__remove,
+    .step-row__close {
       margin-block-end: 0;
     }
   }

@@ -428,6 +428,26 @@ describe('the spell builder’s Add to Jar', () => {
     expect(pencil()).toHaveAttribute('aria-expanded', 'false');
   });
 
+  it('swaps an open row’s Remove for a Close that collapses it and returns the focus to the pencil', async () => {
+    suggest(ROSEWORT);
+    renderBuilder();
+    await add('Fixture', /Fixture Rosewort/);
+    const row = stepRow('Fixture Rosewort');
+    const pencil = screen.getByRole('button', { name: 'Edit Fixture Rosewort' });
+    expect(pencil).toHaveAttribute('aria-expanded', 'true');
+    expect(within(row).queryByRole('button', { name: 'Remove Fixture Rosewort' })).toBeNull();
+
+    fireEvent.click(within(row).getByRole('button', { name: 'Close Fixture Rosewort' }));
+
+    expect(pencil).toHaveAttribute('aria-expanded', 'false');
+    expect(pencil).toHaveFocus();
+    expect(stepRows()).toHaveLength(1);
+    expect(
+      within(row).getByRole('button', { name: 'Remove Fixture Rosewort' }),
+    ).toBeInTheDocument();
+    expect(within(row).queryByRole('button', { name: /^Close / })).toBeNull();
+  });
+
   it('refuses a unit the coven’s jar cannot be measured in, beside the unit, and holds Save', async () => {
     suggest(ROSEWORT);
     renderBuilder();
@@ -904,7 +924,7 @@ describe('the spell builder’s open and closed steps', () => {
       'true',
     );
 
-    fireEvent.pointerDown(screen.getByRole('heading', { name: 'What Goes In' }));
+    fireEvent.click(screen.getByRole('heading', { name: 'What Goes In' }));
 
     expect(screen.getByRole('button', { name: 'Edit Fixture Rosewort' })).toHaveAttribute(
       'aria-expanded',
@@ -947,7 +967,7 @@ describe('the spell builder’s open and closed steps', () => {
       ).toHaveAttribute('aria-invalid', 'true'),
     );
 
-    fireEvent.pointerDown(screen.getByRole('heading', { name: 'What Goes In' }));
+    fireEvent.click(screen.getByRole('heading', { name: 'What Goes In' }));
 
     expect(
       within(stepRow('Fixture Rosewort')).getByRole('combobox', { name: /^Unit/ }),
@@ -968,14 +988,14 @@ describe('the spell builder’s open and closed steps', () => {
     );
 
     // The box is where the next ingredient is typed: still inside.
-    fireEvent.pointerDown(search());
+    fireEvent.click(search());
     act(() => search().focus());
     expect(screen.getByRole('button', { name: 'Edit Fixture Rosewort' })).toHaveAttribute(
       'aria-expanded',
       'true',
     );
 
-    fireEvent.pointerDown(screen.getByRole('heading', { name: 'What Goes In' }));
+    fireEvent.click(screen.getByRole('heading', { name: 'What Goes In' }));
     expect(screen.getByRole('button', { name: 'Edit Fixture Rosewort' })).toHaveAttribute(
       'aria-expanded',
       'false',
