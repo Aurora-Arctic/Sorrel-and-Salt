@@ -991,9 +991,9 @@ describe('the spell builder’s jar fill colours', () => {
     group: g,
   });
 
-  it('draws a layer in the group colours of its categories, in order, and a layer whose categories have no group in the muted ink', async () => {
+  it('draws a layer in the one group colour of its first category, and a layer with no known group in the muted ink', async () => {
     suggest(ROSEWORT, MOCKROOT);
-    // Rosewort carries Love and Calm, two groups; Mockroot carries Love, one group, and Protection, which has none known.
+    // Rosewort carries Calm then Love; Mockroot carries Protection, which has no known group, then Love.
     renderBuilder({}, [
       node('Love', group('Love', '#cf6e87', '#a44c63')),
       node('Calm', group('Calm', '#50a58e', '#1d755d')),
@@ -1001,13 +1001,13 @@ describe('the spell builder’s jar fill colours', () => {
     await add('Mock', /Fixture Mockroot/);
     await add('Rose', /Fixture Rosewort/);
 
-    await waitFor(() => expect(fills()).toHaveLength(3));
-    const [mockroot, ...rosewort] = fills();
+    await waitFor(() => expect(fills()).toHaveLength(2));
+    const [mockroot, rosewort] = fills();
+    // One colour each: Mockroot skips Protection for Love, and Rosewort takes its first, which is Love.
     expect(mockroot.style.getPropertyValue('--band-light')).toBe('#a44c63');
-    expect(rosewort.map((path) => path.style.getPropertyValue('--band-light'))).toEqual([
-      '#a44c63',
-      '#1d755d',
-    ]);
+    expect(rosewort.style.getPropertyValue('--band-light')).toBe('#a44c63');
+    await addOneOff('Testwort');
+    expect(fills()[2]?.style.getPropertyValue('--band-light')).toBe('');
   });
 });
 
