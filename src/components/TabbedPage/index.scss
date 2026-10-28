@@ -305,9 +305,11 @@ $track-inset: calc(1px + 0.125rem);
 }
 
 // Sliding from tab to tab, its width easing to the new one's; under reduced
-// motion it jumps.
+// motion it jumps. Shown by `inherit`, not `visible`: a page held hidden under a
+// navigation's skeleton (SkeletonFade, `.skeleton-held`) hides it by inheritance, and
+// `visible` showed the pill through the skeleton.
 .tabbed-page__row[data-sliding] > .tabbed-page__pill {
-  visibility: visible;
+  visibility: inherit;
   transition:
     transform 250ms ease,
     width 250ms ease;

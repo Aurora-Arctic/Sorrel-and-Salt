@@ -149,4 +149,33 @@ describe('GrimoireList', () => {
     expect(pushed.pathname).toBe(PATH);
     expect(pushed.searchParams.getAll('categories')).toEqual(['testwarding']);
   });
+
+  it('offers each category with how many spells it holds, and no category that holds none', () => {
+    const category = (slug: string, name: string, count: number) => ({
+      id: slug,
+      slug,
+      name,
+      description: null,
+      group: GROUP,
+      count,
+    });
+    render(
+      <Navigating push={router.push}>
+        <List
+          {...props({
+            categories: [
+              category('testwarding', 'Testwarding', 3),
+              category('testmending', 'Testmending', 0),
+            ],
+          })}
+        />
+      </Navigating>,
+    );
+    fireEvent.click(screen.getByRole('button', { name: /^Filters/ }));
+    screen.getByRole('combobox', { name: 'Category' }).focus();
+    fireEvent.click(screen.getByRole('button', { name: 'Show Category suggestions' }));
+
+    expect(screen.getByRole('option', { name: /^Testwarding\D*3/ })).toBeInTheDocument();
+    expect(screen.queryByRole('option', { name: /^Testmending/ })).not.toBeInTheDocument();
+  });
 });

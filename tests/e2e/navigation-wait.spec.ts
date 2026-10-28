@@ -240,6 +240,45 @@ test("a site link takes the shell's page away at once and puts one status in its
   await expect(compendiumList(page)).toBeVisible();
 });
 
+// A bug that reached the owner's review of M10.11: a tabbed page held hidden under the
+// shell's wait still showed its tab row's open pill through the skeleton, since the pill
+// set its own visibility rather than inheriting the held page's. Members is a tabbed page.
+test('a site link from a tabbed page shows nothing of the held page through the wait', async ({
+  page,
+}) => {
+  await signInAgainAs(page, viewer);
+  const response = await page.goto(`/coven/${hollow.slug}/members`);
+  expect(response?.status()).toBe(200);
+  await expect(page.getByRole('main').getByRole('table')).toBeVisible();
+  // The precondition: the tab row is drawn, with its open tab marked.
+  await expect(
+    page.getByRole('main').getByRole('link', { name: 'Members', exact: true }),
+  ).toHaveAttribute('aria-current', 'page');
+  const server = await holdServerAnswers(page);
+
+  server.hold();
+  await siteNav(page).getByRole('link', { name: 'Compendium', exact: true }).click();
+  await expect.poll(server.navigations).toBeGreaterThan(0);
+  await expect(statuses(page)).toHaveCount(1);
+
+  // Every box of the held page that takes up room is hidden while the wait stands.
+  const shown = await page.evaluate(() =>
+    [...document.querySelectorAll('[inert] *')]
+      .filter((element) => {
+        const box = element.getBoundingClientRect();
+        return (
+          box.width > 0 && box.height > 0 && getComputedStyle(element).visibility === 'visible'
+        );
+      })
+      .map((element) => element.outerHTML.slice(0, 120)),
+  );
+  expect(shown).toEqual([]);
+
+  await server.release();
+  await expect(page).toHaveURL('/compendium');
+  await expect(compendiumList(page)).toBeVisible();
+});
+
 // The three below start from a control that the wait itself takes away: the
 // region they aim at holds the link that was pressed, so the swap unmounts it.
 // The wait must still last until the server answers (the navigation provider

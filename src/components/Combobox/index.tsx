@@ -121,8 +121,19 @@ function arrange<O extends ComboboxOption>(
         ].filter((bucket) => bucket.rows.length > 0)
       : [{ heading: null, key: 'all', rows: options }];
   const lastRow: ActionRow | null = action === undefined ? null : { value: action, action: true };
+  // A suggestion whose row reads as the text typed, spaces and case aside,
+  // already offers it, so the typed row would only repeat it, and stand first,
+  // where Enter takes the typed text rather than the suggestion's own spelling.
+  // Its row's text, the label where it has one: "Wax (Animal)" is not "wax", so
+  // that typed row stays, a choice the rows do not offer.
+  const folded = typed.trim().toLowerCase();
+  const matched = options.some(
+    (option) => (option.label ?? option.value).trim().toLowerCase() === folded,
+  );
   const firstRow: TypedRow | null =
-    lastRow === null && typed !== '' && offerTyped ? { value: typed, typed: true } : null;
+    lastRow === null && typed !== '' && offerTyped && !matched
+      ? { value: typed, typed: true }
+      : null;
   const items: Item<O>[] = firstRow ? [firstRow] : [];
   items.push(...buckets.flatMap((bucket) => bucket.rows));
   if (lastRow) items.push(lastRow);

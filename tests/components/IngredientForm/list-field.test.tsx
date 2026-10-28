@@ -529,7 +529,9 @@ describe('ListField', () => {
       expect(
         screen.queryByRole('option', { name: 'Mockwort This coven’s entry' }),
       ).not.toBeInTheDocument();
-      expect(typedRow('mockwort')).toBeInTheDocument();
+      // The suggestion reads as what was typed, so no typed row repeats it (M10.12):
+      // Enter with nothing highlighted still adds the name as typed text.
+      expect(typedRow('mockwort')).not.toBeInTheDocument();
       fireEvent.keyDown(box(entry), { key: 'Enter' });
       expect(entries(legend)).toEqual(['Remove Mockwort', 'Remove mockwort']);
 

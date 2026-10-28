@@ -71,8 +71,11 @@ different groups, so the page offers each name once, whatever its case.
   set over it (`hrefFor`, through `COMPENDIUM_PARAMS.changed`, which drops the cursor).
   The lists are repeated parameters, categories and deities are slugs, No Refs is
   `withoutReferences=1`, No Form (M12.30, the entries with no live form) is `withoutForms=1`, Reviewed (M14.8, the admin's) is `reviewed=1` or `reviewed=0`, and `categoryMode` is written only from two categories up.
-  Picking a name in the dropdown instead opens that entry's `?edit=` modal over the filter
-  as shown, the text typed not applied (the owner's call, M8.10).
+  Picking a name in the dropdown instead opens that entry's Quick Look (`?entry=`) over the
+  list as shown, the filter and the page (`cursor`) kept and the text typed not applied, on
+  all three lists: by slug on the admin's, by id on the public and the coven's lists, as
+  each list's eye opens it (the owner's rule of 2026-10-27, from the M10.11 review; it replaced M8.10's `?edit=` modal on the
+  admin list). Closing it goes back to the same page.
 - **Before hydration** the dialog is drawn open inside the form, each facet a native
   control under the name the parameter table reads (forms and the other lists as
   `<select multiple>`, categories as the native `Categories` select, Match and Toxic as

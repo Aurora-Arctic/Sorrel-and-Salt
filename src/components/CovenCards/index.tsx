@@ -33,6 +33,7 @@ const CovenCards = ({
   nextHref,
   position,
   total,
+  cursor,
   canAdd,
 }: CovenCardsProps): ReactElement => (
   <IngredientSearch
@@ -47,6 +48,7 @@ const CovenCards = ({
         categories={categories}
         vocabulary={vocabulary}
         total={total}
+        cursor={cursor}
       />
     }
     previousHref={previousHref}

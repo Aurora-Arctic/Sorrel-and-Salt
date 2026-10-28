@@ -16,7 +16,6 @@ const push = vi.fn();
 vi.mock('next/navigation', () => ({ useRouter: () => ({ push, refresh: vi.fn() }) }));
 
 const { default: SpellBuilder } = await import('@/components/SpellBuilder');
-const { NavigationProvider, usePendingNavigation } = await import('@/lib/navigation');
 
 // The spell builder's title, intent and jar fields (M10.12, story 47). The
 // saves are answered by MSW in the shape /api/graphql answers, so a refusal is
@@ -38,6 +37,9 @@ const field = (name: string) =>
 const save = () => screen.getByRole('button', { name: /^Sav/ });
 const type = (name: string, value: string) => fireEvent.change(field(name), { target: { value } });
 const submit = () => fireEvent.submit(save().closest('form') as HTMLFormElement);
+// When to Work It folds shut until its heading is pressed, its two fields hidden.
+const when = () => screen.getByRole('button', { name: 'When to Work It' });
+const openWhen = () => fireEvent.click(when());
 
 /** The spell as the server answers a save: every field as sent, at `revision`. */
 function saved(id: string, revision: number, input: CreateSpellMutationVariables['input']) {
@@ -105,6 +107,7 @@ beforeEach(() => {
 describe('SpellBuilder', () => {
   it('opens a new spell with every field empty and none of them required', () => {
     renderBuilder();
+    openWhen();
 
     for (const label of LABELS) {
       expect(field(label)).toHaveValue('');
@@ -112,12 +115,6 @@ describe('SpellBuilder', () => {
     }
     // The recipe's steps are M13.3's; a step's instruction is its own field there.
     expect(screen.queryByRole('textbox', { name: 'Instructions' })).toBeNull();
-  });
-
-  it('goes back by a link, not a Cancel button', () => {
-    renderBuilder();
-
-    expect(screen.queryByRole('button', { name: 'Cancel' })).toBeNull();
   });
 
   it('has nothing to save until a field holds something', () => {
@@ -166,6 +163,7 @@ describe('SpellBuilder', () => {
     type('Intent', 'To see clearly');
     type('Jar Size', '4 oz');
     type('Seal Wax Colour', 'Blue');
+    openWhen();
     type('Moon Phase', 'Waxing gibbous');
     type('Day of the Week', 'Monday');
     type('Note', 'Kept on the sill');
@@ -242,6 +240,7 @@ describe('SpellBuilder', () => {
 
     expect(field('Title')).toHaveValue('Fixture Working');
     expect(field('Jar Size')).toHaveValue('4 oz');
+    openWhen();
     expect(field('Moon Phase')).toHaveValue('');
     expect(save()).toBeDisabled();
 
@@ -303,18 +302,9 @@ describe('SpellBuilder', () => {
   describe('the moon phase and day of the week suggestions', () => {
     const listed = () => screen.getAllByRole('option').map((option) => option.textContent);
 
-    // The recipe's timing, when to work the spell, grouped under its own heading.
-    it('groups the two under When to Work It', () => {
-      renderBuilder();
-
-      const group = screen.getByRole('group', { name: 'When to Work It' });
-      expect(within(group).getByRole('combobox', { name: 'Moon Phase' })).toBeInTheDocument();
-      expect(within(group).getByRole('combobox', { name: 'Day of the Week' })).toBeInTheDocument();
-      expect(within(group).queryByRole('textbox', { name: 'Jar Size' })).toBeNull();
-    });
-
     it('offers the moon phases and the seven days', () => {
       renderBuilder();
+      openWhen();
 
       fireEvent.click(screen.getByRole('button', { name: 'Show Moon Phase suggestions' }));
       expect(listed()).toEqual([
@@ -346,6 +336,7 @@ describe('SpellBuilder', () => {
 
     it('narrows the list to what is typed', () => {
       renderBuilder();
+      openWhen();
 
       type('Moon Phase', 'wan');
 
@@ -356,6 +347,7 @@ describe('SpellBuilder', () => {
     it('saves a picked suggestion', async () => {
       const calls = acceptCreate();
       renderBuilder();
+      openWhen();
 
       type('Moon Phase', 'full');
       fireEvent.click(screen.getByRole('option', { name: 'Full Moon' }));
@@ -373,6 +365,7 @@ describe('SpellBuilder', () => {
     it('saves typed text that no suggestion holds, as typed', async () => {
       const calls = acceptCreate();
       renderBuilder();
+      openWhen();
 
       type('Moon Phase', 'Blue moon');
       type('Day of the Week', 'Any dark night');
@@ -400,6 +393,7 @@ describe('SpellBuilder', () => {
           visibility: 'workspace',
         },
       });
+      openWhen();
 
       expect(field('Moon Phase')).toHaveValue('Full');
       expect(field('Day of the Week')).toHaveValue('saturday');
@@ -407,76 +401,116 @@ describe('SpellBuilder', () => {
     });
   });
 
-  describe('guarding typed changes', () => {
-    /** A link elsewhere on the page, as the coven nav is. */
-    function Go() {
-      const navigation = usePendingNavigation();
-      return (
-        <button type="button" onClick={() => navigation.navigate('/coven/a/grimoire')}>
-          Grimoire
-        </button>
-      );
-    }
+  // The recipe's timing, when to work the spell, folds under its own heading
+  // (CollapsibleSection), shut on opening, its line saying what it holds.
+  describe('When to Work It', () => {
+    /** The fields the heading's toggle opens and shuts. */
+    const whenFields = () =>
+      document.getElementById(when().getAttribute('aria-controls') ?? '') as HTMLElement;
 
-    const asking = () => screen.queryByRole('dialog', { name: 'Discard Changes?' });
+    it('opens shut on a new spell, reading Nothing yet, its two fields hidden', () => {
+      renderBuilder();
 
-    it('asks before a link leaves unsaved changes', () => {
-      render(
-        <QueryClientProvider client={makeQueryClient()}>
-          <NavigationProvider>
-            <SpellBuilder workspaceId="w1" />
-            <Go />
-          </NavigationProvider>
-        </QueryClientProvider>,
-      );
-      type('Title', 'Fixture Working');
-
-      fireEvent.click(screen.getByRole('button', { name: 'Grimoire' }));
-
-      expect(asking()).toBeInTheDocument();
-      expect(push).not.toHaveBeenCalled();
+      expect(screen.getByRole('heading', { name: 'When to Work It' })).toContainElement(when());
+      expect(when()).toHaveAttribute('aria-expanded', 'false');
+      expect(when()).toHaveAccessibleDescription('Nothing yet');
+      expect(screen.queryByRole('combobox', { name: 'Moon Phase' })).toBeNull();
+      expect(screen.queryByRole('combobox', { name: 'Day of the Week' })).toBeNull();
     });
 
-    it('asks before a link leaves an unsaved visibility choice', () => {
-      render(
-        <QueryClientProvider client={makeQueryClient()}>
-          <NavigationProvider>
-            <SpellBuilder workspaceId="w1" />
-            <Go />
-          </NavigationProvider>
-        </QueryClientProvider>,
-      );
-      // Why the link could have gone: nothing typed, so no question yet.
-      fireEvent.click(screen.getByRole('button', { name: 'Grimoire' }));
-      expect(asking()).toBeNull();
-      push.mockClear();
+    it('opens from its heading onto Moon Phase and Day of the Week, and nothing else', () => {
+      renderBuilder();
+
+      openWhen();
+
+      expect(when()).toHaveAttribute('aria-expanded', 'true');
+      const fields = whenFields();
+      expect(within(fields).getByRole('combobox', { name: 'Moon Phase' })).toBeVisible();
+      expect(within(fields).getByRole('combobox', { name: 'Day of the Week' })).toBeVisible();
+      expect(within(fields).queryByRole('textbox', { name: 'Jar Size' })).toBeNull();
+    });
+
+    it('opens a saved spell shut, its line naming the values it holds', () => {
+      renderBuilder({
+        spell: {
+          id: 's3',
+          revision: 1,
+          title: null,
+          intent: null,
+          jarSize: null,
+          sealWaxColor: null,
+          moonPhase: 'Waxing Moon',
+          dayOfWeek: 'Monday',
+          note: null,
+          visibility: 'workspace',
+        },
+      });
+
+      expect(when()).toHaveAttribute('aria-expanded', 'false');
+      expect(when()).toHaveAccessibleDescription('Waxing Moon · Monday');
+    });
+
+    it('keeps what was typed across a shut, its line reading it', () => {
+      renderBuilder();
+      openWhen();
+      type('Day of the Week', 'Friday');
+
+      openWhen();
+
+      expect(when()).toHaveAttribute('aria-expanded', 'false');
+      expect(when()).toHaveAccessibleDescription('Friday');
+      openWhen();
+      expect(field('Day of the Week')).toHaveValue('Friday');
+    });
+
+    it('opens, flagged, when a save is refused for one of its fields', async () => {
+      mockGraphQLError('CreateSpell', {
+        code: 'VALIDATION',
+        fieldErrors: [{ path: ['moonPhase'], message: 'Name a moon phase' }],
+      });
+      renderBuilder();
+      type('Intent', 'To see clearly');
+      // The precondition the opening answers: shut when the save is pressed.
+      expect(when()).toHaveAttribute('aria-expanded', 'false');
+
+      submit();
+
+      await waitFor(() => expect(when()).toHaveAttribute('aria-expanded', 'true'));
+      expect(when()).toHaveAccessibleDescription('Has an error to fix');
+      expect(field('Moon Phase')).toHaveAccessibleDescription('Name a moon phase');
+    });
+  });
+
+  describe('guarding typed changes', () => {
+    /** Whether closing the tab now would ask the browser's question. */
+    const tabCloseAsks = () => {
+      const event = new Event('beforeunload', { cancelable: true });
+      window.dispatchEvent(event);
+      return event.defaultPrevented;
+    };
+
+    it('has the browser ask before the tab closes on an unsaved visibility choice', () => {
+      renderBuilder();
+      // Why the tab could have closed: nothing typed, so no question yet.
+      expect(tabCloseAsks()).toBe(false);
 
       fireEvent.click(screen.getByRole('switch', { name: 'Share With the Coven' }));
-      fireEvent.click(screen.getByRole('button', { name: 'Grimoire' }));
 
-      expect(asking()).toBeInTheDocument();
-      expect(push).not.toHaveBeenCalled();
+      expect(tabCloseAsks()).toBe(true);
     });
 
-    it('lets a link go once the changes are saved', async () => {
+    it('has the browser ask before the tab closes on unsaved changes, and not once they are saved', async () => {
       acceptCreate();
-      render(
-        <QueryClientProvider client={makeQueryClient()}>
-          <NavigationProvider>
-            <SpellBuilder workspaceId="w1" />
-            <Go />
-          </NavigationProvider>
-        </QueryClientProvider>,
-      );
+      renderBuilder();
+      expect(tabCloseAsks()).toBe(false);
       type('Title', 'Fixture Working');
+
+      expect(tabCloseAsks()).toBe(true);
+
       submit();
       await waitFor(() => expect(save()).toBeDisabled());
       await waitFor(() => expect(save()).not.toHaveAttribute('aria-busy', 'true'));
-
-      fireEvent.click(screen.getByRole('button', { name: 'Grimoire' }));
-
-      expect(asking()).toBeNull();
-      expect(push).toHaveBeenCalledWith('/coven/a/grimoire');
+      expect(tabCloseAsks()).toBe(false);
     });
   });
 });

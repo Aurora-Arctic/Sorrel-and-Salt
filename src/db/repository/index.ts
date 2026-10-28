@@ -34,7 +34,7 @@ export {
   findManyOfSpellIngredientsIncludingSoftDeleted,
   findOneSpell,
 } from './spells';
-export { findGrimoireCount, findGrimoirePage } from './grimoire';
+export { findGrimoireCategoryCounts, findGrimoireCount, findGrimoirePage } from './grimoire';
 export {
   findCompendiumCount,
   findCompendiumEntryByIdentity,

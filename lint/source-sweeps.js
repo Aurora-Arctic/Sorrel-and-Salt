@@ -306,10 +306,11 @@ export const rules = {
   // M13.14 (story 32): a form that holds what someone typed asks before a tab
   // close, a reload or a link leaves it unsaved. The mechanism is
   // `useLeaveGuard` (src/lib/navigation/leave-guard.tsx), which
-  // `useDiscardGuard` calls for every form already guarded in a modal. A
-  // component that draws a `<form>`, renders `FormActions` or calls
-  // react-hook-form's `useForm` must call one of the two unless the list below
-  // says why not; a listed file that no longer needs its place is reported
+  // `useDiscardGuard` calls for every form already guarded in a modal, and
+  // the spell builder's `useSaveOnClose` calls for a form that saves on close
+  // rather than asking (M10.12). A component that draws a `<form>`, renders
+  // `FormActions` or calls react-hook-form's `useForm` must call one of the
+  // three unless the list below says why not; a listed file that no longer needs its place is reported
   // too, so the list can only shrink.
   'long-form-guards-leaving': {
     create: (context) => {
@@ -329,12 +330,13 @@ export const rules = {
         Program(program) {
           const code = codeOf(context);
           const isForm = /<form\b|<FormActions\b|\buseForm\s*[<(]/.test(code);
-          const unguarded = isForm && !/\buse(?:Discard|Leave)Guard\s*\(/.test(code);
+          const unguarded =
+            isForm && !/\buse(?:(?:Discard|Leave)Guard|SaveOnClose)\s*\(/.test(code);
           if (unguarded && !(file in ALLOWED)) {
             context.report({
               node: program,
               message:
-                'A form that holds typed input calls useDiscardGuard or useLeaveGuard, so leaving it unsaved asks first (M13.14)',
+                'A form that holds typed input calls useDiscardGuard, useLeaveGuard or useSaveOnClose, so leaving it unsaved asks or saves first (M13.14)',
             });
           } else if (!unguarded && file in ALLOWED) {
             context.report({

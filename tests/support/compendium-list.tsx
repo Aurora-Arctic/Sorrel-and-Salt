@@ -40,7 +40,11 @@ export const FilterRow = ({
   nextHref,
   position,
   ...filterProps
-}: CompendiumListProps & Pick<CompendiumListFilterProps, 'audience' | 'covens'>): ReactElement => (
+}: CompendiumListProps &
+  Pick<
+    CompendiumListFilterProps,
+    'audience' | 'covens' | 'covenSlug' | 'workspaceId'
+  >): ReactElement => (
   <QueryClientProvider client={client}>
     <IngredientSearch
       search={<AudienceFilter {...filterProps} />}

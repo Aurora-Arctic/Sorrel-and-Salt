@@ -63,7 +63,13 @@ const PanelCategories = ({
   const { pending } = useListNavigation();
   const changed = JSON.stringify(held) !== JSON.stringify(heldOf(filter));
   const choices = useMemo(
-    () => categories.map(({ slug, name, group }) => ({ value: slug, label: name, group })),
+    () =>
+      categories.map(({ slug, name, group, count }) => ({
+        value: slug,
+        label: name,
+        group,
+        count,
+      })),
     [categories],
   );
   return (

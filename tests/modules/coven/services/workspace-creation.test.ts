@@ -111,4 +111,16 @@ describe('createWorkspace and the create page’s address', () => {
     expect(second.slug).toBe('new-3');
     expect(await sql`select id from workspaces where slug = 'new'`).toHaveLength(0);
   });
+
+  // `?new=spell` and `?new=ingredient` open a dialog, and `?new=<slug>` names a coven
+  // (M10.12), so neither value is ever a coven's slug.
+  it.each([
+    ['Spell', 'spell'],
+    ['Ingredient', 'ingredient'],
+  ])('never gives a coven named %s the slug %s, a value of ?new', async (name, slug) => {
+    const created = await createWorkspace(asUser(A), { name });
+
+    expect(created.slug).toBe(`${slug}-2`);
+    expect(await sql`select id from workspaces where slug = ${slug}`).toHaveLength(0);
+  });
 });

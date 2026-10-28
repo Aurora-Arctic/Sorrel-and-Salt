@@ -6,6 +6,7 @@ import IngredientSearch, {
   useSearchText,
 } from '@/components/IngredientSearch';
 import type { IngredientSearchMatch, SearchSource } from '@/components/IngredientSearch/types';
+import { RouteModalContext } from '@/components/Modal/route-modal-provider';
 import { DEBOUNCE_MS } from '@/lib/debounce';
 import { filterForm } from '../../support/filter-form';
 import { renderWithClient, waitFor } from '../../support/ingredient-form';
@@ -316,6 +317,43 @@ describe('IngredientSearch', () => {
     expect(router.push.mock.calls).toEqual([[pickHref(match(2))]]);
     expect(box()).toHaveValue('wort');
     expect(screen.getByText('Results go here')).toBeInTheDocument();
+  });
+
+  // The owner's rule of 2026-10-27: a pick opens the item's Quick Look, so under a route
+  // modal opener it opens there, in the place the page's details modal stands in, and the
+  // modal shows its head at once while its page loads.
+  it('opens a pick through the route modal opener, under its heading and in its place', async () => {
+    offer([match(1), match(2)]);
+    const open = vi.fn();
+    renderWithClient(
+      <RouteModalContext.Provider value={{ loading: undefined, open, cancel: () => undefined }}>
+        <IngredientSearch
+          search={
+            <IngredientSearchForm
+              label="Filter Ingredients"
+              action={PATH as never}
+              query=""
+              shown={[]}
+              searchHref={searchHref}
+              pickHref={pickHref}
+              pickHeading={(picked) => ({ title: picked.name })}
+              pickPlace="details"
+            />
+          }
+          previousHref={undefined}
+          nextHref={undefined}
+        >
+          <p>Results go here</p>
+        </IngredientSearch>
+      </RouteModalContext.Provider>,
+    );
+
+    typeName('wort');
+    await settle();
+    fireEvent.click(await screen.findByRole('option', { name: /Testwort 2/ }));
+
+    expect(open.mock.calls).toEqual([[pickHref(match(2)), { title: 'Testwort 2' }, 'details']]);
+    expect(router.push).not.toHaveBeenCalled();
   });
 
   it('empties the box with its clear and applies the empty search', async () => {

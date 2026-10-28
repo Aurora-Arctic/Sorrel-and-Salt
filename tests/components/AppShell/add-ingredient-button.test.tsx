@@ -176,7 +176,7 @@ describe('AddIngredientButton', () => {
       // coven: a navigation there, where the address opens its dialog.
       press(items[1]!);
       expect(screen.queryByRole('menu')).toBeNull();
-      expect(push).toHaveBeenCalledExactlyOnceWith('/coven/fixture-coven?new');
+      expect(push).toHaveBeenCalledExactlyOnceWith('/coven/fixture-coven?new=ingredient');
       expect(target()).toBe('id-fixture-coven');
     });
 
@@ -300,18 +300,25 @@ describe('AddIngredientButton', () => {
   });
 
   describe('by its address', () => {
-    it('writes ?new onto the address when pressed, over the parameters already there', () => {
+    it('writes ?new=ingredient onto the address when pressed, over the parameters already there', () => {
       window.history.replaceState(null, '', '/coven/fixture-coven?query=rose');
       draw(MEMBER, [FIXTURE]);
       open();
 
-      expect(window.location.search).toBe('?query=rose&new');
+      expect(window.location.search).toBe('?query=rose&new=ingredient');
       expect(screen.getByRole('dialog')).toBeInTheDocument();
     });
 
     it('opens from the address alone, for the default coven and for a named one', () => {
+      window.history.replaceState(null, '', '/coven/fixture-coven?new=ingredient');
+      let view = draw(MEMBER, [FIXTURE, TESTWORT]);
+      expect(target()).toBe('id-fixture-coven');
+      view.unmount();
+
+      // A bare `?new` is read as `?new=ingredient`, so a link saved before the value
+      // existed still opens the default coven's dialog.
       window.history.replaceState(null, '', '/coven/fixture-coven?new');
-      const view = draw(MEMBER, [FIXTURE, TESTWORT]);
+      view = draw(MEMBER, [FIXTURE, TESTWORT]);
       expect(target()).toBe('id-fixture-coven');
       view.unmount();
 
@@ -330,6 +337,17 @@ describe('AddIngredientButton', () => {
       window.history.replaceState(null, '', '/admin/users?new');
       draw(ADMIN, [FIXTURE]);
       expect(screen.queryByRole('dialog')).toBeNull();
+    });
+
+    it('opens nothing for ?new=spell, the grimoire’s New Spell, on any page', () => {
+      // The same writer and coven that open the dialog under ?new=ingredient, so only the
+      // value keeps it shut.
+      window.history.replaceState(null, '', '/coven/fixture-coven/ingredients?new=spell');
+      pathname.mockReturnValue('/coven/fixture-coven/ingredients');
+      draw(MEMBER, [FIXTURE]);
+
+      expect(screen.queryByRole('dialog')).toBeNull();
+      expect(window.location.search).toBe('?new=spell');
     });
 
     it('drops ?new from the address on close, keeping the rest, and the focus returns to the button', async () => {
