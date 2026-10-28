@@ -9,7 +9,7 @@ over the grimoire's list, at the default column and laid out as Add Ingredient i
 The address opens it, as it opens Add Ingredient: `?new=spell-<slug>` draws it empty,
 reached from New Spell at the Grimoire's heading, which only an owner or a
 member is shown, and `?edit=<id>` draws it with a saved spell, reached from a
-spell card's pencil and Quick Look's Edit (M13.10). There is no page of its
+spell card's pencil, the recipe page's Edit (M13.10, where the dialog opens over the recipe page and closes back to it) and Quick Look's Edit (M13.21). Only a role that may update a spell is offered either control, and a viewer's `?edit` opens nothing; on the recipe page it opens only when it names that page's own spell. There is no page of its
 own. `?new=spell` is the same for the grimoire the page is on, and `?new=spell-<slug>`
 on any other page is sent to that coven's grimoire with a replace
 (`NewSpellElsewhere`; the owner's call, 2026-10-28). New Spell's press writes
@@ -72,7 +72,8 @@ no `instructions` field: the ritual is the spell's steps (M13.1).
   off, and nothing is sent, since an update's steps are the whole recipe and
   one sent now would delete the steps not yet shown. A Close pressed meanwhile
   saves once they land, then closes. Fields typed meanwhile are kept. If the
-  read fails the jar says so, nothing can be saved, and a reload tries again.
+  read fails the jar says so and opens its section, nothing can be saved, Close
+  closes without saving, since the save would be refused, and a reload tries again.
   A draft the dialog created needs no read: its save's answer holds its steps.
 - **A saved step's selection is written out three times, not shared as a
   fragment.** The steps read and both save mutations each list a step's
@@ -261,7 +262,8 @@ stored as typed: the columns are free text
   A pick the service refuses (a category deleted since the builder loaded) is
   marked invalid, and its message names it. The builder shows its picks
   as the picker's chips; the grimoire's spell card shows the saved ones with
-  `CategoryChips`.
+  `CategoryChips`. A saved spell opens with its categories picked: the
+  `?edit=<id>` read (`readEditedSpell`) loads them with `assignedCategoriesOf`.
 - **Jar Description and Seal Wax Colour** stay plain text boxes, with no list, by
   the owner's decision (2026-10-27).
 - **Intent and Note** are multi-line. Title, Jar Description and Seal Wax Colour are
@@ -269,8 +271,12 @@ stored as typed: the columns are free text
 
 ## Steps
 
-`steps/` is the jar: the list of steps, the picker that adds to it, and the
-spell's derived categories. It sits in the Jar section after Seal Wax Colour;
+`steps/` is the jar: the picker that adds to it, the list of steps, and the
+spell's derived categories, in that order. The picker leads so that a step
+added never pushes the search box, or the list open beneath it, down the
+dialog: the list is fixed under its box, and a box carried below the fold of
+the dialog's scrolling body opened its list off the screen (found by story
+51's flow). It sits in the Jar section after Seal Wax Colour;
 while a saved spell's steps are still being read it is a skeleton there, and
 if the read fails, an error in its place.
 
@@ -282,7 +288,10 @@ if the read fails, an error in its place.
   brackets, its form's icon, and the formal name as its note. A retired
   ingredient is not offered. A form already in the jar is listed but disabled,
   with the note "Already in the jar". Picking a row appends the step and
-  clears the search.
+  clears the search, and the focus stays in the search for the next
+  ingredient: the append passes `shouldFocus: false`, since react-hook-form
+  would otherwise move the focus to the new step's Quantity a render later and
+  close the list of whatever was typed meanwhile.
 - **A one-off ingredient** is a name and an optional form typed for this jar
   alone (One-Off Name, One-Off Form, Add One-Off Ingredient). It makes no
   ingredients row: the step saves its `name` and `form` with no ids. A name
@@ -292,10 +301,24 @@ if the read fails, an error in its place.
   jar it was found through (`stepInputOf` in `values.ts`); a one-off sends
   its `name` and `form`. A saved step sends its `id`. Quantity is sent as a
   number, and a blank quantity, unit or note is left out.
-- **Each row** (`step-row.tsx`, story 50) leads with its handle, Move and
-  the step's name (below), then shows the form's icon and the name with its
-  form, a Quantity and a Unit for it, and Remove. An instruction step (no
-  name) shows its handle and its text only.
+- **Each row** (`step-row.tsx`'s `BuilderStepRow`, stories 50 and 80) is
+  [`StepRow`](step-row.md) with the builder's controls in it: the handle (Move
+  and the step's name, below), then the form's icon and the name with its
+  form, a Quantity and a Unit, an Instruction beneath, and Remove. An
+  instruction-only step has the handle and its Instruction alone.
+- **Add a Step** (M13.3) is a button beside Add to Jar that appends an
+  instruction-only step and puts the focus in its Instruction field. Until
+  something is written the step is named "New Instruction" where it is read
+  out. The Instruction field is a two-row text area; its placeholder is
+  "Light candle" on an instruction-only step and "Crush first" under an
+  ingredient. A step with an ingredient needs no instruction: a cleared one is
+  left out of the save. An instruction-only step with a blank one is refused
+  at its own field, "Write the instruction, or remove it", before anything is
+  sent (`stepInputOf` keeps the blank body on that kind of step so the schema
+  says it, rather than a step that says nothing). A step's `note` is not
+  edited here.
+- **After a Remove** the focus goes to the handle of the row now in that place
+  (the one before it for the last), and to Add a Step when the list is empty.
 - **The unit rule** (story 77, `unitIssues`) is the service's, from
   `src/modules/grimoire/validation/step-unit.ts`: when the coven holds a jar
   of that form, the step's unit must be one the jar can be measured in (the
@@ -398,6 +421,11 @@ or Refused After Saving, each in its `SpellDialog` over the app shell, with
 Open Again to look once more after Close.
 
 ## Testing
+
+`tests/components/SpellBuilder/step-text.test.tsx` covers the step text (M13.3): Add a Step with
+its focus and announcement, an instruction-only step sent as its text alone, a blank one refused at its
+field, a saved spell's texts read back and saved by id, a cleared text dropped from an ingredient step,
+and Remove.
 
 `tests/components/SpellBuilder/index.test.tsx` uses role and label queries
 against MSW, which answers in the route's own error shape. It covers the

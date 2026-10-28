@@ -1,0 +1,50 @@
+@use '../../scss/variables' as *;
+@use '../../scss/mixins' as *;
+
+// A saved spell's page (MB.6). Tokens only; the layout is a single readable column. Print
+// styles are M10.22's.
+.spell-recipe {
+  display: flex;
+  flex-direction: column;
+  gap: space(4);
+  max-width: 48rem;
+  margin-inline: auto;
+  padding: space(4);
+}
+
+.spell-recipe__head {
+  display: flex;
+  flex-wrap: wrap;
+  gap: space(3);
+  align-items: center;
+
+  h1 {
+    flex: 1 1 0;
+    margin: 0;
+    overflow-wrap: anywhere;
+  }
+}
+
+.spell-recipe__intent,
+.spell-recipe__note {
+  margin: 0;
+  color: $text-muted;
+  white-space: pre-line;
+}
+
+.spell-recipe__ingredients,
+.spell-recipe__steps {
+  display: flex;
+  flex-direction: column;
+  gap: space(2);
+  margin: 0;
+  padding-inline-start: space(5);
+}
+
+.spell-recipe__steps p {
+  margin: 0;
+}
+
+.spell-recipe__amount {
+  font-weight: 600;
+}

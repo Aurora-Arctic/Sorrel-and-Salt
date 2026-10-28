@@ -1,0 +1,61 @@
+import type { Route } from 'next';
+import type { ReactNode } from 'react';
+import type { CardCategory } from '../CategoryChips/types';
+import type { LastEditProps } from '../LastEdit/types';
+import type { SpellStatus, SpellVisibility } from '@/modules/grimoire';
+
+/** A step that does something in words: "Stir three times", with no ingredient. */
+export interface InstructionRecipeStep {
+  kind: 'instruction';
+  id: string;
+  body: string;
+}
+
+/**
+ * A step that lays an ingredient: a coven or compendium ingredient the cupboard names, or a
+ * one-off the author typed (MB.40). Worked out by the page from the service's step views.
+ */
+export interface IngredientRecipeStep {
+  kind: 'ingredient';
+  id: string;
+  /** What the ingredient is called in this coven, or the one-off's own name. */
+  name: string;
+  /** The form laid, as stored; the component sets it in title case. Null for none. */
+  form: string | null;
+  /**
+   * The ingredient's formal name, set only where another ingredient step in the spell has the
+   * same label, so the two can be told apart. Null otherwise.
+   */
+  formal: string | null;
+  /** The amount, as written; null for none ("a pinch" has no number). */
+  quantity: string | null;
+  unit: string | null;
+  /** The ingredient's page in this coven; null for a one-off, or an ingredient since deleted. */
+  href: Route | null;
+  oneOff: boolean;
+  /** The ingredient or its form has been deleted since; the step still says what went in. */
+  deleted: boolean;
+  /** The step's own line on the ingredient's role. */
+  note: string | null;
+  /** An instruction given on the same step. */
+  body: string | null;
+}
+
+export type RecipeStep = InstructionRecipeStep | IngredientRecipeStep;
+
+export interface SpellRecipeProps {
+  /** The spell's title; a draft may have none. */
+  title: string | null;
+  intent: string | null;
+  status: SpellStatus;
+  visibility: SpellVisibility;
+  categories: readonly CardCategory[];
+  lastEdit: LastEditProps | null;
+  /** The spell's single free-text note. */
+  note: string | null;
+  steps: readonly RecipeStep[];
+  /** The way back to the grimoire. */
+  back: { href: Route; label: string };
+  /** The Edit control, for a role that may update the spell (M13.10). */
+  action?: ReactNode;
+}

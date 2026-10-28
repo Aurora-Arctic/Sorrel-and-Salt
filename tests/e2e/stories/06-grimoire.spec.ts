@@ -75,15 +75,17 @@ test('a member names a spell and states its intent', { tag: '@story-47' }, async
   await builder.getByRole('textbox', { name: 'Title' }).fill('Fixture Working');
   await expect(save).toBeEnabled();
   await save.click();
-  // Saved: nothing left to save, and the address now names the saved draft, so a reload or
-  // Back opens it rather than an empty form.
-  await expect(save).toBeDisabled();
-  await expect(save).not.toHaveAttribute('aria-busy', 'true');
+  // Saved: the address now names the saved draft, so a reload or Back opens it rather than an
+  // empty form, and the same dialog is headed as the saved spell, with nothing left to save.
   await expect(page).toHaveURL(new RegExp(`/coven/${coven.slug}/grimoire\\?edit=[0-9a-f-]{36}$`));
+  const drafted = page.getByRole('dialog', { name: 'Edit Spell, Fixture Working' });
+  const saved = drafted.getByRole('button', { name: 'Save' });
+  await expect(saved).toBeDisabled();
+  await expect(saved).not.toHaveAttribute('aria-busy', 'true');
   const draft = page.url();
   // Close saves what is unsaved before it closes, and asks nothing.
-  await builder.getByRole('textbox', { name: 'Intent' }).fill('To see clearly');
-  await builder.getByRole('button', { name: 'Close' }).click();
+  await drafted.getByRole('textbox', { name: 'Intent' }).fill('To see clearly');
+  await drafted.getByRole('button', { name: 'Close', exact: true }).click();
   await expect(page).toHaveURL(`/coven/${coven.slug}/grimoire`);
   await expect(page.getByRole('dialog')).toHaveCount(0);
   await page.goto(draft);
@@ -91,12 +93,12 @@ test('a member names a spell and states its intent', { tag: '@story-47' }, async
   // A saved spell opens its sections shut, each line naming what it holds.
   await edit.getByRole('button', { name: 'Open All' }).click();
   await expect(edit.getByRole('textbox', { name: 'Intent' })).toHaveValue('To see clearly');
-  await edit.getByRole('button', { name: 'Close' }).click();
+  await edit.getByRole('button', { name: 'Close', exact: true }).click();
   await expect(page).toHaveURL(`/coven/${coven.slug}/grimoire`);
   // A new spell is a draft, listed under the grimoire's Drafts tab (M10.11).
   await page.getByRole('link', { name: 'Drafts' }).click();
   await expect(page).toHaveURL(`/coven/${coven.slug}/grimoire/drafts`);
-  await expect(grimoireList(page).getByText('Fixture Working')).toBeVisible();
+  await expect(grimoireList(page).getByText('Fixture Working', { exact: true })).toBeVisible();
 });
 
 test(
@@ -119,10 +121,13 @@ test(
     await categoryChip(builder, 'Cleansing').click();
     await expect(categoryChip(builder, 'Cleansing')).toHaveCount(0);
     await save.click();
-    await expect(save).toBeDisabled();
-    await expect(save).not.toHaveAttribute('aria-busy', 'true');
-    // Saved: the spell's card in the grimoire's Drafts carries the category assigned, and only it.
-    await builder.getByRole('button', { name: 'Close' }).click();
+    // Saved: the same dialog is headed as the saved spell, with nothing left to save.
+    const drafted = page.getByRole('dialog', { name: 'Edit Spell, Fixture Working' });
+    const saved = drafted.getByRole('button', { name: 'Save' });
+    await expect(saved).toBeDisabled();
+    await expect(saved).not.toHaveAttribute('aria-busy', 'true');
+    // The spell's card in the grimoire's Drafts carries the category assigned, and only it.
+    await drafted.getByRole('button', { name: 'Close', exact: true }).click();
     await expect(page.getByRole('dialog')).toHaveCount(0);
     await page.getByRole('link', { name: 'Drafts' }).click();
     await expect(page).toHaveURL(`/coven/${coven.slug}/grimoire/drafts`);
@@ -213,9 +218,16 @@ test(
     await expect(steps.first()).toContainText('Rosemary');
     // Keyboard alone: pick the handle up, move it one place, put it down.
     const handle = page.getByRole('button', { name: 'Move Mugwort (Herb)' });
+    // Each key waits for what the last one said, as a person hears it. dnd-kit
+    // starts listening for the moving keys in a timer it sets at the lift, which
+    // can run after the lift is said, so the Up also waits one timer behind it.
+    const said = (text: string) => page.getByRole('status').filter({ hasText: text });
     await handle.focus();
     await page.keyboard.press('Space');
+    await expect(said('Picked up Mugwort (Herb), at position 2 of 2.')).toBeAttached();
+    await page.evaluate(() => new Promise((resolve) => setTimeout(resolve)));
     await page.keyboard.press('ArrowUp');
+    await expect(said('Mugwort (Herb) moved to position 1 of 2.')).toBeAttached();
     await page.keyboard.press('Space');
     await expect(
       page.getByRole('status').filter({ hasText: 'Mugwort (Herb) put down at position 1 of 2.' }),
@@ -370,7 +382,7 @@ test(
       await signInAgainAs(page, reader);
       await page.goto(path);
       await expect(grimoireList(page).getByRole('listitem')).toHaveCount(1);
-      await expect(grimoireList(page).getByText('Shared Working')).toBeVisible();
+      await expect(grimoireList(page).getByText('Shared Working', { exact: true })).toBeVisible();
       await expect(grimoireList(page).getByText('Private Working')).toHaveCount(0);
     }
   },
@@ -526,12 +538,9 @@ test.fixme(
   },
 );
 
-test.fixme(
+test(
   "a member records a spell's steps in one order, each an instruction, an ingredient, or both",
-  {
-    tag: '@story-80',
-    annotation: { type: 'fixme', description: 'M13.3 builds step text in the spell builder' },
-  },
+  { tag: '@story-80' },
   async ({ page }) => {
     const coven = await seedCoven(page, 'Fixture Coven Eighty', 'story-80.test', {
       A: 'owner',
@@ -545,7 +554,11 @@ test.fixme(
     await steps.first().getByRole('textbox', { name: 'Instruction' }).fill('Light the candle');
     const withIngredient = await addIngredientStep(page, 'Rosemary');
     await withIngredient.getByRole('textbox', { name: 'Instruction' }).fill('Crush it first');
-    await page.getByRole('button', { name: 'Save' }).click();
+    const save = page.getByRole('button', { name: 'Save' });
+    await save.click();
+    // The address names the saved spell once it is saved, so a reload reopens it.
+    await expect(page).toHaveURL(/\?edit=[0-9a-f-]{36}$/);
+    await expect(save).toBeDisabled();
     await page.reload();
     // A saved spell opens with its sections shut (M10.12).
     await page.getByRole('button', { name: 'Open All' }).click();

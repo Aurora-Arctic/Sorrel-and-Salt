@@ -59,6 +59,24 @@ export const newStep = (
   note: null,
 });
 
+/** A new instruction-only step: no ingredient, and a blank text the member writes. */
+export const newInstruction = (): SpellStepValue => ({
+  ...newStep({
+    ingredientId: null,
+    variantId: null,
+    name: null,
+    form: null,
+    icon: null,
+    categories: [],
+    jarUnit: null,
+  }),
+  body: '',
+});
+
+/** Whether `step` is only an instruction: no ingredient and no one-off name. */
+export const isInstruction = (step: Pick<SpellStepValue, 'ingredientId' | 'name'>): boolean =>
+  step.ingredientId === null && step.name === null;
+
 /** `value` with its blank keys left out, so a save sends only what a step holds. */
 function present<T extends object>(value: T): Partial<T> {
   return Object.fromEntries(
@@ -82,11 +100,15 @@ export function stepInputOf(step: SpellStepValue): SpellStepSend {
     body: step.body,
     note: step.note,
   };
-  return present(
+  const sent = present(
     step.ingredientId === null
       ? { ...shared, name: step.name, form: step.form }
       : { ...shared, ingredientId: step.ingredientId, variantId: step.variantId },
   ) as SpellStepSend;
+  // A blank text is dropped from a step that has an ingredient, which needs
+  // none, but kept on an instruction-only step so the schema refuses it at
+  // its own field rather than as a step that says nothing (M13.3).
+  return isInstruction(step) ? { ...sent, body: step.body ?? '' } : sent;
 }
 
 /**
@@ -123,6 +145,9 @@ export function derivedCategories(steps: readonly SpellStepValue[]): StepCategor
 // name is read before every move of it and every Add and Remove.
 const INSTRUCTION_NAME_LENGTH = 40;
 
+/** What an instruction is called before anything is written in it. */
+const BLANK_INSTRUCTION = 'New Instruction';
+
 /**
  * What a step is called where it is read out: "Fixture Rosewort", or with its
  * form, "Fixture Rosewort (Dried Leaf)"; an instruction, by its text.
@@ -130,6 +155,7 @@ const INSTRUCTION_NAME_LENGTH = 40;
 export function stepNameOf({ name, form, body }: SpellStepValue): string {
   if (name === null) {
     const text = (body ?? '').trim();
+    if (text === '') return BLANK_INSTRUCTION;
     return text.length > INSTRUCTION_NAME_LENGTH
       ? `${text.slice(0, INSTRUCTION_NAME_LENGTH).trimEnd()}…`
       : text;

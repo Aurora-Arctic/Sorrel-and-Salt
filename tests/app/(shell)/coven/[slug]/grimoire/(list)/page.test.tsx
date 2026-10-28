@@ -323,6 +323,25 @@ describe('the spell builder over a Grimoire tab', () => {
     expect(screen.queryByRole('dialog')).not.toBeInTheDocument();
   });
 
+  it('draws an Edit pencil on each card for a member, linking to the tab with ?edit=<id>', async () => {
+    as('member');
+    await renderTab(DraftsPage, { query: 'fixture' });
+    const pencil = screen.getByRole('link', { name: 'Edit Fixture Working' });
+    const href = new URL(pencil.getAttribute('href') ?? '', 'https://example.test');
+    expect(href.pathname).toBe('/coven/fixture-coven/grimoire/drafts');
+    expect(href.searchParams.get('edit')).toBe('s1');
+    // The address it opens over is kept, so closing returns to it as it was.
+    expect(href.searchParams.get('query')).toBe('fixture');
+    expect(screen.getAllByRole('link', { name: /^Edit / })).toHaveLength(2);
+  });
+
+  it('draws no Edit pencil for a viewer, who could read the same cards', async () => {
+    as('viewer');
+    await renderTab(DraftsPage);
+    expect(screen.getAllByRole('heading', { name: 'Fixture Working' }).length).toBeGreaterThan(0);
+    expect(screen.queryByRole('link', { name: /^Edit / })).not.toBeInTheDocument();
+  });
+
   it('opens a saved draft under ?edit=<id> with its values, read for the signed-in member', async () => {
     as('member');
     readSpell.mockResolvedValue(SPELL);
@@ -334,6 +353,34 @@ describe('the spell builder over a Grimoire tab', () => {
     fireEvent.click(within(dialog).getByRole('button', { name: 'Open All' }));
     expect(within(dialog).getByRole('textbox', { name: 'Intent' })).toHaveValue('Calm');
     expect(within(dialog).getByRole('textbox', { name: 'Jar Description' })).toHaveValue('4 oz');
+  });
+
+  it('opens a saved spell under ?edit=<id> with the categories its author assigned it picked', async () => {
+    as('member');
+    readSpell.mockResolvedValue(SPELL);
+    offerCategories([
+      {
+        id: CATEGORY.id,
+        name: CATEGORY.name,
+        description: 'Keeps a fixture warded.',
+        group: GROUP,
+      },
+    ]);
+    // Testwarding is this spell’s alone: the cards beneath carry none.
+    assignedCategoriesOf.mockImplementation(async (_s: unknown, spells: { id: string }[]) =>
+      spells.map(({ id }) => (id === SPELL_ID ? [{ id: 'c1', name: 'Testwarding' }] : [])),
+    );
+    await renderTab(DraftsPage, { edit: SPELL_ID });
+
+    // The spell is the one asked for, so its picks are this spell’s and no other’s.
+    expect(assignedCategoriesOf).toHaveBeenCalledWith(session, [
+      { id: SPELL_ID, workspaceId: COVEN.id },
+    ]);
+    const dialog = screen.getByRole('dialog', { name: 'Edit Spell, Fixture Working' });
+    fireEvent.click(within(dialog).getByRole('button', { name: 'Open All' }));
+    expect(
+      await within(dialog).findByRole('button', { name: 'Remove Testwarding' }),
+    ).toBeInTheDocument();
   });
 
   it('reads nothing and opens nothing under ?edit=<id> for a viewer', async () => {

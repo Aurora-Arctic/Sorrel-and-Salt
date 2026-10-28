@@ -1,6 +1,13 @@
+import type { Route } from 'next';
 import { render, screen, within } from '@testing-library/react';
-import { describe, expect, it } from 'vitest';
-import SpellCard, { spellTitleId } from '@/components/SpellCard';
+import { describe, expect, it, vi } from 'vitest';
+import SpellCard, { SpellCardFilters, spellTitleId } from '@/components/SpellCard';
+
+// The title link navigates through the shared hook (M12.33), so the App Router is mocked.
+vi.mock('next/navigation', () => ({
+  useRouter: () => ({ push: vi.fn(), replace: vi.fn(), refresh: vi.fn() }),
+  usePathname: () => '/here',
+}));
 
 // M10.11 (claude-docs/components/spell-card.md): the card is presentational, so each
 // case is its props in and what rendered out. The spells are the test's own data.
@@ -16,6 +23,16 @@ const BASE = {
 };
 
 describe('SpellCard', () => {
+  it('draws an Edit link named for the spell only when given the address', () => {
+    const { rerender } = render(<SpellCard {...BASE} />);
+    expect(screen.queryByRole('link', { name: /^Edit / })).not.toBeInTheDocument();
+    rerender(<SpellCard {...BASE} editHref={'/here?edit=spell-1' as Route} />);
+    expect(screen.getByRole('link', { name: 'Edit Fixture Working' })).toHaveAttribute(
+      'href',
+      '/here?edit=spell-1',
+    );
+  });
+
   it('names the card by its title, under the id a list item points at', () => {
     render(<SpellCard {...BASE} />);
     const card = screen.getByRole('article', { name: 'Fixture Working' });
@@ -92,6 +109,37 @@ describe('SpellCard', () => {
   });
 
   it('is not a link until the spell page exists (MB.6)', () => {
+    render(<SpellCard {...BASE} />);
+    expect(screen.queryByRole('link')).not.toBeInTheDocument();
+  });
+  // The smouldering edge (spell-card.md): layers drawn on hover, which a screen reader must
+  // not meet. Hidden layers have no role, so they are found by the attribute that hides them.
+  it('draws the smoulder as hidden decoration, leaving the card named by its title alone', () => {
+    render(<SpellCard {...BASE} />);
+    const card = screen.getByRole('article', { name: 'Fixture Working' });
+    const layers = card.querySelectorAll(':scope > [aria-hidden="true"]');
+    expect(layers).toHaveLength(3);
+    layers.forEach((layer) => expect(layer).toHaveTextContent(/^$/));
+  });
+
+  it('renders the burn filter the stylesheet names, hidden from assistive technology', () => {
+    const { container } = render(<SpellCardFilters />);
+    const svg = container.querySelector('svg');
+    expect(svg).toHaveAttribute('aria-hidden', 'true');
+    expect(svg?.querySelector('filter#spell-card-burn')).not.toBeNull();
+  });
+});
+
+// MB.6: the title links to the spell's recipe page, through the shared navigation hook.
+describe('SpellCard link', () => {
+  it('makes the title a link to the recipe page when given an address', () => {
+    render(<SpellCard {...BASE} href={'/coven/fixture-coven/grimoire/spell-1' as Route} />);
+    const link = screen.getByRole('link', { name: 'Fixture Working' });
+    expect(link).toHaveAttribute('href', '/coven/fixture-coven/grimoire/spell-1');
+    expect(within(screen.getByRole('heading')).getByRole('link')).toBe(link);
+  });
+
+  it('leaves the title plain text with no address', () => {
     render(<SpellCard {...BASE} />);
     expect(screen.queryByRole('link')).not.toBeInTheDocument();
   });
