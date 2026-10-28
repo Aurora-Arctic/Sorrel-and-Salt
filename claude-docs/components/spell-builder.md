@@ -311,7 +311,7 @@ being read the column is a skeleton, and if the read fails, an error in its plac
   dashed numbered last line of the list. It appends an instruction-only step, opens it and puts the
   focus in its Instruction field. Until something is written the step is named "New Instruction"
   where it is read out. The Instruction field is a two-row text area; its placeholder is
-  "Light candle" on an instruction-only step and "Crush first" under an
+  "Light candle" on an instruction-only step and "Add an instruction" under an
   ingredient. A step with an ingredient needs no instruction: a cleared one is
   left out of the save. An instruction-only step with a blank one is refused
   at its own field, "Write the instruction, or remove it", before anything is

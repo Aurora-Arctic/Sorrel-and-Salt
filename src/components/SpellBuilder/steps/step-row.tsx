@@ -107,7 +107,7 @@ export function BuilderStepRow({
       name={`steps.${index}.body`}
       label="Instruction"
       labelSuffix={instruction ? `Step ${index + 1}` : name}
-      placeholder={instruction ? 'Light candle' : 'Crush first'}
+      placeholder={instruction ? 'Light candle' : 'Add an instruction'}
       multiline
       rows={2}
     />
