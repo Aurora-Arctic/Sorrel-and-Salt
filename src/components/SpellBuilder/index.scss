@@ -76,6 +76,33 @@ $spell-columns-switch: $spell-main-min + $spell-columns-gap + $spell-side;
   }
 }
 
+// When to Work It and Notes: their fields end where the Jar's What Goes In column ends (the
+// owner's call, 2026-10-28). The section's own width is the container, and the same
+// two-track grid as the Purpose section leaves the side track empty, so the fields are the
+// main column's width from the Jar's switch point up, and the whole width below it.
+.spell-main-column {
+  container: spell-main-column / inline-size;
+}
+
+.spell-main-column__fields {
+  display: flex;
+  flex-direction: column;
+  gap: space(5);
+  min-width: 0;
+}
+
+@container spell-main-column (min-width: #{$spell-columns-switch}) {
+  .spell-main-column__fields {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) $spell-side;
+    gap: space(5) $spell-columns-gap;
+  }
+
+  .spell-main-column__fields > * {
+    grid-column: 1;
+  }
+}
+
 // A step's handle (M10.16): the grip it is moved by, a button unboxed as the
 // combobox's chip handle is. `touch-action` is dnd-kit's ask, so that a drag
 // by touch moves the step rather than the page. Muted, as a grip is a

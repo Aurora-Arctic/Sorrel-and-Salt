@@ -580,32 +580,40 @@ const SpellBuilder = ({
             {section(
               'When to Work It',
               <>
-                <SpellSuggestField
-                  name="moonPhase"
-                  label="Moon Phase"
-                  placeholder="Add a phase"
-                  options={MOON_PHASES}
-                  icon={moonPhaseIcon}
-                />
-                <SpellSuggestField
-                  name="dayOfWeek"
-                  label="Day of the Week"
-                  placeholder="Add a day"
-                  options={DAYS_OF_THE_WEEK}
-                />
+                <div className="spell-main-column">
+                  <div className="spell-main-column__fields">
+                    <SpellSuggestField
+                      name="moonPhase"
+                      label="Moon Phase"
+                      placeholder="Add a phase"
+                      options={MOON_PHASES}
+                      icon={moonPhaseIcon}
+                    />
+                    <SpellSuggestField
+                      name="dayOfWeek"
+                      label="Day of the Week"
+                      placeholder="Add a day"
+                      options={DAYS_OF_THE_WEEK}
+                    />
+                  </div>
+                </div>
               </>,
             )}
             {section(
               'Notes',
               <>
-                <TextField<SpellBuilderValues>
-                  name="note"
-                  label="Note"
-                  placeholder="Add a note"
-                  multiline
-                />
-                <SpellStatusField save={send} />
-                <SpellVisibilityField created={saved !== null} save={send} />
+                <div className="spell-main-column">
+                  <div className="spell-main-column__fields">
+                    <TextField<SpellBuilderValues>
+                      name="note"
+                      label="Note"
+                      placeholder="Add a note"
+                      multiline
+                    />
+                    <SpellStatusField save={send} />
+                    <SpellVisibilityField created={saved !== null} save={send} />
+                  </div>
+                </div>
               </>,
             )}
           </div>
