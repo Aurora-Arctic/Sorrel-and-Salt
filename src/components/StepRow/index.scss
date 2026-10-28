@@ -121,28 +121,6 @@
     grid-area: remove;
     margin-block-end: space(1);
   }
-
-  // An open ingredient row's Remove is this up chevron instead, in the same place: it closes the row.
-  .step-row__close {
-    @include icon-button;
-    @include icon-button-edit;
-
-    grid-area: remove;
-    margin-block-end: space(1);
-
-    // The owner's call: the chevron is light, not the pencil's green. It sits on the card's ground,
-    // so it takes the body ink (near-white in dark, ink in light: literal white would fail on the
-    // light card), and keeps it pointed at, focused or open, over the mixin's tint.
-    &,
-    &:hover,
-    &:focus-visible {
-      color: $text-primary;
-    }
-
-    .chevron-icon {
-      transform: rotate(180deg);
-    }
-  }
 }
 
 // Open and closed (the ingredient form's variant card): closed is one line, the name
@@ -197,8 +175,7 @@ $step-ink-drop: 0.05rem;
     }
 
     .step-row__edit,
-    .step-row__remove,
-    .step-row__close {
+    .step-row__remove {
       margin-block: calc(($step-line - $icon-size) / 2) 0;
     }
   }
@@ -206,8 +183,7 @@ $step-ink-drop: 0.05rem;
   .step-row__handle,
   .step-row__marks,
   .step-row__edit,
-  .step-row__remove,
-  .step-row__close {
+  .step-row__remove {
     position: relative;
     inset-block-start: $step-ink-drop;
   }
@@ -227,6 +203,21 @@ $step-ink-drop: 0.05rem;
     @include icon-button-edit;
 
     grid-area: edit;
+
+    // Open, the pencil is an up chevron that closes the row. The owner's call: it is light, not the
+    // pencil's green. It sits on the card's ground, so it takes the body ink (near-white in dark,
+    // ink in light: literal white would fail on the light card), kept pointed at or focused.
+    &--close {
+      &,
+      &:hover,
+      &:focus-visible {
+        color: $text-primary;
+      }
+
+      .chevron-icon {
+        transform: rotate(180deg);
+      }
+    }
   }
 
   // The opened fields, in the name's column to the card's edge.
@@ -344,8 +335,7 @@ $step-ink-drop: 0.05rem;
     margin-block-start: 0;
   }
 
-  .step-row__remove,
-  .step-row__close {
+  .step-row__remove {
     margin-block-start: space(2) + ($step-line - $icon-size) / 2;
   }
 
@@ -405,8 +395,7 @@ $step-ink-drop: 0.05rem;
       margin-block-start: space(2);
     }
 
-    .step-row__remove,
-    .step-row__close {
+    .step-row__remove {
       margin-block-end: 0;
     }
   }

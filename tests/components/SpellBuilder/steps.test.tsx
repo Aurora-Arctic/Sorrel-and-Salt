@@ -457,7 +457,7 @@ describe('the spell builder’s Add to Jar', () => {
     renderBuilder();
     await add('Fixture', /Fixture Rosewort/);
     await add('Fixture', /Fixture Mockroot/);
-    const pencil = () => screen.getByRole('button', { name: 'Edit Fixture Rosewort' });
+    const pencil = () => screen.getByRole('button', { name: /^(Edit|Close) Fixture Rosewort$/ });
     // The second add opened Mockroot and closed Rosewort.
     expect(pencil()).toHaveAttribute('aria-expanded', 'false');
 
@@ -485,7 +485,7 @@ describe('the spell builder’s Add to Jar', () => {
     suggest(ROSEWORT);
     renderBuilder();
     await add('Fixture', /Fixture Rosewort/);
-    const pencil = () => screen.getByRole('button', { name: 'Edit Fixture Rosewort' });
+    const pencil = () => screen.getByRole('button', { name: /^(Edit|Close) Fixture Rosewort$/ });
     const open = () => expect(pencil()).toHaveAttribute('aria-expanded', 'true');
     open();
     const row = stepRow('Fixture Rosewort');
@@ -513,15 +513,16 @@ describe('the spell builder’s Add to Jar', () => {
     expect(pencil()).toHaveAttribute('aria-expanded', 'false');
   });
 
-  it('swaps an open row’s Remove for a Close that collapses it and returns the focus to the pencil', async () => {
+  it('makes the pencil the row’s Close while open, hiding Remove, and Close collapses it with the focus kept', async () => {
     suggest(ROSEWORT);
     renderBuilder();
     await add('Fixture', /Fixture Rosewort/);
     const row = stepRow('Fixture Rosewort');
-    const pencil = screen.getByRole('button', { name: 'Edit Fixture Rosewort' });
+    const pencil = screen.getByRole('button', { name: /^(Edit|Close) Fixture Rosewort$/ });
     expect(pencil).toHaveAttribute('aria-expanded', 'true');
     expect(within(row).queryByRole('button', { name: 'Remove Fixture Rosewort' })).toBeNull();
 
+    act(() => pencil.focus());
     fireEvent.click(within(row).getByRole('button', { name: 'Close Fixture Rosewort' }));
 
     expect(pencil).toHaveAttribute('aria-expanded', 'false');
@@ -530,7 +531,7 @@ describe('the spell builder’s Add to Jar', () => {
     expect(
       within(row).getByRole('button', { name: 'Remove Fixture Rosewort' }),
     ).toBeInTheDocument();
-    expect(within(row).queryByRole('button', { name: /^Close / })).toBeNull();
+    expect(within(row).getByRole('button', { name: 'Edit Fixture Rosewort' })).toBe(pencil);
   });
 
   it('refuses a unit the coven’s jar cannot be measured in, beside the unit, and holds Save', async () => {
@@ -1028,7 +1029,7 @@ describe('the spell builder’s open and closed steps', () => {
     expect(
       within(stepRow('Fixture Rosewort')).queryByRole('spinbutton', { name: /^Quantity/ }),
     ).toBeNull();
-    expect(screen.getByRole('button', { name: 'Edit Fixture Rosewort' })).toHaveAttribute(
+    expect(screen.getByRole('button', { name: /^(Edit|Close) Fixture Rosewort$/ })).toHaveAttribute(
       'aria-expanded',
       'false',
     );
@@ -1080,14 +1081,14 @@ describe('the spell builder’s open and closed steps', () => {
     });
     // Inside the row is not outside it.
     fireEvent.pointerDown(within(row).getByRole('spinbutton', { name: /^Quantity/ }));
-    expect(screen.getByRole('button', { name: 'Edit Fixture Rosewort' })).toHaveAttribute(
+    expect(screen.getByRole('button', { name: /^(Edit|Close) Fixture Rosewort$/ })).toHaveAttribute(
       'aria-expanded',
       'true',
     );
 
     fireEvent.click(screen.getByRole('heading', { name: 'What Goes In' }));
 
-    expect(screen.getByRole('button', { name: 'Edit Fixture Rosewort' })).toHaveAttribute(
+    expect(screen.getByRole('button', { name: /^(Edit|Close) Fixture Rosewort$/ })).toHaveAttribute(
       'aria-expanded',
       'false',
     );
@@ -1098,20 +1099,20 @@ describe('the spell builder’s open and closed steps', () => {
     suggest(ROSEWORT, MOCKROOT);
     renderBuilder();
     await add('Rose', /Fixture Rosewort/);
-    fireEvent.click(screen.getByRole('button', { name: 'Edit Fixture Rosewort' }));
-    expect(screen.getByRole('button', { name: 'Edit Fixture Rosewort' })).toHaveAttribute(
+    fireEvent.click(screen.getByRole('button', { name: /^(Edit|Close) Fixture Rosewort$/ }));
+    expect(screen.getByRole('button', { name: /^(Edit|Close) Fixture Rosewort$/ })).toHaveAttribute(
       'aria-expanded',
       'false',
     );
-    fireEvent.click(screen.getByRole('button', { name: 'Edit Fixture Rosewort' }));
-    expect(screen.getByRole('button', { name: 'Edit Fixture Rosewort' })).toHaveAttribute(
+    fireEvent.click(screen.getByRole('button', { name: /^(Edit|Close) Fixture Rosewort$/ }));
+    expect(screen.getByRole('button', { name: /^(Edit|Close) Fixture Rosewort$/ })).toHaveAttribute(
       'aria-expanded',
       'true',
     );
 
     act(() => screen.getByRole('button', { name: 'Add an Instruction' }).focus());
 
-    expect(screen.getByRole('button', { name: 'Edit Fixture Rosewort' })).toHaveAttribute(
+    expect(screen.getByRole('button', { name: /^(Edit|Close) Fixture Rosewort$/ })).toHaveAttribute(
       'aria-expanded',
       'false',
     );
@@ -1133,7 +1134,7 @@ describe('the spell builder’s open and closed steps', () => {
     expect(
       within(stepRow('Fixture Rosewort')).getByRole('combobox', { name: /^Unit/ }),
     ).toHaveAttribute('aria-invalid', 'true');
-    expect(screen.getByRole('button', { name: 'Edit Fixture Rosewort' })).toHaveAttribute(
+    expect(screen.getByRole('button', { name: /^(Edit|Close) Fixture Rosewort$/ })).toHaveAttribute(
       'aria-expanded',
       'true',
     );
@@ -1143,7 +1144,7 @@ describe('the spell builder’s open and closed steps', () => {
     suggest(ROSEWORT, MOCKROOT);
     renderBuilder();
     await add('Rose', /Fixture Rosewort/);
-    expect(screen.getByRole('button', { name: 'Edit Fixture Rosewort' })).toHaveAttribute(
+    expect(screen.getByRole('button', { name: /^(Edit|Close) Fixture Rosewort$/ })).toHaveAttribute(
       'aria-expanded',
       'true',
     );
@@ -1151,13 +1152,13 @@ describe('the spell builder’s open and closed steps', () => {
     // The box is where the next ingredient is typed: still inside.
     fireEvent.click(search());
     act(() => search().focus());
-    expect(screen.getByRole('button', { name: 'Edit Fixture Rosewort' })).toHaveAttribute(
+    expect(screen.getByRole('button', { name: /^(Edit|Close) Fixture Rosewort$/ })).toHaveAttribute(
       'aria-expanded',
       'true',
     );
 
     fireEvent.click(screen.getByRole('heading', { name: 'What Goes In' }));
-    expect(screen.getByRole('button', { name: 'Edit Fixture Rosewort' })).toHaveAttribute(
+    expect(screen.getByRole('button', { name: /^(Edit|Close) Fixture Rosewort$/ })).toHaveAttribute(
       'aria-expanded',
       'false',
     );

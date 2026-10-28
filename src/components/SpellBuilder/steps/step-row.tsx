@@ -75,7 +75,6 @@ export function BuilderStepRow({
   const fieldsId = useId();
   // Where the Unit's error is drawn: the full width beneath the inputs (the second design review).
   const [errorNode, setErrorNode] = useState<HTMLElement | null>(null);
-  const edit = useRef<HTMLButtonElement>(null);
   const focusOnOpen = useRef(false);
   const sortable = useSortable({ id });
   const unit = `steps.${index}.unit` as const;
@@ -184,10 +183,15 @@ export function BuilderStepRow({
       }
       edit={
         <button
-          ref={edit}
           type="button"
-          className="step-row__edit"
-          aria-label={instruction ? `Edit step ${index + 1}` : `Edit ${step.name}`}
+          // One disclosure button in one place (second design review): the pencil while the row is
+          // closed, the up chevron, light, once it is open. It keeps the focus when it flips.
+          className={['step-row__edit', !instruction && open && 'step-row__edit--close']
+            .filter(Boolean)
+            .join(' ')}
+          aria-label={
+            instruction ? `Edit step ${index + 1}` : `${open ? 'Close' : 'Edit'} ${step.name}`
+          }
           aria-expanded={open}
           aria-controls={fieldsId}
           onClick={() => {
@@ -195,7 +199,7 @@ export function BuilderStepRow({
             onToggle();
           }}
         >
-          <EditIcon />
+          {!instruction && open ? <ChevronIcon /> : <EditIcon />}
         </button>
       }
       nameField={
@@ -248,25 +252,12 @@ export function BuilderStepRow({
         />
       }
       actions={
-        !instruction && open ? (
-          // An open ingredient row's × becomes a chevron that closes it: Remove is for a closed
-          // row, so a row being edited is never deleted by a stray press.
-          <button
-            type="button"
-            className="step-row__close"
-            aria-label={`Close ${step.name}`}
-            onClick={() => {
-              onToggle();
-              edit.current?.focus();
-            }}
-          >
-            <ChevronIcon />
-          </button>
-        ) : (
+        // Remove is for a closed row, so a row being edited is never deleted by a stray press.
+        !instruction && open ? null : (
           <button
             type="button"
             className="step-row__remove"
-            aria-label={`Remove ${instruction ? name : step.name}`}
+            aria-label={instruction ? `Remove step ${index + 1}` : `Remove ${step.name}`}
             onClick={onRemove}
           >
             {/* The × a variant card's Remove is, so the row keeps its width for the name. */}
