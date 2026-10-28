@@ -304,7 +304,7 @@ being read the column is a skeleton, and if the read fails, an error in its plac
   its form, a summary of amount and instruction, the supply badge, a pencil to open it and Remove.
   Open, it also shows Form (one-offs only), Quantity and Unit on one line, and Instruction full width on a line beneath. One row is open at a
   time: a new step opens, opening another closes the one before, and a step whose unit breaks the
-  rule is forced open so its error is seen. An instruction-only step is the same
+  rule is forced open so its error is seen. An open row also closes when a click or tap lands outside it or the focus leaves it; a new step stays open while the focus is in Add to Jar and closes on the next click or focus outside the box and the row. What was typed in a closed row is kept. An instruction-only step is the same
   card: closed, its text itself (a muted "Write the step" when empty) with a pencil ("Edit step N")
   and Remove; open, a text area in place of the text.
 - **Add a Step** (M13.3) is the last item of the left column: a `.btn` on wide, and on narrow the
@@ -352,7 +352,7 @@ and the comparison. The drawing is `JarDrawing` and `pickJarShape` from the jar 
 as the jar shelf draws it: the vessel, and the verdict in words. A one-off reads "one-off, nothing
 to hold", and its small jar is the plain solid empty outline in `$text-muted`, as the aside's own jar is: no dashes and no fade. All four verdicts stand on the name line at its right end, in one place, so the
 name is cut short with an ellipsis before the verdict is; the words line keeps "need … · hold …".
-Out and Low take StockBadge's symbol and colour; Not Enough has a small jar outline with a level part-way up, in Low's ink (`$stock-low-ink`), and Cannot Compare a struck equals sign in `$text-muted`; both drawn as `StockIcon` is and kept in `supply-icon.tsx`, being spell-builder-only (owner's call 2026-10-28). The word stays beside each symbol. `steps/supply-mark.tsx` is used nowhere and was left as it was. All four are worded as in Supply below. With no steps it
+Out and Low take StockBadge's symbol and colour; Not Enough has a small jar outline with a level part-way up, in Low's ink (`$stock-low-ink`), and Units Differ a struck equals sign in `$text-muted`; both drawn as `StockIcon` is and kept in `supply-icon.tsx`, being spell-builder-only (owner's call 2026-10-28). The word stays beside each symbol. `steps/supply-mark.tsx` is used nowhere and was left as it was. All four are worded as in Supply below. With no steps it
 reads that nothing is held yet.
 
 ## The comparison panel
@@ -381,7 +381,7 @@ once each and sorted by name.
   of: **Out of Stock** (no jar for the form, which is how a compendium form the coven has
   not taken in reads, or a jar at 0), **Not Enough** (the jar holds less than the step
   calls for, once both are in one unit through `unitConvert`; distinct from Out),
-  **Cannot Compare** (the step's unit cannot be set against the jar's: a count, two
+  **Units Differ** (the step's unit cannot be set against the jar's: a count, two
   dimensions, or a jar with no unit; never read as held or enough), **Low Stock** (the
   jar's own threshold), **One-Off** (a one-off, which nothing in the cupboard could ever
   answer; marked, not told to be gathered), or nothing. A jar held but not weighed, a

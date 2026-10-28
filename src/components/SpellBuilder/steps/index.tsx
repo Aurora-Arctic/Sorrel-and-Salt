@@ -45,11 +45,43 @@ export function SpellSteps({ workspaceId }: { workspaceId: string }): ReactEleme
   // known only once the row is drawn.
   const [openId, setOpenId] = useState<string | null>(null);
   const openNew = useRef(false);
+  const addedId = useRef<string | null>(null);
   useEffect(() => {
     if (!openNew.current) return;
     openNew.current = false;
-    setOpenId(fields[fields.length - 1]?.id ?? null);
+    const id = fields[fields.length - 1]?.id ?? null;
+    addedId.current = id;
+    setOpenId(id);
   }, [fields]);
+  // An open row closes when a click or the focus lands outside it, so one row is open at a
+  // time without a second click to shut it. A row just added is also kept open while the
+  // focus stays in Add to Jar (the next ingredient is typed there); a click on the row's own
+  // pencil is inside it, and a popover a box opened (a listbox) counts as inside its owner.
+  // A row whose Unit is refused stays open whatever this says (BuilderStepRow).
+  useEffect(() => {
+    if (openId === null) return;
+    const leave = (event: Event) => {
+      const target = event.target;
+      if (!(target instanceof Node) || !target.isConnected) return;
+      const index = fields.findIndex((field) => field.id === openId);
+      const row = root.current?.querySelectorAll('.spell-steps__list > li')[index];
+      if (row?.contains(target)) return;
+      if (
+        addedId.current === openId &&
+        root.current?.querySelector('.spell-steps__box')?.contains(target)
+      )
+        return;
+      if (target instanceof Element && target.closest('[role="listbox"]')) return;
+      addedId.current = null;
+      setOpenId(null);
+    };
+    document.addEventListener('pointerdown', leave);
+    document.addEventListener('focusin', leave);
+    return () => {
+      document.removeEventListener('pointerdown', leave);
+      document.removeEventListener('focusin', leave);
+    };
+  }, [openId, fields]);
   // A new instruction takes the focus into its field once it is open and drawn: a closed
   // instruction has no field to focus.
   const focusField = useRef(false);
