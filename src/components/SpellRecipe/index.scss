@@ -48,3 +48,11 @@
 .spell-recipe__amount {
   font-weight: 600;
 }
+
+// The same sections inside the Quick Look modal (M13.21): the page's column without its
+// width, centring and padding, since the modal supplies its own.
+.spell-recipe-look {
+  display: flex;
+  flex-direction: column;
+  gap: space(4);
+}

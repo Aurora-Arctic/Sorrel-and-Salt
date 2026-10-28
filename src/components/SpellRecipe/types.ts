@@ -59,3 +59,30 @@ export interface SpellRecipeProps {
   /** The Edit control, for a role that may update the spell (M13.10). */
   action?: ReactNode;
 }
+
+/** What the body below a spell's head draws, shared by the recipe page and the Quick Look modal. */
+export type SpellRecipeBodyProps = Pick<
+  SpellRecipeProps,
+  'title' | 'intent' | 'categories' | 'note' | 'steps'
+>;
+
+/** The spell a Quick Look modal is open on (M13.21); the body arrives as the page's rendered children. */
+export interface SpellLookOpened {
+  /** The spell's title; a draft may have none. */
+  title: string | null;
+  lastEdit: LastEditProps | null;
+  /** The spell's recipe page (MB.6), which the foot links to. */
+  recipeHref: Route;
+  /** Where Edit opens the spell in the builder, for a role that may update it; none draws no Edit. */
+  editHref?: Route;
+  children: ReactNode;
+}
+
+export interface SpellLookDialogProps {
+  /** The list as it was, which closing returns to. */
+  closeHref: Route;
+  /** Absent when the address opens nothing. */
+  opened?: SpellLookOpened;
+  /** The read failed for a reason other than the spell being unavailable: a Notice says so. */
+  failed?: boolean;
+}
