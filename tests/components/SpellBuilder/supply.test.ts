@@ -72,3 +72,32 @@ describe('supplyOf', () => {
     expect(supplyOf(step({ jar: jar({ threshold: 10 }) }))).toBeNull();
   });
 });
+
+// A form laid in several steps is judged on the sum of what they all need (owner, 2026-10-28).
+describe('supplyOf across the steps on one form', () => {
+  const held = jar({ quantity: 50 });
+  const a = step({ jar: held, quantity: '30', unit: 'g' });
+  const b = step({ jar: held, quantity: '30', unit: 'g' });
+
+  it('is short where the steps together pass the jar though each alone fits', () => {
+    expect(supplyOf(a)).toBeNull();
+    expect(supplyOf(a, [a, b])?.kind).toBe('short');
+    expect(supplyOf(b, [a, b])?.kind).toBe('short');
+  });
+
+  it('sums through unitConvert, so kilograms and grams add up', () => {
+    const kg = step({ jar: held, quantity: '0.03', unit: 'kg' });
+    expect(supplyOf(a, [a, kg])?.kind).toBe('short');
+  });
+
+  it('says Units Differ for every line of a form when one step cannot convert', () => {
+    const ml = step({ jar: held, quantity: '1', unit: 'ml' });
+    expect(supplyOf(a, [a, ml])).toEqual({ kind: 'units-differ' });
+    expect(supplyOf(ml, [a, ml])).toEqual({ kind: 'units-differ' });
+  });
+
+  it('leaves another form out of the sum', () => {
+    const other = step({ variantId: 'v2', jar: held, quantity: '30', unit: 'g' });
+    expect(supplyOf(a, [a, other])).toBeNull();
+  });
+});

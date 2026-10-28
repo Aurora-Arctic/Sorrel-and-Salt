@@ -610,6 +610,13 @@
       "when": 1793145935307,
       "tag": "0086_spells-jar-description",
       "breakpoints": true
+    },
+    {
+      "idx": 87,
+      "version": "7",
+      "when": 1793226184471,
+      "tag": "0087_spell-steps-repeat-forms",
+      "breakpoints": true
     }
   ]
 }

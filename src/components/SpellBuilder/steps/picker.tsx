@@ -2,7 +2,7 @@
 
 import { formLabel } from '@/modules/ingredients/validation/form-label';
 
-import { type ReactElement, useCallback, useId, useMemo, useState } from 'react';
+import { type ReactElement, useId, useMemo, useState } from 'react';
 import type { SpellIngredientSuggestionsQuery } from '../../../gql/graphql';
 import type { FormGroupIcon } from '@/modules/vocabulary/schema/form-group-icons';
 import Combobox from '../../Combobox';
@@ -22,14 +22,11 @@ import { jarOf, jarUnitOf, newStep } from './values';
 
 export interface StepPickerProps {
   workspaceId: string;
-  /** The forms already in the jar: offered, but not pickable again. */
-  taken: ReadonlySet<string>;
   /** The one-off names already in the jar, case and spaces aside. */
   oneOffs: ReadonlySet<string>;
   onAdd: (step: SpellStepValue) => void;
 }
 
-const ALREADY_IN_JAR = 'Already in the jar';
 const ONE_OFF_TAKEN = 'This ingredient is already in the jar';
 
 /** A one-off's name as the jar compares it: case and outer spaces aside. */
@@ -39,10 +36,7 @@ const categoryNames = (categories: readonly { name: string }[]): string | undefi
   categories.length > 0 ? categories.map(({ name }) => name).join(' · ') : undefined;
 
 /** Every live form of every live ingredient found, under the heading of where it came from. */
-function pickRows(
-  data: SpellIngredientSuggestionsQuery,
-  taken: ReadonlySet<string>,
-): IngredientPickOption[] {
+function pickRows(data: SpellIngredientSuggestionsQuery): IngredientPickOption[] {
   return data.ingredientSuggestions.edges.flatMap(({ group, node }) =>
     // A retired entry is kept where a spell lays it, never added anew.
     node.retired
@@ -50,11 +44,10 @@ function pickRows(
       : node.variants.map(({ form, ...variant }) => {
           const name = node.cupboardEntry?.label ?? node.name;
           const icon = (variant.formChoice?.group.icon ?? null) as FormGroupIcon | null;
-          const inJar = taken.has(variant.id);
           return {
             value: name,
             label: `${name} (${formLabel(form)})`,
-            note: inJar ? ALREADY_IN_JAR : (node.canonicalName ?? undefined),
+            note: node.canonicalName ?? undefined,
             // The form's categories, else the ingredient's, as small print on that line.
             meta: categoryNames(
               variant.categories.length > 0 ? variant.categories : node.categories,
@@ -62,7 +55,6 @@ function pickRows(
             heading: group === 'yours' ? YOUR_INGREDIENTS : COMPENDIUM_HEADING,
             key: variant.id,
             icon: <FormIcon name={icon} />,
-            disabled: inJar || undefined,
             step: newStep({
               ingredientId: node.id,
               variantId: variant.id,
@@ -84,21 +76,17 @@ function pickRows(
   );
 }
 
-export function StepPicker({ workspaceId, taken, oneOffs, onAdd }: StepPickerProps): ReactElement {
+export function StepPicker({ workspaceId, oneOffs, onAdd }: StepPickerProps): ReactElement {
   const id = useId();
   const [text, setText] = useState('');
   const [active, setActive] = useState(false);
   const [refused, setRefused] = useState(false);
-  const shape = useCallback(
-    (data: SpellIngredientSuggestionsQuery) => pickRows(data, taken),
-    [taken],
-  );
   const suggestions = useLookup(
     SpellIngredientSuggestionsDocument,
     { workspaceId },
     text,
     active,
-    shape,
+    pickRows,
   );
 
   const typed = text.trim();

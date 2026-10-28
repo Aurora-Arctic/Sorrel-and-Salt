@@ -288,16 +288,16 @@ describe('the spell builder’s Add to Jar', () => {
     expect(search()).toHaveFocus();
   });
 
-  it('will not add a form twice: its row is offered but cannot be picked', async () => {
+  it('adds a form again for another step: its row stays pickable and the jar gets two rows', async () => {
     suggest(ROSEWORT);
     renderBuilder();
     await add('Rose', /Fixture Rosewort/);
 
     const again = await lookUp('Rose', /Fixture Rosewort/);
-    expect(again).toHaveAttribute('aria-disabled', 'true');
+    expect(again).not.toHaveAttribute('aria-disabled', 'true');
     fireEvent.click(again);
 
-    expect(stepRows()).toHaveLength(1);
+    expect(stepRows()).toHaveLength(2);
   });
 
   it('adds a one-off ingredient from the box’s first row, drawn with the generic spoon, and opens it for its form', async () => {
@@ -789,6 +789,33 @@ describe('the spell builder’s In Coven Inventory', () => {
     });
     await waitFor(() => expect(notEnough()).not.toBeInTheDocument());
     expect(line('Fixture Rosewort')).toHaveTextContent('need 4 g · hold 5 g');
+  });
+
+  it('judges a form laid in two steps on the sum, and shows one line for each step', async () => {
+    suggest(HELD);
+    renderBuilder();
+    await add('Rose', /Fixture Rosewort/);
+    await add('Rose', /Fixture Rosewort/);
+    const lines = () =>
+      within(hold())
+        .getAllByRole('listitem')
+        .filter((li) => li.textContent?.includes('Fixture Rosewort'));
+    const notEnough = (li: HTMLElement) => within(li).queryByRole('button', { name: 'Not Enough' });
+
+    for (const index of [0, 1]) {
+      // One row is open at a time: open each in turn.
+      const row = stepRows()[index] as HTMLElement;
+      const edit = within(row).queryByRole('button', { name: /^Edit/, expanded: false });
+      if (edit) fireEvent.click(edit);
+      fireEvent.change(within(row).getByRole('spinbutton', { name: /^Quantity/ }), {
+        target: { value: '3' },
+      });
+      chooseUnit(row, 'g');
+    }
+
+    // 3 g and 3 g each fit the 5 g held; together they do not.
+    await waitFor(() => expect(lines().map(notEnough).filter(Boolean)).toHaveLength(2));
+    expect(lines()).toHaveLength(2);
   });
 
   it('says Units Differ where the unit cannot be set against the jar’s', async () => {

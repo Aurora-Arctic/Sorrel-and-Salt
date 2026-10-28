@@ -144,9 +144,9 @@ async function unmeasurableSteps(
 /**
  * Writes the recipe `steps` over the spell's live `existing` steps, inside the
  * caller's transaction. Every unique index over a jar's live steps is checked
- * row by row, so a step that changes its place or what it lays is first moved
- * aside to a place and an identity no other step holds, and only then given
- * its own. Call `checkRecipe` first.
+ * row by row, so a step that changes its place, or to or from a custom name, is
+ * first moved aside to a place and a name no other step holds, and only then
+ * given its own. Call `checkRecipe` first.
  */
 export async function writeRecipe(
   write: AuditWriter,
@@ -170,7 +170,9 @@ export async function writeRecipe(
   // it lays, a custom name only it could have, which every CHECK accepts.
   for (const { step, row, place } of moves) {
     const moving = row.position !== place || row.layerOrder !== place;
-    const relinking = identityChanged(step, row);
+    // Only a custom name is a unique identity now; one form may sit in many steps, so a step
+    // changing from one form to another meets nothing and is written in place.
+    const relinking = identityChanged(step, row) && (row.name != null || step.name != null);
     if (!moving && !relinking) continue;
     await write.updateById(spellSteps, row.id, {
       position: -place,

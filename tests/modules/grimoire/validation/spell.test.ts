@@ -217,17 +217,13 @@ describe('UpdateSpellInput', () => {
 });
 
 describe('a recipe’s steps, taken together', () => {
-  const OTHER_VARIANT = '33333333-3333-4333-8333-333333333333';
   const STEP = '44444444-4444-4444-8444-444444444444';
   const pathsOf = (steps: unknown[]) =>
     SpellInput.safeParse({ steps }).error?.issues.map((issue) => issue.path);
 
-  it('refuses one form laid twice, mirroring spell_steps_spell_id_variant_id_unique', () => {
+  it('admits one form laid in several steps', () => {
     const linked = { ingredientId: INGREDIENT, variantId: VARIANT };
-    expect(
-      pathsOf([linked, { ingredientId: INGREDIENT, variantId: OTHER_VARIANT }]),
-    ).toBeUndefined();
-    expect(pathsOf([linked, { body: 'Stir' }, linked])).toEqual([['steps', 2, 'variantId']]);
+    expect(pathsOf([linked, { body: 'Stir' }, linked])).toBeUndefined();
   });
 
   it('refuses one custom name twice, case aside, mirroring spell_steps_spell_id_custom_name_unique', () => {
