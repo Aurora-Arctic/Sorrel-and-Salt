@@ -7,6 +7,7 @@ import LinkHint from '../LinkHint';
 import { formLabel } from '../../modules/ingredients/validation/form-label';
 import { UNTITLED_SPELL } from '../SpellCard';
 import type { IngredientRecipeStep, RecipeStep, SpellRecipeBodyProps } from './types';
+import './index.scss';
 
 // What a saved spell says, below its head (MB.6, M13.21): its intent, categories, a strip of
 // its four facts, its steps in order and its note. The recipe page and the grimoire's Quick

@@ -8,6 +8,7 @@ import type { ModalHeading } from '../Modal/types';
 import Notice from '../Notice';
 import { SPELL_LOOK_PLACE, UNTITLED_SPELL } from '../SpellCard';
 import type { SpellLookDialogProps } from './types';
+import './index.scss';
 
 // The Quick Look modal a grimoire card's eye opens over the list (M13.21), the spell's twin of
 // the ingredient details modal (M12.5): the spell read in the shared body, the last edit over

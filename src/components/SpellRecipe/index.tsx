@@ -5,7 +5,6 @@ import LinkHint from '../LinkHint';
 import { UNTITLED_SPELL } from '../SpellCard';
 import SpellRecipeBody from './body';
 import type { SpellRecipeProps } from './types';
-import './index.scss';
 
 // A saved spell as a page (MB.6): what it is for, its four facts, then its steps in
 // order, then its note (those are `SpellRecipeBody`, which the Quick Look modal draws too, M13.21). Read-only: Edit is the `action` slot's, for a role that may update
