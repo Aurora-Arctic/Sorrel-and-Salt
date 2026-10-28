@@ -81,6 +81,12 @@ export function SpellSteps({ workspaceId }: { workspaceId: string }): ReactEleme
 
   return (
     <section className="spell-steps" ref={root}>
+      <div className="spell-steps__add">
+        <StepPicker workspaceId={workspaceId} taken={taken} oneOffs={oneOffs} onAdd={add} />
+        <button type="button" className="btn btn--small spell-steps__add-step" onClick={addStep}>
+          Add a Step
+        </button>
+      </div>
       <SortableSteps ids={fields.map((field) => field.id)} names={names} onMove={move}>
         {fields.map((field, index) => (
           <BuilderStepRow
@@ -93,10 +99,6 @@ export function SpellSteps({ workspaceId }: { workspaceId: string }): ReactEleme
         ))}
       </SortableSteps>
       <LiveRegion id={regionId} announcement={announcement} />
-      <button type="button" className="btn btn--small spell-steps__add-step" onClick={addStep}>
-        Add a Step
-      </button>
-      <StepPicker workspaceId={workspaceId} taken={taken} oneOffs={oneOffs} onAdd={add} />
       {/* h4: the jar sits in the builder's Jar section, whose heading is an h3. */}
       <h4 className="spell-steps__heading" id={derivedId}>
         Derived Categories

@@ -294,7 +294,7 @@ if the read fails, an error in its place.
   and the step's name, below), then the form's icon and the name with its
   form, a Quantity and a Unit, an Instruction beneath, and Remove. An
   instruction-only step has the handle and its Instruction alone.
-- **Add a Step** (M13.3) is a button beside Add to Jar that appends an
+- **Add a Step** (M13.3) is a button on the line with Add to Jar, after it and above the list, that appends an
   instruction-only step and puts the focus in its Instruction field. Until
   something is written the step is named "New Instruction" where it is read
   out. The Instruction field is a two-row text area; its placeholder is
@@ -420,8 +420,14 @@ No wrapper: the `<form className="form">` sits straight in the body of a
 `RouteModal` at the default column, Add Ingredient's (`size="wide"` until
 2026-10-28), its sections styled by `CollapsibleSection` ([`modal.md`](modal.md)),
 which scrolls the form when it is taller than the screen. `index.scss` holds the
-visibility switch's alignment (M10.13) and the step handle (M10.16), unboxed as
-the combobox's chip handle is. Its look past the tokens is the grimoire's design review's.
+visibility switch's alignment (M10.13) and the jar's list (the owner's pass,
+2026-10-28): the handle unboxed in `$text-muted` with the shared focus ring; the
+lifted step (`.spell-step.is-dragging`) in `$shadow-lifted` with an `$accent`
+border while the other rows stay as they are; the section a size container
+(`container-type: inline-size`) so that a step row stacks by the width it is
+given; the picker and Add a Step on one line (`.spell-steps__add`) above the
+list; and the list a column spaced by its `gap` alone, with no margin on a row
+and no room taken while empty. The row's own look is `StepRow`'s. Its look past the tokens is the grimoire's design review's.
 
 ## Stories
 

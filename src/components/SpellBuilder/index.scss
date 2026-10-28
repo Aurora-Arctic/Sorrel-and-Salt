@@ -16,11 +16,12 @@
 
 // A step's handle (M10.16): the grip it is moved by, a button unboxed as the
 // combobox's chip handle is. `touch-action` is dnd-kit's ask, so that a drag
-// by touch moves the step rather than the page. Laid out no further until the
-// section's design review.
+// by touch moves the step rather than the page. Muted, as a grip is a
+// means to move a step and not the step itself (the owner's pass, 2026-10-28).
 .spell-step__handle {
   @include button-reset(grab);
 
+  color: $text-muted;
   display: inline-flex;
   align-items: center;
   border-radius: radius('sharp');
@@ -35,10 +36,51 @@
   }
 }
 
-// The step being moved stays above the rows it passes.
+// The step being moved is lifted off the list: a deeper shadow and the accent
+// on its edge. The rows it passes are not restyled; dnd-kit slides them aside.
+// Only the border's colour is set here, the row owns its width.
 .spell-step.is-dragging {
   position: relative;
   z-index: 1;
+  border-color: $accent;
+  box-shadow: $shadow-lifted;
+}
+
+// The jar's list and what surrounds it (the owner's pass, 2026-10-28): one
+// column, spaced by its gap alone, so a row carries no margin of its own. The
+// section is a size container so that a step row can stack at the narrow
+// column by the width it is given and not the screen's.
+.spell-steps {
+  display: flex;
+  flex-direction: column;
+  align-items: stretch;
+  gap: space(4);
+  container-type: inline-size;
+}
+
+// The picker and Add a Step on one line above the list, both against its left
+// edge and the tops level; on a narrow column Add a Step wraps beneath.
+.spell-steps__add {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-start;
+  gap: space(3);
+}
+
+// The steps themselves: unnumbered, unindented, a gap between them.
+.spell-steps__list {
+  display: flex;
+  flex-direction: column;
+  gap: space(3);
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+// An empty list takes no room, so the controls above are not left with a gap
+// above a blank.
+.spell-steps__list:empty {
+  display: none;
 }
 
 // The comparison panel (M10.17): the two levels of the second list are told
