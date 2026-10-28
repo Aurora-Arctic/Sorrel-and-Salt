@@ -123,10 +123,10 @@ refusal's words, which explain the rule and name Delete, show in the
 ## Draft and complete
 
 Whether the spell is finished (M10.20, story 55): `SpellStatusField`, in
-`status-field.tsx`, drawn in the Notes section before the visibility switch.
+`status-field.tsx`, drawn in the form's action row (`FormActions`) beside Save Spell, outside every section.
 A spell is a `draft` until it is marked `complete`. The control is one
 button that says what it will do: Mark Complete on a draft, Reopen as Draft on
-a complete spell, with a line above it saying what the state means. Like Share
+a complete spell, with a line saying what the state means, visually hidden and read as the button's description. Like Share
 With the Coven, a click saves the whole form with the other status at once, so
 the status is never a pick left pending.
 

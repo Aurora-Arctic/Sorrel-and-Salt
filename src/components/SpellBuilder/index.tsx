@@ -576,7 +576,6 @@ const SpellBuilder = ({
                   placeholder="Add a note"
                   multiline
                 />
-                <SpellStatusField save={send} />
                 <SpellVisibilityField created={saved !== null} save={send} />
               </>,
             )}
@@ -585,7 +584,9 @@ const SpellBuilder = ({
             noun="Spell"
             dirty={dirty && !unitRefused && jarReady}
             submitting={isSubmitting}
-          />
+          >
+            <SpellStatusField save={send} />
+          </FormActions>
         </form>
       </FormHistoryContext.Provider>
     </FormProvider>
