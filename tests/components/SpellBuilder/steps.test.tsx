@@ -421,7 +421,11 @@ describe('the spell builder’s Add to Jar', () => {
     for (const label of row.querySelectorAll('label, p, section')) {
       if (label.closest('.step-row__open')) fireEvent.click(label);
     }
+    // The row's blank gaps and its marks are not the header text either.
+    fireEvent.click(row);
     open();
+    fireEvent.click(within(row).getByText(/Fixture Rosewort/, { selector: 'p' }));
+    expect(pencil()).toHaveAttribute('aria-expanded', 'false');
   });
 
   it('refuses a unit the coven’s jar cannot be measured in, beside the unit, and holds Save', async () => {

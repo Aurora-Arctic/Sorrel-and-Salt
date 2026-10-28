@@ -15,14 +15,18 @@ const amountOf = (quantity?: string | null, unit?: string | null): string | null
 /**
  * A click on the card's plain face toggles it, as a mouse shortcut for the pencil (which stays the
  * keyboard and screen-reader control, so the row gets no role or tab stop). Clicks on a control, or
- * anywhere in the open fields, are left to themselves.
+ * anywhere in the open fields, are left to themselves; an open card closes only from its header text.
  */
-function toggleFromFace(event: MouseEvent<HTMLLIElement>, toggle: () => void): void {
+function toggleFromFace(event: MouseEvent<HTMLLIElement>, open: boolean, toggle: () => void): void {
   const target = event.target as Element;
   // React bubbles a portal's clicks (a Unit listbox) to the row though the DOM does not: not the face.
   if (!event.currentTarget.contains(target)) return;
+  // A target a click just removed (a picked list row) is no longer anywhere in the card.
+  if (!target.isConnected) return;
   if (target.closest('button, input, textarea, select, a, [role=combobox], .step-row__open'))
     return;
+  // Open, only the header's own text closes it: nothing near the fields ever does.
+  if (open && !target.closest('.step-row__name, .step-row__summary, .step-row__position')) return;
   toggle();
 }
 
@@ -100,7 +104,7 @@ export default function StepRow({
         ref={rowRef}
         className={className_}
         style={style}
-        onClick={onToggle && ((event) => toggleFromFace(event, onToggle))}
+        onClick={onToggle && ((event) => toggleFromFace(event, open, onToggle))}
       >
         {identity}
         {!open && summary && <p className="step-row__summary">{summary}</p>}
