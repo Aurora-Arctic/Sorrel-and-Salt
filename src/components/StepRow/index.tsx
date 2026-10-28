@@ -1,4 +1,4 @@
-import type { ReactElement } from 'react';
+import type { MouseEvent, ReactElement } from 'react';
 import FormIcon from '../FormIcon';
 import './index.scss';
 import type { StepRowProps } from './types';
@@ -11,6 +11,18 @@ import type { StepRowProps } from './types';
 /** The amount and unit as one phrase, "2 tsp", or null where there is neither. */
 const amountOf = (quantity?: string | null, unit?: string | null): string | null =>
   [quantity, unit].filter(Boolean).join(' ') || null;
+
+/**
+ * A click on the card's plain face toggles it, as a mouse shortcut for the pencil (which stays the
+ * keyboard and screen-reader control, so the row gets no role or tab stop). Clicks on a control, or
+ * anywhere in the open fields, are left to themselves.
+ */
+function toggleFromFace(event: MouseEvent<HTMLLIElement>, toggle: () => void): void {
+  const target = event.target as Element;
+  if (target.closest('button, input, textarea, select, a, [role=combobox], .step-row__open'))
+    return;
+  toggle();
+}
 
 export default function StepRow({
   position,
@@ -26,6 +38,7 @@ export default function StepRow({
   summary,
   badge,
   edit,
+  onToggle,
   aside,
   handle,
   formField,
@@ -81,7 +94,12 @@ export default function StepRow({
   }
   if (collapsible) {
     return (
-      <li ref={rowRef} className={className_} style={style}>
+      <li
+        ref={rowRef}
+        className={className_}
+        style={style}
+        onClick={onToggle && ((event) => toggleFromFace(event, onToggle))}
+      >
         {identity}
         {!open && summary && <p className="step-row__summary">{summary}</p>}
         <div className="step-row__marks">

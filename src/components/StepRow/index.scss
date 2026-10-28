@@ -128,6 +128,11 @@ $step-line: type-size('body') * 1.65;
 // on the first line (the handle, the marks, the pencil and Remove) takes this one drop.
 $step-ink-drop: 0.05rem;
 
+// A closed ingredient row opens on a click anywhere on its face (the pencil still does too).
+.step-row.step-row--card.step-row--closed:not(.step-row--instruction) {
+  cursor: pointer;
+}
+
 .step-row.step-row--card {
   &.step-row--closed,
   &.step-row--open {

@@ -30,6 +30,8 @@ export interface StepRowProps {
   summary?: ReactNode;
   /** A small badge straight after the name, such as One-Off. */
   badge?: ReactNode;
+  /** A click on the card's own face (not a control or an open field) toggles it; the pencil stays the accessible toggle. */
+  onToggle?: () => void;
   /** The pencil that opens the row. */
   edit?: ReactNode;
   /** A line in the open fields beneath the note, such as what a one-off means. */
