@@ -516,24 +516,30 @@ const SpellBuilder = ({
             {section(
               'Purpose',
               <>
-                <div className="spell-field-cap">
-                  <TextField<SpellBuilderValues>
-                    name="title"
-                    label="Title"
-                    placeholder="Add a title"
-                    autoComplete="off"
-                  />
+                <div className="spell-purpose">
+                  <div className="spell-purpose__columns">
+                    <div className="spell-purpose__text">
+                      <div className="spell-field-cap">
+                        <TextField<SpellBuilderValues>
+                          name="title"
+                          label="Title"
+                          placeholder="Add a title"
+                          autoComplete="off"
+                        />
+                      </div>
+                      <div className="spell-field-cap">
+                        <TextField<SpellBuilderValues>
+                          name="intent"
+                          label="Intent"
+                          placeholder="Add an intent"
+                          multiline
+                          rows={3}
+                        />
+                      </div>
+                    </div>
+                    <SpellCategoriesField />
+                  </div>
                 </div>
-                <div className="spell-field-cap">
-                  <TextField<SpellBuilderValues>
-                    name="intent"
-                    label="Intent"
-                    placeholder="Add an intent"
-                    multiline
-                    rows={3}
-                  />
-                </div>
-                <SpellCategoriesField />
               </>,
             )}
             {section(

@@ -22,6 +22,31 @@
   max-inline-size: $narrow-column;
 }
 
+// The Purpose section's two columns: Title and Intent at the left, capped as above, and
+// Categories at the right, top-aligned with Title. The section's own width is the container
+// (not the screen's), so the pair stacks (Title, Intent, Categories) when the dialog is too
+// narrow for both. The right column needs 18rem to be usable, beside the cap and the gap.
+// `minmax(0, ...)` on each track lets a long chip row shrink rather than push the dialog wider.
+.spell-purpose {
+  container: spell-purpose / inline-size;
+}
+
+.spell-purpose__columns,
+.spell-purpose__text {
+  display: flex;
+  flex-direction: column;
+  gap: space(5);
+  min-width: 0;
+}
+
+@container spell-purpose (min-width: #{$narrow-column + space(5) + 18rem}) {
+  .spell-purpose__columns {
+    display: grid;
+    grid-template-columns: minmax(0, $narrow-column) minmax(0, 1fr);
+    align-items: start;
+  }
+}
+
 // A step's handle (M10.16): the grip it is moved by, a button unboxed as the
 // combobox's chip handle is. `touch-action` is dnd-kit's ask, so that a drag
 // by touch moves the step rather than the page. Muted, as a grip is a

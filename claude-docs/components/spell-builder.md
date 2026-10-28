@@ -435,6 +435,7 @@ No wrapper: the `<form className="form">` sits straight in the body of a `RouteM
 visibility switch's alignment (M10.13) and the Jar section (the owner's design pass, 2026-10-28):
 
 - a single text field (Title, Intent, Moon Phase, Day of the Week, Note) is wrapped in `.spell-field-cap`, which stops it at `$narrow-column` (28rem), left-aligned, and lets it fill the dialog below that. `$narrow-column` is the variables file's "forms' column", the width of a form's line; Add Ingredient's fields fill the default dialog column (`$dialog-column`, 32rem), which is not named as a field standard. Only the Jar section keeps the full 55rem;
+- the Purpose section is two columns (the owner's call, 2026-10-28): Title and Intent at the left, each still capped by `.spell-field-cap`, and Categories at the right, top-aligned with Title. `.spell-purpose` is a size container (`spell-purpose`), so the columns stack (Title, Intent, Categories) by the dialog's own width, never the screen's, once it is under `$narrow-column` + the gap + 18rem. Both tracks are `minmax(0, …)`, so a long chip row wraps rather than widens the dialog;
 - the section is a container (`spell-jar`): a two-column row, the list at least 28rem and the
   aside 21rem, stacking below 50rem;
 - the handle unboxed in `$text-muted`, with the shared focus ring;
