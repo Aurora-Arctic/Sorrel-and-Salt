@@ -122,43 +122,43 @@ const NARROWING_REFUSED =
 const COMPLETE: SpellBuilderSpell = { ...SPELL, status: 'complete' };
 
 describe('SpellBuilder visibility', () => {
-  it('opens a new spell shared with the coven, saying what each state means', () => {
+  it('opens a new spell private, saying what each state means', () => {
     renderBuilder();
-
-    expect(toggle()).toBeChecked();
-    expect(toggle()).toBeEnabled();
-    expect(toggle()).toHaveAccessibleDescription(/every member/i);
-
-    fireEvent.click(toggle());
 
     expect(toggle()).not.toBeChecked();
+    expect(toggle()).toBeEnabled();
     expect(toggle()).toHaveAccessibleDescription(/only you/i);
-  });
-
-  it('creates the spell for the coven when nothing else is chosen', async () => {
-    const calls = acceptCreate();
-    renderBuilder();
-
-    fireEvent.change(title(), { target: { value: 'Fixture Working' } });
-    submit();
-
-    await waitFor(() => expect(calls).toHaveLength(1));
-    expect(calls[0]?.input).toMatchObject({ visibility: 'workspace' });
-  });
-
-  it('creates the spell private when the switch is turned off, and keeps the choice open', async () => {
-    const calls = acceptCreate();
-    renderBuilder();
 
     fireEvent.click(toggle());
+
+    expect(toggle()).toBeChecked();
+    expect(toggle()).toHaveAccessibleDescription(/every member/i);
+  });
+
+  it('creates the spell private when nothing else is chosen', async () => {
+    const calls = acceptCreate();
+    renderBuilder();
+
     fireEvent.change(title(), { target: { value: 'Fixture Working' } });
     submit();
 
     await waitFor(() => expect(calls).toHaveLength(1));
     expect(calls[0]?.input).toMatchObject({ visibility: 'private' });
+  });
+
+  it('creates the spell for the coven when the switch is turned on', async () => {
+    const calls = acceptCreate();
+    renderBuilder();
+
+    fireEvent.click(toggle());
+    fireEvent.change(title(), { target: { value: 'Fixture Working' } });
+    submit();
+
+    await waitFor(() => expect(calls).toHaveLength(1));
+    expect(calls[0]?.input).toMatchObject({ visibility: 'workspace' });
     await waitFor(() => expect(save()).toBeDisabled());
-    // Still private, and still free to be shared.
-    expect(toggle()).not.toBeChecked();
+    // Still a draft, so the switch stays free.
+    expect(toggle()).toBeChecked();
     expect(toggle()).toBeEnabled();
   });
 
@@ -170,7 +170,7 @@ describe('SpellBuilder visibility', () => {
 
     fireEvent.click(toggle());
 
-    expect(toggle()).not.toBeChecked();
+    expect(toggle()).toBeChecked();
     expect(save()).toBeEnabled();
 
     fireEvent.click(toggle());
@@ -225,7 +225,10 @@ describe('SpellBuilder visibility', () => {
       fireEvent.click(toggle());
       fireEvent.click(within(sharing() as HTMLElement).getByRole('button', { name: 'Share' }));
 
-      expect(await screen.findByRole('alert')).toHaveTextContent('Viewers cannot write spells');
+      expect(await screen.findByText('Viewers cannot write spells')).toHaveAttribute(
+        'role',
+        'alert',
+      );
       await waitFor(() => expect(sharing()).toBeNull());
       expect(toggle()).not.toBeChecked();
       expect(toggle()).toBeEnabled();
@@ -244,8 +247,8 @@ describe('SpellBuilder visibility', () => {
       fireEvent.change(title(), { target: { value: 'Fixture Working Again' } });
       submit();
 
-      const notice = await screen.findByRole('alert');
-      expect(notice).toHaveTextContent(NARROWING_REFUSED);
+      const notice = await screen.findByText(NARROWING_REFUSED);
+      expect(notice).toHaveAttribute('role', 'alert');
       expect(notice).not.toHaveTextContent(/^Forbidden$/);
     });
   });
@@ -264,6 +267,7 @@ describe('SpellBuilder visibility', () => {
       acceptCreate();
       renderBuilder();
 
+      fireEvent.click(toggle());
       fireEvent.change(title(), { target: { value: 'Fixture Working' } });
       submit();
 

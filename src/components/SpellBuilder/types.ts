@@ -46,6 +46,8 @@ export type SpellBuilderSpell = {
   id: string;
   /** The revision it was read at, sent back with the next save as `expectedRevision`. */
   revision: number;
+  /** When the row was last saved, as an ISO time: a browser copy newer than this holds unsaved changes (M13.17). */
+  updatedAt?: string;
   /** Who can see it: its author alone, or the whole coven, which is for good (M10.13). */
   visibility: SpellVisibility;
   /** Draft or complete (M10.20); left out, a draft. */
@@ -60,12 +62,13 @@ export type SpellBuilderSpell = {
 export interface SpellBuilderProps {
   /** The coven the spell is written in. */
   workspaceId: string;
+  /** The signed-in member, whose browser copy of the draft is the one offered back; left out, no copy is kept. */
+  userId?: string;
   /** A saved spell to edit; left out, the builder opens empty and its first save creates one. */
   spell?: SpellBuilderSpell;
   /**
    * Called with the spell the builder's first save created, whichever save
-   * that is: Save now, M13.17's autosave later. Not called when the save is
-   * the one Close asked for, which leaves the builder.
+   * that is: the autosave's, Save's, Close's or Mark Complete's.
    */
   onCreated?: (spell: SpellBuilderSpell) => void;
   /**
@@ -105,6 +108,8 @@ export interface SpellDialogProps {
    * browser's address alone when true, before the server has read it.
    */
   canCreate: boolean;
+  /** The signed-in member; the builder keeps its browser copy of a draft under this id. */
+  userId?: string;
 }
 
 export interface SpellSuggestFieldProps extends Pick<FieldProps, 'label' | 'hint'> {
@@ -121,21 +126,13 @@ export interface SpellSuggestFieldProps extends Pick<FieldProps, 'label' | 'hint
 }
 
 export interface SpellStatusFieldProps {
-  /** Saves the form with the given values, as Save Spell does; it reports a refusal itself. */
-  save: (values: SpellBuilderInput) => Promise<void>;
+  /** Saves everything the form holds now (the autosave's flush); rejects when the save is refused. */
+  flush: () => Promise<void>;
 }
 
 export interface SpellVisibilityFieldProps {
   /** The spell is saved, so its visibility is the saved one's: a draft's moves either way, a complete one's only widens. */
   created: boolean;
-  /** Saves the form with the given values, as Save Spell does; it reports a refusal itself. */
-  save: (values: SpellBuilderInput) => Promise<void>;
-}
-
-/** The builder's save-on-close guard (`useSaveOnClose`), told how each save ended. */
-export interface SaveOnClose {
-  /** A save landed: closes the modal if Close was waiting on it, answering whether it did. */
-  saved: () => boolean;
-  /** A save was refused, or the fields did not pass: the modal stays open. */
-  refused: () => void;
+  /** Saves everything the form holds now (the autosave's flush); rejects when the save is refused. */
+  flush: () => Promise<void>;
 }

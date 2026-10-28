@@ -312,15 +312,9 @@ test(
   },
 );
 
-test.fixme(
+test(
   'a member sees when they are adding something the coven has none of',
-  {
-    tag: '@story-54',
-    annotation: {
-      type: 'fixme',
-      description: 'M10.19 builds the out-of-stock indicator in the spell builder',
-    },
-  },
+  { tag: '@story-54' },
   async ({ page }) => {
     const coven = await seedCoven(page, 'Fixture Coven Fifty-Four', 'story-54.test', {
       A: 'owner',
@@ -329,8 +323,8 @@ test.fixme(
     await signInAgainAs(page, coven.users.B);
     await openBuilder(page, coven.slug);
     // Rosemary is in the compendium and not in this coven's cupboard.
-    const step = await addIngredientStep(page, 'Rosemary');
-    await expect(step.getByText('Out of Stock')).toBeVisible();
+    const step = await addIngredientStep(page, 'Rosemary (Herb)');
+    await expect(step.getByRole('button', { name: 'Out of Stock' })).toBeVisible();
   },
 );
 
@@ -421,7 +415,10 @@ test(
       stepList(page).getByRole('listitem').filter({ hasText: 'Testwort' }),
     ).toBeVisible();
     const save = page.getByRole('button', { name: 'Save' });
-    await save.click();
+    // The autosave may already have saved it by now, so the press is not waited for.
+    await expect(page.getByRole('status').filter({ hasText: /^Draft saved/ })).toBeVisible({
+      timeout: 15_000,
+    });
     await expect(save).toBeDisabled();
     await expect(save).not.toHaveAttribute('aria-busy', 'true');
     // Nowhere else: the coven's ingredients page does not list it.
@@ -584,6 +581,49 @@ test(
     await expect(steps.last()).toContainText('Rosemary');
     await expect(steps.last().getByRole('textbox', { name: 'Instruction' })).toHaveValue(
       'Crush it first',
+    );
+  },
+);
+
+test(
+  'a member’s typing in the spell builder is saved without a press',
+  { tag: '@story-81' },
+  async ({ page }) => {
+    // The offline save retries after 2, 5 and 15 seconds before it says it failed.
+    test.setTimeout(90_000);
+    const coven = await seedCoven(page, 'Fixture Coven Eighty-One', 'story-81.test', {
+      A: 'owner',
+      B: 'member',
+    });
+    await signInAgainAs(page, coven.users.B);
+    await openBuilder(page, coven.slug);
+    // The dialog is renamed to Edit Spell once the first save lands, so it is found by role alone.
+    const dialog = page.getByRole('dialog');
+    await dialog.getByRole('textbox', { name: 'Title' }).fill('Fixture Working');
+    // Nothing is pressed: three seconds after the last change the draft is saved, and the address names it.
+    await expect(dialog.getByRole('status').filter({ hasText: /^Draft saved/ })).toBeVisible({
+      timeout: 15_000,
+    });
+    await expect(page).toHaveURL(/\?edit=[0-9a-f-]{36}$/);
+    await dialog.getByRole('textbox', { name: 'Intent' }).fill('To see clearly');
+    await expect(dialog.getByRole('button', { name: 'Save Spell' })).toBeDisabled({
+      timeout: 15_000,
+    });
+    await page.reload();
+    const reopened = page.getByRole('dialog', { name: 'Edit Spell, Fixture Working' });
+    await reopened.getByRole('button', { name: 'Open All' }).click();
+    await expect(reopened.getByRole('textbox', { name: 'Intent' })).toHaveValue('To see clearly');
+    // Offline, the save fails after its retries and says so; back online, Retry saves it.
+    await reopened.getByRole('textbox', { name: 'Intent' }).fill('To see clearly, offline');
+    await page.context().setOffline(true);
+    await expect(reopened.getByText(/Couldn.t save/)).toBeVisible({ timeout: 45_000 });
+    await page.context().setOffline(false);
+    await reopened.getByRole('button', { name: 'Retry' }).click();
+    await expect(reopened.getByRole('status').filter({ hasText: /^Draft saved/ })).toBeVisible();
+    await page.reload();
+    await page.getByRole('button', { name: 'Open All' }).click();
+    await expect(page.getByRole('textbox', { name: 'Intent' })).toHaveValue(
+      'To see clearly, offline',
     );
   },
 );

@@ -126,7 +126,7 @@ tester.run('long-form-guards-leaving', rules['long-form-guards-leaving'], {
       // hook calls useLeaveGuard for the tab close.
       filename: at('src/components/SpellForm/index.tsx'),
       cwd: REPO_ROOT,
-      code: 'export function SpellForm() { useSaveOnClose(dirty, saving, submit); return <form />; }',
+      code: 'export function SpellForm() { useSaveOnClose(dirty, save); return <form />; }',
     },
   ],
   invalid: [

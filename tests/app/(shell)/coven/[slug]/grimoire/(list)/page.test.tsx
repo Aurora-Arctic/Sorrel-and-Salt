@@ -326,6 +326,9 @@ describe('the spell builder over a Grimoire tab', () => {
     moonPhase: 'Full Moon',
     dayOfWeek: null,
     note: null,
+    visibility: 'private' as const,
+    status: 'draft' as const,
+    updatedAt: EDITED_AT,
   };
 
   function as(role: 'owner' | 'member' | 'viewer') {

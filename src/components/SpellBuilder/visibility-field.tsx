@@ -1,6 +1,7 @@
 'use client';
 
 import { type ReactElement, useState } from 'react';
+import { flushSync } from 'react-dom';
 import { useController, useFormContext, useFormState } from 'react-hook-form';
 import { SwitchField } from '../Field';
 import { ConfirmQuestion } from '../Modal';
@@ -10,13 +11,14 @@ import type { SpellVisibility } from '@/modules/grimoire';
 // Who can see a spell (M10.13): its author alone, or every member of the coven.
 // A switch, Share With the Coven, on for the coven and off for private (the owner's
 // call, 2026-10-27), with a line under it saying what its state means. A new spell
-// takes either, and the choice goes out with its first save. A draft moves either
-// way, as often as wanted, with no question (M10.20): sharing it is reversible. A
-// complete spell obeys DESIGN.md §5's one-way rule, held by the service: a private
-// one is shared by switching it on, which asks first and then saves at once, so
-// that one action with its confirmation shares it; a shared one never goes back, so
-// the control then reads only and says so, rather than leave a person to find out
-// from a refusal.
+// starts private (the owner's call, 2026-10-28: the autosave would otherwise share
+// it 3 s after the first keystroke), and takes either, and the choice goes out with
+// its first save. A draft moves either way, as often as wanted, with no question
+// (M10.20): sharing it is reversible. A complete spell obeys DESIGN.md §5's one-way
+// rule, held by the service: a private one is shared by switching it on, which asks
+// first and then saves at once, so that one action with its confirmation shares it;
+// a shared one never goes back, so the control then reads only and says so, rather
+// than leave a person to find out from a refusal.
 // claude-docs/components/spell-builder.md, "Visibility".
 
 /** What each state means, said under the switch. */
@@ -29,12 +31,8 @@ const MEANS = {
 const SHARED_FOR_GOOD =
   'Shared with the coven, so it cannot be made private again. Duplicate makes a private copy.';
 
-export function SpellVisibilityField({ created, save }: SpellVisibilityFieldProps): ReactElement {
-  const { control, handleSubmit } = useFormContext<
-    SpellBuilderValues,
-    unknown,
-    SpellBuilderInput
-  >();
+export function SpellVisibilityField({ created, flush }: SpellVisibilityFieldProps): ReactElement {
+  const { control, setValue } = useFormContext<SpellBuilderValues, unknown, SpellBuilderInput>();
   const { defaultValues } = useFormState({ control });
   const { field } = useController({ control, name: 'visibility' });
   const [asking, setAsking] = useState(false);
@@ -56,8 +54,11 @@ export function SpellVisibilityField({ created, save }: SpellVisibilityFieldProp
   // a refusal lands in the builder's notice and the spell stays private.
   const share = async () => {
     setSharing(true);
+    flushSync(() => setValue('visibility', 'workspace'));
     try {
-      await handleSubmit((values) => save({ ...values, visibility: 'workspace' }))();
+      await flush();
+    } catch {
+      setValue('visibility', 'private');
     } finally {
       setSharing(false);
       setAsking(false);
