@@ -2,7 +2,10 @@
 
 import { formLabel } from '@/modules/ingredients/validation/form-label';
 
-import { type ReactElement, useId, useMemo, useState } from 'react';
+import { Fragment, type ReactElement, type ReactNode, useId, useMemo, useState } from 'react';
+import { chipColors } from '../../../lib/chip-colors';
+import type { GroupColors } from '../../../lib/types';
+import { useCategoryColors } from '../category-colors';
 import type { SpellIngredientSuggestionsQuery } from '../../../gql/graphql';
 import type { FormGroupIcon } from '@/modules/vocabulary/schema/form-group-icons';
 import Combobox from '../../Combobox';
@@ -32,11 +35,38 @@ const ONE_OFF_TAKEN = 'This ingredient is already in the jar';
 /** A one-off's name as the jar compares it: case and outer spaces aside. */
 export const oneOffKey = (name: string): string => name.trim().toLocaleLowerCase();
 
-const categoryNames = (categories: readonly { name: string }[]): string | undefined =>
-  categories.length > 0 ? categories.map(({ name }) => name).join(' · ') : undefined;
+/**
+ * The categories as small print on a row: each in its group's chip colours, as CategoryChips
+ * draws them, plain text until the colours land or for a category without a group. The words
+ * and the " · " between them are the same either way, so the row's name does not change.
+ */
+const categoryNames = (
+  categories: readonly { id: string; name: string }[],
+  colors: ReadonlyMap<string, GroupColors>,
+): ReactNode => {
+  if (categories.length === 0) return undefined;
+  return categories.map(({ id, name }, index) => {
+    const pair = colors.get(id);
+    return (
+      <Fragment key={id}>
+        {index > 0 && ' · '}
+        {pair ? (
+          <span className="chip" style={chipColors(pair)}>
+            {name}
+          </span>
+        ) : (
+          name
+        )}
+      </Fragment>
+    );
+  });
+};
 
 /** Every live form of every live ingredient found, under the heading of where it came from. */
-function pickRows(data: SpellIngredientSuggestionsQuery): IngredientPickOption[] {
+function pickRows(
+  data: SpellIngredientSuggestionsQuery,
+  colors: ReadonlyMap<string, GroupColors>,
+): IngredientPickOption[] {
   return data.ingredientSuggestions.edges.flatMap(({ group, node }) =>
     // A retired entry is kept where a spell lays it, never added anew.
     node.retired
@@ -51,6 +81,7 @@ function pickRows(data: SpellIngredientSuggestionsQuery): IngredientPickOption[]
             // The form's categories, else the ingredient's, as small print on that line.
             meta: categoryNames(
               variant.categories.length > 0 ? variant.categories : node.categories,
+              colors,
             ),
             heading: group === 'yours' ? YOUR_INGREDIENTS : COMPENDIUM_HEADING,
             key: variant.id,
@@ -81,12 +112,17 @@ export function StepPicker({ workspaceId, oneOffs, onAdd }: StepPickerProps): Re
   const [text, setText] = useState('');
   const [active, setActive] = useState(false);
   const [refused, setRefused] = useState(false);
+  const colors = useCategoryColors();
+  const shape = useMemo(
+    () => (data: SpellIngredientSuggestionsQuery) => pickRows(data, colors),
+    [colors],
+  );
   const suggestions = useLookup(
     SpellIngredientSuggestionsDocument,
     { workspaceId },
     text,
     active,
-    pickRows,
+    shape,
   );
 
   const typed = text.trim();
