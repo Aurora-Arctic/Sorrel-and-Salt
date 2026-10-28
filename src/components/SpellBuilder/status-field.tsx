@@ -61,10 +61,15 @@ export function SpellStatusField({ save }: SpellStatusFieldProps): ReactElement 
     }
   };
 
+  // The state line is read, not drawn: a button row has no room for a sentence.
   return (
-    <div className="spell-status">
-      <p id="spell-status-says">{state.says}</p>
+    <>
+      <span id="spell-status-says" className="visually-hidden">
+        {state.says}
+      </span>
       <BusyButton
+        type="button"
+        className="btn btn--quiet"
         busy={busy}
         busyLabel={state.busy}
         aria-describedby="spell-status-says"
@@ -72,6 +77,6 @@ export function SpellStatusField({ save }: SpellStatusFieldProps): ReactElement 
       >
         {state.action}
       </BusyButton>
-    </div>
+    </>
   );
 }

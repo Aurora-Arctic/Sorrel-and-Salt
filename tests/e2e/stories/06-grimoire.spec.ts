@@ -352,7 +352,6 @@ test('a member saves a spell as a draft', { tag: '@story-55' }, async ({ page })
   // Marking it complete is explicit, and reversible.
   await page.goto(draft);
   const edit = page.getByRole('dialog', { name: 'Edit Spell, Fixture Working' });
-  await edit.getByRole('button', { name: 'Open All' }).click();
   await edit.getByRole('button', { name: 'Mark Complete' }).click();
   await expect(edit.getByRole('button', { name: 'Reopen as Draft' })).toBeVisible();
   await edit.getByRole('button', { name: 'Reopen as Draft' }).click();

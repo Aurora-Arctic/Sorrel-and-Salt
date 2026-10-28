@@ -95,39 +95,42 @@ off is private (`private`), which only its author can. A line under the
 switch, its `note`, says what the state it is in means. The switch stands at the start of its column, its label and note too, as the
 ingredient form's Toxic switch does, rather than centred as in a filter bar
 (`index.scss`, on the form's `spell-builder` class).
-The rule it follows is DESIGN.md §5's: visibility only widens.
+The rule it follows is DESIGN.md §5's: a complete spell's visibility only widens, and a draft's moves either way (M10.20, [`m10.20-draft-visibility.md`](../design-decisions/m10.20-draft-visibility.md)).
 
 - **A new spell** opens with the switch on, the coven being the database's
   default, and it may be turned either way. The choice goes out with the first save. A choice alone is
   something to save (the owner's call, 2026-10-27): a visibility other than
   the last save's makes the form dirty, so Save Spell enables, Close saves
   it, and the browser asks before the tab closes.
-- **A saved private spell** keeps the switch open. Turning it on asks
+- **A saved draft** keeps the switch open both ways, with no question: sharing
+  it is reversible. Shared, its note says "Every member of the coven can see it.
+  Once the spell is complete, it stays shared." The change is saved with the rest.
+- **A saved complete private spell** keeps the switch open. Turning it on asks
   "Share With the Coven?" (`ConfirmQuestion`, Share or Keep It Private), and
   Share saves the whole form with `visibility: workspace` at once, so the
   spell is shared in one action. Any other unsaved changes go with it, which
   the question says. A refusal lands in the `Notice` and the spell stays
   private.
-- **A spell shared with the coven** shows the switch on and disabled, with
+- **A complete spell shared with the coven** shows the switch on and disabled, with
   the note: "Shared with the coven, so it cannot be made private again.
   Duplicate makes a private copy." Duplicate is M13.20. A new spell saved for
-  the coven shuts the control the same way, as soon as the save answers.
+  the coven stays open, being a draft; marking it complete shuts it.
 
-Which state shows is read from the form's starting values (the last save's)
-and whether the spell has been created, so the builder passes only
+Which state shows is read from the form's starting values (the last save's,
+status and visibility) and whether the spell has been created, so the builder passes only
 `created` and its `send`. Every save carries the visibility the form holds.
 A save from a stale page, after the spell was shared elsewhere, therefore
-says `private` and is refused by the service (`assertWidens`, M10.6); the
+says `private` and, if it is complete, is refused by the service (`assertWidens`, M10.6); the
 refusal's words, which explain the rule and name Delete, show in the
 `Notice`, never a bare "Forbidden".
 
 ## Draft and complete
 
 Whether the spell is finished (M10.20, story 55): `SpellStatusField`, in
-`status-field.tsx`, drawn in the Notes section before the visibility switch.
+`status-field.tsx`, drawn in the form's action row (`FormActions`) beside Save Spell, outside every section.
 A spell is a `draft` until it is marked `complete`. The control is one
 button that says what it will do: Mark Complete on a draft, Reopen as Draft on
-a complete spell, with a line above it saying what the state means. Like Share
+a complete spell, with a line saying what the state means, visually hidden and read as the button's description. Like Share
 With the Coven, a click saves the whole form with the other status at once, so
 the status is never a pick left pending.
 

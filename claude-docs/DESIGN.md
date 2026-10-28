@@ -491,7 +491,7 @@ A stock row is of one form: `variantId` is `NOT NULL`, since a jar of Rosemary h
 
 **Visibility.** A `workspace` spell is readable by every member, viewers included. A `private` spell is readable only by its author — against owners too. Owners and members create and edit; viewers create and edit nothing, including private spells.
 
-**The transition is one-way:** `private` may be widened to `workspace`, and `workspace` may never be narrowed back to `private`. Once a spell is part of the shared grimoire the others have read it and may have built on it; hiding it afterwards would retract something they were relying on. Widening is a gift, narrowing is a retraction, so only one is allowed. Enforced in the service and asserted by test (§8, §11), not merely absent from the UI. This rule governs visibility, not existence — a shared spell can still be deleted.
+**The transition is one-way once a spell is complete:** a `draft` may be shared and made private again as often as its author likes (M10.20, [`m10.20-draft-visibility.md`](design-decisions/m10.20-draft-visibility.md)). A `complete` spell may be widened from `private` to `workspace`, and may never be narrowed back to `private`; the rule reads the status the row holds before the write, so the save that completes a shared draft starts the lock. Once a finished spell is part of the shared grimoire the others have read it and may have built on it; hiding it afterwards would retract something they were relying on. Widening is a gift, narrowing is a retraction, so only one is allowed. Enforced in the service and asserted by test (§8, §11), not merely absent from the UI. This rule governs visibility, not existence — a shared spell can still be deleted.
 
 **`spell_steps`** — `id`, `spellId`, `position`, `body` (nullable), `ingredientId` (nullable), `variantId` (nullable, MB.215), `name`, `form`, `quantity`, `unit`, `note`, + audit. A spell's recipe is one ordered list of steps, and a step is an instruction (`body`), an ingredient laid in the jar (a layer), or both (story 80, M13.1). Soft-deleted, unlike the other two join tables (MB.110), and so keyed on a surrogate `id`: a removed step's tombstone must not go on holding its place, so `(spellId, position)` is a partial unique index over live rows instead. (`note` here is a short free-text line on one ingredient's role in the jar, unrelated to the deferred notes subsystem.) The table was `spell_ingredients` until M13.1 renamed it; until M13.9 a view under the old name serves the deploy before, and the table keeps `layerOrder`, the old name of `position`, which the code writes as well. `position` stays nullable until then, because that deploy writes `layer_order` alone ([`m13.1-spell-steps.md`](design-decisions/m13.1-spell-steps.md)).
 
@@ -1526,7 +1526,7 @@ Stories 35–46 covered the three-tier experience-notes system. They move to v2 
 
 81. As a coven member, I want nothing I type into a spell to be lost, so that I can build it over several sittings and devices. A spell saves to its own row as it is typed, 3 seconds after the last change and at most 30 seconds apart, on a draft and on a complete spell alike, and the person is warned before closing the tab or following a link with a change not yet saved (M13.14 extends story 32 to every long form). A save names the revision it read; if someone else saved first, the builder offers Reload Latest or Keep My Version. While the builder is open it checks the spell every 10 seconds: fields the person has not touched update by themselves, and another member whose save is under 2 minutes old is shown as editing.
 
-Keeping a spell `private` while building it, and the one-way widen to `workspace`, are governed by §5's visibility rule rather than a numbered story.
+Keeping a spell `private` while building it, and the one-way widen of a complete spell to `workspace`, are governed by §5's visibility rule rather than a numbered story.
 
 ---
 
@@ -1619,7 +1619,7 @@ Story coverage is tracked separately from the 80% line threshold, because they m
 - `unitConvert()` — lives in the ingredients module, `src/modules/ingredients/units/convert.ts`, built from `schema/units.ts` and reaching no database code, not in `src/lib/`; within a single dimension only: weight↔weight, volume↔volume, to a defined precision. Weight↔volume and anything involving count are refused as an explicit result the caller must handle, never null or a guess. No density table exists anywhere in the codebase
 - `summarizeSpellCategories()` — union and dedupe across ingredients
 - `compareSpellCategories()` — intended-not-present and present-not-intended, both directions
-- `resolveSpellVisibility()` — the read decision and every transition, exhaustively; `private → workspace` permitted, `workspace → private` rejected
+- `resolveSpellVisibility()` — the read decision and every transition, exhaustively; `private → workspace` permitted, `workspace → private` rejected for a complete spell and permitted for a draft
 - Zod schemas for every model
 - `applyAudit()` — correct fields on insert vs update vs soft delete
 
@@ -1641,7 +1641,7 @@ The highest-risk tests in the project.
 
 - A's `private` spell is invisible to B and C, though they share W, and to owners
 - A's `workspace` spell is visible to B and C, invisible to D
-- `private → workspace` is permitted; `workspace → private` is rejected with an explaining error, not a bare Forbidden
+- `private → workspace` is permitted; `workspace → private` is rejected with an explaining error, not a bare Forbidden, once the spell is complete (a draft moves either way, M10.20)
 - D cannot read W's spell by direct id at either visibility
 - A private spell is excluded in SQL, never fetched then filtered in the resolver
 - Seeded spells migrate to `workspace` visibility
