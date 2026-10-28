@@ -9,7 +9,7 @@ import { BuilderStepRow } from './step-row';
 import type { SpellStepValue, SpellStepsValues } from './types';
 import { isInstruction, newInstruction, stepNameOf, warningOf } from './values';
 
-// The jar's steps (M10.15): the box that adds to them, the Add a Step button
+// The jar's steps (M10.15): the box that adds to them, the Add an Instruction button
 // and the list, under the heading What Goes In. The steps are moved by a handle
 // each (M10.16), and an Add or a Remove is said in a live region of its own,
 // as a move is said in dnd-kit's. One step is open at a time, the newest at
@@ -27,7 +27,7 @@ export function SpellSteps({ workspaceId }: { workspaceId: string }): ReactEleme
 
   // Where focus goes once the row it names has been drawn: a new instruction's
   // field, or what is left after a Remove (the row now in that place, else the
-  // Add a Step button).
+  // Add an Instruction button).
   const root = useRef<HTMLElement>(null);
   const focusAfter = useRef<{ index: number; target: 'handle' } | null>(null);
   useEffect(() => {
@@ -148,7 +148,7 @@ export function SpellSteps({ workspaceId }: { workspaceId: string }): ReactEleme
         </h4>
         {steps.length > 0 && <p className="spell-steps__summary">{counts}</p>}
       </div>
-      {/* One grid holds the box, Add a Step and the list: the button follows the box on a
+      {/* One grid holds the box, Add an Instruction and the list: the button follows the box on a
           wide column and is the list's last line on a narrow one, by `order` alone, so it
           is one button, in the one place in the markup. */}
       <div className="spell-steps__body">
@@ -159,7 +159,7 @@ export function SpellSteps({ workspaceId }: { workspaceId: string }): ReactEleme
           <span className="spell-steps__next" aria-hidden="true">
             {fields.length + 1}.
           </span>
-          Add a Step
+          Add an Instruction
         </button>
         <SortableSteps ids={fields.map((field) => field.id)} names={names} onMove={move}>
           {fields.map((field, index) => (

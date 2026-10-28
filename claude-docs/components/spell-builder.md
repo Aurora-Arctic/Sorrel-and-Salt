@@ -275,7 +275,7 @@ stored as typed: the columns are free text
 
 The Jar section is two columns (owner's design, 2026-10-28, option C2). The left
 column, "What Goes In" (`steps/`), holds a summary line, the one picker, the list of steps and
-Add a Step. The right column is [the Jar aside](#the-jar-aside). The columns sit side by
+Add an Instruction. The right column is [the Jar aside](#the-jar-aside). The columns sit side by
 side once the section is 50rem wide (list at least 28rem, a 1rem gap, the aside 21rem, 20rem of it
 content beside its 1rem of padding and its hairline; the `spell-jar` container query in `index.scss`)
 and stack below it, the list first. A hairline in `$hairline` is the aside's own border: beside
@@ -312,7 +312,7 @@ being read the column is a skeleton, and if the read fails, an error in its plac
   rule is forced open so its error is seen. An open row also closes when a click or tap lands outside it or the focus leaves it; a new step stays open while the focus is in Add to Jar and closes on the next click or focus outside the box and the row. What was typed in a closed row is kept. An instruction-only step is the same
   card: closed, its text itself (a muted "Write the step" when empty) with a pencil ("Edit step N")
   and Remove; open, a text area in place of the text.
-- **Add a Step** (M13.3) is the last item of the left column: a `.btn` on wide, and on narrow the
+- **Add an Instruction** (M13.3) is the last item of the left column: a `.btn` on wide, and on narrow the
   dashed numbered last line of the list. It appends an instruction-only step, opens it and puts the
   focus in its Instruction field. Until something is written the step is named "New Instruction"
   where it is read out. The Instruction field is a two-row text area; its placeholder is
@@ -324,7 +324,7 @@ being read the column is a skeleton, and if the read fails, an error in its plac
   says it, rather than a step that says nothing). A step's `note` is not
   edited here.
 - **After a Remove** the focus goes to the handle of the row now in that place
-  (the one before it for the last), and to Add a Step when the list is empty.
+  (the one before it for the last), and to Add an Instruction when the list is empty.
 - **The starting unit** (story 77): a form the coven keeps a jar of is added with that jar's unit already in the Unit field (`newStep` reads `jarUnit`, which the picker's lookup already returns in `stock`); a form with no jar, or a jar with no unit, starts blank. It is set once, as the step is added, so it never replaces a unit the member has chosen.
 - **The unit rule** (story 77, `unitIssues`) is the service's, from
   `src/modules/grimoire/validation/step-unit.ts`: when the coven holds a jar
@@ -466,7 +466,7 @@ Open Again to look once more after Close.
 
 ## Testing
 
-`tests/components/SpellBuilder/step-text.test.tsx` covers the step text (M13.3): Add a Step with
+`tests/components/SpellBuilder/step-text.test.tsx` covers the step text (M13.3): Add an Instruction with
 its focus and announcement, an instruction-only step sent as its text alone, a blank one refused at its
 field, a saved spell's texts read back and saved by id, a cleared text dropped from an ingredient step,
 and Remove.
