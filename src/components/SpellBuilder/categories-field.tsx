@@ -27,12 +27,8 @@ export function sameCategories(
   return a.size === b.size && [...a].every((id) => b.has(id));
 }
 
-/** The Categories field, on the builder's `categoryIds`. */
-export function SpellCategoriesField(): ReactElement {
-  const { control } = useFormContext<SpellBuilderValues>();
-  const { field } = useController({ control, name: 'categoryIds' });
-  const { errors } = useFormState({ control, name: 'categoryIds' });
-  const errorId = `${useId()}-error`;
+/** Every live category, read once for the field and the builder's shut Purpose line alike. */
+function useCategories() {
   const { data, isPending, isError } = useQuery({
     ...graphqlQuery(CategoriesDocument),
     // A failed read leaves the field saying so; it never takes the builder down.
@@ -42,11 +38,27 @@ export function SpellCategoriesField(): ReactElement {
     () => data?.categories.edges.map(({ node }) => node) ?? [],
     [data],
   );
+  const named = (id: string) => categories.find((category) => category.id === id)?.name ?? id;
+  return { categories, named, isPending, isError };
+}
+
+/** A picked category's name, by its id; none until the categories are read. */
+export function useCategoryName(): (id: string) => string | undefined {
+  const { categories } = useCategories();
+  return (id) => categories.find((category) => category.id === id)?.name;
+}
+
+/** The Categories field, on the builder's `categoryIds`. */
+export function SpellCategoriesField(): ReactElement {
+  const { control } = useFormContext<SpellBuilderValues>();
+  const { field } = useController({ control, name: 'categoryIds' });
+  const { errors } = useFormState({ control, name: 'categoryIds' });
+  const errorId = `${useId()}-error`;
+  const { categories, named, isPending, isError } = useCategories();
   const picked: string[] = field.value;
 
   // An issue on one pick is pathed to its index, as the ids were sent, and
   // names the pick; one on the field is the field's.
-  const named = (id: string) => categories.find((category) => category.id === id)?.name ?? id;
   const issue = get(errors, 'categoryIds');
   const entryIssues: { id: string; message: string }[] = Array.isArray(issue)
     ? issue.flatMap((entry, index) =>

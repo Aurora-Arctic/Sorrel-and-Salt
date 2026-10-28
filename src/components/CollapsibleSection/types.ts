@@ -52,3 +52,12 @@ export interface CollapsibleSectionProps {
   titleId?: string;
   children: ReactNode;
 }
+
+/** Open All / Close All's state, which the form owns with its sections'. */
+export interface FoldAllProps {
+  /** Any section is open: the control reads Close All, else Open All. */
+  anyOpen: boolean;
+  onToggle: () => void;
+  /** Off while the form asks a question over itself, as Undo and Redo are then. */
+  disabled?: boolean;
+}

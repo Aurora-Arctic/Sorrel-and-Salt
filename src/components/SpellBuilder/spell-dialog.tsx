@@ -40,12 +40,19 @@ import type { SpellDialogProps } from './types';
 const withEdit = (closeHref: Route, id: string) =>
   `${closeHref}${closeHref.includes('?') ? '&' : '?'}${new URLSearchParams({ edit: id })}` as Route;
 
-/** The dialog's head for a new spell, shown at once on New Spell's press. */
-export const NEW_SPELL_HEADING: ModalHeading = { title: 'New Spell' };
+/**
+ * The dialog's head for a new spell, headed as Add Ingredient's is (M8.16): the coven it
+ * lands in over the title, and the dialog named by the phrase, "New Spell to Whitethorn Coven".
+ */
+export const newSpellHeading = (covenName: string): ModalHeading => ({
+  title: 'New Spell',
+  destination: covenName,
+});
 
 export default function SpellDialog({
   workspaceId,
   covenSlug,
+  covenName,
   closeHref,
   opened: read,
   canCreate,
@@ -74,11 +81,10 @@ export default function SpellDialog({
   const steps = stepsRead.data?.spell.steps;
   const heading: ModalHeading = spell
     ? { eyebrow: 'Edit Spell', title: spell.title?.trim() || UNTITLED_SPELL }
-    : NEW_SPELL_HEADING;
+    : newSpellHeading(covenName);
   return (
     <RouteModal
       closeHref={closeHref}
-      size="wide"
       content={
         opened && {
           heading,

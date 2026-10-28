@@ -50,6 +50,7 @@ const Page = ({
           <SpellDialog
             workspaceId="fixture-coven"
             covenSlug="fixture-coven"
+            covenName="Fixture Coven"
             closeHref={'/coven/fixture-coven/grimoire' as Route}
             opened={spell ? { spell } : {}}
             canCreate
