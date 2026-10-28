@@ -357,6 +357,16 @@
   }
 }
 
+// Cannot Compare's mark: a button only so the tip can be reached by focus; it does nothing.
+.spell-hold__mark {
+  display: inline-flex;
+  padding: 0;
+  border: 0;
+  background: none;
+  color: inherit;
+  cursor: default;
+}
+
 .spell-hold__icon {
   inline-size: 1em;
   block-size: 1em;

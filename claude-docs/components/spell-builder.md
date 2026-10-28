@@ -353,7 +353,7 @@ and the comparison. The drawing is `JarDrawing` and `pickJarShape` from the jar 
 as the jar shelf draws it: the vessel, and the verdict in words. A one-off reads "one-off, nothing
 to hold", and its small jar is the plain solid empty outline in `$text-muted`, as the aside's own jar is: no dashes and no fade. All four verdicts stand on the name line at its right end, in one place, so the
 name is cut short with an ellipsis before the verdict is; the words line keeps "need … · hold …".
-Out and Low take StockBadge's symbol and colour; Not Enough has a small jar outline with a level part-way up, in Low's ink (`$stock-low-ink`), and Cannot Compare a struck equals sign in `$text-muted`; both drawn as `StockIcon` is and kept in `supply-icon.tsx`, being spell-builder-only (owner's call 2026-10-28). The word stays beside each symbol. `steps/supply-mark.tsx` is used nowhere and was left as it was. All four are worded as in Supply below. With no steps it
+Out and Low take StockBadge's symbol and colour; Not Enough has a small jar outline with a level part-way up, in Low's ink (`$stock-low-ink`), and Cannot Compare a struck equals sign in `$text-muted`, alone, its words in an `IconTip` (the control for an icon-only mark, as `StockTip` uses it) and as the name of the button around it; both drawn as `StockIcon` is and kept in `supply-icon.tsx`, being spell-builder-only (owner's call 2026-10-28). The word stays beside each symbol but Cannot Compare's. `steps/supply-mark.tsx` is used nowhere and was left as it was. All four are worded as in Supply below. With no steps it
 reads that nothing is held yet.
 
 ## The comparison panel

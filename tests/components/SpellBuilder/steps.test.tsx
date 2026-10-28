@@ -712,7 +712,11 @@ describe('the spell builder’s What You Hold', () => {
     });
     chooseUnit(row, 'ml');
 
-    await waitFor(() => expect(line('Fixture Rosewort')).toHaveTextContent('Cannot Compare'));
+    await waitFor(() =>
+      expect(
+        within(line('Fixture Rosewort')).getByRole('button', { name: 'Cannot Compare' }),
+      ).toBeInTheDocument(),
+    );
     expect(line('Fixture Rosewort')).not.toHaveTextContent('Not Enough');
   });
 

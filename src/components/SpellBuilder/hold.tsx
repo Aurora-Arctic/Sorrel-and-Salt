@@ -2,6 +2,7 @@
 
 import type { ReactElement } from 'react';
 import { useFormContext, useWatch } from 'react-hook-form';
+import IconTip from '../IconTip';
 import { JarDrawing, pickJarShape } from '../JarShelf';
 import { StockIcon } from '../StockBadge';
 import { stockState } from '../StockBadge/stock-state';
@@ -15,7 +16,7 @@ import { isInstruction, stepNameOf } from './steps/values';
 // what the step needs against what the coven's jar holds, as `supplyOf` judges it. The
 // verdict is words (Low, Out, Not Enough, Cannot Compare) so no state rests on colour. All four
 // stand at the right end of the name's line, so the name is cut short before they are. Low and
-// Out take StockBadge's colour and symbol; Not Enough has its own jar-level symbol in Low's ink, Cannot Compare a struck equals sign in muted ink (supply-icon.tsx). A step with an instruction only has
+// Out take StockBadge's colour and symbol; Not Enough has its own jar-level symbol in Low's ink. Cannot Compare is that struck equals sign alone (supply-icon.tsx), muted, its words in an IconTip and as the button's name. A step with an instruction only has
 // no line. See claude-docs/components/spell-builder.md, "The aside".
 
 type Verdict = { words: string; state: 'low' | 'out' | null; tone: string };
@@ -64,14 +65,19 @@ function HoldLine({ step, seed }: { step: SpellStepValue; seed: string }): React
         <span className="spell-hold__name">{stepNameOf(step)}</span>
         {verdict && (
           <span className={`spell-hold__verdict is-${verdict.tone}`}>
-            {verdict.state ? (
+            {verdict.words === 'Cannot Compare' ? (
+              // The mark alone, its words in a tip and as the button's name (the owner's call, 2026-10-28).
+              <IconTip tip={verdict.words}>
+                <button type="button" className="spell-hold__mark" aria-label={verdict.words}>
+                  <CannotCompareIcon className="spell-hold__icon" />
+                </button>
+              </IconTip>
+            ) : verdict.state ? (
               <StockIcon out={verdict.state === 'out'} className="spell-hold__icon" />
-            ) : verdict.words === 'Not Enough' ? (
-              <NotEnoughIcon className="spell-hold__icon" />
             ) : (
-              <CannotCompareIcon className="spell-hold__icon" />
+              <NotEnoughIcon className="spell-hold__icon" />
             )}
-            {verdict.words}
+            {verdict.words !== 'Cannot Compare' && verdict.words}
           </span>
         )}
       </span>
