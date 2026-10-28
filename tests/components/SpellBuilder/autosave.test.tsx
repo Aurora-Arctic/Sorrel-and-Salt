@@ -172,6 +172,46 @@ describe('the spell builder’s saves', () => {
     expect(screen.queryByText(/Failed|could not be saved/i)).toBeNull();
   });
 
+  it('holds the autosave back for a saved instruction cleared of its text, and Save then says why', async () => {
+    const { updated } = accept();
+    renderBuilder({
+      spell: {
+        ...SPELL,
+        steps: [
+          {
+            id: '00000000-0000-4000-8000-0000000000a1',
+            name: null,
+            form: null,
+            quantity: null,
+            unit: null,
+            note: null,
+            body: 'Stir three times',
+            ingredient: null,
+            variant: null,
+          },
+        ],
+      },
+    });
+    vi.useFakeTimers({ shouldAdvanceTime: true });
+
+    fireEvent.click(screen.getByRole('button', { name: 'Jar' }));
+    fireEvent.change(screen.getByRole('textbox', { name: /Instruction/ }), {
+      target: { value: '' },
+    });
+    await act(async () => {
+      await vi.advanceTimersByTimeAsync(3100);
+    });
+
+    // Nothing was sent, and nothing is said.
+    expect(updated).toHaveLength(0);
+    expect(screen.queryByText('Write the instruction, or remove it')).toBeNull();
+    expect(screen.queryByText(/Couldn.t save/i)).toBeNull();
+
+    fireEvent.click(save());
+    expect(await screen.findByText('Write the instruction, or remove it')).toBeInTheDocument();
+    expect(updated).toHaveLength(0);
+  });
+
   it('stores a new spell private on its first autosave, with nothing pressed', async () => {
     const { created } = accept();
     renderBuilder();
