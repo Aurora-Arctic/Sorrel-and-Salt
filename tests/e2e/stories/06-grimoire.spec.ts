@@ -293,6 +293,8 @@ test(
     await expect(panel.getByRole('button', { name: 'Prosperity' })).toHaveAccessibleDescription(
       'Assigned to this spell, and nothing in the jar carries it',
     );
+    // The step just added is open, and an open step offers Close in the place of Remove.
+    await page.getByRole('button', { name: /Close Mugwort/ }).click();
     await page.getByRole('button', { name: /Remove Mugwort/ }).click();
     await expect(row('Stray')).toHaveCount(0);
   },

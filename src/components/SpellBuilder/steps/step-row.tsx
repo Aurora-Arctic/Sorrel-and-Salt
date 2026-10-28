@@ -4,7 +4,7 @@ import { useSortable } from '@dnd-kit/sortable';
 import { CSS } from '@dnd-kit/utilities';
 import { type ReactElement, useEffect, useId, useRef } from 'react';
 import { useFormContext, useWatch } from 'react-hook-form';
-import { ClearIcon, GripIcon } from '../../Combobox/icons';
+import { ChevronIcon, ClearIcon, GripIcon } from '../../Combobox/icons';
 import { EditIcon } from '../../IngredientForm/icons';
 import { SelectField, TextField } from '../../Field';
 import SafetyNote, { SafetyMark } from '../../SafetyNote';
@@ -213,15 +213,31 @@ export function BuilderStepRow({
         />
       }
       actions={
-        <button
-          type="button"
-          className="step-row__remove"
-          aria-label={`Remove ${instruction ? name : step.name}`}
-          onClick={onRemove}
-        >
-          {/* The × a variant card's Remove is, so the row keeps its width for the name. */}
-          <ClearIcon />
-        </button>
+        !instruction && open ? (
+          // An open ingredient row's × becomes a chevron that closes it: Remove is for a closed
+          // row, so a row being edited is never deleted by a stray press.
+          <button
+            type="button"
+            className="step-row__close"
+            aria-label={`Close ${step.name}`}
+            onClick={() => {
+              onToggle();
+              edit.current?.focus();
+            }}
+          >
+            <ChevronIcon />
+          </button>
+        ) : (
+          <button
+            type="button"
+            className="step-row__remove"
+            aria-label={`Remove ${instruction ? name : step.name}`}
+            onClick={onRemove}
+          >
+            {/* The × a variant card's Remove is, so the row keeps its width for the name. */}
+            <ClearIcon />
+          </button>
+        )
       }
     />
   );
