@@ -6,7 +6,7 @@ import { GRIMOIRE_PARAMS } from '@/components/GrimoireList/params';
 // are (the search text and the category filter with its match mode), then four facets of its
 // own: moon phase, day of week, visibility and the member who made the spell. Status is the
 // tab's, Spells or Drafts, so the address carries none.
-const EMPTY = { moonPhases: [], daysOfWeek: [], visibilities: [], makers: [] };
+const EMPTY = { moonPhases: [], daysOfWeek: [], visibility: '' as const, makers: [] };
 const MAKER = '00000000-0000-4000-8000-000000000001';
 const PATH = '/coven/test-coven/grimoire';
 const LOOKUPS = { categories: new Map([['protection', 'cat-1']]) };
@@ -21,7 +21,7 @@ describe('the grimoire parameter table', () => {
         'makers',
         'moonPhases',
         'query',
-        'visibilities',
+        'visibility',
       ].sort(),
     );
     for (const key of ['query', 'categories', 'categoryMode'] as const) {
@@ -73,7 +73,7 @@ describe('the grimoire parameter table', () => {
       categoryMode: 'all' as const,
       moonPhases: ['Waxing Crescent'],
       daysOfWeek: ['Friday', 'Monday'],
-      visibilities: ['private' as const],
+      visibility: 'private' as const,
       makers: [MAKER],
     };
     const href = GRIMOIRE_PARAMS.href(PATH, filter);
@@ -99,7 +99,7 @@ describe('the grimoire parameter table', () => {
       visibility: ['public'],
       maker: ['not-an-id', MAKER, MAKER],
     });
-    expect(read.visibilities).toEqual([]);
+    expect(read.visibility).toBe('');
     expect(read.makers).toEqual([MAKER]);
   });
 });

@@ -27,7 +27,7 @@ const List = (props: GrimoireListProps): ReactElement => (
 const PATH = '/coven/fixture-coven/grimoire' as Route;
 const GROUP = { id: 'g1', name: 'Fixture Group', colorDark: '#a0c4ff', colorLight: '#1d3557' };
 
-const OPEN = { moonPhases: [], daysOfWeek: [], visibilities: [], makers: [] };
+const OPEN = { moonPhases: [], daysOfWeek: [], visibility: '' as const, makers: [] };
 
 const props = (over: Partial<GrimoireListProps> = {}): GrimoireListProps => ({
   path: PATH,
@@ -70,7 +70,7 @@ const props = (over: Partial<GrimoireListProps> = {}): GrimoireListProps => ({
     daysOfWeek: [{ value: 'Friday', label: 'Friday', count: 1 }],
     visibilities: [
       { value: 'private', label: 'Private', count: 1 },
-      { value: 'workspace', label: 'Shared with the Coven', count: 1 },
+      { value: 'workspace', label: 'Shared', count: 1 },
     ],
     makers: [{ value: 'u1', label: 'Fixture Member', count: 2 }],
   },
@@ -188,7 +188,8 @@ describe('GrimoireList', () => {
     const form = filterForm('Filter the Grimoire');
     expect(form).toHaveAttribute('action', PATH);
     expect(within(form).getByRole('combobox', { name: 'Title' })).toHaveValue('hearth');
-    expect(sent(form)).toBe('query=hearth');
+    // Any submits an empty value, which the address reads as no filter, as the compendium's Toxic does.
+    expect(sent(form)).toBe('query=hearth&visibility=');
   });
 
   it('applies a category picked in the panel to the tab address, as its slug', async () => {
@@ -244,13 +245,9 @@ describe('GrimoireList', () => {
     const open = () => {
       fireEvent.click(screen.getByRole('button', { name: /^Filters/ }));
     };
-    // Moon Phase, Day of Week and Coven Member type to narrow; Visibility is the select-style box.
+    // Moon Phase, Day of Week and Coven Member type to narrow; Visibility is a chip of radios.
     const show = (field: string) => {
       const box = screen.getByRole('combobox', { name: field });
-      if (field === 'Visibility') {
-        fireEvent.click(box);
-        return;
-      }
       box.focus();
       fireEvent.keyDown(box, { key: 'ArrowDown' });
     };
@@ -288,8 +285,12 @@ describe('GrimoireList', () => {
         </Navigating>,
       );
       open();
-      await pick('Visibility', /^Private/);
       await pick('Coven Member', /^Fixture Member/);
+      fireEvent.click(
+        within(screen.getByRole('group', { name: 'Visibility' })).getByRole('radio', {
+          name: 'Private 1',
+        }),
+      );
       const params = await apply();
       expect(params.getAll('visibility')).toEqual(['private']);
       expect(params.getAll('maker')).toEqual(['u1']);
@@ -307,16 +308,79 @@ describe('GrimoireList', () => {
       expect(screen.queryByRole('option', { name: /^Full/ })).not.toBeInTheDocument();
     });
 
-    it('offers both visibilities and names the shared one for the coven', () => {
+    it('offers Any, Private and Shared with their counts, resting on Any', () => {
       render(
         <Navigating push={router.push}>
           <List {...props()} />
         </Navigating>,
       );
       open();
-      show('Visibility');
-      expect(screen.getByRole('option', { name: /^Private/ })).toBeInTheDocument();
-      expect(screen.getByRole('option', { name: /^Shared with the Coven/ })).toBeInTheDocument();
+      const visibility = within(screen.getByRole('group', { name: 'Visibility' }));
+      expect(visibility.getByRole('radio', { name: 'Any' })).toBeChecked();
+      expect(visibility.getByRole('radio', { name: 'Private 1' })).toBeInTheDocument();
+      expect(visibility.getByRole('radio', { name: 'Shared 1' })).toBeInTheDocument();
+    });
+
+    it('leaves visibility out of the address when Any is chosen again', async () => {
+      render(
+        <Navigating push={router.push}>
+          <List
+            {...props({
+              filter: {
+                query: '',
+                categories: [],
+                categoryMode: 'all',
+                ...OPEN,
+                visibility: 'private',
+              },
+            })}
+          />
+        </Navigating>,
+      );
+      open();
+      fireEvent.click(
+        within(screen.getByRole('group', { name: 'Visibility' })).getByRole('radio', {
+          name: 'Any',
+        }),
+      );
+      const params = await apply();
+      expect(params.has('visibility')).toBe(false);
+    });
+
+    it('rests on Any, disabled, when Private or Shared holds no spell', () => {
+      render(
+        <Navigating push={router.push}>
+          <List
+            {...props({
+              facets: {
+                ...props().facets,
+                visibilities: [
+                  { value: 'private', label: 'Private', count: 0 },
+                  { value: 'workspace', label: 'Shared', count: 2 },
+                ],
+              },
+            })}
+          />
+        </Navigating>,
+      );
+      open();
+      const chip = within(screen.getByRole('group', { name: 'Visibility' })).getByRole('button', {
+        name: /Any/,
+      });
+      expect(chip).toBeDisabled();
+    });
+
+    it('draws the icon of a moon phase beside it in the list', () => {
+      render(
+        <Navigating push={router.push}>
+          <List {...props()} />
+        </Navigating>,
+      );
+      open();
+      show('Moon Phase');
+      expect(
+        screen.getByRole('option', { name: /^Waxing Crescent/ }).querySelector('svg'),
+      ).not.toBeNull();
     });
 
     it('counts the facets in the Filters button and says them in the search sentence', () => {
@@ -329,7 +393,7 @@ describe('GrimoireList', () => {
               categoryMode: 'all',
               moonPhases: ['Waxing Crescent'],
               daysOfWeek: [],
-              visibilities: ['workspace'],
+              visibility: 'workspace',
               makers: ['u1'],
             },
           })}
@@ -337,7 +401,7 @@ describe('GrimoireList', () => {
       );
       expect(screen.getByRole('button', { name: /^Filters.*3/ })).toBeInTheDocument();
       expect(document.body).toHaveTextContent(
-        /in the moon phase Waxing Crescent, that are shared with the coven, made by Fixture Member/,
+        /in the moon phase Waxing Crescent, that are shared, made by Fixture Member/,
       );
     });
 
