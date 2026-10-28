@@ -19,6 +19,7 @@ import MoonPhaseIcon from '../MoonPhaseIcon';
 import Notice from '../Notice';
 import Skeleton from '../Skeleton';
 import { SpellCategoriesField, sameCategories, useCategoryName } from './categories-field';
+import { SpellComparison } from './comparison-panel';
 import { DAYS_OF_THE_WEEK, MOON_PHASES } from './constants';
 import { useSaveOnClose } from './save-on-close';
 import { SpellSteps } from './steps';
@@ -537,6 +538,8 @@ const SpellBuilder = ({
                     <Skeleton shape="line" />
                   </section>
                 )}
+                {/* Intent against the jar's categories (M10.17), after the jar it reads. */}
+                {jarReady && <SpellComparison />}
               </>,
             )}
             {/* The recipe's timing: when to work the spell, not when it was worked,

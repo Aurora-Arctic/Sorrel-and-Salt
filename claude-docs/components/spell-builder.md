@@ -16,7 +16,7 @@ on any other page is sent to that coven's grimoire with a replace
 `?new=spell-<slug>` in the browser, with no server
 request, and the dialog draws the empty builder from the address itself, so
 it opens at its full size at once, with no skeleton before it
-([`modal.md`](modal.md), "A form the browser can draw skips the skeleton"). Its head names the coven the spell lands in, as Add Ingredient's does: the coven's name over the title, and the dialog named "New Spell to Whitethorn Coven" (`ModalHeading.destination`, [`modal.md`](modal.md)); a saved spell's stays "Edit Spell" over its title. Reordering the steps (M10.16), instruction steps (M13.3) and Mark Complete (M10.20) are later tasks that extend it. There is
+([`modal.md`](modal.md), "A form the browser can draw skips the skeleton"). Its head names the coven the spell lands in, as Add Ingredient's does: the coven's name over the title, and the dialog named "New Spell to Whitethorn Coven" (`ModalHeading.destination`, [`modal.md`](modal.md)); a saved spell's stays "Edit Spell" over its title. Reordering the steps (M10.16) is built; instruction steps (M13.3) and Mark Complete (M10.20) are later tasks that extend it. The comparison panel (M10.17) sits in the Jar section, after the steps. There is
 no `instructions` field: the ritual is the spell's steps (M13.1).
 
 ## Props
@@ -305,6 +305,39 @@ if the read fails, an error in its place.
   out from the steps as they stand, so a Remove takes a category off at once.
   These are only ever derived; the categories a spell intends are assigned
   (M10.14), and the two are never mixed (DESIGN.md §5).
+
+## The comparison panel
+
+`comparison-panel.tsx` (M10.17, story 52) sets what the spell intends beside
+what its jar carries, so a mismatch shows while the spell is built. It is an
+`aside` named Intent Against Ingredients, drawn in the Jar section after the steps, its heading an h4 under the section's h3. It reads the
+form's values as they stand, saved or not, so a pick or an ingredient added or
+removed moves it at once. The comparison is M10.8's `compareSpellCategories`
+over M10.7's `summarizeSpellCategories`, run in the browser on the steps'
+categories; a one-off or an instruction brings none.
+
+- **Intended, Not Carried** lists each assigned category that nothing in the
+  jar carries ("Prosperity: nothing in the jar carries it").
+- **Carried, Not Intended** lists each ingredient bringing a category that was
+  not assigned, one item per ingredient and form. It is one list at two
+  levels of emphasis, said in words so that it survives a screen reader. An
+  ingredient that carries nothing intended leads the list, its name in bold,
+  and ends "Carries nothing you intended". One that also carries an intended
+  category follows, in the muted ink, and ends "Also carries <categories>".
+  The words, and the order, are what carry the difference; the bold and the
+  muted ink only follow them. An ingredient with no category at all, or none
+  unintended, brings nothing to list and is not listed.
+- **Matched** reads "Intent and ingredients match." when neither list has an
+  item. With no category assigned, the panel does not list every ingredient as
+  a stray, which would say nothing: it asks for categories first. With nothing
+  assigned and nothing in the jar it reads "Nothing to compare yet."
+
+Placement (decided here, to be confirmed by the owner): an `aside` in the
+form's flow after the jar, not a column of the dialog. The dialog is a single
+column of folding sections like Add Ingredient, and a column beside it would
+set the dialog's layout before the section's design review has. The story
+finds it by its role and name, so moving it to a side column later changes
+styling only.
 
 ## Reordering
 
