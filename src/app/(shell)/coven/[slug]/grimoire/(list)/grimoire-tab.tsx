@@ -88,6 +88,7 @@ export async function grimoireTab({
       <SpellDialog
         workspaceId={workspace.id}
         covenSlug={workspace.slug}
+        covenName={workspace.name}
         closeHref={GRIMOIRE_PARAMS.href(path, filter, { after, before })}
         opened={opened}
         canCreate={canCreate}

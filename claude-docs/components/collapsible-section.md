@@ -5,19 +5,21 @@ disclosure: its heading opens and shuts it, and while it is shut one muted
 line says what it holds (MB.115, the owner's calls on the
 collapsible-sections proposal). It was written for the ingredient form's six
 sections and an open variant's five, and moved out of `IngredientForm` when
-the spell builder's When to Work It took it up (M10.12). What each form puts
+the spell builder took it up (M10.12), whose four sections now follow the
+ingredient form's. What each form puts
 in its sections, and which open when, is that form's doc:
 [`ingredient-form.md`](ingredient-form.md), "Sections", and
 [`spell-builder.md`](spell-builder.md), "The fields".
 
 ## Exports
 
-| Export               | What it is                                                                                                                                                                         |
-| -------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `CollapsibleSection` | The section: a heading at `h3` (or `h4` for a section inside one), its summary line and flag, and its fields                                                                       |
-| `useFoldIds`         | The ids and class a folding block names its parts by. The ingredient form's variant cards use it too, so the two folds are wired alike                                             |
-| `FoldFlag`           | "Has an error to fix", beneath a fold's heading while `shown`, with the id its toggle is described by                                                                              |
-| `SectionFold`        | (`types.ts`) The section's state, `open`, `invalid` and `onToggle`, which the form owns, so Save can open a section holding an error, and Open All / Close All can reach every one |
+| Export               | What it is                                                                                                                                                                                                         |
+| -------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| `CollapsibleSection` | The section: a heading at `h3` (or `h4` for a section inside one), its summary line and flag, and its fields                                                                                                       |
+| `useFoldIds`         | The ids and class a folding block names its parts by. The ingredient form's variant cards use it too, so the two folds are wired alike                                                                             |
+| `FoldAll`            | Open All / Close All for a run of sections: Close All while `anyOpen`, else Open All. In a modal it is portalled into the head, before Undo and Redo; elsewhere it sits above the first section, at the line's end |
+| `FoldFlag`           | "Has an error to fix", beneath a fold's heading while `shown`, with the id its toggle is described by                                                                                                              |
+| `SectionFold`        | (`types.ts`) The section's state, `open`, `invalid` and `onToggle`, which the form owns, so Save can open a section holding an error, and Open All / Close All can reach every one                                 |
 
 ## Props
 
@@ -61,10 +63,9 @@ a card in a card reads as nesting the form does not have. Each heading block
 is `space(3)` deep above and below, its `h3` in the display face at 1.25rem,
 a step under `h4`, the summary in the muted ink at the caption size, weight
 300, and the flag in the error red; open, the fields follow at the form's
-gap, `space(5)` short of the next hairline. The last of a run of sections
-closes with a hairline beneath it, and so does a section followed by a
-field (`:has(+ .field)`), as the spell builder's When to Work It is; a
-browser without `:has` draws no line beneath that one. A variant's last
+gap, `space(5)` short of the next hairline. A form wraps its run of
+sections in `.collapsible-sections`, a column with no gap of its own, and
+the last of the run closes with a hairline beneath it. A variant's last
 section, followed by its Done, has none. The rules are nested under `body`
 to outweigh layout-base's bare `body section` and typography's `body h3`. A
 variant's tighter sections are set in `IngredientForm/index.scss`.

@@ -36,9 +36,13 @@ const field = (name: string) =>
 const save = () => screen.getByRole('button', { name: /^Sav/ });
 const type = (name: string, value: string) => fireEvent.change(field(name), { target: { value } });
 const submit = () => fireEvent.submit(save().closest('form') as HTMLFormElement);
-// When to Work It folds shut until its heading is pressed, its two fields hidden.
-const when = () => screen.getByRole('button', { name: 'When to Work It' });
-const openWhen = () => fireEvent.click(when());
+// The four sections, in order, each folding under its heading as the ingredient
+// form's do: open on a new spell, shut on a saved one.
+const SECTIONS = ['Purpose', 'Jar', 'When to Work It', 'Notes'] as const;
+const section = (name: (typeof SECTIONS)[number]) => screen.getByRole('button', { name });
+const when = () => section('When to Work It');
+// A saved spell opens with every section shut: Open All shows its fields.
+const openAll = () => fireEvent.click(screen.getByRole('button', { name: 'Open All' }));
 
 /** The spell as the server answers a save: every field as sent, at `revision`. */
 function saved(id: string, revision: number, input: CreateSpellMutationVariables['input']) {
@@ -103,7 +107,6 @@ beforeEach(() => {
 describe('SpellBuilder', () => {
   it('opens a new spell with every field empty and none of them required', () => {
     renderBuilder();
-    openWhen();
 
     for (const label of LABELS) {
       expect(field(label)).toHaveValue('');
@@ -159,7 +162,6 @@ describe('SpellBuilder', () => {
     type('Intent', 'To see clearly');
     type('Jar Description', '4 oz');
     type('Seal Wax Colour', 'Blue');
-    openWhen();
     type('Moon Phase', 'Waxing gibbous');
     type('Day of the Week', 'Monday');
     type('Note', 'Kept on the sill');
@@ -234,9 +236,9 @@ describe('SpellBuilder', () => {
       },
     });
 
+    openAll();
     expect(field('Title')).toHaveValue('Fixture Working');
     expect(field('Jar Description')).toHaveValue('4 oz');
-    openWhen();
     expect(field('Moon Phase')).toHaveValue('');
     expect(save()).toBeDisabled();
 
@@ -300,7 +302,6 @@ describe('SpellBuilder', () => {
 
     it('offers the moon phases and the seven days', () => {
       renderBuilder();
-      openWhen();
 
       fireEvent.click(screen.getByRole('button', { name: 'Show Moon Phase suggestions' }));
       expect(listed()).toEqual([
@@ -332,7 +333,6 @@ describe('SpellBuilder', () => {
 
     it('narrows the list to what is typed', () => {
       renderBuilder();
-      openWhen();
 
       type('Moon Phase', 'wan');
 
@@ -343,7 +343,6 @@ describe('SpellBuilder', () => {
     it('saves a picked suggestion', async () => {
       const calls = acceptCreate();
       renderBuilder();
-      openWhen();
 
       type('Moon Phase', 'full');
       fireEvent.click(screen.getByRole('option', { name: 'Full Moon' }));
@@ -361,7 +360,6 @@ describe('SpellBuilder', () => {
     it('saves typed text that no suggestion holds, as typed', async () => {
       const calls = acceptCreate();
       renderBuilder();
-      openWhen();
 
       type('Moon Phase', 'Blue moon');
       type('Day of the Week', 'Any dark night');
@@ -389,7 +387,7 @@ describe('SpellBuilder', () => {
           visibility: 'workspace',
         },
       });
-      openWhen();
+      openAll();
 
       expect(field('Moon Phase')).toHaveValue('Full');
       expect(field('Day of the Week')).toHaveValue('saturday');
@@ -397,75 +395,112 @@ describe('SpellBuilder', () => {
     });
   });
 
-  // The recipe's timing, when to work the spell, folds under its own heading
-  // (CollapsibleSection), shut on opening, its line saying what it holds.
-  describe('When to Work It', () => {
-    /** The fields the heading's toggle opens and shuts. */
-    const whenFields = () =>
-      document.getElementById(when().getAttribute('aria-controls') ?? '') as HTMLElement;
+  // The builder's fields in four sections, as the ingredient form's are
+  // (CollapsibleSection): each folds under its heading, its line saying what
+  // it holds, and one control opens or shuts them all.
+  describe('the sections', () => {
+    /** The fields a section's toggle opens and shuts. */
+    const fieldsOf = (name: (typeof SECTIONS)[number]) =>
+      document.getElementById(section(name).getAttribute('aria-controls') ?? '') as HTMLElement;
+    const expanded = () => SECTIONS.map((name) => section(name).getAttribute('aria-expanded'));
+    const SAVED = {
+      id: 's3',
+      revision: 1,
+      title: 'Fixture Working',
+      intent: 'To see\n  clearly',
+      jarDescription: '4 oz',
+      sealWaxColor: 'Blue',
+      moonPhase: 'Waxing Moon',
+      dayOfWeek: 'Monday',
+      note: null,
+      visibility: 'private' as const,
+    };
 
-    it('opens shut on a new spell, reading Nothing yet, its two fields hidden', () => {
+    it('opens a new spell with its four sections in order, each open on its own fields', () => {
       renderBuilder();
 
-      expect(screen.getByRole('heading', { name: 'When to Work It' })).toContainElement(when());
-      expect(when()).toHaveAttribute('aria-expanded', 'false');
-      expect(when()).toHaveAccessibleDescription('Nothing yet');
-      expect(screen.queryByRole('combobox', { name: 'Moon Phase' })).toBeNull();
-      expect(screen.queryByRole('combobox', { name: 'Day of the Week' })).toBeNull();
+      expect(screen.getAllByRole('heading', { level: 3 }).map((h) => h.textContent)).toEqual([
+        ...SECTIONS,
+      ]);
+      expect(expanded()).toEqual(['true', 'true', 'true', 'true']);
+      const HELD = {
+        Purpose: ['Title', 'Intent'],
+        Jar: ['Jar Description', 'Seal Wax Colour'],
+        'When to Work It': ['Moon Phase', 'Day of the Week'],
+        Notes: ['Note'],
+      } as const;
+      for (const name of SECTIONS) {
+        const inside = within(fieldsOf(name));
+        const boxes = [...inside.queryAllByRole('textbox'), ...inside.queryAllByRole('combobox')];
+        expect(boxes).toHaveLength(HELD[name].length);
+        for (const label of HELD[name]) {
+          expect(
+            inside.queryByRole('textbox', { name: label }) ??
+              inside.getByRole('combobox', { name: label }),
+          ).toBeVisible();
+        }
+      }
+      // M10.13's switch folds with the note.
+      expect(
+        within(fieldsOf('Notes')).getByRole('switch', { name: 'Share With the Coven' }),
+      ).toBeVisible();
     });
 
-    it('opens from its heading onto Moon Phase and Day of the Week, and nothing else', () => {
-      renderBuilder();
+    it('opens a saved spell with every section shut, each line naming what it holds', () => {
+      renderBuilder({ spell: SAVED });
 
-      openWhen();
-
-      expect(when()).toHaveAttribute('aria-expanded', 'true');
-      const fields = whenFields();
-      expect(within(fields).getByRole('combobox', { name: 'Moon Phase' })).toBeVisible();
-      expect(within(fields).getByRole('combobox', { name: 'Day of the Week' })).toBeVisible();
-      expect(within(fields).queryByRole('textbox', { name: 'Jar Description' })).toBeNull();
-    });
-
-    it('opens a saved spell shut, its line naming the values it holds', () => {
-      renderBuilder({
-        spell: {
-          id: 's3',
-          revision: 1,
-          title: null,
-          intent: null,
-          jarDescription: null,
-          sealWaxColor: null,
-          moonPhase: 'Waxing Moon',
-          dayOfWeek: 'Monday',
-          note: null,
-          visibility: 'workspace',
-        },
-      });
-
-      expect(when()).toHaveAttribute('aria-expanded', 'false');
+      expect(expanded()).toEqual(['false', 'false', 'false', 'false']);
+      expect(screen.queryByRole('textbox', { name: 'Title' })).toBeNull();
+      // One line each, the intent's line breaks closed up, as the ingredient form's are.
+      expect(section('Purpose')).toHaveAccessibleDescription('Fixture Working · To see clearly');
+      expect(section('Jar')).toHaveAccessibleDescription('4 oz · Blue');
       expect(when()).toHaveAccessibleDescription('Waxing Moon · Monday');
+      // Notes holds no note, so its line is the visibility switch's alone.
+      expect(section('Notes')).toHaveAccessibleDescription('Private');
+    });
+
+    it('shuts every section with Close All, then opens every one with Open All', () => {
+      renderBuilder();
+      // The precondition: a new spell opens all open, offering Close All.
+      expect(expanded()).toEqual(['true', 'true', 'true', 'true']);
+
+      fireEvent.click(screen.getByRole('button', { name: 'Close All' }));
+      expect(expanded()).toEqual(['false', 'false', 'false', 'false']);
+
+      openAll();
+      expect(expanded()).toEqual(['true', 'true', 'true', 'true']);
+      expect(screen.getByRole('button', { name: 'Close All' })).toBeInTheDocument();
+    });
+
+    it('offers Close All while any one section is open', () => {
+      renderBuilder({ spell: SAVED });
+      fireEvent.click(section('Jar'));
+
+      fireEvent.click(screen.getByRole('button', { name: 'Close All' }));
+
+      expect(expanded()).toEqual(['false', 'false', 'false', 'false']);
     });
 
     it('keeps what was typed across a shut, its line reading it', () => {
       renderBuilder();
-      openWhen();
       type('Day of the Week', 'Friday');
 
-      openWhen();
+      fireEvent.click(when());
 
       expect(when()).toHaveAttribute('aria-expanded', 'false');
       expect(when()).toHaveAccessibleDescription('Friday');
-      openWhen();
+      fireEvent.click(when());
       expect(field('Day of the Week')).toHaveValue('Friday');
     });
 
-    it('opens, flagged, when a save is refused for one of its fields', async () => {
-      mockGraphQLError('CreateSpell', {
+    it('opens the shut section a refused save names, flagged, and leaves the rest shut', async () => {
+      mockGraphQLError('UpdateSpell', {
         code: 'VALIDATION',
         fieldErrors: [{ path: ['moonPhase'], message: 'Name a moon phase' }],
       });
-      renderBuilder();
-      type('Intent', 'To see clearly');
+      renderBuilder({ spell: SAVED });
+      fireEvent.click(section('Notes'));
+      type('Note', 'Kept on the sill');
       // The precondition the opening answers: shut when the save is pressed.
       expect(when()).toHaveAttribute('aria-expanded', 'false');
 
@@ -474,6 +509,8 @@ describe('SpellBuilder', () => {
       await waitFor(() => expect(when()).toHaveAttribute('aria-expanded', 'true'));
       expect(when()).toHaveAccessibleDescription('Has an error to fix');
       expect(field('Moon Phase')).toHaveAccessibleDescription('Name a moon phase');
+      expect(section('Purpose')).toHaveAttribute('aria-expanded', 'false');
+      expect(section('Jar')).toHaveAttribute('aria-expanded', 'false');
     });
   });
 

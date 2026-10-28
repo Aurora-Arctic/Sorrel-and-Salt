@@ -2,9 +2,9 @@
 
 import { zodResolver } from '@hookform/resolvers/zod';
 import { useMutation } from '@tanstack/react-query';
-import { type ReactElement, useRef, useState } from 'react';
+import { type ReactElement, type ReactNode, useRef, useState } from 'react';
 import { FormProvider, type Resolver, useForm, useWatch } from 'react-hook-form';
-import { CollapsibleSection } from '../CollapsibleSection';
+import { CollapsibleSection, FoldAll } from '../CollapsibleSection';
 import { graphql } from '../../gql';
 import { graphqlRequest } from '../../lib/graphql-client';
 import { placeServerIssues } from '../../lib/graphql-failure';
@@ -33,7 +33,9 @@ import './index.scss';
 
 // The spell builder (M10.12): a spell's title, intent, jar and note, in a
 // modal over the grimoire (./spell-dialog.tsx), opened empty by New Spell and
-// on a saved spell by its Edit. Moon phase and day of the week suggest a
+// on a saved spell by its Edit. Its fields sit in four folding sections, as
+// Add Ingredient's do: open on a new spell, shut on a saved one, each shut
+// line naming what it holds, and Open All / Close All in the dialog's head. Moon phase and day of the week suggest a
 // fixed list and still take what is typed (./constants). No field is
 // required: a draft may be saved with any of them, and a title is asked for
 // only when the spell is marked complete (M10.20). Save creates the spell
@@ -88,8 +90,37 @@ const FIELDS: readonly SpellBuilderField[] = [
   'note',
 ];
 
-/** The fields When to Work It folds. */
-const WHEN_FIELDS: readonly SpellBuilderField[] = ['moonPhase', 'dayOfWeek'];
+/** A value the form holds, which a section folds. */
+type SectionField = keyof SpellBuilderValues;
+
+/**
+ * The builder's sections, in order, and the values each folds: what flags a
+ * section holding an error, and what its shut line reads. Later fields join
+ * these: M10.14's categories Purpose, M10.15's steps Jar.
+ */
+const SECTIONS = {
+  Purpose: ['title', 'intent'],
+  Jar: ['jarDescription', 'sealWaxColor'],
+  'When to Work It': ['moonPhase', 'dayOfWeek'],
+  Notes: ['note', 'visibility'],
+} as const satisfies Record<string, readonly SectionField[]>;
+
+type SectionName = keyof typeof SECTIONS;
+
+const SECTION_NAMES = Object.keys(SECTIONS) as SectionName[];
+
+/** A value as one line: a multi-line intent or note reads on a shut section's line. */
+const oneLine = (text: string): string => text.trim().replace(/\s+/g, ' ');
+
+/** A value as its shut section's line reads it, blank for none. */
+function lineOfField(field: SectionField, values: SpellBuilderValues): string {
+  switch (field) {
+    case 'visibility':
+      return values.visibility === 'workspace' ? 'Shared' : 'Private';
+    default:
+      return oneLine(values[field] ?? '');
+  }
+}
 
 const isField = (key: unknown): key is SpellBuilderField =>
   FIELDS.includes(key as SpellBuilderField);
@@ -148,24 +179,50 @@ const SpellBuilder = ({ workspaceId, spell, onCreated }: SpellBuilderProps): Rea
   // its own (the owner's call, 2026-10-27).
   const typed = useWatch({ control, name: [...FIELDS] });
   const visibility = useWatch({ control, name: 'visibility' });
+  const values = useWatch({ control }) as SpellBuilderValues;
   const dirty =
     visibility !== defaultValues?.visibility ||
     FIELDS.some(
       (field, index) => (typed[index] ?? '').trim() !== (defaultValues?.[field] ?? '').trim(),
     );
 
-  // When to Work It opens shut, a new spell's and a saved one's alike: its line
-  // says what it holds, and a save refused on one of its fields opens it.
-  const [whenOpen, setWhenOpen] = useState(false);
-  const whenInvalid = WHEN_FIELDS.some((field) => errors[field] !== undefined);
-  const whenLine =
-    WHEN_FIELDS.map((field) => (typed[FIELDS.indexOf(field)] ?? '').trim())
+  // A new spell opens every section, to be filled in order; a saved one opens
+  // them shut, each line saying what it holds, as Add Ingredient's do (M8.16).
+  const [open, setOpen] = useState<ReadonlySet<SectionName>>(
+    () => new Set(spell ? [] : SECTION_NAMES),
+  );
+  const toggle = (name: SectionName) =>
+    setOpen((was) => {
+      const next = new Set(was);
+      if (!next.delete(name)) next.add(name);
+      return next;
+    });
+  const lineOf = (name: SectionName): string =>
+    SECTIONS[name]
+      .map((field) => lineOfField(field, values))
       .filter(Boolean)
       .join(' · ') || 'Nothing yet';
-  /** Opens When to Work It when one of its fields now holds an error, so the error is seen. */
-  const openWhenErred = () => {
-    if (WHEN_FIELDS.some((field) => methods.getFieldState(field).invalid)) setWhenOpen(true);
+  /** Opens each section one of whose fields now holds an error, so the error is seen. */
+  const openErred = () => {
+    const erred = SECTION_NAMES.filter((name) =>
+      SECTIONS[name].some((field) => methods.getFieldState(field).invalid),
+    );
+    if (erred.length > 0) setOpen((was) => new Set([...was, ...erred]));
   };
+  /** A section, folding its fields, flagged while one of them holds an error. */
+  const section = (name: SectionName, children: ReactNode): ReactElement => (
+    <CollapsibleSection
+      title={name}
+      summary={lineOf(name)}
+      fold={{
+        open: open.has(name),
+        invalid: SECTIONS[name].some((field) => errors[field] !== undefined),
+        onToggle: () => toggle(name),
+      }}
+    >
+      {children}
+    </CollapsibleSection>
+  );
 
   const root = useRef<HTMLFormElement>(null);
   const history = useFormHistory(methods, { root });
@@ -214,13 +271,13 @@ const SpellBuilder = ({ workspaceId, spell, onCreated }: SpellBuilderProps): Rea
       placeServerIssues(error, setError, ({ path: [field, ...rest] }) =>
         rest.length === 0 && isField(field) ? field : undefined,
       );
-      openWhenErred();
+      openErred();
     }
   };
 
   const submit = handleSubmit(send, () => {
     closeGuard.refused();
-    openWhenErred();
+    openErred();
   });
   const closeGuard = useSaveOnClose(dirty, isSubmitting, () => void submit());
 
@@ -228,65 +285,81 @@ const SpellBuilder = ({ workspaceId, spell, onCreated }: SpellBuilderProps): Rea
     <FormProvider {...methods}>
       <FormHistoryContext.Provider value={history}>
         <form ref={root} className="form spell-builder" onSubmit={submit} noValidate>
-          <FormHistoryButtons />
           {errors.root?.message && <Notice kind="error">{errors.root.message}</Notice>}
-          <TextField<SpellBuilderValues>
-            name="title"
-            label="Title"
-            placeholder="Add a title"
-            autoComplete="off"
-          />
-          <TextField<SpellBuilderValues>
-            name="intent"
-            label="Intent"
-            placeholder="Add an intent"
-            multiline
-            rows={3}
-          />
-          <TextField<SpellBuilderValues>
-            name="jarDescription"
-            label="Jar Description"
-            placeholder="Add a description"
-            autoComplete="off"
-          />
-          <TextField<SpellBuilderValues>
-            name="sealWaxColor"
-            label="Seal Wax Colour"
-            placeholder="Add a colour"
-            autoComplete="off"
-          />
-          {/* The recipe's timing: when to work the spell, not when it was worked,
-              which a working's own date gives (M13.4). */}
-          <CollapsibleSection
-            title="When to Work It"
-            summary={whenLine}
-            fold={{
-              open: whenOpen,
-              invalid: whenInvalid,
-              onToggle: () => setWhenOpen((open) => !open),
-            }}
-          >
-            <SpellSuggestField
-              name="moonPhase"
-              label="Moon Phase"
-              placeholder="Add a phase"
-              options={MOON_PHASES}
-              icon={moonPhaseIcon}
+          <div className="collapsible-sections">
+            <FoldAll
+              anyOpen={open.size > 0}
+              onToggle={() => setOpen(open.size > 0 ? new Set() : new Set(SECTION_NAMES))}
             />
-            <SpellSuggestField
-              name="dayOfWeek"
-              label="Day of the Week"
-              placeholder="Add a day"
-              options={DAYS_OF_THE_WEEK}
-            />
-          </CollapsibleSection>
-          <TextField<SpellBuilderValues>
-            name="note"
-            label="Note"
-            placeholder="Add a note"
-            multiline
-          />
-          <SpellVisibilityField created={saved !== null} save={send} />
+            <FormHistoryButtons />
+            {section(
+              'Purpose',
+              <>
+                <TextField<SpellBuilderValues>
+                  name="title"
+                  label="Title"
+                  placeholder="Add a title"
+                  autoComplete="off"
+                />
+                <TextField<SpellBuilderValues>
+                  name="intent"
+                  label="Intent"
+                  placeholder="Add an intent"
+                  multiline
+                  rows={3}
+                />
+              </>,
+            )}
+            {section(
+              'Jar',
+              <>
+                <TextField<SpellBuilderValues>
+                  name="jarDescription"
+                  label="Jar Description"
+                  placeholder="Add a description"
+                  autoComplete="off"
+                />
+                <TextField<SpellBuilderValues>
+                  name="sealWaxColor"
+                  label="Seal Wax Colour"
+                  placeholder="Add a colour"
+                  autoComplete="off"
+                />
+              </>,
+            )}
+            {/* The recipe's timing: when to work the spell, not when it was worked,
+                which a working's own date gives (M13.4). */}
+            {section(
+              'When to Work It',
+              <>
+                <SpellSuggestField
+                  name="moonPhase"
+                  label="Moon Phase"
+                  placeholder="Add a phase"
+                  options={MOON_PHASES}
+                  icon={moonPhaseIcon}
+                />
+                <SpellSuggestField
+                  name="dayOfWeek"
+                  label="Day of the Week"
+                  placeholder="Add a day"
+                  options={DAYS_OF_THE_WEEK}
+                />
+              </>,
+            )}
+            {section(
+              'Notes',
+              <>
+                <TextField<SpellBuilderValues>
+                  name="note"
+                  label="Note"
+                  placeholder="Add a note"
+                  multiline
+                />
+                <SpellVisibilityField created={saved !== null} save={send} />
+              </>,
+            )}
+          </div>
           <FormActions noun="Spell" dirty={dirty} submitting={isSubmitting} />
         </form>
       </FormHistoryContext.Provider>

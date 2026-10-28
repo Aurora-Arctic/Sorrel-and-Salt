@@ -15,7 +15,11 @@ import { CARD_PAGE_SIZE } from '@/lib/pagination';
 // the spell builder's dialog over the tab (M10.12), `?new=spell-<slug>` and `?edit=<id>`, beside the
 // shell's Add Ingredient, `?new=ingredient-coven-<slug>`.
 
-const COVEN = { id: '5b8f4a10-2d6e-4c19-8a37-0e9d1c2b3a44', slug: 'fixture-coven' };
+const COVEN = {
+  id: '5b8f4a10-2d6e-4c19-8a37-0e9d1c2b3a44',
+  slug: 'fixture-coven',
+  name: 'Fixture Coven',
+};
 const session = { user: { id: 'fixture-user' } };
 
 const router = { push: vi.fn(), replace: vi.fn(), refresh: vi.fn() };
@@ -299,7 +303,7 @@ describe('the spell builder over a Grimoire tab', () => {
       as(role);
       await renderTab(SpellsPage, { new: value });
 
-      const dialog = screen.getByRole('dialog', { name: 'New Spell' });
+      const dialog = screen.getByRole('dialog', { name: 'New Spell to Fixture Coven' });
       expect(within(dialog).getByRole('textbox', { name: 'Title' })).toHaveValue('');
       expect(screen.getAllByRole('heading', { name: 'Fixture Working' }).length).toBeGreaterThan(0);
     },
@@ -321,6 +325,8 @@ describe('the spell builder over a Grimoire tab', () => {
 
     expect(readSpell).toHaveBeenCalledWith(session, COVEN.id, SPELL_ID);
     const dialog = screen.getByRole('dialog', { name: 'Edit Spell, Fixture Working' });
+    // A saved spell opens its sections shut.
+    fireEvent.click(within(dialog).getByRole('button', { name: 'Open All' }));
     expect(within(dialog).getByRole('textbox', { name: 'Intent' })).toHaveValue('Calm');
     expect(within(dialog).getByRole('textbox', { name: 'Jar Description' })).toHaveValue('4 oz');
   });
@@ -370,7 +376,7 @@ describe('the spell builder over a Grimoire tab', () => {
     readSpell.mockResolvedValue(SPELL);
     await renderTab(SpellsPage, { new: 'spell-fixture-coven', edit: SPELL_ID });
 
-    expect(screen.getByRole('dialog', { name: 'New Spell' })).toBeInTheDocument();
+    expect(screen.getByRole('dialog', { name: 'New Spell to Fixture Coven' })).toBeInTheDocument();
     expect(readSpell).not.toHaveBeenCalled();
   });
 

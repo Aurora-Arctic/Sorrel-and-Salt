@@ -22,7 +22,7 @@ import NewSpellAction from './new-spell-action';
 // RouteModalProvider, so the dialog opens at once on the press and holds across the tabs.
 export default async function GrimoireLayout({ children, params }: CovenLayoutProps) {
   const { slug } = await params;
-  const { membership } = await requireCovenMembership(slug);
+  const { membership, workspace } = await requireCovenMembership(slug);
   const tabs: PageTab[] = [
     { href: `/coven/${slug}/grimoire` as Route, label: 'Spells', filtered: true, shape: 'cards' },
     {
@@ -33,7 +33,7 @@ export default async function GrimoireLayout({ children, params }: CovenLayoutPr
     },
   ];
   const action = rolePermits(membership.role, { spell: ['create'] }) ? (
-    <NewSpellAction />
+    <NewSpellAction covenName={workspace.name} />
   ) : undefined;
   return (
     <RouteModalProvider>

@@ -14,7 +14,7 @@ import type {
 import { graphqlRequest } from '../../lib/graphql-client';
 import { placeServerIssues } from '../../lib/graphql-failure';
 import BusyButton from '../BusyButton';
-import { ConfirmQuestion, useDiscardGuard, useModalHeaderNote, useModalHeaderSlot } from '../Modal';
+import { ConfirmQuestion, useDiscardGuard, useModalHeaderNote } from '../Modal';
 import { PanelChangesContext, usePanelChanges } from './panel-changes';
 import { DiscardAskingContext } from './remove-question';
 import {
@@ -31,7 +31,7 @@ import { NAMELESS_KIND, UNSETTLED_KIND } from '@/modules/ingredients/schema/ingr
 import { CategoryField } from './categories';
 import { NameField, useDuplicateWarning } from './duplicates';
 import { ReferencesField } from './references';
-import { CollapsibleSection } from '../CollapsibleSection';
+import { CollapsibleSection, FoldAll } from '../CollapsibleSection';
 import type { SectionFold } from '../CollapsibleSection/types';
 import { SectionSummary } from './summaries';
 import { SubstituteForms } from './substitute-forms';
@@ -334,21 +334,17 @@ const IngredientForm = ({
   // over itself, as Undo and Redo are then, the owner's call: a control that
   // cannot be used reads as one, rather than faded with the form behind.
   const anyOpen = open.size > 0;
-  const headerSlot = useModalHeaderSlot();
   const headerNote = useModalHeaderNote();
   const compendiumNotice = <Notice kind="plain">{COMPENDIUM_EDIT_NOTICE}</Notice>;
   const foldAll = (
-    <button
-      type="button"
-      className="btn btn--small btn--quiet"
+    <FoldAll
+      anyOpen={anyOpen}
       disabled={discard.asking || deleting || question !== null}
-      onClick={() => {
+      onToggle={() => {
         setOpen(new Set(anyOpen ? [] : SECTION_KEYS));
         variantFolds.setAll(!anyOpen, getValues('variants').length);
       }}
-    >
-      {anyOpen ? 'Close All' : 'Open All'}
-    </button>
+    />
   );
 
   // Undo and redo (M12.9, adopted here by M12.10), off while a save is in
@@ -632,12 +628,8 @@ const IngredientForm = ({
               opens or closes them all sits beside the modal's title, the
               owner's call (MB.115); outside a modal, at the end of the line
               above the first section. */}
-                  <div className="ingredient-form__folds">
-                    {headerSlot ? (
-                      createPortal(foldAll, headerSlot)
-                    ) : (
-                      <div className="ingredient-form__fold-all">{foldAll}</div>
-                    )}
+                  <div className="collapsible-sections">
+                    {foldAll}
                     {/* After Open All, so the header reads Open All, Undo, Redo. */}
                     <FormHistoryButtons />
                     <CollapsibleSection
