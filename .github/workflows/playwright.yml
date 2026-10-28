@@ -207,12 +207,13 @@ jobs:
             /app/.reports/test-results/
           retention-days: 7
 
-      # Not failure-only: a coverage report on every run that ran a spec.
+      # Not failure-only: a coverage report on every run that ran a spec. Named
+      # per suite for the same reason as the report above.
       - name: Upload coverage artifact
-        if: always() && inputs.should-run && !inputs.build-only && inputs.suite != 'stories'
+        if: always() && inputs.should-run && !inputs.build-only
         uses: actions/upload-artifact@v7
         with:
-          name: playwright-coverage
+          name: ${{ inputs.suite == 'stories' && 'playwright-coverage-stories' || 'playwright-coverage' }}
           path: /app/.reports/coverage-e2e/
           retention-days: 7
 
