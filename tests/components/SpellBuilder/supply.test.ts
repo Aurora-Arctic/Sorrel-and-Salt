@@ -54,10 +54,10 @@ describe('supplyOf', () => {
   });
 
   it('refuses to compare across dimensions, with a count, or against a jar with no unit', () => {
-    expect(supplyOf(step({ quantity: '1', unit: 'ml' }))).toEqual({ kind: 'cannot-compare' });
-    expect(supplyOf(step({ quantity: '1', unit: 'piece' }))).toEqual({ kind: 'cannot-compare' });
+    expect(supplyOf(step({ quantity: '1', unit: 'ml' }))).toEqual({ kind: 'units-differ' });
+    expect(supplyOf(step({ quantity: '1', unit: 'piece' }))).toEqual({ kind: 'units-differ' });
     expect(supplyOf(step({ jar: jar({ unit: null }), quantity: '1', unit: 'g' }))).toEqual({
-      kind: 'cannot-compare',
+      kind: 'units-differ',
     });
   });
 

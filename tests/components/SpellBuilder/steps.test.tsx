@@ -701,7 +701,7 @@ describe('the spell builder’s What You Hold', () => {
     expect(line('Fixture Rosewort')).toHaveTextContent('need 4 g · hold 5 g');
   });
 
-  it('says Cannot Compare where the unit cannot be set against the jar’s', async () => {
+  it('says Units Differ where the unit cannot be set against the jar’s', async () => {
     suggest(HELD);
     renderBuilder();
     await add('Rose', /Fixture Rosewort/);
@@ -712,7 +712,7 @@ describe('the spell builder’s What You Hold', () => {
     });
     chooseUnit(row, 'ml');
 
-    await waitFor(() => expect(line('Fixture Rosewort')).toHaveTextContent('Cannot Compare'));
+    await waitFor(() => expect(line('Fixture Rosewort')).toHaveTextContent('Units Differ'));
     expect(line('Fixture Rosewort')).not.toHaveTextContent('Not Enough');
   });
 
