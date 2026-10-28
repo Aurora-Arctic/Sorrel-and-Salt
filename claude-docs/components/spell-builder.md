@@ -429,6 +429,7 @@ No wrapper: the `<form className="form">` sits straight in the body of a `RouteM
 [`modal.md`](modal.md)), its sections styled by `CollapsibleSection`. `index.scss` holds the
 visibility switch's alignment (M10.13) and the Jar section (the owner's design pass, 2026-10-28):
 
+- a single text field (Title, Intent, Moon Phase, Day of the Week, Note) is wrapped in `.spell-field-cap`, which stops it at `$narrow-column` (28rem), left-aligned, and lets it fill the dialog below that. `$narrow-column` is the variables file's "forms' column", the width of a form's line; Add Ingredient's fields fill the default dialog column (`$dialog-column`, 32rem), which is not named as a field standard. Only the Jar section keeps the full 55rem;
 - the section is a container (`spell-column`): a two-column grid, the list at least 30rem and the
   aside 18rem, stacking below 50rem;
 - the handle unboxed in `$text-muted`, with the shared focus ring;

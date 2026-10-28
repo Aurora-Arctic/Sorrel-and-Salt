@@ -14,6 +14,14 @@
   }
 }
 
+// The wide dialog (55rem) is for the Jar's two columns. A single text field (the title,
+// the intent, the moon phase, the day and the note) stops at the forms' column
+// (`$narrow-column`, 28rem: "a form's line is a field, not prose"), left-aligned, and
+// fills the dialog below it. Only the Jar section keeps the full width.
+.spell-field-cap {
+  max-inline-size: $narrow-column;
+}
+
 // A step's handle (M10.16): the grip it is moved by, a button unboxed as the
 // combobox's chip handle is. `touch-action` is dnd-kit's ask, so that a drag
 // by touch moves the step rather than the page. Muted, as a grip is a
