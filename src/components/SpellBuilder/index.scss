@@ -167,8 +167,9 @@
 // The Jar section (the owner's Option C2): the steps on the left and an aside on the right,
 // side by side where the dialog is wide enough and the aside beneath the list where it is
 // not. The list takes what is spare (`999` to the aside's `1`) and never less than its
-// minimum, so the pair wraps once both cannot fit: 30rem and 18rem and the gap, inside the
-// wide dialog's 55rem, sit side by side; a phone is one column.
+// minimum, so the pair wraps once both cannot fit: 28rem, 1rem and 21rem (the aside's 1rem
+// of padding beside its line, so 20rem of content) make the 50rem the container query below
+// names, inside the wide dialog's 55rem; a phone is one column.
 .spell-jar-layout {
   display: flex;
   flex-wrap: wrap;
@@ -178,7 +179,7 @@
 }
 
 .spell-jar-layout__list {
-  flex: 999 1 30rem;
+  flex: 999 1 28rem;
   min-width: 0;
 
   // The steps section's bare-`section` rhythm margin (_layout.scss) would push What Goes In
@@ -193,7 +194,7 @@
 .spell-aside {
   display: flex;
   box-sizing: border-box;
-  flex: 1 1 18rem;
+  flex: 1 1 21rem;
   flex-direction: column;
   gap: space(3);
   min-width: 0;
@@ -206,7 +207,7 @@
   }
 }
 
-// 50rem is the width at which both columns fit: the list's 30rem, the gap and the aside.
+// 50rem is the width at which both columns fit: 28rem, 1rem, 21rem.
 @container spell-jar (min-width: 50rem) {
   .spell-aside {
     padding-block-start: 0;

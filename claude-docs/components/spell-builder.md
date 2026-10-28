@@ -271,8 +271,11 @@ stored as typed: the columns are free text
 The Jar section is two columns (owner's design, 2026-10-28, option C2). The left
 column, "What Goes In" (`steps/`), holds a summary line, the one picker, the list of steps and
 Add a Step. The right column is [the Jar aside](#the-jar-aside). The columns sit side by
-side once the section is 50rem wide (list at least 30rem, a 2rem gap, the aside 18rem; the
-`spell-column` container query in `index.scss`) and stack below it, the list first. The
+side once the section is 50rem wide (list at least 28rem, a 1rem gap, the aside 21rem, 20rem of it
+content beside its 1rem of padding and its hairline; the `spell-jar` container query in `index.scss`)
+and stack below it, the list first. A hairline in `$hairline` is the aside's own border: beside
+the list when side by side, above the aside when stacked. The two headings share a line, and
+the jar drawing is centred on the Seal Wax Colour input box (its box is `$control-height`). The
 `wide` dialog is 55rem of content, so two columns fit at desktop width and stack at phone
 width (gate spec `tests/e2e/spell-dialog-size.spec.ts`). While a saved spell's steps are still
 being read the column is a skeleton, and if the read fails, an error in its place.
@@ -429,8 +432,8 @@ No wrapper: the `<form className="form">` sits straight in the body of a `RouteM
 visibility switch's alignment (M10.13) and the Jar section (the owner's design pass, 2026-10-28):
 
 - a single text field (Title, Intent, Moon Phase, Day of the Week, Note) is wrapped in `.spell-field-cap`, which stops it at `$narrow-column` (28rem), left-aligned, and lets it fill the dialog below that. `$narrow-column` is the variables file's "forms' column", the width of a form's line; Add Ingredient's fields fill the default dialog column (`$dialog-column`, 32rem), which is not named as a field standard. Only the Jar section keeps the full 55rem;
-- the section is a container (`spell-column`): a two-column grid, the list at least 30rem and the
-  aside 18rem, stacking below 50rem;
+- the section is a container (`spell-jar`): a two-column row, the list at least 28rem and the
+  aside 21rem, stacking below 50rem;
 - the handle unboxed in `$text-muted`, with the shared focus ring;
 - the lifted step (`.step-row.spell-step.is-dragging`) in `$shadow-lifted` with an `$accent`
   border, while the other rows stay as they are;
