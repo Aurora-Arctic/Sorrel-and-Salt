@@ -491,6 +491,13 @@ $spell-columns-switch: $spell-main-min + $spell-columns-gap + $spell-side;
     font-weight: 500;
   }
 
+  // The chips are neutral: the row (Carried, Missing, Stray) says what they are, not the group
+  // hue (the second design review, 2026-10-28).
+  .category-chips .chip {
+    @include chip($dark: $text-primary, $light: $text-primary, $state: quiet, $size: compact);
+    border-color: $hairline;
+  }
+
   dd {
     flex: 1 1 8rem;
     margin: 0;
