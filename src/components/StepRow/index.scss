@@ -103,7 +103,7 @@
   .step-row__fields {
     display: grid;
     grid-area: amount;
-    grid-template-columns: 6rem 8rem;
+    grid-template-columns: 7rem 8rem;
     gap: space(2);
   }
 
@@ -219,7 +219,7 @@ $step-ink-drop: 0.05rem;
   }
 
   .step-row__quantity {
-    flex: 0 0 6rem;
+    flex: 0 0 7rem;
   }
 
   .step-row__unit {
