@@ -386,6 +386,18 @@ describe('the spell builder’s Add to Jar', () => {
     expect(save()).toBeEnabled();
   });
 
+  it('shows each row’s categories beneath its name: the form’s own, else the ingredient’s', async () => {
+    suggest(ROSEWORT, MOCKROOT);
+    renderBuilder();
+
+    const rosewort = await lookUp('Fixture', /Fixture Rosewort/);
+    const mockroot = screen.getByRole('option', { name: /Fixture Mockroot/ });
+
+    expect(rosewort).toHaveTextContent('Calm');
+    expect(rosewort).not.toHaveTextContent('Love');
+    expect(mockroot).toHaveTextContent('Love · Protection');
+  });
+
   it('starts a stocked form in the unit it is stocked in, and an unstocked one blank', async () => {
     suggest(ROSEWORT, MOCKROOT);
     renderBuilder();

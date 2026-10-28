@@ -52,9 +52,9 @@ movable, on dnd-kit.
 | `inputRef`, `name` | The box's, for react-hook-form.                                                                                                                                                                                                                                                                                                                         |
 | `aria-describedby` | The field's hint and error, read with the box; `aria-invalid` draws the error edge on the control.                                                                                                                                                                                                                                                      |
 
-A `ComboboxOption` is `{ value, label?, icon?, note?, curated?, heading?, key? }`: the text a
+A `ComboboxOption` is `{ value, label?, icon?, note?, meta?, curated?, heading?, key? }`: the text a
 pick writes, the row's text when it is more than the value ("Wax (Animal)"), a
-second line, which bucket it is in — `curated` for the two source buckets, or
+second line, `meta` (muted small print after the note on that line, kept to one line with an ellipsis, and part of the option's name: the spell builder's ingredient categories), which bucket it is in — `curated` for the two source buckets, or
 `heading` for a bucket the source names itself, a category's group (MB.126) —
 and what tells it from a row that reads
 the same. A row is keyed, for React and for Downshift, by `key` when it has

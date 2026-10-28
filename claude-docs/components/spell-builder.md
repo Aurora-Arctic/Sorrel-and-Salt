@@ -282,7 +282,7 @@ being read the column is a skeleton, and if the read fails, an error in its plac
   own ingredients under Your Ingredients and the compendium's under Compendium, one row per
   form, since a step lays a form and not a whole ingredient. A row reads the cupboard's label
   (or the ingredient's name) with the form in brackets, its form's icon, and the formal name as
-  its note. A retired ingredient is not offered. A form already in the jar is listed but
+  its note, followed on the same line by the form's categories (the form's own, else the ingredient's, joined by " · ", muted, ending in an ellipsis where long; the combobox's `meta`). A text line rather than `CategoryChips`, whose chips carry group colours the lookup does not return and a "more" popover that does not belong inside a listbox row. A retired ingredient is not offered. A form already in the jar is listed but
   disabled, "Already in the jar". Picking a row appends the step and clears the search, and
   the focus stays in the search for the next ingredient: the append passes
   `shouldFocus: false`, since react-hook-form would otherwise move the focus to the new step's

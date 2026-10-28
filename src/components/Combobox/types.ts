@@ -10,6 +10,11 @@ export interface ComboboxOption {
   label?: string;
   /** A second line, also part of the name: what already claims the value, or a curated row's description. */
   note?: string;
+  /**
+   * More small print on the note's line, after it, muted: an ingredient's categories.
+   * The line stays one line and ends in an ellipsis where it runs long. Part of the name.
+   */
+  meta?: string;
   /** Which bucket it is in, curated or in use; left out by a source with one bucket. */
   curated?: boolean;
   /**

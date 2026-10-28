@@ -35,6 +35,9 @@ const ONE_OFF_TAKEN = 'This ingredient is already in the jar';
 /** A one-off's name as the jar compares it: case and outer spaces aside. */
 export const oneOffKey = (name: string): string => name.trim().toLocaleLowerCase();
 
+const categoryNames = (categories: readonly { name: string }[]): string | undefined =>
+  categories.length > 0 ? categories.map(({ name }) => name).join(' · ') : undefined;
+
 /** Every live form of every live ingredient found, under the heading of where it came from. */
 function pickRows(
   data: SpellIngredientSuggestionsQuery,
@@ -52,6 +55,10 @@ function pickRows(
             value: name,
             label: `${name} (${formLabel(form)})`,
             note: inJar ? ALREADY_IN_JAR : (node.canonicalName ?? undefined),
+            // The form's categories, else the ingredient's, as small print on that line.
+            meta: categoryNames(
+              variant.categories.length > 0 ? variant.categories : node.categories,
+            ),
             heading: group === 'yours' ? YOUR_INGREDIENTS : COMPENDIUM_HEADING,
             key: variant.id,
             icon: <FormIcon name={icon} />,

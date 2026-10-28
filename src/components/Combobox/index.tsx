@@ -411,7 +411,13 @@ function Combobox<O extends ComboboxOption = ComboboxOption>({
                 </>
               )}
             </span>
-            {item.note && <div className="combobox__note">{item.note}</div>}
+            {(item.note || item.meta) && (
+              <div className={item.meta ? 'combobox__note combobox__note--meta' : 'combobox__note'}>
+                {item.note}
+                {item.note && item.meta && ' · '}
+                {item.meta}
+              </div>
+            )}
           </>
         )}
       </li>
