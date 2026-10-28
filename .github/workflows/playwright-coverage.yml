@@ -1,0 +1,113 @@
+name: Playwright Coverage
+
+# The gate suite's and the story suite's JavaScript coverage, merged (M14.28).
+# workflow_call only, from pr-gate's `playwright-coverage` job, which runs
+# after both suites. Each suite uploads its coverage report with monocart's raw
+# data inside it; this downloads whichever were uploaded, merges them and posts
+# the figure in a "Playwright Coverage" comment of its own. Never a required
+# check: `continue-on-error` below, and nothing waits on it.
+#
+# A reusable workflow, not a job of pr-gate.yml, because a job with its own
+# runner is reported cancelled, a failing check, when an edit's run cancels
+# itself in `changes`, where a job that calls a workflow is skipped. The
+# `workshop` job still shows that failing check on such runs.
+on:
+  workflow_call:
+    inputs:
+      image:
+        description: Testing image ref to run in (from build-image.yml)
+        required: true
+        type: string
+      pr-number:
+        description: Pull request number to comment on
+        required: true
+        type: string
+      should-run:
+        description: >-
+          True when at least one of the two suites ran, so there may be coverage
+          to merge. False posts nothing.
+        required: true
+        type: boolean
+
+permissions:
+  contents: read
+  packages: read
+  pull-requests: write
+
+jobs:
+  playwright-coverage:
+    continue-on-error: true
+    runs-on: ubuntu-26.04
+    container:
+      image: ${{ inputs.image }}
+      credentials:
+        username: ${{ github.actor }}
+        password: ${{ secrets.GITHUB_TOKEN }}
+      # The image's default user cannot write the runner's file-commands
+      # directory; actions/checkout fails EACCES without it.
+      options: --user root
+    defaults:
+      run:
+        working-directory: /app
+        shell: bash
+    steps:
+      - name: Checkout into /app
+        if: inputs.should-run
+        uses: Aurora-Arctic/Sorrel-and-Salt/.github/actions/checkout-to-app@main
+
+      # One step and one folder per artifact, by name: a download that matched a
+      # single artifact by pattern extracted it straight into `path`, with no
+      # folder named for it, so the merge could not tell the suites apart. A
+      # suite that did not run, or died before uploading, has no artifact; its
+      # step fails under continue-on-error and the merge leaves it out.
+      - name: Download the gate suite's coverage
+        if: inputs.should-run
+        continue-on-error: true
+        uses: actions/download-artifact@v8
+        with:
+          name: playwright-coverage
+          path: /app/.reports/coverage-downloads/playwright-coverage
+
+      - name: Download the story suite's coverage
+        if: inputs.should-run
+        continue-on-error: true
+        uses: actions/download-artifact@v8
+        with:
+          name: playwright-coverage-stories
+          path: /app/.reports/coverage-downloads/playwright-coverage-stories
+
+      - name: Merge coverage
+        id: merge
+        if: inputs.should-run
+        run: node .github/scripts/merge-playwright-coverage.mjs 2>&1 | tee /app/output.log
+
+      - name: Upload merged coverage artifact
+        if: inputs.should-run && steps.merge.outputs.ran == 'true'
+        uses: actions/upload-artifact@v7
+        with:
+          name: playwright-coverage-merged
+          path: /app/.reports/coverage-e2e-merged/
+          retention-days: 7
+
+      - name: Write job summary
+        if: inputs.should-run && steps.merge.outputs.ran == 'true'
+        uses: ./.github/actions/job-summary
+        with:
+          check-name: Playwright Coverage
+          outcome: ${{ steps.merge.outcome }}
+          log-file: /app/output.log
+          summary: ${{ steps.merge.outputs.summary }}
+          details: ${{ steps.merge.outputs.details }}
+
+      - name: Comment on PR
+        if: inputs.should-run && steps.merge.outputs.ran == 'true'
+        uses: ./.github/actions/pr-comment
+        with:
+          check-name: Playwright Coverage
+          marker-slug: playwright-coverage
+          pr-number: ${{ inputs.pr-number }}
+          outcome: ${{ steps.merge.outcome }}
+          log-file: /app/output.log
+          success-mode: comment
+          summary: ${{ steps.merge.outputs.summary }}
+          details: ${{ steps.merge.outputs.details }}

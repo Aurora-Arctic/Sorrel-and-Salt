@@ -475,6 +475,13 @@ function Combobox<O extends ComboboxOption = ComboboxOption>({
                 'aria-invalid': invalid,
                 'aria-busy': busy || undefined,
                 onKeyDown,
+                // Typing always wants the list, as Downshift's own input change
+                // says. Its open callback alone is not enough: it fires only
+                // when the open state differs from the props it last committed,
+                // so a key landing just after a pick closed the list, before
+                // that render committed, read as no change and the list stayed
+                // shut (story 51). See claude-docs/components/combobox.md.
+                onChange: () => setWantsOpen(true),
                 onFocus: () => {
                   tip.show();
                   onFocus?.();

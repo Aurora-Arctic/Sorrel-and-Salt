@@ -2,8 +2,13 @@
 // JSON (STORIES_JSON), into the same two outputs summarize-playwright.mjs
 // produces.
 import fs from 'node:fs';
+import { buildCoverageSection } from './lib/coverage-table.mjs';
 
 const RESULTS_PATH = '/app/stories.json';
+// This run's own report. The gate suite's is merged with it by
+// merge-playwright-coverage.mjs, in a comment of its own; Vitest's never is.
+const COVERAGE_SUMMARY_PATH = '/app/.reports/coverage-e2e/coverage-summary.json';
+const REPO_ROOT = '/app';
 
 function setOutput(name, value) {
   const delim = `ghadelim_${Math.random().toString(36).slice(2)}`;
@@ -29,7 +34,10 @@ const parts = [`${counts.passed} of ${total} stories passing`];
 if (counts.failed) parts.push(`${counts.failed} failing`);
 if (counts.skipped) parts.push(`${counts.skipped} skipped`);
 if (counts.untested) parts.push(`${counts.untested} without a test`);
-const summary = parts.join(', ');
+const storySummary = parts.join(', ');
+// Null when the run wrote no report; the checklist then posts alone.
+const coverage = buildCoverageSection(COVERAGE_SUMMARY_PATH, REPO_ROOT);
+const summary = coverage ? `${storySummary} — ${coverage.stat}` : storySummary;
 
 const SUFFIX = {
   passed: '',
@@ -68,5 +76,8 @@ if (unknown.length > 0 || untagged.length > 0) {
 }
 lines.push('', '</details>');
 
+let details = lines.join('\n');
+if (coverage?.table) details = `${details}\n\n${coverage.table}`;
+
 setOutput('summary', summary);
-setOutput('details', lines.join('\n'));
+setOutput('details', details);
