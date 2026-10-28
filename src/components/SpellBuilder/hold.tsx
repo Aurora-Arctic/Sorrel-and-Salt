@@ -12,8 +12,9 @@ import { isInstruction, stepNameOf } from './steps/values';
 
 // What You Hold (the Jar's aside): one line for each ingredient step, in step order, saying
 // what the step needs against what the coven's jar holds, as `supplyOf` judges it. The
-// verdict is words (Low, Out, Not Enough, Cannot Compare) so no state rests on colour, and
-// Low and Out also take StockBadge's colour and symbol. A step with an instruction only has
+// verdict is words (Low, Out, Not Enough, Cannot Compare) so no state rests on colour. Low and
+// Out take StockBadge's colour and symbol and stand after the name, on its line, so the name
+// is cut short before they are; Not Enough and Cannot Compare end the words line. A step with an instruction only has
 // no line. See claude-docs/components/spell-builder.md, "The aside".
 
 type Verdict = { words: string; state: 'low' | 'out' | null };
@@ -62,20 +63,18 @@ function HoldLine({ step, seed }: { step: SpellStepValue; seed: string }): React
       <span className={`spell-hold__jar ${modifier}`}>
         <JarDrawing shape={pickJarShape(seed, formKey ?? '')} held={oneOff ? null : jar} />
       </span>
-      <span className="spell-hold__name">{stepNameOf(step)}</span>
+      <span className="spell-hold__title">
+        <span className="spell-hold__name">{stepNameOf(step)}</span>
+        {verdict?.state && (
+          <span className={`spell-hold__verdict is-${verdict.state}`}>
+            <StockIcon out={verdict.state === 'out'} className="spell-hold__icon" />
+            {verdict.words}
+          </span>
+        )}
+      </span>
       <span className="spell-hold__words">
         {parts.join(' · ')}
-        {verdict && (
-          <>
-            {' · '}
-            <span className={verdict.state ? `spell-hold__verdict is-${verdict.state}` : undefined}>
-              {verdict.state && (
-                <StockIcon out={verdict.state === 'out'} className="spell-hold__icon" />
-              )}
-              {verdict.words}
-            </span>
-          </>
-        )}
+        {verdict && !verdict.state && ` · ${verdict.words}`}
       </span>
     </li>
   );

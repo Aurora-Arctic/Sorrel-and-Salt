@@ -663,7 +663,7 @@ describe('the spell builder’s What You Hold', () => {
 
     await add('Mock', /Fixture Mockroot/);
 
-    expect(line('Fixture Mockroot')).toHaveTextContent('hold none · Out');
+    expect(line('Fixture Mockroot')).toHaveTextContent(/Fixture Mockroot.*Outhold none$/);
   });
 
   it('flags an empty jar as Out', async () => {
@@ -676,7 +676,7 @@ describe('the spell builder’s What You Hold', () => {
 
     await add('Rose', /Fixture Rosewort/);
 
-    expect(line('Fixture Rosewort')).toHaveTextContent('hold none · Out');
+    expect(line('Fixture Rosewort')).toHaveTextContent(/Fixture Rosewort.*Outhold none$/);
   });
 
   it('says Not Enough, and not Out, once the amount typed passes the jar, and clears when it fits', async () => {

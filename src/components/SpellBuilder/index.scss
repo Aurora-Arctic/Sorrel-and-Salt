@@ -306,8 +306,17 @@
   }
 }
 
-.spell-hold__name {
+// The name line: the name, which is cut short with an ellipsis, then the Low or Out state,
+// which is not.
+.spell-hold__title {
+  display: flex;
   grid-area: name;
+  gap: space(2);
+  align-items: baseline;
+  min-width: 0;
+}
+
+.spell-hold__name {
   min-width: 0;
   overflow: hidden;
   font-weight: 500;
@@ -322,6 +331,7 @@
 
 .spell-hold__verdict {
   display: inline-flex;
+  flex: none;
   align-items: center;
   gap: space(1);
 
@@ -342,6 +352,7 @@
 
 @container spell-column (max-width: #{$narrow-column}) {
   .spell-hold__name {
+    overflow: visible;
     white-space: normal;
   }
 }
