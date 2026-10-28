@@ -10,8 +10,8 @@ import type { PageRequest } from '@/lib/types';
 import { entryDetail } from '../../../../support/entry-detail';
 
 // The `/admin/compendium` page (M5.5): the guard, one page of the compendium
-// under the address's filter, and the modal its address opens — `?new` empty,
-// `?edit=` an entry by slug, an old slug sent on to the new one. The guard,
+// under the address's filter, and the modal its address opens — `?new=ingredient-compendium`
+// (or a bare `?new`), `?edit=` an entry by slug, an old slug sent on to the new one. The guard,
 // the services and the entry's values are mocked: what they decide is
 // tests/lib/request-session.test.ts's, the compendium services' tests', and
 // tests/db/entry-values.test.ts's.
@@ -363,7 +363,7 @@ describe('the /admin/compendium filter', () => {
     // The links keep the slugs the address spelt, never the ids.
     expect(screen.getByRole('link', { name: 'Add Ingredient' })).toHaveAttribute(
       'href',
-      '/admin/compendium?categories=testward&categories=testcraft&new',
+      '/admin/compendium?categories=testward&categories=testcraft&new=ingredient-compendium',
     );
   });
 
@@ -419,7 +419,7 @@ describe('the /admin/compendium filter', () => {
     const here = `${FILTERED_HREF}&after=${encodeURIComponent(after)}`;
     expect(screen.getByRole('link', { name: 'Add Ingredient' })).toHaveAttribute(
       'href',
-      `${here}&new`,
+      `${here}&new=ingredient-compendium`,
     );
     expect(screen.getByRole('link', { name: 'Edit Testwort 0, Fixtura testalis' })).toHaveAttribute(
       'href',
@@ -436,18 +436,35 @@ describe('the /admin/compendium filter', () => {
 });
 
 describe('the /admin/compendium modal', () => {
-  it('opens the form on ?new with no entry', async () => {
-    await renderPage({ new: '' });
+  // A bare `?new` is an older link's, read as `ingredient-compendium` so it still opens.
+  it.each(['ingredient-compendium', ''])(
+    'opens the form on ?new=%s with no entry',
+    async (value) => {
+      await renderPage({ new: value });
 
-    const dialog = screen.getByRole('dialog', { name: 'Add Ingredient to Compendium' });
-    expect(within(dialog).getByRole('form', { name: 'Fixture Form' })).toBeInTheDocument();
-    expect(formEntry()).toBeUndefined();
-    expect(resolveCompendiumSlug).not.toHaveBeenCalled();
-  });
+      const dialog = screen.getByRole('dialog', { name: 'Add Ingredient to Compendium' });
+      expect(within(dialog).getByRole('form', { name: 'Fixture Form' })).toBeInTheDocument();
+      expect(formEntry()).toBeUndefined();
+      expect(resolveCompendiumSlug).not.toHaveBeenCalled();
+    },
+  );
+
+  // The shell's Add Ingredient opens over any page by `?new` (M10.12), so its values are not
+  // this page's: the list draws, with no dialog of its own and no edit beneath.
+  it.each(['ingredient-coven-fixture-coven', 'ingredient'])(
+    'opens no dialog of its own on ?new=%s, the shell’s Add Ingredient, holding an ?edit= back',
+    async (value) => {
+      await renderPage({ new: value, edit: TESTWORT.slug });
+
+      expect(screen.getByRole('link', { name: 'Add Ingredient' })).toBeInTheDocument();
+      expect(screen.queryByRole('dialog')).not.toBeInTheDocument();
+      expect(entryValues).not.toHaveBeenCalled();
+    },
+  );
 
   // `?new` is a link from the list, so it wins over an `?edit=` left beside it.
   it('opens the empty form on ?new beside an ?edit=, reading no entry', async () => {
-    await renderPage({ new: '', edit: TESTWORT.slug });
+    await renderPage({ new: 'ingredient-compendium', edit: TESTWORT.slug });
 
     expect(
       screen.getByRole('dialog', { name: 'Add Ingredient to Compendium' }),
@@ -622,7 +639,7 @@ describe('the /admin/compendium details modal', () => {
 
   // A form's duplicates warning opens a match's details over the form (M12.48).
   it('opens the details over an add form on ?entry= with ?new, closing back to the form, with no Edit', async () => {
-    await renderPage({ ...FILTERED, new: '', entry: TESTWORT.slug });
+    await renderPage({ ...FILTERED, new: 'ingredient-compendium', entry: TESTWORT.slug });
 
     // Why it could have an Edit: the details alone carry one.
     expect(screen.getAllByRole('dialog')).toHaveLength(2);
@@ -630,7 +647,7 @@ describe('the /admin/compendium details modal', () => {
 
     fireEvent.click(within(details()).getByRole('button', { name: 'Close' }));
 
-    expect(router.replace).toHaveBeenCalledWith(`${FILTERED_HREF}&new`);
+    expect(router.replace).toHaveBeenCalledWith(`${FILTERED_HREF}&new=ingredient-compendium`);
   });
 
   it("opens the details over another entry's edit form with no Edit, closing back to that form", async () => {

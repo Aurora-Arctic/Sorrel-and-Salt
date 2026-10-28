@@ -164,7 +164,7 @@ test.fixme(
       }
       // The spell builder is a dialog over the grimoire (M10.12): its address
       // shows a viewer the grimoire, and no dialog.
-      await page.goto(`/coven/${coven.slug}/grimoire?new=spell`);
+      await page.goto(`/coven/${coven.slug}/grimoire?new=spell-${coven.slug}`);
       await expect(page.getByRole('heading', { name: 'Grimoire' })).toBeVisible();
       await expect(page.getByRole('dialog')).toHaveCount(0);
     });

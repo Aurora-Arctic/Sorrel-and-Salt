@@ -19,7 +19,10 @@ type Story = StoryObj<{ state?: import('react').ReactNode }>;
 // The compendium's, the one admin page with a heading of its own since the
 // others went into tabs (MB.115).
 const AddIngredient = () => (
-  <AddAction href={'/admin/compendium?new' as Route} heading={{ title: 'Add Ingredient' }}>
+  <AddAction
+    href={'/admin/compendium?new=ingredient-compendium' as Route}
+    heading={{ title: 'Add Ingredient' }}
+  >
     Add Ingredient
   </AddAction>
 );

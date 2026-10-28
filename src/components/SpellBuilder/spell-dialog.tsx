@@ -3,7 +3,7 @@
 import type { Route } from 'next';
 import { useSearchParams } from 'next/navigation';
 import { type ReactElement, useState } from 'react';
-import { NEW, NEW_SPELL } from '../AppShell/add-href';
+import { NEW, opensNewSpell } from '../AppShell/add-href';
 import { usePendingNavigation } from '../../lib/navigation';
 import { RouteModal } from '../Modal';
 import type { ModalHeading } from '../Modal/types';
@@ -12,15 +12,16 @@ import SpellBuilder from '.';
 import type { SpellDialogProps } from './types';
 
 // The spell builder as a modal over the grimoire (M10.12), the owner's call on
-// 2026-10-27, in step with Add Ingredient: New Spell opens it under `?new=spell`,
+// 2026-10-27, in step with Add Ingredient: New Spell opens it under `?new=spell-<slug>`
+// (or `?new=spell`, the current grimoire's; the owner's call, 2026-10-28),
 // and a spell's Edit under `?edit=<id>` (claude-docs/design-decisions/
-// m10.12-spell-builder-modal.md). A draft's first save replaces `?new=spell`
+// m10.12-spell-builder-modal.md). A draft's first save replaces `?new`
 // with its own `?edit=<id>`, so a reload or Back opens the saved draft, never an
 // empty form. The builder reports that save through `onCreated`, whichever
 // way it was made, so M13.17's autosave moves the address the same way.
 // Close saves first (./save-on-close.ts). A client part because the
 // builder's handlers are functions, which a server page cannot hand down.
-// New Spell's press writes `?new=spell` with the browser's pushState (AddAction's
+// New Spell's press writes `?new=spell-<slug>` with the browser's pushState (AddAction's
 // `drawnHere`), so the dialog reads the address itself and draws the empty builder at
 // once, at its full size, as Add Ingredient does: a skeleton the server's form replaced
 // grew the centred dialog and moved it under the pointer. Any other `?new` is Add
@@ -38,13 +39,15 @@ export const NEW_SPELL_HEADING: ModalHeading = { title: 'New Spell' };
 
 export default function SpellDialog({
   workspaceId,
+  covenSlug,
   closeHref,
   opened: read,
   canCreate,
 }: SpellDialogProps): ReactElement | null {
   const { navigate } = usePendingNavigation();
   const adding = useSearchParams().get(NEW);
-  const opened = adding === null ? read : adding === NEW_SPELL && canCreate ? {} : undefined;
+  const opened =
+    adding === null ? read : opensNewSpell(adding, covenSlug) && canCreate ? {} : undefined;
   // The draft this dialog's first save created. Once the address names it,
   // the builder that created it stays, under the same key, rather than a
   // fresh one replacing it mid-edit.

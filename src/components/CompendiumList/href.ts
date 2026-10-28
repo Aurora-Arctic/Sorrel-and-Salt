@@ -1,4 +1,5 @@
 import type { Route } from 'next';
+import { NEW_COMPENDIUM_ENTRY } from '../../lib/coven-path';
 import { dialogParams } from '../../lib/list-href';
 import type { ListDialog } from '../../lib/types';
 import { COVEN_PARAMS } from '../IngredientSearch/coven-params';
@@ -29,6 +30,8 @@ export function compendiumHref(
     // The details modal under any edit modal, so closing the edit goes back to it (M12.5).
     entry: place.entry,
     ...dialogParams(dialog),
+    // New Entry names itself, so the shell's Add Ingredient can tell `?new` apart (M10.12).
+    ...(dialog === 'new' && { new: NEW_COMPENDIUM_ENTRY }),
   });
 }
 

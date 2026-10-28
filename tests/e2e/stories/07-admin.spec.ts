@@ -149,7 +149,7 @@ test.describe('story 17: everyone but an admin is kept from editing the compendi
       // The edit addresses refuse a non-admin.
       await expectNotAuthorized(page, `/admin/compendium?edit=${slug}`);
       await expect(page.getByRole('textbox')).toHaveCount(0);
-      await expectNotAuthorized(page, '/admin/compendium?new');
+      await expectNotAuthorized(page, '/admin/compendium?new=ingredient-compendium');
 
       // The entry's public page shows the same non-admin its content and no way
       // to change it: no Edit, no Delete, anywhere on it.
@@ -354,7 +354,7 @@ test.describe('story 18: an admin adds, edits and soft-deletes what the compendi
       await expect(busy(adding)).toHaveCount(1);
       await expect(page).toHaveURL(/\/admin\/compendium$/);
       await gate.release();
-      await expect(page).toHaveURL(/\/admin\/compendium\?new$/);
+      await expect(page).toHaveURL(/\/admin\/compendium\?new=ingredient-compendium$/);
       const name = adding.getByRole('textbox', { name: 'Name', exact: true });
       await expect(name).toBeVisible();
       await expect(busy(adding)).toHaveCount(0);
