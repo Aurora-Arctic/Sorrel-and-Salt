@@ -299,38 +299,6 @@
   gap: space(1);
 }
 
-// The actions' own addition to the primitive: above the stretched link, so each
-// button is its own target. The row and the start group are boxes as wide as the card, so
-// they pass the pointer through and only their children take it back (MB.272): a press in
-// the gaps between the controls opens the entry, as the rest of the card does. Each child
-// is a control or the wrapper its tip or menu opens in, so a menu or tip keeps the pointer.
-.ingredient-card .specimen__actions,
-.spell-card .specimen__actions {
-  position: relative;
-  z-index: 1;
-  pointer-events: none;
-}
-
-.ingredient-card .specimen__actions > :not(.specimen__actions-start),
-.ingredient-card .specimen__actions-start > *,
-.spell-card .specimen__actions > :not(.specimen__actions-start),
-.spell-card .specimen__actions-start > * {
-  pointer-events: auto;
-}
-
-// The foot's start (M12.5): the coven's Quick Look eye at the bottom left, the
-// other actions kept at the right by the auto margin. A flex row, not inline: as
-// a line box its text's line height and `vertical-align: middle` set the eye
-// on the baseline rather than the row's centre, and could grow the row past the
-// 2rem controls, which then sat above the eye.
-.ingredient-card .specimen__actions-start,
-.spell-card .specimen__actions-start {
-  display: flex;
-  align-items: center;
-  gap: space(2);
-  margin-inline-end: auto;
-}
-
 // The badges (the marks, Caution, Toxic, Low and Out of Stock are all `.badge`) at the medium
 // badge size, which holds them 24px tall. The chips and their +N button are CategoryChips'.
 .ingredient-card .badge {
