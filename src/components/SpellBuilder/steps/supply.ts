@@ -1,4 +1,4 @@
-import { unitConvert } from '@/modules/ingredients';
+import { unitConvert } from '@/modules/ingredients/validation/unit-convert';
 import type { Unit } from '@/modules/ingredients/schema/units';
 import { stockState } from '../../StockBadge/stock-state';
 import type { StepJar, SpellStepValue } from './types';
