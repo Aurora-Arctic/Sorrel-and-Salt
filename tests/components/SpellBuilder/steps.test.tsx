@@ -367,6 +367,35 @@ describe('the spell builder’s Add to Jar', () => {
     expect(stepRows()[0]).toHaveTextContent('Fixture Mockroot');
   });
 
+  it('opens a closed ingredient row from a click on its name, and a click on Remove removes it without opening it', async () => {
+    suggest(ROSEWORT, MOCKROOT);
+    renderBuilder();
+    await add('Fixture', /Fixture Rosewort/);
+    await add('Fixture', /Fixture Mockroot/);
+    const pencil = () => screen.getByRole('button', { name: 'Edit Fixture Rosewort' });
+    // The second add opened Mockroot and closed Rosewort.
+    expect(pencil()).toHaveAttribute('aria-expanded', 'false');
+
+    fireEvent.click(
+      within(stepRow('Fixture Rosewort')).getByText(/Fixture Rosewort/, { selector: 'p' }),
+    );
+    expect(pencil()).toHaveAttribute('aria-expanded', 'true');
+    expect(
+      within(stepRow('Fixture Rosewort')).getByRole('spinbutton', { name: /^Quantity/ }),
+    ).toBeInTheDocument();
+
+    fireEvent.click(
+      within(stepRow('Fixture Rosewort')).getByText(/Fixture Rosewort/, { selector: 'p' }),
+    );
+    expect(pencil()).toHaveAttribute('aria-expanded', 'false');
+
+    fireEvent.click(
+      within(stepRow('Fixture Mockroot')).getByRole('button', { name: 'Remove Fixture Mockroot' }),
+    );
+    expect(stepRows()).toHaveLength(1);
+    expect(pencil()).toHaveAttribute('aria-expanded', 'false');
+  });
+
   it('refuses a unit the coven’s jar cannot be measured in, beside the unit, and holds Save', async () => {
     suggest(ROSEWORT);
     renderBuilder();

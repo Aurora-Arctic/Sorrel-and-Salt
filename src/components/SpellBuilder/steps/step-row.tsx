@@ -114,6 +114,14 @@ export function BuilderStepRow({
   );
   return (
     <StepRow
+      onToggle={
+        instruction
+          ? undefined
+          : () => {
+              focusOnOpen.current = !open;
+              onToggle();
+            }
+      }
       rowRef={(node) => {
         row.current = node;
         sortable.setNodeRef(node);
