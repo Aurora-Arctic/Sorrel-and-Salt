@@ -52,8 +52,11 @@ const VERDICTS: Partial<Record<StepSupply['kind'], Verdict>> = {
 };
 
 /** The line's words after the name, as the parts to join: need, hold, the verdict. */
-export function holdWords(step: SpellStepValue): { parts: string[]; verdict: Verdict | null } {
-  const supply = supplyOf(step);
+export function holdWords(
+  step: SpellStepValue,
+  steps: readonly SpellStepValue[] = [step],
+): { parts: string[]; verdict: Verdict | null } {
+  const supply = supplyOf(step, steps);
   if (step.ingredientId === null) return { parts: ['one-off', 'nothing to hold'], verdict: null };
   const typed = step.quantity.trim();
   const need = typed === '' ? null : `need ${[typed, step.unit].filter(Boolean).join(' ')}`;
@@ -70,8 +73,16 @@ export function holdWords(step: SpellStepValue): { parts: string[]; verdict: Ver
   };
 }
 
-function HoldLine({ step, seed }: { step: SpellStepValue; seed: string }): ReactElement {
-  const { parts, verdict } = holdWords(step);
+function HoldLine({
+  step,
+  steps,
+  seed,
+}: {
+  step: SpellStepValue;
+  steps: readonly SpellStepValue[];
+  seed: string;
+}): ReactElement {
+  const { parts, verdict } = holdWords(step, steps);
   const oneOff = step.ingredientId === null;
   const jar = step.jar;
   // The form only picks the vessel's shape here; it is not shown.
@@ -113,6 +124,7 @@ export function InCovenInventory({ steps }: { steps: readonly SpellStepValue[] }
             <HoldLine
               key={`${index}-${step.variantId ?? step.name}`}
               step={step}
+              steps={lines}
               seed={step.ingredientId ?? step.name ?? ''}
             />
           ))}

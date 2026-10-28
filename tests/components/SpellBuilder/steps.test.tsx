@@ -771,6 +771,33 @@ describe('the spell builder’s In Coven Inventory', () => {
     expect(line('Fixture Rosewort')).toHaveTextContent('need 4 g · hold 5 g');
   });
 
+  it('judges a form laid in two steps on the sum, and shows one line for each step', async () => {
+    suggest(HELD);
+    renderBuilder();
+    await add('Rose', /Fixture Rosewort/);
+    await add('Rose', /Fixture Rosewort/);
+    const lines = () =>
+      within(hold())
+        .getAllByRole('listitem')
+        .filter((li) => li.textContent?.includes('Fixture Rosewort'));
+    const notEnough = (li: HTMLElement) => within(li).queryByRole('button', { name: 'Not Enough' });
+
+    for (const index of [0, 1]) {
+      // One row is open at a time: open each in turn.
+      const row = stepRows()[index] as HTMLElement;
+      const edit = within(row).queryByRole('button', { name: /^Edit/, expanded: false });
+      if (edit) fireEvent.click(edit);
+      fireEvent.change(within(row).getByRole('spinbutton', { name: /^Quantity/ }), {
+        target: { value: '3' },
+      });
+      chooseUnit(row, 'g');
+    }
+
+    // 3 g and 3 g each fit the 5 g held; together they do not.
+    await waitFor(() => expect(lines().map(notEnough).filter(Boolean)).toHaveLength(2));
+    expect(lines()).toHaveLength(2);
+  });
+
   it('says Units Differ where the unit cannot be set against the jar’s', async () => {
     suggest(HELD);
     renderBuilder();
