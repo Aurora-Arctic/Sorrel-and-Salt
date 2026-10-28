@@ -323,26 +323,39 @@ $-shake-duration: 500ms;
   }
 }
 
-// The spell jar's ingredient bands: two close tints of the one ink, alternating, so the
-// change of tint marks each boundary and no line is drawn.
+// The spell jar's ingredient bands: two tints of the one ink, alternating, with a thin line
+// along each boundary. The top band's upper edge is drawn as the level line of a held jar.
 .jar-shelf__band {
   transition: transform 0.4s ease;
 
   @include reduced-motion {
     transition: none;
   }
-
-  path {
-    fill: $text-primary;
-  }
 }
 
-.jar-shelf__band--0 path {
-  opacity: 0.09;
+.jar-shelf__band-fill {
+  fill: $text-primary;
 }
 
-.jar-shelf__band--1 path {
-  opacity: 0.12;
+.jar-shelf__band--0 .jar-shelf__band-fill {
+  opacity: 0.08;
+}
+
+.jar-shelf__band--1 .jar-shelf__band-fill {
+  opacity: 0.18;
+}
+
+.jar-shelf__band-edge {
+  fill: none;
+  stroke: $text-primary;
+  stroke-width: 0.5;
+  opacity: 0.25;
+}
+
+.jar-shelf__band-edge--top {
+  stroke: $accent;
+  stroke-width: 1.2;
+  opacity: 0.9;
 }
 
 // A form with no jar: the same vessel in dashes, its corks and cloths left off.

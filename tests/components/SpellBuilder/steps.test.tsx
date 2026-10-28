@@ -842,7 +842,7 @@ describe('the spell builder’s jar fill', () => {
   const bands = () =>
     screen
       .getByRole('complementary', { name: 'The Jar' })
-      .querySelectorAll('svg .jar-shelf__band path').length;
+      .querySelectorAll('svg .jar-shelf__band-fill').length;
 
   it('draws a band for each ingredient step, a one-off too, and none for an instruction', async () => {
     suggest(MOCKROOT);
