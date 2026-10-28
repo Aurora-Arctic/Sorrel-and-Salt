@@ -234,7 +234,9 @@ describe('compendiumHref', () => {
     expect(compendiumHref({ after: 'x/y' }, { edit: 'testwort' })).toBe(
       '/admin/compendium?after=x%2Fy&edit=testwort',
     );
-    expect(compendiumHref({ before: 'b' }, 'new')).toBe('/admin/compendium?before=b&new');
+    expect(compendiumHref({ before: 'b' }, 'new')).toBe(
+      '/admin/compendium?before=b&new=ingredient-compendium',
+    );
     expect(compendiumHref({})).toBe('/admin/compendium');
   });
 
@@ -256,7 +258,7 @@ describe('compendiumHref', () => {
       '/admin/compendium?elements=fire&elements=water&after=a',
     );
     expect(compendiumHref({ query: 'test', before: 'b' }, 'new')).toBe(
-      '/admin/compendium?query=test&before=b&new',
+      '/admin/compendium?query=test&before=b&new=ingredient-compendium',
     );
     expect(compendiumHref({ withoutReferences: true })).toBe(
       '/admin/compendium?withoutReferences=1',

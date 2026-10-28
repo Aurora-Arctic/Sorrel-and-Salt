@@ -95,7 +95,7 @@ test('the compendium form stands inside the viewport on a phone', async ({ page 
   await page.setViewportSize({ width: 375, height: 812 });
   await signInAs(page, 'phone-admin@admin-compendium.test', ['discord'], 'admin');
 
-  await page.goto('/admin/compendium?new');
+  await page.goto('/admin/compendium?new=ingredient-compendium');
 
   await expectInsideViewport(page, page.getByRole('dialog', { name: 'Add Ingredient' }));
   await assertNoAccessibilityViolations(page);
@@ -108,7 +108,7 @@ test('the compendium form stands inside the viewport and keeps its pickers insid
 }) => {
   await signInAs(page, 'an-admin@admin-compendium.test', ['discord'], 'admin');
 
-  const response = await page.goto('/admin/compendium?new');
+  const response = await page.goto('/admin/compendium?new=ingredient-compendium');
   expect(response?.status()).toBe(200);
   const adding = page.getByRole('dialog', { name: 'Add Ingredient' });
   await expect(adding).toBeVisible();
@@ -193,7 +193,7 @@ test('the edit source panel leaves the dialog in place and closes from its top b
 }) => {
   await page.setViewportSize({ width: 1280, height: 900 });
   await signInAs(page, 'source-admin@admin-compendium.test', ['discord'], 'admin');
-  await page.goto('/admin/compendium?new');
+  await page.goto('/admin/compendium?new=ingredient-compendium');
   const adding = page.getByRole('dialog', { name: 'Add Ingredient' });
   await expect(adding).toBeVisible();
 
@@ -247,7 +247,7 @@ test('the edit source panel leaves the dialog in place and closes from its top b
 // (tests/modules/ingredients/services/toxic-flags.test.ts).
 test('the toxic toggle starts off, saves, and reads back on reopening', async ({ page }) => {
   await signInAs(page, 'toxic-admin@admin-compendium.test', ['discord'], 'admin');
-  await page.goto('/admin/compendium?new');
+  await page.goto('/admin/compendium?new=ingredient-compendium');
   const adding = page.getByRole('dialog', { name: 'Add Ingredient' });
   await adding.getByRole('textbox', { name: 'Name', exact: true }).fill('Aaa Toxicwort');
   await adding.getByRole('combobox', { name: 'Classification' }).click();

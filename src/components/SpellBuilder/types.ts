@@ -68,15 +68,17 @@ export interface SpellBuilderProps {
 /** A saved spell as the grimoire page reads it for `?edit=<id>`: the dialog reads its steps after. */
 export type SpellDialogSpell = Omit<SpellBuilderSpell, 'steps'>;
 
-/** What the address opens the builder's dialog on: a new spell (`?new=spell`), or a saved one (`?edit=<id>`). */
+/** What the address opens the builder's dialog on: a new spell (`?new=spell-<slug>`), or a saved one (`?edit=<id>`). */
 export interface SpellDialogOpened {
-  /** The saved spell `?edit=<id>` names; left out for `?new=spell`. */
+  /** The saved spell `?edit=<id>` names; left out for `?new=spell-<slug>`. */
   spell?: SpellDialogSpell;
 }
 
 export interface SpellDialogProps {
   /** The coven the spell is written in. */
   workspaceId: string;
+  /** That coven's slug, which `?new=spell-<slug>` names. */
+  covenSlug: string;
   /**
    * The grimoire tab it opened over, as it was, the dialog's parameter dropped. A new
    * draft's first save moves to it with `edit=<id>` added.
@@ -85,7 +87,7 @@ export interface SpellDialogProps {
   /** What the server read from the address; left out, it opens nothing. */
   opened?: SpellDialogOpened;
   /**
-   * Whether this member may create a spell. `?new=spell` opens the empty builder from the
+   * Whether this member may create a spell. `?new=spell-<slug>` opens the empty builder from the
    * browser's address alone when true, before the server has read it.
    */
   canCreate: boolean;

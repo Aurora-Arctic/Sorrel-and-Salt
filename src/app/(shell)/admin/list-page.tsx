@@ -12,17 +12,24 @@ import type { ListPlace, ListSearchParams } from './types';
 // Modelled on the celestial bodies' and signs' page module, the one shape two
 // routes already shared, now `value-page.tsx`.
 
-/** The name filter, cursor and modal the address asks for. */
-export function readListPlace(params: ListSearchParams): ListPlace {
+/**
+ * The name filter, cursor and modal the address asks for. `own` is the page's own value of
+ * `?new` beside the bare flag, as the compendium's `ingredient-compendium` (M10.12).
+ */
+export function readListPlace(params: ListSearchParams, own?: string): ListPlace {
   const { after, before } = readPageCursors(params);
+  const value = params.new === undefined ? undefined : (single(params.new) ?? '');
   return {
     // Blank is no filter: a native submit sends `query=`.
     query: trimmed(params.query),
     after,
     before,
-    editSlug: single(params.edit),
-    // By presence: `?new` is written bare (src/lib/list-href.ts).
-    adding: params.new !== undefined,
+    // Any `?new` holds an edit back, the shell's Add Ingredient's included, so one dialog
+    // shows at a time; the edit opens when that dialog's close drops `new`.
+    editSlug: value === undefined ? single(params.edit) : undefined,
+    // `?new` is written bare (src/lib/list-href.ts), or with the page's own value. Any other
+    // value, as `ingredient-coven-<slug>`, is the shell's Add Ingredient over the page.
+    adding: value === '' || (own !== undefined && value === own),
   };
 }
 
