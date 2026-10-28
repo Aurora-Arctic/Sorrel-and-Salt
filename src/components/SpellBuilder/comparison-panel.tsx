@@ -29,6 +29,7 @@ export interface ComparisonPanelProps {
   groups: ReadonlyMap<string, GroupColors>;
 }
 
+// The chips are the compact size, the one the admin Compendium table's Categories column uses.
 function Row({
   label,
   categories,
@@ -43,7 +44,7 @@ function Row({
     <div className="comparison-panel__row">
       <dt>{label}</dt>
       <dd>
-        <CategoryChips categories={categories} label={label} />
+        <CategoryChips categories={categories} label={label} compact />
         {children}
       </dd>
     </div>

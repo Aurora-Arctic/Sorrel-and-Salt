@@ -360,7 +360,7 @@ reads that nothing is held yet.
 `comparison-panel.tsx` (M10.17, story 52) sets what the spell intends beside what its jar
 carries, so a mismatch shows while the spell is built. It is a region named Intent Against
 Ingredients in the Jar aside, drawn as rows of a `dl` (Carried, Missing, Stray) whose values are
-the site's own `CategoryChips` ([`category-chips.md`](category-chips.md)), each in its category's group colours (read by id from the `categories` query the picker already makes; a category whose colours have not landed is left out until they do). The row's label alone says Carried, Missing or Stray: there is no chip variant of the panel's own, and no tip on a chip. It reads the form's values as they stand, saved or not, so a pick or an ingredient added or
+the site's own `CategoryChips` ([`category-chips.md`](category-chips.md)), each in its category's group colours (read by id from the `categories` query the picker already makes; a category whose colours have not landed is left out until they do). The chips are the compact size, the one the admin Compendium table's Categories column uses. The row's label alone says Carried, Missing or Stray: there is no chip variant of the panel's own, and no tip on a chip. It reads the form's values as they stand, saved or not, so a pick or an ingredient added or
 removed moves it at once. The comparison is M10.8's `compareSpellCategories` over M10.7's
 `summarizeSpellCategories`, run in the browser on the steps' categories; a one-off or an
 instruction brings none. It also lists Derived Categories, the union of the steps' categories,
