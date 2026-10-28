@@ -2,28 +2,31 @@
 
 import { useSortable } from '@dnd-kit/sortable';
 import { CSS } from '@dnd-kit/utilities';
-import type { ReactElement } from 'react';
+import { type ReactElement, useEffect, useId, useRef } from 'react';
 import { useFormContext, useWatch } from 'react-hook-form';
 import { ClearIcon, GripIcon } from '../../Combobox/icons';
+import { EditIcon } from '../../IngredientForm/icons';
 import { SelectField, TextField } from '../../Field';
 import SafetyNote, { SafetyMark } from '../../SafetyNote';
 import StepRow from '../../StepRow';
 import { UNIT_OPTIONS } from '../../StockFields';
-import { SupplyMark } from './supply-mark';
-import { supplyOf } from './supply';
 import type { SpellStepValue, SpellStepsValues } from './types';
 import { isInstruction, safetyOf, stepNameOf } from './values';
 
 // One step of the jar (M10.15, M13.3): the handle it is moved by (M10.16), then
-// StepRow's drawing of it with the controls around it — an ingredient's amount
-// and unit, its instruction beneath, and Remove. An instruction-only step has
-// the instruction alone. See claude-docs/components/spell-builder.md, "Steps".
+// StepRow's drawing of it with the controls around it. An ingredient's step is a
+// line, open or closed like the ingredient form's variant card: closed it reads
+// "· 2 tsp · Crush first"; open it shows its amount, unit and instruction (and,
+// for a one-off, its form). An instruction-only step has the instruction alone. See claude-docs/components/spell-builder.md, "Steps".
 
 export interface BuilderStepRowProps {
   /** The row's field-array key, its place in the sortable list. */
   id: string;
   index: number;
   step: SpellStepValue;
+  /** Whether the fields are shown. A unit that is refused opens its row whatever this says. */
+  open: boolean;
+  onToggle: () => void;
   onRemove: () => void;
 }
 
@@ -54,22 +57,46 @@ function StepHandle({
   );
 }
 
-export function BuilderStepRow({ id, index, step, onRemove }: BuilderStepRowProps): ReactElement {
-  const { setValue } = useFormContext<SpellStepsValues>();
+export function BuilderStepRow({
+  id,
+  index,
+  step,
+  open: openWanted,
+  onToggle,
+  onRemove,
+}: BuilderStepRowProps): ReactElement {
+  const {
+    setValue,
+    formState: { errors },
+  } = useFormContext<SpellStepsValues>();
+  const fieldsId = useId();
+  const edit = useRef<HTMLButtonElement>(null);
+  const focusOnOpen = useRef(false);
   const sortable = useSortable({ id });
   const unit = `steps.${index}.unit` as const;
   const name = stepNameOf(step);
   const instruction = isInstruction(step);
   const safety = safetyOf(step);
-  // The amount as it is typed now, so the verdict follows each keystroke (M10.19).
-  const [quantity, unitChosen] = useWatch<SpellStepsValues>({
-    name: [`steps.${index}.quantity`, `steps.${index}.unit`],
-  }) as [string, string];
-  const supply = supplyOf({
-    ...step,
-    quantity: quantity ?? step.quantity,
-    unit: unitChosen ?? step.unit,
-  });
+  // The amount and instruction as they are typed now, so the closed line follows them.
+  const [quantity, unitChosen, bodyTyped] = useWatch<SpellStepsValues>({
+    name: [`steps.${index}.quantity`, `steps.${index}.unit`, `steps.${index}.body`],
+  }) as [string | undefined, string | undefined, string | null | undefined];
+  // A unit the jar cannot be measured in is said on the Unit field, so its row is open.
+  const open = openWanted || errors.steps?.[index]?.unit !== undefined;
+  const oneOff = !instruction && step.ingredientId === null;
+  const summary = [
+    [quantity, unitChosen].filter(Boolean).join(' '),
+    (bodyTyped ?? '').trim(),
+  ].filter(Boolean);
+  // Opening by the pencil takes the focus to the first field, as a variant card's Edit does.
+  const row = useRef<HTMLLIElement | null>(null);
+  useEffect(() => {
+    if (!open || !focusOnOpen.current) return;
+    focusOnOpen.current = false;
+    row.current
+      ?.querySelector<HTMLElement>('.step-row__open input, .step-row__open textarea')
+      ?.focus();
+  }, [open]);
   const handle = <StepHandle name={name} sortable={sortable} />;
   const body = (
     <TextField<SpellStepsValues>
@@ -83,7 +110,10 @@ export function BuilderStepRow({ id, index, step, onRemove }: BuilderStepRowProp
   );
   return (
     <StepRow
-      rowRef={sortable.setNodeRef}
+      rowRef={(node) => {
+        row.current = node;
+        sortable.setNodeRef(node);
+      }}
       className={[
         'spell-step',
         'step-row--card',
@@ -98,18 +128,51 @@ export function BuilderStepRow({ id, index, step, onRemove }: BuilderStepRowProp
         transform: CSS.Translate.toString(sortable.transform),
         transition: sortable.transition,
       }}
+      open={instruction ? undefined : open}
+      fieldsId={fieldsId}
       position={index + 1}
       name={instruction ? null : name}
       icon={step.icon}
       // The care the ingredient needs, kept in view beside the step and never in the way of
       // saving it (M10.18). A one-off has none to show: it draws nothing, not "safe".
-      marks={
-        <>
-          {safety && <SafetyMark {...safety} />}
-          <SupplyMark supply={supply} />
-        </>
-      }
+      marks={safety && <SafetyMark {...safety} />}
       note={safety && <SafetyNote level={5} {...safety} />}
+      badge={oneOff ? <span className="badge badge--local">One-Off</span> : null}
+      summary={summary.length > 0 ? `· ${summary.join(' · ')}` : null}
+      aside={
+        oneOff
+          ? 'Goes in this jar and nowhere else: it makes no ingredient in your cupboard.'
+          : null
+      }
+      edit={
+        instruction ? null : (
+          <button
+            ref={edit}
+            type="button"
+            className="step-row__edit"
+            aria-label={`Edit ${step.name}`}
+            aria-expanded={open}
+            aria-controls={fieldsId}
+            onClick={() => {
+              focusOnOpen.current = !open;
+              onToggle();
+            }}
+          >
+            <EditIcon />
+          </button>
+        )
+      }
+      formField={
+        oneOff ? (
+          <TextField<SpellStepsValues>
+            name={`steps.${index}.form`}
+            label="Form"
+            labelSuffix={step.name ?? undefined}
+            placeholder="Add a form"
+            autoComplete="off"
+          />
+        ) : null
+      }
       handle={handle}
       bodyField={body}
       quantityField={

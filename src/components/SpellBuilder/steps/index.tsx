@@ -1,20 +1,20 @@
 'use client';
 
 import { LiveRegion, useAnnouncement } from '@dnd-kit/accessibility';
-import { type ReactElement, useEffect, useId, useMemo, useRef } from 'react';
+import { type ReactElement, useEffect, useId, useMemo, useRef, useState } from 'react';
 import { useFieldArray, useFormContext, useWatch } from 'react-hook-form';
 import { StepPicker, oneOffKey } from './picker';
 import { SortableSteps } from './sortable';
 import { BuilderStepRow } from './step-row';
 import type { SpellStepValue, SpellStepsValues } from './types';
-import { derivedCategories, newInstruction, stepNameOf, warningOf } from './values';
+import { isInstruction, newInstruction, stepNameOf, warningOf } from './values';
 
-// The jar's steps (M10.15): the picker that adds to them, the list, and the
-// spell's derived categories, worked out from the steps as they stand so a
-// Remove takes its categories off at once. The steps are moved by a handle
+// The jar's steps (M10.15): the box that adds to them, the Add a Step button
+// and the list, under the heading What Goes In. The steps are moved by a handle
 // each (M10.16), and an Add or a Remove is said in a live region of its own,
-// as a move is said in dnd-kit's. The categories the spell intends
-// are M10.14's, assigned; these are only ever derived (DESIGN.md §5).
+// as a move is said in dnd-kit's. One step is open at a time, the newest at
+// once; the rest are a line each. What the jar holds and the spell's intent set
+// against it are the aside's (hold.tsx, comparison-panel.tsx).
 // See claude-docs/components/spell-builder.md, "Steps".
 
 export function SpellSteps({ workspaceId }: { workspaceId: string }): ReactElement {
@@ -43,7 +43,18 @@ export function SpellSteps({ workspaceId }: { workspaceId: string }): ReactEleme
     target?.focus();
   }, [fields.length]);
 
+  // The step added since the last render opens at once, its field-array key being
+  // known only once the row is drawn.
+  const [openId, setOpenId] = useState<string | null>(null);
+  const openNew = useRef(false);
+  useEffect(() => {
+    if (!openNew.current) return;
+    openNew.current = false;
+    setOpenId(fields[fields.length - 1]?.id ?? null);
+  }, [fields]);
+
   const add = (step: SpellStepValue) => {
+    openNew.current = !isInstruction(step);
     // The focus stays in Add to Jar for the next ingredient: react-hook-form
     // would move it to the new step's Quantity a render later, closing the
     // list of whatever was typed in the meantime.
@@ -79,40 +90,50 @@ export function SpellSteps({ workspaceId }: { workspaceId: string }): ReactEleme
       ),
     [steps],
   );
-  const derived = derivedCategories(steps);
-  const derivedId = useId();
+  const headingId = useId();
+  const ingredients = steps.filter((step) => !isInstruction(step)).length;
+  const counts = [
+    `${steps.length} ${steps.length === 1 ? 'step' : 'steps'}`,
+    `${ingredients} ${ingredients === 1 ? 'ingredient' : 'ingredients'}`,
+  ].join(' · ');
 
   return (
-    <section className="spell-steps" ref={root}>
-      <div className="spell-steps__add">
-        {/* The picker leads the list rather than following it, so a step added
-            never pushes the box being typed in, nor its list, down the dialog. */}
-        <StepPicker workspaceId={workspaceId} taken={taken} oneOffs={oneOffs} onAdd={add} />
-        <button type="button" className="btn btn--small spell-steps__add-step" onClick={addStep}>
+    <section className="spell-steps" ref={root} aria-labelledby={headingId}>
+      <div className="spell-steps__head">
+        {/* h4: the jar sits in the builder's Jar section, whose heading is an h3. */}
+        <h4 className="spell-steps__heading" id={headingId}>
+          What Goes In
+        </h4>
+        {steps.length > 0 && <p className="spell-steps__summary">{counts}</p>}
+      </div>
+      {/* One grid holds the box, Add a Step and the list: the button follows the box on a
+          wide column and is the list's last line on a narrow one, by `order` alone, so it
+          is one button, in the one place in the markup. */}
+      <div className="spell-steps__body">
+        <div className="spell-steps__box">
+          <StepPicker workspaceId={workspaceId} taken={taken} oneOffs={oneOffs} onAdd={add} />
+        </div>
+        <button type="button" className="btn spell-steps__add-step" onClick={addStep}>
+          <span className="spell-steps__next" aria-hidden="true">
+            {fields.length + 1}.
+          </span>
           Add a Step
         </button>
+        <SortableSteps ids={fields.map((field) => field.id)} names={names} onMove={move}>
+          {fields.map((field, index) => (
+            <BuilderStepRow
+              key={field.id}
+              id={field.id}
+              index={index}
+              step={steps[index] ?? field}
+              open={openId === field.id}
+              onToggle={() => setOpenId((was) => (was === field.id ? null : field.id))}
+              onRemove={() => removeAt(index)}
+            />
+          ))}
+        </SortableSteps>
       </div>
-      <SortableSteps ids={fields.map((field) => field.id)} names={names} onMove={move}>
-        {fields.map((field, index) => (
-          <BuilderStepRow
-            key={field.id}
-            id={field.id}
-            index={index}
-            step={steps[index] ?? field}
-            onRemove={() => removeAt(index)}
-          />
-        ))}
-      </SortableSteps>
       <LiveRegion id={regionId} announcement={announcement} />
-      {/* h4: the jar sits in the builder's Jar section, whose heading is an h3. */}
-      <h4 className="spell-steps__heading" id={derivedId}>
-        Derived Categories
-      </h4>
-      <ul className="spell-steps__categories" aria-labelledby={derivedId}>
-        {derived.map((category) => (
-          <li key={category.id}>{category.name}</li>
-        ))}
-      </ul>
     </section>
   );
 }

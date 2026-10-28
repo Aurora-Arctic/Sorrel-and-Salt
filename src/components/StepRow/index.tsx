@@ -21,7 +21,14 @@ export default function StepRow({
   body,
   marks,
   note,
+  open,
+  fieldsId,
+  summary,
+  badge,
+  edit,
+  aside,
   handle,
+  formField,
   quantityField,
   unitField,
   bodyField,
@@ -31,8 +38,16 @@ export default function StepRow({
   style,
 }: StepRowProps): ReactElement {
   const amount = amountOf(quantity, unit);
-  return (
-    <li ref={rowRef} className={['step-row', className].filter(Boolean).join(' ')} style={style}>
+  const collapsible = open !== undefined && name !== null;
+  const className_ = [
+    'step-row',
+    collapsible && (open ? 'step-row--open' : 'step-row--closed'),
+    className,
+  ]
+    .filter(Boolean)
+    .join(' ');
+  const identity = (
+    <>
       {handle && <div className="step-row__handle">{handle}</div>}
       <span className="step-row__position">{position}.</span>
       {name !== null && (
@@ -40,8 +55,38 @@ export default function StepRow({
           {/* The generic spoon for a one-off, which names no form group. */}
           <FormIcon name={icon} />
           {name}
+          {badge}
         </p>
       )}
+    </>
+  );
+  if (collapsible) {
+    return (
+      <li ref={rowRef} className={className_} style={style}>
+        {identity}
+        {!open && summary && <p className="step-row__summary">{summary}</p>}
+        <div className="step-row__marks">{marks}</div>
+        {edit}
+        {actions}
+        {/* Fields exist only while open; their values are the form's, so they persist. */}
+        {open && (
+          <div className="step-row__open" id={fieldsId}>
+            <div className="step-row__inputs">
+              {formField && <div className="step-row__form">{formField}</div>}
+              {quantityField && <div className="step-row__quantity">{quantityField}</div>}
+              {unitField && <div className="step-row__unit">{unitField}</div>}
+              {bodyField && <div className="step-row__instruction">{bodyField}</div>}
+            </div>
+            {note && <div className="step-row__note">{note}</div>}
+            {aside && <p className="step-row__aside">{aside}</p>}
+          </div>
+        )}
+      </li>
+    );
+  }
+  return (
+    <li ref={rowRef} className={className_} style={style}>
+      {identity}
       {name !== null && <div className="step-row__marks">{marks}</div>}
       {name !== null && (quantityField || unitField) ? (
         <div className="step-row__fields">

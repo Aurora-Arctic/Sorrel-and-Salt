@@ -58,13 +58,86 @@
   gap: space(4);
 }
 
-// The picker and Add a Step on one line above the list, both against its left
-// edge and the tops level; on a narrow column Add a Step wraps beneath.
-.spell-steps__add {
+// What Goes In: the heading with a muted count at the right of its line.
+.spell-steps__head {
   display: flex;
   flex-wrap: wrap;
-  align-items: flex-start;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: space(1) space(3);
+}
+
+.spell-steps__heading,
+.spell-steps__summary {
+  margin: 0;
+}
+
+.spell-steps__summary {
+  color: $text-muted;
+}
+
+// The box, Add a Step and the list in one grid, so that one button can sit after the box
+// on a wide column and be the list's last line on a narrow one, by `order` alone. The
+// column is its own container for the query, named for it.
+.spell-steps {
+  container: spell-column / inline-size;
+}
+
+.spell-steps__body {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  align-items: start;
   gap: space(3);
+}
+
+.spell-steps__box {
+  grid-column: 1;
+  grid-row: 1;
+  min-width: 0;
+}
+
+.spell-steps__add-step {
+  grid-column: 2;
+  grid-row: 1;
+  white-space: nowrap;
+}
+
+// The next step's number, shown only where the button is a line of the list.
+.spell-steps__next {
+  display: none;
+}
+
+.spell-steps__body > .spell-steps__list,
+.spell-steps__body > .spell-steps__list:empty {
+  grid-column: 1 / -1;
+  grid-row: 2;
+}
+
+@container spell-column (max-width: #{$narrow-column}) {
+  .spell-steps__body {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .spell-steps__box,
+  .spell-steps__body > .spell-steps__list {
+    grid-column: 1;
+  }
+
+  // The dashed last line of the list, numbered as the next step, full width.
+  .spell-steps__add-step {
+    grid-column: 1;
+    grid-row: 3;
+    justify-content: flex-start;
+    gap: space(2);
+    border: 1px dashed $hairline;
+    background-color: transparent;
+    color: $text-primary;
+  }
+
+  .spell-steps__next {
+    display: inline;
+    color: $text-muted;
+  }
 }
 
 // The steps themselves: unnumbered, unindented, a gap between them.
@@ -83,9 +156,225 @@
   display: none;
 }
 
-// The comparison panel (M10.17): the two levels of the second list are told
-// apart in words first. Weight and ink follow the words and are not what
-// carries them; laid out no further until the section's design review.
-.comparison-panel__stray:not(.is-unplaced) {
+// The Jar section (the owner's Option C2): the steps on the left and an aside on the right,
+// side by side where the dialog is wide enough and the aside beneath the list where it is
+// not. The list takes what is spare (`999` to the aside's `1`) and never less than its
+// minimum, so the pair wraps once both cannot fit: 30rem and 18rem and the gap, inside the
+// wide dialog's 55rem, sit side by side; a phone is one column.
+.spell-jar-layout {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-start;
+  gap: space(5);
+}
+
+.spell-jar-layout__list {
+  flex: 999 1 30rem;
+  min-width: 0;
+}
+
+.spell-aside {
+  display: flex;
+  flex: 1 1 18rem;
+  flex-direction: column;
+  gap: space(3);
+  min-width: 0;
+
+  h4,
+  h5 {
+    margin: 0;
+  }
+}
+
+.spell-aside__rule {
+  width: 100%;
+  margin: 0;
+  border: 0;
+  border-block-start: 1px solid $hairline;
+}
+
+.spell-aside__empty {
+  margin: 0;
+  color: $text-muted;
+}
+
+// The jar drawing with the two fields beside it.
+.spell-aside__jar {
+  display: flex;
+  align-items: flex-start;
+  gap: space(3);
+}
+
+.spell-aside__fields {
+  display: flex;
+  flex: 1 1 auto;
+  flex-direction: column;
+  gap: space(2);
+  min-width: 0;
+}
+
+.spell-jar {
+  display: block;
+  flex: none;
+  inline-size: 4rem;
+
+  svg {
+    display: block;
+    inline-size: 100%;
+    block-size: auto;
+  }
+
+  .jar-shelf__glass,
+  .jar-shelf__lid,
+  .jar-shelf__facet {
+    stroke: $text-muted;
+  }
+}
+
+// What You Hold: a small jar, the name, and the words under it.
+.spell-hold {
+  display: flex;
+  flex-direction: column;
+  gap: space(2);
+}
+
+.spell-hold__list {
+  display: flex;
+  flex-direction: column;
+  gap: space(2);
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.spell-hold__line {
+  display: grid;
+  grid-template-areas:
+    'jar name'
+    'jar words';
+  grid-template-columns: 2rem minmax(0, 1fr);
+  column-gap: space(2);
+
+  &.is-one-off {
+    opacity: 0.7;
+  }
+}
+
+.spell-hold__jar {
+  grid-area: jar;
+  align-self: center;
+
+  svg {
+    display: block;
+    inline-size: 100%;
+    block-size: auto;
+  }
+}
+
+.spell-hold__name {
+  grid-area: name;
+  min-width: 0;
+  overflow: hidden;
+  font-weight: 500;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.spell-hold__words {
+  grid-area: words;
+  color: $text-muted;
+}
+
+.spell-hold__verdict {
+  display: inline-flex;
+  align-items: center;
+  gap: space(1);
+
+  &.is-low {
+    color: $stock-low-ink;
+  }
+
+  &.is-out {
+    color: $stock-out-ink;
+  }
+}
+
+.spell-hold__icon {
+  inline-size: 1em;
+  block-size: 1em;
+  flex: none;
+}
+
+@container spell-column (max-width: #{$narrow-column}) {
+  .spell-hold__name {
+    white-space: normal;
+  }
+}
+
+// Intent Against Ingredients: Carried, Missing and Stray, each a row of chips.
+.comparison-panel {
+  display: flex;
+  flex-direction: column;
+  gap: space(2);
+
+  h5 {
+    margin: 0;
+  }
+}
+
+.comparison-panel__rows {
+  display: flex;
+  flex-direction: column;
+  gap: space(2);
+  margin: 0;
+}
+
+.comparison-panel__row {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: space(1) space(2);
+
+  dt {
+    flex: none;
+    inline-size: 4.5rem;
+    color: $text-muted;
+  }
+
+  dd {
+    flex: 1 1 8rem;
+    margin: 0;
+  }
+}
+
+.comparison-panel__chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: space(1) space(2);
+  margin: 0;
+  padding: 0;
+  list-style: none;
+
+  li {
+    padding: 0 space(2);
+    border: 1px solid transparent;
+    border-radius: radius('pill');
+  }
+
+  &.is-carried li {
+    background-color: color-mix(in srgb, $accent 20%, $surface-card);
+  }
+
+  &.is-missing li {
+    border: 1px dashed $warning;
+    color: $warning;
+  }
+
+  &.is-stray li {
+    background-color: color-mix(in srgb, $text-muted 15%, $surface-card);
+  }
+}
+
+.comparison-panel__from {
   color: $text-muted;
 }

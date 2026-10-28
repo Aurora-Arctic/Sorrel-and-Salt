@@ -7,6 +7,7 @@ import { StockJarButton } from '../StockDialog';
 import type { StockDialogProps } from '../StockDialog/types';
 import { fillOf } from './level';
 import { pick } from './pick';
+export { pick as pickJarShape } from './pick';
 import { SHAPES, lv, wv } from './shapes';
 import type { HeldJar, JarPart, JarShelfProps, ShelfForm } from './types';
 import './index.scss';
@@ -59,12 +60,12 @@ function Part({ part }: { part: JarPart }): ReactElement {
  * around the group that moves, since a clip on a transformed element moves
  * with it. Each jar's clip has an id of its own, as two on a page cannot share.
  */
-function Drawing({
+export function JarDrawing({
   shape,
   held,
 }: {
   shape: keyof typeof SHAPES;
-  held: HeldJar | null;
+  held: Pick<HeldJar, 'quantity' | 'threshold'> | null;
 }): ReactElement {
   const clip = `jar-shelf-clip-${useId().replace(/\W/g, '')}`;
   const S = SHAPES[shape];
@@ -138,7 +139,7 @@ function Jar({
     : ' jar-shelf__jar--empty';
   return (
     <li className={`jar-shelf__jar${modifier}`}>
-      <Drawing shape={pick(seed, form)} held={jar} />
+      <JarDrawing shape={pick(seed, form)} held={jar} />
       {edit ? (
         // The button is the form's name, stretched over the whole jar by its `::after`, so a
         // press anywhere on the jar lands on it. A Low or Out amount is its own button (its

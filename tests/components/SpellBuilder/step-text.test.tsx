@@ -1,15 +1,16 @@
 import { QueryClientProvider } from '@tanstack/react-query';
-import { fireEvent, render, screen, waitFor, within } from '@testing-library/react';
+import { act, fireEvent, render, screen, waitFor, within } from '@testing-library/react';
 import { describe, expect, it, vi } from 'vitest';
 import type { SpellBuilderProps, SpellBuilderSpell } from '@/components/SpellBuilder/types';
 import type {
+  SpellIngredientSuggestionsQuery,
   CreateSpellMutation,
   CreateSpellMutationVariables,
   UpdateSpellMutation,
   UpdateSpellMutationVariables,
 } from '@/gql/graphql';
 import { makeQueryClient } from '@/lib/graphql-client';
-import { mockGraphQLMutation } from '../../support/msw/graphql';
+import { mockGraphQLMutation, mockGraphQLQuery } from '../../support/msw/graphql';
 import { offerCategories } from '../../support/msw/ingredient-lookups';
 
 vi.mock('next/navigation', () => ({ useRouter: () => ({ push: vi.fn(), refresh: vi.fn() }) }));
@@ -113,11 +114,17 @@ const announced = () =>
     .map((region) => region.textContent)
     .join(' | ');
 const addStep = () => fireEvent.click(screen.getByRole('button', { name: 'Add a Step' }));
-const addOneOff = (name: string) => {
-  fireEvent.change(screen.getByRole('textbox', { name: 'One-Off Name' }), {
-    target: { value: name },
-  });
-  fireEvent.click(screen.getByRole('button', { name: 'Add One-Off Ingredient' }));
+/** Types a name into the Add to Jar box and picks its last row: a one-off ingredient. */
+const addOneOff = async (name: string) => {
+  mockGraphQLQuery<SpellIngredientSuggestionsQuery>('SpellIngredientSuggestions', () => ({
+    ingredientSuggestions: { edges: [] },
+  }));
+  const box = screen.getByRole('combobox', { name: 'Add to Jar' });
+  act(() => box.focus());
+  fireEvent.change(box, { target: { value: name } });
+  fireEvent.click(
+    await screen.findByRole('option', { name: `Add "${name}" as a one-off ingredient` }),
+  );
 };
 
 describe('the spell builder’s step text', () => {
@@ -141,7 +148,7 @@ describe('the spell builder’s step text', () => {
 
     addStep();
     fireEvent.change(instructions()[0] as HTMLElement, { target: { value: 'Light the candle' } });
-    addOneOff('Testwort');
+    await addOneOff('Testwort');
     fireEvent.change(instructions()[1] as HTMLElement, { target: { value: 'Crush it first' } });
     submit();
 
@@ -171,6 +178,7 @@ describe('the spell builder’s step text', () => {
 
   it('reads a saved spell’s texts back into their fields, an ingredient step’s beneath it', () => {
     renderSaved();
+    fireEvent.click(screen.getByRole('button', { name: 'Edit Testwort' }));
 
     expect(instructions().map((field) => field.value)).toEqual([
       'Light the candle',
@@ -199,6 +207,7 @@ describe('the spell builder’s step text', () => {
     const calls = acceptUpdate();
     renderSaved();
 
+    fireEvent.click(screen.getByRole('button', { name: 'Edit Testwort' }));
     fireEvent.change(instructions()[1] as HTMLElement, { target: { value: '' } });
     submit();
 

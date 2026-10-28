@@ -2,9 +2,13 @@ import { QueryClientProvider } from '@tanstack/react-query';
 import { act, fireEvent, render, screen, waitFor, within } from '@testing-library/react';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import type { SpellBuilderProps, SpellBuilderSpell } from '@/components/SpellBuilder/types';
-import type { UpdateSpellMutation, UpdateSpellMutationVariables } from '@/gql/graphql';
+import type {
+  SpellIngredientSuggestionsQuery,
+  UpdateSpellMutation,
+  UpdateSpellMutationVariables,
+} from '@/gql/graphql';
 import { makeQueryClient } from '@/lib/graphql-client';
-import { mockGraphQLMutation } from '../../support/msw/graphql';
+import { mockGraphQLMutation, mockGraphQLQuery } from '../../support/msw/graphql';
 import { offerCategories } from '../../support/msw/ingredient-lookups';
 import { TOUCH_DRAG_DELAY_MS } from '@/lib/sortable';
 import {
@@ -228,13 +232,20 @@ describe('the spell builder’s step order', () => {
     expect(order()).toEqual(['Testwort', 'Stir thrice', ROSEWORT]);
   });
 
-  it('says a step added and a step removed, with the place', () => {
+  it('says a step added and a step removed, with the place', async () => {
     renderBuilder();
+    mockGraphQLQuery<SpellIngredientSuggestionsQuery>('SpellIngredientSuggestions', () => ({
+      ingredientSuggestions: { edges: [] },
+    }));
 
-    fireEvent.change(screen.getByRole('textbox', { name: 'One-Off Name' }), {
-      target: { value: 'Fixture Glimmerseed' },
-    });
-    fireEvent.click(screen.getByRole('button', { name: 'Add One-Off Ingredient' }));
+    const box = screen.getByRole('combobox', { name: 'Add to Jar' });
+    act(() => box.focus());
+    fireEvent.change(box, { target: { value: 'Fixture Glimmerseed' } });
+    fireEvent.click(
+      await screen.findByRole('option', {
+        name: 'Add "Fixture Glimmerseed" as a one-off ingredient',
+      }),
+    );
     expect(announced()).toContain('Added Fixture Glimmerseed, at position 4 of 4.');
 
     fireEvent.click(screen.getByRole('button', { name: 'Remove Testwort' }));

@@ -19,7 +19,7 @@ import MoonPhaseIcon from '../MoonPhaseIcon';
 import Notice from '../Notice';
 import Skeleton from '../Skeleton';
 import { SpellCategoriesField, sameCategories, useCategoryName } from './categories-field';
-import { SpellComparison } from './comparison-panel';
+import { JarAside } from './jar-aside';
 import { DAYS_OF_THE_WEEK, MOON_PHASES } from './constants';
 import { useSaveOnClose } from './save-on-close';
 import { SpellSteps } from './steps';
@@ -535,29 +535,33 @@ const SpellBuilder = ({
             {section(
               'Jar',
               <>
-                <TextField<SpellBuilderValues>
-                  name="jarDescription"
-                  label="Jar Description"
-                  placeholder="Add a description"
-                  autoComplete="off"
-                />
-                <TextField<SpellBuilderValues>
-                  name="sealWaxColor"
-                  label="Seal Wax Colour"
-                  placeholder="Add a colour"
-                  autoComplete="off"
-                />
-                {jarReady ? (
-                  <SpellSteps workspaceId={workspaceId} />
-                ) : stepsRead === 'failed' ? (
-                  <Notice kind="error">{STEPS_FAILED}</Notice>
-                ) : (
-                  <section className="spell-steps" aria-label="Steps" aria-busy="true">
-                    <Skeleton shape="line" />
-                  </section>
-                )}
-                {/* Intent against the jar's categories (M10.17), after the jar it reads. */}
-                {jarReady && <SpellComparison />}
+                <div className="spell-jar-layout">
+                  <div className="spell-jar-layout__list">
+                    {jarReady ? (
+                      <SpellSteps workspaceId={workspaceId} />
+                    ) : stepsRead === 'failed' ? (
+                      <Notice kind="error">{STEPS_FAILED}</Notice>
+                    ) : (
+                      <section className="spell-steps" aria-label="Steps" aria-busy="true">
+                        <Skeleton shape="line" />
+                      </section>
+                    )}
+                  </div>
+                  <JarAside ready={jarReady}>
+                    <TextField<SpellBuilderValues>
+                      name="jarDescription"
+                      label="Jar Description"
+                      placeholder="Add a description"
+                      autoComplete="off"
+                    />
+                    <TextField<SpellBuilderValues>
+                      name="sealWaxColor"
+                      label="Seal Wax Colour"
+                      placeholder="Add a colour"
+                      autoComplete="off"
+                    />
+                  </JarAside>
+                </div>
               </>,
             )}
             {/* The recipe's timing: when to work the spell, not when it was worked,

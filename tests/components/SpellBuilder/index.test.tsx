@@ -441,13 +441,7 @@ describe('SpellBuilder', () => {
       expect(expanded()).toEqual(['true', 'true', 'true', 'true']);
       const HELD = {
         Purpose: ['Title', 'Intent', 'Category'],
-        Jar: [
-          'Jar Description',
-          'Seal Wax Colour',
-          'Search Ingredients',
-          'One-Off Name',
-          'One-Off Form',
-        ],
+        Jar: ['Jar Description', 'Seal Wax Colour', 'Add to Jar'],
         'When to Work It': ['Moon Phase', 'Day of the Week'],
         Notes: ['Note'],
       } as const;

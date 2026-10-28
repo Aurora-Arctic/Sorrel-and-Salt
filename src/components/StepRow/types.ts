@@ -18,8 +18,25 @@ export interface StepRowProps {
   note?: ReactNode;
   /** The step's instruction. Read-only; `bodyField` replaces it. */
   body?: string | null;
+  /**
+   * Makes the card open or closed (the ingredient form's variant card). Closed it is one line:
+   * the name, `summary`, marks, `edit` and `actions`. Open it also holds the fields, the
+   * instruction and the note. Left out, the row is always as the caller fills it.
+   */
+  open?: boolean;
+  /** The id of the opened fields, which `edit` names in its `aria-controls`. */
+  fieldsId?: string;
+  /** A muted phrase after the name while closed, such as the amount and the instruction. */
+  summary?: ReactNode;
+  /** A small badge straight after the name, such as One-Off. */
+  badge?: ReactNode;
+  /** The pencil that opens the row. */
+  edit?: ReactNode;
+  /** A line in the open fields beneath the note, such as what a one-off means. */
+  aside?: ReactNode;
   /** The editing controls around the step, each drawn in place of the plain text it stands for. */
   handle?: ReactNode;
+  formField?: ReactNode;
   quantityField?: ReactNode;
   unitField?: ReactNode;
   bodyField?: ReactNode;
