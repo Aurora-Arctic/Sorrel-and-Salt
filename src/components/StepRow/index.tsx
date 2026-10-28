@@ -19,6 +19,8 @@ const amountOf = (quantity?: string | null, unit?: string | null): string | null
  */
 function toggleFromFace(event: MouseEvent<HTMLLIElement>, toggle: () => void): void {
   const target = event.target as Element;
+  // React bubbles a portal's clicks (a Unit listbox) to the row though the DOM does not: not the face.
+  if (!event.currentTarget.contains(target)) return;
   if (target.closest('button, input, textarea, select, a, [role=combobox], .step-row__open'))
     return;
   toggle();

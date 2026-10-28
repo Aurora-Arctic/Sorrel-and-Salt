@@ -396,6 +396,34 @@ describe('the spell builder’s Add to Jar', () => {
     expect(pencil()).toHaveAttribute('aria-expanded', 'false');
   });
 
+  it('stays open for a click or focus on anything inside its fields, including a Unit list picked from', async () => {
+    suggest(ROSEWORT);
+    renderBuilder();
+    await add('Fixture', /Fixture Rosewort/);
+    const pencil = () => screen.getByRole('button', { name: 'Edit Fixture Rosewort' });
+    const open = () => expect(pencil()).toHaveAttribute('aria-expanded', 'true');
+    open();
+    const row = stepRow('Fixture Rosewort');
+
+    chooseUnit(row, 'g');
+    open();
+    fireEvent.click(within(row).getByRole('combobox', { name: /^Unit/ }));
+    open();
+    const listbox = screen.getByRole('listbox', { name: /^Unit.* choices$/ });
+    fireEvent.pointerDown(listbox);
+    fireEvent.click(listbox);
+    open();
+    for (const field of within(row).getAllByRole('spinbutton')) {
+      fireEvent.pointerDown(field);
+      act(() => field.focus());
+      fireEvent.click(field);
+    }
+    for (const label of row.querySelectorAll('label, p, section')) {
+      if (label.closest('.step-row__open')) fireEvent.click(label);
+    }
+    open();
+  });
+
   it('refuses a unit the coven’s jar cannot be measured in, beside the unit, and holds Save', async () => {
     suggest(ROSEWORT);
     renderBuilder();
