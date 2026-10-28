@@ -133,6 +133,44 @@ describe('the spell builder’s saves', () => {
     await waitFor(() => expect(created).toHaveLength(1));
     expect(created[0].input.title).toBeNull();
   });
+  it('still refuses a blank new instruction when Save is pressed, beside the instruction', async () => {
+    const { created } = accept();
+    renderBuilder();
+
+    type('Title', 'Fixture Working');
+    fireEvent.click(screen.getByRole('button', { name: 'Add a Step' }));
+    fireEvent.click(save());
+
+    expect(await screen.findByText('Write the instruction, or remove it')).toBeInTheDocument();
+    expect(created).toHaveLength(0);
+  });
+
+  it('leaves a blank new instruction out of the autosave, and Remove then takes it out cleanly', async () => {
+    const { created } = accept();
+    renderBuilder();
+    vi.useFakeTimers({ shouldAdvanceTime: true });
+
+    type('Title', 'Fixture Working');
+    fireEvent.click(screen.getByRole('button', { name: 'Add a Step' }));
+    await act(async () => {
+      await vi.advanceTimersByTimeAsync(3100);
+    });
+
+    // The rest of the spell saved; the blank row stayed, with nothing said about it.
+    await waitFor(() => expect(created).toHaveLength(1));
+    expect(created[0].input.steps ?? []).toHaveLength(0);
+    expect(screen.queryByRole('alert')).toBeNull();
+    expect(screen.queryByText(/Failed|could not be saved/i)).toBeNull();
+
+    fireEvent.click(screen.getByRole('button', { name: /^Remove/ }));
+    await act(async () => {
+      await vi.advanceTimersByTimeAsync(3100);
+    });
+
+    expect(screen.queryByRole('button', { name: /^Remove/ })).toBeNull();
+    expect(screen.queryByRole('alert')).toBeNull();
+    expect(screen.queryByText(/Failed|could not be saved/i)).toBeNull();
+  });
 
   it('stores a new spell private on its first autosave, with nothing pressed', async () => {
     const { created } = accept();

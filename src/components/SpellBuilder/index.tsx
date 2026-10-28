@@ -34,7 +34,14 @@ import { saveSpell } from './autosave';
 import { useSaveOnClose } from './save-on-close';
 import { SpellSteps } from './steps';
 import type { SpellStepSend } from './steps/types';
-import { stepInputOf, stepValueOf, stepsChanged, unitIssues } from './steps/values';
+import {
+  isBlankNewInstruction,
+  isBlankSavedInstruction,
+  stepInputOf,
+  stepValueOf,
+  stepsChanged,
+  unitIssues,
+} from './steps/values';
 import { SpellStatusField } from './status-field';
 import { SpellSuggestField } from './suggest-field';
 import { SpellInput } from '@/modules/grimoire/validation/spell';
@@ -161,19 +168,38 @@ const resolver: Resolver<SpellBuilderValues, unknown, SpellBuilderInput> = async
   context,
   options,
 ) => {
+  // A new blank instruction is not checked until a save is asked for (Save
+  // or Close), since the autosave leaves it out and says nothing of it.
+  const asked = (context as { current: boolean } | undefined)?.current === true;
+  const kept = values.steps.flatMap((step, index) =>
+    asked || !isBlankNewInstruction(step) ? [index] : [],
+  );
   const result = await schemaResolver(
-    { ...values, steps: values.steps.map(stepInputOf) },
+    { ...values, steps: kept.map((index) => stepInputOf(values.steps[index]!)) },
     context,
     options as unknown as Parameters<typeof schemaResolver>[2],
   );
   const issues = unitIssues(values.steps);
-  if (issues.size === 0) return result as Awaited<ReturnType<typeof resolver>>;
-  const errors: Record<string, unknown> = { ...result.errors };
-  const steps: Record<string, unknown>[] = Array.isArray(errors.steps) ? [...errors.steps] : [];
+  const { steps: checked, ...otherErrors } = result.errors as Record<string, unknown>;
+  // The errors name the steps by their place among those checked: back to the form's.
+  const found: Record<string, unknown>[] = [];
+  if (Array.isArray(checked)) {
+    checked.forEach((error: Record<string, unknown>, at: number) => {
+      if (error && kept[at] !== undefined) found[kept[at]!] = error;
+    });
+  }
+  if (issues.size === 0 && !found.some(Boolean) && Object.keys(otherErrors).length === 0) {
+    return { values: result.values, errors: {} } as Awaited<ReturnType<typeof resolver>>;
+  }
+  const errors: Record<string, unknown> = { ...otherErrors };
+  const steps: Record<string, unknown>[] = [...found];
   for (const [index, message] of issues) {
     steps[index] = { ...steps[index], unit: { type: 'unit', message } };
   }
-  return { values: {}, errors: { ...errors, steps } } as Awaited<ReturnType<typeof resolver>>;
+  return {
+    values: {},
+    errors: { ...errors, ...(steps.some(Boolean) ? { steps } : {}) },
+  } as Awaited<ReturnType<typeof resolver>>;
 };
 
 // A moon phase's drawing beside its name, null for a phase typed outside
@@ -208,9 +234,12 @@ const SpellBuilder = ({
   // builder keeps what it opened with and carries the id its save returned.
   const [opened] = useState(spell);
   const [createdId, setCreatedId] = useState<string | null>(null);
+  // True while a save the person asked for runs: the resolver then checks a blank new instruction too.
+  const asked = useRef(false);
   const methods = useForm<SpellBuilderValues, unknown, SpellBuilderInput>({
     defaultValues: valuesOf(spell),
     resolver,
+    context: asked,
     // A field is checked when it is first left, and on every change after,
     // as the ingredient form's are (M5.9).
     mode: 'onTouched',
@@ -241,6 +270,8 @@ const SpellBuilder = ({
   const steps = useWatch({ control, name: 'steps' });
   const values = useWatch({ control }) as SpellBuilderValues;
   const categoryName = useCategoryName();
+  // The autosave never sends a blank new instruction: it stays in the form, unsaved and unmentioned.
+  const sendable = steps.filter((step) => !isBlankNewInstruction(step));
   const dirty =
     categoriesChanged ||
     visibility !== defaultValues?.visibility ||
@@ -248,9 +279,11 @@ const SpellBuilder = ({
     FIELDS.some(
       (field, index) => (typed[index] ?? '').trim() !== (defaultValues?.[field] ?? '').trim(),
     ) ||
-    stepsChanged(steps, (defaultValues?.steps ?? []) as SpellBuilderValues['steps']);
+    stepsChanged(sendable, (defaultValues?.steps ?? []) as SpellBuilderValues['steps']);
   // A unit the jar cannot be measured in holds Save, as the service would refuse it.
   const unitRefused = unitIssues(steps).size > 0;
+  // A saved instruction cleared of its text cannot be left out (that would delete it), so the autosave waits.
+  const blankSaved = steps.some(isBlankSavedInstruction);
 
   // A new spell opens every section, to be filled in order; a saved one opens
   // them shut, each line saying what it holds, as Add Ingredient's do (M8.16).
@@ -333,10 +366,13 @@ const SpellBuilder = ({
       { ...valuesOf(answer), categoryIds: sent.categoryIds },
       { keepValues: true, keepErrors: true },
     );
-    const now = getValues('steps');
+    // The save left out any blank new instruction, so its steps are placed among the form's that were sendable.
+    const now = getValues('steps')
+      .map((step, at) => ({ step, at }))
+      .filter(({ step }) => !isBlankNewInstruction(step));
     sent.steps.forEach((step, index) => {
       const created = answer.steps[index];
-      const current = now[index];
+      const current = now[index]?.step;
       if (
         step.stepId !== null ||
         !created ||
@@ -345,7 +381,7 @@ const SpellBuilder = ({
         JSON.stringify(stepInputOf(current)) !== JSON.stringify(stepInputOf(step))
       )
         return;
-      setValue(`steps.${index}.stepId`, created.id);
+      setValue(`steps.${now[index]!.at}.stepId`, created.id);
     });
   };
 
@@ -409,9 +445,9 @@ const SpellBuilder = ({
     ? mirrorKey({ entity: 'spell', id: createdId ?? opened?.id ?? null, userId })
     : undefined;
   const autosave = useAutosave({
-    value: values,
+    value: { ...values, steps: sendable },
     dirty,
-    enabled: jarReady && !unitRefused,
+    enabled: jarReady && !unitRefused && !blankSaved,
     save: persist,
     mirror,
     revision: opened?.revision ?? null,
@@ -431,8 +467,15 @@ const SpellBuilder = ({
     )();
   /** Saves now, for Save and Enter; a refusal is shown by the status beside Save. */
   const saveNow = async () => {
-    await markSubmitted();
-    await flush().catch(() => undefined);
+    asked.current = true;
+    try {
+      await markSubmitted();
+      // The autosave holds back a cleared saved instruction, so the error just drawn is the answer.
+      if (getValues('steps').some(isBlankSavedInstruction)) return;
+      await flush().catch(() => undefined);
+    } finally {
+      asked.current = false;
+    }
   };
 
   // A Close pressed while the steps are on their way saves once they land.
@@ -447,11 +490,15 @@ const SpellBuilder = ({
     try {
       if (!jarReady) await new Promise<void>((resume) => jarWaiters.current.push(resume));
       // The autosave holds back a unit the jar cannot take, so Close says why instead.
-      if (unitIssues(getValues('steps')).size > 0) {
-        await trigger();
+      const held = getValues('steps');
+      if (unitIssues(held).size > 0 || held.some(isBlankSavedInstruction)) {
+        asked.current = true;
+        await markSubmitted();
+        asked.current = false;
         openErred();
         throw fieldsRefused();
       }
+      asked.current = true;
       await markSubmitted();
       await flush();
       return true;
@@ -461,6 +508,7 @@ const SpellBuilder = ({
       return false;
     } finally {
       closing.current = false;
+      asked.current = false;
     }
   };
   // Steps that could not be read leave nothing a save would take, so Close closes, unsaved.

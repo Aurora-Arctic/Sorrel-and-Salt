@@ -43,6 +43,15 @@ Save flushes at once, is off when nothing is unsaved, and spins while saving.
 The autosave is held back while a step's unit is refused or a saved spell's
 steps are still being read.
 
+The autosave never sends a blank instruction (owner decision 2026-10-28). A
+new blank instruction step (no saved id) is left out of what the autosave
+sends and of what makes the form unsaved, so the rest of the spell saves and
+the blank row stays in the form with no error, until it is written, removed,
+or Save or Close checks the whole form (the resolver checks it only while a
+save the person asked for runs). A saved instruction whose text has been
+cleared is not left out, since that would delete it: the autosave is held back
+for it, as for a refused unit, and Save or Close shows the error beside it.
+
 - **The adapter** (`autosave.ts`) takes a target: `{ kind: 'new' }` calls
   `createSpell`, once, and the engine then carries the id;
   `{ kind: 'spell', id, revision }` calls `updateSpell` with that

@@ -238,3 +238,23 @@ export function stepNameOf({ name, form, body }: SpellStepValue): string {
   }
   return form ? `${name} (${formLabel(form)})` : name;
 }
+
+/** Whether `step` is an instruction with no text. */
+const blankInstruction = (step: SpellStepValue): boolean =>
+  isInstruction(step) && (step.body ?? '').trim() === '';
+
+/**
+ * A new instruction with no text yet. The autosave leaves it out of what it
+ * sends, since a save would refuse it, and says nothing: the row waits in the
+ * form until it is written, removed, or Save or Close checks the whole form.
+ */
+export const isBlankNewInstruction = (step: SpellStepValue): boolean =>
+  step.stepId === null && blankInstruction(step);
+
+/**
+ * A saved instruction whose text has been cleared. Leaving it out would
+ * delete it, so the autosave holds back altogether until it is written or
+ * removed.
+ */
+export const isBlankSavedInstruction = (step: SpellStepValue): boolean =>
+  step.stepId !== null && blankInstruction(step);
