@@ -23,7 +23,6 @@ const DEFAULT_STEP: SpellStepFixture = {
   form: 'ash',
   quantity: '1.000',
   unit: 'pinch',
-  note: null,
   body: null,
   position: 1,
   layerOrder: 1,

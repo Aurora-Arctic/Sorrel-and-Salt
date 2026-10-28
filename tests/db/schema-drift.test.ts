@@ -63,6 +63,7 @@ const PENDING_DROPS: readonly {
     droppedBy: 'M13.9',
   },
   { table: 'spell_steps', kind: 'column', name: 'layer_order', droppedBy: 'M13.9' },
+  { table: 'spell_steps', kind: 'column', name: 'note', droppedBy: 'M13.9' },
   { table: 'spells', kind: 'column', name: 'instructions', droppedBy: 'M13.9' },
 ];
 

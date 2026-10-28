@@ -81,17 +81,16 @@ async function layer({
   unit = 'tbsp',
   position = 1,
   layerOrder = position,
-  note = null,
   body = null,
 }: StepRow = {}): Promise<void> {
   await sql`
     insert into spell_steps
       (spell_id, ingredient_id, variant_id, name, form, quantity, unit, position, layer_order,
-       note, body, created_by, updated_by)
+       body, created_by, updated_by)
     values (${spellId}, ${ingredientId},
             ${variantId === undefined && ingredientId !== null ? sql`(${liveVariantOf(ingredientId)})` : (variantId ?? null)},
             ${name}, ${form}, ${quantity}, ${unit}::inventory_unit,
-            ${position}, ${layerOrder}, ${note}, ${body}, ${AUTHOR}, ${AUTHOR})
+            ${position}, ${layerOrder}, ${body}, ${AUTHOR}, ${AUTHOR})
   `;
 }
 
@@ -153,11 +152,11 @@ beforeEach(async () => {
 });
 
 describe('spell_steps table', () => {
-  it('stores the measurement, the place and the note', async () => {
-    await layer({ quantity: '0.125', unit: 'tsp', position: 3, note: 'crushed, not ground' });
+  it('stores the measurement and the place', async () => {
+    await layer({ quantity: '0.125', unit: 'tsp', position: 3 });
 
     const [row] = await sql`
-      select quantity, unit::text, position, note from spell_steps
+      select quantity, unit::text, position from spell_steps
       where spell_id = ${hearthGuard}
     `;
 
@@ -165,7 +164,6 @@ describe('spell_steps table', () => {
     expect(row.quantity).toBe('0.125');
     expect(row.unit).toBe('tsp');
     expect(row.position).toBe(3);
-    expect(row.note).toBe('crushed, not ground');
   });
 
   // Nullable until M13.9, because the deploy before 0083 writes `layer_order`
@@ -216,15 +214,14 @@ describe('spell_steps table', () => {
       expect(error.constraint_name).toBe(CHECK_BODY_NOT_BLANK);
     });
 
-    // An amount or a note says how much of an ingredient, or what it is for;
-    // on an instruction alone it is about nothing. Admitted beside an
+    // An amount says how much of an ingredient; on an instruction alone it
+    // is about nothing. Admitted beside an
     // ingredient, as the first test of this table shows.
-    it('refuses a quantity, a unit or a note on an instruction alone', async () => {
+    it('refuses a quantity or a unit on an instruction alone', async () => {
       const quantity = await failureOf(instruction('Stir.', { quantity: '1.000' }));
       const unit = await failureOf(instruction('Stir.', { unit: 'pinch' }));
-      const note = await failureOf(instruction('Stir.', { note: 'clockwise' }));
 
-      for (const error of [quantity, unit, note]) {
+      for (const error of [quantity, unit]) {
         expect(error.code).toBe('23514');
         expect(error.constraint_name).toBe(CHECK_AMOUNT_ON_INGREDIENT);
       }

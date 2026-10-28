@@ -65,7 +65,10 @@
   gap: 0 space(3);
   align-items: end;
   padding: space(2) space(2) space(2) space(3);
-  border: 1px solid $text-muted;
+  // A hairline, not `$text-muted`: the card is a container, not a control, so
+  // it needs no 3:1 edge, and the fields inside keep theirs (design review,
+  // 2026-10-28, finding 3). It was `$text-muted` before.
+  border: 1px solid $hairline;
   border-radius: radius('surface');
   background-color: $surface-card;
 

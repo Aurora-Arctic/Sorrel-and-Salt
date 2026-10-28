@@ -137,6 +137,18 @@ describe('SpellBuilder', () => {
     expect(save()).toBeDisabled();
   });
 
+  it('says beside a disabled Save why nothing can be saved, and stops once it can', () => {
+    renderBuilder();
+    expect(save()).toBeDisabled();
+    const reason = screen.getByText('Nothing to save yet');
+    expect(save()).toHaveAccessibleDescription('Nothing to save yet');
+    expect(reason).toBeVisible();
+
+    type('Intent', 'To see clearly');
+    expect(save()).toBeEnabled();
+    expect(screen.queryByText('Nothing to save yet')).not.toBeInTheDocument();
+  });
+
   it('saves a draft with only its intent: no field is required', async () => {
     const calls = acceptCreate();
     renderBuilder();

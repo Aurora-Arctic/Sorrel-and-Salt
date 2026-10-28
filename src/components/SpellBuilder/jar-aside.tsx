@@ -74,17 +74,17 @@ export function JarAside({
   const headingId = useId();
   return (
     <aside className="spell-aside" aria-labelledby={headingId}>
-      <h4 id={headingId}>The Jar</h4>
-      <div className="spell-aside__jar">
-        <SpellJar />
-        <div className="spell-aside__fields">{waxField}</div>
+      <div className="spell-aside__block">
+        <h4 id={headingId}>The Jar</h4>
+        <div className="spell-aside__jar">
+          <SpellJar />
+          <div className="spell-aside__fields">{waxField}</div>
+        </div>
+        {descriptionField}
       </div>
-      {descriptionField}
       {ready && (
         <>
-          <hr className="spell-aside__rule" />
           <SpellInventory />
-          <hr className="spell-aside__rule" />
           <SpellComparison />
         </>
       )}

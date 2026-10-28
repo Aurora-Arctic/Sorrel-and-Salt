@@ -28,7 +28,6 @@ function stepColumns(step: ParsedStep, place: number) {
     // The column is `numeric`, which the driver reads and writes as text.
     quantity: step.quantity == null ? null : String(step.quantity),
     unit: step.unit ?? null,
-    note: step.note ?? null,
     // `layer_order` is the old name of `position`, written alike until M13.9
     // drops it (the schema's comment says why).
     position: place,

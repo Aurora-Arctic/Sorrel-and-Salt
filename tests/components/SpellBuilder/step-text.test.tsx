@@ -35,7 +35,6 @@ const savedStep = (
   form: null,
   quantity: null,
   unit: null,
-  note: null,
   body: null,
   ingredient: null,
   variant: null,
