@@ -43,7 +43,7 @@ function Row({
   if (categories.length === 0) return null;
   return (
     <div className="comparison-panel__row">
-      <dt>{label}</dt>
+      <dt className="eyebrow">{label}</dt>
       <dd>
         <CategoryChips categories={categories} label={label} compact showAll tipOf={tipOf} />
       </dd>
