@@ -33,7 +33,7 @@ export default function StepRow({
   const amount = amountOf(quantity, unit);
   return (
     <li ref={rowRef} className={['step-row', className].filter(Boolean).join(' ')} style={style}>
-      {handle}
+      {handle && <div className="step-row__handle">{handle}</div>}
       <span className="step-row__position">{position}.</span>
       {name !== null && (
         <p className="step-row__name">
@@ -42,16 +42,20 @@ export default function StepRow({
           {name}
         </p>
       )}
-      {name !== null && marks}
+      {name !== null && <div className="step-row__marks">{marks}</div>}
       {name !== null && (quantityField || unitField) ? (
-        <>
+        <div className="step-row__fields">
           {quantityField}
           {unitField}
-        </>
+        </div>
       ) : (
         name !== null && amount && <p className="step-row__amount">{amount}</p>
       )}
-      {bodyField ?? (body ? <p className="step-row__body">{body}</p> : null)}
+      {bodyField ? (
+        <div className="step-row__field">{bodyField}</div>
+      ) : body ? (
+        <p className="step-row__body">{body}</p>
+      ) : null}
       {actions}
       {name !== null && note && <div className="step-row__note">{note}</div>}
     </li>

@@ -28,6 +28,22 @@ It renders an `<li>`, so the caller wraps it in an `<ol>` it names.
 
 An instruction-only step (`name` null) never draws an amount, `marks` or `note`, whatever it is given.
 
+## Markup
+
+Inside the `<li class="step-row">`, in order: `handle`, `step-row__position`, `step-row__name`
+(icon and name), `step-row__marks` (the `marks` slot; empty, it is `display: none`),
+`step-row__fields` (Quantity and Unit together) or `step-row__amount` (the plain phrase),
+`step-row__field` (a control in place of the text) or `step-row__body` (the plain text),
+`actions`, `step-row__note`. `StepRow`'s base style is a wrapping flex line, which is
+all the recipe page needs. The builder lays the same markup out as a card on a grid
+(`step-row--card`, below).
+
+## The card
+
+A caller that edits adds `step-row--card` (and `step-row--instruction` for an instruction-only step), as the spell builder does. The card follows the ingredient form's variant card: the muted-ink border, `radius('surface')`, `$surface-card`, the same padding. `handle`, position, icon and name, the amount fields and Remove stand on one grid row, level along the bottoms of their fields. Beneath, from the name's column: the marks, the instruction field, the note. The amount fields are 6rem and 8rem. Remove is the variant card's × (`step-row__remove`, an icon button; the caller gives it its accessible name). An instruction-only card has a dashed `$hairline` border and no ground, its field between the number and Remove.
+
+The list holding the cards is a size container (`spell-steps`, declared in this file on `.spell-steps__list`): at `$narrow-column` (28rem) or narrower the amount drops to a second line under the name and the × stays at the end of the first. The recipe page does not ask for the card and draws the bare flex line; it needs no change, and reads as before.
+
 ## Testing
 
 `tests/components/StepRow/index.test.tsx`: what each kind of step draws, and that a control

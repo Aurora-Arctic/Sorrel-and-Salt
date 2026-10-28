@@ -4,7 +4,7 @@ import { useSortable } from '@dnd-kit/sortable';
 import { CSS } from '@dnd-kit/utilities';
 import type { ReactElement } from 'react';
 import { useFormContext, useWatch } from 'react-hook-form';
-import { GripIcon } from '../../Combobox/icons';
+import { ClearIcon, GripIcon } from '../../Combobox/icons';
 import { SelectField, TextField } from '../../Field';
 import SafetyNote, { SafetyMark } from '../../SafetyNote';
 import StepRow from '../../StepRow';
@@ -84,7 +84,14 @@ export function BuilderStepRow({ id, index, step, onRemove }: BuilderStepRowProp
   return (
     <StepRow
       rowRef={sortable.setNodeRef}
-      className={['spell-step', sortable.isDragging && 'is-dragging'].filter(Boolean).join(' ')}
+      className={[
+        'spell-step',
+        'step-row--card',
+        instruction && 'step-row--instruction',
+        sortable.isDragging && 'is-dragging',
+      ]
+        .filter(Boolean)
+        .join(' ')}
       // Where a move has carried the row so far, translated only: a row keeps
       // its own height wherever it goes.
       style={{
@@ -129,8 +136,14 @@ export function BuilderStepRow({ id, index, step, onRemove }: BuilderStepRowProp
         />
       }
       actions={
-        <button type="button" className="btn btn--small btn--quiet" onClick={onRemove}>
-          Remove {instruction ? name : step.name}
+        <button
+          type="button"
+          className="step-row__remove"
+          aria-label={`Remove ${instruction ? name : step.name}`}
+          onClick={onRemove}
+        >
+          {/* The × a variant card's Remove is, so the row keeps its width for the name. */}
+          <ClearIcon />
         </button>
       }
     />
