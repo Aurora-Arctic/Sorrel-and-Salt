@@ -25,6 +25,7 @@ import { useSaveOnClose } from './save-on-close';
 import { SpellSteps } from './steps';
 import type { SpellStepSend } from './steps/types';
 import { stepInputOf, stepValueOf, stepsChanged, unitIssues } from './steps/values';
+import { SpellStatusField } from './status-field';
 import { SpellSuggestField } from './suggest-field';
 import { SpellInput } from '@/modules/grimoire/validation/spell';
 import { SpellVisibilityField } from './visibility-field';
@@ -99,6 +100,7 @@ const CreateSpellDocument = graphql(`
         }
       }
       visibility
+      status
     }
   }
 `);
@@ -150,6 +152,7 @@ const UpdateSpellDocument = graphql(`
         }
       }
       visibility
+      status
     }
   }
 `);
@@ -226,6 +229,8 @@ function valuesOf(spell?: Partial<SpellBuilderSpell>): SpellBuilderValues {
     steps: (spell?.steps ?? []).map(stepValueOf),
     // A new spell is the coven's unless chosen otherwise (§5).
     visibility: spell?.visibility ?? 'workspace',
+    // A new spell is a draft (M10.20).
+    status: spell?.status ?? 'draft',
     categoryIds: [...(spell?.categoryIds ?? [])],
   };
 }
@@ -407,6 +412,7 @@ const SpellBuilder = ({
         string | null
       >),
       visibility: values.visibility,
+      status: values.status,
       steps: values.steps,
     };
     // The categories go only when the picks differ from the last save: left
@@ -579,7 +585,9 @@ const SpellBuilder = ({
             noun="Spell"
             dirty={dirty && !unitRefused && jarReady}
             submitting={isSubmitting}
-          />
+          >
+            <SpellStatusField save={send} />
+          </FormActions>
         </form>
       </FormHistoryContext.Provider>
     </FormProvider>

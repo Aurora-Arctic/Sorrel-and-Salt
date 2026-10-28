@@ -330,40 +330,40 @@ test.fixme(
   },
 );
 
-test.fixme(
-  'a member saves a spell as a draft',
-  {
-    tag: '@story-55',
-    annotation: { type: 'fixme', description: 'M10.20 builds save as draft and mark complete' },
-  },
-  async ({ page }) => {
-    const coven = await seedCoven(page, 'Fixture Coven Fifty-Five', 'story-55.test', {
-      A: 'owner',
-      B: 'member',
-    });
-    await signInAgainAs(page, coven.users.B);
-    await openBuilder(page, coven.slug);
-    await page.getByRole('textbox', { name: 'Title' }).fill('Fixture Working');
-    await page.getByRole('button', { name: 'Save' }).click();
-    await page.goto(`/coven/${coven.slug}/grimoire`);
-    const card = grimoireList(page).getByRole('listitem', { name: /Fixture Working/ });
-    await expect(card.getByText('Draft')).toBeVisible();
-    await card.getByRole('link', { name: /Fixture Working/ }).click();
-    await page.getByRole('button', { name: 'Mark Complete' }).click();
-    await expect(page.getByText('Complete')).toBeVisible();
-    // M13.10: a saved spell is edited from its card's pencil, and the change reads back on the
-    // card and on the recipe page. tests/e2e/spell-edit.spec.ts walks the same flow while M10.20 is open.
-    await page.goto(`/coven/${coven.slug}/grimoire`);
-    await grimoireList(page).getByRole('link', { name: 'Edit Fixture Working' }).click();
-    const edit = page.getByRole('dialog', { name: 'Edit Spell, Fixture Working' });
-    await edit.getByRole('textbox', { name: 'Title' }).fill('Fixture Working Renamed');
-    await edit.getByRole('button', { name: 'Close' }).click();
-    await expect(page).toHaveURL(`/coven/${coven.slug}/grimoire`);
-    await expect(
-      grimoireList(page).getByRole('link', { name: 'Fixture Working Renamed', exact: true }),
-    ).toBeVisible();
-  },
-);
+test('a member saves a spell as a draft', { tag: '@story-55' }, async ({ page }) => {
+  const coven = await seedCoven(page, 'Fixture Coven Fifty-Five', 'story-55.test', {
+    A: 'owner',
+    B: 'member',
+  });
+  await signInAgainAs(page, coven.users.B);
+  const dialog = await openBuilder(page, coven.slug);
+  await dialog.getByRole('textbox', { name: 'Title' }).fill('Fixture Working');
+  await dialog.getByRole('button', { name: 'Save Spell' }).click();
+  await expect(page).toHaveURL(new RegExp(`/coven/${coven.slug}/grimoire\\?edit=[0-9a-f-]{36}$`));
+  const draft = page.url();
+  // It lists as a draft.
+  await page.goto(`/coven/${coven.slug}/grimoire/drafts`);
+  const card = grimoireList(page).getByRole('listitem', { name: /Fixture Working/ });
+  await expect(card.getByText('Draft')).toBeVisible();
+  // Marking it complete is explicit, and reversible.
+  await page.goto(draft);
+  const edit = page.getByRole('dialog', { name: 'Edit Spell, Fixture Working' });
+  await edit.getByRole('button', { name: 'Mark Complete' }).click();
+  await expect(edit.getByRole('button', { name: 'Reopen as Draft' })).toBeVisible();
+  await edit.getByRole('button', { name: 'Reopen as Draft' }).click();
+  await expect(edit.getByRole('button', { name: 'Mark Complete' })).toBeVisible();
+  // A saved spell is edited from its card's link, and the change reads back on the card.
+  await page.goto(`/coven/${coven.slug}/grimoire/drafts`);
+  await grimoireList(page).getByRole('link', { name: 'Edit Fixture Working' }).click();
+  const renamed = page.getByRole('dialog', { name: 'Edit Spell, Fixture Working' });
+  await renamed.getByRole('button', { name: 'Open All' }).click();
+  await renamed.getByRole('textbox', { name: 'Title' }).fill('Fixture Working Renamed');
+  await renamed.getByRole('button', { name: 'Close', exact: true }).click();
+  await expect(page).toHaveURL(`/coven/${coven.slug}/grimoire/drafts`);
+  await expect(
+    grimoireList(page).getByRole('link', { name: 'Fixture Working Renamed', exact: true }),
+  ).toBeVisible();
+});
 
 test(
   'any member, a viewer included, reads every workspace-visible spell, and a private spell stays with its author',

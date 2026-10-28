@@ -99,7 +99,7 @@ function acceptUpdate() {
     'UpdateSpell',
     (variables) => {
       calls.push(variables);
-      return { updateSpell: { ...SPELL, revision: 5 } };
+      return { updateSpell: { ...SPELL, status: 'draft' as const, revision: 5 } };
     },
   );
   return calls;
