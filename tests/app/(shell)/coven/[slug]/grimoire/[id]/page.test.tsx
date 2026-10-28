@@ -132,7 +132,7 @@ describe('the spell recipe page', () => {
     const steps = within(screen.getByRole('list', { name: 'Steps' }));
     expect(steps.getAllByRole('listitem').map((li) => li.textContent)).toEqual([
       expect.stringContaining('Testwort'),
-      'Stir three times',
+      expect.stringContaining('Stir three times'),
     ]);
     expect(screen.getByText('Best on a dry night.')).toBeInTheDocument();
     expect(screen.getAllByText(/Fixture Author/).length).toBeGreaterThan(0);

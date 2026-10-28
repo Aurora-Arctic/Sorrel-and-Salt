@@ -19,6 +19,19 @@ describe('StepRow', () => {
     expect(row()).toHaveTextContent('Light the candle');
   });
 
+  it('draws a name given as markup, so a read-only caller can link the ingredient', () => {
+    render(
+      <ol>
+        <StepRow position={1} name={<a href="/ingredients/a">Testwort (Dried Leaf)</a>} />
+      </ol>,
+    );
+
+    expect(within(row()).getByRole('link', { name: 'Testwort (Dried Leaf)' })).toHaveAttribute(
+      'href',
+      '/ingredients/a',
+    );
+  });
+
   it('draws an ingredient step with its amount and its text', () => {
     render(
       <ol>

@@ -4,8 +4,11 @@ import type { FormGroupIcon } from '@/modules/vocabulary/schema/form-group-icons
 export interface StepRowProps {
   /** Where the step stands in the spell, counting from 1. */
   position: number;
-  /** The ingredient and its form as the step reads them; null for an instruction-only step. */
-  name: string | null;
+  /**
+   * The ingredient and its form as the step reads them; null for an instruction-only step.
+   * Markup where a read-only caller links the ingredient (the recipe body, M13.21).
+   */
+  name: ReactNode;
   /** The form's group icon; null draws the generic spoon. Only drawn beside a name. */
   icon?: FormGroupIcon | null;
   /** The amount, as text. Read-only; `quantityField` replaces it. */

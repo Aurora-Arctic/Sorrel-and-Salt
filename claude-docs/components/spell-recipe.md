@@ -30,7 +30,7 @@ except Steps, which says the spell has no steps.
   that may update the spell (M13.10): an `EditLink` to `?edit=<id>`, over which the page
   renders the spell builder's dialog, closing back to this page.
 - No `PageNav`: the sections fit one screen. No print rules: M10.22 styles this page.
-- Steps are drawn by the component read-only. M13.3's `StepRow` replaces this when it lands.
+- Steps are drawn by `StepRow` (M13.3) with no editing controls, so the page and the Quick Look modal read them the same way as the builder draws them. The body keeps no step renderer of its own. The ingredient's name is passed to `StepRow` as markup (a link, the formal name, One-Off and Deleted marks).
 
 ## Quick Look
 

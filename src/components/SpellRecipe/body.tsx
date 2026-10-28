@@ -2,6 +2,7 @@ import type { ReactElement } from 'react';
 import { PendingLink } from '../../lib/navigation';
 import { ingredientLinkTarget } from '../AppShell/site-target';
 import CategoryChips from '../CategoryChips';
+import StepRow from '../StepRow';
 import LinkHint from '../LinkHint';
 import { formLabel } from '../../modules/ingredients/validation/form-label';
 import { UNTITLED_SPELL } from '../SpellCard';
@@ -75,24 +76,21 @@ const SpellRecipeBody = ({
           <p className="meta">This spell has no steps yet.</p>
         ) : (
           <ol className="spell-recipe__steps" aria-labelledby="spell-recipe-steps">
-            {steps.map((step: RecipeStep) => (
-              <li key={step.id}>
-                {step.kind === 'instruction' ? (
-                  <p>{step.body}</p>
-                ) : (
-                  <>
-                    <p>
-                      {amountOf(step) !== null && (
-                        <span className="spell-recipe__amount">{amountOf(step)} </span>
-                      )}
-                      <Name step={step} />
-                    </p>
-                    {step.body && <p>{step.body}</p>}
-                    {step.note && <p className="meta">{step.note}</p>}
-                  </>
-                )}
-              </li>
-            ))}
+            {steps.map((step: RecipeStep, i) =>
+              step.kind === 'instruction' ? (
+                <StepRow key={step.id} position={i + 1} name={null} body={step.body} />
+              ) : (
+                <StepRow
+                  key={step.id}
+                  position={i + 1}
+                  name={<Name step={step} />}
+                  quantity={step.quantity}
+                  unit={step.unit}
+                  body={step.body}
+                  note={step.note && <p className="meta">{step.note}</p>}
+                />
+              ),
+            )}
           </ol>
         )}
       </section>

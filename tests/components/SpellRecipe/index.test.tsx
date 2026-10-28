@@ -72,7 +72,9 @@ describe('SpellRecipe', () => {
       />,
     );
     const items = within(screen.getByRole('list', { name: 'Steps' })).getAllByRole('listitem');
+    expect(items[0]).toHaveTextContent('1.');
     expect(items[0]).toHaveTextContent('Light the candle.');
+    expect(items[1]).toHaveTextContent('2.');
     expect(items[1]).toHaveTextContent('2 tsp');
     expect(items[1]).toHaveTextContent('Testwort');
   });

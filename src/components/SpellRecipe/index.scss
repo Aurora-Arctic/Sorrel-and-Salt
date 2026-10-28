@@ -38,7 +38,9 @@
   flex-direction: column;
   gap: space(2);
   margin: 0;
-  padding-inline-start: space(5);
+  // StepRow draws its own "N.", so the list draws no marker of its own.
+  padding: 0;
+  list-style: none;
 }
 
 .spell-recipe__steps p {
