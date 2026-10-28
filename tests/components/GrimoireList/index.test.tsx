@@ -30,6 +30,7 @@ const GROUP = { id: 'g1', name: 'Fixture Group', colorDark: '#a0c4ff', colorLigh
 const props = (over: Partial<GrimoireListProps> = {}): GrimoireListProps => ({
   path: PATH,
   workspaceId: 'w1',
+  covenSlug: 'fixture-coven',
   status: 'complete',
   spells: [
     {
@@ -81,6 +82,18 @@ describe('GrimoireList', () => {
     expect(within(list).getAllByRole('listitem')).toHaveLength(2);
     expect(within(list).getByRole('listitem', { name: 'Fixture Working' })).toBeInTheDocument();
     expect(within(list).getByRole('listitem', { name: 'Testwort Charm' })).toBeInTheDocument();
+  });
+
+  it("links each card's title to the spell's recipe page", () => {
+    render(<List {...props()} />);
+    expect(screen.getByRole('link', { name: /Fixture Working/ })).toHaveAttribute(
+      'href',
+      '/coven/fixture-coven/grimoire/s1',
+    );
+    expect(screen.getByRole('link', { name: /Testwort Charm/ })).toHaveAttribute(
+      'href',
+      '/coven/fixture-coven/grimoire/s2',
+    );
   });
 
   it('says there are no spells, and no list, when the tab holds none and no filter is in force', () => {

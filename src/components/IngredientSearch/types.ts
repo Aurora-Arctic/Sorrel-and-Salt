@@ -19,7 +19,7 @@ export interface IngredientSearchMatch {
   nomenclature: NomenclatureKind;
 }
 
-/** A dropdown row: the combobox's option, carrying the ingredient it stands for. A spell's row carries none. */
+/** A dropdown row: the combobox's option, carrying the ingredient it stands for. A spell's row carries the spell id as `id` and `slug`. */
 export interface IngredientSearchOption extends ComboboxOption {
   match?: IngredientSearchMatch;
 }
@@ -63,7 +63,7 @@ export interface IngredientSearchFormProps {
   /**
    * Where a picked ingredient opens: on a list with a Quick Look, its details
    * modal over the list as it stands (M12.5). Left out, a pick applies its
-   * row's text as the search, as a grimoire's does until a spell has a page (MB.6).
+   * row's text as the search. A grimoire's picks open the spell's recipe page (MB.6).
    */
   pickHref?: (match: IngredientSearchMatch) => Route;
   /**

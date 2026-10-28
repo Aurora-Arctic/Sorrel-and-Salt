@@ -1,3 +1,4 @@
+import type { Route } from 'next';
 import type { CardCategory } from '../CategoryChips/types';
 import type { LastEditProps } from '../LastEdit/types';
 import type { SpellStatus, SpellVisibility } from '@/modules/grimoire';
@@ -5,6 +6,8 @@ import type { SpellStatus, SpellVisibility } from '@/modules/grimoire';
 export interface SpellCardProps {
   /** The spell's id, which names its title heading for the list item (`spellTitleId`). */
   id: string;
+  /** The spell's recipe page, which the title links to; none leaves the title plain text. */
+  href?: Route;
   /** The title; a draft may have none, and lists as "Untitled Spell". */
   title: string | null;
   /** What the spell is for, in the member's words; none draws no paragraph. */
