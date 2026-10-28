@@ -2,7 +2,7 @@
 
 import { useSortable } from '@dnd-kit/sortable';
 import { CSS } from '@dnd-kit/utilities';
-import { type ReactElement, useEffect, useId, useRef } from 'react';
+import { type ReactElement, useEffect, useId, useRef, useState } from 'react';
 import { useFormContext, useWatch } from 'react-hook-form';
 import { ChevronIcon, ClearIcon, GripIcon } from '../../Combobox/icons';
 import { EditIcon } from '../../IngredientForm/icons';
@@ -73,6 +73,8 @@ export function BuilderStepRow({
     formState: { errors },
   } = useFormContext<SpellStepsValues>();
   const fieldsId = useId();
+  // Where the Unit's error is drawn: the full width beneath the inputs (the second design review).
+  const [errorNode, setErrorNode] = useState<HTMLElement | null>(null);
   const edit = useRef<HTMLButtonElement>(null);
   const focusOnOpen = useRef(false);
   const sortable = useSortable({ id });
@@ -218,6 +220,7 @@ export function BuilderStepRow({
           />
         ) : null
       }
+      errorRef={setErrorNode}
       handle={handle}
       bodyField={body}
       quantityField={
@@ -236,6 +239,7 @@ export function BuilderStepRow({
           label="Unit"
           labelSuffix={name}
           options={UNIT_OPTIONS}
+          errorInto={errorNode}
           // Checked as it is chosen, not when it is left: a unit the jar cannot
           // be measured in is said at once (story 77).
           onChange={(value) =>

@@ -36,6 +36,8 @@ export interface StepRowProps {
   edit?: ReactNode;
   /** A line in the open fields beneath the note, such as what a one-off means. */
   aside?: ReactNode;
+  /** The node the fields' errors are drawn in, the full width beneath the inputs. */
+  errorRef?: Ref<HTMLDivElement>;
   /** The editing controls around the step, each drawn in place of the plain text it stands for. */
   handle?: ReactNode;
   /** A one-off's name, first of the open fields and the full width of them. */

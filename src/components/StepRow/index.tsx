@@ -53,6 +53,7 @@ export default function StepRow({
   unitField,
   bodyField,
   actions,
+  errorRef,
   rowRef,
   className,
   style,
@@ -125,6 +126,7 @@ export default function StepRow({
               {unitField && <div className="step-row__unit">{unitField}</div>}
               {bodyField && <div className="step-row__instruction">{bodyField}</div>}
             </div>
+            <div className="step-row__inputs-error" ref={errorRef} />
             {note && <div className="step-row__note">{note}</div>}
             {aside && <p className="step-row__aside">{aside}</p>}
           </div>
