@@ -289,7 +289,7 @@ test(
     await expect(panel.getByText('Prosperity')).toBeVisible();
     await addIngredientStep(page, 'Mugwort');
     await expect(row('Stray')).toBeVisible();
-    await expect(panel.getByText('Psychic Work')).toBeVisible();
+    await expect(panel.getByText(/Psychic Work from Mugwort/)).toBeVisible();
     await page.getByRole('button', { name: /Remove Mugwort/ }).click();
     await expect(row('Stray')).toHaveCount(0);
   },

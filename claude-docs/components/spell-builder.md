@@ -355,18 +355,16 @@ reads that nothing is held yet.
 `comparison-panel.tsx` (M10.17, story 52) sets what the spell intends beside what its jar
 carries, so a mismatch shows while the spell is built. It is a region named Intent Against
 Ingredients in the Jar aside, drawn as rows of a `dl` (Carried, Missing, Stray) whose values are
-chips. It reads the form's values as they stand, saved or not, so a pick or an ingredient added or
+the site's own `CategoryChips` ([`category-chips.md`](category-chips.md)), each in its category's group colours (read by id from the `categories` query the picker already makes; a category whose colours have not landed is left out until they do). The row's label alone says Carried, Missing or Stray: there is no chip variant of the panel's own, and no tip on a chip. It reads the form's values as they stand, saved or not, so a pick or an ingredient added or
 removed moves it at once. The comparison is M10.8's `compareSpellCategories` over M10.7's
 `summarizeSpellCategories`, run in the browser on the steps' categories; a one-off or an
 instruction brings none. It also lists Derived Categories, the union of the steps' categories,
 once each and sorted by name.
 
 - **Carried** is each intended category the jar carries; **Missing** each assigned category nothing
-  in the jar carries; **Stray** each ingredient bringing a category that was not assigned, one
-  chip per ingredient and form, in words that survive a screen reader (an ingredient carrying
-  nothing intended leads, "Carries nothing you intended"; one that also carries an intended
-  category follows, "Also carries <categories>"). The words and the order carry the difference;
-  bold and muted ink only follow them.
+  in the jar carries; **Stray** each category the jar carries that was not assigned, with a muted
+  line beneath naming the ingredients and forms that bring each ("Cleansing from Basil (Dried)").
+  The words carry the difference; the chips are coloured by group, as they are everywhere.
 - With none of the three, it reads "Intent and ingredients match." With no category assigned the
   panel does not list every ingredient as a stray: it asks for categories first. With nothing
   assigned and nothing in the jar it reads "Nothing to compare yet."
@@ -439,7 +437,7 @@ visibility switch's alignment (M10.13) and the Jar section (the owner's design p
 - the list a column spaced by its `gap` alone, with no margin on a row and no room taken while
   empty. The list is the size container a row stacks by (`spell-steps`), declared in
   `StepRow`'s stylesheet;
-- the aside's hairlines in `$hairline`, its chips in the surface tokens; every colour is a token,
+- the aside's hairlines in `$hairline`; its chips are `CategoryChips`, unstyled here; every colour is a token,
   so both themes follow.
 
 The row's own look, the card, is in [`step-row.md`](step-row.md), "The card".

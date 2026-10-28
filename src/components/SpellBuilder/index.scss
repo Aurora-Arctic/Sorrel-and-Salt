@@ -354,47 +354,7 @@
   }
 }
 
-.comparison-panel__chips {
-  display: flex;
-  flex-wrap: wrap;
-  gap: space(1) space(2);
-  @include list-reset;
-
-  li {
-    padding: 0 space(2);
-    border: 1px solid transparent;
-    border-radius: radius('pill');
-  }
-
-  &.is-carried li {
-    background-color: color-mix(in srgb, $accent 20%, $surface-card);
-  }
-
-  &.is-missing li {
-    border: 1px dashed $warning;
-    color: $warning;
-  }
-
-  &.is-stray li {
-    background-color: color-mix(in srgb, $text-muted 15%, $surface-card);
-  }
-}
-
 .comparison-panel__from {
+  margin: space(1) 0 0;
   color: $text-muted;
-}
-
-// A chip's name is a button so the tip behind it ("From Frankincense (Resin)") can be
-// reached by keyboard and touch: it looks like the plain text it replaces.
-.comparison-panel__chip {
-  padding: 0;
-  border: 0;
-  background: none;
-  color: inherit;
-  font: inherit;
-  cursor: help;
-}
-
-.comparison-panel__tip-text {
-  @include visually-hidden;
 }

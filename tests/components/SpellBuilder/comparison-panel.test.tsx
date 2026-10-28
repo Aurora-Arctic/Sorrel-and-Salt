@@ -37,6 +37,13 @@ function step(name: string, categories: string[], extra: Partial<SpellStepValue>
   } satisfies SpellStepValue;
 }
 
+const groups = new Map(
+  ['Prosperity', 'Love', 'Cleansing', 'Psychic Work'].map((name) => [
+    `c-${name}`,
+    { colorDark: '#8fb8de', colorLight: '#2f5d86' },
+  ]),
+);
+
 const panel = () => screen.getByRole('region', { name: 'Intent Against Ingredients' });
 /** The chips on one of the three rows (Carried, Missing, Stray), or null if the row is left out. */
 const row = (label: 'Carried' | 'Missing' | 'Stray') => {
@@ -47,7 +54,11 @@ const row = (label: 'Carried' | 'Missing' | 'Stray') => {
 describe('ComparisonPanel', () => {
   it('puts an intended category nothing in the jar carries on the Missing row', () => {
     render(
-      <ComparisonPanel intended={[cat('Prosperity')]} steps={[step('Fixture Mugwort', [])]} />,
+      <ComparisonPanel
+        groups={groups}
+        intended={[cat('Prosperity')]}
+        steps={[step('Fixture Mugwort', [])]}
+      />,
     );
     expect(row('Missing')).toHaveTextContent('Prosperity');
     expect(row('Carried')).toBeNull();
@@ -56,6 +67,7 @@ describe('ComparisonPanel', () => {
   it('puts a category carried but not intended on the Stray row, with the ingredient that brings it', () => {
     render(
       <ComparisonPanel
+        groups={groups}
         intended={[cat('Prosperity')]}
         steps={[step('Fixture Mugwort', ['Psychic Work'])]}
       />,
@@ -67,6 +79,7 @@ describe('ComparisonPanel', () => {
   it('names every bringer of a stray category once', () => {
     render(
       <ComparisonPanel
+        groups={groups}
         intended={[cat('Prosperity')]}
         steps={[
           step('Fixture Basil', ['Prosperity', 'Cleansing']),
@@ -74,42 +87,31 @@ describe('ComparisonPanel', () => {
         ]}
       />,
     );
-    const chips = within(row('Stray') as HTMLElement).getAllByRole('listitem');
-    expect(chips).toHaveLength(1);
-    expect(within(chips[0]).getByRole('button', { name: 'Cleansing' })).toBeVisible();
-    expect(chips[0]).toHaveTextContent('from Fixture Basil, Fixture Mugwort');
+    const stray = row('Stray') as HTMLElement;
+    expect(within(stray).getAllByRole('listitem')).toHaveLength(1);
+    expect(within(stray).getByText('Cleansing')).toBeVisible();
+    expect(stray).toHaveTextContent('Cleansing from Fixture Basil, Fixture Mugwort');
     expect(row('Carried')).toHaveTextContent('Prosperity');
   });
 
-  it('tells every chip what it is from, to a screen reader, on focus, and on a tap', () => {
+  it('draws each row as category chips in the category group colours', () => {
     render(
       <ComparisonPanel
-        intended={[cat('Prosperity'), cat('Love')]}
-        steps={[
-          step('Fixture Basil (Dried)', ['Prosperity', 'Cleansing']),
-          step('Fixture Mugwort', ['Prosperity']),
-        ]}
+        groups={groups}
+        intended={[cat('Prosperity')]}
+        steps={[step('Fixture Basil', ['Prosperity'])]}
       />,
     );
-    const named = (name: string) => within(panel()).getByRole('button', { name });
-    expect(named('Prosperity')).toHaveAccessibleDescription(
-      'From Fixture Basil (Dried), Fixture Mugwort',
-    );
-    expect(named('Cleansing')).toHaveAccessibleDescription('From Fixture Basil (Dried)');
-    expect(named('Love')).toHaveAccessibleDescription(
-      'Assigned to this spell, and nothing in the jar carries it',
-    );
-    // The drawn tip is decoration (aria-hidden), so it is found by its role with hidden on.
-    expect(screen.queryByRole('tooltip', { hidden: true })).toBeNull();
-    fireEvent.click(named('Prosperity'));
-    expect(screen.getByRole('tooltip', { hidden: true })).toHaveTextContent(
-      'From Fixture Basil (Dried), Fixture Mugwort',
-    );
+    const chips = within(row('Carried') as HTMLElement).getByRole('list', { name: 'Categories' });
+    const chip = within(chips).getByText('Prosperity');
+    expect(chip).toHaveClass('chip');
+    expect(chip).toHaveStyle({ '--chip-dark': '#8fb8de', '--chip-light': '#2f5d86' });
   });
 
   it('shows only Carried when the two agree, and leaves the other rows out', () => {
     render(
       <ComparisonPanel
+        groups={groups}
         intended={[cat('Prosperity')]}
         steps={[step('Fixture Basil', ['Prosperity'])]}
       />,
@@ -120,12 +122,18 @@ describe('ComparisonPanel', () => {
   });
 
   it('asks for something to compare while there are no categories and no ingredients', () => {
-    render(<ComparisonPanel intended={[]} steps={[]} />);
+    render(<ComparisonPanel groups={groups} intended={[]} steps={[]} />);
     expect(within(panel()).getByText('Nothing to compare yet.')).toBeVisible();
   });
 
   it('does not call every ingredient stray while no category is intended', () => {
-    render(<ComparisonPanel intended={[]} steps={[step('Fixture Basil', ['Cleansing'])]} />);
+    render(
+      <ComparisonPanel
+        groups={groups}
+        intended={[]}
+        steps={[step('Fixture Basil', ['Cleansing'])]}
+      />,
+    );
     expect(within(panel()).getByText('Assign categories to compare.')).toBeVisible();
     expect(row('Stray')).toBeNull();
   });
@@ -133,6 +141,7 @@ describe('ComparisonPanel', () => {
   it('ignores an instruction and a one-off', () => {
     render(
       <ComparisonPanel
+        groups={groups}
         intended={[cat('Prosperity')]}
         steps={[
           step('Fixture Oddment', ['Cleansing'], { ingredientId: null, variantId: null }),
@@ -149,12 +158,10 @@ describe('the panel in the builder', () => {
   it('moves as an ingredient is removed, saved or not', async () => {
     const id = (n: number) => `00000000-0000-4000-8000-00000000000${n}`;
     const ward = { id: id(1), name: 'Testward' };
+    const group = { id: id(2), name: 'Fixtures', colorDark: '#8fb8de', colorLight: '#2f5d86' };
     offerCategories([
-      {
-        ...ward,
-        description: 'Keeps a fixture from harm.',
-        group: { id: id(2), name: 'Fixtures', colorDark: '#8fb8de', colorLight: '#2f5d86' },
-      },
+      { ...ward, description: 'Keeps a fixture from harm.', group },
+      { id: id(5), name: 'Calm', description: 'Settles a fixture.', group },
     ]);
     render(
       <QueryClientProvider client={makeQueryClient()}>

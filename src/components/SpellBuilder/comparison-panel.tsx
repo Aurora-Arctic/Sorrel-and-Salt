@@ -1,11 +1,12 @@
 'use client';
 
 import { useQuery } from '@tanstack/react-query';
-import { type ReactElement, useId, useMemo } from 'react';
+import { type ReactElement, type ReactNode, useId, useMemo } from 'react';
 import { useFormContext, useWatch } from 'react-hook-form';
 import { graphqlQuery } from '../../lib/graphql-client';
 import { CategoriesDocument } from '../IngredientForm/categories';
-import IconTip from '../IconTip/icon-tip';
+import CategoryChips, { type CardCategory } from '../CategoryChips';
+import type { GroupColors } from '../../lib/types';
 import type { SpellBuilderValues } from './types';
 import { compareSpellCategories } from '@/modules/grimoire/validation/categories/compare';
 import { summarizeSpellCategories } from '@/modules/grimoire/validation/categories/summarize';
@@ -24,46 +25,32 @@ export interface ComparisonPanelProps {
   /** The categories the spell is assigned, named. */
   intended: readonly StepCategory[];
   steps: readonly SpellStepValue[];
+  /** Each category's group colours by id, so a chip is drawn as the site draws one; a category not in it is left out. */
+  groups: ReadonlyMap<string, GroupColors>;
 }
 
 function Row({
   label,
-  kind,
+  categories,
   children,
 }: {
   label: string;
-  kind: 'carried' | 'missing' | 'stray';
-  children: ReactElement[];
+  categories: readonly CardCategory[];
+  children?: ReactNode;
 }): ReactElement | null {
-  if (children.length === 0) return null;
+  if (categories.length === 0) return null;
   return (
     <div className="comparison-panel__row">
       <dt>{label}</dt>
       <dd>
-        <ul className={`comparison-panel__chips is-${kind}`}>{children}</ul>
+        <CategoryChips categories={categories} label={label} />
+        {children}
       </dd>
     </div>
   );
 }
 
-// A chip's name as a button, so its tip is reached by focus and by a tap as well as hover
-// (the M12.43 rule: never hover alone). The tip bubble is decoration, as IconTip's is, so
-// the same words ride on the button as its description for a screen reader.
-function Chip({ name, tip }: { name: string; tip: string }): ReactElement {
-  const tipId = useId();
-  return (
-    <IconTip tip={tip} placement="above" opensOnPress>
-      <button type="button" className="comparison-panel__chip" aria-describedby={tipId}>
-        {name}
-      </button>
-      <span id={tipId} className="comparison-panel__tip-text">
-        {tip}
-      </span>
-    </IconTip>
-  );
-}
-
-export function ComparisonPanel({ intended, steps }: ComparisonPanelProps): ReactElement {
+export function ComparisonPanel({ intended, steps, groups }: ComparisonPanelProps): ReactElement {
   const headingId = useId();
   const intendedIds = intended.map(({ id }) => id);
   const ingredientSteps = steps.filter((step) => step.ingredientId !== null);
@@ -76,8 +63,11 @@ export function ComparisonPanel({ intended, steps }: ComparisonPanelProps): Reac
   const gaps = compareSpellCategories(intendedIds, present);
   const missing = intended.filter(({ id }) => gaps.intendedNotPresent.includes(id));
   const carried = intended.filter(({ id }) => !gaps.intendedNotPresent.includes(id));
-  const bringersOf = (id: string): string[] =>
-    ingredientSteps.filter((step) => step.categories.some((c) => c.id === id)).map(stepNameOf);
+  const chipsOf = (list: readonly StepCategory[]): CardCategory[] =>
+    list.flatMap(({ id, name }) => {
+      const group = groups.get(id);
+      return group ? [{ category: { id, name }, group }] : [];
+    });
   // Each stray category, once, with the ingredients bringing it in the jar's order.
   const strays = gaps.presentNotIntended.flatMap((id) => {
     const bringers = ingredientSteps.filter((step) => step.categories.some((c) => c.id === id));
@@ -93,27 +83,12 @@ export function ComparisonPanel({ intended, steps }: ComparisonPanelProps): Reac
   } else {
     body = (
       <dl className="comparison-panel__rows">
-        <Row label="Carried" kind="carried">
-          {carried.map(({ id, name }) => (
-            <li key={id}>
-              <Chip name={name} tip={`From ${bringersOf(id).join(', ')}`} />
-            </li>
-          ))}
-        </Row>
-        <Row label="Missing" kind="missing">
-          {missing.map(({ id, name }) => (
-            <li key={id}>
-              <Chip name={name} tip="Assigned to this spell, and nothing in the jar carries it" />
-            </li>
-          ))}
-        </Row>
-        <Row label="Stray" kind="stray">
-          {strays.map(({ id, name, bringers }) => (
-            <li key={id}>
-              <Chip name={name} tip={`From ${bringers.join(', ')}`} />
-              <span className="comparison-panel__from"> from {bringers.join(', ')}</span>
-            </li>
-          ))}
+        <Row label="Carried" categories={chipsOf(carried)} />
+        <Row label="Missing" categories={chipsOf(missing)} />
+        <Row label="Stray" categories={chipsOf(strays)}>
+          <p className="comparison-panel__from">
+            {strays.map(({ name, bringers }) => `${name} from ${bringers.join(', ')}`).join('; ')}
+          </p>
         </Row>
       </dl>
     );
@@ -137,6 +112,16 @@ export function SpellComparison(): ReactElement {
   const watchedPicks = useWatch({ control, name: 'categoryIds' });
   const steps = useWatch({ control, name: 'steps' }) ?? [];
   const { data } = useQuery({ ...graphqlQuery(CategoriesDocument), throwOnError: false });
+  const groups = useMemo(
+    () =>
+      new Map(
+        (data?.categories.edges ?? []).map(({ node }) => [
+          node.id,
+          { colorDark: node.group.colorDark, colorLight: node.group.colorLight },
+        ]),
+      ),
+    [data],
+  );
   const intended = useMemo(() => {
     const byId = new Map(data?.categories.edges.map(({ node }) => [node.id, node]));
     // A pick whose name has not landed yet is left out until it does.
@@ -145,5 +130,5 @@ export function SpellComparison(): ReactElement {
       return found ? [{ id, name: found.name }] : [];
     });
   }, [data, watchedPicks]);
-  return <ComparisonPanel intended={intended} steps={steps} />;
+  return <ComparisonPanel intended={intended} steps={steps} groups={groups} />;
 }
