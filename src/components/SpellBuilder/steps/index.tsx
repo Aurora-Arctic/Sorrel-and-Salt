@@ -60,7 +60,21 @@ export function SpellSteps({ workspaceId }: { workspaceId: string }): ReactEleme
   // A row whose Unit is refused stays open whatever this says (BuilderStepRow).
   useEffect(() => {
     if (openId === null) return;
+    // The row closes when the click lands, not when the button goes down: a taller open row above
+    // closing on the press moves the pencil being pressed away before the release, and that click
+    // is lost. The focus a press brings is held back for the same reason.
+    let pressed = false;
+    const press = () => {
+      pressed = true;
+    };
+    const release = () => {
+      // The click follows the release in the same task; this runs after it.
+      setTimeout(() => {
+        pressed = false;
+      }, 0);
+    };
     const leave = (event: Event) => {
+      if (event.type === 'focusin' && pressed) return;
       const target = event.target;
       if (!(target instanceof Node) || !target.isConnected) return;
       const index = fields.findIndex((field) => field.id === openId);
@@ -79,10 +93,16 @@ export function SpellSteps({ workspaceId }: { workspaceId: string }): ReactEleme
       addedId.current = null;
       setOpenId(null);
     };
-    document.addEventListener('pointerdown', leave);
+    document.addEventListener('pointerdown', press, true);
+    document.addEventListener('pointerup', release, true);
+    document.addEventListener('pointercancel', release, true);
+    document.addEventListener('click', leave, true);
     document.addEventListener('focusin', leave);
     return () => {
-      document.removeEventListener('pointerdown', leave);
+      document.removeEventListener('pointerdown', press, true);
+      document.removeEventListener('pointerup', release, true);
+      document.removeEventListener('pointercancel', release, true);
+      document.removeEventListener('click', leave, true);
       document.removeEventListener('focusin', leave);
     };
   }, [openId, fields]);

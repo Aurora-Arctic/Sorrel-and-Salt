@@ -904,7 +904,7 @@ describe('the spell builder’s open and closed steps', () => {
       'true',
     );
 
-    fireEvent.pointerDown(screen.getByRole('heading', { name: 'What Goes In' }));
+    fireEvent.click(screen.getByRole('heading', { name: 'What Goes In' }));
 
     expect(screen.getByRole('button', { name: 'Edit Fixture Rosewort' })).toHaveAttribute(
       'aria-expanded',
@@ -947,7 +947,7 @@ describe('the spell builder’s open and closed steps', () => {
       ).toHaveAttribute('aria-invalid', 'true'),
     );
 
-    fireEvent.pointerDown(screen.getByRole('heading', { name: 'What Goes In' }));
+    fireEvent.click(screen.getByRole('heading', { name: 'What Goes In' }));
 
     expect(
       within(stepRow('Fixture Rosewort')).getByRole('combobox', { name: /^Unit/ }),
@@ -968,14 +968,14 @@ describe('the spell builder’s open and closed steps', () => {
     );
 
     // The box is where the next ingredient is typed: still inside.
-    fireEvent.pointerDown(search());
+    fireEvent.click(search());
     act(() => search().focus());
     expect(screen.getByRole('button', { name: 'Edit Fixture Rosewort' })).toHaveAttribute(
       'aria-expanded',
       'true',
     );
 
-    fireEvent.pointerDown(screen.getByRole('heading', { name: 'What Goes In' }));
+    fireEvent.click(screen.getByRole('heading', { name: 'What Goes In' }));
     expect(screen.getByRole('button', { name: 'Edit Fixture Rosewort' })).toHaveAttribute(
       'aria-expanded',
       'false',
