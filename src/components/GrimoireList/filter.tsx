@@ -2,11 +2,11 @@
 
 import type { Route } from 'next';
 import { moonPhaseIcon } from '../SpellBuilder/moon-phase-icon';
-import { RadioGroupField } from '../Field/radio-group-field';
 import FacetCombobox from '../FacetCombobox';
 import CardDensitySwitch from '../CardDensitySwitch';
 import { type ReactElement, useMemo, useState } from 'react';
 import type { CategoryMode } from '@/modules/ingredients/schema/ingredient-enums';
+import { ChoiceChip } from '../FacetPanel/choice-chip';
 import { CategoryLine } from '../FacetPanel/category-line';
 import { FacetShell } from '../FacetPanel/shell';
 import { useApplyFilter } from '../FilterForm';
@@ -93,6 +93,7 @@ const PanelCategories = ({
   const apply = useApplyFilter();
   const { pending } = useListNavigation();
   const changed = JSON.stringify(held) !== JSON.stringify(heldOf(filter));
+  const visibilityStuck = facets.visibilities.some((choice) => choice.count === 0);
   const choices = useMemo(
     () =>
       categories.map(({ slug, name, group, count }) => ({
@@ -177,11 +178,10 @@ const PanelCategories = ({
             onChange={(makers) => onHeld({ ...held, makers })}
           />
         </div>
-        <div className="facet-panel__grow">
-          <RadioGroupField
+        <div className="facet-panel__quick">
+          <ChoiceChip
             legend="Visibility"
             name="visibility"
-            layout="segmented"
             options={[
               { value: '', label: 'Any' },
               ...facets.visibilities.map(({ value, label, count }) => ({
@@ -190,7 +190,15 @@ const PanelCategories = ({
                 count,
               })),
             ]}
-            value={held.visibility}
+            // Drawn and placed as the compendium's Toxic is: both values always show, and with
+            // either at zero every spell shares one visibility, so the chip rests on Any.
+            value={visibilityStuck ? '' : held.visibility}
+            disabled={visibilityStuck}
+            chipHint={
+              visibilityStuck
+                ? 'Every matching spell shares the same visibility, so this filter cannot narrow further.'
+                : undefined
+            }
             onChange={(visibility) => onHeld({ ...held, visibility })}
           />
         </div>

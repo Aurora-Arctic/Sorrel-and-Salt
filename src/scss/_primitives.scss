@@ -1968,7 +1968,7 @@
   // field's label has, and the bar is a control's height, so a row of mixed controls
   // shares one top and one baseline.
   .fieldset.radio-group--segmented .fieldset__legend {
-    margin-bottom: 0;
+    margin-bottom: space(2);
     font-weight: 400;
   }
 
