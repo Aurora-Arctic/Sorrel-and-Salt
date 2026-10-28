@@ -20,8 +20,7 @@ import { isInstruction, stepNameOf } from './steps/values';
 // call, 2026-10-28), the verdict's `mark`. A step with an instruction only has
 // no line. See claude-docs/components/spell-builder.md, "The aside".
 
-const UNITS_DIFFER_TIP =
-  'The spell’s unit can’t be checked against the jar’s, so it can’t tell if you have enough.';
+const UNITS_DIFFER_TIP = 'The units don’t match, so it can’t tell if you have enough.';
 const NOT_ENOUGH_TIP = 'The jar holds less than this step needs.';
 
 const OUT_TIP = 'The jar is empty, so there is nothing to put in.';
