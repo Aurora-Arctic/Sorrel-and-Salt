@@ -1,5 +1,6 @@
 import type { ReactElement } from 'react';
 import { chipColors } from '../../lib/chip-colors';
+import CategoryTipChip from './category-tip-chip';
 import CategoryMore from './category-more';
 import { CATEGORY_CHIP_LIMIT } from './constants';
 import type { CategoryChipsProps } from './types';
@@ -13,8 +14,11 @@ const CategoryChips = ({
   categories,
   label,
   compact = false,
+  showAll = false,
+  tipOf,
 }: CategoryChipsProps): ReactElement | null => {
   if (categories.length === 0) return null;
+  const limit = showAll ? categories.length : CATEGORY_CHIP_LIMIT;
   return (
     <ul
       className={
@@ -24,16 +28,20 @@ const CategoryChips = ({
       }
       aria-label="Categories"
     >
-      {categories.slice(0, CATEGORY_CHIP_LIMIT).map(({ category, group }) => (
+      {categories.slice(0, limit).map(({ category, group }) => (
         <li key={category.id}>
-          <span className="chip" style={chipColors(group)}>
-            {category.name}
-          </span>
+          {tipOf ? (
+            <CategoryTipChip category={category} group={group} tip={tipOf(category)} />
+          ) : (
+            <span className="chip" style={chipColors(group)}>
+              {category.name}
+            </span>
+          )}
         </li>
       ))}
-      {categories.length > CATEGORY_CHIP_LIMIT && (
+      {categories.length > limit && (
         <li className="category-more-item">
-          <CategoryMore categories={categories.slice(CATEGORY_CHIP_LIMIT)} label={label} />
+          <CategoryMore categories={categories.slice(limit)} label={label} tipOf={tipOf} />
         </li>
       )}
     </ul>

@@ -11,6 +11,7 @@ import type { SpellBuilderValues } from './types';
 import { compareSpellCategories } from '@/modules/grimoire/validation/categories/compare';
 import { summarizeSpellCategories } from '@/modules/grimoire/validation/categories/summarize';
 import type { SpellStepValue, StepCategory } from './steps/types';
+import { stepNameOf } from './steps/values';
 
 // Intent Against Ingredients (M10.17, story 52), in the Jar's aside: the categories the
 // author assigned set beside the ones the jar's ingredients carry, in three rows. Carried
@@ -28,20 +29,23 @@ export interface ComparisonPanelProps {
   groups: ReadonlyMap<string, GroupColors>;
 }
 
-// The chips are the compact size, the one the admin Compendium table's Categories column uses.
+// The chips are the compact size, the one the admin Compendium table's Categories column uses,
+// and every one is drawn: the panel is a comparison, so none is folded behind a +N.
 function Row({
   label,
   categories,
+  tipOf,
 }: {
   label: string;
   categories: readonly CardCategory[];
+  tipOf: (category: CardCategory['category']) => string;
 }): ReactElement | null {
   if (categories.length === 0) return null;
   return (
     <div className="comparison-panel__row">
       <dt>{label}</dt>
       <dd>
-        <CategoryChips categories={categories} label={label} compact />
+        <CategoryChips categories={categories} label={label} compact showAll tipOf={tipOf} />
       </dd>
     </div>
   );
@@ -65,6 +69,13 @@ export function ComparisonPanel({ intended, steps, groups }: ComparisonPanelProp
       const group = groups.get(id);
       return group ? [{ category: { id, name }, group }] : [];
     });
+  // The ingredients carrying a category, in the jar's order: what a Carried or Stray chip's tip names.
+  const fromTip = ({ id }: { id: string }): string =>
+    `From ${ingredientSteps
+      .filter((step) => step.categories.some((c) => c.id === id))
+      .map(stepNameOf)
+      .join(', ')}`;
+  const missingTip = (): string => 'Assigned to this spell, and nothing in the jar carries it';
   // Each stray category, once, named by the first ingredient that carries it.
   const strays = gaps.presentNotIntended.flatMap((id) => {
     const name = ingredientSteps.flatMap((step) => step.categories).find((c) => c.id === id)?.name;
@@ -79,9 +90,9 @@ export function ComparisonPanel({ intended, steps, groups }: ComparisonPanelProp
   } else {
     body = (
       <dl className="comparison-panel__rows">
-        <Row label="Carried" categories={chipsOf(carried)} />
-        <Row label="Missing" categories={chipsOf(missing)} />
-        <Row label="Stray" categories={chipsOf(strays)} />
+        <Row label="Carried" categories={chipsOf(carried)} tipOf={fromTip} />
+        <Row label="Missing" categories={chipsOf(missing)} tipOf={missingTip} />
+        <Row label="Stray" categories={chipsOf(strays)} tipOf={fromTip} />
       </dl>
     );
   }

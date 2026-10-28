@@ -289,8 +289,10 @@ test(
     await expect(panel.getByText('Prosperity')).toBeVisible();
     await addIngredientStep(page, 'Mugwort');
     await expect(row('Stray')).toBeVisible();
-    // The row is its chips alone: no ingredient is named in the panel.
-    await expect(panel.getByText('Mugwort')).toHaveCount(0);
+    // Prosperity is still intended and nothing carries it: its chip says so in its tip.
+    await expect(panel.getByRole('button', { name: 'Prosperity' })).toHaveAccessibleDescription(
+      'Assigned to this spell, and nothing in the jar carries it',
+    );
     await page.getByRole('button', { name: /Remove Mugwort/ }).click();
     await expect(row('Stray')).toHaveCount(0);
   },

@@ -64,7 +64,7 @@ describe('ComparisonPanel', () => {
     expect(row('Carried')).toBeNull();
   });
 
-  it('puts a category carried but not intended on the Stray row, as its chip alone', () => {
+  it('puts a category carried but not intended on the Stray row, as one chip', () => {
     render(
       <ComparisonPanel
         groups={groups}
@@ -73,7 +73,7 @@ describe('ComparisonPanel', () => {
       />,
     );
     expect(row('Stray')).toHaveTextContent('Psychic Work');
-    expect(row('Stray')).toHaveTextContent(/^Psychic Work$/);
+    expect(within(row('Stray') as HTMLElement).getAllByRole('button')).toHaveLength(1);
   });
 
   it('shows a stray category once, however many ingredients carry it', () => {
@@ -90,8 +90,48 @@ describe('ComparisonPanel', () => {
     const stray = row('Stray') as HTMLElement;
     expect(within(stray).getAllByRole('listitem')).toHaveLength(1);
     expect(within(stray).getByText('Cleansing')).toBeVisible();
-    expect(stray).toHaveTextContent(/^Cleansing$/);
+    expect(within(stray).getAllByRole('button')).toHaveLength(1);
     expect(row('Carried')).toHaveTextContent('Prosperity');
+  });
+
+  it('tells every chip what it is from, to a screen reader, on focus, and on a tap', () => {
+    render(
+      <ComparisonPanel
+        groups={groups}
+        intended={[cat('Prosperity'), cat('Love')]}
+        steps={[
+          step('Fixture Basil (Dried)', ['Prosperity', 'Cleansing']),
+          step('Fixture Mugwort', ['Prosperity']),
+        ]}
+      />,
+    );
+    const named = (name: string) => within(panel()).getByRole('button', { name });
+    expect(named('Prosperity')).toHaveAccessibleDescription(
+      'From Fixture Basil (Dried), Fixture Mugwort',
+    );
+    expect(named('Cleansing')).toHaveAccessibleDescription('From Fixture Basil (Dried)');
+    expect(named('Love')).toHaveAccessibleDescription(
+      'Assigned to this spell, and nothing in the jar carries it',
+    );
+    // The drawn tip is decoration (aria-hidden), so it is found by its role with hidden on.
+    expect(screen.queryByRole('tooltip', { hidden: true })).toBeNull();
+    fireEvent.click(named('Prosperity'));
+    expect(screen.getByRole('tooltip', { hidden: true })).toHaveTextContent(
+      'From Fixture Basil (Dried), Fixture Mugwort',
+    );
+  });
+
+  it('draws every chip of a row, with no +N button', () => {
+    render(
+      <ComparisonPanel
+        groups={groups}
+        intended={[cat('Prosperity')]}
+        steps={[step('Fixture Basil', ['Cleansing', 'Love', 'Psychic Work'])]}
+      />,
+    );
+    const stray = row('Stray') as HTMLElement;
+    expect(within(stray).getAllByRole('button')).toHaveLength(3);
+    expect(within(stray).queryByRole('button', { name: /more categories/ })).toBeNull();
   });
 
   it('draws each row as category chips in the category group colours', () => {
@@ -210,7 +250,11 @@ describe('the panel in the builder', () => {
     );
     // A saved spell opens with its sections shut; the panel is in the Jar's.
     fireEvent.click(screen.getByRole('button', { name: 'Open All' }));
-    await waitFor(() => expect(row('Stray')).toHaveTextContent(/^Calm$/));
+    await waitFor(() =>
+      expect(
+        within(row('Stray') as HTMLElement).getByRole('button', { name: 'Calm' }),
+      ).toBeVisible(),
+    );
     expect(row('Missing')).toHaveTextContent('Testward');
 
     fireEvent.click(screen.getByRole('button', { name: 'Remove Fixture Rosewort' }));

@@ -13,4 +13,8 @@ export interface CategoryChipsProps {
   label: string;
   /** The tighter chip size, for a table cell; the card keeps the regular one. */
   compact?: boolean;
+  /** Show every chip with no +N button (default false: the first few, then +N). */
+  showAll?: boolean;
+  /** Words for a chip's tip, opened by hover, focus and tap; given, each chip is a button carrying its tip. */
+  tipOf?: (category: CardCategory['category']) => string;
 }
