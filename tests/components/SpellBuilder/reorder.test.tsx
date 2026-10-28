@@ -53,8 +53,14 @@ const SPELL: SpellBuilderSpell = {
       unit: 'g',
       note: null,
       body: null,
-      ingredient: { id: ID.rosewort, categories: [], stock: [] },
-      variant: { id: ID.roseLeaf, categories: [], formChoice: null },
+      ingredient: { id: ID.rosewort, toxic: false, safetyNotes: null, categories: [], stock: [] },
+      variant: {
+        id: ID.roseLeaf,
+        toxic: false,
+        safetyNotes: null,
+        categories: [],
+        formChoice: null,
+      },
     },
     {
       id: ID.stepTestwort,

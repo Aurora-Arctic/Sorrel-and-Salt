@@ -19,6 +19,8 @@ export default function StepRow({
   quantity,
   unit,
   body,
+  marks,
+  note,
   handle,
   quantityField,
   unitField,
@@ -40,6 +42,7 @@ export default function StepRow({
           {name}
         </p>
       )}
+      {name !== null && marks}
       {name !== null && (quantityField || unitField) ? (
         <>
           {quantityField}
@@ -50,6 +53,7 @@ export default function StepRow({
       )}
       {bodyField ?? (body ? <p className="step-row__body">{body}</p> : null)}
       {actions}
+      {name !== null && note && <div className="step-row__note">{note}</div>}
     </li>
   );
 }

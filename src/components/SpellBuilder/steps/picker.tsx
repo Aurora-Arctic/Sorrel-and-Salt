@@ -62,6 +62,12 @@ function pickRows(
               form,
               icon,
               categories: [...node.categories, ...variant.categories],
+              safety: {
+                toxic: node.toxic,
+                safetyNotes: node.safetyNotes ?? null,
+                formToxic: variant.toxic,
+                formSafetyNotes: variant.safetyNotes ?? null,
+              },
               jarUnit: jarUnitOf(node.stock, variant.id),
             }),
           };
@@ -101,6 +107,7 @@ export function StepPicker({ workspaceId, taken, oneOffs, onAdd }: StepPickerPro
         form: oneOffForm.trim() || null,
         icon: null,
         categories: [],
+        safety: null,
         jarUnit: null,
       }),
     );

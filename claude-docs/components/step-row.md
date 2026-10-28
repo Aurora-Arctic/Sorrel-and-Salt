@@ -21,11 +21,12 @@ It renders an `<li>`, so the caller wraps it in an `<ol>` it names.
 | `icon`                                    | The form's group icon; null draws the generic spoon                                 |
 | `quantity`, `unit`                        | The amount as text, drawn as one phrase ("2 tsp"); none draws nothing               |
 | `body`                                    | The instruction as text                                                             |
+| `marks`, `note`                           | Beside the name, and on a line below the row: the builder's safety mark and note    |
 | `handle`, `actions`                       | Controls before and after the row: the builder's move handle and Remove             |
 | `quantityField`, `unitField`, `bodyField` | A control drawn in place of the plain text it stands for                            |
 | `rowRef`, `className`, `style`            | For a caller that makes the row sortable                                            |
 
-An instruction-only step (`name` null) never draws an amount, whatever it is given.
+An instruction-only step (`name` null) never draws an amount, `marks` or `note`, whatever it is given.
 
 ## Testing
 

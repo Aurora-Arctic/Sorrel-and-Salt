@@ -49,6 +49,9 @@ interface FormSpec {
   categories?: string[];
   /** The unit of the coven's jar of this form; left out, the coven holds none. */
   jar?: Unit;
+  /** This form's own flag and notes (M10.18). */
+  toxic?: boolean;
+  safetyNotes?: string;
 }
 
 const category = (name: string) => ({ id: `c-${name}`, name });
@@ -60,6 +63,7 @@ function suggestion(
   name: string,
   forms: FormSpec[],
   categories: string[] = [],
+  safety: { toxic?: boolean; safetyNotes?: string } = {},
 ): Edge {
   return {
     group,
@@ -68,11 +72,15 @@ function suggestion(
       name,
       canonicalName: null,
       retired: false,
+      toxic: safety.toxic ?? false,
+      safetyNotes: safety.safetyNotes ?? null,
       cupboardEntry: null,
       categories: categories.map(category),
       variants: forms.map((form) => ({
         id: form.id,
         form: form.form,
+        toxic: form.toxic ?? false,
+        safetyNotes: form.safetyNotes ?? null,
         categories: (form.categories ?? []).map(category),
         formChoice: form.icon === undefined ? null : { group: { icon: form.icon } },
       })),
@@ -388,8 +396,20 @@ describe('the spell builder’s Add to Jar', () => {
             unit: 'g',
             note: null,
             body: null,
-            ingredient: { id: ID.rosewort, categories: [category('Love')], stock: [] },
-            variant: { id: ID.roseLeaf, categories: [], formChoice: null },
+            ingredient: {
+              id: ID.rosewort,
+              toxic: false,
+              safetyNotes: null,
+              categories: [category('Love')],
+              stock: [],
+            },
+            variant: {
+              id: ID.roseLeaf,
+              toxic: false,
+              safetyNotes: null,
+              categories: [],
+              formChoice: null,
+            },
           },
           {
             id: ID.savedOneOff,
@@ -447,5 +467,127 @@ describe('the spell builder’s Add to Jar', () => {
 
     const unit = within(stepRow('Fixture Mockroot')).getByRole('combobox', { name: /^Unit/ });
     await waitFor(() => expect(unit).toHaveAccessibleDescription(UNMEASURABLE_UNIT));
+  });
+});
+
+// M10.18, story 53: a warning on an ingredient that is toxic or needs care. The
+// mark and the note are SafetyNote's own (tests/components/SafetyNote); this is
+// only that the builder draws them for the right steps, and never blocks a save.
+describe('the spell builder’s safety warning', () => {
+  const TOXWORT = suggestion(
+    'compendium',
+    ID.mockroot,
+    'Fixture Toxwort',
+    [{ id: ID.mockRoot, form: 'root', icon: 'mineral' }],
+    [],
+    { toxic: true, safetyNotes: 'Never burn it indoors.' },
+  );
+  const CAREWORT = suggestion('compendium', ID.twinwort, 'Fixture Carewort', [
+    { id: ID.twinLeaf, form: 'leaf', safetyNotes: 'Wash your hands after.' },
+  ]);
+  const warning = () => within(steps()).queryByText('Toxic');
+
+  it('marks a toxic ingredient’s step, shows its notes, and says so as it is added', async () => {
+    suggest(TOXWORT);
+    renderBuilder();
+
+    await add('Tox', /Fixture Toxwort/);
+
+    const row = stepRow('Fixture Toxwort');
+    expect(within(row).getByText('Toxic')).toBeInTheDocument();
+    expect(within(row).getByRole('region', { name: 'Caution' })).toHaveTextContent(
+      'Never burn it indoors.',
+    );
+    expect(
+      screen
+        .getAllByRole('status')
+        .map((region) => region.textContent)
+        .join(' '),
+    ).toContain('Warning: Toxic.');
+  });
+
+  it('marks a step whose form carries notes with Caution, and says so', async () => {
+    suggest(CAREWORT);
+    renderBuilder();
+
+    await add('Care', /Fixture Carewort/);
+
+    const row = stepRow('Fixture Carewort');
+    expect(within(row).getByText('Caution', { selector: '.badge *, .badge' })).toBeInTheDocument();
+    expect(within(row).getByRole('region', { name: 'Caution' })).toHaveTextContent(
+      'Wash your hands after.',
+    );
+    expect(
+      screen
+        .getAllByRole('status')
+        .map((region) => region.textContent)
+        .join(' '),
+    ).toContain('Caution: has safety notes.');
+  });
+
+  it('says nothing for an ingredient with nothing to say, and for a one-off', async () => {
+    suggest(ROSEWORT);
+    renderBuilder();
+    await add('Rose', /Fixture Rosewort/);
+    fireEvent.change(screen.getByRole('textbox', { name: 'One-Off Name' }), {
+      target: { value: 'Testwort' },
+    });
+    fireEvent.click(screen.getByRole('button', { name: 'Add One-Off Ingredient' }));
+
+    expect(warning()).toBeNull();
+    expect(within(steps()).queryByRole('region')).toBeNull();
+    expect(
+      screen
+        .getAllByRole('status')
+        .map((region) => region.textContent)
+        .join(' '),
+    ).not.toMatch(/Warning|Caution/);
+  });
+
+  it('does not block saving the spell', async () => {
+    suggest(TOXWORT);
+    const calls = acceptCreate();
+    renderBuilder();
+    await add('Tox', /Fixture Toxwort/);
+
+    submit();
+
+    await waitFor(() => expect(calls).toHaveLength(1));
+    expect(calls[0]?.input.steps).toEqual([{ ingredientId: ID.mockroot, variantId: ID.mockRoot }]);
+  });
+
+  it('shows the warning on a saved spell’s step, read back with it', () => {
+    renderBuilder({
+      spell: {
+        ...answer('s2', 3, [
+          {
+            id: ID.savedRosewort,
+            name: 'Fixture Toxwort',
+            form: 'root',
+            quantity: null,
+            unit: null,
+            note: null,
+            body: null,
+            ingredient: {
+              id: ID.mockroot,
+              toxic: true,
+              safetyNotes: null,
+              categories: [],
+              stock: [],
+            },
+            variant: {
+              id: ID.mockRoot,
+              toxic: false,
+              safetyNotes: null,
+              categories: [],
+              formChoice: null,
+            },
+          },
+        ]),
+      },
+    });
+    fireEvent.click(screen.getByRole('button', { name: 'Open All' }));
+
+    expect(within(stepRow('Fixture Toxwort')).getByText('Toxic')).toBeInTheDocument();
   });
 });

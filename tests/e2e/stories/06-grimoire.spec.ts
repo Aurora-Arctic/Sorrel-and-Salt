@@ -6,10 +6,12 @@ import {
   compendiumVariant,
   insertSpell,
   insertStock,
+  localIngredient,
   seedCoven,
   withSql,
 } from './coven-ingredients';
 import { categoryChip, pickCategoryIn } from './ingredient-dialogs';
+import { makeVariant } from '../../support/fixtures/ingredient';
 
 // Stories 47 to 57 and 76 to 80: the grimoire, from naming a spell to the
 // workings recorded against it. Every story here is a scaffold: the page it
@@ -275,24 +277,26 @@ test.fixme(
   },
 );
 
-test.fixme(
+test(
   'a member is warned when an ingredient is flagged toxic or unsafe to burn',
-  {
-    tag: '@story-53',
-    annotation: {
-      type: 'fixme',
-      description: 'M10.18 builds the safety warning in the spell builder',
-    },
-  },
+  { tag: '@story-53' },
   async ({ page }) => {
     const coven = await seedCoven(page, 'Fixture Coven Fifty-Three', 'story-53.test', {
       A: 'owner',
       B: 'member',
     });
+    // The coven keeps an ingredient it has flagged toxic.
+    await withSql(async (sql) =>
+      localIngredient(sql, coven.id, coven.users.A, {
+        name: 'Fixture Toxwort',
+        toxic: true,
+        variants: [makeVariant({ form: 'Root' })],
+      }),
+    );
     await signInAgainAs(page, coven.users.B);
     await openBuilder(page, coven.slug);
-    const step = await addIngredientStep(page, 'Belladonna');
-    await expect(step.getByRole('img', { name: /Toxic/ })).toBeVisible();
+    const step = await addIngredientStep(page, 'Fixture Toxwort');
+    await expect(step.getByText('Toxic').first()).toBeVisible();
     // The warning does not block the addition: the step stays and can be saved.
     await page.getByRole('textbox', { name: 'Title' }).fill('Fixture Working');
     await expect(page.getByRole('button', { name: 'Save' })).toBeEnabled();
