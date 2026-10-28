@@ -11,6 +11,7 @@ import type {
 import { makeQueryClient } from '@/lib/graphql-client';
 import type { SpellDialogProps } from '@/components/SpellBuilder/types';
 import { mockGraphQLError, mockGraphQLMutation } from '../../support/msw/graphql';
+import { offerCategories } from '../../support/msw/ingredient-lookups';
 
 const router = vi.hoisted(() => ({ push: vi.fn(), replace: vi.fn(), refresh: vi.fn() }));
 // The address as the browser has it, which New Spell's press writes without a server read.
@@ -109,6 +110,7 @@ function acceptUpdate() {
 }
 
 beforeEach(() => {
+  offerCategories([]);
   address.search = '';
   router.push.mockReset();
   router.replace.mockReset();

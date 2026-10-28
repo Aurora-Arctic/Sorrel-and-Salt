@@ -228,6 +228,10 @@ const SpellInputRef = builder.inputType('SpellInput', {
     status: t.field({ type: SpellStatusEnum }),
     visibility: t.field({ type: SpellVisibilityEnum }),
     steps: t.field({ type: [SpellStepInputRef], description: 'The recipe, in order.' }),
+    categoryIds: t.idList({
+      description:
+        'The categories the spell is assigned: what it intends, not what its ingredients bring.',
+    }),
   }),
 });
 
@@ -249,6 +253,10 @@ const UpdateSpellInputRef = builder.inputType('UpdateSpellInput', {
       description:
         'The whole recipe, in order: a saved step left out is removed. Left out, the recipe is unchanged.',
     }),
+    categoryIds: t.idList({
+      description:
+        'The whole set of categories the spell is assigned: one left out is unassigned. Left out, they are unchanged.',
+    }),
     // Nullable, since null is an answer, but never optional: GraphQL cannot
     // say "present, maybe null", so the service's schema refuses a save that
     // leaves it out, and a client that forgets it overwrites nobody's save.
@@ -260,15 +268,21 @@ const UpdateSpellInputRef = builder.inputType('UpdateSpellInput', {
 });
 
 /**
- * A status, visibility or recipe sent as null, read as left out: none of the
- * three can be cleared, and GraphQL lets any nullable input field be null.
+ * A status, visibility, recipe or category list sent as null, read as left
+ * out: none of the four can be cleared that way (an empty list clears the
+ * last two), and GraphQL lets any nullable input field be null.
  */
-function unstated<T extends { status?: unknown; visibility?: unknown; steps?: unknown }>(input: T) {
+function unstated<
+  T extends { status?: unknown; visibility?: unknown; steps?: unknown; categoryIds?: unknown },
+>(input: T) {
   return {
     status: input.status ?? undefined,
     visibility: input.visibility ?? undefined,
     steps: input.steps ?? undefined,
-  } as { [K in 'status' | 'visibility' | 'steps']: NonNullable<T[K]> | undefined };
+    categoryIds: input.categoryIds ?? undefined,
+  } as {
+    [K in 'status' | 'visibility' | 'steps' | 'categoryIds']: NonNullable<T[K]> | undefined;
+  };
 }
 
 builder.mutationField('createSpell', (t) =>

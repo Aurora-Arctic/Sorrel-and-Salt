@@ -284,6 +284,8 @@ export type SaveStockInput = {
 
 /** A new spell: a draft needs nothing but its status. */
 export type SpellInput = {
+  /** The categories the spell is assigned: what it intends, not what its ingredients bring. */
+  categoryIds?: Array<string | number> | null | undefined;
   dayOfWeek?: string | null | undefined;
   intent?: string | null | undefined;
   jarDescription?: string | null | undefined;
@@ -358,6 +360,8 @@ export type UpdateJarInput = {
 
 /** Changes a spell: a field left out keeps its value, and null clears it. Visibility only widens. */
 export type UpdateSpellInput = {
+  /** The whole set of categories the spell is assigned: one left out is unassigned. Left out, they are unchanged. */
+  categoryIds?: Array<string | number> | null | undefined;
   dayOfWeek?: string | null | undefined;
   /** Required, though it may be null: the revision this save was written against, which a newer one refuses. Null writes regardless. */
   expectedRevision?: number | null | undefined;

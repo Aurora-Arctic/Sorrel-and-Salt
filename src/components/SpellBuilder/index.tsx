@@ -17,6 +17,7 @@ import {
 } from '../Field';
 import MoonPhaseIcon from '../MoonPhaseIcon';
 import Notice from '../Notice';
+import { SpellCategoriesField, sameCategories, useCategoryName } from './categories-field';
 import { DAYS_OF_THE_WEEK, MOON_PHASES } from './constants';
 import { useSaveOnClose } from './save-on-close';
 import { SpellSuggestField } from './suggest-field';
@@ -96,10 +97,10 @@ type SectionField = keyof SpellBuilderValues;
 /**
  * The builder's sections, in order, and the values each folds: what flags a
  * section holding an error, and what its shut line reads. Later fields join
- * these: M10.14's categories Purpose, M10.15's steps Jar.
+ * these: M10.15's steps Jar.
  */
 const SECTIONS = {
-  Purpose: ['title', 'intent'],
+  Purpose: ['title', 'intent', 'categoryIds'],
   Jar: ['jarDescription', 'sealWaxColor'],
   'When to Work It': ['moonPhase', 'dayOfWeek'],
   Notes: ['note', 'visibility'],
@@ -112,9 +113,19 @@ const SECTION_NAMES = Object.keys(SECTIONS) as SectionName[];
 /** A value as one line: a multi-line intent or note reads on a shut section's line. */
 const oneLine = (text: string): string => text.trim().replace(/\s+/g, ' ');
 
-/** A value as its shut section's line reads it, blank for none. */
-function lineOfField(field: SectionField, values: SpellBuilderValues): string {
+/**
+ * A value as its shut section's line reads it, blank for none: the
+ * categories by name, as the picker's chips read (`named`), each once the
+ * categories are read, so the line never shows an id.
+ */
+function lineOfField(
+  field: SectionField,
+  values: SpellBuilderValues,
+  named: (id: string) => string | undefined,
+): string {
   switch (field) {
+    case 'categoryIds':
+      return (values.categoryIds ?? []).flatMap((id) => named(id) ?? []).join(', ');
     case 'visibility':
       return values.visibility === 'workspace' ? 'Shared' : 'Private';
     default:
@@ -134,6 +145,7 @@ function valuesOf(spell?: Partial<SpellBuilderSpell>): SpellBuilderValues {
     >),
     // A new spell is the coven's unless chosen otherwise (§5).
     visibility: spell?.visibility ?? 'workspace',
+    categoryIds: [...(spell?.categoryIds ?? [])],
   };
 }
 
@@ -178,9 +190,13 @@ const SpellBuilder = ({ workspaceId, spell, onCreated }: SpellBuilderProps): Rea
   // visibility other than the last save's, which is a choice worth saving on
   // its own (the owner's call, 2026-10-27).
   const typed = useWatch({ control, name: [...FIELDS] });
+  const picked = useWatch({ control, name: 'categoryIds' });
+  const categoriesChanged = !sameCategories(picked, defaultValues?.categoryIds);
   const visibility = useWatch({ control, name: 'visibility' });
   const values = useWatch({ control }) as SpellBuilderValues;
+  const categoryName = useCategoryName();
   const dirty =
+    categoriesChanged ||
     visibility !== defaultValues?.visibility ||
     FIELDS.some(
       (field, index) => (typed[index] ?? '').trim() !== (defaultValues?.[field] ?? '').trim(),
@@ -199,7 +215,7 @@ const SpellBuilder = ({ workspaceId, spell, onCreated }: SpellBuilderProps): Rea
     });
   const lineOf = (name: SectionName): string =>
     SECTIONS[name]
-      .map((field) => lineOfField(field, values))
+      .map((field) => lineOfField(field, values, categoryName))
       .filter(Boolean)
       .join(' · ') || 'Nothing yet';
   /** Opens each section one of whose fields now holds an error, so the error is seen. */
@@ -250,27 +266,35 @@ const SpellBuilder = ({ workspaceId, spell, onCreated }: SpellBuilderProps): Rea
   const send = async (values: SpellBuilderInput): Promise<void> => {
     // Only the builder's fields: the schema's defaults (an empty recipe)
     // would otherwise replace a saved spell's steps.
-    const input = {
+    const input: SpellBuilderInput = {
       ...(Object.fromEntries(FIELDS.map((field) => [field, values[field] ?? null])) as Record<
         SpellBuilderField,
         string | null
       >),
       visibility: values.visibility,
     };
+    // The categories go only when the picks differ from the last save: left
+    // out, the service keeps the spell's set as it is (M10.14).
+    const categoryIds = values.categoryIds ?? [];
+    if (!sameCategories(categoryIds, defaultValues?.categoryIds)) input.categoryIds = categoryIds;
     try {
       const created = saved === null;
       const answer = await save.mutateAsync(input);
       setSaved({ id: answer.id, revision: answer.revision });
       // What was saved is the new start: Save goes off until the next change.
-      reset(valuesOf(answer));
+      reset({ ...valuesOf(answer), categoryIds });
       // A Close waiting on this save closes now, and leaves the address be.
       if (closeGuard.saved()) return;
       if (created) onCreated?.(answer);
     } catch (error) {
       closeGuard.refused();
-      placeServerIssues(error, setError, ({ path: [field, ...rest] }) =>
-        rest.length === 0 && isField(field) ? field : undefined,
-      );
+      placeServerIssues(error, setError, ({ path: [field, ...rest] }) => {
+        // A refused pick is pathed to its index, as the ids were sent.
+        if (field === 'categoryIds') {
+          return rest.length === 0 ? 'categoryIds' : `categoryIds.${Number(rest[0])}`;
+        }
+        return rest.length === 0 && isField(field) ? field : undefined;
+      });
       openErred();
     }
   };
@@ -308,6 +332,7 @@ const SpellBuilder = ({ workspaceId, spell, onCreated }: SpellBuilderProps): Rea
                   multiline
                   rows={3}
                 />
+                <SpellCategoriesField />
               </>,
             )}
             {section(

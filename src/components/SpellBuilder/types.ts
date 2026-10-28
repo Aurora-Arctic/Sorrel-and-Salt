@@ -7,14 +7,22 @@ import type { SpellVisibility } from '@/modules/grimoire';
 export type SpellBuilderField =
   'title' | 'intent' | 'jarDescription' | 'sealWaxColor' | 'moonPhase' | 'dayOfWeek' | 'note';
 
-/** The form's values: each field as typed, blank for none, and who can see the spell (M10.13). */
+/**
+ * The form's values: each field as typed, blank for none, who can see the spell
+ * (M10.13), and the ids of the categories it is assigned (M10.14), none for none.
+ */
 export type SpellBuilderValues = Record<SpellBuilderField, string> & {
   visibility: SpellVisibility;
+  categoryIds: string[];
 };
 
-/** The form's values as a save sends them: trimmed, and null for blank, as the schema reads them. */
+/**
+ * The form's values as a save sends them: trimmed, and null for blank, as the
+ * schema reads them; the categories only when they changed (M10.14).
+ */
 export type SpellBuilderInput = Record<SpellBuilderField, string | null> & {
   visibility: SpellVisibility;
+  categoryIds?: string[];
 };
 
 /** A saved spell the builder opens, as the `spell` query answers it (M13.10). */
@@ -24,7 +32,10 @@ export type SpellBuilderSpell = {
   revision: number;
   /** Who can see it: its author alone, or the whole coven, which is for good (M10.13). */
   visibility: SpellVisibility;
-} & Record<SpellBuilderField, string | null>;
+} & Record<SpellBuilderField, string | null> & {
+    /** The categories it is assigned (M10.14); left out, none. */
+    categoryIds?: readonly string[];
+  };
 
 export interface SpellBuilderProps {
   /** The coven the spell is written in. */

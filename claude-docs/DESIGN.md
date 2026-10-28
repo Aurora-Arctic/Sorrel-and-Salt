@@ -889,8 +889,8 @@ type Mutation {
   addIngredientToWorkspace(workspaceId: ID!, variantId: ID!, input: StockInput!): InventoryItem! # stock is of one form (MB.215); refused beside variantId when the coven holds that form already (M9.3)
   updateStock(workspaceId: ID!, id: ID!, input: StockInput!): InventoryItem! # a field left out keeps its value, null clears it (M9.3)
   deleteStock(workspaceId: ID!, id: ID!): ID! # a soft delete of the jar; the entry stays (M9.4)
-  createSpell(workspaceId: ID!, input: SpellInput!): Spell! # every field nullable: a draft needs nothing, a complete spell a title; steps is the recipe in order (M10.10)
-  updateSpell(workspaceId: ID!, id: ID!, input: UpdateSpellInput!): Spell! # a field left out keeps its value, null clears it; steps, when given, is the whole recipe; expectedRevision must be sent, null writes regardless, a stale one is STALE_WRITE; visibility only widens (M10.10)
+  createSpell(workspaceId: ID!, input: SpellInput!): Spell! # every field nullable: a draft needs nothing, a complete spell a title; steps is the recipe in order (M10.10); categoryIds the assigned categories (M10.14)
+  updateSpell(workspaceId: ID!, id: ID!, input: UpdateSpellInput!): Spell! # a field left out keeps its value, null clears it; steps, when given, is the whole recipe, and categoryIds the whole set of assigned categories (M10.14); expectedRevision must be sent, null writes regardless, a stale one is STALE_WRITE; visibility only widens (M10.10)
   setSpellVisibility(id: ID!, visibility: SpellVisibility!): Spell! # private -> workspace only
   createInvitation(workspaceId: ID!, email: String!, role: InvitableRole!): Invitation! # the link is mailed; no response carries it
   acceptInvitation(token: String!): Invitation! # either tier (MB.202); the session's verified email must match the invitation's, and the page lands by tier
