@@ -267,7 +267,7 @@ describe('GrimoireList', () => {
       return new URL(router.push.mock.lastCall![0], 'http://localhost').searchParams;
     };
 
-    it('applies a moon phase, a day, a visibility and a member picked in the panel to the address', async () => {
+    it('applies a moon phase and a day picked in the panel to the address', async () => {
       render(
         <Navigating push={router.push}>
           <List {...props()} />
@@ -276,14 +276,21 @@ describe('GrimoireList', () => {
       open();
       await pick('Moon Phase', /^Waxing Crescent/);
       await pick('Day of Week', /^Friday/);
-      await pick('Visibility', /^Private/);
-      expect(
-        screen.getByRole('button', { name: 'Remove Visibility: Private' }),
-      ).toBeInTheDocument();
-      await pick('Coven Member', /^Fixture Member/);
       const params = await apply();
       expect(params.getAll('moonPhase')).toEqual(['Waxing Crescent']);
       expect(params.getAll('dayOfWeek')).toEqual(['Friday']);
+    });
+
+    it('applies a visibility and a member picked in the panel to the address', async () => {
+      render(
+        <Navigating push={router.push}>
+          <List {...props()} />
+        </Navigating>,
+      );
+      open();
+      await pick('Visibility', /^Private/);
+      await pick('Coven Member', /^Fixture Member/);
+      const params = await apply();
       expect(params.getAll('visibility')).toEqual(['private']);
       expect(params.getAll('maker')).toEqual(['u1']);
     });

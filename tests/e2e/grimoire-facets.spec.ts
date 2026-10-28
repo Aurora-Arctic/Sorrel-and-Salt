@@ -124,3 +124,32 @@ test('the Compact switch sets the grimoire list density and the filter is access
   await openFilters(page);
   await assertNoAccessibilityViolations(page);
 });
+
+test('at 375px the grimoire filter panel opens, a facet can be picked, and the page does not scroll sideways', async ({
+  page,
+}) => {
+  await page.setViewportSize({ width: 375, height: 800 });
+  const coven = await seedCoven(page, 'Fixture Coven Narrow', 'grimoire-narrow.test', {
+    A: 'owner',
+  });
+  await withSql(async (sql) => {
+    const id = await insertSpell(
+      sql,
+      coven.id,
+      'Fixture Narrow Working',
+      'workspace',
+      coven.users.A,
+      'complete',
+    );
+    await sql`update spells set moon_phase = 'Full Moon' where id = ${id}`;
+  });
+  await page.goto(`/coven/${coven.slug}/grimoire`);
+  const panel = await openFilters(page);
+  await panel.getByRole('combobox', { name: 'Moon Phase' }).fill('full');
+  await page.getByRole('option', { name: /Full Moon/ }).click();
+  await expect(panel.getByRole('button', { name: 'Remove Moon Phase: Full Moon' })).toBeVisible();
+  const overflow = await page.evaluate(
+    () => document.documentElement.scrollWidth > document.documentElement.clientWidth,
+  );
+  expect(overflow).toBe(false);
+});
