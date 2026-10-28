@@ -341,6 +341,17 @@ test('a member saves a spell as a draft', { tag: '@story-55' }, async ({ page })
   await expect(edit.getByRole('button', { name: 'Reopen as Draft' })).toBeVisible();
   await edit.getByRole('button', { name: 'Reopen as Draft' }).click();
   await expect(edit.getByRole('button', { name: 'Mark Complete' })).toBeVisible();
+  // A saved spell is edited from its card's link, and the change reads back on the card.
+  await page.goto(`/coven/${coven.slug}/grimoire/drafts`);
+  await grimoireList(page).getByRole('link', { name: 'Edit Fixture Working' }).click();
+  const renamed = page.getByRole('dialog', { name: 'Edit Spell, Fixture Working' });
+  await renamed.getByRole('button', { name: 'Open All' }).click();
+  await renamed.getByRole('textbox', { name: 'Title' }).fill('Fixture Working Renamed');
+  await renamed.getByRole('button', { name: 'Close', exact: true }).click();
+  await expect(page).toHaveURL(`/coven/${coven.slug}/grimoire/drafts`);
+  await expect(
+    grimoireList(page).getByRole('link', { name: 'Fixture Working Renamed', exact: true }),
+  ).toBeVisible();
 });
 
 test(

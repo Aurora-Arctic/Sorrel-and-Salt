@@ -11,6 +11,7 @@ import { buildSearchSentence } from '../IngredientSearch/sentence';
 import { useListNavigation } from '../ListFrame';
 import SearchSentence from '../SearchSentence';
 import { GRIMOIRE_PARAMS } from './params';
+import { recipeHref } from './recipe-href';
 import { nounOf } from './noun';
 import type { GrimoireFilterProps, GrimoireListFilter } from './types';
 
@@ -19,8 +20,7 @@ import type { GrimoireFilterProps, GrimoireListFilter } from './types';
 // and the panel it opens, which holds the Categories line alone. Status is not a filter here:
 // Spells and Drafts are two tabs, so each tab's row searches and filters within its own status.
 // A change in the panel is held until it shuts, then applied in one soft navigation, as the
-// compendium's is. Picking a title in the search box's dropdown searches for it: there is no
-// spell page to open yet (MB.6). See claude-docs/components/grimoire-list.md.
+// compendium's is. Picking a title in the search box's dropdown opens that spell's recipe page (MB.6). See claude-docs/components/grimoire-list.md.
 
 /** What the panel holds: the categories and their match mode. */
 interface Held {
@@ -102,6 +102,7 @@ const PanelCategories = ({
 const GrimoireFilterRow = ({
   path,
   workspaceId,
+  covenSlug,
   status,
   filter,
   categories,
@@ -124,6 +125,8 @@ const GrimoireFilterRow = ({
       clear={false}
       className="compendium-list__row"
       searchHref={(query) => hrefFor(path, filter, held, query)}
+      // A picked title opens that spell's recipe page (MB.6).
+      pickHref={({ id }) => recipeHref(covenSlug, id)}
       source={{ kind: 'grimoire', workspaceId, status }}
     >
       <PanelCategories
@@ -148,6 +151,7 @@ function filterOf(href: string): GrimoireListFilter {
 const GrimoireFilter = ({
   path,
   workspaceId,
+  covenSlug,
   status,
   filter,
   categories,
@@ -176,6 +180,7 @@ const GrimoireFilter = ({
         key={filter.query}
         path={path}
         workspaceId={workspaceId}
+        covenSlug={covenSlug}
         status={status}
         filter={filter}
         categories={categories}

@@ -1,6 +1,7 @@
 import type { ReactElement } from 'react';
 import IngredientSearch from '../IngredientSearch';
 import SpellCard, { spellTitleId } from '../SpellCard';
+import { recipeHref } from './recipe-href';
 import EmptyGrimoire from './empty';
 import GrimoireFilter from './filter';
 import type { GrimoireListProps } from './types';
@@ -17,6 +18,7 @@ import './index.scss';
 const GrimoireList = ({
   path,
   workspaceId,
+  covenSlug,
   status,
   spells,
   filter,
@@ -32,6 +34,7 @@ const GrimoireList = ({
       <GrimoireFilter
         path={path}
         workspaceId={workspaceId}
+        covenSlug={covenSlug}
         status={status}
         filter={filter}
         categories={categories}
@@ -48,7 +51,7 @@ const GrimoireList = ({
       <ul className="ingredient-card-list" aria-label="Grimoire" data-density="regular">
         {spells.map((spell) => (
           <li key={spell.id} aria-labelledby={spellTitleId(spell.id)}>
-            <SpellCard {...spell} />
+            <SpellCard {...spell} href={recipeHref(covenSlug, spell.id)} />
           </li>
         ))}
       </ul>
