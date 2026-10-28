@@ -68,7 +68,7 @@ export const BANDS_FULL = 8;
  * Height of the crest on each band edge, in drawing units. The aside's jar is 4rem wide for a
  * 48-unit drawing, so 1.3 units is about 1.7px there: below that the wave is not seen.
  */
-const CREST = 1.3;
+const CREST = 1.9;
 
 /** A band's top edge: one low crest across the jar. */
 const crest = `M-2 ${CREST}Q24 ${-CREST} 50 ${CREST}`;
