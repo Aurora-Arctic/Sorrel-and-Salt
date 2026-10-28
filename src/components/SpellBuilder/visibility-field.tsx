@@ -13,14 +13,16 @@ import type { SpellVisibility } from '@/modules/grimoire';
 // takes either, the coven by default (§5), and
 // the choice goes out with its first save. A saved private spell is shared by
 // switching it on, which asks first and then saves at once, so that one action
-// with its confirmation shares it. A spell shared with the coven never goes back
-// (DESIGN.md §5's one-way rule, held by the service), so the control then reads
-// only and says so, rather than leave a person to find out from a refusal.
+// with its confirmation shares it. A complete spell shared with the coven never
+// goes back (DESIGN.md §5's one-way rule, held by the service), so the control
+// then reads only and says so, rather than leave a person to find out from a
+// refusal. A shared draft may go back (the owner, 2026-10-28), so its switch
+// stays open.
 // claude-docs/components/spell-builder.md, "Visibility".
 
 /** What each state means, said under the switch. */
 const MEANS = {
-  workspace: 'Every member of the coven can see it. Once shared, it stays shared.',
+  workspace: 'Every member of the coven can see it. Once the spell is complete, it stays shared.',
   private: 'Only you can see it, until you share it with the coven.',
 } as const satisfies Record<SpellVisibility, string>;
 
@@ -39,8 +41,10 @@ export function SpellVisibilityField({ created, save }: SpellVisibilityFieldProp
   const [asking, setAsking] = useState(false);
   const [sharing, setSharing] = useState(false);
 
-  // The saved spell's visibility is the last save's, which the form starts from.
-  const shared = created && defaultValues?.visibility === 'workspace';
+  // The saved spell's visibility and status are the last save's, which the form
+  // starts from. Only a complete spell is shut: a draft may be made private.
+  const shared =
+    created && defaultValues?.visibility === 'workspace' && defaultValues.status === 'complete';
 
   const choose = (on: boolean) => {
     const visibility: SpellVisibility = on ? 'workspace' : 'private';
@@ -77,8 +81,8 @@ export function SpellVisibilityField({ created, save }: SpellVisibilityFieldProp
           question="Share With the Coven?"
           details={
             <p>
-              Every member of the coven will be able to see this spell, and it cannot be made
-              private again. Any other changes are saved with it.
+              Every member of the coven will be able to see this spell. Once it is marked complete,
+              it cannot be made private again. Any other changes are saved with it.
             </p>
           }
           confirmLabel="Share"

@@ -95,7 +95,8 @@ off is private (`private`), which only its author can. A line under the
 switch, its `note`, says what the state it is in means. The switch stands at the start of its column, its label and note too, as the
 ingredient form's Toxic switch does, rather than centred as in a filter bar
 (`index.scss`, on the form's `spell-builder` class).
-The rule it follows is DESIGN.md §5's: visibility only widens.
+The rule it follows is DESIGN.md §5's: visibility only widens once the spell is
+complete; a draft may be made private again ([`m13.17-draft-unshare`](../design-decisions/m13.17-draft-unshare.md)).
 
 - **A new spell** opens with the switch on, the coven being the database's
   default, and it may be turned either way. The choice goes out with the first save. A choice alone is
@@ -108,10 +109,13 @@ The rule it follows is DESIGN.md §5's: visibility only widens.
   spell is shared in one action. Any other unsaved changes go with it, which
   the question says. A refusal lands in the `Notice` and the spell stays
   private.
-- **A spell shared with the coven** shows the switch on and disabled, with
+- **A shared draft** keeps the switch open. Switching it off is a pending
+  change like a new spell's: Save Spell saves it. Marking the spell complete in
+  the same go is refused by the service, and its words show in the `Notice`.
+- **A complete spell shared with the coven** shows the switch on and disabled, with
   the note: "Shared with the coven, so it cannot be made private again.
   Duplicate makes a private copy." Duplicate is M13.20. A new spell saved for
-  the coven shuts the control the same way, as soon as the save answers.
+  the coven stays open while it is a draft, and shuts once it is complete.
 
 Which state shows is read from the form's starting values (the last save's)
 and whether the spell has been created, so the builder passes only

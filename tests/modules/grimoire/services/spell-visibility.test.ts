@@ -32,6 +32,7 @@ async function cast(
   author: typeof A,
   visibility: SpellVisibility,
   workspaceId: string = WORKSPACE_W_ID,
+  status: 'draft' | 'complete' = 'draft',
 ): Promise<string> {
   const session = asUser(author);
   const membership = await assertMembership(session, workspaceId, { spell: ['create'] });
@@ -40,7 +41,7 @@ async function cast(
     categories: _categories,
     steps: _steps,
     ...row
-  } = makeSpell({ visibility });
+  } = makeSpell({ visibility, status });
 
   const [spell] = await withAudit(session, (write) =>
     write.insertInWorkspace(membership, spells, row),
@@ -89,9 +90,36 @@ describe('setSpellVisibility', () => {
     });
   });
 
-  describe('narrowing workspace → private', () => {
-    it('is refused with an error that says why, not a bare Forbidden', async () => {
+  describe('narrowing a draft, workspace → private (the owner, 2026-10-28)', () => {
+    it('is permitted to the author, by direct id', async () => {
       const spellId = await cast(B, 'workspace');
+      // Why this could have been refused: the coven can already read the spell,
+      // so it is exactly the case the one-way rule holds once a spell is complete.
+      const owner = await assertMembership(asUser(A), WORKSPACE_W_ID, { spell: ['read'] });
+      await expect(findOneSpell(owner, spellId)).resolves.toMatchObject({ id: spellId });
+
+      await expect(
+        setSpellVisibility(asUser(B), WORKSPACE_W_ID, spellId, 'private'),
+      ).resolves.toMatchObject({ id: spellId, visibility: 'private' });
+
+      expect(await visibilityOf(spellId)).toBe('private');
+      await expect(findOneSpell(owner, spellId)).resolves.toBeUndefined();
+    });
+
+    it('still refuses a viewer, who writes nothing', async () => {
+      const spellId = await cast(B, 'workspace');
+
+      await expect(
+        setSpellVisibility(asUser(C), WORKSPACE_W_ID, spellId, 'private'),
+      ).rejects.toBeInstanceOf(Forbidden);
+
+      expect(await visibilityOf(spellId)).toBe('workspace');
+    });
+  });
+
+  describe('narrowing a complete spell, workspace → private', () => {
+    it('is refused with an error that says why, not a bare Forbidden', async () => {
+      const spellId = await cast(B, 'workspace', WORKSPACE_W_ID, 'complete');
 
       // Why this could have succeeded: B authored this spell and may widen the
       // private one in the same coven, so the refusal is the rule rather than a
@@ -115,7 +143,7 @@ describe('setSpellVisibility', () => {
     });
 
     it('leaves the spell shared', async () => {
-      const spellId = await cast(B, 'workspace');
+      const spellId = await cast(B, 'workspace', WORKSPACE_W_ID, 'complete');
 
       await expect(
         setSpellVisibility(asUser(B), WORKSPACE_W_ID, spellId, 'private'),
@@ -125,7 +153,7 @@ describe('setSpellVisibility', () => {
     });
 
     it('is refused to the owner too, who cannot retract another member’s gift', async () => {
-      const spellId = await cast(B, 'workspace');
+      const spellId = await cast(B, 'workspace', WORKSPACE_W_ID, 'complete');
 
       await expect(
         setSpellVisibility(asUser(A), WORKSPACE_W_ID, spellId, 'private'),

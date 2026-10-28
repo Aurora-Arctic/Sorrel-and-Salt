@@ -194,7 +194,7 @@ describe('SpellBuilder visibility', () => {
       expect(calls).toHaveLength(0);
     });
 
-    it('is shared in one action once confirmed, and the control then reads only', async () => {
+    it('is shared in one action once confirmed, and a draft’s control stays open', async () => {
       const calls = acceptUpdate();
       renderBuilder({ spell: SPELL });
 
@@ -209,7 +209,7 @@ describe('SpellBuilder visibility', () => {
       });
       await waitFor(() => expect(sharing()).toBeNull());
       expect(toggle()).toBeChecked();
-      expect(toggle()).toBeDisabled();
+      expect(toggle()).toBeEnabled();
     });
 
     it('stays private when the share is refused, with the refusal in the notice', async () => {
@@ -247,24 +247,43 @@ describe('SpellBuilder visibility', () => {
     });
   });
 
-  describe('a spell shared with the coven', () => {
-    it('opens the control read-only, saying why and naming Duplicate', () => {
-      renderBuilder({ spell: { ...SPELL, visibility: 'workspace' } });
-
+  describe('a shared draft (the owner, 2026-10-28)', () => {
+    it('keeps the control open, and a switch-off is saved as private', async () => {
+      const calls = acceptUpdate();
+      renderBuilder({ spell: { ...SPELL, visibility: 'workspace', status: 'draft' } });
+      // Why it could have been shut: the spell is shared with the coven.
       expect(toggle()).toBeChecked();
-      expect(toggle()).toBeDisabled();
-      expect(toggle()).toHaveAccessibleDescription(/cannot be made private/i);
-      expect(toggle()).toHaveAccessibleDescription(/Duplicate/);
+      expect(toggle()).toBeEnabled();
+
+      fireEvent.click(toggle());
+
+      expect(toggle()).not.toBeChecked();
+      expect(save()).toBeEnabled();
+      submit();
+      await waitFor(() => expect(calls).toHaveLength(1));
+      expect(calls[0]?.input).toMatchObject({ visibility: 'private', status: 'draft' });
     });
 
-    it('becomes read-only once a new spell is saved for the coven', async () => {
+    it('stays open when a new spell is saved for the coven', async () => {
       acceptCreate();
       renderBuilder();
 
       fireEvent.change(title(), { target: { value: 'Fixture Working' } });
       submit();
 
-      await waitFor(() => expect(toggle()).toBeDisabled());
+      await waitFor(() => expect(save()).toBeDisabled());
+      expect(toggle()).toBeChecked();
+      expect(toggle()).toBeEnabled();
+    });
+  });
+
+  describe('a complete spell shared with the coven', () => {
+    it('opens the control read-only, saying why and naming Duplicate', () => {
+      renderBuilder({ spell: { ...SPELL, visibility: 'workspace', status: 'complete' } });
+
+      expect(toggle()).toBeChecked();
+      expect(toggle()).toBeDisabled();
+      expect(toggle()).toHaveAccessibleDescription(/cannot be made private/i);
       expect(toggle()).toHaveAccessibleDescription(/Duplicate/);
     });
   });

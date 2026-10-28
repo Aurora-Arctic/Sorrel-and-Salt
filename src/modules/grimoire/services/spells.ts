@@ -110,7 +110,8 @@ export async function createSpell(
  * names its steps, the whole recipe in order; when it names its categories,
  * the whole set it is assigned. A save written against a
  * revision the spell has moved past is refused, and null overwrites (M13.15).
- * Visibility only widens, as `setSpellVisibility` holds it.
+ * Visibility only widens once the spell is complete, as `setSpellVisibility`
+ * holds it; a draft may be made private.
  *
  * @throws {Forbidden} the caller may not write this coven's grimoire, or the
  * save narrows a shared spell.
@@ -129,7 +130,7 @@ export async function updateSpell(
   const membership = await assertMembership(session, workspaceId, { spell: ['update'] });
   const parsed = parseInput(UpdateSpellInputSchema, input);
   const current = await readableSpell(membership, spellId);
-  if (parsed.visibility) assertWidens(current.visibility, parsed.visibility);
+  if (parsed.visibility) assertWidens(current, parsed.visibility, parsed.status);
 
   const existing = parsed.steps ? await findManyInSpell(membership, spellSteps, spellId) : [];
   if (parsed.steps) await checkRecipe(membership, parsed.steps, existing);

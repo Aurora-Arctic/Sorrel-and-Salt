@@ -358,7 +358,7 @@ export type UpdateJarInput = {
   input: StockInput;
 };
 
-/** Changes a spell: a field left out keeps its value, and null clears it. Visibility only widens. */
+/** Changes a spell: a field left out keeps its value, and null clears it. Visibility only widens once the spell is complete. */
 export type UpdateSpellInput = {
   /** The whole set of categories the spell is assigned: one left out is unassigned. Left out, they are unchanged. */
   categoryIds?: Array<string | number> | null | undefined;
