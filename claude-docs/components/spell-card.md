@@ -68,7 +68,7 @@ their own press, hover and focus.
 ## The Edit pencil
 
 Given an `editHref`, the card draws an `EditLink` (an icon link, named "Edit <title>") in the
-card's top-right corner, as IngredientEntry's pencil is drawn (M13.10). The grimoire tab works the address
+card's foot, at the right of the `specimen__actions` row, as IngredientCard draws its Edit pencil (M13.10). The row reuses IngredientCard's classes and size rules (`.spell-card .specimen__actions` is in the same selector lists), so the icons match in the grid, compact and phone layouts. The grimoire tab works the address
 out and passes it only for a role that may update a spell (`rolePermits(role, { spell:
 ['update'] })`), so a viewer's cards have none. It keeps the tab's filter, page and tab in
 the address, so closing the dialog returns to the list as it was.
@@ -76,7 +76,7 @@ the address, so closing the dialog returns to the list as it was.
 ## The Quick Look eye
 
 Given a `lookHref`, the card draws a `QuickLookLink` (an eye icon link, named "Quick Look <title>")
-in the corner beside the Edit pencil (M13.21), opening the `look` modal place
+at the bottom left of the foot, in `specimen__actions-start`, as IngredientCard draws its eye (M13.21), opening the `look` modal place
 (`SPELL_LOOK_PLACE`) so it is independent of the spell builder's dialog. The grimoire tab passes
 it for every role, since a viewer may read the spell; it keeps the tab's filter, page and tab in
 the address, and closing returns there with focus back on the eye. What the modal shows is

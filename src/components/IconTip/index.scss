@@ -176,6 +176,7 @@
 // gap out from the box (the stock lines' badge inset, the entry's title room, the window's
 // controls row) reads `$action-icon-size` too.
 .ingredient-card .specimen__actions,
+.spell-card .specimen__actions,
 .ingredient-entry__cupboard--icons,
 .modal-dialog__formal-actions {
   :is(.icon-tip__edit, .icon-tip__remove, .icon-tip__look, .add-icon, .add-icon--held) {

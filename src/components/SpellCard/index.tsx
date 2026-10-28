@@ -83,33 +83,36 @@ const SpellCard = ({
             </div>
           )}
         </div>
-        {/* The card's top-right corner, as an ingredient card's badges are. */}
-        {(lookHref || editHref) && (
-          <div className="spell-card__corner">
-            {lookHref && (
-              <QuickLookLink
-                href={lookHref}
-                name={name}
-                heading={{ title: name }}
-                place={SPELL_LOOK_PLACE}
-              />
-            )}
-            {editHref && (
-              <EditLink
-                href={editHref}
-                name={name}
-                heading={{ eyebrow: 'Edit Spell', title: name }}
-              />
-            )}
-          </div>
-        )}
       </div>
       {purpose !== '' && <p className="spell-card__intent">{purpose}</p>}
       <CategoryChips categories={categories} label={name} />
       {/* In the foot, as IngredientCard's, so cards in one grid row end on the same line. */}
-      {lastEdit != null && (
+      {(lastEdit != null || lookHref || editHref) && (
+        // The foot, as IngredientCard's: who last edited, then the actions on one row, the
+        // Quick Look eye at the bottom left (the start group) and the Edit pencil at the right.
         <div className="specimen__foot">
-          <LastEdit by={lastEdit.by} at={lastEdit.at} />
+          {lastEdit != null && <LastEdit by={lastEdit.by} at={lastEdit.at} />}
+          {(lookHref || editHref) && (
+            <div className="specimen__actions">
+              {lookHref && (
+                <span className="specimen__actions-start">
+                  <QuickLookLink
+                    href={lookHref}
+                    name={name}
+                    heading={{ title: name }}
+                    place={SPELL_LOOK_PLACE}
+                  />
+                </span>
+              )}
+              {editHref && (
+                <EditLink
+                  href={editHref}
+                  name={name}
+                  heading={{ eyebrow: 'Edit Spell', title: name }}
+                />
+              )}
+            </div>
+          )}
         </div>
       )}
       {/* The smoulder's ember line and char rim, over the content (_smoulder.scss). */}

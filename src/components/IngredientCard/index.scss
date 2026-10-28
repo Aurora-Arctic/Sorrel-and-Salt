@@ -304,14 +304,17 @@
 // they pass the pointer through and only their children take it back (MB.272): a press in
 // the gaps between the controls opens the entry, as the rest of the card does. Each child
 // is a control or the wrapper its tip or menu opens in, so a menu or tip keeps the pointer.
-.ingredient-card .specimen__actions {
+.ingredient-card .specimen__actions,
+.spell-card .specimen__actions {
   position: relative;
   z-index: 1;
   pointer-events: none;
 }
 
 .ingredient-card .specimen__actions > :not(.specimen__actions-start),
-.ingredient-card .specimen__actions-start > * {
+.ingredient-card .specimen__actions-start > *,
+.spell-card .specimen__actions > :not(.specimen__actions-start),
+.spell-card .specimen__actions-start > * {
   pointer-events: auto;
 }
 
@@ -320,7 +323,8 @@
 // a line box its text's line height and `vertical-align: middle` set the eye
 // on the baseline rather than the row's centre, and could grow the row past the
 // 2rem controls, which then sat above the eye.
-.ingredient-card .specimen__actions-start {
+.ingredient-card .specimen__actions-start,
+.spell-card .specimen__actions-start {
   display: flex;
   align-items: center;
   gap: space(2);
