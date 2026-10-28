@@ -151,6 +151,8 @@ export interface SwitchFieldProps {
   hint?: string;
   /** Optional: a line under the toggle, read with it, saying what its state means (M10.13). */
   note?: string;
+  /** Optional: more of the note, behind an info tip beside it and still read with the toggle. */
+  noteTip?: string;
 }
 
 /** One choice of a `RadioGroupField`: its value, its name and what it means. */

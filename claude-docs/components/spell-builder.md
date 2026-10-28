@@ -109,8 +109,9 @@ The rule it follows is DESIGN.md §5's: visibility only widens.
   the question says. A refusal lands in the `Notice` and the spell stays
   private.
 - **A spell shared with the coven** shows the switch on and disabled, with
-  the note: "Shared with the coven, so it cannot be made private again.
-  Duplicate makes a private copy." Duplicate is M13.20. A new spell saved for
+  the note "Shared with the coven" and, in an InfoTip beside it, "It cannot be
+  made private again. Duplicate makes a private copy." The tip's text is in
+  the switch's accessible description. Duplicate is M13.20. A new spell saved for
   the coven shuts the control the same way, as soon as the save answers.
 
 Which state shows is read from the form's starting values (the last save's)
