@@ -200,11 +200,11 @@ grimoire. Owners and members hold `spell: create` and `update`, a viewer holds
 `read` alone, and `assertMembership` refuses everyone else, a site admin
 included.
 
-| Call                               | Does                                                                           |
-| ---------------------------------- | ------------------------------------------------------------------------------ |
-| `createSpell` / `updateSpell`      | write the spell and its whole recipe; `updateSpell` widens visibility only     |
-| `listGrimoire` / `readSpell`       | read a page, or one spell without its steps (`spell-reads.ts`)                 |
-| `addSpellStep` / `updateSpellStep` | write a one-off ingredient or an instruction, only on a spell the caller reads |
+| Call                               | Does                                                                                                |
+| ---------------------------------- | --------------------------------------------------------------------------------------------------- |
+| `createSpell` / `updateSpell`      | write the spell, its whole recipe and its assigned categories; `updateSpell` widens visibility only |
+| `listGrimoire` / `readSpell`       | read a page, or one spell without its steps (`spell-reads.ts`)                                      |
+| `addSpellStep` / `updateSpellStep` | write a one-off ingredient or an instruction, only on a spell the caller reads                      |
 
 A call that names a spell reads it first as the caller. A private spell of
 someone else, and a spell of another coven, both come back `NotFound`, so the

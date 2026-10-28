@@ -1,6 +1,6 @@
 import { QueryClientProvider } from '@tanstack/react-query';
 import { fireEvent, render, screen, waitFor, within } from '@testing-library/react';
-import { describe, expect, it, vi } from 'vitest';
+import { beforeEach, describe, expect, it, vi } from 'vitest';
 import type {
   CreateSpellMutation,
   CreateSpellMutationVariables,
@@ -10,10 +10,14 @@ import type {
 import { makeQueryClient } from '@/lib/graphql-client';
 import type { SpellBuilderProps, SpellBuilderSpell } from '@/components/SpellBuilder/types';
 import { mockGraphQLError, mockGraphQLMutation } from '../../support/msw/graphql';
+import { offerCategories } from '../../support/msw/ingredient-lookups';
 
 vi.mock('next/navigation', () => ({ useRouter: () => ({ push: vi.fn(), refresh: vi.fn() }) }));
 
 const { default: SpellBuilder } = await import('@/components/SpellBuilder');
+
+// The builder's category picker (M10.14) reads the categories as it opens.
+beforeEach(() => offerCategories([]));
 
 // The spell builder's visibility control (M10.13): who can see the spell, its
 // author alone or the whole coven, set at creation, widened once with a

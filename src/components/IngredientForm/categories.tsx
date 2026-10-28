@@ -19,7 +19,7 @@ import type { IngredientFormValues, SharedFieldProps } from './types';
 
 // One page of the hard maximum, MAX_PAGE_SIZE, holds every category there is
 // (rule 8): written out, since the pagination module is the server's.
-const CategoriesDocument = graphql(`
+export const CategoriesDocument = graphql(`
   query PickerCategories {
     categories(first: 100) {
       edges {

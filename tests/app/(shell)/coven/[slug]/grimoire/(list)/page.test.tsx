@@ -5,6 +5,7 @@ import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { NotFound } from '@/lib/errors';
 import { makeQueryClient } from '@/lib/graphql-client';
 import { CARD_PAGE_SIZE } from '@/lib/pagination';
+import { offerCategories } from '../../../../../../support/msw/ingredient-lookups';
 
 // The Grimoire's two tabs (M10.11): Spells and Drafts. The guard and the services are mocked,
 // since what they decide is their own tests' (which spells a reader may list is
@@ -105,6 +106,7 @@ async function renderTab(Page: PageFn, search: Record<string, string | string[]>
 
 beforeEach(() => {
   vi.clearAllMocks();
+  offerCategories([]);
   address.path = '/coven/fixture-coven/grimoire';
   address.search = '';
   vi.stubGlobal('matchMedia', (query: string) => ({
@@ -329,6 +331,34 @@ describe('the spell builder over a Grimoire tab', () => {
     fireEvent.click(within(dialog).getByRole('button', { name: 'Open All' }));
     expect(within(dialog).getByRole('textbox', { name: 'Intent' })).toHaveValue('Calm');
     expect(within(dialog).getByRole('textbox', { name: 'Jar Description' })).toHaveValue('4 oz');
+  });
+
+  it('opens a saved spell under ?edit=<id> with the categories its author assigned it picked', async () => {
+    as('member');
+    readSpell.mockResolvedValue(SPELL);
+    offerCategories([
+      {
+        id: CATEGORY.id,
+        name: CATEGORY.name,
+        description: 'Keeps a fixture warded.',
+        group: GROUP,
+      },
+    ]);
+    // Testwarding is this spell’s alone: the cards beneath carry none.
+    assignedCategoriesOf.mockImplementation(async (_s: unknown, spells: { id: string }[]) =>
+      spells.map(({ id }) => (id === SPELL_ID ? [{ id: 'c1', name: 'Testwarding' }] : [])),
+    );
+    await renderTab(DraftsPage, { edit: SPELL_ID });
+
+    // The spell is the one asked for, so its picks are this spell’s and no other’s.
+    expect(assignedCategoriesOf).toHaveBeenCalledWith(session, [
+      { id: SPELL_ID, workspaceId: COVEN.id },
+    ]);
+    const dialog = screen.getByRole('dialog', { name: 'Edit Spell, Fixture Working' });
+    fireEvent.click(within(dialog).getByRole('button', { name: 'Open All' }));
+    expect(
+      await within(dialog).findByRole('button', { name: 'Remove Testwarding' }),
+    ).toBeInTheDocument();
   });
 
   it('reads nothing and opens nothing under ?edit=<id> for a viewer', async () => {

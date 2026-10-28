@@ -252,3 +252,32 @@ describe('a recipe’s steps, taken together', () => {
     expect(SpellInput.parse({}).steps).toEqual([]);
   });
 });
+
+describe('a spell’s categories', () => {
+  const CATEGORY = '33333333-3333-4333-8333-333333333333';
+
+  it('leaves the categories out when the input names none, on create and update alike', () => {
+    expect(SpellInput.parse({}).categoryIds).toBeUndefined();
+    expect(UpdateSpellInput.parse({ expectedRevision: null }).categoryIds).toBeUndefined();
+  });
+
+  it('takes category ids, and an empty list that clears them', () => {
+    expect(SpellInput.parse({ categoryIds: [CATEGORY] }).categoryIds).toEqual([CATEGORY]);
+    expect(UpdateSpellInput.parse({ expectedRevision: null, categoryIds: [] }).categoryIds).toEqual(
+      [],
+    );
+  });
+
+  it('refuses an id that is not an id, at its index', () => {
+    for (const schema of [SpellInput, UpdateSpellInput]) {
+      const result = schema.safeParse({
+        expectedRevision: null,
+        categoryIds: [CATEGORY, 'Protection'],
+      });
+      expect(result.success).toBe(false);
+      expect(result.error?.issues.map((issue) => [issue.path, issue.message])).toEqual([
+        [['categoryIds', 1], 'No such category'],
+      ]);
+    }
+  });
+});
