@@ -222,11 +222,16 @@
   margin: 0;
   border: 0;
   border-block-start: 1px solid $hairline;
+  // The aside's space(3) gap plus space(1) on each side: every hairline has space(4) above
+  // and below it, so a heading sits as far under a line as the block above sits over it.
+  margin-block: space(1);
+}
 
-  // More air below The Jar before the first hairline: the aside's space(3) gap plus space(1).
-  &:first-of-type {
-    margin-block-start: space(1);
-  }
+// The aside's own gap spaces these sections. A bare `section` carries space(4) of margin
+// (_layout.scss), which sat on top of the gap and left the space below a hairline 12px
+// larger than the space above it.
+.spell-aside > section {
+  margin-block: 0;
 }
 
 .spell-aside__empty {
@@ -262,6 +267,13 @@
     flex: none;
     inline-size: 100%;
     block-size: auto;
+    // The stroke is centred on the path, so a path on the box's bottom edge loses half its
+    // width to the svg's clip; letting it overflow keeps the jar's base whole.
+    overflow: visible;
+    // This vessel fills only the lower part of its 48 by 40 box (its ink spans y 11 to 40),
+    // so a box centred on the fields draws the jar low. Lifting it by the ink's offset from
+    // the box centre (5.5 of 40) centres what is seen.
+    transform: translateY(-13.75%);
   }
 
   .jar-shelf__glass,
@@ -313,6 +325,8 @@
     display: block;
     inline-size: 100%;
     block-size: auto;
+    // As `.spell-jar svg`: the stroke on the bottom edge is not clipped.
+    overflow: visible;
   }
 }
 
