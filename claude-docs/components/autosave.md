@@ -49,7 +49,9 @@ It returns `status`, `savedAt`, `error`, `conflict`, `id`, and three actions:
   row gets its id from its first save, and the second save updates that row
   instead of making another.
 - **A failure retries after 2 s, 5 s and 15 s** (`RETRY_DELAYS_MS`), then stops
-  at `failed`. The form keeps its state, and the mirror keeps the copy.
+  at `failed`. The form keeps its state, and the mirror keeps the copy. A
+  refusal (a `VALIDATION`, `FORBIDDEN` or `NOT_FOUND` answer) skips the waits and
+  stops at `failed` at once, because asking again gets the same answer.
 - **A `StaleWriteError` from `save` pauses autosave** at `conflict`, carrying the
   row's revision now. `keep-mine` sends the value again with `force: true`
   against that revision. `reload` drops the unsaved value and its copy and

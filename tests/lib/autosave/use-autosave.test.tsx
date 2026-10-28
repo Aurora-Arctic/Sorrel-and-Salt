@@ -7,7 +7,7 @@ import {
   type SaveContext,
   type SaveResult,
 } from '@/lib/autosave';
-import { StaleWriteError } from '@/lib/graphql-client-error';
+import { GraphQLClientError, StaleWriteError } from '@/lib/graphql-client-error';
 
 // An autosaving form (M13.16): a save 3 s after the last change and at most
 // 30 s into a run of them, one in flight, retries with backoff, a pause when
@@ -210,6 +210,25 @@ describe('useAutosave with a save in flight', () => {
 });
 
 describe('useAutosave when a save fails', () => {
+  it('stops at failed at once for a refusal, which asking again would not change', async () => {
+    const save = vi.fn(() =>
+      Promise.reject(
+        new GraphQLClientError({
+          status: 200,
+          errors: [{ message: 'Not allowed', extensions: { code: 'FORBIDDEN' } }],
+        }),
+      ),
+    );
+    const { type, result } = renderAutosave(save);
+
+    type('T');
+    await wait(3000);
+    expect(result.current.status).toBe('failed');
+    expect(result.current.error?.message).toBe('Not allowed');
+    await wait(60_000);
+    expect(save).toHaveBeenCalledTimes(1);
+  });
+
   it('retries after 2 s, 5 s and 15 s, then stops at failed until Retry', async () => {
     const save = vi.fn(() => Promise.reject(new Error('Network down')));
     const { type, result } = renderAutosave(save);
