@@ -103,7 +103,7 @@ that a closed tab, a crash or a failed save loses nothing.
   agreeing with the server, not the server confirming. It is cleared on
   `reload`, because the person chose to drop their copy.
 - **`readMirror(key)` ignores a copy over a day old** and removes it, and
-  answers `null` for nothing stored or something unreadable. Recovery (M13.17)
+  answers `null` for nothing stored or something unreadable. Recovery (M13.17, the spell builder's banner)
   offers the copy when its `at` is later than the row's `updatedAt`.
 - **Every access is in `try`/`catch`.** Storage can throw in a private window
   or with blocked site data, even on reaching `window.localStorage`. Then there

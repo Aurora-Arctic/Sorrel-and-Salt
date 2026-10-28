@@ -27,9 +27,38 @@ no `instructions` field: the ritual is the spell's steps (M13.1).
 | ------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | `workspaceId` | The coven the spell belongs to, sent with every save                                                                                                                        |
 | `spell`       | Optional: a saved spell, its `id`, `revision`, `visibility`, `steps`, the seven fields (null for one not set) and its `categoryIds` (left out, none). Without it, all empty |
+| `userId`      | Optional: the signed-in person, which keys the browser copy the autosave keeps. Left out, no copy is kept                                                                   |
 | `stepsRead`   | Optional: `loading` while `spell`'s steps are on their way, `failed` when they could not be read. Left out, `spell.steps` are its steps                                     |
 
 ## Saving
+
+**It autosaves** (M13.17, story 81) through the shared engine
+([`autosave.md`](autosave.md)): three seconds after the last change, thirty at
+most while typing, with the status (`SaveStatus`) beside Save. Every way of
+saving (the autosave, Save, Close, Mark Complete and Share) goes through one
+function, `persist` in `index.tsx`, which checks the form, calls
+`saveSpell` (`autosave.ts`) and rebases the form on the answer. A refusal
+skips the engine's retries, so the status stops at "Couldn't save" with Retry.
+Save flushes at once, is off when nothing is unsaved, and spins while saving.
+The autosave is held back while a step's unit is refused or a saved spell's
+steps are still being read.
+
+- **The adapter** (`autosave.ts`) takes a target: `{ kind: 'new' }` calls
+  `createSpell`, once, and the engine then carries the id;
+  `{ kind: 'spell', id, revision }` calls `updateSpell` with that
+  `expectedRevision` (null forces, for M13.18). A later edit to a complete
+  spell can name another target when spell history arrives.
+- **The browser copy.** Every change is mirrored to localStorage, keyed
+  `autosave:spell:<id|new>:<userId>`, until the server confirms. If a copy
+  newer than the spell's `updatedAt` exists when the builder opens, a banner
+  reads "Restored unsaved changes from 2:02 pm" with Keep (load the copy into
+  the form, unsaved) and Discard (forget it). An older copy is removed without
+  a word.
+- **Typing in flight is kept.** A save's answer becomes the form's new start
+  with `reset(..., { keepValues: true })`, so what was typed meanwhile reads
+  as the next change.
+- **Mark Complete and Reopen as Draft** flush first; a missing title refuses
+  inline on the title field and the status goes back.
 
 - **No field is required.** A draft saves with any one field, or all of them.
   Only marking a spell complete needs a title (the `spells_complete_has_title`
@@ -159,7 +188,7 @@ in the browser: the title rule needs `status: complete`, which M10.20 adds.
 
 ## Closing
 
-Close, Escape and a click outside the dialog save anything unsaved, then
+Close, Escape and a click outside the dialog flush the autosave, then
 close, and ask nothing (`useSaveOnClose`, `save-on-close.ts`). This is the
 builder's exception to M13.14's Discard Changes question, by the owner's call
 on 2026-10-27: a spell's draft is kept, never thrown away. The close waits for
@@ -415,10 +444,17 @@ the combobox's chip handle is. Its look past the tokens is the grimoire's design
 `index.stories.tsx`, titled "Grimoire / Spell Builder": `States`, with a
 control that chooses Empty, Title Typed, Saved Spell (shared with the coven,
 its visibility shut), Private Spell, Share Question, Phase Outside the List
-or Refused After Saving, each in its `SpellDialog` over the app shell, with
+or Refused After Saving (the status reads Couldn't save, with Retry), each in its `SpellDialog` over the app shell, with
 Open Again to look once more after Close.
 
 ## Testing
+
+`tests/components/SpellBuilder/autosave.test.tsx` covers the saves (create once,
+then update at the revision; a draft with no title; the three-second save) and
+the recovery banner (Keep, Discard, an older copy). The gate spec
+`tests/e2e/spell-builder-autosave.spec.ts` scans the builder with axe in each
+status: saving, saved, failed with Retry, and conflict. Story 81 is in
+`tests/e2e/stories/06-grimoire.spec.ts`.
 
 `tests/components/SpellBuilder/step-text.test.tsx` covers the step text (M13.3): Add a Step with
 its focus and announcement, an instruction-only step sent as its text alone, a blank one refused at its
