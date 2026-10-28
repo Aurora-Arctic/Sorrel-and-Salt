@@ -64,7 +64,7 @@ describe('ComparisonPanel', () => {
     expect(row('Carried')).toBeNull();
   });
 
-  it('puts a category carried but not intended on the Stray row, with the ingredient that brings it', () => {
+  it('puts a category carried but not intended on the Stray row, as its chip alone', () => {
     render(
       <ComparisonPanel
         groups={groups}
@@ -73,10 +73,10 @@ describe('ComparisonPanel', () => {
       />,
     );
     expect(row('Stray')).toHaveTextContent('Psychic Work');
-    expect(row('Stray')).toHaveTextContent('from Fixture Mugwort');
+    expect(row('Stray')).toHaveTextContent(/^Psychic Work$/);
   });
 
-  it('names every bringer of a stray category once', () => {
+  it('shows a stray category once, however many ingredients carry it', () => {
     render(
       <ComparisonPanel
         groups={groups}
@@ -90,7 +90,7 @@ describe('ComparisonPanel', () => {
     const stray = row('Stray') as HTMLElement;
     expect(within(stray).getAllByRole('listitem')).toHaveLength(1);
     expect(within(stray).getByText('Cleansing')).toBeVisible();
-    expect(stray).toHaveTextContent('Cleansing from Fixture Basil, Fixture Mugwort');
+    expect(stray).toHaveTextContent(/^Cleansing$/);
     expect(row('Carried')).toHaveTextContent('Prosperity');
   });
 
@@ -210,7 +210,7 @@ describe('the panel in the builder', () => {
     );
     // A saved spell opens with its sections shut; the panel is in the Jar's.
     fireEvent.click(screen.getByRole('button', { name: 'Open All' }));
-    await waitFor(() => expect(row('Stray')).toHaveTextContent('from Fixture Rosewort'));
+    await waitFor(() => expect(row('Stray')).toHaveTextContent(/^Calm$/));
     expect(row('Missing')).toHaveTextContent('Testward');
 
     fireEvent.click(screen.getByRole('button', { name: 'Remove Fixture Rosewort' }));

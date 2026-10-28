@@ -1,7 +1,7 @@
 'use client';
 
 import { useQuery } from '@tanstack/react-query';
-import { type ReactElement, type ReactNode, useId, useMemo } from 'react';
+import { type ReactElement, useId, useMemo } from 'react';
 import { useFormContext, useWatch } from 'react-hook-form';
 import { graphqlQuery } from '../../lib/graphql-client';
 import { CategoriesDocument } from '../IngredientForm/categories';
@@ -11,12 +11,11 @@ import type { SpellBuilderValues } from './types';
 import { compareSpellCategories } from '@/modules/grimoire/validation/categories/compare';
 import { summarizeSpellCategories } from '@/modules/grimoire/validation/categories/summarize';
 import type { SpellStepValue, StepCategory } from './steps/types';
-import { stepNameOf } from './steps/values';
 
 // Intent Against Ingredients (M10.17, story 52), in the Jar's aside: the categories the
 // author assigned set beside the ones the jar's ingredients carry, in three rows. Carried
 // is intended and present, Missing intended and absent from the jar, Stray present but not
-// intended, each stray naming the ingredient(s) bringing it. A row with nothing in it is
+// intended. A row with nothing in it is
 // left out. The words lead each row, so neither colour nor the chip's outline carries it.
 // It reads what the builder holds now, saved or not, through M10.8's pure comparison.
 // See claude-docs/components/spell-builder.md, "The comparison panel".
@@ -33,11 +32,9 @@ export interface ComparisonPanelProps {
 function Row({
   label,
   categories,
-  children,
 }: {
   label: string;
   categories: readonly CardCategory[];
-  children?: ReactNode;
 }): ReactElement | null {
   if (categories.length === 0) return null;
   return (
@@ -45,7 +42,6 @@ function Row({
       <dt>{label}</dt>
       <dd>
         <CategoryChips categories={categories} label={label} compact />
-        {children}
       </dd>
     </div>
   );
@@ -69,11 +65,10 @@ export function ComparisonPanel({ intended, steps, groups }: ComparisonPanelProp
       const group = groups.get(id);
       return group ? [{ category: { id, name }, group }] : [];
     });
-  // Each stray category, once, with the ingredients bringing it in the jar's order.
+  // Each stray category, once, named by the first ingredient that carries it.
   const strays = gaps.presentNotIntended.flatMap((id) => {
-    const bringers = ingredientSteps.filter((step) => step.categories.some((c) => c.id === id));
-    const name = bringers[0]?.categories.find((c) => c.id === id)?.name;
-    return name === undefined ? [] : [{ id, name, bringers: bringers.map(stepNameOf) }];
+    const name = ingredientSteps.flatMap((step) => step.categories).find((c) => c.id === id)?.name;
+    return name === undefined ? [] : [{ id, name }];
   });
 
   let body: ReactElement;
@@ -86,11 +81,7 @@ export function ComparisonPanel({ intended, steps, groups }: ComparisonPanelProp
       <dl className="comparison-panel__rows">
         <Row label="Carried" categories={chipsOf(carried)} />
         <Row label="Missing" categories={chipsOf(missing)} />
-        <Row label="Stray" categories={chipsOf(strays)}>
-          <p className="comparison-panel__from">
-            {strays.map(({ name, bringers }) => `${name} from ${bringers.join(', ')}`).join('; ')}
-          </p>
-        </Row>
+        <Row label="Stray" categories={chipsOf(strays)} />
       </dl>
     );
   }

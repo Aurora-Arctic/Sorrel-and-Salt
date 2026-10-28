@@ -289,7 +289,8 @@ test(
     await expect(panel.getByText('Prosperity')).toBeVisible();
     await addIngredientStep(page, 'Mugwort');
     await expect(row('Stray')).toBeVisible();
-    await expect(panel.getByText(/Psychic Work from Mugwort/)).toBeVisible();
+    // The row is its chips alone: no ingredient is named in the panel.
+    await expect(panel.getByText('Mugwort')).toHaveCount(0);
     await page.getByRole('button', { name: /Remove Mugwort/ }).click();
     await expect(row('Stray')).toHaveCount(0);
   },

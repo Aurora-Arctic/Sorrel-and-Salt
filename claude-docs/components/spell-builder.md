@@ -367,8 +367,9 @@ instruction brings none. It also lists Derived Categories, the union of the step
 once each and sorted by name.
 
 - **Carried** is each intended category the jar carries; **Missing** each assigned category nothing
-  in the jar carries; **Stray** each category the jar carries that was not assigned, with a muted
-  line beneath naming the ingredients and forms that bring each ("Cleansing from Basil (Dried)").
+  in the jar carries; **Stray** each category the jar carries that was not assigned. The row is its chips and nothing
+  else: no line, tip or other place names the ingredients that bring a stray category (the owner's
+  call, 2026-10-28).
   The words carry the difference; the chips are coloured by group, as they are everywhere.
 - With none of the three, it reads "Intent and ingredients match." With no category assigned the
   panel does not list every ingredient as a stray: it asks for categories first. With nothing
