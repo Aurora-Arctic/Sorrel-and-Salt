@@ -34,6 +34,18 @@ const SpellCard = ({
   const purpose = (intent ?? '').trim();
   return (
     <article className="spell-card specimen" aria-labelledby={spellTitleId(id)}>
+      {/* The card's face and shadow, and the warm glow behind them, as layers, so the
+          smouldering edge (_smoulder.scss) can burn a real hole in the face and its shadow.
+          First, so the content paints over them; decoration only, so hidden from assistive
+          technology and named in nothing. */}
+      <span className="spell-card__glow" aria-hidden="true" />
+      <span className="spell-card__face" aria-hidden="true">
+        <span className="spell-card__face-paper">
+          <span className="spell-card__face-corner">
+            <span className="spell-card__face-hole" />
+          </span>
+        </span>
+      </span>
       <div className="specimen__top">
         <Heading id={spellTitleId(id)} className="spell-card__title">
           {href ? (
@@ -64,9 +76,55 @@ const SpellCard = ({
           <LastEdit by={lastEdit.by} at={lastEdit.at} />
         </div>
       )}
+      {/* The smoulder's ember line and char rim, over the content (_smoulder.scss). */}
+      <span className="spell-card__burn" aria-hidden="true">
+        <span className="spell-card__burn-paper">
+          <span className="spell-card__burn-corner">
+            <span className="spell-card__burn-hole" />
+          </span>
+          <span className="spell-card__burn-curve" />
+        </span>
+      </span>
     </article>
   );
 };
+
+/**
+ * The filter that tears the smouldering edge ragged, referenced by id from index.scss.
+ * Rendered once per page beside the list of cards (GrimoireList), not per card: an id
+ * must be unique, and one filter serves every card. Without it the burn front is a smooth
+ * curve. Coarse noise displacing the hole and its ember and char bands; still, since a
+ * burn line does not wriggle.
+ */
+export const SpellCardFilters = (): ReactElement => (
+  <svg className="spell-card-filters" aria-hidden="true" focusable="false" width="0" height="0">
+    <defs>
+      <filter
+        id="spell-card-burn"
+        x="-20%"
+        y="-20%"
+        width="140%"
+        height="140%"
+        colorInterpolationFilters="sRGB"
+      >
+        <feTurbulence
+          type="fractalNoise"
+          baseFrequency="0.07 0.05"
+          numOctaves="4"
+          seed="11"
+          result="noise"
+        />
+        <feDisplacementMap
+          in="SourceGraphic"
+          in2="noise"
+          scale="11"
+          xChannelSelector="R"
+          yChannelSelector="G"
+        />
+      </filter>
+    </defs>
+  </svg>
+);
 
 export default SpellCard;
 export type { SpellCardProps } from './types';
