@@ -314,7 +314,10 @@ describe('the spell builder’s Add to Jar', () => {
       target: { value: 'Dried Root' },
     });
     expect(within(row).getByRole('textbox', { name: /^Form/ })).toHaveValue('Dried Root');
-    expect(within(row).getByText(/Used in this spell only/)).toBeInTheDocument();
+    expect(within(row).getByRole('button', { name: 'One-Off' })).toHaveAccessibleDescription(
+      'Used in this spell only; not kept in your cupboard.',
+    );
+    expect(within(row).queryByText(/Used in this spell only/, { selector: 'p' })).toBeNull();
   });
 
   it('offers no one-off row for an empty box, and refuses one already in the jar', async () => {

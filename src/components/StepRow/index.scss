@@ -22,6 +22,12 @@
 
 // The marks (safety, supply) run along in a line and wrap; none, and the box
 // is empty and takes no room, so the builder's grid keeps no gap for it.
+// The One-Off badge is a button so its tip is reached by focus; it reads as the badge it was.
+.step-row__one-off {
+  font-family: inherit;
+  cursor: default;
+}
+
 .step-row__marks {
   display: flex;
   flex-wrap: wrap;

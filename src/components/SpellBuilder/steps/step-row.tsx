@@ -7,6 +7,7 @@ import { useFormContext, useWatch } from 'react-hook-form';
 import { ChevronIcon, ClearIcon, GripIcon } from '../../Combobox/icons';
 import { EditIcon } from '../../IngredientForm/icons';
 import { SelectField, TextField } from '../../Field';
+import IconTip from '../../IconTip';
 import SafetyNote, { SafetyMark } from '../../SafetyNote';
 import StepRow from '../../StepRow';
 import { UNIT_OPTIONS } from '../../StockFields';
@@ -18,6 +19,8 @@ import { isInstruction, safetyOf, stepNameOf } from './values';
 // line, open or closed like the ingredient form's variant card: closed it reads
 // "· 2 tsp · Crush first"; open it shows its amount, unit and instruction (and,
 // for a one-off, its form). An instruction-only step has the instruction alone. See claude-docs/components/spell-builder.md, "Steps".
+
+const ONE_OFF_TIP = 'Used in this spell only; not kept in your cupboard.';
 
 export interface BuilderStepRowProps {
   /** The row's field-array key, its place in the sortable list. */
@@ -150,7 +153,24 @@ export function BuilderStepRow({
       // saving it (M10.18). A one-off has none to show: it draws nothing, not "safe".
       marks={safety && <SafetyMark {...safety} />}
       note={safety && <SafetyNote level={5} compact {...safety} />}
-      badge={oneOff ? <span className="badge badge--local">One-Off</span> : null}
+      badge={
+        oneOff ? (
+          // The badge is a button so the tip is reached by focus; its name stays One-Off and the
+          // sentence is its description (IconTip's own bubble is drawn only, never read).
+          <IconTip tip={ONE_OFF_TIP} placement="above" opensOnPress>
+            <button
+              type="button"
+              className="badge badge--local step-row__one-off"
+              aria-describedby={`${fieldsId}-one-off`}
+            >
+              One-Off
+            </button>
+            <span id={`${fieldsId}-one-off`} className="visually-hidden">
+              {ONE_OFF_TIP}
+            </span>
+          </IconTip>
+        ) : null
+      }
       summary={
         instruction
           ? (bodyTyped ?? '').trim() || (
@@ -160,7 +180,6 @@ export function BuilderStepRow({
             ? `· ${summary.join(' · ')}`
             : null
       }
-      aside={oneOff ? 'Used in this spell only; not kept in your cupboard.' : null}
       edit={
         <button
           ref={edit}
