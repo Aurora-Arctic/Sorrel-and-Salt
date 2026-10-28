@@ -103,6 +103,8 @@ variables, so a search and its categories live in the address and combine.
 
 Tokens only, before the section's design review. `index.scss` sets the two empty regions as the coven's empty cupboard is (`CovenCards/index.scss`): the empty tab's sentence centred and larger than body copy, the no-match hint in muted body copy. The cards are `SpellCard`'s own.
 
+One thing in the list exists for the cards' smouldering edge ([spell-card.md](spell-card.md), "The smouldering edge"): **one `SpellCardFilters` before the list.** It holds the SVG filter the burn front uses, by id. An id must be unique on the page, so the list renders it once rather than each card. The list needs no stacking context of its own: the card's layers stack by the order of the markup, with no `z-index`.
+
 ## Testing
 
 - `tests/components/GrimoireList/index.test.tsx`: the named list and items, the three empty
