@@ -124,6 +124,15 @@
     grid-area: remove;
     margin-block-end: space(1);
 
+    // The owner's call: the chevron is light, not the pencil's green. It sits on the card's ground,
+    // so it takes the body ink (near-white in dark, ink in light: literal white would fail on the
+    // light card), and keeps it pointed at, focused or open, over the mixin's tint.
+    &,
+    &:hover,
+    &:focus-visible {
+      color: $text-primary;
+    }
+
     .chevron-icon {
       transform: rotate(180deg);
     }
