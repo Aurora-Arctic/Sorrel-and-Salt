@@ -214,6 +214,7 @@ jobs:
               - 'Docker/postgres-init/**'
               - '.github/scripts/summarize-playwright.mjs'
               - '.github/scripts/merge-playwright-coverage.mjs'
+              - '.github/workflows/playwright-coverage.yml'
               - '.github/scripts/lib/**'
               - 'Docker/Dockerfile.e2e'
               - 'src/**'
@@ -234,6 +235,7 @@ jobs:
               - 'Docker/postgres-init/**'
               - '.github/scripts/summarize-stories.mjs'
               - '.github/scripts/merge-playwright-coverage.mjs'
+              - '.github/workflows/playwright-coverage.yml'
               - 'Docker/Dockerfile.e2e'
               - 'src/**'
               - 'tests/e2e/**'
@@ -338,88 +340,25 @@ jobs:
       # No job-level `if:` — see the header.
       should-run: ${{ needs.changes.outputs.stories == 'true' }}
 
-  # The gate suite's and the story suite's JavaScript coverage, merged (M14.28).
-  # Each suite uploads its coverage report with monocart's raw data inside it;
-  # this job downloads whichever were uploaded, merges them and posts the
-  # figure in a "Playwright Coverage" comment of its own. Never a required
-  # check: `continue-on-error`, and nothing waits on it. Its `if:` is the one
-  # job-level `if:` in this file (see the header): without it a failed suite
-  # would skip the merge. Whether a suite ran is read from `changes`, by
-  # step-level `if:`; when neither did, no step runs and nothing is posted.
-  # Runs in the `testing` image, which has node_modules and monocart, as
-  # vitest.yml's merge job does.
+  # The gate suite's and the story suite's JavaScript coverage, merged (M14.28):
+  # playwright-coverage.yml downloads whichever coverage artifacts the two
+  # uploaded and posts a "Playwright Coverage" comment. Never a required check
+  # (it carries `continue-on-error`, and nothing waits on it). Its `if:` is
+  # the one job-level `if:` in this file (see the header): without it a failed
+  # suite would skip the merge. It is a called workflow, not a job here, so
+  # that an edit's run which cancels itself in `changes` leaves it skipped like
+  # the other called workflows, not cancelled and failing.
   playwright-coverage:
     needs: [build-image, changes, playwright, stories]
     if: ${{ !cancelled() }}
     concurrency:
       group: pr-gate-playwright-coverage-${{ github.event.pull_request.number }}
       cancel-in-progress: true
-    continue-on-error: true
-    runs-on: ubuntu-26.04
-    container:
+    uses: ./.github/workflows/playwright-coverage.yml
+    with:
       image: ${{ needs.build-image.outputs.image }}
-      credentials:
-        username: ${{ github.actor }}
-        password: ${{ secrets.GITHUB_TOKEN }}
-      # The image's default user cannot write the runner's file-commands
-      # directory; actions/checkout fails EACCES without it.
-      options: --user root
-    defaults:
-      run:
-        working-directory: /app
-        shell: bash
-    env:
-      ANY_SUITE_RAN: ${{ needs.changes.outputs.playwright == 'true' || needs.changes.outputs.stories == 'true' }}
-    steps:
-      - name: Checkout into /app
-        if: env.ANY_SUITE_RAN == 'true'
-        uses: Aurora-Arctic/Sorrel-and-Salt/.github/actions/checkout-to-app@main
-
-      # One folder per artifact (no merge-multiple), so the merge can tell the
-      # suites apart. A suite that did not run, or died before uploading, leaves
-      # no folder, and a pattern matching nothing is not an error.
-      - name: Download the suites' coverage
-        if: env.ANY_SUITE_RAN == 'true'
-        uses: actions/download-artifact@v8
-        with:
-          pattern: playwright-coverage*
-          path: /app/.reports/coverage-downloads
-
-      - name: Merge coverage
-        id: merge
-        if: env.ANY_SUITE_RAN == 'true'
-        run: node .github/scripts/merge-playwright-coverage.mjs 2>&1 | tee /app/output.log
-
-      - name: Upload merged coverage artifact
-        if: env.ANY_SUITE_RAN == 'true' && steps.merge.outputs.ran == 'true'
-        uses: actions/upload-artifact@v7
-        with:
-          name: playwright-coverage-merged
-          path: /app/.reports/coverage-e2e-merged/
-          retention-days: 7
-
-      - name: Write job summary
-        if: env.ANY_SUITE_RAN == 'true' && steps.merge.outputs.ran == 'true'
-        uses: ./.github/actions/job-summary
-        with:
-          check-name: Playwright Coverage
-          outcome: ${{ steps.merge.outcome }}
-          log-file: /app/output.log
-          summary: ${{ steps.merge.outputs.summary }}
-          details: ${{ steps.merge.outputs.details }}
-
-      - name: Comment on PR
-        if: env.ANY_SUITE_RAN == 'true' && steps.merge.outputs.ran == 'true'
-        uses: ./.github/actions/pr-comment
-        with:
-          check-name: Playwright Coverage
-          marker-slug: playwright-coverage
-          pr-number: ${{ github.event.pull_request.number }}
-          outcome: ${{ steps.merge.outcome }}
-          log-file: /app/output.log
-          success-mode: comment
-          summary: ${{ steps.merge.outputs.summary }}
-          details: ${{ steps.merge.outputs.details }}
+      pr-number: ${{ github.event.pull_request.number }}
+      should-run: ${{ needs.changes.outputs.playwright == 'true' || needs.changes.outputs.stories == 'true' }}
 
   # The workshop specs (tests/e2e/workshop/, M12.31): a component measured in
   # its workshop story, `npm run e2e:workshop`. In the e2e image, as playwright.yml

@@ -30,6 +30,20 @@ const included = SUITES.map((suite) => ({
   rawDir: path.join(DOWNLOAD_DIR, suite.artifact, 'raw'),
 })).filter(({ rawDir }) => fs.existsSync(rawDir) && fs.readdirSync(rawDir).length > 0);
 
+// Logged so a run that merged nothing says where it looked and what was there.
+for (const { artifact, rawDir } of SUITES.map((s) => ({
+  ...s,
+  rawDir: path.join(DOWNLOAD_DIR, s.artifact, 'raw'),
+}))) {
+  const found = fs.existsSync(rawDir) ? `${fs.readdirSync(rawDir).length} raw files` : 'not found';
+  console.log(`${artifact}: ${rawDir} — ${found}`);
+}
+if (fs.existsSync(DOWNLOAD_DIR)) {
+  console.log(`${DOWNLOAD_DIR} holds: ${fs.readdirSync(DOWNLOAD_DIR).join(', ') || '(nothing)'}`);
+} else {
+  console.log(`${DOWNLOAD_DIR} does not exist`);
+}
+
 if (included.length === 0) {
   setOutput('ran', 'false');
   setOutput('summary', '');

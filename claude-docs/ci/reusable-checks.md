@@ -208,15 +208,17 @@
   and so does the report upload. It is never a required check, which keeps red
   scaffolds off the merge path, and nothing waits on it, which keeps the
   gate's time down (`claude-docs/testing/acceptance.md`).
-- **`pr-gate.yml`'s `playwright-coverage` job** (M14.28) — the two Playwright
-  suites' coverage, merged. It is not a reusable workflow: a job of
-  `pr-gate.yml` itself, in the `testing` image, `needs` `playwright` and
-  `stories` and runs after both whatever their result (its `!cancelled()` is
-  the one job-level `if:` in the file, safe because it is no required check;
-  `continue-on-error` too). Its steps run only when `changes` says a suite
-  ran, and post nothing otherwise. It downloads `playwright-coverage*` into one
-  folder per artifact, `merge-playwright-coverage.mjs` merges the `raw/` data
-  that is there, and the job uploads `playwright-coverage-merged`, writes the job
+- **`playwright-coverage.yml`** (M14.28) — the two Playwright suites'
+  coverage, merged, called by `pr-gate.yml`'s `playwright-coverage` job in the
+  `testing` image. That job `needs` `playwright` and `stories` and runs after
+  both whatever their result (its `!cancelled()` is the one job-level `if:` in
+  the file, safe because it is no required check; the workflow carries
+  `continue-on-error` too). It is a called workflow, not a job with its own
+  runner, so an edit's run that cancels itself leaves it skipped, as for the
+  other called workflows. Its steps run only when `changes` says a suite ran
+  (`should-run`), and post nothing otherwise. It downloads each coverage artifact
+  by name into a folder of its own, `merge-playwright-coverage.mjs` merges the
+  `raw/` data that is there, and the job uploads `playwright-coverage-merged`, writes the job
   summary and comments as "Playwright Coverage" (`marker-slug: playwright-coverage`).
   The summary line names the suites included.
 - **`playwright.yml`** (M1.14) — `npm run e2e` against the servers
