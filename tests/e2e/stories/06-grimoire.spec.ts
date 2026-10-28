@@ -218,9 +218,16 @@ test(
     await expect(steps.first()).toContainText('Rosemary');
     // Keyboard alone: pick the handle up, move it one place, put it down.
     const handle = page.getByRole('button', { name: 'Move Mugwort (Herb)' });
+    // Each key waits for what the last one said, as a person hears it. dnd-kit
+    // starts listening for the moving keys in a timer it sets at the lift, which
+    // can run after the lift is said, so the Up also waits one timer behind it.
+    const said = (text: string) => page.getByRole('status').filter({ hasText: text });
     await handle.focus();
     await page.keyboard.press('Space');
+    await expect(said('Picked up Mugwort (Herb), at position 2 of 2.')).toBeAttached();
+    await page.evaluate(() => new Promise((resolve) => setTimeout(resolve)));
     await page.keyboard.press('ArrowUp');
+    await expect(said('Mugwort (Herb) moved to position 1 of 2.')).toBeAttached();
     await page.keyboard.press('Space');
     await expect(
       page.getByRole('status').filter({ hasText: 'Mugwort (Herb) put down at position 1 of 2.' }),
