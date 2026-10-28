@@ -482,11 +482,13 @@ $spell-columns-switch: $spell-main-min + $spell-columns-gap + $spell-side;
   align-items: baseline;
   gap: space(1) space(2);
 
+  // One quiet label: caption size, normal case, left-aligned, so the chips start on one edge.
   dt {
     flex: none;
-    inline-size: 4.5rem;
-    text-align: end;
+    inline-size: 5.5rem;
     color: $text-muted;
+    font-size: type-size('caption');
+    font-weight: 500;
   }
 
   dd {

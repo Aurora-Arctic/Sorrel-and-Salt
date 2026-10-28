@@ -18,7 +18,7 @@ import { stepNameOf } from './steps/values';
 // author assigned set beside the ones the jar's ingredients carry, in three rows. Carried
 // is intended and present, Missing intended and absent from the jar, Stray present but not
 // intended. A row with nothing in it is
-// left out. The words lead each row, so neither colour nor the chip's outline carries it.
+// left out. The words lead each row and carry it alone.
 // It reads what the builder holds now, saved or not, through M10.8's pure comparison.
 // See claude-docs/components/spell-builder.md, "The comparison panel".
 
@@ -44,7 +44,7 @@ function Row({
   if (categories.length === 0) return null;
   return (
     <div className="comparison-panel__row">
-      <dt className="eyebrow">{label}</dt>
+      <dt>{label}</dt>
       <dd>
         <CategoryChips categories={categories} label={label} compact showAll tipOf={tipOf} />
       </dd>
