@@ -121,16 +121,35 @@
 // then a muted summary of the amount and the instruction, the marks, the pencil and
 // Remove; open adds the fields beneath the name's column: Form, Quantity and Unit on one
 // line where they fit, the Instruction on its own line beneath.
+// The height of a paragraph's line (typography-base's 1.65), which the name takes.
+$step-line: type-size('body') * 1.65;
+
 .step-row.step-row--card {
   &.step-row--closed,
   &.step-row--open {
     grid-template-areas: 'handle position name summary marks edit remove';
     grid-template-columns: auto auto minmax(0, auto) minmax(0, 1fr) auto auto auto;
-    align-items: center;
+
+    // Everything on the first line sits on that line's centre, and not on the
+    // centre of the whole row: a name that wraps, or the summary that stands
+    // beneath it when the row is narrow, must not carry the handle, the number
+    // and the buttons down with it. Each is given the name's line (a paragraph's
+    // 1.65) to centre in, or margins that centre it there.
+    align-items: start;
 
     .step-row__name,
     .step-row__position {
       padding-block-end: 0;
+    }
+
+    .step-row__handle,
+    .step-row__position,
+    .step-row__marks {
+      align-self: start;
+      display: flex;
+      align-items: center;
+      min-height: $step-line;
+      line-height: $step-line;
     }
 
     .step-row__marks {
@@ -140,8 +159,9 @@
       margin-inline-start: space(2);
     }
 
+    .step-row__edit,
     .step-row__remove {
-      margin-block-end: 0;
+      margin-block: calc(($step-line - $icon-size) / 2) 0;
     }
   }
 
@@ -223,10 +243,13 @@
 
   // The handle, number and buttons line up with the text's first line: the number shares
   // its baseline (the text's own line is taller than the number's), and the handle and the
-  // buttons are set down to the middle of that line, not left at the row's top or middle.
+  // buttons are centred in a line the height of the text's, which stands space(2) down.
   .step-row__handle {
+    display: flex;
+    align-items: center;
     align-self: start;
-    margin-block-start: space(3);
+    height: $step-line;
+    margin-block-start: space(2);
   }
 
   .step-row__position {
@@ -240,7 +263,7 @@
   }
 
   .step-row__remove {
-    margin-block-start: space(2);
+    margin-block-start: space(2) + ($step-line - $icon-size) / 2;
   }
 
   .step-row__edit {
@@ -248,7 +271,7 @@
     @include icon-button-edit;
 
     grid-area: edit;
-    margin-block-start: space(2);
+    margin-block-start: space(2) + ($step-line - $icon-size) / 2;
   }
 
   // Closed, the instruction is its own words, wrapping; open, its textarea stands in
@@ -312,6 +335,7 @@
       'handle position name marks edit remove'
       '. . summary summary summary summary';
     grid-template-columns: auto auto minmax(0, 1fr) auto auto auto;
+    align-items: start;
 
     .step-row__open {
       grid-row: 3;
