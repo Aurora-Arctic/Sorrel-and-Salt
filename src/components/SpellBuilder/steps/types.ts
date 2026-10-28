@@ -39,6 +39,8 @@ export interface SpellStepValue {
   safety: StepSafety | null;
   /** The unit of the coven's jar of this form; null where it holds none, or one with no unit. */
   jarUnit: Unit | null;
+  /** The coven's jar of this form, with what is in it; null where it holds none (M10.19). */
+  jar: StepJar | null;
 }
 
 /**
@@ -85,4 +87,13 @@ export interface SortableStepsProps {
   /** Moves the step at `from` to `to`. */
   onMove: (from: number, to: number) => void;
   children: ReactNode;
+}
+
+/** What the coven's jar of a form holds, as far as a step compares itself against it (M10.19). */
+export interface StepJar {
+  /** Null where the jar has no unit. */
+  unit: Unit | null;
+  /** Null where it is held but not weighed. */
+  quantity: number | null;
+  threshold: number | null;
 }

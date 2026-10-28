@@ -362,6 +362,21 @@ set the dialog's layout before the section's design review has. The story
 finds it by its role and name, so moving it to a side column later changes
 styling only.
 
+- **Supply (M10.19, story 54).** Each ingredient step reads the coven's jar of its form
+  (`quantityOnHand`, `lowStockThreshold` and unit, from the same `stock` the unit rule
+  reads) and `supplyOf` (`steps/supply.ts`, pure) turns it and the amount typed into one
+  of: **Out of Stock** (no jar for the form, which is how a compendium form the coven has
+  not taken in reads, or a jar at 0), **Not Enough** (the jar holds less than the step
+  calls for, once both are in one unit through `unitConvert`; distinct from Out),
+  **Cannot Compare** (the step's unit cannot be set against the jar's: a count, two
+  dimensions, or a jar with no unit; never read as held or enough), **Low Stock** (the
+  jar's own threshold), **One-Off** (a one-off, which nothing in the cupboard could ever
+  answer; marked, not told to be gathered), or nothing. A jar held but not weighed, a
+  step with no amount, and an instruction-only step show nothing. Out and Low are
+  `StockBadge`'s own; the others are words in a badge, so no state rests on colour. The
+  verdict follows each keystroke of the quantity and unit, and the jar figures are as the
+  picker or the saved read found them, not refreshed while the dialog is open.
+
 ## Reordering
 
 The steps are in the order they are laid (M10.16, story 51), and each is

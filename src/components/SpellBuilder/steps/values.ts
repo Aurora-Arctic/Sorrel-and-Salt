@@ -2,7 +2,7 @@ import type { SpellBuilderStep } from '../types';
 import type { Unit } from '@/modules/ingredients/schema/units';
 import { formLabel } from '@/modules/ingredients/validation/form-label';
 import { UNMEASURABLE_UNIT, measurable } from '@/modules/grimoire/validation/step-unit';
-import type { SpellStepSend, SpellStepValue, StepCategory } from './types';
+import type { SpellStepSend, SpellStepValue, StepCategory, StepJar } from './types';
 import type { SafetyMarkProps } from '../../SafetyNote/types';
 
 // The step list's values: a saved step as the builder holds it, a held step as
@@ -15,11 +15,28 @@ const categoriesOf = (step: SpellBuilderStep): StepCategory[] => [
   ...(step.variant?.categories ?? []),
 ];
 
-/** The unit of the coven's jar of `variantId`, from the ingredient's jars: a form has one jar per coven. */
-export const jarUnitOf = (
-  stock: readonly { unit: string | null; variant: { id: string } }[],
-  variantId: string,
-): Unit | null => (stock.find((jar) => jar.variant.id === variantId)?.unit as Unit | null) ?? null;
+type JarRow = {
+  unit: string | null;
+  quantityOnHand: number | null;
+  lowStockThreshold: number | null;
+  variant: { id: string };
+};
+
+/** The coven's jar of `variantId`, from the ingredient's jars: a form has one jar per coven. Null where it holds none. */
+export const jarOf = (stock: readonly JarRow[], variantId: string): StepJar | null => {
+  const jar = stock.find((row) => row.variant.id === variantId);
+  return jar
+    ? {
+        unit: jar.unit as Unit | null,
+        quantity: jar.quantityOnHand,
+        threshold: jar.lowStockThreshold,
+      }
+    : null;
+};
+
+/** The unit of that jar; null where there is none, or one with no unit. */
+export const jarUnitOf = (stock: readonly JarRow[], variantId: string): Unit | null =>
+  jarOf(stock, variantId)?.unit ?? null;
 
 /** A saved step as the builder holds it. */
 export function stepValueOf(step: SpellBuilderStep): SpellStepValue {
@@ -50,6 +67,10 @@ export function stepValueOf(step: SpellBuilderStep): SpellStepValue {
       variantId === null || step.ingredient === null
         ? null
         : jarUnitOf(step.ingredient.stock, variantId),
+    jar:
+      variantId === null || step.ingredient === null
+        ? null
+        : jarOf(step.ingredient.stock, variantId),
   };
 }
 
@@ -57,7 +78,15 @@ export function stepValueOf(step: SpellBuilderStep): SpellStepValue {
 export const newStep = (
   step: Pick<
     SpellStepValue,
-    'ingredientId' | 'variantId' | 'name' | 'form' | 'icon' | 'categories' | 'safety' | 'jarUnit'
+    | 'ingredientId'
+    | 'variantId'
+    | 'name'
+    | 'form'
+    | 'icon'
+    | 'categories'
+    | 'safety'
+    | 'jarUnit'
+    | 'jar'
   >,
 ): SpellStepValue => ({
   ...step,
@@ -80,6 +109,7 @@ export const newInstruction = (): SpellStepValue => ({
     categories: [],
     safety: null,
     jarUnit: null,
+    jar: null,
   }),
   body: '',
 });

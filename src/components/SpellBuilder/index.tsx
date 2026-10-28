@@ -83,6 +83,8 @@ const CreateSpellDocument = graphql(`
           }
           stock(workspaceId: $workspaceId) {
             unit
+            quantityOnHand
+            lowStockThreshold
             variant {
               id
             }
@@ -139,6 +141,8 @@ const UpdateSpellDocument = graphql(`
           }
           stock(workspaceId: $workspaceId) {
             unit
+            quantityOnHand
+            lowStockThreshold
             variant {
               id
             }

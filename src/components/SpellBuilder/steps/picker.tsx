@@ -12,7 +12,7 @@ import { useLookup } from '../../IngredientForm/suggestions';
 import { COMPENDIUM_HEADING, YOUR_INGREDIENTS } from '../../IngredientForm/values';
 import { SpellIngredientSuggestionsDocument } from './documents';
 import type { IngredientPickOption, SpellStepValue } from './types';
-import { jarUnitOf, newStep } from './values';
+import { jarOf, jarUnitOf, newStep } from './values';
 
 // Add to Jar (M10.15, story 49): the type-ahead over the coven's ingredients
 // and the compendium's, one row per form, since a step lays a form; and a
@@ -69,6 +69,7 @@ function pickRows(
                 formSafetyNotes: variant.safetyNotes ?? null,
               },
               jarUnit: jarUnitOf(node.stock, variant.id),
+              jar: jarOf(node.stock, variant.id),
             }),
           };
         }),
@@ -109,6 +110,7 @@ export function StepPicker({ workspaceId, taken, oneOffs, onAdd }: StepPickerPro
         categories: [],
         safety: null,
         jarUnit: null,
+        jar: null,
       }),
     );
     setOneOffName('');

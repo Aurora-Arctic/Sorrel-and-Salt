@@ -3,12 +3,14 @@
 import { useSortable } from '@dnd-kit/sortable';
 import { CSS } from '@dnd-kit/utilities';
 import type { ReactElement } from 'react';
-import { useFormContext } from 'react-hook-form';
+import { useFormContext, useWatch } from 'react-hook-form';
 import { GripIcon } from '../../Combobox/icons';
 import { SelectField, TextField } from '../../Field';
 import SafetyNote, { SafetyMark } from '../../SafetyNote';
 import StepRow from '../../StepRow';
 import { UNIT_OPTIONS } from '../../StockFields';
+import { SupplyMark } from './supply-mark';
+import { supplyOf } from './supply';
 import type { SpellStepValue, SpellStepsValues } from './types';
 import { isInstruction, safetyOf, stepNameOf } from './values';
 
@@ -59,6 +61,15 @@ export function BuilderStepRow({ id, index, step, onRemove }: BuilderStepRowProp
   const name = stepNameOf(step);
   const instruction = isInstruction(step);
   const safety = safetyOf(step);
+  // The amount as it is typed now, so the verdict follows each keystroke (M10.19).
+  const [quantity, unitChosen] = useWatch<SpellStepsValues>({
+    name: [`steps.${index}.quantity`, `steps.${index}.unit`],
+  }) as [string, string];
+  const supply = supplyOf({
+    ...step,
+    quantity: quantity ?? step.quantity,
+    unit: unitChosen ?? step.unit,
+  });
   const handle = <StepHandle name={name} sortable={sortable} />;
   const body = (
     <TextField<SpellStepsValues>
@@ -85,7 +96,12 @@ export function BuilderStepRow({ id, index, step, onRemove }: BuilderStepRowProp
       icon={step.icon}
       // The care the ingredient needs, kept in view beside the step and never in the way of
       // saving it (M10.18). A one-off has none to show: it draws nothing, not "safe".
-      marks={safety && <SafetyMark {...safety} />}
+      marks={
+        <>
+          {safety && <SafetyMark {...safety} />}
+          <SupplyMark supply={supply} />
+        </>
+      }
       note={safety && <SafetyNote level={5} {...safety} />}
       handle={handle}
       bodyField={body}
