@@ -62,7 +62,38 @@ const CreateSpellDocument = graphql(`
       dayOfWeek
       note
       steps {
-        ...SpellBuilderStep
+        id
+        name
+        form
+        quantity
+        unit
+        note
+        body
+        ingredient {
+          id
+          categories {
+            id
+            name
+          }
+          stock(workspaceId: $workspaceId) {
+            unit
+            variant {
+              id
+            }
+          }
+        }
+        variant {
+          id
+          categories {
+            id
+            name
+          }
+          formChoice {
+            group {
+              icon
+            }
+          }
+        }
       }
       visibility
     }
@@ -82,7 +113,38 @@ const UpdateSpellDocument = graphql(`
       dayOfWeek
       note
       steps {
-        ...SpellBuilderStep
+        id
+        name
+        form
+        quantity
+        unit
+        note
+        body
+        ingredient {
+          id
+          categories {
+            id
+            name
+          }
+          stock(workspaceId: $workspaceId) {
+            unit
+            variant {
+              id
+            }
+          }
+        }
+        variant {
+          id
+          categories {
+            id
+            name
+          }
+          formChoice {
+            group {
+              icon
+            }
+          }
+        }
       }
       visibility
     }

@@ -6,14 +6,13 @@ import { beforeEach, describe, expect, it, vi } from 'vitest';
 import type {
   CreateSpellMutation,
   CreateSpellMutationVariables,
-  SpellBuilderStepFragment,
   SpellBuilderStepsQuery,
   SpellBuilderStepsQueryVariables,
   UpdateSpellMutation,
   UpdateSpellMutationVariables,
 } from '@/gql/graphql';
 import { makeQueryClient } from '@/lib/graphql-client';
-import type { SpellDialogProps } from '@/components/SpellBuilder/types';
+import type { SpellBuilderStep, SpellDialogProps } from '@/components/SpellBuilder/types';
 import { graphqlLink, mockGraphQLError, mockGraphQLMutation } from '../../support/msw/graphql';
 import { offerCategories } from '../../support/msw/ingredient-lookups';
 import { server } from '../../support/msw/server';
@@ -53,7 +52,7 @@ const SAVED = {
 };
 
 /** A saved step, as the dialog's read of a saved spell's steps answers it. */
-const ROSEWORT_STEP: SpellBuilderStepFragment = {
+const ROSEWORT_STEP: SpellBuilderStep = {
   id: '00000000-0000-4000-8000-000000000008',
   name: 'Fixture Rosewort',
   form: 'dried leaf',
@@ -75,7 +74,7 @@ const ROSEWORT_SENT = {
 };
 
 /** Answers the read of a saved spell's steps with `steps`, once `landed` settles. */
-function answerSteps(steps: SpellBuilderStepFragment[] = [], landed?: Promise<void>) {
+function answerSteps(steps: SpellBuilderStep[] = [], landed?: Promise<void>) {
   const reads: SpellBuilderStepsQueryVariables[] = [];
   server.use(
     graphqlLink.query<SpellBuilderStepsQuery, SpellBuilderStepsQueryVariables>(

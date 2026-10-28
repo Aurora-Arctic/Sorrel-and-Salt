@@ -74,6 +74,14 @@ no `instructions` field: the ritual is the spell's steps (M13.1).
   saves once they land, then closes. Fields typed meanwhile are kept. If the
   read fails the jar says so, nothing can be saved, and a reload tries again.
   A draft the dialog created needs no read: its save's answer holds its steps.
+- **A saved step's selection is written out three times, not shared as a
+  fragment.** The steps read and both save mutations each list a step's
+  fields in full. Through a fragment spread, the jar's `stock { variant { id } }`
+  and the form's `formChoice { group { icon } }` were 8 levels deep, past the
+  API's limit of 7 (DESIGN.md §7; [`graphql/protections.md`](../graphql/protections.md)),
+  and every save was refused. The answers are all typed as `SpellBuilderStep`
+  (`types.ts`, off the steps read) where the builder reads them, so a copy
+  missing a field fails the type check.
 
 ## Visibility
 

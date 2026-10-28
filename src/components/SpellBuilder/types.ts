@@ -1,9 +1,16 @@
 import type { Route } from 'next';
 import type { ReactNode } from 'react';
-import type { SpellBuilderStepFragment } from '../../gql/graphql';
+import type { SpellBuilderStepsQuery } from '../../gql/graphql';
 import type { FieldProps } from '../Field/types';
 import type { SpellStepSend, SpellStepValue } from './steps/types';
 import type { SpellVisibility } from '@/modules/grimoire';
+
+/**
+ * A saved step as the builder opens it. Typed off the steps read; both save
+ * mutations write the same selection out (./steps/documents.ts says why), and
+ * their answers are checked against this where the builder reads them.
+ */
+export type SpellBuilderStep = SpellBuilderStepsQuery['spell']['steps'][number];
 
 /** The builder's fields, M10.12's: what the spell is called, what it is for, and its jar. */
 export type SpellBuilderField =
@@ -39,7 +46,7 @@ export type SpellBuilderSpell = {
   /** Who can see it: its author alone, or the whole coven, which is for good (M10.13). */
   visibility: SpellVisibility;
   /** Its recipe in order (M10.15): required, so a page opening a saved spell must read them. */
-  steps: SpellBuilderStepFragment[];
+  steps: SpellBuilderStep[];
 } & Record<SpellBuilderField, string | null> & {
     /** The categories it is assigned (M10.14); left out, none. */
     categoryIds?: readonly string[];
