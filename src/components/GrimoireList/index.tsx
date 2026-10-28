@@ -1,6 +1,6 @@
 import type { ReactElement } from 'react';
 import IngredientSearch from '../IngredientSearch';
-import SpellCard, { spellTitleId } from '../SpellCard';
+import SpellCard, { SpellCardFilters, spellTitleId } from '../SpellCard';
 import EmptyGrimoire from './empty';
 import GrimoireFilter from './filter';
 import type { GrimoireListProps } from './types';
@@ -45,13 +45,20 @@ const GrimoireList = ({
     {spells.length === 0 ? (
       <EmptyGrimoire status={status} filter={filter} />
     ) : (
-      <ul className="ingredient-card-list" aria-label="Grimoire" data-density="regular">
-        {spells.map((spell) => (
-          <li key={spell.id} aria-labelledby={spellTitleId(spell.id)}>
-            <SpellCard {...spell} />
-          </li>
-        ))}
-      </ul>
+      <>
+        <SpellCardFilters />
+        <ul
+          className="ingredient-card-list grimoire-list__cards"
+          aria-label="Grimoire"
+          data-density="regular"
+        >
+          {spells.map((spell) => (
+            <li key={spell.id} aria-labelledby={spellTitleId(spell.id)}>
+              <SpellCard {...spell} />
+            </li>
+          ))}
+        </ul>
+      </>
     )}
   </IngredientSearch>
 );
