@@ -72,7 +72,8 @@ no `instructions` field: the ritual is the spell's steps (M13.1).
   off, and nothing is sent, since an update's steps are the whole recipe and
   one sent now would delete the steps not yet shown. A Close pressed meanwhile
   saves once they land, then closes. Fields typed meanwhile are kept. If the
-  read fails the jar says so, nothing can be saved, and a reload tries again.
+  read fails the jar says so and opens its section, nothing can be saved, Close
+  closes without saving, since the save would be refused, and a reload tries again.
   A draft the dialog created needs no read: its save's answer holds its steps.
 - **A saved step's selection is written out three times, not shared as a
   fragment.** The steps read and both save mutations each list a step's
@@ -234,7 +235,8 @@ stored as typed: the columns are free text
   A pick the service refuses (a category deleted since the builder loaded) is
   marked invalid, and its message names it. The builder shows its picks
   as the picker's chips; the grimoire's spell card shows the saved ones with
-  `CategoryChips`.
+  `CategoryChips`. A saved spell opens with its categories picked: the
+  `?edit=<id>` read (`readEditedSpell`) loads them with `assignedCategoriesOf`.
 - **Jar Description and Seal Wax Colour** stay plain text boxes, with no list, by
   the owner's decision (2026-10-27).
 - **Intent and Note** are multi-line. Title, Jar Description and Seal Wax Colour are

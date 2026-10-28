@@ -355,6 +355,34 @@ describe('the spell builder over a Grimoire tab', () => {
     expect(within(dialog).getByRole('textbox', { name: 'Jar Description' })).toHaveValue('4 oz');
   });
 
+  it('opens a saved spell under ?edit=<id> with the categories its author assigned it picked', async () => {
+    as('member');
+    readSpell.mockResolvedValue(SPELL);
+    offerCategories([
+      {
+        id: CATEGORY.id,
+        name: CATEGORY.name,
+        description: 'Keeps a fixture warded.',
+        group: GROUP,
+      },
+    ]);
+    // Testwarding is this spell’s alone: the cards beneath carry none.
+    assignedCategoriesOf.mockImplementation(async (_s: unknown, spells: { id: string }[]) =>
+      spells.map(({ id }) => (id === SPELL_ID ? [{ id: 'c1', name: 'Testwarding' }] : [])),
+    );
+    await renderTab(DraftsPage, { edit: SPELL_ID });
+
+    // The spell is the one asked for, so its picks are this spell’s and no other’s.
+    expect(assignedCategoriesOf).toHaveBeenCalledWith(session, [
+      { id: SPELL_ID, workspaceId: COVEN.id },
+    ]);
+    const dialog = screen.getByRole('dialog', { name: 'Edit Spell, Fixture Working' });
+    fireEvent.click(within(dialog).getByRole('button', { name: 'Open All' }));
+    expect(
+      await within(dialog).findByRole('button', { name: 'Remove Testwarding' }),
+    ).toBeInTheDocument();
+  });
+
   it('reads nothing and opens nothing under ?edit=<id> for a viewer', async () => {
     as('viewer');
     readSpell.mockResolvedValue(SPELL);
