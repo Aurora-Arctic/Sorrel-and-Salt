@@ -64,5 +64,13 @@ for (const viewport of [
     expect(frames.length).toBeGreaterThan(10);
     expect(frames.every(({ form }) => form)).toBe(true);
     expect(new Set(frames.map(({ height }) => height)).size).toBe(1);
+
+    // The wide size (55rem of content and the dialog's 3rem of padding, 928px), held to the
+    // window's gap on a phone, where the jar's columns stack.
+    const width = await page
+      .getByRole('dialog', { name: 'New Spell' })
+      .evaluate((dialog) => Math.round(dialog.getBoundingClientRect().width));
+    if (viewport.width >= 1280) expect(width).toBe(928);
+    else expect(width).toBeLessThan(viewport.width);
   });
 }
