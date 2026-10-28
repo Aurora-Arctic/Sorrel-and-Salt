@@ -1,6 +1,7 @@
 @use '../../scss/variables' as *;
 @use '../../scss/mixins' as *;
 @use 'smoulder' as *;
+@use 'compact' as *;
 
 // The Foundations specimen (`.specimen` in _primitives.scss) carries the layout;
 // this adds IngredientCard's padding, and the title's size. Tokens only. The card's face
@@ -10,8 +11,10 @@
   @include smoulder-base;
   @include theme-transition(color);
 
+  // The containing block for the title link's stretched `::after` below.
   position: relative;
   padding: space(4);
+  cursor: pointer;
   color: $text-primary;
   border-radius: radius('surface');
 
@@ -45,17 +48,100 @@
   overflow: hidden;
 }
 
-// h3's size, as an ingredient card's name: one of many in a grid.
-.spell-card__title {
+// The whole card is the link, as an ingredient card's is: the title's one `<a>` stretches an
+// empty `::after` over the article, not an `<a>` around the card, which a screen reader would
+// read whole as the link's name. Plain ink, no underline, at rest or on hover. The top row is
+// left unpositioned so the overlay is placed against the article.
+.spell-card > .specimen__top {
+  position: static;
+}
+
+.spell-card .spell-card__title a {
+  color: $text-primary;
+  text-decoration: none;
+
+  &:hover {
+    color: $text-primary;
+  }
+
+  &::after {
+    content: '';
+    position: absolute;
+    inset: 0;
+    border-radius: radius('surface');
+  }
+
+  // The ring goes round the card, drawn on the overlay.
+  &:focus-visible {
+    outline: none;
+
+    &::after {
+      @include focus-ring;
+    }
+  }
+}
+
+// The title block and the Edit pencil share the top row; the title's first word decides
+// when the pencil wraps below, as an ingredient card's name does.
+.spell-card__heading {
   flex: 1 1 0;
   max-width: 100%;
-  margin-bottom: 0;
-  font-size: heading-size(3);
   overflow-wrap: anywhere;
+}
+
+// h3's size, as an ingredient card's name: one of many in a grid.
+.spell-card__title {
+  margin: 0;
+  font-size: heading-size(3);
   hyphens: auto;
 }
 
+// The pending dot hangs into the gap, as the ingredient card's does.
+.spell-card__title .link-hint {
+  margin-inline-end: -0.6em;
+}
+
+// The badges, a row under the title, as the marks sit under an ingredient card's name.
+.spell-card .spell-card__heading > .specimen__badges {
+  inline-size: 0;
+  min-inline-size: 100%;
+  margin-block: space(2) 0;
+  align-items: center;
+}
+
+.spell-card .badge {
+  @include badge-size('medium');
+}
+
+// The Edit pencil, above the stretched link so it is its own target; its row passes the
+// pointer through to the link.
+.spell-card__corner {
+  position: relative;
+  z-index: 1;
+  display: flex;
+  flex: 0 0 auto;
+  align-items: center;
+}
+
+// The intent and the category chips pass a click through to the title link's overlay: each
+// is positioned by the content rule above, which paints it over the overlay. Only the chips'
+// `li`s, so the +N button keeps its press, hover and focus.
 .spell-card__intent {
   margin: 0;
   color: $text-muted;
+  pointer-events: none;
+}
+
+.spell-card .specimen__chips > li:not(.category-more-item) {
+  pointer-events: none;
+}
+
+.spell-card .last-edit {
+  pointer-events: none;
+}
+
+// The compact look, wherever an ancestor says `data-density="compact"`, unless a stored
+// Regular choice sits on <html> (data-card-density, CardDensitySwitch).
+[data-density='compact']:not(:root[data-card-density='regular'] *) {
+  @include spell-card-compact;
 }

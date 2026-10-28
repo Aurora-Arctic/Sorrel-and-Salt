@@ -49,27 +49,38 @@ const SpellCard = ({
         </span>
       </span>
       <div className="specimen__top">
-        <Heading id={spellTitleId(id)} className="spell-card__title">
-          {href ? (
-            // The recipe page draws its own frame while it loads, so the link names it (MB.6).
-            <PendingLink href={href} navigationTarget={ingredientLinkTarget(href)}>
-              {name} <LinkHint />
-            </PendingLink>
-          ) : (
-            name
+        <div className="spell-card__heading">
+          <Heading id={spellTitleId(id)} className="spell-card__title">
+            {href ? (
+              // The recipe page draws its own frame while it loads, so the link names it (MB.6).
+              // The link stretches over the whole card, as an ingredient card's name does.
+              <PendingLink href={href} navigationTarget={ingredientLinkTarget(href)}>
+                {name} <LinkHint />
+              </PendingLink>
+            ) : (
+              name
+            )}
+          </Heading>
+          {/* Only a draft is marked: complete is the default, so a Complete badge would
+              say nothing (the owner, 2026-10-27). Likewise only a private spell: the
+              coven is the default, and a private one lists to its author alone, so
+              the badge tells them no one else sees it (M10.13). Under the title, as the
+              marks sit under an ingredient card's name. */}
+          {(status === 'draft' || visibility === 'private') && (
+            <div className="specimen__badges">
+              {status === 'draft' && <span className="badge badge--draft">Draft</span>}
+              {visibility === 'private' && <span className="badge badge--private">Private</span>}
+            </div>
           )}
-        </Heading>
-        {/* Only a draft is marked: complete is the default, so a Complete badge would
-            say nothing (the owner, 2026-10-27). Likewise only a private spell: the
-            coven is the default, and a private one lists to its author alone, so
-            the badge tells them no one else sees it (M10.13). */}
+        </div>
+        {/* The card's top-right corner, as an ingredient card's badges are. */}
         {editHref && (
-          <EditLink href={editHref} name={name} heading={{ eyebrow: 'Edit Spell', title: name }} />
-        )}
-        {(status === 'draft' || visibility === 'private') && (
-          <div className="specimen__badges">
-            {status === 'draft' && <span className="badge badge--draft">Draft</span>}
-            {visibility === 'private' && <span className="badge badge--private">Private</span>}
+          <div className="spell-card__corner">
+            <EditLink
+              href={editHref}
+              name={name}
+              heading={{ eyebrow: 'Edit Spell', title: name }}
+            />
           </div>
         )}
       </div>
