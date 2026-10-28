@@ -5,7 +5,7 @@ import type { SpellVisibility } from '@/modules/grimoire';
 
 /** The builder's fields, M10.12's: what the spell is called, what it is for, and its jar. */
 export type SpellBuilderField =
-  'title' | 'intent' | 'jarSize' | 'sealWaxColor' | 'moonPhase' | 'dayOfWeek' | 'note';
+  'title' | 'intent' | 'jarDescription' | 'sealWaxColor' | 'moonPhase' | 'dayOfWeek' | 'note';
 
 /** The form's values: each field as typed, blank for none, and who can see the spell (M10.13). */
 export type SpellBuilderValues = Record<SpellBuilderField, string> & {

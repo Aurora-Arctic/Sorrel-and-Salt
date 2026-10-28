@@ -21,7 +21,7 @@ const SpellFields = z.object({
   title: optionalText(),
   // What the spell is for, and the jar it is made in: free text, member-written (§5).
   intent: optionalText(),
-  jarSize: optionalText(),
+  jarDescription: optionalText(),
   sealWaxColor: optionalText(),
   moonPhase: optionalText(),
   dayOfWeek: optionalText(),

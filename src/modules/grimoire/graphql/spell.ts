@@ -108,7 +108,7 @@ export const SpellRef = builder.objectRef<SpellRow>('Spell').implement({
         'Null on a draft not yet named: only a complete spell must carry a title (M13.15).',
     }),
     intent: t.exposeString('intent', { nullable: true }),
-    jarSize: t.exposeString('jarSize', { nullable: true }),
+    jarDescription: t.exposeString('jarDescription', { nullable: true }),
     sealWaxColor: t.exposeString('sealWaxColor', { nullable: true }),
     moonPhase: t.exposeString('moonPhase', { nullable: true }),
     dayOfWeek: t.exposeString('dayOfWeek', { nullable: true }),
@@ -220,7 +220,7 @@ const SpellInputRef = builder.inputType('SpellInput', {
   fields: (t) => ({
     title: t.string({ description: 'Required once the status is complete.' }),
     intent: t.string(),
-    jarSize: t.string(),
+    jarDescription: t.string(),
     sealWaxColor: t.string(),
     moonPhase: t.string(),
     dayOfWeek: t.string(),
@@ -237,7 +237,7 @@ const UpdateSpellInputRef = builder.inputType('UpdateSpellInput', {
   fields: (t) => ({
     title: t.string({ description: 'Required once the status is complete.' }),
     intent: t.string(),
-    jarSize: t.string(),
+    jarDescription: t.string(),
     sealWaxColor: t.string(),
     moonPhase: t.string(),
     dayOfWeek: t.string(),

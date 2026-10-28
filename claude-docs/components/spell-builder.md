@@ -1,7 +1,7 @@
 # SpellBuilder
 
 `src/components/SpellBuilder/` is the form that writes a spell's own fields
-(M10.12, story 47): its title, intent, jar size, seal wax colour, moon phase,
+(M10.12, story 47): its title, intent, jar description, seal wax colour, moon phase,
 day of the week and note. It is a client component, drawn in a wide modal
 over the grimoire's list (`SpellDialog`, `spell-dialog.tsx`; the owner's call,
 2026-10-27, [`design-decisions/m10.12-spell-builder-modal.md`](../design-decisions/m10.12-spell-builder-modal.md)).
@@ -169,9 +169,9 @@ stored as typed: the columns are free text
   rest of the disc in shadow (the owner, 2026-10-27). A phase typed outside the list, such as "Dark",
   shows its words with no drawing (the owner, 2026-10-27).
 
-- **Jar Size and Seal Wax Colour** stay plain text boxes, with no list, by
+- **Jar Description and Seal Wax Colour** stay plain text boxes, with no list, by
   the owner's decision (2026-10-27).
-- **Intent and Note** are multi-line. Title, Jar Size and Seal Wax Colour are
+- **Intent and Note** are multi-line. Title, Jar Description and Seal Wax Colour are
   `autoComplete="off"`.
 
 ## Styling
