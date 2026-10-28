@@ -109,7 +109,7 @@ test(
     await expect(save).toBeDisabled();
     await expect(save).not.toHaveAttribute('aria-busy', 'true');
     // Saved: the spell's card in the grimoire's Drafts carries the category assigned, and only it.
-    await builder.getByRole('button', { name: 'Close' }).click();
+    await builder.getByRole('button', { name: 'Close', exact: true }).click();
     await expect(page.getByRole('dialog')).toHaveCount(0);
     await page.getByRole('link', { name: 'Drafts' }).click();
     await expect(page).toHaveURL(`/coven/${coven.slug}/grimoire/drafts`);
