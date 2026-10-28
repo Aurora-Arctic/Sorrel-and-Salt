@@ -86,7 +86,7 @@ export const readGrimoire = cache(
 
 /**
  * The spell `?edit=<id>` opens the builder's dialog on (M10.12), read as the signed-in
- * member, with the fields the builder edits. Nothing for a spell the service will not give
+ * member, with the fields the builder edits and the categories it is assigned. Nothing for a spell the service will not give
  * this member, a private one of another member's included, so the tab opens no dialog, as
  * the Ingredients page's `readEditedEntry` does. Any other failure of the read is let
  * through rather than called no spell.
@@ -101,6 +101,10 @@ export async function readEditedSpell(
     const { revision, title, intent, jarDescription, sealWaxColor, moonPhase, dayOfWeek, note } =
       spell;
     const { visibility } = spell;
+    // The categories its author assigned it, so the builder opens with them picked and a
+    // save sends the set as edited, not as if it had none (M10.14).
+    const [assigned] = await assignedCategoriesOf(session, [{ id, workspaceId }]);
+    if (assigned instanceof Error) throw assigned;
     return {
       id,
       revision,
@@ -112,6 +116,7 @@ export async function readEditedSpell(
       dayOfWeek,
       note,
       visibility,
+      categoryIds: assigned.map((category) => category.id),
     };
   } catch (error) {
     if (error instanceof NotFound || error instanceof Forbidden) return undefined;

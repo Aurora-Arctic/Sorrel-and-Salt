@@ -211,7 +211,8 @@ stored as typed: the columns are free text
   A pick the service refuses (a category deleted since the builder loaded) is
   marked invalid, and its message names it. The builder shows its picks
   as the picker's chips; the grimoire's spell card shows the saved ones with
-  `CategoryChips`.
+  `CategoryChips`. A saved spell opens with its categories picked: the
+  `?edit=<id>` read (`readEditedSpell`) loads them with `assignedCategoriesOf`.
 - **Jar Description and Seal Wax Colour** stay plain text boxes, with no list, by
   the owner's decision (2026-10-27).
 - **Intent and Note** are multi-line. Title, Jar Description and Seal Wax Colour are
