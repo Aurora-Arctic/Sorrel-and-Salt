@@ -549,6 +549,32 @@ describe('updateSpell, with its recipe', () => {
     ]);
   });
 
+  it('reorders linked, one-off and instruction steps alike, moving each row in place', async () => {
+    const leaf = await ingredientWithForm('Fixture Leaf');
+    const { id, ids } = await saved([leaf, { name: 'Fixture Pebble' }, { body: 'Stir.' }]);
+
+    await updateSpell(asUser(B), WORKSPACE_W_ID, id, {
+      expectedRevision: null,
+      steps: [
+        { id: ids[2], body: 'Stir.' },
+        { id: ids[0], ...leaf },
+        { id: ids[1], name: 'Fixture Pebble' },
+      ],
+    });
+
+    // The same three rows, none soft-deleted and none added: a move, never a
+    // Remove and a fresh Add, which would leave a tombstone behind.
+    const rows = await stepRowsOf(id);
+    expect(rows).toHaveLength(3);
+    expect(rows.every((row) => row.deleted_at === null)).toBe(true);
+    const byId = new Map(rows.map((row) => [row.id, row]));
+    expect([ids[2], ids[0], ids[1]].map((step) => byId.get(step))).toEqual([
+      expect.objectContaining({ position: 1, layer_order: 1, body: 'Stir.' }),
+      expect.objectContaining({ position: 2, layer_order: 2, variant_id: leaf.variantId }),
+      expect.objectContaining({ position: 3, layer_order: 3, name: 'Fixture Pebble' }),
+    ]);
+  });
+
   it('swaps two steps’ ingredients without tripping the one-form-per-jar index', async () => {
     const leaf = await ingredientWithForm('Fixture Leaf');
     const root = await ingredientWithForm('Fixture Root');

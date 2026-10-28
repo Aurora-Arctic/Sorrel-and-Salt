@@ -1,3 +1,6 @@
+@use '../../scss/variables' as *;
+@use '../../scss/mixins' as *;
+
 // The Share With the Coven switch (M10.13) stands at the start of its column,
 // its label and the note under it at the start too, as the ingredient form's
 // Toxic switch does (the owner's call, 2026-10-16). Not the primitive's
@@ -9,4 +12,31 @@
   .field__label {
     text-align: start;
   }
+}
+
+// A step's handle (M10.16): the grip it is moved by, a button unboxed as the
+// combobox's chip handle is. `touch-action` is dnd-kit's ask, so that a drag
+// by touch moves the step rather than the page. Laid out no further until the
+// section's design review.
+.spell-step__handle {
+  @include button-reset(grab);
+
+  display: inline-flex;
+  align-items: center;
+  border-radius: radius('sharp');
+  touch-action: none;
+
+  &:focus-visible {
+    @include focus-ring;
+  }
+
+  .is-dragging & {
+    cursor: grabbing;
+  }
+}
+
+// The step being moved stays above the rows it passes.
+.spell-step.is-dragging {
+  position: relative;
+  z-index: 1;
 }

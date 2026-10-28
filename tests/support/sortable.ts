@@ -77,3 +77,34 @@ export async function dragByPointer(handle: HTMLElement, x: number) {
   // presses nothing; waited out, so that it swallows no later test's.
   await act(() => new Promise<void>((resolve) => setTimeout(resolve, 60)));
 }
+
+/**
+ * Lays a spell's steps out in a column, in their list's order: each row
+ * 600px wide and 48px tall, 60px apart, and the list as tall as its rows.
+ * Restore as `layOutChips`.
+ */
+export function layOutRows() {
+  vi.spyOn(Element.prototype, 'getBoundingClientRect').mockImplementation(function (this: Element) {
+    if (this.classList.contains('spell-steps__list')) {
+      return new DOMRect(0, 0, 600, this.children.length * 60);
+    }
+    const row = this.closest('.spell-step');
+    if (!row?.parentElement) return new DOMRect(0, 0, 0, 0);
+    const at = Array.prototype.indexOf.call(row.parentElement.children, row);
+    return new DOMRect(0, at * 60, 600, 48);
+  });
+}
+
+/** Drags `handle` by pointer from its row's middle, up or down the column, to `y`. */
+export async function dragVertically(handle: HTMLElement, y: number) {
+  const { top, height } = handle.getBoundingClientRect();
+  const from = { clientX: 20, clientY: top + height / 2, isPrimary: true, button: 0 };
+  fireEvent.pointerDown(handle, from);
+  fireEvent.pointerMove(document, { ...from, clientY: from.clientY + 10 });
+  await tick();
+  fireEvent.pointerMove(document, { ...from, clientY: y });
+  await tick();
+  fireEvent.pointerUp(document, { ...from, clientY: y });
+  // The 50ms the sensor swallows clicks for, as `dragByPointer`.
+  await act(() => new Promise<void>((resolve) => setTimeout(resolve, 60)));
+}
