@@ -986,6 +986,26 @@ describe('the spell builder’s jar fill colours', () => {
     group: g,
   });
 
+  it('draws a row’s categories in their groups’ chip colours, with the row’s name unchanged', async () => {
+    suggest(ROSEWORT, MOCKROOT);
+    renderBuilder({}, [
+      node('Love', group('Love', '#cf6e87', '#a44c63')),
+      node('Calm', group('Calm', '#50a58e', '#1d755d')),
+    ] as never);
+
+    const rosewort = await lookUp('Fixture', /Fixture Rosewort/);
+    const mockroot = screen.getByRole('option', { name: /Fixture Mockroot/ });
+
+    const chip = await within(rosewort).findByText('Calm');
+    expect(chip).toHaveClass('chip');
+    expect(chip.style.getPropertyValue('--chip-dark')).toBe('#50a58e');
+    expect(chip.style.getPropertyValue('--chip-light')).toBe('#1d755d');
+    // Protection has no known group: plain text, not a chip. The words and separator stand.
+    expect(within(mockroot).getByText('Love')).toHaveClass('chip');
+    expect(within(mockroot).queryByText('Protection')).toBeNull();
+    expect(mockroot).toHaveTextContent('Love · Protection');
+  });
+
   it('draws a layer in the group colours of its categories, in order, and a layer whose categories have no group in the muted ink', async () => {
     suggest(ROSEWORT, MOCKROOT);
     // Rosewort carries Love and Calm, two groups; Mockroot carries Love, one group, and Protection, which has none known.
