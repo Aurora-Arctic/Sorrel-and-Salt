@@ -4,7 +4,7 @@ import type { ReactElement } from 'react';
 // `StockIcon` is (16 box, 1.6 round stroke, currentColor, hidden from a screen reader), so
 // the four sit side by side as one set. Spell-builder-only, so they live here, not beside
 // StockIcon. Every stroke stays inside the box (half a stroke, 0.8, clear of the edge).
-// Not Enough: a jar outline with its level part-way up. Cannot Compare: an equals sign
+// Not Enough: a jar outline with its level part-way up. Units Differ: an equals sign
 // struck through. The word beside each stays visible, so neither rests on the symbol.
 
 const Icon = ({ className, children }: { className: string; children: ReactElement }) => (
@@ -29,7 +29,7 @@ export const NotEnoughIcon = ({ className }: { className: string }): ReactElemen
   </Icon>
 );
 
-export const CannotCompareIcon = ({ className }: { className: string }): ReactElement => (
+export const UnitsDifferIcon = ({ className }: { className: string }): ReactElement => (
   <Icon className={className}>
     <path d="M3.5 6h9M3.5 10h9M10.5 3 5.5 13" />
   </Icon>

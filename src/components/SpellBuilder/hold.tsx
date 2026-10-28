@@ -7,17 +7,20 @@ import { JarDrawing, pickJarShape } from '../JarShelf';
 import { StockIcon } from '../StockBadge';
 import { stockState } from '../StockBadge/stock-state';
 import { amountText } from '../StockBadge/stock-words';
-import { CannotCompareIcon, NotEnoughIcon } from './supply-icon';
+import { UnitsDifferIcon, NotEnoughIcon } from './supply-icon';
 import { type StepSupply, supplyOf } from './steps/supply';
 import type { SpellStepValue, SpellStepsValues } from './steps/types';
 import { isInstruction, stepNameOf } from './steps/values';
 
 // What You Hold (the Jar's aside): one line for each ingredient step, in step order, saying
 // what the step needs against what the coven's jar holds, as `supplyOf` judges it. The
-// verdict is words (Low, Out, Not Enough, Cannot Compare) so no state rests on colour. All four
+// verdict is words (Low, Out, Not Enough, Units Differ) so no state rests on colour. All four
 // stand at the right end of the name's line, so the name is cut short before they are. Low and
-// Out take StockBadge's colour and symbol; Not Enough has its own jar-level symbol in Low's ink. Cannot Compare is that struck equals sign alone (supply-icon.tsx), muted, its words in an IconTip and as the button's name. A step with an instruction only has
+// Out take StockBadge's colour and symbol; Not Enough has its own jar-level symbol in Low's ink. Units Differ is that struck equals sign alone (supply-icon.tsx), muted, its words the button's name and its reason in an IconTip. A step with an instruction only has
 // no line. See claude-docs/components/spell-builder.md, "The aside".
+
+const UNITS_DIFFER_TIP =
+  'The spell’s unit can’t be checked against the jar’s, so it can’t tell if you have enough.';
 
 type Verdict = { words: string; state: 'low' | 'out' | null; tone: string };
 
@@ -25,7 +28,7 @@ const VERDICTS: Record<StepSupply['kind'], Verdict> = {
   'one-off': { words: 'One-Off', state: null, tone: 'muted' },
   out: { words: 'Out', state: 'out', tone: 'out' },
   short: { words: 'Not Enough', state: null, tone: 'low' },
-  'cannot-compare': { words: 'Cannot Compare', state: null, tone: 'muted' },
+  'units-differ': { words: 'Units Differ', state: null, tone: 'muted' },
   low: { words: 'Low', state: 'low', tone: 'low' },
 };
 
@@ -65,11 +68,11 @@ function HoldLine({ step, seed }: { step: SpellStepValue; seed: string }): React
         <span className="spell-hold__name">{stepNameOf(step)}</span>
         {verdict && (
           <span className={`spell-hold__verdict is-${verdict.tone}`}>
-            {verdict.words === 'Cannot Compare' ? (
-              // The mark alone, its words in a tip and as the button's name (the owner's call, 2026-10-28).
-              <IconTip tip={verdict.words}>
+            {verdict.words === 'Units Differ' ? (
+              // The mark alone, its words the button's name and its reason in a tip (the owner's call, 2026-10-28).
+              <IconTip tip={UNITS_DIFFER_TIP}>
                 <button type="button" className="spell-hold__mark" aria-label={verdict.words}>
-                  <CannotCompareIcon className="spell-hold__icon" />
+                  <UnitsDifferIcon className="spell-hold__icon" />
                 </button>
               </IconTip>
             ) : verdict.state ? (
@@ -77,7 +80,7 @@ function HoldLine({ step, seed }: { step: SpellStepValue; seed: string }): React
             ) : (
               <NotEnoughIcon className="spell-hold__icon" />
             )}
-            {verdict.words !== 'Cannot Compare' && verdict.words}
+            {verdict.words !== 'Units Differ' && verdict.words}
           </span>
         )}
       </span>

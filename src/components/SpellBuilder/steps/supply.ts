@@ -17,7 +17,7 @@ export type StepSupply =
   /** The jar holds less than the step calls for, once both are in one unit. */
   | { kind: 'short'; held: number; unit: Unit }
   /** The step's amount cannot be set against the jar's, so no verdict is given. */
-  | { kind: 'cannot-compare' }
+  | { kind: 'units-differ' }
   /** The jar is at or below its own threshold: StockBadge's Low Stock. */
   | { kind: 'low'; jar: StepJar };
 
@@ -37,9 +37,9 @@ export function supplyOf(step: SupplyInput): StepSupply | null {
 
   const needed = step.quantity.trim() === '' ? 0 : Number(step.quantity);
   if (step.unit !== '' && Number.isFinite(needed) && needed > 0) {
-    if (jar.unit === null) return { kind: 'cannot-compare' };
+    if (jar.unit === null) return { kind: 'units-differ' };
     const converted = unitConvert(needed, step.unit as Unit, jar.unit);
-    if (!converted.ok) return { kind: 'cannot-compare' };
+    if (!converted.ok) return { kind: 'units-differ' };
     if (converted.value > jar.quantity)
       return { kind: 'short', held: jar.quantity, unit: jar.unit };
   }

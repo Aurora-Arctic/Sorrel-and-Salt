@@ -701,7 +701,7 @@ describe('the spell builder’s What You Hold', () => {
     expect(line('Fixture Rosewort')).toHaveTextContent('need 4 g · hold 5 g');
   });
 
-  it('says Cannot Compare where the unit cannot be set against the jar’s', async () => {
+  it('says Units Differ where the unit cannot be set against the jar’s', async () => {
     suggest(HELD);
     renderBuilder();
     await add('Rose', /Fixture Rosewort/);
@@ -714,7 +714,7 @@ describe('the spell builder’s What You Hold', () => {
 
     await waitFor(() =>
       expect(
-        within(line('Fixture Rosewort')).getByRole('button', { name: 'Cannot Compare' }),
+        within(line('Fixture Rosewort')).getByRole('button', { name: 'Units Differ' }),
       ).toBeInTheDocument(),
     );
     expect(line('Fixture Rosewort')).not.toHaveTextContent('Not Enough');
@@ -791,5 +791,98 @@ describe('the spell builder’s open and closed steps', () => {
     expect(
       within(stepRow('Fixture Rosewort')).getByRole('combobox', { name: /^Unit/ }),
     ).toHaveAttribute('aria-invalid', 'true');
+  });
+
+  it('closes an open row when a click lands outside it, and keeps what was typed', async () => {
+    suggest(ROSEWORT, MOCKROOT);
+    renderBuilder();
+    await add('Rose', /Fixture Rosewort/);
+    const row = stepRow('Fixture Rosewort');
+    fireEvent.change(within(row).getByRole('spinbutton', { name: /^Quantity/ }), {
+      target: { value: '3' },
+    });
+    // Inside the row is not outside it.
+    fireEvent.pointerDown(within(row).getByRole('spinbutton', { name: /^Quantity/ }));
+    expect(screen.getByRole('button', { name: 'Edit Fixture Rosewort' })).toHaveAttribute(
+      'aria-expanded',
+      'true',
+    );
+
+    fireEvent.pointerDown(screen.getByRole('heading', { name: 'What Goes In' }));
+
+    expect(screen.getByRole('button', { name: 'Edit Fixture Rosewort' })).toHaveAttribute(
+      'aria-expanded',
+      'false',
+    );
+    expect(stepRow('Fixture Rosewort')).toHaveTextContent('3');
+  });
+
+  it('closes an open row when the focus leaves it', async () => {
+    suggest(ROSEWORT, MOCKROOT);
+    renderBuilder();
+    await add('Rose', /Fixture Rosewort/);
+    fireEvent.click(screen.getByRole('button', { name: 'Edit Fixture Rosewort' }));
+    expect(screen.getByRole('button', { name: 'Edit Fixture Rosewort' })).toHaveAttribute(
+      'aria-expanded',
+      'false',
+    );
+    fireEvent.click(screen.getByRole('button', { name: 'Edit Fixture Rosewort' }));
+    expect(screen.getByRole('button', { name: 'Edit Fixture Rosewort' })).toHaveAttribute(
+      'aria-expanded',
+      'true',
+    );
+
+    act(() => screen.getByRole('button', { name: 'Add a Step' }).focus());
+
+    expect(screen.getByRole('button', { name: 'Edit Fixture Rosewort' })).toHaveAttribute(
+      'aria-expanded',
+      'false',
+    );
+  });
+
+  it('keeps a row open while its unit is refused, even after a click outside it', async () => {
+    suggest(ROSEWORT, MOCKROOT);
+    renderBuilder();
+    await add('Rose', /Fixture Rosewort/);
+    chooseUnit(stepRow('Fixture Rosewort'), 'ml');
+    await waitFor(() =>
+      expect(
+        within(stepRow('Fixture Rosewort')).getByRole('combobox', { name: /^Unit/ }),
+      ).toHaveAttribute('aria-invalid', 'true'),
+    );
+
+    fireEvent.pointerDown(screen.getByRole('heading', { name: 'What Goes In' }));
+
+    expect(
+      within(stepRow('Fixture Rosewort')).getByRole('combobox', { name: /^Unit/ }),
+    ).toHaveAttribute('aria-invalid', 'true');
+    expect(screen.getByRole('button', { name: 'Edit Fixture Rosewort' })).toHaveAttribute(
+      'aria-expanded',
+      'true',
+    );
+  });
+
+  it('opens a new step while the focus stays in Add to Jar, and closes it on the next click outside the box and the row', async () => {
+    suggest(ROSEWORT, MOCKROOT);
+    renderBuilder();
+    await add('Rose', /Fixture Rosewort/);
+    expect(screen.getByRole('button', { name: 'Edit Fixture Rosewort' })).toHaveAttribute(
+      'aria-expanded',
+      'true',
+    );
+
+    // The box is where the next ingredient is typed: still inside.
+    fireEvent.pointerDown(search());
+    act(() => search().focus());
+    expect(screen.getByRole('button', { name: 'Edit Fixture Rosewort' })).toHaveAttribute(
+      'aria-expanded',
+      'true',
+    );
+
+    fireEvent.pointerDown(screen.getByRole('heading', { name: 'What Goes In' }));
+    expect(screen.getByRole('button', { name: 'Edit Fixture Rosewort' })).toHaveAttribute(
+      'aria-expanded',
+      'false',
+    );
   });
 });
