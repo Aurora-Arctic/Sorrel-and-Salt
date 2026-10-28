@@ -17,16 +17,17 @@ The card is presentational: it takes props and works nothing out from the data, 
 
 ## Props
 
-| Prop         | What it is                                                                                    |
-| ------------ | --------------------------------------------------------------------------------------------- |
-| `id`         | The spell's id. It names the title heading, `spellTitleId(id)`                                |
-| `title`      | The title, or null. Null or blank lists as "Untitled Spell"                                   |
-| `intent`     | The intent, or null. Without one the card draws no paragraph                                  |
-| `status`     | `draft` or `complete`                                                                         |
-| `visibility` | `private` or `workspace`: who can see it                                                      |
-| `categories` | The assigned categories, each with its group's colours. Never the derived ones (DESIGN.md §5) |
-| `lastEdit`   | Who last edited it and when, `{ by, at }`, worked out by the caller. None draws no line       |
-| `level`      | The title's heading level, 2 by default                                                       |
+| Prop         | What it is                                                                                           |
+| ------------ | ---------------------------------------------------------------------------------------------------- |
+| `id`         | The spell's id. It names the title heading, `spellTitleId(id)`                                       |
+| `title`      | The title, or null. Null or blank lists as "Untitled Spell"                                          |
+| `intent`     | The intent, or null. Without one the card draws no paragraph                                         |
+| `status`     | `draft` or `complete`                                                                                |
+| `visibility` | `private` or `workspace`: who can see it                                                             |
+| `categories` | The assigned categories, each with its group's colours. Never the derived ones (DESIGN.md §5)        |
+| `lastEdit`   | Who last edited it and when, `{ by, at }`, worked out by the caller. None draws no line              |
+| `editHref`   | Where the Edit pencil opens the spell, the tab's own address plus `?edit=<id>`. None draws no pencil |
+| `level`      | The title's heading level, 2 by default                                                              |
 
 ## Its name
 
@@ -51,11 +52,19 @@ and tells them no one else in the coven sees it. It is the word "Private", so it
 rely on colour. `.badge--private` takes Draft's muted tint and inks, and sits after Draft
 when a spell is both.
 
-## No link yet
+## The link
 
-The card is not a link. The spell's own page is MB.6, and the card gains its link there,
-through `PendingLink` as IngredientCard's name does. Until then the title is plain text, and
-the card has no drawer behind it, since nothing opens from it.
+Given an `href`, the title is a `PendingLink` with a `LinkHint`, as IngredientCard's name
+is; the grimoire list passes each spell's recipe page (MB.6, `recipeHref`). Without one the
+title is plain text. The card has no drawer behind it, since nothing opens from it.
+
+## The Edit pencil
+
+Given an `editHref`, the card draws an `EditLink` (an icon link, named "Edit <title>") beside
+the badges, as IngredientEntry's pencil is drawn (M13.10). The grimoire tab works the address
+out and passes it only for a role that may update a spell (`rolePermits(role, { spell:
+['update'] })`), so a viewer's cards have none. It keeps the tab's filter, page and tab in
+the address, so closing the dialog returns to the list as it was.
 
 ## Styling
 

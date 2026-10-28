@@ -100,7 +100,7 @@ test('a member names a spell and states its intent', { tag: '@story-47' }, async
   // A new spell is a draft, listed under the grimoire's Drafts tab (M10.11).
   await page.getByRole('link', { name: 'Drafts' }).click();
   await expect(page).toHaveURL(`/coven/${coven.slug}/grimoire/drafts`);
-  await expect(grimoireList(page).getByText('Fixture Working')).toBeVisible();
+  await expect(grimoireList(page).getByText('Fixture Working', { exact: true })).toBeVisible();
 });
 
 test(
@@ -387,7 +387,7 @@ test(
       await signInAgainAs(page, reader);
       await page.goto(path);
       await expect(grimoireList(page).getByRole('listitem')).toHaveCount(1);
-      await expect(grimoireList(page).getByText('Shared Working')).toBeVisible();
+      await expect(grimoireList(page).getByText('Shared Working', { exact: true })).toBeVisible();
       await expect(grimoireList(page).getByText('Private Working')).toHaveCount(0);
     }
   },

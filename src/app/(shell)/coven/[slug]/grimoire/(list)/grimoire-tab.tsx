@@ -22,8 +22,14 @@ import type { GrimoireTabProps } from './types';
 // `?edit=<id>` for a saved spell, over the tab as it was, for a role that may write a spell. A viewer's opens
 // nothing. `?new` is shared with the shell's Add Ingredient, `?new=ingredient-coven-<slug>`, and its
 // value says which dialog (claude-docs/design-decisions/m10.12-spell-builder-modal.md).
+// A role that may update a spell also gets each card's Edit pencil, a link to the tab's own
+// address with `?edit=<id>` added (M13.10), so closing the dialog returns to it as it was.
 // A function the two pages call rather than a component they draw, so each page is the
 // async component itself and a test awaits it whole.
+/** `closeHref` with a saved spell's dialog open over it. */
+const editHrefOf = (closeHref: Route, id: string): Route =>
+  `${closeHref}${closeHref.includes('?') ? '&' : '?'}${new URLSearchParams({ edit: id })}` as Route;
+
 export async function grimoireTab({
   params,
   searchParams,
@@ -61,10 +67,12 @@ export async function grimoireTab({
   const edit = adding === undefined ? query.edit : undefined;
   const spellId = typeof edit === 'string' ? RowId.safeParse(edit) : undefined;
   const canCreate = rolePermits(role, { spell: ['create'] });
+  const canUpdate = rolePermits(role, { spell: ['update'] });
+  const closeHref = GRIMOIRE_PARAMS.href(path, filter, { after, before });
   const opened =
     opensNewSpell(single(adding) ?? null, workspace.slug) && canCreate
       ? {}
-      : spellId?.success && rolePermits(role, { spell: ['update'] })
+      : spellId?.success && canUpdate
         ? await readEditedSpell(workspace.id, spellId.data).then(
             (saved) => saved && { spell: saved },
           )
@@ -75,8 +83,13 @@ export async function grimoireTab({
       <GrimoireList
         path={path}
         workspaceId={workspace.id}
+        covenSlug={workspace.slug}
         status={status}
-        spells={page.spells}
+        spells={
+          canUpdate
+            ? page.spells.map((spell) => ({ ...spell, editHref: editHrefOf(closeHref, spell.id) }))
+            : page.spells
+        }
         filter={filter}
         categories={counted}
         position={page.position}
@@ -89,7 +102,7 @@ export async function grimoireTab({
         workspaceId={workspace.id}
         covenSlug={workspace.slug}
         covenName={workspace.name}
-        closeHref={GRIMOIRE_PARAMS.href(path, filter, { after, before })}
+        closeHref={closeHref}
         opened={opened}
         canCreate={canCreate}
       />
