@@ -222,11 +222,16 @@
   margin: 0;
   border: 0;
   border-block-start: 1px solid $hairline;
+  // The aside's space(3) gap plus space(1) on each side: every hairline has space(4) above
+  // and below it, so a heading sits as far under a line as the block above sits over it.
+  margin-block: space(1);
+}
 
-  // More air below The Jar before the first hairline: the aside's space(3) gap plus space(1).
-  &:first-of-type {
-    margin-block-start: space(1);
-  }
+// The aside's own gap spaces these sections. A bare `section` carries space(4) of margin
+// (_layout.scss), which sat on top of the gap and left the space below a hairline 12px
+// larger than the space above it.
+.spell-aside > section {
+  margin-block: 0;
 }
 
 .spell-aside__empty {
@@ -262,6 +267,9 @@
     flex: none;
     inline-size: 100%;
     block-size: auto;
+    // The stroke is centred on the path, so a path on the box's bottom edge loses half its
+    // width to the svg's clip; letting it overflow keeps the jar's base whole.
+    overflow: visible;
   }
 
   .jar-shelf__glass,
@@ -271,14 +279,14 @@
   }
 }
 
-// What You Hold: a small jar, the name, and the words under it.
-.spell-hold {
+// In Coven Inventory: a small jar, the name, and the words under it.
+.spell-inventory {
   display: flex;
   flex-direction: column;
   gap: space(2);
 }
 
-.spell-hold__list {
+.spell-inventory__list {
   display: flex;
   flex-direction: column;
   gap: space(2);
@@ -286,7 +294,7 @@
   @include list-reset;
 }
 
-.spell-hold__line {
+.spell-inventory__line {
   display: grid;
   grid-template-areas:
     'jar name'
@@ -296,7 +304,7 @@
 
   // A one-off holds no stock, so its jar is the plain empty outline the aside's own jar is,
   // solid and muted, not the dashed outline of a form with no jar, and not faded.
-  &.is-one-off .spell-hold__jar {
+  &.is-one-off .spell-inventory__jar {
     .jar-shelf__glass,
     .jar-shelf__lid,
     .jar-shelf__facet {
@@ -305,7 +313,7 @@
   }
 }
 
-.spell-hold__jar {
+.spell-inventory__jar {
   grid-area: jar;
   align-self: center;
 
@@ -313,12 +321,14 @@
     display: block;
     inline-size: 100%;
     block-size: auto;
+    // As `.spell-jar svg`: the stroke on the bottom edge is not clipped.
+    overflow: visible;
   }
 }
 
 // The name line: the name, which is cut short with an ellipsis, then the Low or Out state,
 // which is not.
-.spell-hold__title {
+.spell-inventory__title {
   display: flex;
   grid-area: name;
   gap: space(2);
@@ -326,7 +336,7 @@
   min-width: 0;
 }
 
-.spell-hold__name {
+.spell-inventory__name {
   min-width: 0;
   overflow: hidden;
   font-weight: 500;
@@ -334,12 +344,12 @@
   white-space: nowrap;
 }
 
-.spell-hold__words {
+.spell-inventory__words {
   grid-area: words;
   color: $text-muted;
 }
 
-.spell-hold__verdict {
+.spell-inventory__verdict {
   display: inline-flex;
   flex: none;
   // Pushed to the line's right end; the name keeps the rest and is the one cut short.
@@ -358,7 +368,7 @@
 }
 
 // Units Differ's mark: a button only so the tip can be reached by focus; it does nothing.
-.spell-hold__mark {
+.spell-inventory__mark {
   display: inline-flex;
   padding: 0;
   border: 0;
@@ -367,20 +377,20 @@
   cursor: default;
 }
 
-.spell-hold__icon {
+.spell-inventory__icon {
   inline-size: 1em;
   block-size: 1em;
   flex: none;
 }
 
 @container spell-column (max-width: #{$narrow-column}) {
-  .spell-hold__name {
+  .spell-inventory__name {
     overflow: visible;
     white-space: normal;
   }
 }
 
-// Intent Against Ingredients: Carried, Missing and Stray, each a row of chips.
+// Category Match: Carried, Missing and Stray, each a row of chips.
 .comparison-panel {
   display: flex;
   flex-direction: column;

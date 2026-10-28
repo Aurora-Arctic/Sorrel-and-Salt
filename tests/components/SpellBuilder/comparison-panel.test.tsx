@@ -44,7 +44,7 @@ const groups = new Map(
   ]),
 );
 
-const panel = () => screen.getByRole('region', { name: 'Intent Against Ingredients' });
+const panel = () => screen.getByRole('region', { name: 'Category Match' });
 /** The chips on one of the three rows (Carried, Missing, Stray), or null if the row is left out. */
 const row = (label: 'Carried' | 'Missing' | 'Stray') => {
   const term = within(panel()).queryByText(label, { selector: 'dt' });

@@ -177,12 +177,12 @@ The fields sit in four `CollapsibleSection`s at `h3`
 `.collapsible-sections`, as Add Ingredient's are (M8.16; the owner, 2026-10-28,
 "Use add ingredient modal as reference"):
 
-| Section         | Fields                                                                                                                  |
-| --------------- | ----------------------------------------------------------------------------------------------------------------------- |
-| Purpose         | Title, Intent, Categories (M10.14)                                                                                      |
-| Jar             | The Jar aside (Jar Description, Seal Wax Colour, What You Hold, the comparison) beside What Goes In (the steps, M10.15) |
-| When to Work It | Moon Phase, Day of the Week                                                                                             |
-| Notes           | Note, Share With the Coven (M10.13)                                                                                     |
+| Section         | Fields                                                                                                                       |
+| --------------- | ---------------------------------------------------------------------------------------------------------------------------- |
+| Purpose         | Title, Intent, Categories (M10.14)                                                                                           |
+| Jar             | The Jar aside (Jar Description, Seal Wax Colour, In Coven Inventory, the comparison) beside What Goes In (the steps, M10.15) |
+| When to Work It | Moon Phase, Day of the Week                                                                                                  |
+| Notes           | Note, Share With the Coven (M10.13)                                                                                          |
 
 A new spell opens with every section open, to be filled in order; a saved
 spell opens with every section shut. Shut, a section's line names the values
@@ -345,11 +345,11 @@ being read the column is a skeleton, and if the read fails, an error in its plac
 
 `jar-aside.tsx` is an `aside` named The Jar, the right column of the Jar section (the owner's
 placement, 2026-10-28; it was a block after the steps). In order: the jar drawing with Seal
-Wax Colour to its right (the drawing centred on the whole field, label and input), Jar Description beneath both at the aside's full width (at every width), a hairline one `space(1)` further down than the aside's usual gap, What You Hold (`hold.tsx`), a hairline,
+Wax Colour to its right (the drawing centred on the whole field, label and input), Jar Description beneath both at the aside's full width (at every width), a hairline one `space(1)` further down than the aside's usual gap, In Coven Inventory (`inventory.tsx`), a hairline,
 and the comparison. The drawing is `JarDrawing` and `pickJarShape` from the jar shelf
 ([`jar-shelf.md`](jar-shelf.md)), drawn empty and tinted by the seal wax.
 
-**What You Hold** (`hold.tsx`) lists each step's ingredient with the coven's stock of its form,
+**In Coven Inventory** (`inventory.tsx`) lists each step's ingredient with the coven's stock of its form,
 as the jar shelf draws it: the vessel, and the verdict in words. A one-off reads "one-off, nothing
 to hold", and its small jar is the plain solid empty outline in `$text-muted`, as the aside's own jar is: no dashes and no fade. All four verdicts stand on the name line at its right end, in one place, so the
 name is cut short with an ellipsis before the verdict is; the words line keeps "need … · hold …".
@@ -359,8 +359,8 @@ reads that nothing is held yet.
 ## The comparison panel
 
 `comparison-panel.tsx` (M10.17, story 52) sets what the spell intends beside what its jar
-carries, so a mismatch shows while the spell is built. It is a region named Intent Against
-Ingredients in the Jar aside, drawn as rows of a `dl` (Carried, Missing, Stray) whose values are
+carries, so a mismatch shows while the spell is built. It is a region named Category Match
+in the Jar aside, drawn as rows of a `dl` (Carried, Missing, Stray) whose values are
 the site's own `CategoryChips` ([`category-chips.md`](category-chips.md)), each in its category's group colours (read by id from the `categories` query the picker already makes; a category whose colours have not landed is left out until they do). The chips are the compact size, the one the admin Compendium table's Categories column uses. The row's label alone says Carried, Missing or Stray: there is no chip variant of the panel's own. Every chip carries a tip, through `CategoryChips`'s `tipOf` prop: "From <the ingredients carrying it, in the jar's order>" on a Carried or Stray chip, and "Assigned to this spell, and nothing in the jar carries it" on a Missing one. It opens by hover, focus and tap (the M12.43 rule) and rides on the chip as its accessible description. Every chip is drawn (`showAll`): the panel has no +N button (the owner's call, 2026-10-28). The Stray row has no line of its own beneath the chip: the tip is where the ingredients are named. It reads the form's values as they stand, saved or not, so a pick or an ingredient added or
 removed moves it at once. The comparison is M10.8's `compareSpellCategories` over M10.7's
 `summarizeSpellCategories`, run in the browser on the steps' categories; a one-off or an

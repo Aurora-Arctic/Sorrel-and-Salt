@@ -1,6 +1,6 @@
 import type { ReactElement } from 'react';
 
-// The two What You Hold verdicts StockBadge has no symbol for, drawn exactly as its
+// The two In Coven Inventory verdicts StockBadge has no symbol for, drawn exactly as its
 // `StockIcon` is (16 box, 1.6 round stroke, currentColor, hidden from a screen reader), so
 // the four sit side by side as one set. Spell-builder-only, so they live here, not beside
 // StockIcon. Every stroke stays inside the box (half a stroke, 0.8, clear of the edge).

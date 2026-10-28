@@ -6,7 +6,7 @@ import IconTip from '../IconTip/icon-tip';
 import type { CardCategory } from './types';
 
 // A category chip that carries a tip, for a caller that has something to say about each
-// chip (the spell builder's Intent Against Ingredients: what each category is from). The
+// chip (the spell builder's Category Match: what each category is from). The
 // chip is a button so its tip is reached by focus and by a tap as well as by hover (the
 // M12.43 rule: never hover alone). The bubble is decoration, as IconTip's is, so the same
 // words ride on the button as its description for a screen reader. A client child of its
