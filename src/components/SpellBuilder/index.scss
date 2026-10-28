@@ -451,6 +451,8 @@ $spell-columns-switch: $spell-main-min + $spell-columns-gap + $spell-side;
   border: 0;
   background: none;
   color: inherit;
+  // A button does not inherit the font; its own size (13.33px) would shrink the 1em icon inside.
+  font: inherit;
   cursor: default;
 }
 
