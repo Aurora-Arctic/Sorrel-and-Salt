@@ -78,19 +78,19 @@ variables, so a search and its categories live in the address and combine.
   the tab's address, as a slug, when it shuts.
 - **The four more facets (M13.22).** Beside Categories, `FacetShell` holds Moon Phase, Day of
   Week and Coven Member are each a `FacetCombobox` taking several picks
-  ([facet-combobox.md](facet-combobox.md)); Visibility is a three-way segmented toggle. Within a facet the picks are alternatives, and the
+  ([facet-combobox.md](facet-combobox.md)); Visibility, last, is a three-way segmented toggle. Within a facet the picks are alternatives, and the
   facets are ANDed with each other, with Categories and with the search.
   - **Moon Phase** and **Day of Week** are typeaheads over the values written on spells the
     viewer can read, compared trimmed and ignoring case. Typed text that matches no suggestion
     picks nothing. Addresses: `moonPhase` and `dayOfWeek`, repeated.
+  - **Coven Member** is the spell's maker (`created_by`), address `maker=<user id>`, an id
+    that is not a uuid is dropped. Makers are named in one `displayNamesOf` batch, a former
+    member included. A picked maker the viewer cannot name reads Unknown Member.
   - **Visibility** is a segmented radio group (`RadioGroupField`, `layout="segmented"`, as the
     compendium filter's Toxic is drawn; [field.md](field.md)): Any (no filter, the default),
     Private and Shared, the owner's call of 2026-10-28. Private and Shared show their counts. It
     takes one value, not several: address `visibility=private|workspace`, left out for Any.
     Private counts only the viewer's own.
-  - **Coven Member** is the spell's maker (`created_by`), address `maker=<user id>`, an id
-    that is not a uuid is dropped. Makers are named in one `displayNamesOf` batch, a former
-    member included. A picked maker the viewer cannot name reads Unknown Member.
   - The counts are `countGrimoireFacets`'s ([db/grimoire.md](../db/grimoire.md)), read in
     `reads.ts` under the address with each facet's own picks dropped, never cached. A picked
     value with no count is shown at 0.

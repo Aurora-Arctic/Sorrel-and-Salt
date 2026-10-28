@@ -165,6 +165,19 @@ const PanelCategories = ({
       </div>
       <div className="facet-panel__line">
         <div className="facet-panel__grow">
+          <FacetCombobox
+            label="Coven Member"
+            name="maker"
+            typeahead
+            placeholder="Add Member"
+            removeNoun="Member"
+            loading={pending}
+            choices={facets.makers}
+            values={held.makers}
+            onChange={(makers) => onHeld({ ...held, makers })}
+          />
+        </div>
+        <div className="facet-panel__grow">
           <RadioGroupField
             legend="Visibility"
             name="visibility"
@@ -179,19 +192,6 @@ const PanelCategories = ({
             ]}
             value={held.visibility}
             onChange={(visibility) => onHeld({ ...held, visibility })}
-          />
-        </div>
-        <div className="facet-panel__grow">
-          <FacetCombobox
-            label="Coven Member"
-            name="maker"
-            typeahead
-            placeholder="Add Member"
-            removeNoun="Member"
-            loading={pending}
-            choices={facets.makers}
-            values={held.makers}
-            onChange={(makers) => onHeld({ ...held, makers })}
           />
         </div>
       </div>
