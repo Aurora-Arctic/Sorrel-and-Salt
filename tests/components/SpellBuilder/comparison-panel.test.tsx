@@ -76,8 +76,35 @@ describe('ComparisonPanel', () => {
     );
     const chips = within(row('Stray') as HTMLElement).getAllByRole('listitem');
     expect(chips).toHaveLength(1);
-    expect(chips[0]).toHaveTextContent('Cleansing from Fixture Basil, Fixture Mugwort');
+    expect(within(chips[0]).getByRole('button', { name: 'Cleansing' })).toBeVisible();
+    expect(chips[0]).toHaveTextContent('from Fixture Basil, Fixture Mugwort');
     expect(row('Carried')).toHaveTextContent('Prosperity');
+  });
+
+  it('tells every chip what it is from, to a screen reader, on focus, and on a tap', () => {
+    render(
+      <ComparisonPanel
+        intended={[cat('Prosperity'), cat('Love')]}
+        steps={[
+          step('Fixture Basil (Dried)', ['Prosperity', 'Cleansing']),
+          step('Fixture Mugwort', ['Prosperity']),
+        ]}
+      />,
+    );
+    const named = (name: string) => within(panel()).getByRole('button', { name });
+    expect(named('Prosperity')).toHaveAccessibleDescription(
+      'From Fixture Basil (Dried), Fixture Mugwort',
+    );
+    expect(named('Cleansing')).toHaveAccessibleDescription('From Fixture Basil (Dried)');
+    expect(named('Love')).toHaveAccessibleDescription(
+      'Assigned to this spell, and nothing in the jar carries it',
+    );
+    // The drawn tip is decoration (aria-hidden), so it is found by its role with hidden on.
+    expect(screen.queryByRole('tooltip', { hidden: true })).toBeNull();
+    fireEvent.click(named('Prosperity'));
+    expect(screen.getByRole('tooltip', { hidden: true })).toHaveTextContent(
+      'From Fixture Basil (Dried), Fixture Mugwort',
+    );
   });
 
   it('shows only Carried when the two agree, and leaves the other rows out', () => {

@@ -5,6 +5,7 @@ import { type ReactElement, useId, useMemo } from 'react';
 import { useFormContext, useWatch } from 'react-hook-form';
 import { graphqlQuery } from '../../lib/graphql-client';
 import { CategoriesDocument } from '../IngredientForm/categories';
+import IconTip from '../IconTip/icon-tip';
 import type { SpellBuilderValues } from './types';
 import { compareSpellCategories } from '@/modules/grimoire/validation/categories/compare';
 import { summarizeSpellCategories } from '@/modules/grimoire/validation/categories/summarize';
@@ -45,6 +46,23 @@ function Row({
   );
 }
 
+// A chip's name as a button, so its tip is reached by focus and by a tap as well as hover
+// (the M12.43 rule: never hover alone). The tip bubble is decoration, as IconTip's is, so
+// the same words ride on the button as its description for a screen reader.
+function Chip({ name, tip }: { name: string; tip: string }): ReactElement {
+  const tipId = useId();
+  return (
+    <IconTip tip={tip} placement="above" opensOnPress>
+      <button type="button" className="comparison-panel__chip" aria-describedby={tipId}>
+        {name}
+      </button>
+      <span id={tipId} className="comparison-panel__tip-text">
+        {tip}
+      </span>
+    </IconTip>
+  );
+}
+
 export function ComparisonPanel({ intended, steps }: ComparisonPanelProps): ReactElement {
   const headingId = useId();
   const intendedIds = intended.map(({ id }) => id);
@@ -58,6 +76,8 @@ export function ComparisonPanel({ intended, steps }: ComparisonPanelProps): Reac
   const gaps = compareSpellCategories(intendedIds, present);
   const missing = intended.filter(({ id }) => gaps.intendedNotPresent.includes(id));
   const carried = intended.filter(({ id }) => !gaps.intendedNotPresent.includes(id));
+  const bringersOf = (id: string): string[] =>
+    ingredientSteps.filter((step) => step.categories.some((c) => c.id === id)).map(stepNameOf);
   // Each stray category, once, with the ingredients bringing it in the jar's order.
   const strays = gaps.presentNotIntended.flatMap((id) => {
     const bringers = ingredientSteps.filter((step) => step.categories.some((c) => c.id === id));
@@ -75,18 +95,22 @@ export function ComparisonPanel({ intended, steps }: ComparisonPanelProps): Reac
       <dl className="comparison-panel__rows">
         <Row label="Carried" kind="carried">
           {carried.map(({ id, name }) => (
-            <li key={id}>{name}</li>
+            <li key={id}>
+              <Chip name={name} tip={`From ${bringersOf(id).join(', ')}`} />
+            </li>
           ))}
         </Row>
         <Row label="Missing" kind="missing">
           {missing.map(({ id, name }) => (
-            <li key={id}>{name}</li>
+            <li key={id}>
+              <Chip name={name} tip="Assigned to this spell, and nothing in the jar carries it" />
+            </li>
           ))}
         </Row>
         <Row label="Stray" kind="stray">
           {strays.map(({ id, name, bringers }) => (
             <li key={id}>
-              {name}
+              <Chip name={name} tip={`From ${bringers.join(', ')}`} />
               <span className="comparison-panel__from"> from {bringers.join(', ')}</span>
             </li>
           ))}

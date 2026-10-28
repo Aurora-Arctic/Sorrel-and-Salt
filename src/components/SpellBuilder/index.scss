@@ -375,3 +375,18 @@
 .comparison-panel__from {
   color: $text-muted;
 }
+
+// A chip's name is a button so the tip behind it ("From Frankincense (Resin)") can be
+// reached by keyboard and touch: it looks like the plain text it replaces.
+.comparison-panel__chip {
+  padding: 0;
+  border: 0;
+  background: none;
+  color: inherit;
+  font: inherit;
+  cursor: help;
+}
+
+.comparison-panel__tip-text {
+  @include visually-hidden;
+}
