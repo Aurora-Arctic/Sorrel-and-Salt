@@ -40,3 +40,10 @@
   position: relative;
   z-index: 1;
 }
+
+// The comparison panel (M10.17): the two levels of the second list are told
+// apart in words first. Weight and ink follow the words and are not what
+// carries them; laid out no further until the section's design review.
+.comparison-panel__stray:not(.is-unplaced) {
+  color: $text-muted;
+}

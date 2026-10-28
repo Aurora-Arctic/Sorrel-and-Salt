@@ -242,15 +242,9 @@ test(
   },
 );
 
-test.fixme(
+test(
   'a member sees the gaps between intended and derived categories in both directions',
-  {
-    tag: '@story-52',
-    annotation: {
-      type: 'fixme',
-      description: 'M10.17 builds the comparison panel in the spell builder',
-    },
-  },
+  { tag: '@story-52' },
   async ({ page }) => {
     const coven = await seedCoven(page, 'Fixture Coven Fifty-Two', 'story-52.test', {
       A: 'owner',
@@ -259,7 +253,10 @@ test.fixme(
     await signInAgainAs(page, coven.users.B);
     await openBuilder(page, coven.slug);
     const panel = page.getByRole('complementary', { name: 'Intent Against Ingredients' });
-    await page.getByRole('combobox', { name: 'Categories' }).fill('Prosperity');
+    await page
+      .getByRole('group', { name: 'Categories', exact: true })
+      .getByRole('combobox')
+      .fill('Prosperity');
     await page.getByRole('option', { name: 'Prosperity' }).click();
     await expect(panel.getByRole('list', { name: 'Intended, Not Carried' })).toContainText(
       'Prosperity',

@@ -1,7 +1,7 @@
 import { builder } from '../../../graphql/builder';
 import { sessionOf } from '../../../graphql/context-helpers';
 import { AuditInfo } from '../../../graphql/schema/audit';
-import { compareSpellCategories } from '../categories/compare';
+import { compareSpellCategories } from '../validation/categories/compare';
 import { listGrimoire, readSpell } from '../services/spell-reads';
 import { createSpell, updateSpell } from '../services/spells';
 import { clearSpell } from '../loaders/spell-children';
