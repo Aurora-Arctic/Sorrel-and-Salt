@@ -96,6 +96,7 @@ function arrange<O extends ComboboxOption>(
   typed: string,
   action: string | undefined,
   offerTyped: boolean,
+  actionFirst: boolean,
 ): {
   items: Item<O>[];
   buckets: Bucket<O>[];
@@ -136,7 +137,10 @@ function arrange<O extends ComboboxOption>(
       : null;
   const items: Item<O>[] = firstRow ? [firstRow] : [];
   items.push(...buckets.flatMap((bucket) => bucket.rows));
-  if (lastRow) items.push(lastRow);
+  if (lastRow) {
+    if (actionFirst) items.unshift(lastRow);
+    else items.push(lastRow);
+  }
   return { items, buckets, firstRow, lastRow };
 }
 
@@ -205,6 +209,7 @@ function Combobox<O extends ComboboxOption = ComboboxOption>({
   toggle = true,
   action,
   offerTyped = true,
+  actionFirst = false,
   highlightFirst = false,
   keepOpen = false,
   noun = 'suggestion',
@@ -234,8 +239,8 @@ function Combobox<O extends ComboboxOption = ComboboxOption>({
   const hasSource = suggestions !== undefined;
   const actionLabel = action?.label;
   const { items, buckets, firstRow, lastRow } = useMemo(
-    () => arrange(suggestions?.options ?? [], value.trim(), actionLabel, offerTyped),
-    [suggestions, value, actionLabel, offerTyped],
+    () => arrange(suggestions?.options ?? [], value.trim(), actionLabel, offerTyped, actionFirst),
+    [suggestions, value, actionLabel, offerTyped, actionFirst],
   );
   const isOpen = hasSource && wantsOpen && items.length > 0;
   // A settled lookup with nothing found, said aloud rather than left as a
@@ -598,6 +603,7 @@ function Combobox<O extends ComboboxOption = ComboboxOption>({
           })}
         >
           {isOpen && firstRow && row(firstRow)}
+          {isOpen && actionFirst && lastRow && row(lastRow)}
           {isOpen &&
             buckets.map((bucket) =>
               bucket.heading === null ? (
@@ -621,7 +627,7 @@ function Combobox<O extends ComboboxOption = ComboboxOption>({
                 // oxlint-enable jsx-a11y/prefer-tag-over-role
               ),
             )}
-          {isOpen && lastRow && row(lastRow)}
+          {isOpen && !actionFirst && lastRow && row(lastRow)}
         </ul>
       </Popup>
       {/* What the list holds, for a screen reader: the rows arrive after the

@@ -120,6 +120,12 @@ export interface ComboboxProps<O extends ComboboxOption = ComboboxOption> {
    */
   offerTyped?: boolean;
   /**
+   * Put the action row first rather than last, the row nearest the box where the list
+   * opens beneath it: for an action that stands for what was typed, such as the spell
+   * builder's one-off ingredient. Last unless said otherwise.
+   */
+  actionFirst?: boolean;
+  /**
    * Whether the list opens and narrows with its first row highlighted, so
    * Enter takes it: a closed set's type-ahead. Free text highlights nothing.
    */

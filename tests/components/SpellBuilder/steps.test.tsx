@@ -202,7 +202,7 @@ async function add(text: string, option: string | RegExp): Promise<void> {
   fireEvent.click(await lookUp(text, option));
 }
 
-/** Types a name into the box and picks its last row: a one-off ingredient. */
+/** Types a name into the box and picks its first row: a one-off ingredient. */
 async function addOneOff(name: string): Promise<void> {
   await add(name, `Add "${name}" as a one-off ingredient`);
 }
@@ -253,10 +253,11 @@ describe('the spell builder’s Add to Jar', () => {
 
     await lookUp('Fixture', /Fixture Twinwort \(Seed\)/);
 
+    // The one-off row stands first, the row nearest the box the list opens beneath.
     expect(screen.getAllByRole('option').map((option) => option.textContent)).toEqual([
+      'Add "Fixture" as a one-off ingredient',
       expect.stringContaining('Fixture Twinwort (Leaf)'),
       expect.stringContaining('Fixture Twinwort (Seed)'),
-      'Add "Fixture" as a one-off ingredient',
     ]);
   });
 
@@ -299,7 +300,7 @@ describe('the spell builder’s Add to Jar', () => {
     expect(stepRows()).toHaveLength(1);
   });
 
-  it('adds a one-off ingredient from the box’s last row, drawn with the generic spoon, and opens it for its form', async () => {
+  it('adds a one-off ingredient from the box’s first row, drawn with the generic spoon, and opens it for its form', async () => {
     suggest();
     renderBuilder();
 

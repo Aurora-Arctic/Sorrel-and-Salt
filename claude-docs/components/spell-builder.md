@@ -287,7 +287,7 @@ being read the column is a skeleton, and if the read fails, an error in its plac
   the focus stays in the search for the next ingredient: the append passes
   `shouldFocus: false`, since react-hook-form would otherwise move the focus to the new step's
   Quantity a render later and close the list of whatever was typed meanwhile.
-- **A one-off ingredient** is the combobox's last row, `Add "<typed>" as a one-off ingredient`
+- **A one-off ingredient** is the combobox's first row, `Add "<typed>" as a one-off ingredient`
   (the Combobox's `action`). It makes no ingredients row: the step saves its `name` with no
   ids, is marked One-Off, and its Form is typed in the open row. A name already in the jar as a
   one-off, trimmed and ignoring case, is refused beneath the box.

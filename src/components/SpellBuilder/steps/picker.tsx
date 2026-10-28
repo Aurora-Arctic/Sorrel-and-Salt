@@ -15,7 +15,7 @@ import type { IngredientPickOption, SpellStepValue } from './types';
 import { jarOf, jarUnitOf, newStep } from './values';
 
 // Add to Jar (M10.15, story 49): one box, the type-ahead over the coven's ingredients
-// and the compendium's, one row per form, since a step lays a form. Its last row
+// and the compendium's, one row per form, since a step lays a form. Its first row
 // offers what was typed as a one-off ingredient, written for this jar alone, which
 // makes no ingredient; the form and amount are typed in the opened row.
 // See claude-docs/components/spell-builder.md, "Steps".
@@ -95,7 +95,7 @@ export function StepPicker({ workspaceId, taken, oneOffs, onAdd }: StepPickerPro
   );
 
   const typed = text.trim();
-  // The last row is offered for text no row already reads as, as a typed row is.
+  // The first row is offered for text no row already reads as, as a typed row is.
   const offerOneOff = useMemo(
     () =>
       typed !== '' &&
@@ -149,6 +149,7 @@ export function StepPicker({ workspaceId, taken, oneOffs, onAdd }: StepPickerPro
         }
         toggle={false}
         offerTyped={false}
+        actionFirst
         noun="ingredient"
         placeholder="Add an ingredient or search"
         aria-invalid={refused || undefined}

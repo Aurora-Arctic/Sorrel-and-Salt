@@ -55,7 +55,7 @@ function grimoireList(page: Page): Locator {
  */
 async function addIngredientStep(page: Page, name: string): Promise<Locator> {
   await page.getByRole('combobox', { name: 'Add to Jar' }).fill(name);
-  // The box's last row offers the typed text as a one-off; it is not the ingredient.
+  // The box's first row offers the typed text as a one-off; it is not the ingredient.
   await page
     .getByRole('option', { name })
     .filter({ hasNotText: 'as a one-off ingredient' })

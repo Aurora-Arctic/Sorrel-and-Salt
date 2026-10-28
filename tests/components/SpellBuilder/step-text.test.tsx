@@ -114,7 +114,7 @@ const announced = () =>
     .map((region) => region.textContent)
     .join(' | ');
 const addStep = () => fireEvent.click(screen.getByRole('button', { name: 'Add a Step' }));
-/** Types a name into the Add to Jar box and picks its last row: a one-off ingredient. */
+/** Types a name into the Add to Jar box and picks its first row: a one-off ingredient. */
 const addOneOff = async (name: string) => {
   mockGraphQLQuery<SpellIngredientSuggestionsQuery>('SpellIngredientSuggestions', () => ({
     ingredientSuggestions: { edges: [] },
