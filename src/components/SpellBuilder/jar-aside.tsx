@@ -17,25 +17,19 @@ import { isInstruction } from './steps/values';
 // claude-docs/components/spell-builder.md, "The aside".
 
 /**
- * The colours of a layer: the group colours of the step's categories, in their listed order,
- * once for each distinct group (a group's pair stands for it). A step with no category in a
- * known group has none, and its layer stays the muted ink.
+ * The colour of a layer: the group colour of the step's first category in its listed order
+ * (the ingredient's before its form's), skipping any not in a known group. A step with none
+ * has none, and its layer stays the muted ink.
  */
-function groupsOf(
+function groupOf(
   categories: readonly { id: string }[],
   colors: ReadonlyMap<string, GroupColors>,
-): GroupColors[] {
-  const seen = new Set<string>();
-  const found: GroupColors[] = [];
+): GroupColors | null {
   for (const { id } of categories) {
     const pair = colors.get(id);
-    if (!pair) continue;
-    const key = `${pair.colorDark}/${pair.colorLight}`;
-    if (seen.has(key)) continue;
-    seen.add(key);
-    found.push(pair);
+    if (pair) return pair;
   }
-  return found;
+  return null;
 }
 
 /**
@@ -49,7 +43,7 @@ function SpellJar(): ReactElement {
   const colors = useCategoryColors();
   const bands = useMemo(
     () =>
-      steps.filter((step) => !isInstruction(step)).map((step) => groupsOf(step.categories, colors)),
+      steps.filter((step) => !isInstruction(step)).map((step) => groupOf(step.categories, colors)),
     [steps, colors],
   );
   return (

@@ -3,11 +3,13 @@ import {
   type FacetCount,
   findGrimoireCategoryCounts,
   findGrimoireCount,
+  findGrimoireFacetCounts,
   findGrimoirePage,
   findManyByIds,
   findManyInSpells,
   findManyOfSpellIngredientsIncludingSoftDeleted,
   findOneSpell,
+  type GrimoireFacetCounts,
   type GrimoireQuery,
 } from '../../../db/repository';
 import { Forbidden, NotFound } from '../../../lib/errors';
@@ -90,6 +92,25 @@ export async function countGrimoireCategories(
 ): Promise<FacetCount[]> {
   const membership = await assertMembership(session, workspaceId, { spell: ['read'] });
   return findGrimoireCategoryCounts(membership, searchable(query));
+}
+
+/**
+ * The counts behind the grimoire's Moon Phase, Day of Week, Visibility and
+ * Coven Member facets (M13.22), each facet's counted under the rest of
+ * `query` with its own picks left out. They are also the facets' choices: a
+ * value no readable spell carries is absent, and another member's private
+ * spell is never counted or offered, as it never lists. A maker is a user id,
+ * to be named by the caller.
+ *
+ * @throws {Forbidden} the caller is not a member of this coven.
+ */
+export async function countGrimoireFacets(
+  session: Session,
+  workspaceId: string,
+  query: GrimoireQuery,
+): Promise<GrimoireFacetCounts> {
+  const membership = await assertMembership(session, workspaceId, { spell: ['read'] });
+  return findGrimoireFacetCounts(membership, searchable(query));
 }
 
 /**

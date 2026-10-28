@@ -736,10 +736,7 @@ describe('updateSpell, with its recipe', () => {
     expect((await liveRecipe(id)).map((step) => [step.id, step.body])).toEqual([[ids[0], 'One']]);
   });
 
-  const visibilityOf = async (id: string) =>
-    (await sql`select visibility from spells where id = ${id}`)[0].visibility;
-
-  it('widens a private spell and refuses to narrow a complete shared one, saying why', async () => {
+  it('widens a private spell and refuses to narrow a shared complete one, saying why', async () => {
     const hidden = await createSpell(asUser(B), WORKSPACE_W_ID, {
       title: 'Named',
       status: 'complete',
@@ -751,6 +748,10 @@ describe('updateSpell, with its recipe', () => {
         visibility: 'workspace',
       }),
     ).resolves.toMatchObject({ visibility: 'workspace' });
+    // Why the refusal below is the rule: the row is complete and shared.
+    expect(
+      (await sql`select status::text, visibility::text from spells where id = ${hidden.id}`)[0],
+    ).toMatchObject({ status: 'complete', visibility: 'workspace' });
 
     await expect(
       updateSpell(asUser(B), WORKSPACE_W_ID, hidden.id, {
@@ -758,45 +759,53 @@ describe('updateSpell, with its recipe', () => {
         visibility: 'private',
       }),
     ).rejects.toThrow(/cannot be made private again/);
-    expect(await visibilityOf(hidden.id)).toBe('workspace');
+    expect((await sql`select visibility from spells where id = ${hidden.id}`)[0].visibility).toBe(
+      'workspace',
+    );
   });
 
-  it('lets a shared draft be made private, including a save that keeps it a draft', async () => {
-    const draft = await createSpell(asUser(B), WORKSPACE_W_ID, { visibility: 'workspace' });
-    // Why the refusal below could have applied: the draft is shared with the coven.
-    expect(await visibilityOf(draft.id)).toBe('workspace');
+  it('lets a draft narrow and widen freely (M10.20)', async () => {
+    const draft = await createSpell(asUser(B), WORKSPACE_W_ID, {
+      status: 'draft',
+      visibility: 'workspace',
+    });
+    expect(draft).toMatchObject({ status: 'draft', visibility: 'workspace' });
 
+    const narrowed = await updateSpell(asUser(B), WORKSPACE_W_ID, draft.id, {
+      expectedRevision: null,
+      visibility: 'private',
+    });
+    expect(narrowed.visibility).toBe('private');
     await expect(
       updateSpell(asUser(B), WORKSPACE_W_ID, draft.id, {
         expectedRevision: null,
-        visibility: 'private',
-        status: 'draft',
+        visibility: 'workspace',
       }),
-    ).resolves.toMatchObject({ visibility: 'private', status: 'draft' });
+    ).resolves.toMatchObject({ visibility: 'workspace' });
   });
 
-  it('refuses to complete and narrow a shared draft in one save', async () => {
+  it('starts the lock with the save that completes a shared draft', async () => {
     const draft = await createSpell(asUser(B), WORKSPACE_W_ID, {
       title: 'Named',
+      status: 'draft',
       visibility: 'workspace',
     });
-    // Why this could have succeeded: the stored spell is a draft, which may narrow.
-    expect(draft.status).toBe('draft');
+    // Preconditions: a shared draft, which may still narrow.
+    expect(draft).toMatchObject({ status: 'draft', visibility: 'workspace' });
+
+    const completed = await updateSpell(asUser(B), WORKSPACE_W_ID, draft.id, {
+      expectedRevision: null,
+      title: 'Named',
+      status: 'complete',
+    });
+    expect(completed).toMatchObject({ status: 'complete', visibility: 'workspace' });
 
     await expect(
       updateSpell(asUser(B), WORKSPACE_W_ID, draft.id, {
         expectedRevision: null,
-        title: 'Named',
         visibility: 'private',
-        status: 'complete',
       }),
     ).rejects.toThrow(/cannot be made private again/);
-    expect(
-      (await sql`select visibility, status from spells where id = ${draft.id}`)[0],
-    ).toMatchObject({
-      visibility: 'workspace',
-      status: 'draft',
-    });
   });
 });
 

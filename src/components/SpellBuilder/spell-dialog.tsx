@@ -56,6 +56,7 @@ export default function SpellDialog({
   closeHref,
   opened: read,
   canCreate,
+  userId,
 }: SpellDialogProps): ReactElement | null {
   const { navigate } = usePendingNavigation();
   const adding = useSearchParams().get(NEW);
@@ -94,6 +95,7 @@ export default function SpellDialog({
             <SpellBuilder
               key={spell && spell.id !== created ? spell.id : 'new'}
               workspaceId={workspaceId}
+              userId={userId}
               spell={spell && { ...spell, steps: steps ?? [] }}
               stepsRead={
                 editing === undefined || steps !== undefined

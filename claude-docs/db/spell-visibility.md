@@ -65,7 +65,7 @@ fetched row. The JavaScript check covers only `src/db/` and `src/modules/`,
 where read decisions live: a component or a GraphQL resolver compares
 `spell.visibility` to draw a private badge or a read-only control (M10.11,
 M10.13) on a spell the service has already let the viewer read, which is a
-display decision rather than who may read it. It allows one comparison, `setSpellVisibility`'s check of the
+display decision rather than who may read it. It allows two helpers beside the predicate, `visibilityIn` and `visibilityText` (M13.22: the grimoire's Visibility facet, which only narrows what `readableSpells` lets through), and one comparison, `setSpellVisibility`'s check of the
 spell it has already read, which decides a write rather than who reads.
 `spellStepWrites` scopes by coven alone and skips visibility on purpose: it
 moves steps because their form is going, whoever may read the spell.
@@ -139,10 +139,9 @@ are [`m5.3-spells-keep-deleted-ingredients.md`](../design-decisions/m5.3-spells-
 ### Writing: the one-way rule
 
 `src/modules/grimoire/services/spell-visibility.ts`'s `setSpellVisibility(session, workspaceId,
-spellId, visibility)`. `private` may be widened to `workspace`; a `complete` `workspace` spell may
-never be narrowed back, for §5's reason. A stored `draft` may be (the owner,
-2026-10-28; [`m13.17-draft-unshare`](../design-decisions/m13.17-draft-unshare.md)),
-unless the same write completes it. The narrowing is refused with a
+spellId, visibility)`. `private` may be widened to `workspace`; a **complete** spell's `workspace` may
+never be narrowed back, for §5's reason. A draft moves either way (M10.20), and
+the check reads the status the row holds before the write. The narrowing is refused with a
 `Forbidden` **carrying a message that says so**, not the bare one: the caller
 holds the permission, and a two-word refusal would send them looking for a
 role they already have. The rule governs visibility and not existence — a

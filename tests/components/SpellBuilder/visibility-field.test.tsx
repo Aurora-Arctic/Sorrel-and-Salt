@@ -118,44 +118,47 @@ const NARROWING_REFUSED =
   'This spell has been shared with the coven and cannot be made private again. ' +
   'Delete it instead if it should not be there.';
 
+// The one-way rule binds a complete spell only (M10.20); SPELL, with no status, is a draft.
+const COMPLETE: SpellBuilderSpell = { ...SPELL, status: 'complete' };
+
 describe('SpellBuilder visibility', () => {
-  it('opens a new spell shared with the coven, saying what each state means', () => {
+  it('opens a new spell private, saying what each state means', () => {
     renderBuilder();
-
-    expect(toggle()).toBeChecked();
-    expect(toggle()).toBeEnabled();
-    expect(toggle()).toHaveAccessibleDescription(/every member/i);
-
-    fireEvent.click(toggle());
 
     expect(toggle()).not.toBeChecked();
+    expect(toggle()).toBeEnabled();
     expect(toggle()).toHaveAccessibleDescription(/only you/i);
-  });
-
-  it('creates the spell for the coven when nothing else is chosen', async () => {
-    const calls = acceptCreate();
-    renderBuilder();
-
-    fireEvent.change(title(), { target: { value: 'Fixture Working' } });
-    submit();
-
-    await waitFor(() => expect(calls).toHaveLength(1));
-    expect(calls[0]?.input).toMatchObject({ visibility: 'workspace' });
-  });
-
-  it('creates the spell private when the switch is turned off, and keeps the choice open', async () => {
-    const calls = acceptCreate();
-    renderBuilder();
 
     fireEvent.click(toggle());
+
+    expect(toggle()).toBeChecked();
+    expect(toggle()).toHaveAccessibleDescription(/every member/i);
+  });
+
+  it('creates the spell private when nothing else is chosen', async () => {
+    const calls = acceptCreate();
+    renderBuilder();
+
     fireEvent.change(title(), { target: { value: 'Fixture Working' } });
     submit();
 
     await waitFor(() => expect(calls).toHaveLength(1));
     expect(calls[0]?.input).toMatchObject({ visibility: 'private' });
+  });
+
+  it('creates the spell for the coven when the switch is turned on', async () => {
+    const calls = acceptCreate();
+    renderBuilder();
+
+    fireEvent.click(toggle());
+    fireEvent.change(title(), { target: { value: 'Fixture Working' } });
+    submit();
+
+    await waitFor(() => expect(calls).toHaveLength(1));
+    expect(calls[0]?.input).toMatchObject({ visibility: 'workspace' });
     await waitFor(() => expect(save()).toBeDisabled());
-    // Still private, and still free to be shared.
-    expect(toggle()).not.toBeChecked();
+    // Still a draft, so the switch stays free.
+    expect(toggle()).toBeChecked();
     expect(toggle()).toBeEnabled();
   });
 
@@ -167,7 +170,7 @@ describe('SpellBuilder visibility', () => {
 
     fireEvent.click(toggle());
 
-    expect(toggle()).not.toBeChecked();
+    expect(toggle()).toBeChecked();
     expect(save()).toBeEnabled();
 
     fireEvent.click(toggle());
@@ -175,10 +178,10 @@ describe('SpellBuilder visibility', () => {
     expect(save()).toBeDisabled();
   });
 
-  describe('a private spell', () => {
+  describe('a complete private spell', () => {
     it('asks before sharing it, and Keep It Private sends nothing', () => {
       const calls = acceptUpdate();
-      renderBuilder({ spell: SPELL });
+      renderBuilder({ spell: COMPLETE });
       expect(toggle()).not.toBeChecked();
 
       fireEvent.click(toggle());
@@ -194,9 +197,9 @@ describe('SpellBuilder visibility', () => {
       expect(calls).toHaveLength(0);
     });
 
-    it('is shared in one action once confirmed, and a draft’s control stays open', async () => {
+    it('is shared in one action once confirmed, and the control then reads only', async () => {
       const calls = acceptUpdate();
-      renderBuilder({ spell: SPELL });
+      renderBuilder({ spell: COMPLETE });
 
       fireEvent.click(toggle());
       fireEvent.click(within(sharing() as HTMLElement).getByRole('button', { name: 'Share' }));
@@ -209,7 +212,7 @@ describe('SpellBuilder visibility', () => {
       });
       await waitFor(() => expect(sharing()).toBeNull());
       expect(toggle()).toBeChecked();
-      expect(toggle()).toBeEnabled();
+      expect(toggle()).toBeDisabled();
     });
 
     it('stays private when the share is refused, with the refusal in the notice', async () => {
@@ -217,12 +220,15 @@ describe('SpellBuilder visibility', () => {
         code: 'FORBIDDEN',
         message: 'Viewers cannot write spells',
       });
-      renderBuilder({ spell: SPELL });
+      renderBuilder({ spell: COMPLETE });
 
       fireEvent.click(toggle());
       fireEvent.click(within(sharing() as HTMLElement).getByRole('button', { name: 'Share' }));
 
-      expect(await screen.findByRole('alert')).toHaveTextContent('Viewers cannot write spells');
+      expect(await screen.findByText('Viewers cannot write spells')).toHaveAttribute(
+        'role',
+        'alert',
+      );
       await waitFor(() => expect(sharing()).toBeNull());
       expect(toggle()).not.toBeChecked();
       expect(toggle()).toBeEnabled();
@@ -233,7 +239,7 @@ describe('SpellBuilder visibility', () => {
     // (M10.6); the builder says why in the server's words.
     it('shows a refused narrowing in the notice, in words that explain it', async () => {
       mockGraphQLError('UpdateSpell', { code: 'FORBIDDEN', message: NARROWING_REFUSED });
-      renderBuilder({ spell: SPELL });
+      renderBuilder({ spell: COMPLETE });
       // Why the save could have gone through: the builder holds the spell as
       // private, and the save carries that choice.
       expect(toggle()).not.toBeChecked();
@@ -241,50 +247,68 @@ describe('SpellBuilder visibility', () => {
       fireEvent.change(title(), { target: { value: 'Fixture Working Again' } });
       submit();
 
-      const notice = await screen.findByRole('alert');
-      expect(notice).toHaveTextContent(NARROWING_REFUSED);
+      const notice = await screen.findByText(NARROWING_REFUSED);
+      expect(notice).toHaveAttribute('role', 'alert');
       expect(notice).not.toHaveTextContent(/^Forbidden$/);
-    });
-  });
-
-  describe('a shared draft (the owner, 2026-10-28)', () => {
-    it('keeps the control open, and a switch-off is saved as private', async () => {
-      const calls = acceptUpdate();
-      renderBuilder({ spell: { ...SPELL, visibility: 'workspace', status: 'draft' } });
-      // Why it could have been shut: the spell is shared with the coven.
-      expect(toggle()).toBeChecked();
-      expect(toggle()).toBeEnabled();
-
-      fireEvent.click(toggle());
-
-      expect(toggle()).not.toBeChecked();
-      expect(save()).toBeEnabled();
-      submit();
-      await waitFor(() => expect(calls).toHaveLength(1));
-      expect(calls[0]?.input).toMatchObject({ visibility: 'private', status: 'draft' });
-    });
-
-    it('stays open when a new spell is saved for the coven', async () => {
-      acceptCreate();
-      renderBuilder();
-
-      fireEvent.change(title(), { target: { value: 'Fixture Working' } });
-      submit();
-
-      await waitFor(() => expect(save()).toBeDisabled());
-      expect(toggle()).toBeChecked();
-      expect(toggle()).toBeEnabled();
     });
   });
 
   describe('a complete spell shared with the coven', () => {
     it('opens the control read-only, saying why and naming Duplicate', () => {
-      renderBuilder({ spell: { ...SPELL, visibility: 'workspace', status: 'complete' } });
+      renderBuilder({ spell: { ...COMPLETE, visibility: 'workspace' } });
 
       expect(toggle()).toBeChecked();
       expect(toggle()).toBeDisabled();
       expect(toggle()).toHaveAccessibleDescription(/cannot be made private/i);
       expect(toggle()).toHaveAccessibleDescription(/Duplicate/);
     });
+
+    it('stays free to switch off once a new spell is saved shared, for it is a draft', async () => {
+      acceptCreate();
+      renderBuilder();
+
+      fireEvent.click(toggle());
+      fireEvent.change(title(), { target: { value: 'Fixture Working' } });
+      submit();
+
+      await waitFor(() => expect(save()).toBeDisabled());
+      expect(toggle()).toBeChecked();
+      expect(toggle()).toBeEnabled();
+      expect(toggle()).toHaveAccessibleDescription(/once the spell is complete, it stays shared/i);
+    });
+  });
+});
+
+describe('SpellBuilder visibility on a saved draft (M10.20)', () => {
+  it('switches a shared draft off and on with no question, saved with the rest', async () => {
+    const calls = acceptUpdate();
+    renderBuilder({ spell: { ...SPELL, visibility: 'workspace' } });
+    // Why it could have been shut: it is saved and shared, and only its status keeps it open.
+    expect(toggle()).toBeChecked();
+    expect(toggle()).toBeEnabled();
+
+    fireEvent.click(toggle());
+
+    expect(sharing()).toBeNull();
+    expect(toggle()).not.toBeChecked();
+    expect(save()).toBeEnabled();
+    fireEvent.click(toggle());
+    expect(sharing()).toBeNull();
+    expect(toggle()).toBeChecked();
+    expect(calls).toHaveLength(0);
+  });
+
+  it('shares a private draft with no question, sending nothing until it is saved', () => {
+    const calls = acceptUpdate();
+    renderBuilder({ spell: SPELL });
+    expect(toggle()).not.toBeChecked();
+
+    fireEvent.click(toggle());
+
+    expect(sharing()).toBeNull();
+    expect(toggle()).toBeChecked();
+    expect(toggle()).toBeEnabled();
+    expect(toggle()).toHaveAccessibleDescription(/once the spell is complete, it stays shared/i);
+    expect(calls).toHaveLength(0);
   });
 });

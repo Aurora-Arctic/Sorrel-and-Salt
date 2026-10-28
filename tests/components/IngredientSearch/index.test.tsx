@@ -51,7 +51,11 @@ function offer(matches: IngredientSearchMatch[], hasNextPage = false) {
 /** A slot field that reads the text typed, as a filter applying on its change would. */
 const SlotField = (): ReactElement => <output aria-label="Typed">{useSearchText()}</output>;
 
-function renderSearch(query = '', source?: SearchSource) {
+function renderSearch(
+  query = '',
+  source?: SearchSource,
+  opener: typeof pickHref | null = pickHref,
+) {
   return renderWithClient(
     <IngredientSearch
       search={
@@ -61,7 +65,7 @@ function renderSearch(query = '', source?: SearchSource) {
           query={query}
           shown={[query]}
           searchHref={searchHref}
-          pickHref={source?.kind === 'grimoire' ? undefined : pickHref}
+          pickHref={opener ?? undefined}
           source={source}
         >
           <SlotField />
@@ -525,25 +529,24 @@ describe('IngredientSearch', () => {
       expect(screen.getByRole('option', { name: 'Untitled Spell' })).toBeInTheDocument();
     });
 
-    // No spell has a page until MB.6, so a pick narrows the list to it instead.
-    it('applies a picked title as the search', async () => {
+    it("opens a picked spell's recipe page, by the spell's id", async () => {
       const spellsAsked = offerSpells(['Hearth Ward', null]);
       renderSearch('', GRIMOIRE);
 
       await typeTitle('hearth', spellsAsked);
       fireEvent.click(await screen.findByRole('option', { name: 'Hearth Ward' }));
 
-      expect(router.push.mock.calls).toEqual([[searchHref('Hearth Ward')]]);
+      expect(router.push.mock.calls).toEqual([[`${PATH}?edit=spell-0`]]);
     });
 
-    it('applies the typed text for a picked untitled spell', async () => {
-      const spellsAsked = offerSpells(['Hearth Ward', null]);
-      renderSearch('', GRIMOIRE);
+    it('applies the typed text as the search where no page opener is given', async () => {
+      const spellsAsked = offerSpells(['Hearth Ward']);
+      renderSearch('', GRIMOIRE, null);
 
       await typeTitle('hearth', spellsAsked);
-      fireEvent.click(await screen.findByRole('option', { name: 'Untitled Spell' }));
+      fireEvent.click(await screen.findByRole('option', { name: 'Hearth Ward' }));
 
-      expect(router.push.mock.calls).toEqual([[searchHref('hearth')]]);
+      expect(router.push.mock.calls).toEqual([[searchHref('Hearth Ward')]]);
     });
 
     it('clears by its own label and applies the empty search', () => {

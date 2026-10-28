@@ -1,9 +1,7 @@
 'use client';
 
 import { useContext, useEffect, useRef } from 'react';
-import { useLeaveGuard } from '@/lib/navigation';
 import { CloseGuardContext } from '../Modal/close-guard';
-import type { SaveOnClose } from './types';
 
 // The spell builder's way out of its modal (M10.12): Close, Escape and a click
 // outside save what is unsaved, then close, and ask nothing. The owner's call
@@ -11,26 +9,24 @@ import type { SaveOnClose } from './types';
 // alone, since a spell's draft is kept rather than thrown away
 // (claude-docs/design-decisions/m10.12-spell-builder-modal.md). The close is
 // held while the save runs: a refused save keeps the modal open with the
-// refusal shown, so nothing typed is lost. Closing the tab or reloading still
-// asks the browser's question, which no page can answer by saving.
+// refusal shown, so nothing typed is lost. Closing the tab or reloading is
+// the autosave's to guard (`useAutosave` asks the browser, and saves as the
+// tab hides), which no page can answer by saving.
 
 /**
- * Puts the save-on-close guard in the modal's slot. `dirty` is whether a field
- * reads differently from the last save, `saving` whether a save is on its way,
- * and `submit` starts one. The form reports each save's end through the
- * answer's `saved` or `refused`.
+ * Puts the save-on-close guard in the modal's slot. `unsaved` is whether
+ * anything is not yet on the server, and `save` flushes it, answering whether
+ * the server has it. The modal closes when it does, and stays open when not.
  */
-export function useSaveOnClose(dirty: boolean, saving: boolean, submit: () => void): SaveOnClose {
+export function useSaveOnClose(unsaved: boolean, save: () => Promise<boolean>): void {
   const slot = useContext(CloseGuardContext);
-  // The close a save holds back, run once that save lands.
-  const closing = useRef<(() => void) | null>(null);
 
-  /** True when nothing is unsaved; otherwise holds `close` until a save lands. */
+  /** True when nothing is unsaved; otherwise holds `close` until the save lands. */
   const consult = (close: () => void): boolean => {
-    if (!dirty && !saving) return true;
-    closing.current = close;
-    // A save already on its way closes the modal when it lands.
-    if (!saving) submit();
+    if (!unsaved) return true;
+    void save().then((saved) => {
+      if (saved) close();
+    });
     return false;
   };
 
@@ -44,20 +40,4 @@ export function useSaveOnClose(dirty: boolean, saving: boolean, submit: () => vo
     if (!slot) return;
     return slot.put((close) => latest.current(close));
   }, [slot]);
-
-  // In a modal an in-app navigation goes unheld: the page behind is inert, and
-  // what navigates is the builder's own close after its save.
-  useLeaveGuard(dirty, (go) => go(), { holdNavigation: false });
-
-  return {
-    saved: () => {
-      const close = closing.current;
-      closing.current = null;
-      close?.();
-      return close !== null;
-    },
-    refused: () => {
-      closing.current = null;
-    },
-  };
 }

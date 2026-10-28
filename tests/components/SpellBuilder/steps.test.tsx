@@ -427,7 +427,7 @@ describe('the spell builder’s Add to Jar', () => {
     const quantity = () =>
       within(stepRow('Fixture Rosewort')).getByRole('spinbutton', { name: /^Quantity/ });
     fireEvent.change(quantity(), { target: { value: '7' } });
-    // The new row is open, so Remove waits behind its Close.
+    // The row is open after typing, and Remove shows only on a closed row.
     fireEvent.click(screen.getByRole('button', { name: 'Close Fixture Rosewort' }));
     fireEvent.click(
       within(stepRow('Fixture Rosewort')).getByRole('button', { name: 'Remove Fixture Rosewort' }),
@@ -827,9 +827,7 @@ describe('the spell builder’s In Coven Inventory', () => {
 
     await add('Mock', /Fixture Mockroot/);
 
-    expect(
-      within(line('Fixture Mockroot')).getByRole('button', { name: 'Out' }),
-    ).toBeInTheDocument();
+    expect(within(line('Fixture Mockroot')).getByText('Out')).toBeInTheDocument();
     expect(line('Fixture Mockroot')).toHaveTextContent('hold none');
   });
 
@@ -843,19 +841,16 @@ describe('the spell builder’s In Coven Inventory', () => {
 
     await add('Rose', /Fixture Rosewort/);
 
-    expect(
-      within(line('Fixture Rosewort')).getByRole('button', { name: 'Out' }),
-    ).toBeInTheDocument();
+    expect(within(line('Fixture Rosewort')).getByText('Out')).toBeInTheDocument();
     expect(line('Fixture Rosewort')).toHaveTextContent('hold none');
   });
 
-  it('gives Not Enough as an icon button, and not Out, once the amount typed passes the jar, and clears when it fits', async () => {
+  it('gives Not Enough in words, and not Out, once the amount typed passes the jar, and clears when it fits', async () => {
     suggest(HELD);
     renderBuilder();
     await add('Rose', /Fixture Rosewort/);
     const row = stepRow('Fixture Rosewort');
-    const notEnough = () =>
-      within(line('Fixture Rosewort')).queryByRole('button', { name: 'Not Enough' });
+    const notEnough = () => within(line('Fixture Rosewort')).queryByText('Not Enough');
     expect(notEnough()).not.toBeInTheDocument();
 
     fireEvent.change(within(row).getByRole('spinbutton', { name: /^Quantity/ }), {
@@ -865,7 +860,7 @@ describe('the spell builder’s In Coven Inventory', () => {
 
     await waitFor(() => expect(notEnough()).toBeInTheDocument());
     expect(line('Fixture Rosewort')).toHaveTextContent('need 9 g · hold 5 g');
-    expect(within(line('Fixture Rosewort')).queryByRole('button', { name: 'Out' })).toBeNull();
+    expect(within(line('Fixture Rosewort')).queryByText('Out')).toBeNull();
 
     fireEvent.change(within(row).getByRole('spinbutton', { name: /^Quantity/ }), {
       target: { value: '4' },
@@ -883,7 +878,7 @@ describe('the spell builder’s In Coven Inventory', () => {
       within(hold())
         .getAllByRole('listitem')
         .filter((li) => li.textContent?.includes('Fixture Rosewort'));
-    const notEnough = (li: HTMLElement) => within(li).queryByRole('button', { name: 'Not Enough' });
+    const notEnough = (li: HTMLElement) => within(li).queryByText('Not Enough');
 
     for (const index of [0, 1]) {
       // One row is open at a time: open each in turn.
@@ -913,13 +908,9 @@ describe('the spell builder’s In Coven Inventory', () => {
     chooseUnit(row, 'ml');
 
     await waitFor(() =>
-      expect(
-        within(line('Fixture Rosewort')).getByRole('button', { name: 'Units Differ' }),
-      ).toBeInTheDocument(),
+      expect(within(line('Fixture Rosewort')).getByText('Units Differ')).toBeInTheDocument(),
     );
-    expect(
-      within(line('Fixture Rosewort')).queryByRole('button', { name: 'Not Enough' }),
-    ).toBeNull();
+    expect(within(line('Fixture Rosewort')).queryByText('Not Enough')).toBeNull();
   });
 
   it('follows a one-off’s new name in its inventory line', async () => {
@@ -1009,9 +1000,9 @@ describe('the spell builder’s jar fill colours', () => {
     expect(mockroot).toHaveTextContent('Love · Protection');
   });
 
-  it('draws a layer in the group colours of its categories, in order, and a layer whose categories have no group in the muted ink', async () => {
+  it('draws a layer in the one group colour of its first category, and a layer with no known group in the muted ink', async () => {
     suggest(ROSEWORT, MOCKROOT);
-    // Rosewort carries Love and Calm, two groups; Mockroot carries Love, one group, and Protection, which has none known.
+    // Rosewort carries Calm then Love; Mockroot carries Protection, which has no known group, then Love.
     renderBuilder({}, [
       node('Love', group('Love', '#cf6e87', '#a44c63')),
       node('Calm', group('Calm', '#50a58e', '#1d755d')),
@@ -1019,13 +1010,13 @@ describe('the spell builder’s jar fill colours', () => {
     await add('Mock', /Fixture Mockroot/);
     await add('Rose', /Fixture Rosewort/);
 
-    await waitFor(() => expect(fills()).toHaveLength(3));
-    const [mockroot, ...rosewort] = fills();
+    await waitFor(() => expect(fills()).toHaveLength(2));
+    const [mockroot, rosewort] = fills();
+    // One colour each: Mockroot skips Protection for Love, and Rosewort takes its first, which is Love.
     expect(mockroot.style.getPropertyValue('--band-light')).toBe('#a44c63');
-    expect(rosewort.map((path) => path.style.getPropertyValue('--band-light'))).toEqual([
-      '#a44c63',
-      '#1d755d',
-    ]);
+    expect(rosewort.style.getPropertyValue('--band-light')).toBe('#a44c63');
+    await addOneOff('Testwort');
+    expect(fills()[2]?.style.getPropertyValue('--band-light')).toBe('');
   });
 });
 

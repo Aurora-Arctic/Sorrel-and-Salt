@@ -62,9 +62,8 @@ variables, so a search and its categories live in the address and combine.
 - **The title search.** The search box is `IngredientSearch`'s, labelled Title, with the
   same submit behaviour as the ingredients page. It matches title and intent, from two
   characters (M10.11's floor in the query). Its suggestions come from the coven's spells on
-  this tab, by title. Until MB.6, picking a suggestion applies its title as the search, since
-  the spell has no page to open. MB.6 makes a pick open the spell's recipe page through
-  `IngredientSearch`'s `pickHref`, and M13.21 then makes it open the spell's Quick Look
+  this tab, by title. Picking a suggestion opens the spell's recipe page (MB.6) through
+  `IngredientSearch`'s `pickHref`, the row's `match` holding the spell id, and M13.21 then makes it open the spell's Quick Look
   instead, as a pick on the coven's Ingredients page opens the entry's Quick Look (the
   owner's rule of 2026-10-27).
 - **The Categories panel.** The panel is `FacetShell` holding the shared `CategoryLine`
@@ -77,6 +76,29 @@ variables, so a search and its categories live in the address and combine.
   they stay in force, as the ingredient facets count ([`db/grimoire.md`](../db/grimoire.md),
   "The Categories filter's counts"). A pick is held while the panel is open and applied to
   the tab's address, as a slug, when it shuts.
+- **The four more facets (M13.22).** Beside Categories, `FacetShell` holds Moon Phase, Day of
+  Week and Coven Member are each a `FacetCombobox` taking several picks
+  ([facet-combobox.md](facet-combobox.md)); Visibility, last, is a `ChoiceChip` with three states. Within a facet the picks are alternatives, and the
+  facets are ANDed with each other, with Categories and with the search.
+  - **Moon Phase** and **Day of Week** are typeaheads over the values written on spells the
+    viewer can read, compared trimmed and ignoring case. Typed text that matches no suggestion
+    picks nothing. Addresses: `moonPhase` and `dayOfWeek`, repeated.
+  - **Coven Member** is the spell's maker (`created_by`), address `maker=<user id>`, an id
+    that is not a uuid is dropped. Makers are named in one `displayNamesOf` batch, a former
+    member included. A picked maker the viewer cannot name reads Unknown Member.
+  - **Visibility** is a `ChoiceChip` ([`FacetPanel/choice-chip.tsx`](../../src/components/FacetPanel/choice-chip.tsx)),
+    the control the compendium filter draws Toxic with and placed the same way, in a
+    `facet-panel__quick` wrapper after Coven Member on the panel's last line (the owner's call of
+    2026-10-28). Its states are Any (no filter, the default), Private and Shared, each of
+    Private and Shared showing its count. Both always show, zero included, and with either at
+    zero every spell shares one visibility, so the chip rests on Any and is disabled, as Toxic's
+    is. It takes one value, not several: address `visibility=private|workspace`, left out for
+    Any. Private counts only the viewer's own.
+  - The counts are `countGrimoireFacets`'s ([db/grimoire.md](../db/grimoire.md)), read in
+    `reads.ts` under the address with each facet's own picks dropped, never cached. A picked
+    value with no count is shown at 0.
+  - The search sentence names each pick: "in the moon phase X or Y", "for the day X",
+    "that are private" (one pick), "made by X".
 - **The list** is named Grimoire, and each item is named by its spell's title, through the
   card's title id, so a test or a screen reader finds a spell by
   `getByRole('listitem', { name: 'Hearth Warding Jar' })`.
@@ -90,14 +112,23 @@ variables, so a search and its categories live in the address and combine.
   Which one is the search sentence's own test (`hasFilter`), so the two never disagree.
   Neither offers a first spell: New Spell at the heading does.
 
-- **No link yet.** A card does not open its spell until MB.6 builds the spell's page and
-  adds the link.
+- **Each card links to its spell's recipe page** (MB.6), built from the `covenSlug` prop by
+  `recipe-href.ts`. See [`spell-recipe.md`](spell-recipe.md).
 - **Visibility is the query's.** The page lists what the `grimoire` query returns: every
   workspace-visible spell and the viewer's own private ones, filtered in SQL. Nothing here
   filters after fetching.
 - **The loading shape** is `PARTS_OF_SECTION.grimoire` in `src/lib/coven-path.ts`: cards
   under a title, the tab row and a filter. Drafts is the grimoire's second tab, so it draws
   the same; any other path beneath `grimoire` draws as a spell's own page.
+
+## The Compact switch
+
+The filter row ends with `CardDensitySwitch` ([card-density-switch.md](card-density-switch.md)),
+where the coven Ingredients filter draws it. It is a view setting: it sits inside the search
+landmark and submits nothing. The list carries `data-density="compact"`, and the stored choice
+(`data-card-density="regular"` on `<html>`) turns the compact look off in CSS, so one choice
+serves this list and the Ingredients list and works before hydration. `SpellCard`'s compact
+look is [spell-card.md](spell-card.md), "Compact".
 
 ## Styling
 
@@ -110,12 +141,15 @@ One thing in the list exists for the cards' smouldering edge ([spell-card.md](sp
 - `tests/components/GrimoireList/index.test.tsx`: the named list and items, the three empty
   regions, the title search's address, the category pick applied as a slug, and each category
   offered with its count, a category at zero not offered.
+  The Compact switch: on by default, the list's `data-density`, and the stored choice it writes.
 - `tests/app/(shell)/coven/[slug]/grimoire/(list)/page.test.tsx`: the membership guard on
   both tabs and the layout, each tab's status and page size, the address read into the
   query, the tab's status winning, the categories and the editors each read in one batch,
   the category counts read under the tab's status and query and reaching the panel, a
   private spell badged Private (M10.13), and the pager's link.
 - `tests/components/CovenNav/index.test.tsx`: the Grimoire link, current on Drafts too.
+- `tests/e2e/grimoire-facets.spec.ts`: the four facets in the address and the panel, another
+  member's private phase not suggested, the Compact switch and axe.
 - `tests/e2e/stories/06-grimoire.spec.ts`: story 56 in the browser, a private spell listed
   for its author alone.
 - Visibility, search, categories and counts are proved below the page, in

@@ -4,6 +4,7 @@ import type postgres from 'postgres';
 import {
   findGrimoireCategoryCounts,
   findGrimoireCount,
+  findGrimoireFacetCounts,
   findGrimoirePage,
   findManyInSpells,
   findOneSpell,
@@ -471,5 +472,171 @@ describe('the grimoire search and category filter (M10.11)', () => {
       [cleansing]: 2,
       [protection]: 2,
     });
+  });
+});
+
+describe('the grimoire facets (M13.22)', () => {
+  /** A spell of W by `author`, with the facet fields written as given. */
+  const made = (
+    author: User,
+    title: string,
+    fields: Partial<Parameters<typeof makeSpell>[0]>,
+    workspaceId: string = WORKSPACE_W_ID,
+  ): Promise<string> =>
+    insertSpell(
+      sql,
+      makeSpell({ title, workspaceId, steps: [{ body: 'Stir.' }], ...fields }),
+      author.id,
+    );
+
+  const NEWEST: GrimoireQuery = { order: 'UPDATED_DESC' };
+
+  const facetsOf = async (user: User, query: GrimoireQuery = NEWEST) => {
+    const counts = await findGrimoireFacetCounts(await proofFor(user), query);
+    const byValue = (rows: { value: string; count: number }[]) =>
+      Object.fromEntries(rows.map(({ value, count }) => [value, count]));
+    return {
+      moonPhases: byValue(counts.moonPhases),
+      daysOfWeek: byValue(counts.daysOfWeek),
+      visibilities: byValue(counts.visibilities),
+      makers: byValue(counts.makers),
+    };
+  };
+
+  const titlesOf = async (user: User, query: GrimoireQuery) =>
+    (await findGrimoirePage(await proofFor(user), FIRST_PAGE, query))
+      .map(({ node }) => node.title)
+      .sort();
+
+  it('folds a moon phase and a day by trim and case, names the group by its most-used spelling, and skips blanks', async () => {
+    await made(A, 'One', { moonPhase: 'Full Moon', dayOfWeek: 'Friday' });
+    await made(A, 'Two', { moonPhase: ' full moon ', dayOfWeek: 'FRIDAY' });
+    await made(B, 'Three', { moonPhase: 'Full Moon', dayOfWeek: 'friday' });
+    await made(B, 'Four', { moonPhase: '  ', dayOfWeek: null });
+
+    const { moonPhases, daysOfWeek } = await facetsOf(A);
+
+    expect(moonPhases).toEqual({ 'Full Moon': 3 });
+    expect(Object.values(daysOfWeek)).toEqual([3]);
+    expect(await titlesOf(A, { ...NEWEST, moonPhases: ['FULL moon'] })).toEqual([
+      'One',
+      'Three',
+      'Two',
+    ]);
+  });
+
+  it('never suggests, counts or lists another member’s private spell', async () => {
+    await made(B, 'Shared', {
+      moonPhase: 'Full Moon',
+      dayOfWeek: 'Friday',
+      visibility: 'workspace',
+    });
+    await made(B, 'Hidden', {
+      moonPhase: 'Waning Crescent',
+      dayOfWeek: 'Monday',
+      visibility: 'private',
+    });
+    // The precondition: B's private spell carries the values, and B is offered them.
+    expect(await facetsOf(B)).toMatchObject({
+      moonPhases: { 'Full Moon': 1, 'Waning Crescent': 1 },
+      daysOfWeek: { Friday: 1, Monday: 1 },
+      visibilities: { private: 1, workspace: 1 },
+    });
+
+    expect(await facetsOf(A)).toEqual({
+      moonPhases: { 'Full Moon': 1 },
+      daysOfWeek: { Friday: 1 },
+      visibilities: { workspace: 1 },
+      makers: { [B.id]: 1 },
+    });
+    // Direct: asking for the private spell's own values lists nothing for A, and it for B.
+    expect(await titlesOf(A, { ...NEWEST, moonPhases: ['Waning Crescent'] })).toEqual([]);
+    expect(await titlesOf(A, { ...NEWEST, visibilities: ['private'] })).toEqual([]);
+    expect(await titlesOf(B, { ...NEWEST, visibilities: ['private'] })).toEqual(['Hidden']);
+  });
+
+  it('counts a viewer’s Private as their own private spells only', async () => {
+    await made(A, 'Mine', { visibility: 'private' });
+    await made(B, 'Theirs', { visibility: 'private' });
+    await made(B, 'Ours', { visibility: 'workspace' });
+
+    expect((await facetsOf(A)).visibilities).toEqual({ private: 1, workspace: 1 });
+    expect((await facetsOf(B)).visibilities).toEqual({ private: 1, workspace: 1 });
+    expect(await titlesOf(A, { ...NEWEST, visibilities: ['private'] })).toEqual(['Mine']);
+  });
+
+  it('ORs the picks within a facet and ANDs the facets, each facet’s counts dropping its own picks', async () => {
+    await made(A, 'FullFri', { moonPhase: 'Full Moon', dayOfWeek: 'Friday' });
+    await made(A, 'FullMon', { moonPhase: 'Full Moon', dayOfWeek: 'Monday' });
+    await made(A, 'NewFri', { moonPhase: 'New Moon', dayOfWeek: 'Friday' });
+    await made(A, 'NewMon', { moonPhase: 'New Moon', dayOfWeek: 'Monday' });
+
+    expect(
+      await titlesOf(A, {
+        ...NEWEST,
+        moonPhases: ['Full Moon', 'New Moon'],
+        daysOfWeek: ['Friday'],
+      }),
+    ).toEqual(['FullFri', 'NewFri']);
+
+    const counts = await facetsOf(A, {
+      ...NEWEST,
+      moonPhases: ['Full Moon'],
+      daysOfWeek: ['Friday'],
+    });
+    // Moon phases ignore the moon pick and keep the day; days the reverse.
+    expect(counts.moonPhases).toEqual({ 'Full Moon': 1, 'New Moon': 1 });
+    expect(counts.daysOfWeek).toEqual({ Friday: 1, Monday: 1 });
+    expect(counts.visibilities).toEqual({ workspace: 1 });
+  });
+
+  it('keeps the status and the search in force in every facet’s counts', async () => {
+    await made(A, 'Hearth Working', { moonPhase: 'Full Moon', status: 'complete' });
+    await made(A, 'Hearth Draft', { moonPhase: 'New Moon', status: 'draft' });
+    await made(A, 'Unrelated', { moonPhase: 'Waxing Moon', status: 'complete' });
+
+    expect(
+      (await facetsOf(A, { ...NEWEST, status: 'complete', query: 'hearth' })).moonPhases,
+    ).toEqual({
+      'Full Moon': 1,
+    });
+  });
+
+  it('filters by the maker, not the last editor, and a pick of a stranger lists nothing', async () => {
+    const id = await made(A, 'By A', {});
+    await made(B, 'By B', {});
+    await sql`update spells set updated_by = ${B.id} where id = ${id}`;
+
+    expect(await titlesOf(A, { ...NEWEST, makerIds: [A.id] })).toEqual(['By A']);
+    expect(await titlesOf(A, { ...NEWEST, makerIds: [B.id] })).toEqual(['By B']);
+    expect((await facetsOf(A)).makers).toEqual({ [A.id]: 1, [B.id]: 1 });
+    // D sits in X only, and made a spell there: a pick of D in W lists nothing.
+    await made(D, 'In X', {}, WORKSPACE_X_ID);
+    expect(await titlesOf(A, { ...NEWEST, makerIds: [D.id] })).toEqual([]);
+  });
+
+  it('offers a maker who no longer holds a seat, since it reads spells and not seats', async () => {
+    await made(B, 'Left Behind', {});
+    await sql`update workspace_members set deleted_at = now() where user_id = ${B.id} and workspace_id = ${WORKSPACE_W_ID}`;
+
+    expect((await facetsOf(A)).makers).toEqual({ [B.id]: 1 });
+  });
+
+  it('suggests and counts nothing from another coven', async () => {
+    await made(
+      D,
+      'In X',
+      { moonPhase: 'Blood Moon', dayOfWeek: 'Sunday', visibility: 'workspace' },
+      WORKSPACE_X_ID,
+    );
+    await made(B, 'In W', { moonPhase: 'Full Moon' });
+    // The precondition: X's own member is offered the value.
+
+    const counts = await findGrimoireFacetCounts(await proofFor(D, WORKSPACE_X_ID), NEWEST);
+    expect(counts.moonPhases).toEqual([{ value: 'Blood Moon', count: 1 }]);
+    const inW = await facetsOf(A);
+    expect(inW.moonPhases).toEqual({ 'Full Moon': 1 });
+    expect(inW.daysOfWeek).toEqual({});
+    expect(inW.makers).toEqual({ [B.id]: 1 });
   });
 });

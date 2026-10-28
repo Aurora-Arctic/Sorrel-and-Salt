@@ -105,7 +105,7 @@ test('a member names a spell and states its intent', { tag: '@story-47' }, async
   // A new spell is a draft, listed under the grimoire's Drafts tab (M10.11).
   await page.getByRole('link', { name: 'Drafts' }).click();
   await expect(page).toHaveURL(`/coven/${coven.slug}/grimoire/drafts`);
-  await expect(grimoireList(page).getByText('Fixture Working')).toBeVisible();
+  await expect(grimoireList(page).getByText('Fixture Working', { exact: true })).toBeVisible();
 });
 
 test(
@@ -342,7 +342,7 @@ test(
     const hold = page.getByRole('region', { name: 'In Coven Inventory' });
     const rosemary = hold.getByRole('listitem').filter({ hasText: 'Rosemary' });
     await expect(rosemary).toContainText('hold none');
-    await expect(rosemary.getByRole('button', { name: 'Out' })).toBeVisible();
+    await expect(rosemary.getByText('Out', { exact: true })).toBeVisible();
   },
 );
 
@@ -364,11 +364,21 @@ test('a member saves a spell as a draft', { tag: '@story-55' }, async ({ page })
   // Marking it complete is explicit, and reversible.
   await page.goto(draft);
   const edit = page.getByRole('dialog', { name: 'Edit Spell, Fixture Working' });
-  await edit.getByRole('button', { name: 'Open All' }).click();
   await edit.getByRole('button', { name: 'Mark Complete' }).click();
   await expect(edit.getByRole('button', { name: 'Reopen as Draft' })).toBeVisible();
   await edit.getByRole('button', { name: 'Reopen as Draft' }).click();
   await expect(edit.getByRole('button', { name: 'Mark Complete' })).toBeVisible();
+  // A saved spell is edited from its card's link, and the change reads back on the card.
+  await page.goto(`/coven/${coven.slug}/grimoire/drafts`);
+  await grimoireList(page).getByRole('link', { name: 'Edit Fixture Working' }).click();
+  const renamed = page.getByRole('dialog', { name: 'Edit Spell, Fixture Working' });
+  await renamed.getByRole('button', { name: 'Open All' }).click();
+  await renamed.getByRole('textbox', { name: 'Title' }).fill('Fixture Working Renamed');
+  await renamed.getByRole('button', { name: 'Close', exact: true }).click();
+  await expect(page).toHaveURL(`/coven/${coven.slug}/grimoire/drafts`);
+  await expect(
+    grimoireList(page).getByRole('link', { name: 'Fixture Working Renamed', exact: true }),
+  ).toBeVisible();
 });
 
 test(
@@ -399,7 +409,7 @@ test(
       await signInAgainAs(page, reader);
       await page.goto(path);
       await expect(grimoireList(page).getByRole('listitem')).toHaveCount(1);
-      await expect(grimoireList(page).getByText('Shared Working')).toBeVisible();
+      await expect(grimoireList(page).getByText('Shared Working', { exact: true })).toBeVisible();
       await expect(grimoireList(page).getByText('Private Working')).toHaveCount(0);
     }
   },
@@ -423,7 +433,10 @@ test(
     await oneOff.getByRole('textbox', { name: /^Form/ }).fill('Dried Root');
     await expect(oneOff).toContainText('One-Off');
     const save = page.getByRole('button', { name: 'Save' });
-    await save.click();
+    // The autosave may already have saved it by now, so the press is not waited for.
+    await expect(page.getByRole('status').filter({ hasText: /^Draft saved/ })).toBeVisible({
+      timeout: 15_000,
+    });
     await expect(save).toBeDisabled();
     await expect(save).not.toHaveAttribute('aria-busy', 'true');
     // Nowhere else: the coven's ingredients page does not list it.
@@ -596,6 +609,49 @@ test(
       .click();
     await expect(steps.last().getByRole('textbox', { name: 'Instruction' })).toHaveValue(
       'Crush it first',
+    );
+  },
+);
+
+test(
+  'a member’s typing in the spell builder is saved without a press',
+  { tag: '@story-81' },
+  async ({ page }) => {
+    // The offline save retries after 2, 5 and 15 seconds before it says it failed.
+    test.setTimeout(90_000);
+    const coven = await seedCoven(page, 'Fixture Coven Eighty-One', 'story-81.test', {
+      A: 'owner',
+      B: 'member',
+    });
+    await signInAgainAs(page, coven.users.B);
+    await openBuilder(page, coven.slug);
+    // The dialog is renamed to Edit Spell once the first save lands, so it is found by role alone.
+    const dialog = page.getByRole('dialog');
+    await dialog.getByRole('textbox', { name: 'Title' }).fill('Fixture Working');
+    // Nothing is pressed: three seconds after the last change the draft is saved, and the address names it.
+    await expect(dialog.getByRole('status').filter({ hasText: /^Draft saved/ })).toBeVisible({
+      timeout: 15_000,
+    });
+    await expect(page).toHaveURL(/\?edit=[0-9a-f-]{36}$/);
+    await dialog.getByRole('textbox', { name: 'Intent' }).fill('To see clearly');
+    await expect(dialog.getByRole('button', { name: 'Save Spell' })).toBeDisabled({
+      timeout: 15_000,
+    });
+    await page.reload();
+    const reopened = page.getByRole('dialog', { name: 'Edit Spell, Fixture Working' });
+    await reopened.getByRole('button', { name: 'Open All' }).click();
+    await expect(reopened.getByRole('textbox', { name: 'Intent' })).toHaveValue('To see clearly');
+    // Offline, the save fails after its retries and says so; back online, Retry saves it.
+    await reopened.getByRole('textbox', { name: 'Intent' }).fill('To see clearly, offline');
+    await page.context().setOffline(true);
+    await expect(reopened.getByText(/Couldn.t save/)).toBeVisible({ timeout: 45_000 });
+    await page.context().setOffline(false);
+    await reopened.getByRole('button', { name: 'Retry' }).click();
+    await expect(reopened.getByRole('status').filter({ hasText: /^Draft saved/ })).toBeVisible();
+    await page.reload();
+    await page.getByRole('button', { name: 'Open All' }).click();
+    await expect(page.getByRole('textbox', { name: 'Intent' })).toHaveValue(
+      'To see clearly, offline',
     );
   },
 );

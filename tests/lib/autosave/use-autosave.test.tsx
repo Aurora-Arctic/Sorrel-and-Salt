@@ -1,4 +1,5 @@
-import { act, renderHook } from '@testing-library/react';
+import { act, render, renderHook } from '@testing-library/react';
+import { Activity } from 'react';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import {
   mirrorKey,
@@ -7,7 +8,7 @@ import {
   type SaveContext,
   type SaveResult,
 } from '@/lib/autosave';
-import { StaleWriteError } from '@/lib/graphql-client-error';
+import { GraphQLClientError, StaleWriteError } from '@/lib/graphql-client-error';
 
 // An autosaving form (M13.16): a save 3 s after the last change and at most
 // 30 s into a run of them, one in flight, retries with backoff, a pause when
@@ -210,6 +211,25 @@ describe('useAutosave with a save in flight', () => {
 });
 
 describe('useAutosave when a save fails', () => {
+  it('stops at failed at once for a refusal, which asking again would not change', async () => {
+    const save = vi.fn(() =>
+      Promise.reject(
+        new GraphQLClientError({
+          status: 200,
+          errors: [{ message: 'Not allowed', extensions: { code: 'FORBIDDEN' } }],
+        }),
+      ),
+    );
+    const { type, result } = renderAutosave(save);
+
+    type('T');
+    await wait(3000);
+    expect(result.current.status).toBe('failed');
+    expect(result.current.error?.message).toBe('Not allowed');
+    await wait(60_000);
+    expect(save).toHaveBeenCalledTimes(1);
+  });
+
   it('retries after 2 s, 5 s and 15 s, then stops at failed until Retry', async () => {
     const save = vi.fn(() => Promise.reject(new Error('Network down')));
     const { type, result } = renderAutosave(save);
@@ -436,5 +456,56 @@ describe('useAutosave mirror', () => {
 
     expect(save).toHaveBeenCalledTimes(1);
     expect(result.current.status).toBe('saved');
+  });
+});
+
+describe('useAutosave when the page is hidden and shown again mid-save', () => {
+  it('shows the answer of a save that landed while hidden', async () => {
+    const { save, calls } = controlledSave();
+    let current: ReturnType<typeof useAutosave<Draft>> | undefined;
+    const Form = ({ title }: { title: string }) => {
+      current = useAutosave<Draft>({ value: { title }, dirty: true, enabled: true, save });
+      return null;
+    };
+    const Page = ({ title, visible }: { title: string; visible: boolean }) => (
+      <Activity mode={visible ? 'visible' : 'hidden'}>
+        <Form title={title} />
+      </Activity>
+    );
+    const view = render(<Page title="" visible />);
+    view.rerender(<Page title="T" visible />);
+    act(() => {
+      void current?.flush().catch(() => undefined);
+    });
+    expect(calls).toHaveLength(1);
+
+    view.rerender(<Page title="T" visible={false} />);
+    calls[0].resolve(confirmed(2));
+    await settle();
+    view.rerender(<Page title="T" visible />);
+    await settle();
+    expect(current?.status).toBe('saved');
+  });
+});
+
+describe('useAutosave when a flush arrives during a save and nothing changed', () => {
+  it('ends at saved, and resolves the flush, with no second save', async () => {
+    const { save, calls } = controlledSave();
+    const { type, result } = renderAutosave(save);
+    type('T');
+    act(() => {
+      void result.current.flush().catch(() => undefined);
+    });
+    let flushed = false;
+    act(() => {
+      void result.current.flush().then(() => {
+        flushed = true;
+      });
+    });
+    calls[0].resolve(confirmed(2));
+    await settle();
+    expect(result.current.status).toBe('saved');
+    expect(flushed).toBe(true);
+    expect(save).toHaveBeenCalledTimes(1);
   });
 });

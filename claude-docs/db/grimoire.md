@@ -356,6 +356,32 @@ joined to their `spell_categories` pairs and each pair's live category,
 - **A category no spell carries is absent** rather than at zero; the page
   reads a missing count as zero and the picker does not offer it.
 
+### The four facets' counts (M13.22)
+
+Beside Categories the grimoire filter has Moon Phase, Day of Week, Visibility and
+Coven Member. `findGrimoireFacetCounts` in `src/db/repository/grimoire.ts`, behind
+`countGrimoireFacets` in `spell-reads.ts`, runs one grouped read per facet, together,
+over `readableSpells` and `count(distinct spells.id)`: another member's private spell is
+never counted or offered, and nothing of another coven (`readableSpells` ANDs the
+membership's `workspace_id`). The counts are also the choices: a value no readable spell
+carries is absent, so nothing is suggested that the viewer could not list.
+
+- **Each facet's counts drop its own picks** and keep the other facets, the categories,
+  the tab's status and the search in force. A pick within a facet is an alternative; the
+  facets are ANDed (`whereOf`).
+- **Moon Phase and Day of Week** compare `lower(btrim(column))`, so `Full Moon` and
+  `full moon ` are one choice, and name the group by its most-used spelling
+  (`mode() within group (order by btrim(column))`, the smallest on a tie). A blank value
+  is not a choice. The column has no vocabulary, so the choices are what spells hold.
+- **Visibility** counts `private` and `workspace` of the readable spells, so a member's
+  Private is their own private spells only. The column is named in `visibilityIn` and
+  `visibilityText` in `spells.ts`, beside `readableSpells`, the only places the lint rule
+  `sorrel/spell-visibility-read-in-one-place` allows it; they narrow after `readableSpells`
+  and never decide who reads.
+- **Coven Member** groups on `created_by`, the maker, never `updated_by`. It reads spells
+  and not seats, so someone who has left the coven is still a choice while a readable
+  spell of theirs stays. A pick of a user who made no readable spell lists nothing.
+
 ### The rest of the calls, and the ones not made
 
 - **`status` is a `spell_status` enum defaulting to `draft`**, on the column

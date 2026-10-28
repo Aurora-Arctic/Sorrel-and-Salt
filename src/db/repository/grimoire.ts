@@ -1,4 +1,4 @@
-import { and, eq, inArray, type SQL, sql } from 'drizzle-orm';
+import { and, eq, inArray, isNotNull, type SQL, sql } from 'drizzle-orm';
 import { alias } from 'drizzle-orm/pg-core';
 import { spellCategories } from '../../modules/grimoire/schema/spell-categories';
 import { spells } from '../../modules/grimoire/schema/spells';
@@ -9,8 +9,15 @@ import { findPageCountInReadableSpells, findPageInReadableSpells } from './finde
 import { pointsLive } from './ingredients';
 import { notSoftDeleted, scopedTo } from './predicates';
 import { existsIn, selectFrom } from './select';
-import { readableSpells } from './spells';
-import type { FacetCount, GrimoireQuery, ListOrder, SortPart, WeightedSearch } from './types';
+import { readableSpells, visibilityIn, visibilityText } from './spells';
+import type {
+  FacetCount,
+  GrimoireFacetCounts,
+  GrimoireQuery,
+  ListOrder,
+  SortPart,
+  WeightedSearch,
+} from './types';
 import { inLiveGroup } from './vocabularies';
 import { weightedSearch } from './weighted-search';
 
@@ -129,15 +136,36 @@ function categoryArms({ categoryIds = [], categoryMode = 'all' }: GrimoireQuery)
     : categoryIds.map((categoryId) => carries(eq(spellCategories.categoryId, categoryId)));
 }
 
+type TextColumn = typeof spells.moonPhase | typeof spells.dayOfWeek;
+
+/** A free-text column as the facets compare it: trimmed, case set aside. */
+const folded = (column: TextColumn) => sql<string>`lower(btrim(${column}))`;
+
+/** The spell's text column is any of `values`, compared `folded`; a blank value matches nothing. */
+function textArm(column: TextColumn, values: readonly string[] | undefined): SQL[] {
+  if (!values || values.length === 0) return [];
+  return [
+    inArray(
+      folded(column),
+      values.map((value) => value.trim().toLowerCase()),
+    ),
+  ];
+}
+
 /**
- * Everything a query narrows by besides the search, ANDed: status and
- * categories each filter in SQL (rule 7). The search narrows through its
- * join, which holds only the spells that match.
+ * Everything a query narrows by besides the search, ANDed: status, categories
+ * and the four facets of M13.22 each filter in SQL (rule 7), the picks within
+ * a facet alternatives. The search narrows through its join, which holds only
+ * the spells that match.
  */
 function whereOf(query: GrimoireQuery): SQL | undefined {
   return and(
     query.status === undefined ? undefined : eq(spells.status, query.status),
     ...categoryArms(query),
+    ...textArm(spells.moonPhase, query.moonPhases),
+    ...textArm(spells.dayOfWeek, query.daysOfWeek),
+    query.visibilities?.length ? visibilityIn(query.visibilities) : undefined,
+    query.makerIds?.length ? inArray(spells.createdBy, [...query.makerIds]) : undefined,
   );
 }
 
@@ -206,4 +234,61 @@ export function findGrimoireCategoryCounts(
       groupBy: [categories.id],
     },
   );
+}
+
+/**
+ * The counts behind the four facets M13.22 adds, in four grouped reads (one per
+ * facet, run together) under the same visibility rule as the list, so another
+ * member's private spell is never counted and its moon phase, day or maker is
+ * never offered. Each facet's counts leave its own picks out of the query and
+ * keep every other facet, the categories, the status and the search in force,
+ * as `findGrimoireCategoryCounts` drops the categories under Match Any. A
+ * value no readable spell carries is absent rather than at zero.
+ *
+ * Moon phase and day of the week group on the trimmed, lower-cased text and
+ * name the group by its most-used spelling (`mode()`, the smallest on a tie),
+ * so `Full Moon` and `full moon` are one choice. A maker is a user id, and
+ * stays a choice after leaving the coven, since the read looks at spells and
+ * not seats.
+ */
+export async function findGrimoireFacetCounts(
+  membership: Membership,
+  query: GrimoireQuery,
+): Promise<GrimoireFacetCounts> {
+  const read = (
+    drop: keyof GrimoireQuery,
+    value: SQL<string>,
+    groupBy: SQL,
+    present?: SQL,
+  ): Promise<FacetCount[]> => {
+    const rest: GrimoireQuery = { ...query, [drop]: undefined };
+    const match = searchMatch(membership, rest.query);
+    return selectFrom(
+      spells,
+      and(readableSpells(membership), notSoftDeleted(spells), whereOf(rest), present),
+      {
+        aggregate: { value, count: sql<number>`count(distinct ${spells.id})::int` },
+        over: { join: match?.join, wordMatch: match !== undefined },
+        groupBy: [groupBy],
+      },
+    );
+  };
+  const text = (column: TextColumn) =>
+    [
+      sql<string>`mode() within group (order by btrim(${column}))`,
+      folded(column),
+      and(isNotNull(column), sql`btrim(${column}) <> ''`),
+    ] as const;
+  const [moonPhases, daysOfWeek, visibilities, makers] = await Promise.all([
+    read('moonPhases', ...text(spells.moonPhase)),
+    read('daysOfWeek', ...text(spells.dayOfWeek)),
+    read('visibilities', visibilityText, visibilityText),
+    read('makerIds', sql<string>`${spells.createdBy}::text`, sql`${spells.createdBy}`),
+  ]);
+  return {
+    moonPhases,
+    daysOfWeek,
+    visibilities: visibilities as GrimoireFacetCounts['visibilities'],
+    makers,
+  };
 }

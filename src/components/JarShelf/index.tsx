@@ -64,8 +64,11 @@ function Part({ part }: { part: JarPart }): ReactElement {
 /** How many bands fill the spell's jar; past it the bands shrink to keep fitting. */
 export const BANDS_FULL = 8;
 
-/** Height of the crest on each band edge, in drawing units (about 2% of a body). */
-const CREST = 0.6;
+/**
+ * Height of the crest on each band edge, in drawing units. The aside's jar is 4rem wide for a
+ * 48-unit drawing, so 1.3 units is about 1.7px there: below that the wave is not seen.
+ */
+const CREST = 1.9;
 
 /** A band's top edge: one low crest across the jar. */
 const crest = `M-2 ${CREST}Q24 ${-CREST} 50 ${CREST}`;
@@ -81,11 +84,6 @@ function bandPath(height: number, lowest: boolean): string {
   return crest + bottom;
 }
 
-/** The stripe counts the bands use above one, each needing its clips. */
-const stripeCounts = (bands: readonly (readonly GroupColors[])[]): number[] => [
-  ...new Set(bands.map((inks) => inks.length).filter((count) => count > 1)),
-];
-
 /** A group's colours on a band, for the stylesheet to pick from by theme; React types no custom property. */
 const bandInk = ({ colorDark, colorLight }: GroupColors): CSSProperties =>
   ({ '--band-dark': colorDark, '--band-light': colorLight }) as CSSProperties;
@@ -99,10 +97,9 @@ export function JarDrawing({
   held: Pick<HeldJar, 'quantity' | 'threshold'> | null;
   /**
    * Equal horizontal bands stacked from the base, one per ingredient (the spell's jar); none
-   * draws none. A band holds the group colours it is drawn in: one pair fills it, several split
-   * it into vertical stripes in order, and none leaves it the muted ink.
+   * draws none. A band holds the one group colour it is drawn in; null leaves it the muted ink.
    */
-  bands?: readonly (readonly GroupColors[])[];
+  bands?: readonly (GroupColors | null)[];
 }): ReactElement {
   const clip = `jar-shelf-clip-${useId().replace(/\W/g, '')}`;
   const S = SHAPES[shape];
@@ -129,31 +126,19 @@ export function JarDrawing({
       )}
       {bands.length > 0 && (
         <g clipPath={url}>
-          {stripeCounts(bands).map((count) =>
-            Array.from({ length: count }, (_, j) => (
-              <clipPath key={`${count}-${j}`} id={`${clip}-${count}-${j}`}>
-                <rect x={(48 * j) / count} y={-2} width={48 / count} height={44} />
-              </clipPath>
-            )),
-          )}
-          {bands.map((inks, i) => {
+          {bands.map((ink, i) => {
             const height = +((40 - S.full) / Math.max(bands.length, BANDS_FULL)).toFixed(2);
-            const count = Math.max(inks.length, 1);
             return (
               <g
                 key={i}
                 className={`jar-shelf__band jar-shelf__band--${i % 2}`}
                 style={{ transform: `translateY(${+(40 - height * (i + 1)).toFixed(2)}px)` }}
               >
-                {Array.from({ length: count }, (_, j) => (
-                  <path
-                    key={j}
-                    className={`jar-shelf__band-fill${inks.length > 0 ? ' jar-shelf__band-fill--group' : ''}`}
-                    style={inks[j] ? bandInk(inks[j]) : undefined}
-                    clipPath={count > 1 ? `url(#${clip}-${count}-${j})` : undefined}
-                    d={bandPath(height, i === 0)}
-                  />
-                ))}
+                <path
+                  className={`jar-shelf__band-fill${ink ? ' jar-shelf__band-fill--group' : ''}`}
+                  style={ink ? bandInk(ink) : undefined}
+                  d={bandPath(height, i === 0)}
+                />
                 <path
                   className={`jar-shelf__band-edge${i === bands.length - 1 ? ' jar-shelf__band-edge--top' : ''}`}
                   d={crest}

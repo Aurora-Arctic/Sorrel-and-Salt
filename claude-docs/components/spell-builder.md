@@ -9,7 +9,7 @@ over the grimoire's list, at the default column and laid out as Add Ingredient i
 The address opens it, as it opens Add Ingredient: `?new=spell-<slug>` draws it empty,
 reached from New Spell at the Grimoire's heading, which only an owner or a
 member is shown, and `?edit=<id>` draws it with a saved spell, reached from a
-spell card's pencil and Quick Look's Edit (M13.10). There is no page of its
+spell card's pencil, the recipe page's Edit (M13.10, where the dialog opens over the recipe page and closes back to it) and Quick Look's Edit (M13.21). Only a role that may update a spell is offered either control, and a viewer's `?edit` opens nothing; on the recipe page it opens only when it names that page's own spell. There is no page of its
 own. `?new=spell` is the same for the grimoire the page is on, and `?new=spell-<slug>`
 on any other page is sent to that coven's grimoire with a replace
 (`NewSpellElsewhere`; the owner's call, 2026-10-28). New Spell's press writes
@@ -27,9 +27,47 @@ no `instructions` field: the ritual is the spell's steps (M13.1).
 | ------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | `workspaceId` | The coven the spell belongs to, sent with every save                                                                                                                        |
 | `spell`       | Optional: a saved spell, its `id`, `revision`, `visibility`, `steps`, the seven fields (null for one not set) and its `categoryIds` (left out, none). Without it, all empty |
+| `userId`      | Optional: the signed-in person, which keys the browser copy the autosave keeps. Left out, no copy is kept                                                                   |
 | `stepsRead`   | Optional: `loading` while `spell`'s steps are on their way, `failed` when they could not be read. Left out, `spell.steps` are its steps                                     |
 
 ## Saving
+
+**It autosaves** (M13.17, story 81) through the shared engine
+([`autosave.md`](autosave.md)): three seconds after the last change, thirty at
+most while typing, with the status (`SaveStatus`) beside Save. Every way of
+saving (the autosave, Save, Close, Mark Complete and Share) goes through one
+function, `persist` in `index.tsx`, which checks the form, calls
+`saveSpell` (`autosave.ts`) and rebases the form on the answer. A refusal
+skips the engine's retries, so the status stops at "Couldn't save" with Retry.
+Save flushes at once, is off when nothing is unsaved, and spins while saving.
+The autosave is held back while a step's unit is refused or a saved spell's
+steps are still being read.
+
+The autosave never sends a blank instruction (owner decision 2026-10-28). A
+new blank instruction step (no saved id) is left out of what the autosave
+sends and of what makes the form unsaved, so the rest of the spell saves and
+the blank row stays in the form with no error, until it is written, removed,
+or Save or Close checks the whole form (the resolver checks it only while a
+save the person asked for runs). A saved instruction whose text has been
+cleared is not left out, since that would delete it: the autosave is held back
+for it, as for a refused unit, and Save or Close shows the error beside it.
+
+- **The adapter** (`autosave.ts`) takes a target: `{ kind: 'new' }` calls
+  `createSpell`, once, and the engine then carries the id;
+  `{ kind: 'spell', id, revision }` calls `updateSpell` with that
+  `expectedRevision` (null forces, for M13.18). A later edit to a complete
+  spell can name another target when spell history arrives.
+- **The browser copy.** Every change is mirrored to localStorage, keyed
+  `autosave:spell:<id|new>:<userId>`, until the server confirms. If a copy
+  newer than the spell's `updatedAt` exists when the builder opens, a banner
+  reads "Restored unsaved changes from 2:02 pm" with Keep (load the copy into
+  the form, unsaved) and Discard (forget it). An older copy is removed without
+  a word.
+- **Typing in flight is kept.** A save's answer becomes the form's new start
+  with `reset(..., { keepValues: true })`, so what was typed meanwhile reads
+  as the next change.
+- **Mark Complete and Reopen as Draft** flush first; a missing title refuses
+  inline on the title field and the status goes back.
 
 - **No field is required.** A draft saves with any one field, or all of them.
   Only marking a spell complete needs a title (the `spells_complete_has_title`
@@ -95,44 +133,47 @@ off is private (`private`), which only its author can. A line under the
 switch, its `note`, says what the state it is in means. The switch stands at the start of its column, its label and note too, as the
 ingredient form's Toxic switch does, rather than centred as in a filter bar
 (`index.scss`, on the form's `spell-builder` class).
-The rule it follows is DESIGN.md §5's: visibility only widens once the spell is
-complete; a draft may be made private again ([`m13.17-draft-unshare`](../design-decisions/m13.17-draft-unshare.md)).
+The rule it follows is DESIGN.md §5's: a complete spell's visibility only widens, and a draft's moves either way (M10.20, [`m10.20-draft-visibility.md`](../design-decisions/m10.20-draft-visibility.md)).
 
-- **A new spell** opens with the switch on, the coven being the database's
-  default, and it may be turned either way. The choice goes out with the first save. A choice alone is
+- **A new spell** opens with the switch off, private (the owner's call, 2026-10-28: the
+  autosave saves it 3 s after the first keystroke, and a shared spell never goes back; the
+  database's column default stays `workspace`, since every write sends the value). It may be turned either way. The choice goes out with the first save. A choice alone is
   something to save (the owner's call, 2026-10-27): a visibility other than
   the last save's makes the form dirty, so Save Spell enables, Close saves
   it, and the browser asks before the tab closes.
-- **A saved private spell** keeps the switch open. Turning it on asks
+- **A saved draft** keeps the switch open both ways, with no question: sharing
+  it is reversible. Shared, its note says "Every member of the coven can see it.
+  Once the spell is complete, it stays shared." The change is saved with the rest.
+- **A saved complete private spell** keeps the switch open. Turning it on asks
   "Share With the Coven?" (`ConfirmQuestion`, Share or Keep It Private), and
   Share saves the whole form with `visibility: workspace` at once, so the
   spell is shared in one action. Any other unsaved changes go with it, which
   the question says. A refusal lands in the `Notice` and the spell stays
   private.
 - **A shared draft** keeps the switch open. Switching it off is a pending
-  change like a new spell's: Save Spell saves it. Marking the spell complete in
-  the same go is refused by the service, and its words show in the `Notice`.
+  change like a new spell's, saved with the rest of the form. The lock binds only
+  once the stored status is complete (M10.20).
 - **A complete spell shared with the coven** shows the switch on and disabled, with
   the note "Shared with the coven" and, in an InfoTip beside it, "It cannot be
   made private again. Duplicate makes a private copy." The tip's text is in
   the switch's accessible description. Duplicate is M13.20. A new spell saved for
   the coven stays open while it is a draft, and shuts once it is complete.
 
-Which state shows is read from the form's starting values (the last save's)
-and whether the spell has been created, so the builder passes only
+Which state shows is read from the form's starting values (the last save's,
+status and visibility) and whether the spell has been created, so the builder passes only
 `created` and its `send`. Every save carries the visibility the form holds.
 A save from a stale page, after the spell was shared elsewhere, therefore
-says `private` and is refused by the service (`assertWidens`, M10.6); the
+says `private` and, if it is complete, is refused by the service (`assertWidens`, M10.6); the
 refusal's words, which explain the rule and name Delete, show in the
 `Notice`, never a bare "Forbidden".
 
 ## Draft and complete
 
 Whether the spell is finished (M10.20, story 55): `SpellStatusField`, in
-`status-field.tsx`, drawn in the Notes section before the visibility switch.
+`status-field.tsx`, drawn in the form's action row (`FormActions`) beside Save Spell, outside every section.
 A spell is a `draft` until it is marked `complete`. The control is one
 button that says what it will do: Mark Complete on a draft, Reopen as Draft on
-a complete spell, with a line above it saying what the state means. Like Share
+a complete spell, with a line saying what the state means, visually hidden and read as the button's description. Like Share
 With the Coven, a click saves the whole form with the other status at once, so
 the status is never a pick left pending.
 
@@ -164,7 +205,7 @@ in the browser: the title rule needs `status: complete`, which M10.20 adds.
 
 ## Closing
 
-Close, Escape and a click outside the dialog save anything unsaved, then
+Close, Escape and a click outside the dialog flush the autosave, then
 close, and ask nothing (`useSaveOnClose`, `save-on-close.ts`). This is the
 builder's exception to M13.14's Discard Changes question, by the owner's call
 on 2026-10-27: a spell's draft is kept, never thrown away. The close waits for
@@ -353,13 +394,13 @@ placement, 2026-10-28; it was a block after the steps). In order: the jar drawin
 Wax Colour to its right (the drawing centred on the whole field, label and input), Jar Description beneath both at the aside's full width (at every width), then In Coven Inventory (`inventory.tsx`) and the comparison. The heading, jar and description are one block (`spell-aside__block`, `space(2)` apart); the aside puts `space(6)` between its blocks and draws no hairline between them (second design review, 2026-10-28, which reverses the hairlines the first review left). Inside each block the gaps are `space(2)`. The drawing is `JarDrawing` and `pickJarShape` from the jar shelf
 ([`jar-shelf.md`](jar-shelf.md)), drawn empty and tinted by the seal wax.
 
-**The jar fills as ingredients are added.** `JarDrawing` takes `bands`, one entry per ingredient step (one-offs count, instructions do not), each entry the step's distinct category-group colours. Each band is the same height, stacked from the base and clipped to the vessel's body so it follows the shape. Eight bands fill the jar (`BANDS_FULL`, a typical spell); past eight the bands shrink so they keep fitting. A band with no known group colour is the jar's ink (`$text-primary`) in two alternating tints, 8% and 18% opacity, with a thin line (0.5 wide, 25%) along each boundary. Each band's top edge is one low crest across the jar (a quadratic curve, about 2% of the body high) and its bottom is the same curve, so bands tile; the lowest is flat on the base. The highest band's top edge is drawn as the level line of a held jar (`$accent`, 1.2 wide). A band that has group colours takes them instead (MB.35: the colours are data on the group row, so they reach the drawing as the custom properties `--band-dark` and `--band-light`, never as tokens). They are those of the step's categories in listed order (the ingredient's, then the form's), one colour per distinct group. One group fills the band. Several split it into equal vertical stripes in that order, each stripe its own clip. The colour is mixed 55% in the light theme and 65% in the dark with `color-mix`, picked by `light-dark()`, so the boundary lines and the top line stay legible. A step with no categories, or none whose group is loaded yet, keeps the muted tint. The group colours come from the categories the Category Match panel already reads (`useCategoryColors`), so the Jar adds no request. A band moves by a `transform` transition (none under reduced motion). The drawing stays `aria-hidden`, and an empty jar draws no band.
+**The jar fills as ingredients are added.** `JarDrawing` takes `bands`, one entry per ingredient step (one-offs count, instructions do not), each entry the one group colour of the step's first category (or null). Each band is the same height, stacked from the base and clipped to the vessel's body so it follows the shape. Eight bands fill the jar (`BANDS_FULL`, a typical spell); past eight the bands shrink so they keep fitting. A band with no known group colour is the jar's ink (`$text-primary`) in two alternating tints, 8% and 18% opacity, with a thin line (0.5 wide, 25%) along each boundary. Each band's top edge is one low crest across the jar (a quadratic curve, 1.9 drawing units deep, about 2.5px in the aside's 4rem jar) and its bottom is the same curve, so bands tile; the lowest is flat on the base. The highest band's top edge is drawn as the level line of a held jar (`$accent`, 1.2 wide). A band that has group colours takes them instead (MB.35: the colours are data on the group row, so they reach the drawing as the custom properties `--band-dark` and `--band-light`, never as tokens). It is the group colour of the step's first category in listed order (the ingredient's, then the form's), skipping any whose group is not loaded: one colour for each layer, never stripes (the owner's call, 2026-10-28). The colour is mixed 55% in the light theme and 65% in the dark with `color-mix`, picked by `light-dark()`, so the boundary lines and the top line stay legible. A step with no categories, or none whose group is loaded yet, keeps the muted tint. The group colours come from the categories the Category Match panel already reads (`useCategoryColors`), so the Jar adds no request. A band moves by a `transform` transition (none under reduced motion). The drawing stays `aria-hidden`, and an empty jar draws no band.
 
 **In Coven Inventory** (`inventory.tsx`) lists each step's ingredient (one line per step, so a form laid in two steps has two lines, both judged on the sum of the two) with the coven's stock of its form,
-as the jar shelf draws it: the vessel, and the verdict as a symbol. A one-off reads "one-off, nothing
+as the jar shelf draws it: the vessel, and the verdict as words beside a symbol. A one-off reads "one-off, nothing
 to hold", and its small jar is the plain solid empty outline in `$text-muted`, as the aside's own jar is: no dashes and no fade. All four verdicts stand on the name line at its right end, in one place, so the
 name is cut short with an ellipsis before the verdict is; the words line keeps "need … · hold …".
-Every verdict is a symbol alone, its words the name of the button around it and, in an `IconTip`, a sentence saying why (the control for an icon-only mark, as `StockTip` uses it): Out takes StockBadge's symbol and colour (the jar is empty), Low its symbol and colour (the jar is at or below the coven’s Low mark), Not Enough a small jar outline with a level part-way up, in Low's ink (`$stock-low-ink`) (the jar holds less than the step needs), and Units Differ a struck equals sign in `$text-muted` (the units do not match, so it cannot tell whether there is enough). The last two are drawn as `StockIcon` is and kept in `supply-icon.tsx`, being spell-builder-only (owner's call 2026-10-28). All four share one branch in `inventory.tsx`, a `mark` on the verdict. `steps/supply-mark.tsx` is used nowhere and was left as it was. All four are worded as in Supply below. With no steps it
+Every verdict is its words (Out, Low, Not Enough, Units Differ) at the small size in its tone, beside a symbol that is `aria-hidden` decoration. There is no button and no `IconTip`, so the verdict adds no tab stop and nothing is read by hovering (the second design review, 2026-10-28): the numbers in the words line already say why. Out takes StockBadge's symbol and colour (the jar is empty), Low its symbol and colour (the jar is at or below the coven’s Low mark), Not Enough a small jar outline with a level part-way up, in Low's ink (`$stock-low-ink`) (the jar holds less than the step needs), and Units Differ a struck equals sign in `$text-muted` (the units do not match, so it cannot tell whether there is enough). The last two are drawn as `StockIcon` is and kept in `supply-icon.tsx`, being spell-builder-only (owner's call 2026-10-28). All four share one branch in `inventory.tsx`, a `mark` on the verdict. `steps/supply-mark.tsx` is used nowhere and was left as it was. All four are worded as in Supply below. With no steps it
 reads that nothing is held yet.
 
 ## The comparison panel
@@ -367,7 +408,7 @@ reads that nothing is held yet.
 `comparison-panel.tsx` (M10.17, story 52) sets what the spell intends beside what its jar
 carries, so a mismatch shows while the spell is built. It is a region named Category Match
 in the Jar aside, drawn as rows of a `dl` (Carried, Missing, Stray) whose values are
-the site's own `CategoryChips` ([`category-chips.md`](category-chips.md)), each in its category's group colours (read by id from the `categories` query the picker already makes; a category whose colours have not landed is left out until they do). The chips are the compact size, the one the admin Compendium table's Categories column uses. The row's label alone says Carried, Missing or Stray: there is no chip variant of the panel's own. Every chip carries a tip, through `CategoryChips`'s `tipOf` prop: "From <the ingredients carrying it, in the jar's order>" on a Carried or Stray chip, and "Assigned to this spell, and nothing in the jar carries it" on a Missing one. It opens by hover, focus and tap (the M12.43 rule) and rides on the chip as its accessible description. Every chip is drawn (`showAll`): the panel has no +N button (the owner's call, 2026-10-28). The Stray row has no line of its own beneath the chip: the tip is where the ingredients are named. It reads the form's values as they stand, saved or not, so a pick or an ingredient added or
+the site's own `CategoryChips` ([`category-chips.md`](category-chips.md)), drawn neutral in this panel, in `$fill-quiet`-style quiet chips with `$text-primary` and no group hue (the second design review, 2026-10-28). The group is still read by id from the `categories` query the picker already makes; a category whose group has not landed is left out until it does. The chips are the compact size, the one the admin Compendium table's Categories column uses. The row's label alone says Carried, Missing or Stray: there is no chip variant of the panel's own. Every chip carries a tip, through `CategoryChips`'s `tipOf` prop: "From <the ingredients carrying it, in the jar's order>" on a Carried or Stray chip, and "Assigned to this spell, and nothing in the jar carries it" on a Missing one. It opens by hover, focus and tap (the M12.43 rule) and rides on the chip as its accessible description. Every chip is drawn (`showAll`): the panel has no +N button (the owner's call, 2026-10-28). The Stray row has no line of its own beneath the chip: the tip is where the ingredients are named. It reads the form's values as they stand, saved or not, so a pick or an ingredient added or
 removed moves it at once. The comparison is M10.8's `compareSpellCategories` over M10.7's
 `summarizeSpellCategories`, run in the browser on the steps' categories; a one-off or an
 instruction brings none. It also lists Derived Categories, the union of the steps' categories,
@@ -377,7 +418,7 @@ once each and sorted by name.
   in the jar carries; **Stray** each category the jar carries that was not assigned. The row is its chips and nothing
   else: no line, tip or other place names the ingredients that bring a stray category (the owner's
   call, 2026-10-28).
-  The words carry the difference; the chips are coloured by group, as they are everywhere.
+  The words carry the difference; the chips are neutral here and the row labels are one quiet caption.
 - With none of the three, it reads "Intent and ingredients match." With no category assigned the
   panel does not list every ingredient as a stray: it asks for categories first. With nothing
   assigned and nothing in the jar it reads "Nothing to compare yet."
@@ -471,10 +512,17 @@ The row's own look, the card, is in [`step-row.md`](step-row.md), "The card".
 `index.stories.tsx`, titled "Grimoire / Spell Builder": `States`, with a
 control that chooses Empty, Title Typed, Saved Spell (shared with the coven,
 its visibility shut), Private Spell, Share Question, Phase Outside the List
-or Refused After Saving, each in its `SpellDialog` over the app shell, with
+or Refused After Saving (the status reads Couldn't save, with Retry), each in its `SpellDialog` over the app shell, with
 Open Again to look once more after Close.
 
 ## Testing
+
+`tests/components/SpellBuilder/autosave.test.tsx` covers the saves (create once,
+then update at the revision; a draft with no title; the three-second save) and
+the recovery banner (Keep, Discard, an older copy). The gate spec
+`tests/e2e/spell-builder-autosave.spec.ts` scans the builder with axe in each
+status: saving, saved, failed with Retry, and conflict. Story 81 is in
+`tests/e2e/stories/06-grimoire.spec.ts`.
 
 `tests/components/SpellBuilder/step-text.test.tsx` covers the step text (M13.3): Add an Instruction with
 its focus and announcement, an instruction-only step sent as its text alone, a blank one refused at its
@@ -503,8 +551,8 @@ grimoire page's test,
 `tests/app/(shell)/coven/[slug]/grimoire/(list)/page.test.tsx`, covers which
 address opens which dialog for an owner and a member, and that a viewer's
 `?new=spell-<slug>` or `?edit=<id>` opens nothing. `visibility-field.test.tsx` covers the
-visibility control: on by default and sent with a create, off sent as private and
-left open, a choice alone saveable, the share question kept and
+visibility control: off by default and sent as private with a create, on sent as workspace and
+shut; a new spell's first autosave stores private (`autosave.test.tsx`), a choice alone saveable, the share question kept and
 confirmed, a refused share, a refused narrowing shown in the notice, and the
 control shut with its reason on a shared spell. `tests/components/SpellBuilder/categories-field.test.tsx` covers the
 Categories field: the picks sent with a first save, Save on with a pick and

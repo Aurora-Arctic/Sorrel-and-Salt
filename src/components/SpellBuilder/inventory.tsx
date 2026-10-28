@@ -2,7 +2,6 @@
 
 import type { ReactElement } from 'react';
 import { useFormContext, useWatch } from 'react-hook-form';
-import IconTip from '../IconTip';
 import { JarDrawing, pickJarShape } from '../JarShelf';
 import { StockIcon } from '../StockBadge';
 import { stockState } from '../StockBadge/stock-state';
@@ -15,16 +14,10 @@ import { isInstruction, stepNameOf } from './steps/values';
 // In Coven Inventory (the Jar's aside): one line for each ingredient step, in step order, saying
 // what the step needs against what the coven's jar holds, as `supplyOf` judges it. All four
 // verdicts stand at the right end of the name's line, so the name is cut short before they are.
-// Every verdict is a symbol alone (StockBadge's for Out and Low, supply-icon.tsx's for Not Enough
-// and Units Differ): the words are the button's name and the reason is its IconTip (the owner's
-// call, 2026-10-28), the verdict's `mark`. A step with an instruction only has
-// no line. See claude-docs/components/spell-builder.md, "The aside".
-
-const UNITS_DIFFER_TIP = 'The units don’t match, so it can’t tell if you have enough.';
-const NOT_ENOUGH_TIP = 'The jar holds less than this step needs.';
-
-const OUT_TIP = 'The jar is empty, so there is nothing to put in.';
-const LOW_TIP = 'The jar is at or below the coven’s Low mark.';
+// Every verdict is its words in its tone beside a symbol that only decorates (StockBadge's for Out
+// and Low, supply-icon.tsx's for Not Enough and Units Differ), so nothing is read by hovering
+// and the verdict adds no tab stop (the second design review, 2026-10-28). A step with an
+// instruction only has no line. See claude-docs/components/spell-builder.md, "The aside".
 
 const OutIcon = ({ className }: { className: string }): ReactElement => (
   <StockIcon out className={className} />
@@ -33,22 +26,22 @@ const LowIcon = ({ className }: { className: string }): ReactElement => (
   <StockIcon out={false} className={className} />
 );
 
-/** The verdict is its `mark` alone: the symbol in a button named `words`, whose IconTip says why. */
+/** The verdict: its words, its tone, and the symbol drawn beside them. */
 type Verdict = {
   words: string;
   tone: string;
-  mark: { Icon: (props: { className: string }) => ReactElement; tip: string };
+  Icon: (props: { className: string }) => ReactElement;
 };
 
 const VERDICTS: Partial<Record<StepSupply['kind'], Verdict>> = {
-  out: { words: 'Out', tone: 'out', mark: { Icon: OutIcon, tip: OUT_TIP } },
-  short: { words: 'Not Enough', tone: 'low', mark: { Icon: NotEnoughIcon, tip: NOT_ENOUGH_TIP } },
+  out: { words: 'Out', tone: 'out', Icon: OutIcon },
+  short: { words: 'Not Enough', tone: 'low', Icon: NotEnoughIcon },
   'units-differ': {
     words: 'Units Differ',
     tone: 'muted',
-    mark: { Icon: UnitsDifferIcon, tip: UNITS_DIFFER_TIP },
+    Icon: UnitsDifferIcon,
   },
-  low: { words: 'Low', tone: 'low', mark: { Icon: LowIcon, tip: LOW_TIP } },
+  low: { words: 'Low', tone: 'low', Icon: LowIcon },
 };
 
 /** The line's words after the name, as the parts to join: need, hold, the verdict. */
@@ -98,11 +91,8 @@ function HoldLine({
         <span className="spell-inventory__name">{stepNameOf(step)}</span>
         {verdict && (
           <span className={`spell-inventory__verdict is-${verdict.tone}`}>
-            <IconTip tip={verdict.mark.tip}>
-              <button type="button" className="spell-inventory__mark" aria-label={verdict.words}>
-                <verdict.mark.Icon className="spell-inventory__icon" />
-              </button>
-            </IconTip>
+            <verdict.Icon className="spell-inventory__icon" />
+            {verdict.words}
           </span>
         )}
       </span>
