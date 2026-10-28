@@ -103,7 +103,8 @@ const SpellRecipeBody = ({
                 name={<Name step={step} />}
                 quantity={step.quantity}
                 unit={step.unit}
-                body={step.body}
+                // An ingredient step shows its note and not its text (the owner, 2026-10-28);
+                // an instruction step is its text.
                 note={step.note && <p className="meta">{step.note}</p>}
               />
             ),

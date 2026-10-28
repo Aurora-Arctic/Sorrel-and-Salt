@@ -27,7 +27,9 @@ list. Four columns, two per row in a column narrower than `$narrow-column` (a co
 the strip's box). There is no Ingredients section: the steps carry the amounts, the amount leading
 the name in weight 500 with the name in 400, and an instruction-only step's text is muted and fills
 the number's line. The steps are an `ol` named Steps with no visible heading, in `position`
-order, the position column 2rem and right-aligned, the step's text and note indented to the name;
+order, the position column 2rem and right-aligned; an ingredient step draws its note (not its
+`body`) indented to the name, and an instruction step is its text, at the ingredients' size and
+colour (the owner, 2026-10-28). A unit with no quantity reads "0 tsp" (`StepRow`);
 the form icon `StepRow` draws is hidden here, as the mock-up's steps carry none. A one-off's mark
 is `badge badge--local`, the builder's `SupplyMark`'s, at the small badge size. The note is a
 muted paragraph under its own hairline, drawn only when there is one; the strip and the list are

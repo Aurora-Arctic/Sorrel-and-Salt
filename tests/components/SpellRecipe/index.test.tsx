@@ -129,6 +129,23 @@ describe('SpellRecipe', () => {
     expect(screen.queryByRole('button', { name: /more categories/i })).toBeNull();
   });
 
+  it("draws an ingredient step's note and not its text, and an instruction step's text", () => {
+    render(
+      <SpellRecipe
+        {...props({
+          steps: [
+            ingredient('a', { body: 'Crush it first', note: 'The base' }),
+            instruction('b', 'Stir.'),
+          ],
+        })}
+      />,
+    );
+
+    expect(screen.getByText('The base')).toBeInTheDocument();
+    expect(screen.queryByText('Crush it first')).toBeNull();
+    expect(screen.getByText('Stir.')).toBeInTheDocument();
+  });
+
   it('draws no facts strip when none is set', () => {
     render(<SpellRecipe {...props()} />);
     expect(screen.queryByRole('term')).toBeNull();
