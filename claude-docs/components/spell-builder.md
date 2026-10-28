@@ -290,8 +290,8 @@ being read the column is a skeleton, and if the read fails, an error in its plac
   own ingredients under Your Ingredients and the compendium's under Compendium, one row per
   form, since a step lays a form and not a whole ingredient. A row reads the cupboard's label
   (or the ingredient's name) with the form in brackets, its form's icon, and the formal name as
-  its note, followed on the same line by the form's categories (the form's own, else the ingredient's, joined by " · ", muted, ending in an ellipsis where long; the combobox's `meta`). A text line rather than `CategoryChips`, whose chips carry group colours the lookup does not return and a "more" popover that does not belong inside a listbox row. A retired ingredient is not offered. A form already in the jar is listed but
-  disabled, "Already in the jar". Picking a row appends the step and clears the search, and
+  its note, followed on the same line by the form's categories (the form's own, else the ingredient's, joined by " · ", muted, ending in an ellipsis where long; the combobox's `meta`). A text line rather than `CategoryChips`, whose chips carry group colours the lookup does not return and a "more" popover that does not belong inside a listbox row. A retired ingredient is not offered. A form already in the jar is listed and
+  can be picked again, for another step (owner, 2026-10-28; before it a form could be in the jar once). Picking a row appends the step and clears the search, and
   the focus stays in the search for the next ingredient: the append passes
   `shouldFocus: false`, since react-hook-form would otherwise move the focus to the new step's
   Quantity a render later and close the list of whatever was typed meanwhile.
@@ -355,7 +355,7 @@ and the comparison. The drawing is `JarDrawing` and `pickJarShape` from the jar 
 
 **The jar fills as ingredients are added.** `JarDrawing` takes a `bands` count, and the aside passes the number of ingredient steps (one-offs count, instructions do not). Each band is the same height, stacked from the base and clipped to the vessel's body so it follows the shape. Eight bands fill the jar (`BANDS_FULL`, a typical spell); past eight the bands shrink so they keep fitting. A band is the jar's ink (`$text-primary`) at 10% opacity, with a 0.5 hairline of the same ink at 18% on its top edge, so the line between ingredients is quiet. All bands are one tone: none is coloured by its ingredient. A band moves by a `transform` transition (none under reduced motion). The drawing stays `aria-hidden`, and an empty jar draws no band.
 
-**In Coven Inventory** (`inventory.tsx`) lists each step's ingredient with the coven's stock of its form,
+**In Coven Inventory** (`inventory.tsx`) lists each step's ingredient (one line per step, so a form laid in two steps has two lines, both judged on the sum of the two) with the coven's stock of its form,
 as the jar shelf draws it: the vessel, and the verdict as a symbol. A one-off reads "one-off, nothing
 to hold", and its small jar is the plain solid empty outline in `$text-muted`, as the aside's own jar is: no dashes and no fade. All four verdicts stand on the name line at its right end, in one place, so the
 name is cut short with an ellipsis before the verdict is; the words line keeps "need … · hold …".
@@ -391,7 +391,11 @@ once each and sorted by name.
   **Units Differ** (the step's unit cannot be set against the jar's: a count, two
   dimensions, or a jar with no unit; never read as held or enough), **Low Stock** (the
   jar's own threshold), **One-Off** (a one-off, which nothing in the cupboard could ever
-  answer; marked, not told to be gathered), or nothing. A jar held but not weighed, a
+  answer; marked, not told to be gathered), or nothing. A form laid in several steps is judged
+  once, on the sum of what all its steps need (each converted to the jar's unit through
+  `unitConvert`; `supplyOf` takes the jar's steps as its second argument), so every line of that
+  form carries the same verdict. If any one of its steps cannot be converted, each of its lines
+  reads Units Differ. Each step keeps its own line, with its own "need". A jar held but not weighed, a
   step with no amount, and an instruction-only step show nothing. Out and Low are
   `StockBadge`'s own; the others are words in a badge, so no state rests on colour. The
   verdict follows each keystroke of the quantity and unit, and the jar figures are as the
@@ -503,7 +507,7 @@ after a removal sent (an empty set to clear them), the categories left out of
 a save that did not change them, and a refused pick shown beside the field
 by name. `steps.test.tsx` covers the
 jar: the two headings, one row per form, a pick adding its row and clearing
-the search, a form already in the jar disabled, a one-off and its two
+the search, a form picked twice giving two rows, a one-off and its two
 refusals, the ids sent, Remove updating Derived Categories, the unit rule both
 ways and with no jar, saved steps sent back by id, and a server issue placed
 on its step. `reorder.test.tsx` covers the order: a handle on every kind of

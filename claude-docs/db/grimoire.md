@@ -229,21 +229,21 @@ this is what holds it in the database.
   `spell_steps_name_not_blank` and `spell_steps_form_not_blank` are
   the `ingredients_form_not_blank` idiom, since a blank name would satisfy
   `num_nonnulls` and name nothing.
-- **Two partial unique indexes, one per kind of row.**
-  `spell_steps_spell_id_variant_id_unique` on
-  `(spell_id, variant_id)`, live rows only, is one form per jar since MB.217,
-  where `spell_ingredients_spell_id_ingredient_id_unique` was one ingredient
-  per jar — what the M10.2 key used to give. A linked layer names its form in
+- **No unique index on the form.** `spell_steps_spell_id_variant_id_unique` on
+  `(spell_id, variant_id)` was one form per jar since MB.217 and was dropped by
+  `0087_spell-steps-repeat-forms.sql` (owner, 2026-10-28): a spell may lay one
+  form in several steps, so the custom-name index is the one identity index
+  left (a custom name is still once per jar). A linked layer names its form in
   `variant_id`, set exactly when `ingredient_id` is
   (`spell_steps_variant_with_ingredient`) and held to it by the
   composite key `spell_steps_variant_fk`, so a jar may lay Rosemary
-  herb and Rosemary oil. Migration `0063` filled each existing linked layer
+  herb and Rosemary oil, or the herb twice. Migration `0063` filled each existing linked layer
   from its ingredient's one live variant, refusing a database where one had
   none or several; and
   `spell_steps_spell_id_custom_name_unique` on
   `(spell_id, lower(name)) WHERE ingredient_id IS NULL` is one custom name per
-  jar, the shape of `ingredients_workspace_label_unique`. Both are partial on
-  the discriminator, so each index covers exactly the rows that have the column
+  jar, the shape of `ingredients_workspace_label_unique`. It is partial on
+  the discriminator, so the index covers exactly the rows that have the column
   it is unique on, and since MB.110 on rule 4's `deleted_at IS NULL` beside it.
 - **Name only, not name plus form, in the custom-name index**, since a custom
   row is matched against nothing. It is the one judgment call in the shape,
@@ -259,7 +259,7 @@ this is what holds it in the database.
 `constraint_name` and pairs each with the insert that shows why it could have
 succeeded: `form` on a linked row is refused where the same `form` on a custom
 row is accepted; `Threshold Salt` and `threshold salt` collide in one jar and
-not across two; the same ingredient twice is refused by the partial index, a
+not across two; the same form twice is accepted, a
 place collision by the position index; an instruction-only step, an
 ingredient-only step and a step with both are each accepted, and an empty
 step, a blank instruction and an amount on an instruction alone are each
