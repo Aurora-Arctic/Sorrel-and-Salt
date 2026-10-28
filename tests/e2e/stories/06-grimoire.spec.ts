@@ -580,6 +580,8 @@ test(
   'a member’s typing in the spell builder is saved without a press',
   { tag: '@story-81' },
   async ({ page }) => {
+    // The offline save retries after 2, 5 and 15 seconds before it says it failed.
+    test.setTimeout(90_000);
     const coven = await seedCoven(page, 'Fixture Coven Eighty-One', 'story-81.test', {
       A: 'owner',
       B: 'member',
