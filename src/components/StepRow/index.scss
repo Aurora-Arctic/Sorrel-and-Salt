@@ -227,6 +227,24 @@ $step-ink-drop: 0.05rem;
     min-width: 0;
   }
 
+  // An instruction starts two lines high (the `rows` the field gives it), not the 6rem a
+  // plain textarea keeps, and grows as lines are typed. Growing is `field-sizing`, which is
+  // not Baseline widely available, so it sits in @supports: without it the box stays two
+  // lines and scrolls inside, and its resize handle still opens it by hand.
+  .step-row__instruction .textarea,
+  .step-row__field .textarea {
+    min-height: 0;
+  }
+
+  @supports (field-sizing: content) {
+    .step-row__instruction .textarea,
+    .step-row__field .textarea {
+      // Two lines of the textarea's 1.5 line height, its padding and border.
+      min-height: calc(2 * 1.5em + 2 * #{space(2)} + 2px);
+      field-sizing: content;
+    }
+  }
+
   .step-row__note,
   .step-row__aside {
     margin-block-start: space(2);
