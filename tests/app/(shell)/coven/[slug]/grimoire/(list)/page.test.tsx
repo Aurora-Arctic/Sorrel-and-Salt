@@ -49,15 +49,18 @@ const CATEGORY = {
 };
 vi.mock('@/app/compendium-reads', () => ({ readCategories: async () => [CATEGORY] }));
 
+const MAKER = '00000000-0000-4000-8000-0000000000aa';
 const listGrimoire = vi.fn();
 const countGrimoire = vi.fn();
 const countGrimoireCategories = vi.fn();
+const countGrimoireFacets = vi.fn();
 const assignedCategoriesOf = vi.fn();
 const readSpell = vi.fn();
 vi.mock('@/modules/grimoire', () => ({
   listGrimoire,
   countGrimoire,
   countGrimoireCategories,
+  countGrimoireFacets,
   assignedCategoriesOf,
   readSpell,
 }));
@@ -125,9 +128,15 @@ beforeEach(() => {
   listGrimoire.mockResolvedValue([spell('s1', 'Fixture Working'), spell('s2', 'Testwort Charm')]);
   countGrimoire.mockResolvedValue({ totalCount: 2, countBefore: null });
   countGrimoireCategories.mockResolvedValue([{ value: 'c1', count: 4 }]);
+  countGrimoireFacets.mockResolvedValue({
+    moonPhases: [{ value: 'Waxing Crescent', count: 2 }],
+    daysOfWeek: [],
+    visibilities: [{ value: 'private', count: 1 }],
+    makers: [{ value: MAKER, count: 3 }],
+  });
   assignedCategoriesOf.mockResolvedValue([[{ id: 'c1', name: 'Testwarding' }], []]);
   displayNamesOf.mockImplementation(async (_s: unknown, ids: string[]) =>
-    ids.map((id) => (id === 'editor-s1' ? 'Fixture A' : null)),
+    ids.map((id) => (id === 'editor-s1' ? 'Fixture A' : id === MAKER ? 'Fixture Maker' : null)),
   );
 });
 
@@ -203,6 +212,33 @@ describe('the Grimoire tabs', () => {
     expect(screen.queryByRole('option', { name: /^Testwarding/ })).not.toBeInTheDocument();
   });
 
+  it('reads the four facets from the address into the query, and counts them under the tab’s status', async () => {
+    await renderTab(SpellsPage, {
+      moonPhase: 'Waxing Crescent',
+      dayOfWeek: ['Friday', 'Monday'],
+      visibility: 'private',
+      maker: [MAKER, 'not-an-id'],
+    });
+    const facets = {
+      order: 'UPDATED_DESC',
+      status: 'complete',
+      moonPhases: ['Waxing Crescent'],
+      daysOfWeek: ['Friday', 'Monday'],
+      visibilities: ['private'],
+      makerIds: [MAKER],
+    };
+    expect(listGrimoire.mock.calls[0]![3]).toEqual(facets);
+    expect(countGrimoireFacets).toHaveBeenCalledWith(session, COVEN.id, facets);
+  });
+
+  it('offers a member by name with their count, and Visibility as the pair whether or not a spell holds each', async () => {
+    await renderTab(SpellsPage);
+    fireEvent.click(screen.getByRole('button', { name: /^Filters/ }));
+    fireEvent.click(screen.getByRole('combobox', { name: 'Visibility' }));
+    expect(screen.getByRole('option', { name: /^Private\D*1/ })).toBeInTheDocument();
+    expect(screen.getByRole('option', { name: /^Shared with the Coven/ })).toBeInTheDocument();
+  });
+
   it('keeps the tab’s status over a status written into the address', async () => {
     await renderTab(SpellsPage, { status: 'draft' });
     expect(listGrimoire.mock.calls[0]![3]).toMatchObject({ status: 'complete' });
@@ -237,8 +273,10 @@ describe('the Grimoire tabs', () => {
 
   it('says on each card who last edited it and when, the editors named in one batch', async () => {
     await renderTab(SpellsPage);
-    expect(displayNamesOf).toHaveBeenCalledTimes(1);
+    // One batch for the page's editors, one for the members the Coven Member facet offers.
+    expect(displayNamesOf).toHaveBeenCalledTimes(2);
     expect(displayNamesOf).toHaveBeenCalledWith(session, ['editor-s1', 'editor-s2']);
+    expect(displayNamesOf).toHaveBeenCalledWith(session, [MAKER]);
     const list = screen.getByRole('list', { name: 'Grimoire' });
     const edited = (name: string) =>
       within(within(list).getByRole('listitem', { name })).getByRole('button', {

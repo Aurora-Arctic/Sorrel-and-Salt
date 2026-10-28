@@ -27,6 +27,8 @@ const List = (props: GrimoireListProps): ReactElement => (
 const PATH = '/coven/fixture-coven/grimoire' as Route;
 const GROUP = { id: 'g1', name: 'Fixture Group', colorDark: '#a0c4ff', colorLight: '#1d3557' };
 
+const OPEN = { moonPhases: [], daysOfWeek: [], visibilities: [], makers: [] };
+
 const props = (over: Partial<GrimoireListProps> = {}): GrimoireListProps => ({
   path: PATH,
   workspaceId: 'w1',
@@ -50,7 +52,7 @@ const props = (over: Partial<GrimoireListProps> = {}): GrimoireListProps => ({
       categories: [],
     },
   ],
-  filter: { query: '', categories: [], categoryMode: 'all' },
+  filter: { query: '', categories: [], categoryMode: 'all', ...OPEN },
   categories: [
     {
       id: 'c1',
@@ -60,6 +62,18 @@ const props = (over: Partial<GrimoireListProps> = {}): GrimoireListProps => ({
       group: GROUP,
     },
   ],
+  facets: {
+    moonPhases: [
+      { value: 'Waxing Crescent', label: 'Waxing Crescent', count: 2 },
+      { value: 'Full', label: 'Full', count: 0 },
+    ],
+    daysOfWeek: [{ value: 'Friday', label: 'Friday', count: 1 }],
+    visibilities: [
+      { value: 'private', label: 'Private', count: 1 },
+      { value: 'workspace', label: 'Shared with the Coven', count: 1 },
+    ],
+    makers: [{ value: 'u1', label: 'Fixture Member', count: 2 }],
+  },
   position: { page: 1, pages: 1 },
   total: 2,
   ...over,
@@ -157,7 +171,7 @@ describe('GrimoireList', () => {
           spells: [],
           total: 0,
           position: undefined,
-          filter: { query: 'nothing', categories: [], categoryMode: 'all' },
+          filter: { query: 'nothing', categories: [], categoryMode: 'all', ...OPEN },
         })}
       />,
     );
@@ -167,7 +181,9 @@ describe('GrimoireList', () => {
 
   it("searches by title from its own tab's address", () => {
     render(
-      <List {...props({ filter: { query: 'hearth', categories: [], categoryMode: 'all' } })} />,
+      <List
+        {...props({ filter: { query: 'hearth', categories: [], categoryMode: 'all', ...OPEN } })}
+      />,
     );
     const form = filterForm('Filter the Grimoire');
     expect(form).toHaveAttribute('action', PATH);
@@ -222,5 +238,114 @@ describe('GrimoireList', () => {
 
     expect(screen.getByRole('option', { name: /^Testwarding\D*3/ })).toBeInTheDocument();
     expect(screen.queryByRole('option', { name: /^Testmending/ })).not.toBeInTheDocument();
+  });
+
+  describe('the four facets (M13.22)', () => {
+    const open = () => {
+      fireEvent.click(screen.getByRole('button', { name: /^Filters/ }));
+    };
+    // Moon Phase, Day of Week and Coven Member type to narrow; Visibility is the select-style box.
+    const show = (field: string) => {
+      const box = screen.getByRole('combobox', { name: field });
+      if (field === 'Visibility') {
+        fireEvent.click(box);
+        return;
+      }
+      box.focus();
+      fireEvent.keyDown(box, { key: 'ArrowDown' });
+    };
+    const pick = async (field: string, option: RegExp) => {
+      await act(async () => show(field));
+      await act(async () => {
+        fireEvent.click(screen.getByRole('option', { name: option }));
+      });
+    };
+    const apply = async () => {
+      await act(async () => {
+        fireEvent.click(screen.getByRole('button', { name: 'Apply Filters' }));
+      });
+      return new URL(router.push.mock.lastCall![0], 'http://localhost').searchParams;
+    };
+
+    it('applies a moon phase, a day, a visibility and a member picked in the panel to the address', async () => {
+      render(
+        <Navigating push={router.push}>
+          <List {...props()} />
+        </Navigating>,
+      );
+      open();
+      await pick('Moon Phase', /^Waxing Crescent/);
+      await pick('Day of Week', /^Friday/);
+      await pick('Visibility', /^Private/);
+      expect(
+        screen.getByRole('button', { name: 'Remove Visibility: Private' }),
+      ).toBeInTheDocument();
+      await pick('Coven Member', /^Fixture Member/);
+      const params = await apply();
+      expect(params.getAll('moonPhase')).toEqual(['Waxing Crescent']);
+      expect(params.getAll('dayOfWeek')).toEqual(['Friday']);
+      expect(params.getAll('visibility')).toEqual(['private']);
+      expect(params.getAll('maker')).toEqual(['u1']);
+    });
+
+    it('offers a value with its count, and leaves out one that holds no spell', () => {
+      render(
+        <Navigating push={router.push}>
+          <List {...props()} />
+        </Navigating>,
+      );
+      open();
+      show('Moon Phase');
+      expect(screen.getByRole('option', { name: /^Waxing Crescent\D*2/ })).toBeInTheDocument();
+      expect(screen.queryByRole('option', { name: /^Full/ })).not.toBeInTheDocument();
+    });
+
+    it('offers both visibilities and names the shared one for the coven', () => {
+      render(
+        <Navigating push={router.push}>
+          <List {...props()} />
+        </Navigating>,
+      );
+      open();
+      show('Visibility');
+      expect(screen.getByRole('option', { name: /^Private/ })).toBeInTheDocument();
+      expect(screen.getByRole('option', { name: /^Shared with the Coven/ })).toBeInTheDocument();
+    });
+
+    it('counts the facets in the Filters button and says them in the search sentence', () => {
+      render(
+        <List
+          {...props({
+            filter: {
+              query: '',
+              categories: [],
+              categoryMode: 'all',
+              moonPhases: ['Waxing Crescent'],
+              daysOfWeek: [],
+              visibilities: ['workspace'],
+              makers: ['u1'],
+            },
+          })}
+        />,
+      );
+      expect(screen.getByRole('button', { name: /^Filters.*3/ })).toBeInTheDocument();
+      expect(document.body).toHaveTextContent(
+        /in the moon phase Waxing Crescent, that are shared with the coven, made by Fixture Member/,
+      );
+    });
+
+    it('says nothing matched, not that there are none, when only a facet is in force', () => {
+      render(
+        <List
+          {...props({
+            spells: [],
+            total: 0,
+            position: undefined,
+            filter: { query: '', categories: [], categoryMode: 'all', ...OPEN, makers: ['u1'] },
+          })}
+        />,
+      );
+      expect(screen.getByRole('status', { name: 'No Matches' })).toBeInTheDocument();
+    });
   });
 });

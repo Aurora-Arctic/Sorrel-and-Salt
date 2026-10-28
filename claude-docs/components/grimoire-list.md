@@ -76,6 +76,23 @@ variables, so a search and its categories live in the address and combine.
   they stay in force, as the ingredient facets count ([`db/grimoire.md`](../db/grimoire.md),
   "The Categories filter's counts"). A pick is held while the panel is open and applied to
   the tab's address, as a slug, when it shuts.
+- **The four more facets (M13.22).** Beside Categories, `FacetShell` holds Moon Phase, Day of
+  Week, Visibility and Coven Member, each a `FacetCombobox` taking several picks
+  ([facet-combobox.md](facet-combobox.md)). Within a facet the picks are alternatives, and the
+  facets are ANDed with each other, with Categories and with the search.
+  - **Moon Phase** and **Day of Week** are typeaheads over the values written on spells the
+    viewer can read, compared trimmed and ignoring case. Typed text that matches no suggestion
+    picks nothing. Addresses: `moonPhase` and `dayOfWeek`, repeated.
+  - **Visibility** offers Private and Shared with the Coven, both always listed (`hideZeros`
+    off), address `visibility=private|workspace`. Private counts only the viewer's own.
+  - **Coven Member** is the spell's maker (`created_by`), address `maker=<user id>`, an id
+    that is not a uuid is dropped. Makers are named in one `displayNamesOf` batch, a former
+    member included. A picked maker the viewer cannot name reads Unknown Member.
+  - The counts are `countGrimoireFacets`'s ([db/grimoire.md](../db/grimoire.md)), read in
+    `reads.ts` under the address with each facet's own picks dropped, never cached. A picked
+    value with no count is shown at 0.
+  - The search sentence names each pick: "in the moon phase X or Y", "for the day X",
+    "that are private", "made by X".
 - **The list** is named Grimoire, and each item is named by its spell's title, through the
   card's title id, so a test or a screen reader finds a spell by
   `getByRole('listitem', { name: 'Hearth Warding Jar' })`.
@@ -125,6 +142,8 @@ One thing in the list exists for the cards' smouldering edge ([spell-card.md](sp
   the category counts read under the tab's status and query and reaching the panel, a
   private spell badged Private (M10.13), and the pager's link.
 - `tests/components/CovenNav/index.test.tsx`: the Grimoire link, current on Drafts too.
+- `tests/e2e/grimoire-facets.spec.ts`: the four facets in the address and the panel, another
+  member's private phase not suggested, the Compact switch and axe.
 - `tests/e2e/stories/06-grimoire.spec.ts`: story 56 in the browser, a private spell listed
   for its author alone.
 - Visibility, search, categories and counts are proved below the page, in

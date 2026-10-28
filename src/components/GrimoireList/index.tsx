@@ -23,6 +23,7 @@ const GrimoireList = ({
   spells,
   filter,
   categories,
+  facets,
   position,
   total,
   previousHref,
@@ -38,6 +39,7 @@ const GrimoireList = ({
         status={status}
         filter={filter}
         categories={categories}
+        facets={facets}
         total={total}
       />
     }
