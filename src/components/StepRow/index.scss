@@ -218,7 +218,10 @@ $step-ink-drop: 0.05rem;
     // Open, the pencil is an up chevron that closes the row. The owner's call: it is light, not the
     // pencil's green. It sits on the card's ground, so it takes the body ink (near-white in dark,
     // ink in light: literal white would fail on the light card), kept pointed at or focused.
+    // Open, Remove is hidden, so it takes Remove's place at the row's right edge (the owner's call).
     &--close {
+      grid-area: remove;
+
       &,
       &:hover,
       &:focus-visible {
