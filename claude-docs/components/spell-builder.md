@@ -350,9 +350,9 @@ and the comparison. The drawing is `JarDrawing` and `pickJarShape` from the jar 
 
 **What You Hold** (`hold.tsx`) lists each step's ingredient with the coven's stock of its form,
 as the jar shelf draws it: the vessel, and the verdict in words. A one-off reads "one-off, nothing
-to hold", and its small jar is the plain solid empty outline in `$text-muted`, as the aside's own jar is: no dashes and no fade. Out and Low (with StockBadge's symbol and colour) stand on the name line at its right end, so the
-name is cut short with an ellipsis before the state is; the words line keeps "need … · hold …", and
-Not Enough and Cannot Compare end it. All four are worded as in Supply below. With no steps it
+to hold", and its small jar is the plain solid empty outline in `$text-muted`, as the aside's own jar is: no dashes and no fade. All four verdicts stand on the name line at its right end, in one place, so the
+name is cut short with an ellipsis before the verdict is; the words line keeps "need … · hold …".
+Out and Low take StockBadge's symbol and colour; Not Enough and Cannot Compare are muted, with no symbol (owner's call 2026-10-28). All four are worded as in Supply below. With no steps it
 reads that nothing is held yet.
 
 ## The comparison panel

@@ -346,6 +346,8 @@
   margin-inline-start: auto;
   align-items: center;
   gap: space(1);
+  // Not Enough and Cannot Compare: no state class, so muted ink and no symbol.
+  color: $text-muted;
 
   &.is-low {
     color: $stock-low-ink;

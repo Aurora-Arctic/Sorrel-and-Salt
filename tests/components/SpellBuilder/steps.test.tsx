@@ -691,9 +691,7 @@ describe('the spell builder’s What You Hold', () => {
     });
     chooseUnit(row, 'g');
 
-    await waitFor(() =>
-      expect(line('Fixture Rosewort')).toHaveTextContent('need 9 g · hold 5 g · Not Enough'),
-    );
+    await waitFor(() => expect(line('Fixture Rosewort')).toHaveTextContent('need 9 g · hold 5 g'));
     expect(line('Fixture Rosewort')).not.toHaveTextContent('Out');
 
     fireEvent.change(within(row).getByRole('spinbutton', { name: /^Quantity/ }), {
