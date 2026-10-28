@@ -307,7 +307,7 @@ being read the column is a skeleton, and if the read fails, an error in its plac
 - **Each row** (`step-row.tsx`'s `BuilderStepRow`, stories 50 and 80) is [`StepRow`](step-row.md), an
   open or a closed card. Closed, it shows the handle, the position, the form's icon, the name with
   its form, a summary of amount and instruction, the supply badge, a pencil to open it and Remove.
-  Open, it also shows Form (one-offs only), Quantity and Unit on one line, and Instruction full width on a line beneath. One row is open at a
+  Open, it also shows Name (one-offs only, required, editable: the header and inventory line follow it, a blank is refused as "Give the ingredient a name" and a repeat as the picker does, both in the field; a linked ingredient's name is read-only), Form (one-offs only), Quantity and Unit on one line, and Instruction full width on a line beneath. One row is open at a
   time: a new step opens, opening another closes the one before, and a step whose unit breaks the
   rule is forced open so its error is seen. An open row also closes when a click or tap lands outside it or the focus leaves it; a new step stays open while the focus is in Add to Jar and closes on the next click or focus outside the box and the row. What was typed in a closed row is kept. An instruction-only step is the same
   card: closed, its text itself (a muted "Write the step" when empty) with a pencil ("Edit step N")

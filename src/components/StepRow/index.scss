@@ -237,6 +237,11 @@ $step-ink-drop: 0.05rem;
     gap: space(2);
   }
 
+  .step-row__name-field {
+    flex: 1 1 100%;
+    min-width: 0;
+  }
+
   .step-row__form {
     flex: 0 1 10rem;
     min-width: 0;

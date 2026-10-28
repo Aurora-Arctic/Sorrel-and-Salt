@@ -38,6 +38,8 @@ export interface StepRowProps {
   aside?: ReactNode;
   /** The editing controls around the step, each drawn in place of the plain text it stands for. */
   handle?: ReactNode;
+  /** A one-off's name, first of the open fields and the full width of them. */
+  nameField?: ReactNode;
   formField?: ReactNode;
   quantityField?: ReactNode;
   unitField?: ReactNode;

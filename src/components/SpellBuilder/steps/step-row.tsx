@@ -86,7 +86,8 @@ export function BuilderStepRow({
   const open =
     openWanted ||
     errors.steps?.[index]?.unit !== undefined ||
-    (isInstruction(step) && errors.steps?.[index]?.body !== undefined);
+    (isInstruction(step) && errors.steps?.[index]?.body !== undefined) ||
+    errors.steps?.[index]?.name !== undefined;
   const oneOff = !instruction && step.ingredientId === null;
   const summary = [
     [quantity, unitChosen].filter(Boolean).join(' '),
@@ -175,6 +176,17 @@ export function BuilderStepRow({
         >
           <EditIcon />
         </button>
+      }
+      nameField={
+        oneOff ? (
+          <TextField<SpellStepsValues>
+            name={`steps.${index}.name`}
+            label="Name"
+            required
+            placeholder="Add a name"
+            autoComplete="off"
+          />
+        ) : null
       }
       formField={
         oneOff ? (

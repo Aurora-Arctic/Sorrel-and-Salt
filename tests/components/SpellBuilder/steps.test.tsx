@@ -353,6 +353,53 @@ describe('the spell builder’s Add to Jar', () => {
     ]);
   });
 
+  it('renames a one-off in its open row: the header follows, a repeat or a blank is refused, and the save carries the new name', async () => {
+    suggest();
+    const calls = acceptCreate();
+    renderBuilder();
+    await addOneOff('Testwort');
+    const row = () => stepRows()[0] as HTMLElement;
+    const name = () => within(row()).getByRole('textbox', { name: /^Name/ });
+
+    fireEvent.change(name(), { target: { value: 'Mockwort' } });
+    expect(row()).toHaveTextContent('Mockwort');
+    expect(within(row()).getByRole('button', { name: 'Close Mockwort' })).toBeInTheDocument();
+
+    fireEvent.change(name(), { target: { value: '' } });
+    fireEvent.blur(name());
+    await waitFor(() => expect(name()).toHaveAccessibleDescription('Give the ingredient a name'));
+
+    fireEvent.change(name(), { target: { value: 'Mockwort' } });
+    submit();
+    await waitFor(() => expect(calls).toHaveLength(1));
+    expect(calls[0]?.input.steps).toEqual([{ name: 'Mockwort' }]);
+  });
+
+  it('refuses a one-off renamed to a name already in the jar, in the Name field', async () => {
+    suggest();
+    renderBuilder();
+    await addOneOff('Testwort');
+    await addOneOff('Mockwort');
+    const name = () => within(stepRows()[1] as HTMLElement).getByRole('textbox', { name: /^Name/ });
+
+    fireEvent.change(name(), { target: { value: 'testwort' } });
+    fireEvent.blur(name());
+    submit();
+
+    await waitFor(() =>
+      expect(name()).toHaveAccessibleDescription('This ingredient is already in the jar'),
+    );
+  });
+
+  it('shows a linked ingredient’s name read-only: no Name field', async () => {
+    suggest(ROSEWORT);
+    renderBuilder();
+    await add('Rose', /Fixture Rosewort/);
+    expect(
+      within(stepRow('Fixture Rosewort')).queryByRole('textbox', { name: /^Name/ }),
+    ).toBeNull();
+  });
+
   it('takes a step out with Remove', async () => {
     suggest(ROSEWORT, MOCKROOT);
     renderBuilder();
@@ -837,6 +884,16 @@ describe('the spell builder’s In Coven Inventory', () => {
     expect(
       within(line('Fixture Rosewort')).queryByRole('button', { name: 'Not Enough' }),
     ).toBeNull();
+  });
+
+  it('follows a one-off’s new name in its inventory line', async () => {
+    suggest();
+    renderBuilder();
+    await addOneOff('Testwort');
+    fireEvent.change(within(stepRows()[0] as HTMLElement).getByRole('textbox', { name: /^Name/ }), {
+      target: { value: 'Mockwort' },
+    });
+    expect(line('Mockwort')).toHaveTextContent('one-off · nothing to hold');
   });
 
   it('says a one-off has nothing to hold, badges it One-Off in its row, and gives an instruction no line', async () => {
