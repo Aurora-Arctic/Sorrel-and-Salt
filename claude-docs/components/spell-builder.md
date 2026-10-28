@@ -344,13 +344,13 @@ being read the column is a skeleton, and if the read fails, an error in its plac
 
 `jar-aside.tsx` is an `aside` named The Jar, the right column of the Jar section (the owner's
 placement, 2026-10-28; it was a block after the steps). In order: the jar drawing with Seal
-Wax Colour to its right, Jar Description beneath both at the aside's full width (at every width), a hairline, What You Hold (`hold.tsx`), a hairline,
+Wax Colour to its right (the drawing centred on the whole field, label and input), Jar Description beneath both at the aside's full width (at every width), a hairline one `space(1)` further down than the aside's usual gap, What You Hold (`hold.tsx`), a hairline,
 and the comparison. The drawing is `JarDrawing` and `pickJarShape` from the jar shelf
 ([`jar-shelf.md`](jar-shelf.md)), drawn empty and tinted by the seal wax.
 
 **What You Hold** (`hold.tsx`) lists each step's ingredient with the coven's stock of its form,
 as the jar shelf draws it: the vessel, and the verdict in words. A one-off reads "one-off, nothing
-to hold", and its small jar is the plain solid empty outline in `$text-muted`, as the aside's own jar is: no dashes and no fade. Out and Low (with StockBadge's symbol and colour) stand on the name line, after the name, so the
+to hold", and its small jar is the plain solid empty outline in `$text-muted`, as the aside's own jar is: no dashes and no fade. Out and Low (with StockBadge's symbol and colour) stand on the name line at its right end, so the
 name is cut short with an ellipsis before the state is; the words line keeps "need … · hold …", and
 Not Enough and Cannot Compare end it. All four are worded as in Supply below. With no steps it
 reads that nothing is held yet.

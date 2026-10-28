@@ -222,6 +222,11 @@
   margin: 0;
   border: 0;
   border-block-start: 1px solid $hairline;
+
+  // More air below The Jar before the first hairline: the aside's space(3) gap plus space(1).
+  &:first-of-type {
+    margin-block-start: space(1);
+  }
 }
 
 .spell-aside__empty {
@@ -232,9 +237,8 @@
 // The jar drawing with the two fields beside it.
 .spell-aside__jar {
   display: flex;
-  // The jar is centred on the input box, not the label above it: the wax field ends at its
-  // input, and the jar's own box is the input's height with the drawing centred in it.
-  align-items: flex-end;
+  // The jar is centred on the whole Seal Wax Colour field, its label as well as its input.
+  align-items: center;
   gap: space(3);
 }
 
@@ -338,6 +342,8 @@
 .spell-hold__verdict {
   display: inline-flex;
   flex: none;
+  // Pushed to the line's right end; the name keeps the rest and is the one cut short.
+  margin-inline-start: auto;
   align-items: center;
   gap: space(1);
 
