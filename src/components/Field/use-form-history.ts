@@ -173,8 +173,11 @@ export function useFormHistory<V extends FieldValues>(
           defaultsSeen.current !== undefined && defaultsSeen.current !== defaultValues;
         defaultsSeen.current = defaultValues;
         if (name === undefined || defaultsChanged) {
-          // The form started itself over: its old steps no longer lead anywhere.
-          if (defaultsChanged || !sameValues(previous, values)) {
+          // The form started itself over: its old steps no longer lead anywhere. A save is
+          // the exception: it moves the baseline to what is on screen and leaves the values
+          // alone, so the steps still lead back to the values before it (Undo then marks the
+          // form changed against the new baseline, and the next save sends them).
+          if (!sameValues(previous, values)) {
             commit({ type: 'cleared' });
             sealed.current = true;
           }

@@ -115,6 +115,22 @@ function acceptUpdate() {
   return calls;
 }
 
+/** Like `acceptUpdate`, but the answer holds the steps as they were sent, as the server's does. */
+function acceptUpdateEchoingSteps() {
+  const calls: UpdateSpellMutationVariables[] = [];
+  mockGraphQLMutation<UpdateSpellMutation, UpdateSpellMutationVariables>(
+    'UpdateSpell',
+    (variables) => {
+      calls.push(variables);
+      const steps = (variables.input.steps ?? []).flatMap(({ id }) =>
+        SPELL.steps.filter((step) => step.id === id),
+      );
+      return { updateSpell: { ...SPELL, steps, status: 'draft' as const, revision: 5 } };
+    },
+  );
+  return calls;
+}
+
 function renderBuilder(props: Partial<SpellBuilderProps> = {}) {
   // The builder reads the coven's categories as it opens (M10.14).
   offerCategories([]);
@@ -307,5 +323,29 @@ describe('the spell builder’s undo of step changes', () => {
 
     undo();
     await waitFor(() => expect(order()).toEqual([ROSEWORT, 'Testwort', 'Stir thrice']));
+  });
+});
+
+describe('the spell builder’s undo across a save', () => {
+  beforeEach(() => layOutRows());
+  afterEach(() => vi.restoreAllMocks());
+
+  it('still undoes and redoes a step removed before the save, and marks the form changed again', async () => {
+    const calls = acceptUpdateEchoingSteps();
+    renderBuilder();
+    const rows = () => within(steps()).getAllByRole('listitem');
+    fireEvent.click(screen.getByRole('button', { name: 'Remove Stir thrice' }));
+    await waitFor(() => expect(rows()).toHaveLength(2));
+    submit();
+    await waitFor(() => expect(calls).toHaveLength(1));
+    await waitFor(() => expect(save()).toBeDisabled());
+    const kept = rows().length;
+
+    fireEvent.click(screen.getByRole('button', { name: 'Undo' }));
+    await waitFor(() => expect(rows()).toHaveLength(kept + 1));
+    await waitFor(() => expect(save()).toBeEnabled());
+
+    fireEvent.click(screen.getByRole('button', { name: 'Redo' }));
+    await waitFor(() => expect(rows()).toHaveLength(kept));
   });
 });
