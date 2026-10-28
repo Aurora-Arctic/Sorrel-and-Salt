@@ -9,7 +9,7 @@ over the grimoire's list, at the default column and laid out as Add Ingredient i
 The address opens it, as it opens Add Ingredient: `?new=spell-<slug>` draws it empty,
 reached from New Spell at the Grimoire's heading, which only an owner or a
 member is shown, and `?edit=<id>` draws it with a saved spell, reached from a
-spell card's pencil and Quick Look's Edit (M13.10). There is no page of its
+spell card's pencil, the recipe page's Edit (M13.10, where the dialog opens over the recipe page and closes back to it) and Quick Look's Edit (M13.21). Only a role that may update a spell is offered either control, and a viewer's `?edit` opens nothing; on the recipe page it opens only when it names that page's own spell. There is no page of its
 own. `?new=spell` is the same for the grimoire the page is on, and `?new=spell-<slug>`
 on any other page is sent to that coven's grimoire with a replace
 (`NewSpellElsewhere`; the owner's call, 2026-10-28). New Spell's press writes

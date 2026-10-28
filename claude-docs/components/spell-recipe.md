@@ -26,8 +26,9 @@ except Steps, which says the spell has no steps.
 - A one-off ingredient (MB.40) shows its own name and form, a One-Off badge and no link.
 - The formal name shows in brackets only where two different ingredients in the spell share a
   label. The same ingredient in two forms does not get one.
-- No Edit or Delete control. The `action` slot takes the Edit control for a role that may
-  update the spell (M13.10).
+- No Delete control. The `action` slot takes the Edit control, which the page passes for a role
+  that may update the spell (M13.10): an `EditLink` to `?edit=<id>`, over which the page
+  renders the spell builder's dialog, closing back to this page.
 - No `PageNav`: the sections fit one screen. No print rules: M10.22 styles this page.
 - Steps are drawn by the component read-only. M13.3's `StepRow` replaces this when it lands.
 

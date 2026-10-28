@@ -323,6 +323,25 @@ describe('the spell builder over a Grimoire tab', () => {
     expect(screen.queryByRole('dialog')).not.toBeInTheDocument();
   });
 
+  it('draws an Edit pencil on each card for a member, linking to the tab with ?edit=<id>', async () => {
+    as('member');
+    await renderTab(DraftsPage, { query: 'fixture' });
+    const pencil = screen.getByRole('link', { name: 'Edit Fixture Working' });
+    const href = new URL(pencil.getAttribute('href') ?? '', 'https://example.test');
+    expect(href.pathname).toBe('/coven/fixture-coven/grimoire/drafts');
+    expect(href.searchParams.get('edit')).toBe('s1');
+    // The address it opens over is kept, so closing returns to it as it was.
+    expect(href.searchParams.get('query')).toBe('fixture');
+    expect(screen.getAllByRole('link', { name: /^Edit / })).toHaveLength(2);
+  });
+
+  it('draws no Edit pencil for a viewer, who could read the same cards', async () => {
+    as('viewer');
+    await renderTab(DraftsPage);
+    expect(screen.getAllByRole('heading', { name: 'Fixture Working' }).length).toBeGreaterThan(0);
+    expect(screen.queryByRole('link', { name: /^Edit / })).not.toBeInTheDocument();
+  });
+
   it('opens a saved draft under ?edit=<id> with its values, read for the signed-in member', async () => {
     as('member');
     readSpell.mockResolvedValue(SPELL);

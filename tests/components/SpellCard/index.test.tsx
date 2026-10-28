@@ -23,6 +23,16 @@ const BASE = {
 };
 
 describe('SpellCard', () => {
+  it('draws an Edit link named for the spell only when given the address', () => {
+    const { rerender } = render(<SpellCard {...BASE} />);
+    expect(screen.queryByRole('link', { name: /^Edit / })).not.toBeInTheDocument();
+    rerender(<SpellCard {...BASE} editHref={'/here?edit=spell-1' as Route} />);
+    expect(screen.getByRole('link', { name: 'Edit Fixture Working' })).toHaveAttribute(
+      'href',
+      '/here?edit=spell-1',
+    );
+  });
+
   it('names the card by its title, under the id a list item points at', () => {
     render(<SpellCard {...BASE} />);
     const card = screen.getByRole('article', { name: 'Fixture Working' });

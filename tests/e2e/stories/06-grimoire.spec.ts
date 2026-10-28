@@ -98,7 +98,7 @@ test('a member names a spell and states its intent', { tag: '@story-47' }, async
   // A new spell is a draft, listed under the grimoire's Drafts tab (M10.11).
   await page.getByRole('link', { name: 'Drafts' }).click();
   await expect(page).toHaveURL(`/coven/${coven.slug}/grimoire/drafts`);
-  await expect(grimoireList(page).getByText('Fixture Working')).toBeVisible();
+  await expect(grimoireList(page).getByText('Fixture Working', { exact: true })).toBeVisible();
 });
 
 test(
@@ -351,6 +351,17 @@ test.fixme(
     await card.getByRole('link', { name: /Fixture Working/ }).click();
     await page.getByRole('button', { name: 'Mark Complete' }).click();
     await expect(page.getByText('Complete')).toBeVisible();
+    // M13.10: a saved spell is edited from its card's pencil, and the change reads back on the
+    // card and on the recipe page. tests/e2e/spell-edit.spec.ts walks the same flow while M10.20 is open.
+    await page.goto(`/coven/${coven.slug}/grimoire`);
+    await grimoireList(page).getByRole('link', { name: 'Edit Fixture Working' }).click();
+    const edit = page.getByRole('dialog', { name: 'Edit Spell, Fixture Working' });
+    await edit.getByRole('textbox', { name: 'Title' }).fill('Fixture Working Renamed');
+    await edit.getByRole('button', { name: 'Close' }).click();
+    await expect(page).toHaveURL(`/coven/${coven.slug}/grimoire`);
+    await expect(
+      grimoireList(page).getByRole('link', { name: 'Fixture Working Renamed', exact: true }),
+    ).toBeVisible();
   },
 );
 
@@ -382,7 +393,7 @@ test(
       await signInAgainAs(page, reader);
       await page.goto(path);
       await expect(grimoireList(page).getByRole('listitem')).toHaveCount(1);
-      await expect(grimoireList(page).getByText('Shared Working')).toBeVisible();
+      await expect(grimoireList(page).getByText('Shared Working', { exact: true })).toBeVisible();
       await expect(grimoireList(page).getByText('Private Working')).toHaveCount(0);
     }
   },
