@@ -108,3 +108,21 @@ export async function dragVertically(handle: HTMLElement, y: number) {
   // The 50ms the sensor swallows clicks for, as `dragByPointer`.
   await act(() => new Promise<void>((resolve) => setTimeout(resolve, 60)));
 }
+
+/**
+ * Drags `handle` by touch, up or down the column, to `y`: held `holdMs`
+ * before it moves, as a finger must hold before a touch drag starts.
+ */
+export async function touchDragVertically(handle: HTMLElement, y: number, holdMs: number) {
+  const { top, height } = handle.getBoundingClientRect();
+  const at = (clientY: number) => ({ touches: [{ clientX: 20, clientY }] });
+  const from = top + height / 2;
+  fireEvent.touchStart(handle, at(from));
+  await act(() => new Promise<void>((resolve) => setTimeout(resolve, holdMs)));
+  fireEvent.touchMove(document, at(from + 2));
+  await tick();
+  fireEvent.touchMove(document, at(y));
+  await tick();
+  fireEvent.touchEnd(document, { touches: [], changedTouches: [{ clientX: 20, clientY: y }] });
+  await act(() => new Promise<void>((resolve) => setTimeout(resolve, 60)));
+}

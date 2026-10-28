@@ -236,6 +236,10 @@ instruction steps move alike.
   nothing in a column. The focus stays on the moved step's handle.
 - **By pointer**, the handle drags once the pointer has moved 4px, and the
   step drops on the place whose centre is nearest.
+- **By touch**, the handle drags once a finger has rested on it for
+  `TOUCH_DRAG_DELAY_MS` (250ms, moving no more than 5px); a finger that
+  moves off at once does not drag. The delay is the owner's open question,
+  set in one constant in `src/lib/sortable` that the combobox shares.
 - **Every move, Add and Remove is said.** A move in dnd-kit's live region, in
   the combobox's wording ("Picked up Testwort, at position 2 of 3.",
   "Testwort moved to position 1 of 3.", "Testwort put down at position 1 of
@@ -292,7 +296,8 @@ ways and with no jar, saved steps sent back by id, and a server issue placed
 on its step. `reorder.test.tsx` covers the order: a handle on every kind of
 step, a keyboard move said at each step with the focus kept, the new order
 sent by id, Home and End and no further, Escape putting a step back, a
-pointer drag, and Add and Remove said. `spells.test.ts` asserts a reorder of
+pointer drag, a touch drag held for the delay and not a quick one, and Add
+and Remove said. `spells.test.ts` asserts a reorder of
 linked, one-off and instruction steps moves the same rows, none soft-deleted.
 `tests/modules/grimoire/services/spell-ingredient-steps.test.ts`
 reads the rows a save leaves, and asserts a member of another coven and a

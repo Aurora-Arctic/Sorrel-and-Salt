@@ -7,6 +7,7 @@ import {
   type KeyboardCoordinateGetter,
   KeyboardSensor,
   PointerSensor,
+  TouchSensor,
   type UniqueIdentifier,
   useSensor,
   useSensors,
@@ -31,6 +32,29 @@ export const SORTABLE_INSTRUCTIONS =
 // is never taken for a drag.
 const DRAG_DISTANCE_PX = 4;
 
+// ---------------------------------------------------------------------------
+// TOUCH DRAG DELAY: the owner has not settled it yet (M10.16). How long a
+// finger must rest on a handle before a touch drag starts; a finger that moves
+// further than the tolerance first is not a drag. Change the two numbers here
+// and nothing else: every sortable list reads them.
+// ---------------------------------------------------------------------------
+/** How long, in milliseconds, a finger rests on a handle before it drags. */
+export const TOUCH_DRAG_DELAY_MS = 250;
+/** How far, in pixels, a finger may move during that wait and still drag. */
+export const TOUCH_DRAG_TOLERANCE_PX = 5;
+
+/**
+ * The pointer sensor for a mouse or a pen only: a finger also sends pointer
+ * events, and the touch sensor, with its delay, answers those instead.
+ */
+class MouseAndPenSensor extends PointerSensor {
+  static override activators = PointerSensor.activators.map(({ eventName, handler }) => ({
+    eventName,
+    handler: (...args: Parameters<typeof handler>) =>
+      args[0].nativeEvent.pointerType !== 'touch' && handler(...args),
+  }));
+}
+
 /** The keys that move a lifted item, besides those that lift and put it down. */
 export const MOVE_KEYS = new Set([
   'ArrowLeft',
@@ -41,10 +65,17 @@ export const MOVE_KEYS = new Set([
   'End',
 ]);
 
-/** The pointer sensor, which drags once past a few pixels, and the keyboard's, moving by `coordinateGetter`. */
+/**
+ * A mouse or pen, which drags once past a few pixels; a finger, which drags
+ * once held for `TOUCH_DRAG_DELAY_MS`; and the keyboard, moving by
+ * `coordinateGetter`.
+ */
 export function useSortableSensors(coordinateGetter: KeyboardCoordinateGetter) {
   return useSensors(
-    useSensor(PointerSensor, { activationConstraint: { distance: DRAG_DISTANCE_PX } }),
+    useSensor(MouseAndPenSensor, { activationConstraint: { distance: DRAG_DISTANCE_PX } }),
+    useSensor(TouchSensor, {
+      activationConstraint: { delay: TOUCH_DRAG_DELAY_MS, tolerance: TOUCH_DRAG_TOLERANCE_PX },
+    }),
     useSensor(KeyboardSensor, { coordinateGetter }),
   );
 }

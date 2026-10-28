@@ -630,10 +630,15 @@ standard package rather than a bespoke one, the task's preference
   chip's tooltip, as the ×'s does. A list that is not sortable draws its
   text bare, as before, with nothing to move it by.
 - **By pointer**, the chip is dragged onto another's place, the others
-  sliding aside, and dropped. A drag starts only once the pointer has moved
-  4px, so a press focuses the handle and opens its tooltip rather than
-  starting one. `touch-action: none` on the handle lets a touch drag move the
-  chip rather than the page. A pointer's chip is over whichever place's
+  sliding aside, and dropped. A mouse or pen drag starts only once the
+  pointer has moved 4px, so a press focuses the handle and opens its tooltip
+  rather than starting one. A finger drags once it has rested on the handle
+  for `TOUCH_DRAG_DELAY_MS` (250ms for now, moving no more than 5px), on
+  dnd-kit's `TouchSensor`; the pointer sensor skips touch pointers so the
+  two never race. The delay is the owner's open question (M10.16), and the
+  one constant in [`src/lib/sortable`](../../src/lib/sortable/index.ts)
+  changes it for every sortable list. `touch-action: none` on the handle lets
+  a touch drag move the chip rather than the page. A pointer's chip is over whichever place's
   centre is nearest its own, as dnd-kit's closest-centre collision has it.
 - **The chips making way sit where the row will put them.** dnd-kit's
   `rectSortingStrategy` moves each chip onto the box of the chip whose place

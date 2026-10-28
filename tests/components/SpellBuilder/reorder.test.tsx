@@ -6,7 +6,14 @@ import type { UpdateSpellMutation, UpdateSpellMutationVariables } from '@/gql/gr
 import { makeQueryClient } from '@/lib/graphql-client';
 import { mockGraphQLMutation } from '../../support/msw/graphql';
 import { offerCategories } from '../../support/msw/ingredient-lookups';
-import { dragVertically, layOutRows, moveByKeyboard, press } from '../../support/sortable';
+import { TOUCH_DRAG_DELAY_MS } from '@/lib/sortable';
+import {
+  dragVertically,
+  layOutRows,
+  moveByKeyboard,
+  press,
+  touchDragVertically,
+} from '../../support/sortable';
 
 vi.mock('next/navigation', () => ({ useRouter: () => ({ push: vi.fn(), refresh: vi.fn() }) }));
 
@@ -199,6 +206,17 @@ describe('the spell builder’s step order', () => {
 
     expect(order()).toEqual(['Testwort', 'Stir thrice', ROSEWORT]);
     expect(save()).toBeEnabled();
+  });
+
+  it('moves a step by touch held for the delay, and not by a quick swipe', async () => {
+    renderBuilder();
+
+    // A finger that moves off at once is not a drag.
+    await touchDragVertically(handle(ROSEWORT), 144, 0);
+    expect(order()).toEqual([ROSEWORT, 'Testwort', 'Stir thrice']);
+
+    await touchDragVertically(handle(ROSEWORT), 144, TOUCH_DRAG_DELAY_MS + 50);
+    expect(order()).toEqual(['Testwort', 'Stir thrice', ROSEWORT]);
   });
 
   it('says a step added and a step removed, with the place', () => {
