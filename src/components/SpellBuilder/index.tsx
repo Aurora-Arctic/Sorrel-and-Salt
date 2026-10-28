@@ -551,20 +551,25 @@ const SpellBuilder = ({
                       </section>
                     )}
                   </div>
-                  <JarAside ready={jarReady}>
-                    <TextField<SpellBuilderValues>
-                      name="jarDescription"
-                      label="Jar Description"
-                      placeholder="Add a description"
-                      autoComplete="off"
-                    />
-                    <TextField<SpellBuilderValues>
-                      name="sealWaxColor"
-                      label="Seal Wax Colour"
-                      placeholder="Add a colour"
-                      autoComplete="off"
-                    />
-                  </JarAside>
+                  <JarAside
+                    ready={jarReady}
+                    descriptionField={
+                      <TextField<SpellBuilderValues>
+                        name="jarDescription"
+                        label="Jar Description"
+                        placeholder="Add a description"
+                        autoComplete="off"
+                      />
+                    }
+                    waxField={
+                      <TextField<SpellBuilderValues>
+                        name="sealWaxColor"
+                        label="Seal Wax Colour"
+                        placeholder="Add a colour"
+                        autoComplete="off"
+                      />
+                    }
+                  />
                 </div>
               </>,
             )}

@@ -340,8 +340,8 @@ being read the column is a skeleton, and if the read fails, an error in its plac
 ## The Jar aside
 
 `jar-aside.tsx` is an `aside` named The Jar, the right column of the Jar section (the owner's
-placement, 2026-10-28; it was a block after the steps). In order: the jar drawing with Jar
-Description and Seal Wax Colour beside it, a hairline, What You Hold (`hold.tsx`), a hairline,
+placement, 2026-10-28; it was a block after the steps). In order: the jar drawing with Seal
+Wax Colour to its right, Jar Description beneath both at the aside's full width (at every width), a hairline, What You Hold (`hold.tsx`), a hairline,
 and the comparison. The drawing is `JarDrawing` and `pickJarShape` from the jar shelf
 ([`jar-shelf.md`](jar-shelf.md)), drawn empty and tinted by the seal wax.
 

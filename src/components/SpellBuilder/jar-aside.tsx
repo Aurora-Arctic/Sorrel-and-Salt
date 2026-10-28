@@ -6,7 +6,7 @@ import { SpellComparison } from './comparison-panel';
 import { SpellHold } from './hold';
 
 // The Jar section's right-hand column (the owner's Option C2, 2026-10-28): the jar drawn
-// with the two jar fields beside it, then what the coven holds against the steps, then the
+// with the Seal Wax Colour field to its right and the Jar Description beneath both, then what the coven holds against the steps, then the
 // spell's intent against what the ingredients carry. It sits beside the step list where the
 // dialog is wide enough and drops beneath it where it is not (index.scss).
 // claude-docs/components/spell-builder.md, "The aside".
@@ -24,11 +24,14 @@ function SpellJar(): ReactElement {
 }
 
 export function JarAside({
-  children,
+  waxField,
+  descriptionField,
   ready,
 }: {
-  /** The Jar Description and Seal Wax Colour fields, drawn beside the jar. */
-  children: ReactNode;
+  /** The Seal Wax Colour field, drawn to the right of the jar. */
+  waxField: ReactNode;
+  /** The Jar Description field, beneath the jar and the wax field, the aside's full width. */
+  descriptionField: ReactNode;
   /** Whether the steps have been read; until they have, the two readings are left out. */
   ready: boolean;
 }): ReactElement {
@@ -38,8 +41,9 @@ export function JarAside({
       <h4 id={headingId}>The Jar</h4>
       <div className="spell-aside__jar">
         <SpellJar />
-        <div className="spell-aside__fields">{children}</div>
+        <div className="spell-aside__fields">{waxField}</div>
       </div>
+      {descriptionField}
       {ready && (
         <>
           <hr className="spell-aside__rule" />
