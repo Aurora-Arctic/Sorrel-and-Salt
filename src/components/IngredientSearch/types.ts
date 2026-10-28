@@ -1,4 +1,4 @@
-import type { ToxicFilter } from '@/modules/ingredients/schema/ingredient-enums';
+import type { NomenclatureKind, ToxicFilter } from '@/modules/ingredients/schema/ingredient-enums';
 import type { SpellStatus } from '@/modules/grimoire';
 import type { Route } from 'next';
 import type { ReactNode } from 'react';
@@ -16,7 +16,7 @@ export interface IngredientSearchMatch {
   /** Its formal name, null for none. */
   canonicalName: string | null;
   /** Its naming system, which a pick's dialog head sets the formal name by. */
-  nomenclature: string;
+  nomenclature: NomenclatureKind;
 }
 
 /** A dropdown row: the combobox's option, carrying the ingredient it stands for. A spell's row carries none. */
@@ -61,8 +61,9 @@ export interface IngredientSearchFormProps {
   /** The list with `query` set to `text` and the other filters kept, from the first page. */
   searchHref: (text: string) => Route;
   /**
-   * Where a picked ingredient opens. Left out, a pick applies its row's text
-   * as the search, as a grimoire's does until a spell has a page (MB.6).
+   * Where a picked ingredient opens: on a list with a Quick Look, its details
+   * modal over the list as it stands (M12.5). Left out, a pick applies its
+   * row's text as the search, as a grimoire's does until a spell has a page (MB.6).
    */
   pickHref?: (match: IngredientSearchMatch) => Route;
   /**
@@ -71,6 +72,11 @@ export interface IngredientSearchFormProps {
    * over the list as it stands; left out, a pick is a plain navigation.
    */
   pickHeading?: (match: IngredientSearchMatch) => ModalHeading;
+  /**
+   * The page's place for the modal a pick opens (`RouteModalProps.place`), where the page has
+   * more than one: the details modal's `DETAILS_PLACE`, so its head shows at once there.
+   */
+  pickPlace?: string;
   /** What the type-ahead suggests from: the compendium when left out. */
   source?: SearchSource;
   /** Draw the form's own Clear while a filter is shown. Default true. */
@@ -88,6 +94,7 @@ export interface IngredientSearchBoxProps {
   searchHref: IngredientSearchFormProps['searchHref'];
   pickHref?: IngredientSearchFormProps['pickHref'];
   pickHeading?: IngredientSearchFormProps['pickHeading'];
+  pickPlace?: IngredientSearchFormProps['pickPlace'];
   source?: IngredientSearchFormProps['source'];
 }
 

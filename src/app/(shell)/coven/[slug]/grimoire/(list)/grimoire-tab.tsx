@@ -10,7 +10,7 @@ import { readPageCursors } from '@/lib/numbered-page';
 import { requireCovenMembership } from '@/lib/request-session';
 import { RowId } from '@/lib/validation';
 import { rolePermits } from '@/modules/coven';
-import { readEditedSpell, readGrimoire } from './reads';
+import { readEditedSpell, readGrimoire, readGrimoireCategoryCounts } from './reads';
 import type { GrimoireTabProps } from './types';
 
 // One grimoire tab, Spells or Drafts (M10.11): the guard on the slug from the address, the
@@ -40,7 +40,15 @@ export async function grimoireTab({
   const categories = await readCategories();
   const lookups = { categories: new Map(categories.map(({ slug, id }) => [slug, id])) };
   const variables = JSON.stringify(GRIMOIRE_PARAMS.variables(filter, lookups));
-  const page = await readGrimoire(workspace.id, variables, status, after, before);
+  const [page, counts] = await Promise.all([
+    readGrimoire(workspace.id, variables, status, after, before),
+    readGrimoireCategoryCounts(workspace.id, variables, status),
+  ]);
+  // A category no readable spell of this tab carries is not in the counts: it holds none.
+  const counted = categories.map((category) => ({
+    ...category,
+    count: counts.get(category.id) ?? 0,
+  }));
 
   // The dialog the address opens, if this role may write a spell. `?new` is read first:
   // `?new=spell` is New Spell, and any other `?new` is the shell's Add Ingredient, so a
@@ -68,7 +76,7 @@ export async function grimoireTab({
         status={status}
         spells={page.spells}
         filter={filter}
-        categories={categories}
+        categories={counted}
         position={page.position}
         total={page.totalCount}
         {...pagerHrefs(page.pageInfo, (cursor) =>

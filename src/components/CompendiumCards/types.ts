@@ -106,6 +106,7 @@ export interface CompendiumCardsProps extends Pick<
   | 'nextHref'
   | 'position'
   | 'total'
+  | 'cursor'
 > {
   entries: readonly CompendiumCardEntry[];
   /** What the foot of each card holds. */

@@ -13,7 +13,7 @@ import { IngredientSearchForm, useSearchText } from '../IngredientSearch';
 import { useListNavigation } from '../ListFrame';
 import SearchSentence from '../SearchSentence';
 import { useLiveFacets } from './live-facets';
-import { editHeading } from './heading';
+import { DETAILS_PLACE, detailsHeading } from '../IngredientEntry/details';
 import { COVEN_PARAMS } from '../IngredientSearch/coven-params';
 import {
   COMPENDIUM_PATH,
@@ -35,11 +35,12 @@ import type { CompendiumListFilterProps } from './types';
 // where the page is in view, applies at once. Before hydration the panel is drawn open
 // inside this GET form, each facet a native control under the name the parameter table
 // reads, and Apply Filters (or Enter in the search box) submits them all. Picking a name in
-// the search box's dropdown opens that entry's modal over the list as it is shown, the typed
-// text not applied (the owner's call, M8.10). The row has no Clear of its own.
+// the search box's dropdown opens that entry's Quick Look, its details modal (M12.5), over the
+// list as it is shown, its page kept and the typed text not applied (the owner's rule of
+// 2026-10-27, for every list with a Quick Look). The row has no Clear of its own.
 // A coven's list (M9.6, `audience="coven"`) is the same row on COVEN_PARAMS: it adds the Source,
 // In Stock and Low Stock Only choices, reads its live counts from the coven's cupboard, suggests
-// from it, and opens a pick at the entry's page under /coven/<slug>/ingredients.
+// from it.
 // See claude-docs/components/compendium-list.md.
 
 type Held = CompendiumListFilterProps['filter'];
@@ -227,6 +228,7 @@ const CompendiumListFilterRow = ({
   covenSlug,
   workspaceId,
   covens,
+  cursor,
 }: CompendiumListFilterProps): ReactElement => {
   const where = whereOf({ audience, covenSlug });
   const coven = where.covenSlug !== undefined;
@@ -251,16 +253,19 @@ const CompendiumListFilterRow = ({
       className="compendium-list__row"
       searchHref={(query) => hrefFor(filter, panel, query, where)}
       source={coven && workspaceId ? { kind: 'cupboard', workspaceId } : undefined}
-      // The list as shown, the typed text not applied: the modal opens over it.
+      // The entry's Quick Look over the list as shown, its page kept and the typed text not
+      // applied, keyed as the list's eye keys it: the admin's by slug, the other two by id.
       pickHref={(match) => {
+        const place = { ...filter, ...cursor };
         if (where.covenSlug !== undefined) {
-          return `${where.path}/${match.id}` as Route;
+          return covenIngredientsHref(where.covenSlug, { ...place, entry: match.id });
         }
         return audience === 'admin'
-          ? compendiumHref(filter, { edit: match.slug })
-          : (`/compendium/ingredients/${match.slug}` as Route);
+          ? compendiumHref({ ...place, entry: match.slug })
+          : compendiumHref({ ...place, entry: match.id }, undefined, PUBLIC_COMPENDIUM_PATH);
       }}
-      pickHeading={audience === 'admin' ? editHeading : undefined}
+      pickHeading={detailsHeading}
+      pickPlace={DETAILS_PLACE}
     >
       <PanelFacets
         filter={filter}
@@ -328,6 +333,7 @@ const CompendiumListFilterWithSentence = ({
   covenSlug,
   workspaceId,
   covens,
+  cursor,
   total,
 }: CompendiumListFilterProps & { total: number }): ReactElement => {
   // Only a filter's navigation retypes the sentence: a pager press changes the page, not the search.
@@ -368,6 +374,7 @@ const CompendiumListFilterWithSentence = ({
         covenSlug={covenSlug}
         workspaceId={workspaceId}
         covens={covens}
+        cursor={cursor}
       />
       <SearchSentence sentence={sentence} query={searched.query} pending={searching} />
     </>

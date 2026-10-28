@@ -24,16 +24,17 @@ ingredients list (M9.6) and the spell builder follow.
 `IngredientSearchForm` (a client component, re-exported from `index.tsx`) is
 the filter row. Its props (`IngredientSearchFormProps`):
 
-| Prop          | What it is                                                                     |
-| ------------- | ------------------------------------------------------------------------------ |
-| `label`       | The form's accessible name, title case                                         |
-| `action`      | The page itself: the form's GET target, and the unfiltered page Clear opens    |
-| `query`       | The text the list shows now, which the box starts from                         |
-| `shown`       | Each filter value the page shows; Clear is drawn while any is set              |
-| `searchHref`  | The list with the query set to a text, other filters kept, from the first page |
-| `pickHref`    | Where a picked match opens                                                     |
-| `pickHeading` | Optional: the route modal's heading; given, a pick opens a route modal         |
-| `children`    | Optional: the consumer's other fields, after the search box                    |
+| Prop          | What it is                                                                      |
+| ------------- | ------------------------------------------------------------------------------- |
+| `label`       | The form's accessible name, title case                                          |
+| `action`      | The page itself: the form's GET target, and the unfiltered page Clear opens     |
+| `query`       | The text the list shows now, which the box starts from                          |
+| `shown`       | Each filter value the page shows; Clear is drawn while any is set               |
+| `searchHref`  | The list with the query set to a text, other filters kept, from the first page  |
+| `pickHref`    | Where a picked match opens                                                      |
+| `pickHeading` | Optional: the route modal's heading; given, a pick opens a route modal          |
+| `pickPlace`   | Optional: the route modal's place, as `RouteModalProps.place` (`DETAILS_PLACE`) |
+| `children`    | Optional: the consumer's other fields, after the search box                     |
 
 `useSearchText()` returns the text in the box now, searched or not, for a field
 in the filter slot to carry.
@@ -158,7 +159,11 @@ in the filter slot to carry.
   list's own edit links do. Without it, a plain `router.push`. Neither goes
   through the list frame's transition, which would grey the list and swap it
   for a skeleton. The heading is opt-in so a consumer whose pick is a page
-  (M8.18) does not show a loading modal.
+  (M8.18) does not show a loading modal. On every ingredient list with a Quick Look a pick
+  opens that entry's Quick Look over the list as shown, the filter and the page kept: the
+  list gives `pickHeading={detailsHeading}` and `pickPlace={DETAILS_PLACE}`, and the href is
+  the list's `?entry=` address ([`ingredient-entry.md`](ingredient-entry.md), "The details
+  modal"; the owner's rule of 2026-10-27, from the M10.11 review).
 - **Which page uses which source.** The compendium pages leave `source` out,
   the coven Ingredients page passes the cupboard, and the coven Grimoire page
   passes the grimoire with its tab's status (above).

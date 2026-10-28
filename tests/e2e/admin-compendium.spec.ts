@@ -282,7 +282,7 @@ test('the toxic toggle starts off, saves, and reads back on reopening', async ({
 // JavaScript are real (claude-docs/components/ingredient-search.md).
 const CATS_CLAW = /^Cat's Claw \(Uncaria/;
 
-test('a name typed shows matching rows, and a pick opens its modal over the list as it was shown', async ({
+test('a name typed shows matching rows, and a pick opens its Quick Look over the list as it was shown', async ({
   page,
 }) => {
   await signInAs(page, 'search-pick-admin@admin-compendium.test', ['discord'], 'admin');
@@ -301,10 +301,12 @@ test('a name typed shows matching rows, and a pick opens its modal over the list
 
   await rows.first().click();
 
-  const dialog = page.getByRole('dialog', { name: /^Edit Ingredient, Cat's Claw/ });
+  // The owner's rule of 2026-10-27: a pick opens the entry's Quick Look, not its edit modal.
+  const dialog = page.getByRole('dialog', { name: "Cat's Claw", exact: true });
   await expect(dialog).toBeVisible();
   await expect(page).toHaveURL(/[?&]withoutReferences=1(&|$)/);
-  await expect(page).toHaveURL(/[?&]edit=cat/);
+  await expect(page).toHaveURL(/[?&]entry=cat/);
+  await expect(page).not.toHaveURL(/[?&]edit=/);
   await expect(page).not.toHaveURL(/query=/);
 });
 

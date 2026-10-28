@@ -45,11 +45,13 @@ vi.mock('@/app/compendium-reads', () => ({ readCategories: async () => [CATEGORY
 
 const listGrimoire = vi.fn();
 const countGrimoire = vi.fn();
+const countGrimoireCategories = vi.fn();
 const assignedCategoriesOf = vi.fn();
 const readSpell = vi.fn();
 vi.mock('@/modules/grimoire', () => ({
   listGrimoire,
   countGrimoire,
+  countGrimoireCategories,
   assignedCategoriesOf,
   readSpell,
 }));
@@ -107,6 +109,7 @@ beforeEach(() => {
   });
   listGrimoire.mockResolvedValue([spell('s1', 'Fixture Working'), spell('s2', 'Testwort Charm')]);
   countGrimoire.mockResolvedValue({ totalCount: 2, countBefore: null });
+  countGrimoireCategories.mockResolvedValue([{ value: 'c1', count: 4 }]);
   assignedCategoriesOf.mockResolvedValue([[{ id: 'c1', name: 'Testwarding' }], []]);
   displayNamesOf.mockImplementation(async (_s: unknown, ids: string[]) =>
     ids.map((id) => (id === 'editor-s1' ? 'Fixture A' : null)),
@@ -156,6 +159,33 @@ describe('the Grimoire tabs', () => {
       categoryIds: ['c1'],
       categoryMode: 'any',
     });
+  });
+
+  /** The Categories filter's suggestions, the panel opened. */
+  function openCategories() {
+    fireEvent.click(screen.getByRole('button', { name: /^Filters/ }));
+    screen.getByRole('combobox', { name: 'Category' }).focus();
+    fireEvent.click(screen.getByRole('button', { name: 'Show Category suggestions' }));
+  }
+
+  it('counts the categories under the tab’s status and the address’s query, and offers each with its count', async () => {
+    await renderTab(DraftsPage, { query: 'hearth' });
+    expect(countGrimoireCategories).toHaveBeenCalledWith(session, COVEN.id, {
+      order: 'UPDATED_DESC',
+      status: 'draft',
+      query: 'hearth',
+    });
+
+    openCategories();
+    expect(screen.getByRole('option', { name: /^Testwarding\D*4/ })).toBeInTheDocument();
+  });
+
+  it('offers no category the count leaves out, since no spell here carries it', async () => {
+    countGrimoireCategories.mockResolvedValue([]);
+    await renderTab(SpellsPage);
+
+    openCategories();
+    expect(screen.queryByRole('option', { name: /^Testwarding/ })).not.toBeInTheDocument();
   });
 
   it('keeps the tab’s status over a status written into the address', async () => {

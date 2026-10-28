@@ -7,9 +7,11 @@ import type { Membership } from '@/modules/coven';
 import type { Cursor, PageCount, PageEntry, PageRequest } from '../../lib/types';
 import { findPageCountInReadableSpells, findPageInReadableSpells } from './finders';
 import { pointsLive } from './ingredients';
-import { scopedTo } from './predicates';
-import { existsIn } from './select';
-import type { GrimoireQuery, ListOrder, SortPart, WeightedSearch } from './types';
+import { notSoftDeleted, scopedTo } from './predicates';
+import { existsIn, selectFrom } from './select';
+import { readableSpells } from './spells';
+import type { FacetCount, GrimoireQuery, ListOrder, SortPart, WeightedSearch } from './types';
+import { inLiveGroup } from './vocabularies';
 import { weightedSearch } from './weighted-search';
 
 // The grimoire list's read (M10.9), with its search and category filter
@@ -166,4 +168,42 @@ export function findGrimoireCount(
 ): Promise<PageCount> {
   const order = orderOf(query, searchMatch(membership, query.query));
   return findPageCountInReadableSpells(membership, spells, order, start, whereOf(query));
+}
+
+/**
+ * How many spells `findGrimoirePage` would list in each live category, under
+ * the rest of the query: the Categories filter's counts (M10.11), read as
+ * the ingredient facets read theirs (`categoryFacet`), in one grouped read
+ * under the same visibility rule, so another member's private spell never
+ * counts. Under `all` the chosen categories stay in the query, so each count
+ * is the chosen ones and that one together; under `any` they leave it. A
+ * category no spell carries is absent rather than at zero.
+ */
+export function findGrimoireCategoryCounts(
+  membership: Membership,
+  query: GrimoireQuery,
+): Promise<FacetCount[]> {
+  const rest = query.categoryMode === 'any' ? { ...query, categoryIds: undefined } : query;
+  const match = searchMatch(membership, rest.query);
+  const pair = alias(spellCategories, 'facet_pair');
+  return selectFrom(
+    spells,
+    and(readableSpells(membership), notSoftDeleted(spells), whereOf(rest)),
+    {
+      aggregate: {
+        value: sql<string>`${categories.id}`,
+        count: sql<number>`count(distinct ${spells.id})::int`,
+      },
+      over: { join: match?.join, wordMatch: match !== undefined },
+      joins: [
+        { type: 'inner', table: pair, on: eq(pair.spellId, spells.id) },
+        {
+          type: 'inner',
+          table: categories,
+          on: and(eq(categories.id, pair.categoryId), inLiveGroup(categories)),
+        },
+      ],
+      groupBy: [categories.id],
+    },
+  );
 }
