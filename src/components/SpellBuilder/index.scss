@@ -173,7 +173,8 @@
   display: flex;
   flex-wrap: wrap;
   align-items: flex-start;
-  gap: space(5);
+  gap: space(4);
+  container: spell-jar / inline-size;
 }
 
 .spell-jar-layout__list {
@@ -187,16 +188,31 @@
   }
 }
 
+// A hairline between the two columns, drawn as the aside's own border so no element is
+// added for a screen reader: beneath the list when they stack, beside it when they do not.
 .spell-aside {
   display: flex;
+  box-sizing: border-box;
   flex: 1 1 18rem;
   flex-direction: column;
   gap: space(3);
   min-width: 0;
+  padding-block-start: space(4);
+  border-block-start: 1px solid $hairline;
 
   h4,
   h5 {
     margin: 0;
+  }
+}
+
+// 50rem is the width at which both columns fit: the list's 30rem, the gap and the aside.
+@container spell-jar (min-width: 50rem) {
+  .spell-aside {
+    padding-block-start: 0;
+    padding-inline-start: space(4);
+    border-block-start: 0;
+    border-inline-start: 1px solid $hairline;
   }
 }
 
