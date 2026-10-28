@@ -97,9 +97,9 @@ const LABELS = [
   'Title',
   'Intent',
   'Jar Description',
-  'Seal Wax Colour',
+  'Seal Wax',
   'Moon Phase',
-  'Day of the Week',
+  'Day',
   'Note',
 ] as const;
 
@@ -169,9 +169,9 @@ describe('SpellBuilder', () => {
     type('Title', '  Fixture Working ');
     type('Intent', 'To see clearly');
     type('Jar Description', '4 oz');
-    type('Seal Wax Colour', 'Blue');
+    type('Seal Wax', 'Blue');
     type('Moon Phase', 'Waxing gibbous');
-    type('Day of the Week', 'Monday');
+    type('Day', 'Monday');
     type('Note', 'Kept on the sill');
     submit();
 
@@ -255,7 +255,7 @@ describe('SpellBuilder', () => {
     expect(save()).toBeDisabled();
 
     // A field emptied is a field cleared: null, not left out.
-    type('Seal Wax Colour', '');
+    type('Seal Wax', '');
     submit();
 
     await waitFor(() => expect(updated).toHaveLength(1));
@@ -336,7 +336,7 @@ describe('SpellBuilder', () => {
       ]);
       fireEvent.click(screen.getByRole('button', { name: 'Show Moon Phase suggestions' }));
 
-      fireEvent.click(screen.getByRole('button', { name: 'Show Day of the Week suggestions' }));
+      fireEvent.click(screen.getByRole('button', { name: 'Show Day suggestions' }));
       expect(listed()).toEqual([
         'Monday',
         'Tuesday',
@@ -363,11 +363,11 @@ describe('SpellBuilder', () => {
 
       type('Moon Phase', 'full');
       fireEvent.click(screen.getByRole('option', { name: 'Full Moon' }));
-      type('Day of the Week', 'fri');
+      type('Day', 'fri');
       fireEvent.click(screen.getByRole('option', { name: 'Friday' }));
 
       expect(field('Moon Phase')).toHaveValue('Full Moon');
-      expect(field('Day of the Week')).toHaveValue('Friday');
+      expect(field('Day')).toHaveValue('Friday');
       submit();
 
       await waitFor(() => expect(calls).toHaveLength(1));
@@ -379,7 +379,7 @@ describe('SpellBuilder', () => {
       renderBuilder();
 
       type('Moon Phase', 'Blue moon');
-      type('Day of the Week', 'Any dark night');
+      type('Day', 'Any dark night');
       submit();
 
       await waitFor(() => expect(calls).toHaveLength(1));
@@ -408,7 +408,7 @@ describe('SpellBuilder', () => {
       openAll();
 
       expect(field('Moon Phase')).toHaveValue('Full');
-      expect(field('Day of the Week')).toHaveValue('saturday');
+      expect(field('Day')).toHaveValue('saturday');
       expect(save()).toBeDisabled();
     });
   });
@@ -444,8 +444,8 @@ describe('SpellBuilder', () => {
       expect(expanded()).toEqual(['true', 'true', 'true', 'true']);
       const HELD = {
         Purpose: ['Title', 'Intent', 'Category'],
-        Jar: ['Jar Description', 'Seal Wax Colour', 'Add to Jar'],
-        'When to Work It': ['Moon Phase', 'Day of the Week'],
+        Jar: ['Jar Description', 'Seal Wax', 'Add to Jar'],
+        'When to Work It': ['Moon Phase', 'Day'],
         Notes: ['Note'],
       } as const;
       for (const name of SECTIONS) {
@@ -502,14 +502,14 @@ describe('SpellBuilder', () => {
 
     it('keeps what was typed across a shut, its line reading it', () => {
       renderBuilder();
-      type('Day of the Week', 'Friday');
+      type('Day', 'Friday');
 
       fireEvent.click(when());
 
       expect(when()).toHaveAttribute('aria-expanded', 'false');
       expect(when()).toHaveAccessibleDescription('Friday');
       fireEvent.click(when());
-      expect(field('Day of the Week')).toHaveValue('Friday');
+      expect(field('Day')).toHaveValue('Friday');
     });
 
     it('opens the shut section a refused save names, flagged, and leaves the rest shut', async () => {

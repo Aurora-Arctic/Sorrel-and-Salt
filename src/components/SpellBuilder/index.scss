@@ -319,7 +319,7 @@ $spell-columns-switch: $spell-main-min + $spell-columns-gap + $spell-side;
 // The jar drawing with the two fields beside it.
 .spell-aside__jar {
   display: flex;
-  // The jar is centred on the whole Seal Wax Colour field, its label as well as its input.
+  // The jar is centred on the whole Seal Wax field, its label as well as its input.
   align-items: center;
   gap: space(3);
 }

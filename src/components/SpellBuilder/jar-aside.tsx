@@ -11,7 +11,7 @@ import type { SpellStepsValues } from './steps/types';
 import { isInstruction } from './steps/values';
 
 // The Jar section's right-hand column (the owner's Option C2, 2026-10-28): the jar drawn
-// with the Seal Wax Colour field to its right and the Jar Description beneath both, then what the coven holds against the steps, then the
+// with the Seal Wax field to its right and the Jar Description beneath both, then what the coven holds against the steps, then the
 // spell's intent against what the ingredients carry. It sits beside the step list where the
 // dialog is wide enough and drops beneath it where it is not (index.scss).
 // claude-docs/components/spell-builder.md, "The aside".
@@ -58,7 +58,7 @@ export function JarAside({
   descriptionField,
   ready,
 }: {
-  /** The Seal Wax Colour field, drawn to the right of the jar. */
+  /** The Seal Wax field, drawn to the right of the jar. */
   waxField: ReactNode;
   /** The Jar Description field, beneath the jar and the wax field, the aside's full width. */
   descriptionField: ReactNode;

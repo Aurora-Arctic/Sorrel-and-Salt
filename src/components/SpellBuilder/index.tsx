@@ -644,7 +644,7 @@ const SpellBuilder = ({
                     waxField={
                       <TextField<SpellBuilderValues>
                         name="sealWaxColor"
-                        label="Seal Wax Colour"
+                        label="Seal Wax"
                         placeholder="Add a colour"
                         autoComplete="off"
                       />
@@ -669,7 +669,7 @@ const SpellBuilder = ({
                     />
                     <SpellSuggestField
                       name="dayOfWeek"
-                      label="Day of the Week"
+                      label="Day"
                       placeholder="Add a day"
                       options={DAYS_OF_THE_WEEK}
                     />
