@@ -1,6 +1,7 @@
 'use client';
 
 import type { Route } from 'next';
+import { moonPhaseIcon } from '../SpellBuilder/moon-phase-icon';
 import FacetCombobox from '../FacetCombobox';
 import CardDensitySwitch from '../CardDensitySwitch';
 import { type ReactElement, useMemo, useState } from 'react';
@@ -139,7 +140,10 @@ const PanelCategories = ({
             placeholder="Add Moon Phase"
             removeNoun="Moon Phase"
             loading={pending}
-            choices={facets.moonPhases}
+            choices={facets.moonPhases.map((choice) => ({
+              ...choice,
+              icon: moonPhaseIcon(choice.label),
+            }))}
             values={held.moonPhases}
             onChange={(moonPhases) => onHeld({ ...held, moonPhases })}
           />
