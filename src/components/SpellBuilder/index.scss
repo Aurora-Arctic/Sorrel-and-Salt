@@ -242,9 +242,8 @@
   display: flex;
   flex-direction: column;
   gap: space(2);
-  margin: 0;
-  padding: 0;
-  list-style: none;
+  // Not a bulleted list: no ◆ marker from typography-base's `ul li::before`.
+  @include list-reset;
 }
 
 .spell-hold__line {
@@ -351,9 +350,7 @@
   display: flex;
   flex-wrap: wrap;
   gap: space(1) space(2);
-  margin: 0;
-  padding: 0;
-  list-style: none;
+  @include list-reset;
 
   li {
     padding: 0 space(2);
