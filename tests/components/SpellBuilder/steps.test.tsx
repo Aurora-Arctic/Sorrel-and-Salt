@@ -367,6 +367,36 @@ describe('the spell builder’s Add to Jar', () => {
     expect(stepRows()[0]).toHaveTextContent('Fixture Mockroot');
   });
 
+  it('undoes a Remove, putting the step back with what was typed, and redoes it', async () => {
+    suggest(ROSEWORT);
+    renderBuilder();
+    await add('Fixture', /Fixture Rosewort/);
+    const quantity = () =>
+      within(stepRow('Fixture Rosewort')).getByRole('spinbutton', { name: /^Quantity/ });
+    fireEvent.change(quantity(), { target: { value: '7' } });
+    fireEvent.click(
+      within(stepRow('Fixture Rosewort')).getByRole('button', { name: 'Remove Fixture Rosewort' }),
+    );
+    expect(stepRows()).toHaveLength(0);
+
+    fireEvent.click(screen.getByRole('button', { name: 'Undo' }));
+    await waitFor(() => expect(stepRows()).toHaveLength(1));
+    expect(stepRow('Fixture Rosewort')).toHaveTextContent('7');
+
+    fireEvent.click(screen.getByRole('button', { name: 'Redo' }));
+    await waitFor(() => expect(stepRows()).toHaveLength(0));
+  });
+
+  it('undoes an added step', async () => {
+    suggest(ROSEWORT);
+    renderBuilder();
+    await add('Fixture', /Fixture Rosewort/);
+    expect(stepRows()).toHaveLength(1);
+
+    fireEvent.click(screen.getByRole('button', { name: 'Undo' }));
+    await waitFor(() => expect(stepRows()).toHaveLength(0));
+  });
+
   it('opens a closed ingredient row from a click on its name, and a click on Remove removes it without opening it', async () => {
     suggest(ROSEWORT, MOCKROOT);
     renderBuilder();
@@ -812,7 +842,7 @@ describe('the spell builder’s jar fill', () => {
   const bands = () =>
     screen
       .getByRole('complementary', { name: 'The Jar' })
-      .querySelectorAll('svg .jar-shelf__band rect').length;
+      .querySelectorAll('svg .jar-shelf__band path').length;
 
   it('draws a band for each ingredient step, a one-off too, and none for an instruction', async () => {
     suggest(MOCKROOT);

@@ -63,6 +63,22 @@ function Part({ part }: { part: JarPart }): ReactElement {
 /** How many bands fill the spell's jar; past it the bands shrink to keep fitting. */
 export const BANDS_FULL = 8;
 
+/** Height of the crest on each band edge, in drawing units (about 2% of a body). */
+const CREST = 0.6;
+
+/**
+ * One band, `height` tall: its top is a single low crest across the jar and its bottom is
+ * the same crest, so stacked bands tile with no gap. The lowest band is flat along the base;
+ * the highest takes a meniscus (a soft dip, edges raised) for its top, like a liquid at rest.
+ */
+function bandPath(height: number, lowest: boolean, highest: boolean): string {
+  const top = highest ? 'M-2 -1.1Q24 0.9 50 -1.1' : `M-2 ${CREST}Q24 ${-CREST} 50 ${CREST}`;
+  const bottom = lowest
+    ? `V${height + 4}H-2z`
+    : `V${height + CREST}Q24 ${height - CREST} -2 ${height + CREST}z`;
+  return top + bottom;
+}
+
 export function JarDrawing({
   shape,
   held,
@@ -99,15 +115,14 @@ export function JarDrawing({
       {bands > 0 && (
         <g clipPath={url}>
           {Array.from({ length: bands }, (_, i) => {
-            const height = (40 - S.full) / Math.max(bands, BANDS_FULL);
+            const height = +((40 - S.full) / Math.max(bands, BANDS_FULL)).toFixed(2);
             return (
               <g
                 key={i}
-                className="jar-shelf__band"
+                className={`jar-shelf__band jar-shelf__band--${i % 2}`}
                 style={{ transform: `translateY(${+(40 - height * (i + 1)).toFixed(2)}px)` }}
               >
-                <rect x={0} y={0} width={48} height={+height.toFixed(2)} />
-                <line x1={0} y1={0} x2={48} y2={0} />
+                <path d={bandPath(height, i === 0, i === bands - 1)} />
               </g>
             );
           })}
