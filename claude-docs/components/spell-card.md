@@ -51,11 +51,11 @@ and tells them no one else in the coven sees it. It is the word "Private", so it
 rely on colour. `.badge--private` takes Draft's muted tint and inks, and sits after Draft
 when a spell is both.
 
-## No link yet
+## The link
 
-The card is not a link. The spell's own page is MB.6, and the card gains its link there,
-through `PendingLink` as IngredientCard's name does. Until then the title is plain text, and
-the card has no drawer behind it, since nothing opens from it.
+Given an `href`, the title is a `PendingLink` with a `LinkHint`, as IngredientCard's name
+is; the grimoire list passes each spell's recipe page (MB.6, `recipeHref`). Without one the
+title is plain text. The card has no drawer behind it, since nothing opens from it.
 
 ## Styling
 

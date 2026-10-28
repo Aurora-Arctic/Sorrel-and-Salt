@@ -17,6 +17,8 @@ export interface GrimoireListProps {
   path: Route;
   /** The coven the title search suggests from. */
   workspaceId: string;
+  /** The coven's slug, which each spell's recipe page address is built from. */
+  covenSlug: string;
   /** The tab's status, which the title search keeps to. */
   status: SpellStatus;
   spells: readonly GrimoireSpell[];
@@ -32,7 +34,7 @@ export interface GrimoireListProps {
 
 export interface GrimoireFilterProps extends Pick<
   GrimoireListProps,
-  'path' | 'workspaceId' | 'status' | 'filter' | 'categories' | 'total'
+  'path' | 'workspaceId' | 'covenSlug' | 'status' | 'filter' | 'categories' | 'total'
 > {}
 
 export interface EmptyGrimoireProps extends Pick<GrimoireListProps, 'status' | 'filter'> {}

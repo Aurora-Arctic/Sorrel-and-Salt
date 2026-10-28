@@ -75,6 +75,7 @@ export async function grimoireTab({
       <GrimoireList
         path={path}
         workspaceId={workspace.id}
+        covenSlug={workspace.slug}
         status={status}
         spells={page.spells}
         filter={filter}
