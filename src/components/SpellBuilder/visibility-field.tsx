@@ -1,6 +1,7 @@
 'use client';
 
 import { type ReactElement, useState } from 'react';
+import { flushSync } from 'react-dom';
 import { useController, useFormContext, useFormState } from 'react-hook-form';
 import { SwitchField } from '../Field';
 import { ConfirmQuestion } from '../Modal';
@@ -28,12 +29,8 @@ const MEANS = {
 const SHARED_FOR_GOOD =
   'Shared with the coven, so it cannot be made private again. Duplicate makes a private copy.';
 
-export function SpellVisibilityField({ created, save }: SpellVisibilityFieldProps): ReactElement {
-  const { control, handleSubmit } = useFormContext<
-    SpellBuilderValues,
-    unknown,
-    SpellBuilderInput
-  >();
+export function SpellVisibilityField({ created, flush }: SpellVisibilityFieldProps): ReactElement {
+  const { control, setValue } = useFormContext<SpellBuilderValues, unknown, SpellBuilderInput>();
   const { defaultValues } = useFormState({ control });
   const { field } = useController({ control, name: 'visibility' });
   const [asking, setAsking] = useState(false);
@@ -53,8 +50,11 @@ export function SpellVisibilityField({ created, save }: SpellVisibilityFieldProp
   // a refusal lands in the builder's notice and the spell stays private.
   const share = async () => {
     setSharing(true);
+    flushSync(() => setValue('visibility', 'workspace'));
     try {
-      await handleSubmit((values) => save({ ...values, visibility: 'workspace' }))();
+      await flush();
+    } catch {
+      setValue('visibility', 'private');
     } finally {
       setSharing(false);
       setAsking(false);

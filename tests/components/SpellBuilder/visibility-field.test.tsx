@@ -222,7 +222,10 @@ describe('SpellBuilder visibility', () => {
       fireEvent.click(toggle());
       fireEvent.click(within(sharing() as HTMLElement).getByRole('button', { name: 'Share' }));
 
-      expect(await screen.findByRole('alert')).toHaveTextContent('Viewers cannot write spells');
+      expect(await screen.findByText('Viewers cannot write spells')).toHaveAttribute(
+        'role',
+        'alert',
+      );
       await waitFor(() => expect(sharing()).toBeNull());
       expect(toggle()).not.toBeChecked();
       expect(toggle()).toBeEnabled();
@@ -241,8 +244,8 @@ describe('SpellBuilder visibility', () => {
       fireEvent.change(title(), { target: { value: 'Fixture Working Again' } });
       submit();
 
-      const notice = await screen.findByRole('alert');
-      expect(notice).toHaveTextContent(NARROWING_REFUSED);
+      const notice = await screen.findByText(NARROWING_REFUSED);
+      expect(notice).toHaveAttribute('role', 'alert');
       expect(notice).not.toHaveTextContent(/^Forbidden$/);
     });
   });
