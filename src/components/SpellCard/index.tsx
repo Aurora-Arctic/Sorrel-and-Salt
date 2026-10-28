@@ -1,14 +1,17 @@
 import type { ReactElement } from 'react';
+import { PendingLink } from '../../lib/navigation';
+import { ingredientLinkTarget } from '../AppShell/site-target';
 import CategoryChips from '../CategoryChips';
 import LastEdit from '../LastEdit';
+import { EditLink } from '../IconTip';
+import LinkHint from '../LinkHint';
 import type { SpellCardProps } from './types';
 import './index.scss';
 
 // One spell in the grimoire's list (M10.11): its title, its intent, a Draft badge on
 // a draft, a Private badge on a private spell (M10.13), the categories its author assigned it, and who last edited it. Presentational, in IngredientCard's
 // pattern: the Foundations specimen for the layout and the card's surface, with no
-// drawer, since nothing opens from it yet. Not a link until the spell page exists
-// (MB.6), so the title is plain text. claude-docs/components/spell-card.md.
+// drawer. The title links to the spell's recipe page (MB.6) where the caller gives `href`. claude-docs/components/spell-card.md.
 
 /** What a spell with no title is called, here and wherever it is listed. */
 export const UNTITLED_SPELL = 'Untitled Spell';
@@ -18,6 +21,8 @@ export const spellTitleId = (id: string): string => `spell-${id}-title`;
 
 const SpellCard = ({
   id,
+  href,
+  editHref,
   title,
   intent,
   status,
@@ -44,17 +49,44 @@ const SpellCard = ({
         </span>
       </span>
       <div className="specimen__top">
-        <Heading id={spellTitleId(id)} className="spell-card__title">
-          {name}
-        </Heading>
-        {/* Only a draft is marked: complete is the default, so a Complete badge would
-            say nothing (the owner, 2026-10-27). Likewise only a private spell: the
-            coven is the default, and a private one lists to its author alone, so
-            the badge tells them no one else sees it (M10.13). */}
-        {(status === 'draft' || visibility === 'private') && (
-          <div className="specimen__badges">
-            {status === 'draft' && <span className="badge badge--draft">Draft</span>}
-            {visibility === 'private' && <span className="badge badge--private">Private</span>}
+        <div className="spell-card__heading">
+          <Heading id={spellTitleId(id)} className="spell-card__title">
+            {/* The words are their own positioned span, inside the link so the link's overlay
+                is not placed against it: the top row is unpositioned so the overlay is placed
+                against the article, and unpositioned words would paint under the smouldering
+                face (index.scss). */}
+            {href ? (
+              // The recipe page draws its own frame while it loads, so the link names it (MB.6).
+              // The link stretches over the whole card, as an ingredient card's name does.
+              <PendingLink href={href} navigationTarget={ingredientLinkTarget(href)}>
+                <span className="spell-card__title-text">
+                  {name} <LinkHint />
+                </span>
+              </PendingLink>
+            ) : (
+              <span className="spell-card__title-text">{name}</span>
+            )}
+          </Heading>
+          {/* Only a draft is marked: complete is the default, so a Complete badge would
+              say nothing (the owner, 2026-10-27). Likewise only a private spell: the
+              coven is the default, and a private one lists to its author alone, so
+              the badge tells them no one else sees it (M10.13). Under the title, as the
+              marks sit under an ingredient card's name. */}
+          {(status === 'draft' || visibility === 'private') && (
+            <div className="specimen__badges">
+              {status === 'draft' && <span className="badge badge--draft">Draft</span>}
+              {visibility === 'private' && <span className="badge badge--private">Private</span>}
+            </div>
+          )}
+        </div>
+        {/* The card's top-right corner, as an ingredient card's badges are. */}
+        {editHref && (
+          <div className="spell-card__corner">
+            <EditLink
+              href={editHref}
+              name={name}
+              heading={{ eyebrow: 'Edit Spell', title: name }}
+            />
           </div>
         )}
       </div>

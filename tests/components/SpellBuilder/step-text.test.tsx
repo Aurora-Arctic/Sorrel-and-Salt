@@ -54,6 +54,7 @@ const SPELL: SpellBuilderSpell = {
   dayOfWeek: null,
   note: null,
   visibility: 'workspace',
+  status: 'draft',
   steps: [
     savedStep(ID.stepLight, { body: 'Light the candle' }),
     savedStep(ID.stepCrush, { name: 'Testwort', body: 'Crush it first' }),
@@ -67,7 +68,7 @@ function acceptCreate() {
     (variables) => {
       calls.push(variables);
       return {
-        createSpell: { ...SPELL, id: 's1', revision: 1, status: 'draft', steps: [] },
+        createSpell: { ...SPELL, id: 's1', revision: 1, status: 'draft' as const, steps: [] },
       };
     },
   );
@@ -80,7 +81,7 @@ function acceptUpdate() {
     'UpdateSpell',
     (variables) => {
       calls.push(variables);
-      return { updateSpell: { ...SPELL, revision: 5, status: 'draft' } };
+      return { updateSpell: { ...SPELL, revision: 5, status: 'draft' as const } };
     },
   );
   return calls;

@@ -166,7 +166,9 @@ export const rules = {
       return {
         Program(program) {
           const code = codeOf(context);
-          let predicate = null;
+          // `readableSpells`, and beside it the two helpers of the grimoire's
+          // Visibility facet (M13.22), which only narrow what it lets through.
+          const predicates = [];
           if (file === PREDICATE_FILE) {
             for (const statement of program.body) {
               const declaration = statement.declaration;
@@ -175,7 +177,16 @@ export const rules = {
                 declaration?.type === 'FunctionDeclaration' &&
                 declaration.id.name === 'readableSpells'
               ) {
-                predicate = declaration.range;
+                predicates.push(declaration.range);
+              }
+              const variable =
+                declaration?.type === 'VariableDeclaration' && declaration.declarations[0];
+              if (
+                statement.type === 'ExportNamedDeclaration' &&
+                variable &&
+                ['visibilityIn', 'visibilityText'].includes(variable.id.name)
+              ) {
+                predicates.push(declaration.range);
               }
             }
           }
@@ -183,7 +194,7 @@ export const rules = {
             if (scope && !scope.test(file)) continue;
             for (const match of code.matchAll(pattern)) {
               const index = match.index ?? 0;
-              if (predicate && index > predicate[0] && index < predicate[1]) continue;
+              if (predicates.some(([from, to]) => index > from && index < to)) continue;
               const lineText = code.split('\n')[code.slice(0, index).split('\n').length - 1].trim();
               if (file === ALLOWED_FILE && lineText.includes(ALLOWED_TEXT)) continue;
               context.report({

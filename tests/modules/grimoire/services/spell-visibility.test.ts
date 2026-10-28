@@ -9,7 +9,7 @@ import { setSpellVisibility } from '@/modules/grimoire';
 import { A, B, C, D, asUser } from '../../../support/as-user';
 import { useTestDatabase } from '../../../support/db/database';
 import { makeSpell } from '../../../support/fixtures';
-import type { SpellVisibility } from '@/modules/grimoire';
+import type { SpellStatus, SpellVisibility } from '@/modules/grimoire';
 
 // DESIGN.md §5's one-way rule: `private` may be widened to `workspace`, and
 // `workspace` may never be narrowed back. Once the coven has read a spell and
@@ -32,7 +32,8 @@ async function cast(
   author: typeof A,
   visibility: SpellVisibility,
   workspaceId: string = WORKSPACE_W_ID,
-  status: 'draft' | 'complete' = 'draft',
+  // Complete by default: the one-way rule binds a complete spell (M10.20).
+  status: SpellStatus = 'complete',
 ): Promise<string> {
   const session = asUser(author);
   const membership = await assertMembership(session, workspaceId, { spell: ['create'] });
@@ -52,6 +53,11 @@ async function cast(
 async function visibilityOf(spellId: string): Promise<string> {
   const [row] = await sql`select visibility::text from spells where id = ${spellId}`;
   return row.visibility as string;
+}
+
+async function statusOf(spellId: string): Promise<string> {
+  const [row] = await sql`select status::text from spells where id = ${spellId}`;
+  return row.status as string;
 }
 
 describe('setSpellVisibility', () => {
@@ -90,36 +96,10 @@ describe('setSpellVisibility', () => {
     });
   });
 
-  describe('narrowing a draft, workspace → private (the owner, 2026-10-28)', () => {
-    it('is permitted to the author, by direct id', async () => {
-      const spellId = await cast(B, 'workspace');
-      // Why this could have been refused: the coven can already read the spell,
-      // so it is exactly the case the one-way rule holds once a spell is complete.
-      const owner = await assertMembership(asUser(A), WORKSPACE_W_ID, { spell: ['read'] });
-      await expect(findOneSpell(owner, spellId)).resolves.toMatchObject({ id: spellId });
-
-      await expect(
-        setSpellVisibility(asUser(B), WORKSPACE_W_ID, spellId, 'private'),
-      ).resolves.toMatchObject({ id: spellId, visibility: 'private' });
-
-      expect(await visibilityOf(spellId)).toBe('private');
-      await expect(findOneSpell(owner, spellId)).resolves.toBeUndefined();
-    });
-
-    it('still refuses a viewer, who writes nothing', async () => {
-      const spellId = await cast(B, 'workspace');
-
-      await expect(
-        setSpellVisibility(asUser(C), WORKSPACE_W_ID, spellId, 'private'),
-      ).rejects.toBeInstanceOf(Forbidden);
-
-      expect(await visibilityOf(spellId)).toBe('workspace');
-    });
-  });
-
-  describe('narrowing a complete spell, workspace → private', () => {
+  describe('narrowing workspace → private', () => {
     it('is refused with an error that says why, not a bare Forbidden', async () => {
-      const spellId = await cast(B, 'workspace', WORKSPACE_W_ID, 'complete');
+      const spellId = await cast(B, 'workspace');
+      expect(await statusOf(spellId)).toBe('complete');
 
       // Why this could have succeeded: B authored this spell and may widen the
       // private one in the same coven, so the refusal is the rule rather than a
@@ -143,7 +123,7 @@ describe('setSpellVisibility', () => {
     });
 
     it('leaves the spell shared', async () => {
-      const spellId = await cast(B, 'workspace', WORKSPACE_W_ID, 'complete');
+      const spellId = await cast(B, 'workspace');
 
       await expect(
         setSpellVisibility(asUser(B), WORKSPACE_W_ID, spellId, 'private'),
@@ -153,13 +133,29 @@ describe('setSpellVisibility', () => {
     });
 
     it('is refused to the owner too, who cannot retract another member’s gift', async () => {
-      const spellId = await cast(B, 'workspace', WORKSPACE_W_ID, 'complete');
+      const spellId = await cast(B, 'workspace');
 
       await expect(
         setSpellVisibility(asUser(A), WORKSPACE_W_ID, spellId, 'private'),
       ).rejects.toBeInstanceOf(Forbidden);
 
       expect(await visibilityOf(spellId)).toBe('workspace');
+    });
+  });
+
+  describe('a draft (M10.20)', () => {
+    it('narrows and widens as often as its author likes', async () => {
+      const spellId = await cast(B, 'workspace', WORKSPACE_W_ID, 'draft');
+      // Preconditions: it is a shared draft, the very row a complete one would refuse.
+      expect(await visibilityOf(spellId)).toBe('workspace');
+      expect(await statusOf(spellId)).toBe('draft');
+
+      await setSpellVisibility(asUser(B), WORKSPACE_W_ID, spellId, 'private');
+      expect(await visibilityOf(spellId)).toBe('private');
+      await setSpellVisibility(asUser(B), WORKSPACE_W_ID, spellId, 'workspace');
+      expect(await visibilityOf(spellId)).toBe('workspace');
+      await setSpellVisibility(asUser(B), WORKSPACE_W_ID, spellId, 'private');
+      expect(await visibilityOf(spellId)).toBe('private');
     });
   });
 

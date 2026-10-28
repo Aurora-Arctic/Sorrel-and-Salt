@@ -9,7 +9,7 @@ over the grimoire's list, at the default column and laid out as Add Ingredient i
 The address opens it, as it opens Add Ingredient: `?new=spell-<slug>` draws it empty,
 reached from New Spell at the Grimoire's heading, which only an owner or a
 member is shown, and `?edit=<id>` draws it with a saved spell, reached from a
-spell card's pencil and Quick Look's Edit (M13.10). There is no page of its
+spell card's pencil, the recipe page's Edit (M13.10, where the dialog opens over the recipe page and closes back to it) and Quick Look's Edit (M13.21). Only a role that may update a spell is offered either control, and a viewer's `?edit` opens nothing; on the recipe page it opens only when it names that page's own spell. There is no page of its
 own. `?new=spell` is the same for the grimoire the page is on, and `?new=spell-<slug>`
 on any other page is sent to that coven's grimoire with a replace
 (`NewSpellElsewhere`; the owner's call, 2026-10-28). New Spell's press writes
@@ -27,9 +27,47 @@ no `instructions` field: the ritual is the spell's steps (M13.1).
 | ------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | `workspaceId` | The coven the spell belongs to, sent with every save                                                                                                                        |
 | `spell`       | Optional: a saved spell, its `id`, `revision`, `visibility`, `steps`, the seven fields (null for one not set) and its `categoryIds` (left out, none). Without it, all empty |
+| `userId`      | Optional: the signed-in person, which keys the browser copy the autosave keeps. Left out, no copy is kept                                                                   |
 | `stepsRead`   | Optional: `loading` while `spell`'s steps are on their way, `failed` when they could not be read. Left out, `spell.steps` are its steps                                     |
 
 ## Saving
+
+**It autosaves** (M13.17, story 81) through the shared engine
+([`autosave.md`](autosave.md)): three seconds after the last change, thirty at
+most while typing, with the status (`SaveStatus`) beside Save. Every way of
+saving (the autosave, Save, Close, Mark Complete and Share) goes through one
+function, `persist` in `index.tsx`, which checks the form, calls
+`saveSpell` (`autosave.ts`) and rebases the form on the answer. A refusal
+skips the engine's retries, so the status stops at "Couldn't save" with Retry.
+Save flushes at once, is off when nothing is unsaved, and spins while saving.
+The autosave is held back while a step's unit is refused or a saved spell's
+steps are still being read.
+
+The autosave never sends a blank instruction (owner decision 2026-10-28). A
+new blank instruction step (no saved id) is left out of what the autosave
+sends and of what makes the form unsaved, so the rest of the spell saves and
+the blank row stays in the form with no error, until it is written, removed,
+or Save or Close checks the whole form (the resolver checks it only while a
+save the person asked for runs). A saved instruction whose text has been
+cleared is not left out, since that would delete it: the autosave is held back
+for it, as for a refused unit, and Save or Close shows the error beside it.
+
+- **The adapter** (`autosave.ts`) takes a target: `{ kind: 'new' }` calls
+  `createSpell`, once, and the engine then carries the id;
+  `{ kind: 'spell', id, revision }` calls `updateSpell` with that
+  `expectedRevision` (null forces, for M13.18). A later edit to a complete
+  spell can name another target when spell history arrives.
+- **The browser copy.** Every change is mirrored to localStorage, keyed
+  `autosave:spell:<id|new>:<userId>`, until the server confirms. If a copy
+  newer than the spell's `updatedAt` exists when the builder opens, a banner
+  reads "Restored unsaved changes from 2:02 pm" with Keep (load the copy into
+  the form, unsaved) and Discard (forget it). An older copy is removed without
+  a word.
+- **Typing in flight is kept.** A save's answer becomes the form's new start
+  with `reset(..., { keepValues: true })`, so what was typed meanwhile reads
+  as the next change.
+- **Mark Complete and Reopen as Draft** flush first; a missing title refuses
+  inline on the title field and the status goes back.
 
 - **No field is required.** A draft saves with any one field, or all of them.
   Only marking a spell complete needs a title (the `spells_complete_has_title`
@@ -95,44 +133,47 @@ off is private (`private`), which only its author can. A line under the
 switch, its `note`, says what the state it is in means. The switch stands at the start of its column, its label and note too, as the
 ingredient form's Toxic switch does, rather than centred as in a filter bar
 (`index.scss`, on the form's `spell-builder` class).
-The rule it follows is DESIGN.md §5's: visibility only widens once the spell is
-complete; a draft may be made private again ([`m13.17-draft-unshare`](../design-decisions/m13.17-draft-unshare.md)).
+The rule it follows is DESIGN.md §5's: a complete spell's visibility only widens, and a draft's moves either way (M10.20, [`m10.20-draft-visibility.md`](../design-decisions/m10.20-draft-visibility.md)).
 
-- **A new spell** opens with the switch on, the coven being the database's
-  default, and it may be turned either way. The choice goes out with the first save. A choice alone is
+- **A new spell** opens with the switch off, private (the owner's call, 2026-10-28: the
+  autosave saves it 3 s after the first keystroke, and a shared spell never goes back; the
+  database's column default stays `workspace`, since every write sends the value). It may be turned either way. The choice goes out with the first save. A choice alone is
   something to save (the owner's call, 2026-10-27): a visibility other than
   the last save's makes the form dirty, so Save Spell enables, Close saves
   it, and the browser asks before the tab closes.
-- **A saved private spell** keeps the switch open. Turning it on asks
+- **A saved draft** keeps the switch open both ways, with no question: sharing
+  it is reversible. Shared, its note says "Every member of the coven can see it.
+  Once the spell is complete, it stays shared." The change is saved with the rest.
+- **A saved complete private spell** keeps the switch open. Turning it on asks
   "Share With the Coven?" (`ConfirmQuestion`, Share or Keep It Private), and
   Share saves the whole form with `visibility: workspace` at once, so the
   spell is shared in one action. Any other unsaved changes go with it, which
   the question says. A refusal lands in the `Notice` and the spell stays
   private.
 - **A shared draft** keeps the switch open. Switching it off is a pending
-  change like a new spell's: Save Spell saves it. Marking the spell complete in
-  the same go is refused by the service, and its words show in the `Notice`.
+  change like a new spell's, saved with the rest of the form. The lock binds only
+  once the stored status is complete (M10.20).
 - **A complete spell shared with the coven** shows the switch on and disabled, with
   the note "Shared with the coven" and, in an InfoTip beside it, "It cannot be
   made private again. Duplicate makes a private copy." The tip's text is in
   the switch's accessible description. Duplicate is M13.20. A new spell saved for
   the coven stays open while it is a draft, and shuts once it is complete.
 
-Which state shows is read from the form's starting values (the last save's)
-and whether the spell has been created, so the builder passes only
+Which state shows is read from the form's starting values (the last save's,
+status and visibility) and whether the spell has been created, so the builder passes only
 `created` and its `send`. Every save carries the visibility the form holds.
 A save from a stale page, after the spell was shared elsewhere, therefore
-says `private` and is refused by the service (`assertWidens`, M10.6); the
+says `private` and, if it is complete, is refused by the service (`assertWidens`, M10.6); the
 refusal's words, which explain the rule and name Delete, show in the
 `Notice`, never a bare "Forbidden".
 
 ## Draft and complete
 
 Whether the spell is finished (M10.20, story 55): `SpellStatusField`, in
-`status-field.tsx`, drawn in the Notes section before the visibility switch.
+`status-field.tsx`, drawn in the form's action row (`FormActions`) beside Save Spell, outside every section.
 A spell is a `draft` until it is marked `complete`. The control is one
 button that says what it will do: Mark Complete on a draft, Reopen as Draft on
-a complete spell, with a line above it saying what the state means. Like Share
+a complete spell, with a line saying what the state means, visually hidden and read as the button's description. Like Share
 With the Coven, a click saves the whole form with the other status at once, so
 the status is never a pick left pending.
 
@@ -164,7 +205,7 @@ in the browser: the title rule needs `status: complete`, which M10.20 adds.
 
 ## Closing
 
-Close, Escape and a click outside the dialog save anything unsaved, then
+Close, Escape and a click outside the dialog flush the autosave, then
 close, and ask nothing (`useSaveOnClose`, `save-on-close.ts`). This is the
 builder's exception to M13.14's Discard Changes question, by the owner's call
 on 2026-10-27: a spell's draft is kept, never thrown away. The close waits for
@@ -465,10 +506,17 @@ The row's own look, the card, is in [`step-row.md`](step-row.md), "The card".
 `index.stories.tsx`, titled "Grimoire / Spell Builder": `States`, with a
 control that chooses Empty, Title Typed, Saved Spell (shared with the coven,
 its visibility shut), Private Spell, Share Question, Phase Outside the List
-or Refused After Saving, each in its `SpellDialog` over the app shell, with
+or Refused After Saving (the status reads Couldn't save, with Retry), each in its `SpellDialog` over the app shell, with
 Open Again to look once more after Close.
 
 ## Testing
+
+`tests/components/SpellBuilder/autosave.test.tsx` covers the saves (create once,
+then update at the revision; a draft with no title; the three-second save) and
+the recovery banner (Keep, Discard, an older copy). The gate spec
+`tests/e2e/spell-builder-autosave.spec.ts` scans the builder with axe in each
+status: saving, saved, failed with Retry, and conflict. Story 81 is in
+`tests/e2e/stories/06-grimoire.spec.ts`.
 
 `tests/components/SpellBuilder/step-text.test.tsx` covers the step text (M13.3): Add an Instruction with
 its focus and announcement, an instruction-only step sent as its text alone, a blank one refused at its
@@ -497,8 +545,8 @@ grimoire page's test,
 `tests/app/(shell)/coven/[slug]/grimoire/(list)/page.test.tsx`, covers which
 address opens which dialog for an owner and a member, and that a viewer's
 `?new=spell-<slug>` or `?edit=<id>` opens nothing. `visibility-field.test.tsx` covers the
-visibility control: on by default and sent with a create, off sent as private and
-left open, a choice alone saveable, the share question kept and
+visibility control: off by default and sent as private with a create, on sent as workspace and
+shut; a new spell's first autosave stores private (`autosave.test.tsx`), a choice alone saveable, the share question kept and
 confirmed, a refused share, a refused narrowing shown in the notice, and the
 control shut with its reason on a shared spell. `tests/components/SpellBuilder/categories-field.test.tsx` covers the
 Categories field: the picks sent with a first save, Save on with a pick and

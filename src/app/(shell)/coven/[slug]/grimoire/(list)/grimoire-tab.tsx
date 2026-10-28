@@ -3,7 +3,8 @@ import type { ReactElement } from 'react';
 import { readCategories } from '@/app/compendium-reads';
 import GrimoireList from '@/components/GrimoireList';
 import SpellDialog from '@/components/SpellBuilder/spell-dialog';
-import { GRIMOIRE_PARAMS } from '@/components/GrimoireList/params';
+import { GRIMOIRE_PARAMS, VISIBILITIES } from '@/components/GrimoireList/params';
+import type { GrimoireFacets, GrimoireListFilter } from '@/components/GrimoireList/types';
 import { NEW, opensNewSpell } from '@/components/AppShell/add-href';
 import { single } from '@/lib/search-params';
 import { pagerHrefs } from '@/lib/list-href';
@@ -11,7 +12,12 @@ import { readPageCursors } from '@/lib/numbered-page';
 import { requireCovenMembership } from '@/lib/request-session';
 import { RowId } from '@/lib/validation';
 import { rolePermits } from '@/modules/coven';
-import { readEditedSpell, readGrimoire, readGrimoireCategoryCounts } from './reads';
+import {
+  readEditedSpell,
+  readGrimoire,
+  readGrimoireCategoryCounts,
+  readGrimoireFacetCounts,
+} from './reads';
 import type { GrimoireTabProps } from './types';
 
 // One grimoire tab, Spells or Drafts (M10.11): the guard on the slug from the address, the
@@ -22,8 +28,50 @@ import type { GrimoireTabProps } from './types';
 // `?edit=<id>` for a saved spell, over the tab as it was, for a role that may write a spell. A viewer's opens
 // nothing. `?new` is shared with the shell's Add Ingredient, `?new=ingredient-coven-<slug>`, and its
 // value says which dialog (claude-docs/design-decisions/m10.12-spell-builder-modal.md).
+// A role that may update a spell also gets each card's Edit pencil, a link to the tab's own
+// address with `?edit=<id>` added (M13.10), so closing the dialog returns to it as it was.
 // A function the two pages call rather than a component they draw, so each page is the
 // async component itself and a test awaits it whole.
+/** `closeHref` with a saved spell's dialog open over it. */
+const editHrefOf = (closeHref: Route, id: string): Route =>
+  `${closeHref}${closeHref.includes('?') ? '&' : '?'}${new URLSearchParams({ edit: id })}` as Route;
+
+const VISIBILITY_LABELS: Record<(typeof VISIBILITIES)[number], string> = {
+  private: 'Private',
+  workspace: 'Shared',
+};
+
+/**
+ * The four facets' choices from their counts (M13.22). Moon phase and day are the spells' own
+ * words, so a value picked from a hand-edited address that no spell holds is still offered, at 0,
+ * and keeps its chip. Visibility is the fixed pair, each shown whether or not a spell holds it.
+ */
+function facetsOf(
+  filter: GrimoireListFilter,
+  counts: Awaited<ReturnType<typeof readGrimoireFacetCounts>>,
+): GrimoireFacets {
+  const texts = (picked: readonly string[], found: readonly { value: string; count: number }[]) => {
+    const held = new Set(found.map(({ value }) => value.toLowerCase()));
+    return [
+      ...found.map(({ value, count }) => ({ value, label: value, count })),
+      ...picked
+        .filter((value) => !held.has(value.toLowerCase()))
+        .map((value) => ({ value, label: value, count: 0 })),
+    ];
+  };
+  const visible = new Map(counts.visibilities.map(({ value, count }) => [value, count]));
+  return {
+    moonPhases: texts(filter.moonPhases, counts.moonPhases),
+    daysOfWeek: texts(filter.daysOfWeek, counts.daysOfWeek),
+    visibilities: VISIBILITIES.map((value) => ({
+      value,
+      label: VISIBILITY_LABELS[value],
+      count: visible.get(value) ?? 0,
+    })),
+    makers: counts.makers,
+  };
+}
+
 export async function grimoireTab({
   params,
   searchParams,
@@ -41,15 +89,18 @@ export async function grimoireTab({
   const categories = await readCategories();
   const lookups = { categories: new Map(categories.map(({ slug, id }) => [slug, id])) };
   const variables = JSON.stringify(GRIMOIRE_PARAMS.variables(filter, lookups));
-  const [page, counts] = await Promise.all([
+  const [page, counts, facetCounts] = await Promise.all([
     readGrimoire(workspace.id, variables, status, after, before),
     readGrimoireCategoryCounts(workspace.id, variables, status),
+    readGrimoireFacetCounts(workspace.id, variables, status),
   ]);
   // A category no readable spell of this tab carries is not in the counts: it holds none.
   const counted = categories.map((category) => ({
     ...category,
     count: counts.get(category.id) ?? 0,
   }));
+
+  const facets = facetsOf(filter, facetCounts);
 
   // The dialog the address opens, if this role may write a spell. `?new` is read first:
   // `?new=spell-<slug>` naming this coven, or `?new=spell`, is New Spell. Any other `?new` is
@@ -61,10 +112,12 @@ export async function grimoireTab({
   const edit = adding === undefined ? query.edit : undefined;
   const spellId = typeof edit === 'string' ? RowId.safeParse(edit) : undefined;
   const canCreate = rolePermits(role, { spell: ['create'] });
+  const canUpdate = rolePermits(role, { spell: ['update'] });
+  const closeHref = GRIMOIRE_PARAMS.href(path, filter, { after, before });
   const opened =
     opensNewSpell(single(adding) ?? null, workspace.slug) && canCreate
       ? {}
-      : spellId?.success && rolePermits(role, { spell: ['update'] })
+      : spellId?.success && canUpdate
         ? await readEditedSpell(workspace.id, spellId.data).then(
             (saved) => saved && { spell: saved },
           )
@@ -75,10 +128,16 @@ export async function grimoireTab({
       <GrimoireList
         path={path}
         workspaceId={workspace.id}
+        covenSlug={workspace.slug}
         status={status}
-        spells={page.spells}
+        spells={
+          canUpdate
+            ? page.spells.map((spell) => ({ ...spell, editHref: editHrefOf(closeHref, spell.id) }))
+            : page.spells
+        }
         filter={filter}
         categories={counted}
+        facets={facets}
         position={page.position}
         total={page.totalCount}
         {...pagerHrefs(page.pageInfo, (cursor) =>
@@ -89,9 +148,10 @@ export async function grimoireTab({
         workspaceId={workspace.id}
         covenSlug={workspace.slug}
         covenName={workspace.name}
-        closeHref={GRIMOIRE_PARAMS.href(path, filter, { after, before })}
+        closeHref={closeHref}
         opened={opened}
         canCreate={canCreate}
+        userId={membership.userId}
       />
     </>
   );

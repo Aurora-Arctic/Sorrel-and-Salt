@@ -505,3 +505,10 @@ $spell-columns-switch: $spell-main-min + $spell-columns-gap + $spell-side;
     margin: 0;
   }
 }
+
+// The recovery banner's two choices (M13.17), side by side after the sentence.
+.spell-builder__recovered {
+  display: inline-flex;
+  flex-wrap: wrap;
+  gap: space(2);
+}

@@ -1165,6 +1165,34 @@ export interface GrimoireQuery {
   categoryIds?: readonly string[];
   /** Whether a spell needs every chosen category ('all', the default) or any of them. */
   categoryMode?: CategoryMode;
+  /**
+   * Only the spells whose moon phase is any of these, trimmed and ignoring
+   * case (M13.22); absent or empty means no filter. Free text: the column has
+   * no vocabulary.
+   */
+  moonPhases?: readonly string[];
+  /** As `moonPhases`, for the day of the week. */
+  daysOfWeek?: readonly string[];
+  /** Only the spells with any of these visibilities; absent or empty means no filter. */
+  visibilities?: readonly (typeof spells.$inferSelect)['visibility'][];
+  /**
+   * Only the spells made (`created_by`, never the last editor) by any of
+   * these users, by id; absent or empty means no filter. An id that made no
+   * readable spell here lists nothing.
+   */
+  makerIds?: readonly string[];
+}
+
+/** The four facets the grimoire adds to Categories (M13.22), each a list of values with their counts. */
+export interface GrimoireFacetCounts {
+  /** Each moon phase written on a readable spell, as the most-used spelling of it. */
+  moonPhases: FacetCount[];
+  /** As `moonPhases`, for the day of the week. */
+  daysOfWeek: FacetCount[];
+  /** Each visibility a readable spell holds. */
+  visibilities: FacetCount<'private' | 'workspace'>[];
+  /** Each user who made a readable spell, by user id. */
+  makers: FacetCount[];
 }
 
 /** What the admin user list is narrowed by (MB.52). Each part is optional, and absent means no filter. */

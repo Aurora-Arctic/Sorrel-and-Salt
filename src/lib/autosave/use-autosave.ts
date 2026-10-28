@@ -1,7 +1,7 @@
 'use client';
 
 import { useEffect, useRef, useState } from 'react';
-import { StaleWriteError } from '@/lib/graphql-client-error';
+import { GraphQLClientError, StaleWriteError } from '@/lib/graphql-client-error';
 import { useLeaveGuard } from '@/lib/navigation';
 import { clearMirror, writeMirror } from './mirror';
 import type { Autosave, AutosaveOptions, AutosaveView, SaveContext, SaveResult } from './types';
@@ -14,6 +14,10 @@ import type { Autosave, AutosaveOptions, AutosaveView, SaveContext, SaveResult }
 
 /** The waits before each retry of a failed save, after which it stops at `failed`. */
 export const RETRY_DELAYS_MS = [2000, 5000, 15000] as const;
+
+/** An answer that asking again will not change: the server read the request and said no. */
+const isRefusal = (error: GraphQLClientError): boolean =>
+  ['VALIDATION', 'FORBIDDEN', 'NOT_FOUND'].includes(String(error.errors?.[0]?.extensions?.code));
 
 const INITIAL: AutosaveView = {
   status: 'idle',
@@ -125,15 +129,20 @@ function createEngine<TValue>(
     // A change made while the save was in flight is not on the server yet,
     // and the mirror holds it.
     if (!unsaved) clearMirrored();
+    // A flush that arrived mid-save queues a follow-up, but only a change
+    // made since gives it something to send.
+    const again = queued && unsaved && latest.current.enabled;
+    queued = false;
     set({
-      status: queued ? 'saving' : delayTimer ? 'pending' : 'saved',
+      status: again ? 'saving' : delayTimer ? 'pending' : 'saved',
       savedAt: result.savedAt,
       error: null,
       conflict: null,
       id: result.id,
     });
-    if (queued) start();
-    else if (!delayTimer) settle();
+    if (again) {
+      start();
+    } else if (!delayTimer) settle();
   }
 
   function failed(thrown: unknown) {
@@ -148,7 +157,11 @@ function createEngine<TValue>(
       return;
     }
     const error = thrown instanceof Error ? thrown : new Error(String(thrown));
-    const wait = RETRY_DELAYS_MS[attempts];
+    // A refusal (invalid, forbidden, not found) gets the same answer when asked
+    // again, so it stops at `failed` at once; only a dropped connection or a
+    // server fault is worth the retries.
+    const refused = thrown instanceof GraphQLClientError && isRefusal(thrown);
+    const wait = refused ? undefined : RETRY_DELAYS_MS[attempts];
     if (wait !== undefined && attached) {
       // Still busy: a change or a flush during the wait rides on the retry,
       // which sends the latest value.
@@ -234,6 +247,9 @@ function createEngine<TValue>(
 
     attach() {
       attached = true;
+      // A change made while detached (the page hidden and shown again, as a
+      // navigation does) was kept but not published.
+      publish(view);
     },
 
     /** Unmounted: stop every timer. The mirror keeps anything not yet saved. */

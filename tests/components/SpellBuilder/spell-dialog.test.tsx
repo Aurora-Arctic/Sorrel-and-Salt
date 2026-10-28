@@ -468,8 +468,9 @@ describe('SpellDialog', () => {
         fireEvent.click(close());
       });
 
-      expect(await within(dialog()).findByRole('alert')).toHaveTextContent(
-        'Viewers cannot write spells',
+      expect(await within(dialog()).findByText('Viewers cannot write spells')).toHaveAttribute(
+        'role',
+        'alert',
       );
       expect(router.replace).not.toHaveBeenCalled();
       expect(field('Title')).toHaveValue('Fixture Working');

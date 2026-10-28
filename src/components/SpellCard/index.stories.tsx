@@ -89,3 +89,29 @@ export const Hover: Story = {
     </>
   ),
 };
+
+// The compact look, which the grimoire's Compact switch turns on (as an ingredient card's):
+// the list's `data-density` attribute is all it takes.
+export const Compact: Story = {
+  render: () => (
+    <div data-density="compact">
+      <SpellCardFilters />
+      <StatesGrid
+        cell="18rem"
+        states={{
+          Complete: <SpellCard {...BASE} id="compact-complete" lastEdit={LAST_EDIT} />,
+          'Private Draft': (
+            <SpellCard
+              {...BASE}
+              id="compact-private-draft"
+              status="draft"
+              visibility="private"
+              title="Dreaming Sachet"
+              lastEdit={LAST_EDIT}
+            />
+          ),
+        }}
+      />
+    </div>
+  ),
+};

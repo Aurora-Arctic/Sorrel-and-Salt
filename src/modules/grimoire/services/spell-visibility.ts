@@ -9,10 +9,10 @@ import type { SpellVisibility } from '../types';
 
 /**
  * DESIGN.md §5's one-way rule, as the caller meets it. Widening is a gift and
- * narrowing is a retraction: once the coven has read a spell and built on it,
- * hiding it takes back something they were relying on, so `private` may be
- * widened to `workspace` and, once the spell is `complete`, `workspace` may
- * never go back. A draft may be made private again (the owner, 2026-10-28).
+ * narrowing is a retraction: once the coven has read a finished spell and built
+ * on it, hiding it takes back something they were relying on, so `private` may
+ * be widened to `workspace` and a complete spell may never go back. A draft is
+ * not yet relied on, and moves either way (M10.20).
  *
  * **There is no author clause here, and none is missing.** A private spell is
  * readable by its author alone, so `findOneSpell` has already answered

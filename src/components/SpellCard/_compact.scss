@@ -1,0 +1,55 @@
+@use 'sass:map';
+@use '../../scss/variables' as *;
+@use '../../scss/mixins' as *;
+
+// The compact look of the spell card, as IngredientCard's `_compact.scss` is for its card:
+// the same padding, gap, title step, badge size and chip size, so the two lists read alike.
+// The card takes no density prop; the look is switched by the list's `data-density` and a
+// stored Regular choice on <html> (CardDensitySwitch), so it works before React runs.
+// claude-docs/components/spell-card.md, "Compact".
+@mixin spell-card-compact {
+  .spell-card {
+    padding: space(3) space(4);
+    gap: space(2);
+  }
+
+  // Title: h4's size, two steps under the card's h2.
+  .spell-card__title {
+    font-size: heading-size(4);
+    line-height: 1.15;
+  }
+
+  .spell-card .specimen__top {
+    gap: space(2);
+  }
+
+  // Badges: the sides tighten and the gaps close; the height stays at the smallest target.
+  .spell-card .specimen__badges {
+    gap: space(1);
+
+    .badge {
+      @include badge-size('small');
+    }
+  }
+
+  .spell-card .spell-card__heading > .specimen__badges {
+    margin-block-start: space(1);
+  }
+
+  .spell-card .specimen__chips {
+    gap: space(1);
+
+    .chip {
+      font-size: type-size('overline');
+      padding: 0.0625rem 0.5rem;
+    }
+  }
+
+  .spell-card__intent {
+    font-size: type-size('small');
+  }
+
+  .spell-card .specimen__foot {
+    padding-top: space(2);
+  }
+}

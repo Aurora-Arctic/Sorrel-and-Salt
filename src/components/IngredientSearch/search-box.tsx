@@ -179,8 +179,8 @@ const IngredientSearchBox = ({
   });
   const isFetching = { compendium, cupboard, grimoire }[source.kind].isFetching;
   // Every answer becomes the same rows. The coven's label stands in for an
-  // ingredient's name; a spell carries no match, and an untitled one stands for
-  // the text typed, which a pick then applies.
+  // ingredient's name. A spell's match holds its id (and as its slug, which it has none of),
+  // for the recipe page a pick opens (MB.6); an untitled one stands for the text typed.
   const answer = useMemo((): { hasNextPage: boolean; rows: IngredientSearchOption[] } | null => {
     if (source.kind === 'grimoire') {
       const page = grimoire.data?.grimoire;
@@ -191,6 +191,13 @@ const IngredientSearchBox = ({
               key: node.id,
               value: node.title ?? query,
               label: node.title ?? 'Untitled Spell',
+              match: {
+                id: node.id,
+                slug: node.id,
+                name: node.title ?? 'Untitled Spell',
+                canonicalName: null,
+                nomenclature: 'none',
+              },
             })),
           }
         : null;
@@ -233,7 +240,7 @@ const IngredientSearchBox = ({
   // list's Edit link does.
   function pick(_value: string, option: IngredientSearchOption | null) {
     if (!option) return;
-    // A row with nothing to open, a spell's, applies its text as the search.
+    // A row with nothing to open, or a box given nowhere to open it, applies its text as the search.
     if (!pickHref || !option.match) {
       apply(searchHref(option.value.trim()));
       return;
