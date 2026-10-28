@@ -4,7 +4,8 @@ import { readCategories } from '@/app/compendium-reads';
 import GrimoireList from '@/components/GrimoireList';
 import SpellDialog from '@/components/SpellBuilder/spell-dialog';
 import { GRIMOIRE_PARAMS } from '@/components/GrimoireList/params';
-import { NEW, NEW_SPELL } from '@/components/AppShell/add-href';
+import { NEW, opensNewSpell } from '@/components/AppShell/add-href';
+import { single } from '@/lib/search-params';
 import { pagerHrefs } from '@/lib/list-href';
 import { readPageCursors } from '@/lib/numbered-page';
 import { requireCovenMembership } from '@/lib/request-session';
@@ -17,9 +18,9 @@ import type { GrimoireTabProps } from './types';
 // address read as the filter, and one page of 24 cards of the tab's status. Read per request
 // and never cached, since a grimoire is the coven's alone (CLAUDE.md rule 6). The layout's
 // TabbedPage draws the `<main>` and the heading, inside the RouteModalProvider the spell
-// builder's dialog opens in (M10.12): `?new=spell` for New Spell and `?edit=<id>` for a
-// saved spell, over the tab as it was, for a role that may write a spell. A viewer's opens
-// nothing. `?new` is shared with the shell's Add Ingredient, `?new=ingredient`, and its
+// builder's dialog opens in (M10.12): `?new=spell-<slug>` (or `?new=spell`) for New Spell and
+// `?edit=<id>` for a saved spell, over the tab as it was, for a role that may write a spell. A viewer's opens
+// nothing. `?new` is shared with the shell's Add Ingredient, `?new=ingredient-coven-<slug>`, and its
 // value says which dialog (claude-docs/design-decisions/m10.12-spell-builder-modal.md).
 // A function the two pages call rather than a component they draw, so each page is the
 // async component itself and a test awaits it whole.
@@ -51,7 +52,8 @@ export async function grimoireTab({
   }));
 
   // The dialog the address opens, if this role may write a spell. `?new` is read first:
-  // `?new=spell` is New Spell, and any other `?new` is the shell's Add Ingredient, so a
+  // `?new=spell-<slug>` naming this coven, or `?new=spell`, is New Spell. Any other `?new` is
+  // the shell's Add Ingredient, or another coven's New Spell on its way there, so a
   // saved spell's `?edit` waits beneath it and opens when that dialog's close drops `new`.
   // One dialog shows at a time. An `edit` that is not an id reads nothing.
   const role = membership.role;
@@ -60,7 +62,7 @@ export async function grimoireTab({
   const spellId = typeof edit === 'string' ? RowId.safeParse(edit) : undefined;
   const canCreate = rolePermits(role, { spell: ['create'] });
   const opened =
-    adding === NEW_SPELL && canCreate
+    opensNewSpell(single(adding) ?? null, workspace.slug) && canCreate
       ? {}
       : spellId?.success && rolePermits(role, { spell: ['update'] })
         ? await readEditedSpell(workspace.id, spellId.data).then(
@@ -85,6 +87,7 @@ export async function grimoireTab({
       />
       <SpellDialog
         workspaceId={workspace.id}
+        covenSlug={workspace.slug}
         closeHref={GRIMOIRE_PARAMS.href(path, filter, { after, before })}
         opened={opened}
         canCreate={canCreate}

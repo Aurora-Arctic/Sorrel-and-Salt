@@ -5,11 +5,14 @@
 day of the week and note, and the categories it is assigned (M10.14, story 48). It is a client component, drawn in a wide modal
 over the grimoire's list (`SpellDialog`, `spell-dialog.tsx`; the owner's call,
 2026-10-27, [`design-decisions/m10.12-spell-builder-modal.md`](../design-decisions/m10.12-spell-builder-modal.md)).
-The address opens it, as it opens Add Ingredient: `?new=spell` draws it empty,
+The address opens it, as it opens Add Ingredient: `?new=spell-<slug>` draws it empty,
 reached from New Spell at the Grimoire's heading, which only an owner or a
 member is shown, and `?edit=<id>` draws it with a saved spell, reached from a
 spell card's pencil and Quick Look's Edit (M13.10). There is no page of its
-own. New Spell's press writes `?new=spell` in the browser, with no server
+own. `?new=spell` is the same for the grimoire the page is on, and `?new=spell-<slug>`
+on any other page is sent to that coven's grimoire with a replace
+(`NewSpellElsewhere`; the owner's call, 2026-10-28). New Spell's press writes
+`?new=spell-<slug>` in the browser, with no server
 request, and the dialog draws the empty builder from the address itself, so
 it opens at its full size at once, with no skeleton before it
 ([`modal.md`](modal.md), "A form the browser can draw skips the skeleton"). The recipe's steps (M10.15, M10.16, M13.3) and Mark Complete (M10.20) are later tasks that extend it. There is
@@ -52,7 +55,7 @@ no `instructions` field: the ritual is the spell's steps (M13.1).
 - **After a save the form starts again from the answer**, so Save goes
   disabled until the next change.
 - **The first save moves the address to the draft.** A create replaces
-  `?new=spell` with `?edit=<id>`, with `router.replace` so Back goes to the
+  `?new=spell-<slug>` with `?edit=<id>`, with `router.replace` so Back goes to the
   grimoire rather than to an empty New Spell, and a reload opens the saved
   draft. The builder reports the create through `onCreated`, whichever way the
   save was made, so M13.17's autosave moves the address the same way. The
@@ -218,12 +221,12 @@ surfaces. `tests/components/SpellBuilder/spell-dialog.test.tsx` covers the
 dialog: New Spell and Edit Spell's headings, the address moved once on the
 first save and never on a saved spell's, no Cancel, and Close closing at
 once, saving first with no question, or staying open on a refused save, and
-`?new=spell` opening the empty builder from the address alone for a role that
+`?new=spell-<slug>` and `?new=spell` opening the empty builder from the address alone for a role that
 may create a spell, and nothing for one that may not. The
 grimoire page's test,
 `tests/app/(shell)/coven/[slug]/grimoire/(list)/page.test.tsx`, covers which
 address opens which dialog for an owner and a member, and that a viewer's
-`?new=spell` or `?edit=<id>` opens nothing. `visibility-field.test.tsx` covers the
+`?new=spell-<slug>` or `?edit=<id>` opens nothing. `visibility-field.test.tsx` covers the
 visibility control: on by default and sent with a create, off sent as private and
 left open, a choice alone saveable, the share question kept and
 confirmed, a refused share, a refused narrowing shown in the notice, and the

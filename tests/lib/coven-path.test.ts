@@ -38,6 +38,10 @@ describe('isReservedCovenSlug', () => {
     // The values of `?new` that open a dialog rather than name a coven (M10.12).
     expect(isReservedCovenSlug('spell')).toBe(true);
     expect(isReservedCovenSlug('ingredient')).toBe(true);
+    // A value naming a coven is a prefix and then the whole slug, so a slug may start
+    // with either word and still read one way.
+    expect(isReservedCovenSlug('spell-circle')).toBe(false);
+    expect(isReservedCovenSlug('ingredient-compendium')).toBe(false);
     expect(isReservedCovenSlug('new-2')).toBe(false);
     expect(isReservedCovenSlug('fixture-coven')).toBe(false);
   });

@@ -48,7 +48,13 @@ const SAVED = {
 function renderDialog(opened: SpellDialogProps['opened'], canCreate = true) {
   return render(
     <QueryClientProvider client={makeQueryClient()}>
-      <SpellDialog workspaceId="w1" closeHref={CLOSE} opened={opened} canCreate={canCreate} />
+      <SpellDialog
+        workspaceId="w1"
+        covenSlug="testwort-coven"
+        closeHref={CLOSE}
+        opened={opened}
+        canCreate={canCreate}
+      />
     </QueryClientProvider>,
   );
 }
@@ -123,26 +129,40 @@ describe('SpellDialog', () => {
     expect(field('Intent')).toHaveValue('');
   });
 
-  // New Spell's press writes `?new=spell` with the browser's pushState, as Add Ingredient's
+  // New Spell's press writes `?new=spell-<slug>` with the browser's pushState, as Add Ingredient's
   // does, so the empty form draws at once with no skeleton before it: the server has not
   // read the address yet, and the dialog reads it itself.
   it('opens New Spell from the address alone, before the server has read it', () => {
-    address.search = 'new=spell';
+    address.search = 'new=spell-testwort-coven';
     renderDialog(undefined);
 
     expect(screen.getByRole('dialog', { name: 'New Spell' })).toBeInTheDocument();
     expect(field('Title')).toHaveValue('');
   });
 
-  it('opens nothing from ?new=spell for a role that may not create a spell', () => {
+  it('opens New Spell from ?new=spell, the current grimoire’s', () => {
     address.search = 'new=spell';
+    renderDialog(undefined);
+
+    expect(screen.getByRole('dialog', { name: 'New Spell' })).toBeInTheDocument();
+  });
+
+  it('opens nothing for another coven’s ?new=spell-<slug>', () => {
+    address.search = 'new=spell-other-coven';
+    renderDialog(undefined);
+
+    expect(screen.queryByRole('dialog')).not.toBeInTheDocument();
+  });
+
+  it('opens nothing from ?new=spell-<slug> for a role that may not create a spell', () => {
+    address.search = 'new=spell-testwort-coven';
     renderDialog(undefined, false);
 
     expect(screen.queryByRole('dialog')).not.toBeInTheDocument();
   });
 
   it('holds a saved spell back while Add Ingredient’s ?new is in the address', () => {
-    address.search = `edit=${SAVED.id}&new=ingredient`;
+    address.search = `edit=${SAVED.id}&new=ingredient-coven-testwort-coven`;
     renderDialog({ spell: SAVED });
 
     expect(screen.queryByRole('dialog')).not.toBeInTheDocument();

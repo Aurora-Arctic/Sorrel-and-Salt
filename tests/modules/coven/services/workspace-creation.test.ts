@@ -112,8 +112,8 @@ describe('createWorkspace and the create page’s address', () => {
     expect(await sql`select id from workspaces where slug = 'new'`).toHaveLength(0);
   });
 
-  // `?new=spell` and `?new=ingredient` open a dialog, and `?new=<slug>` names a coven
-  // (M10.12), so neither value is ever a coven's slug.
+  // `?new=spell` and `?new=ingredient` open a dialog without naming a coven (M10.12), so
+  // neither word is ever a coven's slug.
   it.each([
     ['Spell', 'spell'],
     ['Ingredient', 'ingredient'],

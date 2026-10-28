@@ -20,12 +20,12 @@ test.beforeAll(async () => {
 /**
  * The spell builder (M10.12), reached as a member reaches it: from the Grimoire, through the
  * New Spell at its heading, which only a role that may create a spell is shown. It opens as a
- * dialog over the grimoire under `?new=spell`, and the dialog is what it returns.
+ * dialog over the grimoire under `?new=spell-<slug>`, and the dialog is what it returns.
  */
 async function openBuilder(page: Page, slug: string): Promise<Locator> {
   await page.goto(`/coven/${slug}/grimoire`);
   await page.getByRole('link', { name: 'New Spell' }).click();
-  await expect(page).toHaveURL(`/coven/${slug}/grimoire?new=spell`);
+  await expect(page).toHaveURL(`/coven/${slug}/grimoire?new=spell-${slug}`);
   const dialog = page.getByRole('dialog', { name: 'New Spell' });
   await expect(dialog).toBeVisible();
   return dialog;

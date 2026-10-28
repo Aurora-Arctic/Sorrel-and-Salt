@@ -13,8 +13,8 @@ import { offerCategories } from '../../../../../../support/msw/ingredient-lookup
 // tests/modules/grimoire/services/spell-reads.test.ts's); the tabs' own read runs for real over
 // them. Here: the guard on the slug from the address, one page of 24 of the tab's status, the
 // address becoming the query, each card's assigned categories, and the pager's addresses; and
-// the spell builder's dialog over the tab (M10.12), `?new=spell` and `?edit=<id>`, beside the shell's
-// Add Ingredient, `?new=ingredient`.
+// the spell builder's dialog over the tab (M10.12), `?new=spell-<slug>` and `?edit=<id>`, beside the
+// shell's Add Ingredient, `?new=ingredient-coven-<slug>`.
 
 const COVEN = { id: '5b8f4a10-2d6e-4c19-8a37-0e9d1c2b3a44', slug: 'fixture-coven' };
 const session = { user: { id: 'fixture-user' } };
@@ -290,11 +290,16 @@ describe('the spell builder over a Grimoire tab', () => {
     });
   }
 
-  it.each(['owner', 'member'] as const)(
-    'opens New Spell over the tab under ?new=spell for a coven %s, the list still beneath it',
-    async (role) => {
+  it.each([
+    ['owner', 'spell-fixture-coven'],
+    ['member', 'spell-fixture-coven'],
+    // `?new=spell` is the current grimoire's, an alias.
+    ['member', 'spell'],
+  ] as const)(
+    'opens New Spell over the tab for a coven %s under ?new=%s, the list still beneath it',
+    async (role, value) => {
       as(role);
-      await renderTab(SpellsPage, { new: 'spell' });
+      await renderTab(SpellsPage, { new: value });
 
       const dialog = screen.getByRole('dialog', { name: 'New Spell' });
       expect(within(dialog).getByRole('textbox', { name: 'Title' })).toHaveValue('');
@@ -302,9 +307,9 @@ describe('the spell builder over a Grimoire tab', () => {
     },
   );
 
-  it('opens nothing under ?new=spell for a viewer, who may not create a spell', async () => {
+  it('opens nothing under ?new=spell-<slug> for a viewer, who may not create a spell', async () => {
     as('viewer');
-    await renderTab(SpellsPage, { new: 'spell' });
+    await renderTab(SpellsPage, { new: 'spell-fixture-coven' });
 
     // The tab drew for this viewer: the missing dialog is the role's, not a refusal.
     expect(screen.getAllByRole('heading', { name: 'Fixture Working' }).length).toBeGreaterThan(0);
@@ -348,8 +353,8 @@ describe('the spell builder over a Grimoire tab', () => {
     expect(screen.queryByRole('dialog')).not.toBeInTheDocument();
   });
 
-  it.each(['', 'ingredient'])(
-    "opens no saved spell while the shell's Add Ingredient holds ?new=%s, so one dialog shows",
+  it.each(['', 'ingredient', 'ingredient-coven-fixture-coven', 'spell-other-coven'])(
+    "opens no saved spell and no New Spell while ?new=%s is another dialog's, so one dialog shows",
     async (value) => {
       as('member');
       readSpell.mockResolvedValue(SPELL);
@@ -362,10 +367,10 @@ describe('the spell builder over a Grimoire tab', () => {
     },
   );
 
-  it('opens New Spell, not the saved spell, when the address holds both ?new=spell and ?edit', async () => {
+  it('opens New Spell, not the saved spell, when the address holds both ?new=spell-<slug> and ?edit', async () => {
     as('member');
     readSpell.mockResolvedValue(SPELL);
-    await renderTab(SpellsPage, { new: 'spell', edit: SPELL_ID });
+    await renderTab(SpellsPage, { new: 'spell-fixture-coven', edit: SPELL_ID });
 
     expect(screen.getByRole('dialog', { name: 'New Spell' })).toBeInTheDocument();
     expect(readSpell).not.toHaveBeenCalled();
@@ -373,7 +378,7 @@ describe('the spell builder over a Grimoire tab', () => {
 
   it('closes back to the tab as it was, its filter kept and the dialog dropped', async () => {
     as('member');
-    await renderTab(DraftsPage, { query: 'fixture', new: 'spell' });
+    await renderTab(DraftsPage, { query: 'fixture', new: 'spell-fixture-coven' });
 
     await act(async () => {
       fireEvent.click(screen.getByRole('button', { name: 'Close' }));
@@ -424,12 +429,12 @@ describe('the Grimoire layout', () => {
   }
 
   it.each(['owner', 'member'] as const)(
-    'links New Spell to the open tab under ?new=spell at the heading for a coven %s, who may create a spell',
+    'links New Spell to the open tab under ?new=spell-<slug> at the heading for a coven %s, who may create a spell',
     async (role) => {
       await renderLayoutAs(role);
       expect(screen.getByRole('link', { name: 'New Spell' })).toHaveAttribute(
         'href',
-        '/coven/fixture-coven/grimoire?new=spell',
+        '/coven/fixture-coven/grimoire?new=spell-fixture-coven',
       );
     },
   );
@@ -437,12 +442,12 @@ describe('the Grimoire layout', () => {
   it('keeps the open tab’s filter and page in New Spell’s address, and no other dialog', async () => {
     address.path = '/coven/fixture-coven/grimoire/drafts';
     address.search =
-      'query=fixture&after=c1&new=ingredient&edit=0f6d2c8e-3b1a-4e5f-9a7c-2d4b6e8f1a3c';
+      'query=fixture&after=c1&new=ingredient-coven-fixture-coven&edit=0f6d2c8e-3b1a-4e5f-9a7c-2d4b6e8f1a3c';
     await renderLayoutAs('member');
 
     expect(screen.getByRole('link', { name: 'New Spell' })).toHaveAttribute(
       'href',
-      '/coven/fixture-coven/grimoire/drafts?query=fixture&after=c1&new=spell',
+      '/coven/fixture-coven/grimoire/drafts?query=fixture&after=c1&new=spell-fixture-coven',
     );
   });
 
