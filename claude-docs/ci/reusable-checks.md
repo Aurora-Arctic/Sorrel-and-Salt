@@ -198,7 +198,10 @@
   markdown checklist), the check name, the comment thread
   (`marker-slug: stories`) and the report artifact's name (`stories-report`,
   since one workflow run may not upload two artifacts under one name), and
-  skips the coverage artifact. The run step carries `continue-on-error: true`
+  the coverage artifact's (`playwright-coverage-stories`, M14.28). The
+  summariser adds this run's coverage figure and table through
+  `lib/coverage-table.mjs`, as `summarize-playwright.mjs` does, and posts the
+  checklist alone when no report was written. The run step carries `continue-on-error: true`
   for stories, since a job that calls a workflow cannot, so a red story never
   fails the job; the comment reads the real result from `steps.run.outcome`,
   and so does the report upload. It is never a required check, which keeps red
@@ -215,7 +218,7 @@
   as `vitest.yml`, fed by the same caller-built `build-db-image` job (one
   build, shared by both — see `vitest.yml`'s entry above). Uploads
   `.reports/playwright-report/`/`.reports/test-results/` on failure and
-  `.reports/coverage-e2e/` always (parallel to `vitest.yml`'s
+  `.reports/coverage-e2e/` always (named `playwright-coverage`; parallel to `vitest.yml`'s
   `.reports/coverage/` upload). Its reporters (`list`, `json`, `html`) come
   from `playwright.config.ts` under `CI`, not from the command line: a CLI
   `--reporter` replaces the config's list and with it the html report's

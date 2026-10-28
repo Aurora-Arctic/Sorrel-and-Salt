@@ -79,3 +79,9 @@ uploads `.reports/coverage-e2e/` on every run (pass or fail), parallel to
 `html`) come from `playwright.config.ts` under `CI`, not from the command line —
 a CLI `--reporter` replaces the config's list and with it the html report's
 `outputFolder`.
+
+The story suite (`suite: stories`, M14.28) reports its coverage the same way: it
+uploads its own report as `playwright-coverage-stories`, and
+`summarize-stories.mjs` adds the figure and the per-file table to the Stories
+comment through `buildCoverageSection`. The two reports are never merged with
+each other or with Vitest's.
