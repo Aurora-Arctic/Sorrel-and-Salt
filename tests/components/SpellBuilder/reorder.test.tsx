@@ -253,3 +253,59 @@ describe('the spell builder’s step order', () => {
     expect(order()).toEqual([ROSEWORT, 'Stir thrice', 'Fixture Glimmerseed']);
   });
 });
+
+describe('the spell builder’s undo of step changes', () => {
+  beforeEach(() => layOutRows());
+  afterEach(() => vi.restoreAllMocks());
+
+  const undo = () => fireEvent.click(screen.getByRole('button', { name: 'Undo' }));
+  const redo = () => fireEvent.click(screen.getByRole('button', { name: 'Redo' }));
+
+  it('undoes and redoes a move as one entry', async () => {
+    renderBuilder();
+    await moveByKeyboard(handle('Stir thrice'), 'ArrowUp');
+    expect(order()).toEqual([ROSEWORT, 'Stir thrice', 'Testwort']);
+
+    undo();
+    await waitFor(() => expect(order()).toEqual([ROSEWORT, 'Testwort', 'Stir thrice']));
+    redo();
+    await waitFor(() => expect(order()).toEqual([ROSEWORT, 'Stir thrice', 'Testwort']));
+  });
+
+  it('undoes and redoes the removal of an instruction', async () => {
+    renderBuilder();
+    fireEvent.click(screen.getByRole('button', { name: 'Remove Stir thrice' }));
+    expect(order()).toEqual([ROSEWORT, 'Testwort']);
+
+    undo();
+    await waitFor(() => expect(order()).toEqual([ROSEWORT, 'Testwort', 'Stir thrice']));
+    redo();
+    await waitFor(() => expect(order()).toEqual([ROSEWORT, 'Testwort']));
+  });
+
+  it('undoes and redoes an added instruction', async () => {
+    renderBuilder();
+    fireEvent.click(screen.getByRole('button', { name: 'Add an Instruction' }));
+    await waitFor(() => expect(within(steps()).getAllByRole('listitem')).toHaveLength(4));
+
+    undo();
+    await waitFor(() => expect(within(steps()).getAllByRole('listitem')).toHaveLength(3));
+    redo();
+    await waitFor(() => expect(within(steps()).getAllByRole('listitem')).toHaveLength(4));
+  });
+
+  it('undoes a move made after a save, and not the save', async () => {
+    const calls = acceptUpdate();
+    renderBuilder();
+    await moveByKeyboard(handle('Stir thrice'), 'ArrowUp');
+    submit();
+    await waitFor(() => expect(calls).toHaveLength(1));
+    await waitFor(() => expect(order()).toEqual([ROSEWORT, 'Testwort', 'Stir thrice']));
+    // The save answers with the spell as it was loaded, so the list starts again from that order.
+    await moveByKeyboard(handle('Stir thrice'), 'ArrowUp');
+    expect(order()).toEqual([ROSEWORT, 'Stir thrice', 'Testwort']);
+
+    undo();
+    await waitFor(() => expect(order()).toEqual([ROSEWORT, 'Testwort', 'Stir thrice']));
+  });
+});
