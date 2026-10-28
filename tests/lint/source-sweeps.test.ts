@@ -54,12 +54,25 @@ tester.run('spell-visibility-read-in-one-place', rules['spell-visibility-read-in
       cwd: REPO_ROOT,
       code: 'export function readableSpells() { return eq(spells.visibility, "workspace"); }',
     },
+    {
+      // The Visibility facet's two helpers (M13.22), beside the rule.
+      filename: at('src/db/repository/spells.ts'),
+      cwd: REPO_ROOT,
+      code: 'export const visibilityIn = (values) => inArray(spells.visibility, values);',
+    },
   ],
   invalid: [
     {
       filename: at('src/modules/grimoire/services/spells.ts'),
       cwd: REPO_ROOT,
       code: 'const rows = query.where(eq(spells.visibility, "workspace"));',
+      errors: 2,
+    },
+    {
+      // Only those two helpers are allowed beside it, not any other export.
+      filename: at('src/db/repository/spells.ts'),
+      cwd: REPO_ROOT,
+      code: 'export const other = (values) => inArray(spells.visibility, values);',
       errors: 2,
     },
   ],

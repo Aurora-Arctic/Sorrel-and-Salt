@@ -34,7 +34,12 @@ export {
   findManyOfSpellIngredientsIncludingSoftDeleted,
   findOneSpell,
 } from './spells';
-export { findGrimoireCategoryCounts, findGrimoireCount, findGrimoirePage } from './grimoire';
+export {
+  findGrimoireCategoryCounts,
+  findGrimoireCount,
+  findGrimoireFacetCounts,
+  findGrimoirePage,
+} from './grimoire';
 export {
   findCompendiumCount,
   findCompendiumEntryByIdentity,
@@ -141,6 +146,7 @@ export type {
   CommonNameSuggestion,
   CompendiumFacets,
   CompendiumScore,
+  GrimoireFacetCounts,
   GrimoireQuery,
   SuggestionGroup,
   SuggestionGroupTag,

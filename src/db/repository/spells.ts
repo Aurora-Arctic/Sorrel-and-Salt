@@ -1,4 +1,4 @@
-import { and, eq, inArray, or, type SQL } from 'drizzle-orm';
+import { and, eq, inArray, or, type SQL, sql } from 'drizzle-orm';
 import type { PgTable } from 'drizzle-orm/pg-core';
 import { spellSteps } from '../../modules/grimoire/schema/spell-steps';
 import { spells } from '../../modules/grimoire/schema/spells';
@@ -36,6 +36,17 @@ export function readableSpells(membership: Membership): SQL | undefined {
     or(eq(spells.visibility, 'workspace'), eq(spells.createdBy, membership.userId)),
   );
 }
+
+/**
+ * The grimoire's Visibility facet (M13.22), beside the rule that decides who
+ * reads so the one lint rule has one file to allow. Neither decides who may
+ * read: both are ANDed after `readableSpells`, so they only narrow what it
+ * lets through. `visibilityIn` keeps the spells holding any of `values`;
+ * `visibilityText` is the column as text, for the facet's grouped count.
+ */
+export const visibilityIn = (values: readonly (typeof spells.$inferSelect)['visibility'][]): SQL =>
+  inArray(spells.visibility, [...values]);
+export const visibilityText = sql<string>`${spells.visibility}::text`;
 
 /**
  * One spell by id, or `undefined` — which is also the answer for another

@@ -6,6 +6,7 @@ import {
   assignedCategoriesOf,
   countGrimoire,
   countGrimoireCategories,
+  countGrimoireFacets,
   derivedCategoriesOf,
   listGrimoire,
   readSpell,
@@ -154,6 +155,41 @@ describe('countGrimoireCategories', () => {
     await expect(countGrimoireCategories(asUser(D), WORKSPACE_W_ID, NEWEST)).rejects.toBeInstanceOf(
       Forbidden,
     );
+  });
+});
+
+describe('countGrimoireFacets', () => {
+  it('counts each facet’s values, a private spell for its author alone', async () => {
+    await seed(B, 'workspace', { moonPhase: 'Full Moon', dayOfWeek: 'Friday' });
+    await seed(B, 'private', { moonPhase: 'New Moon', dayOfWeek: 'Monday' });
+    // Why A's lack of the private values is the rule's: B is offered them.
+    await expect(countGrimoireFacets(asUser(B), WORKSPACE_W_ID, NEWEST)).resolves.toMatchObject({
+      moonPhases: expect.arrayContaining([{ value: 'New Moon', count: 1 }]),
+      makers: [{ value: B.id, count: 2 }],
+    });
+
+    await expect(countGrimoireFacets(asUser(A), WORKSPACE_W_ID, NEWEST)).resolves.toEqual({
+      moonPhases: [{ value: 'Full Moon', count: 1 }],
+      daysOfWeek: [{ value: 'Friday', count: 1 }],
+      visibilities: [{ value: 'workspace', count: 1 }],
+      makers: [{ value: B.id, count: 1 }],
+    });
+  });
+
+  it('refuses a non-member, and offers nothing of another coven', async () => {
+    await seed(B, 'workspace', { moonPhase: 'Full Moon' });
+    // Why this could have succeeded: D reads their own coven's facets.
+    await seed(D, 'workspace', { moonPhase: 'Blood Moon' }, WORKSPACE_X_ID);
+    await expect(countGrimoireFacets(asUser(D), WORKSPACE_X_ID, NEWEST)).resolves.toMatchObject({
+      moonPhases: [{ value: 'Blood Moon', count: 1 }],
+    });
+
+    await expect(countGrimoireFacets(asUser(D), WORKSPACE_W_ID, NEWEST)).rejects.toBeInstanceOf(
+      Forbidden,
+    );
+    await expect(countGrimoireFacets(asUser(A), WORKSPACE_W_ID, NEWEST)).resolves.toMatchObject({
+      moonPhases: [{ value: 'Full Moon', count: 1 }],
+    });
   });
 });
 
