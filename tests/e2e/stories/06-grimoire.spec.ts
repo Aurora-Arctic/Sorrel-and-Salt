@@ -106,10 +106,13 @@ test(
     await categoryChip(builder, 'Cleansing').click();
     await expect(categoryChip(builder, 'Cleansing')).toHaveCount(0);
     await save.click();
-    await expect(save).toBeDisabled();
-    await expect(save).not.toHaveAttribute('aria-busy', 'true');
-    // Saved: the spell's card in the grimoire's Drafts carries the category assigned, and only it.
-    await builder.getByRole('button', { name: 'Close', exact: true }).click();
+    // Saved: the same dialog is headed as the saved spell, with nothing left to save.
+    const drafted = page.getByRole('dialog', { name: 'Edit Spell, Fixture Working' });
+    const saved = drafted.getByRole('button', { name: 'Save' });
+    await expect(saved).toBeDisabled();
+    await expect(saved).not.toHaveAttribute('aria-busy', 'true');
+    // The spell's card in the grimoire's Drafts carries the category assigned, and only it.
+    await drafted.getByRole('button', { name: 'Close', exact: true }).click();
     await expect(page.getByRole('dialog')).toHaveCount(0);
     await page.getByRole('link', { name: 'Drafts' }).click();
     await expect(page).toHaveURL(`/coven/${coven.slug}/grimoire/drafts`);
