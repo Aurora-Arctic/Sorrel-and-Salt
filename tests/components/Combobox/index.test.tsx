@@ -238,6 +238,16 @@ describe('Combobox', () => {
     expect(screen.getByRole('option', { name: 'Wax (Substance)' })).toBeInTheDocument();
   });
 
+  it('leaves out aria-activedescendant while no option is highlighted', () => {
+    render(<Harness suggestions={TWO_BUCKETS} />);
+    expect(box()).not.toHaveAttribute('aria-activedescendant');
+
+    type('wax');
+    expect(box()).not.toHaveAttribute('aria-activedescendant');
+    key('ArrowDown');
+    expect(box()).toHaveAttribute('aria-activedescendant');
+  });
+
   it('picks a suggestion with the arrow keys and Enter, writing nothing itself', () => {
     const onPick = vi.fn();
     render(<Harness suggestions={TWO_BUCKETS} onPick={onPick} />);
