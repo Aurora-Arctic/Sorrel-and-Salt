@@ -158,7 +158,7 @@ $step-ink-drop: 0.05rem;
 
     .step-row__marks {
       grid-area: marks;
-      grid-column: auto;
+      grid-column: marks;
       margin-block-start: 0;
       margin-inline-start: space(2);
     }
@@ -237,10 +237,8 @@ $step-ink-drop: 0.05rem;
     color: $text-muted;
   }
 
-  // The badge after a one-off's name, a little clear of it.
-  .step-row__name .badge {
-    margin-inline-start: space(2);
-  }
+  // A card's badge (a one-off's) stands in the marks, at the right of the first line before
+  // the pencil, so it never wraps into the name.
 }
 
 // An instruction is words, not a thing laid in the jar, but it keeps the card's own
@@ -262,9 +260,16 @@ $step-ink-drop: 0.05rem;
     margin-block-start: space(2);
   }
 
+  // The number stands where the text's first line does, closed or open, so it does not move
+  // when the textarea takes the text's place: the same box in both, not a shared baseline.
   .step-row__position {
-    align-self: baseline;
-    padding-block-start: space(2);
+    align-self: start;
+    display: flex;
+    align-items: center;
+    min-height: $step-line;
+    margin-block-start: space(2);
+    padding-block: 0;
+    line-height: $step-line;
   }
 
   .step-row__field {
@@ -346,6 +351,12 @@ $step-ink-drop: 0.05rem;
       '. . summary summary summary summary';
     grid-template-columns: auto auto minmax(0, 1fr) auto auto auto;
     align-items: start;
+
+    // Two badges stack and keep the right edge, so the name keeps the width they would take.
+    .step-row__marks {
+      flex-direction: column;
+      align-items: flex-end;
+    }
 
     .step-row__open {
       grid-row: 3;

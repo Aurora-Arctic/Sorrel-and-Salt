@@ -32,6 +32,11 @@ export interface SafetyNoteProps {
    * It shows the caution by itself when there are no notes.
    */
   footnote?: ReactNode;
+  /**
+   * A small block for a crowded place, the spell builder's open step: the heading runs on in
+   * the line with the notes, in body type. The word and the bar still say it, not colour alone.
+   */
+  compact?: boolean;
 }
 
 export interface ToxicMarkProps {

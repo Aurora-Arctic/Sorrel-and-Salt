@@ -140,7 +140,7 @@ export function BuilderStepRow({
       // The care the ingredient needs, kept in view beside the step and never in the way of
       // saving it (M10.18). A one-off has none to show: it draws nothing, not "safe".
       marks={safety && <SafetyMark {...safety} />}
-      note={safety && <SafetyNote level={5} {...safety} />}
+      note={safety && <SafetyNote level={5} compact {...safety} />}
       badge={oneOff ? <span className="badge badge--local">One-Off</span> : null}
       summary={
         instruction
