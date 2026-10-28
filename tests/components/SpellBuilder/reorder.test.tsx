@@ -38,7 +38,7 @@ const SPELL: SpellBuilderSpell = {
   revision: 4,
   title: null,
   intent: null,
-  jarSize: null,
+  jarDescription: null,
   sealWaxColor: null,
   moonPhase: null,
   dayOfWeek: null,

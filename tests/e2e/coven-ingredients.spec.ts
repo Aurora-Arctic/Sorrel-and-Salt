@@ -280,7 +280,11 @@ test("the type-ahead offers this coven's cupboard alone", async ({ page }) => {
   // Typed again, the answer may come from the client's cache, with no request to wait on.
   await nameSearch(page).fill('Cronewort');
   await page.getByRole('option', { name: 'Fixture Mirrorwort (Fixtura nostra)' }).click();
-  await expect(page).toHaveURL(new RegExp(`/coven/${ours.slug}/ingredients/${own.ingredientId}$`));
+  // The pick opens the entry's Quick Look over the list (the owner's rule of 2026-10-27).
+  await expect(page.getByRole('dialog', { name: 'Fixture Mirrorwort', exact: true })).toBeVisible();
+  await expect(page).toHaveURL(
+    new RegExp(`/coven/${ours.slug}/ingredients\\?(.*&)?entry=${own.ingredientId}(&|$)`),
+  );
 });
 
 test('the page passes axe at both densities and holds at a phone width', async ({ page }) => {

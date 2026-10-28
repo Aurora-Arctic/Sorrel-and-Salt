@@ -33,8 +33,11 @@ describe('pathInCoven', () => {
 });
 
 describe('isReservedCovenSlug', () => {
-  it('reserves the create page’s segment and nothing else', () => {
+  it('reserves the create page’s segment and the values of `?new` that open a dialog, and nothing else', () => {
     expect(isReservedCovenSlug('new')).toBe(true);
+    // The values of `?new` that open a dialog rather than name a coven (M10.12).
+    expect(isReservedCovenSlug('spell')).toBe(true);
+    expect(isReservedCovenSlug('ingredient')).toBe(true);
     expect(isReservedCovenSlug('new-2')).toBe(false);
     expect(isReservedCovenSlug('fixture-coven')).toBe(false);
   });

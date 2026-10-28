@@ -111,7 +111,7 @@ function answer(id: string, revision: number, steps: SpellBuilderSpell['steps'] 
     revision,
     title: null,
     intent: null,
-    jarSize: null,
+    jarDescription: null,
     sealWaxColor: null,
     moonPhase: null,
     dayOfWeek: null,

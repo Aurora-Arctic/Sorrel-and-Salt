@@ -77,7 +77,14 @@ export interface CardMoreProps extends Pick<
 
 export interface CovenCardsProps extends Pick<
   CompendiumListProps,
-  'facets' | 'categories' | 'vocabulary' | 'previousHref' | 'nextHref' | 'position' | 'total'
+  | 'facets'
+  | 'categories'
+  | 'vocabulary'
+  | 'previousHref'
+  | 'nextHref'
+  | 'position'
+  | 'total'
+  | 'cursor'
 > {
   /** The coven's address segment, which every link and the filter's submit are built under. */
   covenSlug: string;

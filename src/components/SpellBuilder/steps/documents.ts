@@ -92,3 +92,19 @@ export const SpellIngredientSuggestionsDocument = graphql(`
     }
   }
 `);
+
+/**
+ * A saved spell's steps, which the dialog reads once it opens on `?edit=<id>`:
+ * the page's server read gives the fields alone (M10.12), and an update's
+ * steps are the whole recipe, so the builder sends nothing until these land.
+ */
+export const SpellBuilderStepsDocument = graphql(`
+  query SpellBuilderSteps($workspaceId: ID!, $id: ID!) {
+    spell(workspaceId: $workspaceId, id: $id) {
+      id
+      steps {
+        ...SpellBuilderStep
+      }
+    }
+  }
+`);

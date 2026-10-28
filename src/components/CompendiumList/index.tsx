@@ -260,6 +260,7 @@ const CompendiumList = ({
   nextHref,
   position,
   total,
+  cursor,
 }: CompendiumListProps): ReactElement => (
   <IngredientSearch
     search={
@@ -272,6 +273,7 @@ const CompendiumList = ({
         categories={categories}
         vocabulary={vocabulary}
         total={total}
+        cursor={cursor}
       />
     }
     previousHref={previousHref}

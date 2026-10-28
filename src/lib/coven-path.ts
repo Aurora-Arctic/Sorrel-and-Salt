@@ -23,13 +23,26 @@ export const COVEN_LANDING_PATH = `/${COVEN}`;
 /** The create-workspace page's address. */
 export const NEW_COVEN_PATH = `/${COVEN}/${NEW}`;
 
+/** The value of `?new` that opens the grimoire's New Spell (M10.12). */
+export const NEW_SPELL = 'spell';
+
+/** The value of `?new` that opens the default coven's Add Ingredient (M10.12). */
+export const NEW_INGREDIENT = 'ingredient';
+
 /**
- * Whether a slug is an address the router already answers, and so one no
- * workspace may take. The creation service asks before writing a slug, the
- * one place a workspace slug is minted.
+ * The values of `?new` that open a dialog rather than name a coven
+ * (components/AppShell/add-href.ts), reserved as slugs so `?new=<value>`
+ * never means two things.
+ */
+const DIALOG_VALUES = new Set([NEW_SPELL, NEW_INGREDIENT]);
+
+/**
+ * Whether a slug is an address the router already answers, or a value of
+ * `?new` that opens a dialog, and so one no workspace may take. The creation
+ * service asks before writing a slug, the one place a workspace slug is minted.
  */
 export function isReservedCovenSlug(slug: string): boolean {
-  return slug === NEW;
+  return slug === NEW || DIALOG_VALUES.has(slug);
 }
 
 /** The workspace slug an address is in, or `null` outside any workspace, the create page included. */

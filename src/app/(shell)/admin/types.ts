@@ -204,6 +204,11 @@ export interface AddActionProps {
   href: Route;
   /** The head of the modal it opens, "Add Category", shown at once while the form loads (M9.18). */
   heading: ModalHeading;
+  /**
+   * True when the dialog reads the address in the browser and draws its form there (New Spell):
+   * a plain press writes the address with `pushState` rather than navigating. False by default.
+   */
+  drawnHere?: boolean;
   /** The label, "Add Category": the link's name at every width, and the tip over the plus at a phone's. */
   children: string;
 }

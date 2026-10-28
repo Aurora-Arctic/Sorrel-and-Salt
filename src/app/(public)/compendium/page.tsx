@@ -292,6 +292,7 @@ export default async function CompendiumPage({ searchParams }: PublicCompendiumP
         vocabulary={{ deities, formIcons: Object.fromEntries(formIcons) }}
         position={page.position}
         total={page.totalCount}
+        cursor={{ after, before }}
         action={action}
         workspaceId={defaultCoven?.id}
         covens={covens}

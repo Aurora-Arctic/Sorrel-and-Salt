@@ -2,8 +2,9 @@
 
 import { zodResolver } from '@hookform/resolvers/zod';
 import { useMutation } from '@tanstack/react-query';
-import { type ReactElement, useRef, useState } from 'react';
+import { type ReactElement, useEffect, useRef, useState } from 'react';
 import { FormProvider, type Resolver, useForm, useWatch } from 'react-hook-form';
+import { CollapsibleSection } from '../CollapsibleSection';
 import { graphql } from '../../gql';
 import { graphqlRequest } from '../../lib/graphql-client';
 import { placeServerIssues } from '../../lib/graphql-failure';
@@ -14,11 +15,12 @@ import {
   TextField,
   useFormHistory,
 } from '../Field';
-import { DiscardQuestion, useDiscardGuard } from '../Modal';
 import MoonPhaseIcon from '../MoonPhaseIcon';
 import Notice from '../Notice';
+import Skeleton from '../Skeleton';
 import { SpellCategoriesField, sameCategories } from './categories-field';
 import { DAYS_OF_THE_WEEK, MOON_PHASES } from './constants';
+import { useSaveOnClose } from './save-on-close';
 import { SpellSteps } from './steps';
 import type { SpellStepSend } from './steps/types';
 import { stepInputOf, stepValueOf, stepsChanged, unitIssues } from './steps/values';
@@ -34,15 +36,18 @@ import type {
 } from './types';
 import './index.scss';
 
-// The spell builder (M10.12): a spell's title, intent, jar and note, on the
-// new-spell page now and on the edit page once M13.10 opens it with a saved
-// spell. Moon phase and day of the week suggest a fixed list and still take
-// what is typed (./constants). No field is required: a draft may be saved
-// with any of them, and a title is asked for only when the spell is marked
-// complete (M10.20). Save creates the spell once and the builder then holds
-// its id and revision, so every later Save updates that spell, as the
-// autosave adapter will (claude-docs/design-decisions/m13.14-plan.md). A Back
-// link on the page, not Cancel, leaves it. See claude-docs/components/spell-builder.md.
+// The spell builder (M10.12): a spell's title, intent, jar and note, in a
+// modal over the grimoire (./spell-dialog.tsx), opened empty by New Spell and
+// on a saved spell by its Edit. Moon phase and day of the week suggest a
+// fixed list and still take what is typed (./constants). No field is
+// required: a draft may be saved with any of them, and a title is asked for
+// only when the spell is marked complete (M10.20). Save creates the spell
+// once and the builder then holds its id and revision, so every later Save
+// updates that spell, as the autosave adapter will
+// (claude-docs/design-decisions/m13.14-plan.md); `onCreated` hears of the
+// first, so the dialog's address can become the draft's. There is no Cancel:
+// Close saves what is unsaved, then closes (./save-on-close.ts). See
+// claude-docs/components/spell-builder.md.
 
 const CreateSpellDocument = graphql(`
   mutation CreateSpell($workspaceId: ID!, $input: SpellInput!) {
@@ -51,7 +56,7 @@ const CreateSpellDocument = graphql(`
       revision
       title
       intent
-      jarSize
+      jarDescription
       sealWaxColor
       moonPhase
       dayOfWeek
@@ -71,7 +76,7 @@ const UpdateSpellDocument = graphql(`
       revision
       title
       intent
-      jarSize
+      jarDescription
       sealWaxColor
       moonPhase
       dayOfWeek
@@ -87,12 +92,15 @@ const UpdateSpellDocument = graphql(`
 const FIELDS: readonly SpellBuilderField[] = [
   'title',
   'intent',
-  'jarSize',
+  'jarDescription',
   'sealWaxColor',
   'moonPhase',
   'dayOfWeek',
   'note',
 ];
+
+/** The fields When to Work It folds. */
+const WHEN_FIELDS: readonly SpellBuilderField[] = ['moonPhase', 'dayOfWeek'];
 
 const isField = (key: unknown): key is SpellBuilderField =>
   FIELDS.includes(key as SpellBuilderField);
@@ -153,7 +161,19 @@ const resolver: Resolver<SpellBuilderValues, unknown, SpellBuilderInput> = async
 const moonPhaseIcon = (phase: string): ReactElement | null =>
   (MOON_PHASES as readonly string[]).includes(phase) ? <MoonPhaseIcon phase={phase} /> : null;
 
-const SpellBuilder = ({ workspaceId, spell }: SpellBuilderProps): ReactElement => {
+/** Said in the jar's place, and above the fields when a save is tried, while a saved spell's steps cannot be read. */
+const STEPS_FAILED =
+  "The spell's steps could not be loaded, so nothing can be saved. Reload the page to try again.";
+
+/** Said above the fields when a save is tried before a saved spell's steps have landed. */
+const STEPS_LOADING = "The spell's steps are still loading. Try again once they show.";
+
+const SpellBuilder = ({
+  workspaceId,
+  spell,
+  onCreated,
+  stepsRead,
+}: SpellBuilderProps): ReactElement => {
   // The spell this builder saves to: the one it opened, else the one its first save created.
   const [saved, setSaved] = useState(spell ? { id: spell.id, revision: spell.revision } : null);
   const methods = useForm<SpellBuilderValues, unknown, SpellBuilderInput>({
@@ -168,7 +188,9 @@ const SpellBuilder = ({ workspaceId, spell }: SpellBuilderProps): ReactElement =
     control,
     handleSubmit,
     reset,
+    getValues,
     setError,
+    setValue,
     formState: { errors, isSubmitting, defaultValues },
   } = methods;
 
@@ -192,9 +214,21 @@ const SpellBuilder = ({ workspaceId, spell }: SpellBuilderProps): ReactElement =
   // A unit the jar cannot be measured in holds Save, as the service would refuse it.
   const unitRefused = unitIssues(steps).size > 0;
 
-  const discard = useDiscardGuard(dirty && !isSubmitting);
+  // When to Work It opens shut, a new spell's and a saved one's alike: its line
+  // says what it holds, and a save refused on one of its fields opens it.
+  const [whenOpen, setWhenOpen] = useState(false);
+  const whenInvalid = WHEN_FIELDS.some((field) => errors[field] !== undefined);
+  const whenLine =
+    WHEN_FIELDS.map((field) => (typed[FIELDS.indexOf(field)] ?? '').trim())
+      .filter(Boolean)
+      .join(' · ') || 'Nothing yet';
+  /** Opens When to Work It when one of its fields now holds an error, so the error is seen. */
+  const openWhenErred = () => {
+    if (WHEN_FIELDS.some((field) => methods.getFieldState(field).invalid)) setWhenOpen(true);
+  };
+
   const root = useRef<HTMLFormElement>(null);
-  const history = useFormHistory(methods, { root, enabled: !discard.asking });
+  const history = useFormHistory(methods, { root });
 
   const save = useMutation({
     mutationFn: async (input: SpellBuilderInput): Promise<SpellBuilderSpell> => {
@@ -211,8 +245,18 @@ const SpellBuilder = ({ workspaceId, spell }: SpellBuilderProps): ReactElement =
     },
   });
 
-  /** Saves the fields; a refusal lands beside its field, or above them all. */
+  /**
+   * Saves the fields; a refusal lands beside its field, or above them all.
+   * The one save every way in calls: Save, Close (`useSaveOnClose`) and
+   * M13.17's autosave.
+   */
   const send = async (values: SpellBuilderInput): Promise<void> => {
+    // Steps not yet read would go out as none, and an update's steps remove the rest.
+    if (!jarReady) {
+      closeGuard.refused();
+      setError('root', { message: stepsRead === 'failed' ? STEPS_FAILED : STEPS_LOADING });
+      return;
+    }
     // The fields, who can see the spell, and the whole recipe: on an update,
     // the steps sent are the spell's steps, and a saved step left out of them
     // is removed.
@@ -229,11 +273,16 @@ const SpellBuilder = ({ workspaceId, spell }: SpellBuilderProps): ReactElement =
     const categoryIds = values.categoryIds ?? [];
     if (!sameCategories(categoryIds, defaultValues?.categoryIds)) input.categoryIds = categoryIds;
     try {
+      const created = saved === null;
       const answer = await save.mutateAsync(input);
       setSaved({ id: answer.id, revision: answer.revision });
       // What was saved is the new start: Save goes off until the next change.
       reset({ ...valuesOf(answer), categoryIds });
+      // A Close waiting on this save closes now, and leaves the address be.
+      if (closeGuard.saved()) return;
+      if (created) onCreated?.(answer);
     } catch (error) {
+      closeGuard.refused();
       placeServerIssues(error, setError, ({ path: [field, ...rest] }) => {
         // A refused pick is pathed to its index, as the ids were sent.
         if (field === 'categoryIds') {
@@ -250,13 +299,49 @@ const SpellBuilder = ({ workspaceId, spell }: SpellBuilderProps): ReactElement =
           return `steps.${index}.${part}` as const;
         return undefined;
       });
+      openWhenErred();
     }
   };
+
+  const submit = handleSubmit(send, () => {
+    closeGuard.refused();
+    openWhenErred();
+  });
+  // A Close pressed while the steps are on their way saves once they land.
+  const closeWaiting = useRef(false);
+  const [jarReady, setJarReady] = useState(stepsRead === undefined);
+  const closeGuard = useSaveOnClose(dirty, isSubmitting, () => {
+    if (!jarReady && stepsRead !== 'failed') closeWaiting.current = true;
+    else void submit();
+  });
+  // The steps landed: the form starts from them, as from the rest of the saved spell, and
+  // only then is the jar drawn, since its list reads the steps once, as it mounts.
+  const stepsLanded = stepsRead === undefined;
+  useEffect(() => {
+    if (!stepsLanded || jarReady || !spell) return;
+    // A reset, then what was typed meanwhile put back: `resetField` skips a field
+    // nothing has registered, and the jar's list registers the steps only once drawn.
+    const typedMeanwhile = getValues();
+    reset(valuesOf(spell));
+    for (const name of [...FIELDS, 'visibility', 'categoryIds'] as const) {
+      setValue(name, typedMeanwhile[name]);
+    }
+    setJarReady(true);
+    // Run when the steps land, never again for a later answer: a save resets the form itself.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [stepsLanded]);
+  // The held Close's save, from the render that drew the jar, whose `send` sends.
+  useEffect(() => {
+    if (!jarReady || !closeWaiting.current) return;
+    closeWaiting.current = false;
+    void submit();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [jarReady]);
 
   return (
     <FormProvider {...methods}>
       <FormHistoryContext.Provider value={history}>
-        <form ref={root} className="form spell-builder" onSubmit={handleSubmit(send)} noValidate>
+        <form ref={root} className="form spell-builder" onSubmit={submit} noValidate>
           <FormHistoryButtons />
           {errors.root?.message && <Notice kind="error">{errors.root.message}</Notice>}
           <TextField<SpellBuilderValues>
@@ -274,9 +359,9 @@ const SpellBuilder = ({ workspaceId, spell }: SpellBuilderProps): ReactElement =
           />
           <SpellCategoriesField />
           <TextField<SpellBuilderValues>
-            name="jarSize"
-            label="Jar Size"
-            placeholder="Add a size"
+            name="jarDescription"
+            label="Jar Description"
+            placeholder="Add a description"
             autoComplete="off"
           />
           <TextField<SpellBuilderValues>
@@ -286,10 +371,16 @@ const SpellBuilder = ({ workspaceId, spell }: SpellBuilderProps): ReactElement =
             autoComplete="off"
           />
           {/* The recipe's timing: when to work the spell, not when it was worked,
-              which a working's own date gives (M13.4). The shared .fieldset
-              primitive, so the legend names the group to a screen reader. */}
-          <fieldset className="fieldset">
-            <legend className="fieldset__legend">When to Work It</legend>
+              which a working's own date gives (M13.4). */}
+          <CollapsibleSection
+            title="When to Work It"
+            summary={whenLine}
+            fold={{
+              open: whenOpen,
+              invalid: whenInvalid,
+              onToggle: () => setWhenOpen((open) => !open),
+            }}
+          >
             <SpellSuggestField
               name="moonPhase"
               label="Moon Phase"
@@ -303,8 +394,16 @@ const SpellBuilder = ({ workspaceId, spell }: SpellBuilderProps): ReactElement =
               placeholder="Add a day"
               options={DAYS_OF_THE_WEEK}
             />
-          </fieldset>
-          <SpellSteps workspaceId={workspaceId} />
+          </CollapsibleSection>
+          {jarReady ? (
+            <SpellSteps workspaceId={workspaceId} />
+          ) : stepsRead === 'failed' ? (
+            <Notice kind="error">{STEPS_FAILED}</Notice>
+          ) : (
+            <section className="spell-steps" aria-label="Steps" aria-busy="true">
+              <Skeleton shape="line" />
+            </section>
+          )}
           <TextField<SpellBuilderValues>
             name="note"
             label="Note"
@@ -312,8 +411,11 @@ const SpellBuilder = ({ workspaceId, spell }: SpellBuilderProps): ReactElement =
             multiline
           />
           <SpellVisibilityField created={saved !== null} save={send} />
-          <FormActions noun="Spell" dirty={dirty && !unitRefused} submitting={isSubmitting} />
-          {discard.asking && <DiscardQuestion guard={discard} />}
+          <FormActions
+            noun="Spell"
+            dirty={dirty && !unitRefused && jarReady}
+            submitting={isSubmitting}
+          />
         </form>
       </FormHistoryContext.Provider>
     </FormProvider>

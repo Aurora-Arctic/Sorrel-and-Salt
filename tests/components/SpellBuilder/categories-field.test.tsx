@@ -73,12 +73,12 @@ function answer(id: string, revision: number, input: CreateSpellMutationVariable
     revision,
     title: input.title ?? null,
     intent: input.intent ?? null,
-    jarSize: input.jarSize ?? null,
+    jarDescription: input.jarDescription ?? null,
     sealWaxColor: input.sealWaxColor ?? null,
     moonPhase: input.moonPhase ?? null,
     dayOfWeek: input.dayOfWeek ?? null,
     note: input.note ?? null,
-    visibility: 'workspace' as const,
+    visibility: input.visibility ?? ('workspace' as const),
     steps: [],
   };
 }
@@ -119,7 +119,7 @@ const savedSpell = (categoryIds: string[]): SpellBuilderSpell => ({
   revision: 3,
   title: 'Hedge Ward',
   intent: null,
-  jarSize: null,
+  jarDescription: null,
   sealWaxColor: null,
   moonPhase: null,
   dayOfWeek: null,

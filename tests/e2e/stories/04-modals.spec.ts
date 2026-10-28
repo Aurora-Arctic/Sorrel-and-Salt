@@ -146,7 +146,7 @@ test(
         await expect(shellAddIngredient(page)).toBeEnabled();
         const dialog = await openAddIngredient(page);
         // Opened by the address, so a reload keeps it and Back leaves it.
-        await expect(page).toHaveURL(/\?new$/);
+        await expect(page).toHaveURL(/\?new=ingredient$/);
         // In one coven, so there is nothing to choose: no chevron, and the
         // dialog names the coven it adds to.
         await expect(destinationMenu(page).toggle).toHaveCount(0);
