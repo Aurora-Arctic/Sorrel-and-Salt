@@ -1,6 +1,6 @@
 import { QueryClientProvider } from '@tanstack/react-query';
 import { fireEvent, render, screen, waitFor, within } from '@testing-library/react';
-import { describe, expect, it, vi } from 'vitest';
+import { beforeEach, describe, expect, it, vi } from 'vitest';
 import type {
   CreateSpellMutation,
   CreateSpellMutationVariables,
@@ -15,6 +15,9 @@ import { offerCategories } from '../../support/msw/ingredient-lookups';
 vi.mock('next/navigation', () => ({ useRouter: () => ({ push: vi.fn(), refresh: vi.fn() }) }));
 
 const { default: SpellBuilder } = await import('@/components/SpellBuilder');
+
+// The builder's category picker (M10.14) reads the categories as it opens.
+beforeEach(() => offerCategories([]));
 
 // The spell builder's visibility control (M10.13): who can see the spell, its
 // author alone or the whole coven, set at creation, widened once with a
@@ -45,7 +48,7 @@ const SPELL: SpellBuilderSpell = {
   revision: 4,
   title: 'Fixture Working',
   intent: null,
-  jarSize: null,
+  jarDescription: null,
   sealWaxColor: null,
   moonPhase: null,
   dayOfWeek: null,
@@ -66,7 +69,7 @@ function answer(
     revision,
     title: input.title ?? null,
     intent: input.intent ?? null,
-    jarSize: input.jarSize ?? null,
+    jarDescription: input.jarDescription ?? null,
     sealWaxColor: input.sealWaxColor ?? null,
     moonPhase: input.moonPhase ?? null,
     dayOfWeek: input.dayOfWeek ?? null,

@@ -12,7 +12,7 @@ import type { ShellWorkspace } from '../../lib/types';
 import IngredientForm from '../IngredientForm';
 import type { SavedIngredient } from '../IngredientForm/types';
 import Modal from '../Modal';
-import { NEW, closedHref, openHref } from './add-href';
+import { NEW, NEW_INGREDIENT, askedCoven, closedHref, openHref } from './add-href';
 import AddIngredientMenu from './add-ingredient-menu';
 import type { AddDestination, AddIngredientButtonProps } from './types';
 
@@ -23,13 +23,14 @@ import type { AddDestination, AddIngredientButtonProps } from './types';
 // dialog for a coven names it in its head and cannot change it.
 //
 // A coven's dialog is opened by the page's address, as the admin pages' are
-// (the owner's call, 2026-10-18): `?new` on any page in the shell opens the
-// default coven's, `?new=<slug>` a named one's, so a reload keeps it, Back
+// (the owner's call, 2026-10-18): `?new=ingredient` on any page in the shell opens
+// the default coven's, `?new=<slug>` a named one's, and a bare `?new` reads as
+// `?new=ingredient` (the owner's call, 2026-10-27; `?new=spell` is the grimoire's), so a reload keeps it, Back
 // leaves it and the address can be shared. The press writes the address with
 // the browser's own `pushState`, which Next's router follows, rather than a
 // navigation: nothing on the server needs re-reading to draw the form. On an
 // admin page `?new` is the page's own compendium dialog, so a coven chosen
-// there is a navigation to that coven's index with `?new`.
+// there is a navigation to that coven's index with `?new=ingredient`.
 // claude-docs/components/modal.md, "Add Ingredient".
 
 const LABEL = 'Add Ingredient';
@@ -144,15 +145,16 @@ const AddIngredientButton = ({
     covenSlugOf(pathname) ? 'coven' : 'compendium',
   );
   const onAdmin = pathname.startsWith('/admin');
-  // The coven whose dialog the address opens: `?new` the default coven,
-  // `?new=<slug>` that coven, and nothing for a slug the viewer cannot write
-  // to. An admin page's `?new` is its own dialog, never this one.
-  const asked = onAdmin ? null : params.get(NEW);
+  // The coven whose dialog the address opens: `?new=ingredient` (or a bare
+  // `?new`) the default coven, `?new=<slug>` that coven, and nothing for a
+  // slug the viewer cannot write to or for `?new=spell`, the grimoire's. An
+  // admin page's `?new` is its own dialog, never this one.
+  const asked = onAdmin ? null : askedCoven(params.get(NEW));
   const defaultCoven = initial?.kind === 'coven' ? initial.workspace : undefined;
   const adding =
     asked === null
       ? null
-      : asked === ''
+      : asked === 'default'
         ? (defaultCoven ?? null)
         : (all.find(
             (d): d is Extract<AddDestination, { kind: 'coven' }> =>
@@ -169,7 +171,7 @@ const AddIngredientButton = ({
     if (destination.kind === 'compendium') {
       navigate('/admin/compendium?new');
     } else if (onAdmin) {
-      navigate(`/coven/${destination.workspace.slug}?${NEW}` as Route);
+      navigate(`/coven/${destination.workspace.slug}?${NEW}=${NEW_INGREDIENT}` as Route);
     } else {
       const slug =
         destination.workspace.id === defaultCoven?.id ? undefined : destination.workspace.slug;

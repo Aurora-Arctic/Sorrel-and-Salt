@@ -185,6 +185,7 @@ export default async function CovenIngredientsPage({
           vocabulary={{ deities, formIcons: Object.fromEntries(formIcons) }}
           position={page.position}
           total={page.totalCount}
+          cursor={{ after, before }}
           canAdd={rolePermits(membership.role, { ingredient: ['create'], inventory: ['update'] })}
           {...pagerHrefs(page.pageInfo, (cursor) =>
             covenIngredientsHref(workspace.slug, { ...filter, ...cursor }),

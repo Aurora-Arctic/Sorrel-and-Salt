@@ -1835,10 +1835,11 @@ The page also carries:
 - `requireSession()`, called in the page, since the `(shell)` layout does not.
 - The grimoire's `SpellCard` gains its link to this page, through `PendingLink` as `IngredientCard`'s name does: M10.11 left the card unlinked, since a link with no page behind it would ship broken ([`components/spell-card.md`](../components/spell-card.md), "No link yet").
 - `LastEdit` under the title ([`components/last-edit.md`](../components/last-edit.md)).
-- No Edit or Delete control: a control with nothing behind it would ship as a dead button. M13.10 adds the Edit control with the edit route, M13.11 adds the Delete control with `deleteSpell`, and M13.20 adds the Duplicate control with `duplicateSpell` (decided in the Wave 13 review, 2026-10-23, on the review agent's finding).
+- No Edit or Delete control: a control with nothing behind it would ship as a dead button. M13.10 adds the Edit control with the spell builder's modal at `?edit=<id>` (M10.12), M13.11 adds the Delete control with `deleteSpell`, and M13.20 adds the Duplicate control with `duplicateSpell` (decided in the Wave 13 review, 2026-10-23, on the review agent's finding).
 - If the sections run past one screen, a jump menu on the pattern of the ingredient entry page (`PageNav`, `src/components/PageNav/`, used by `IngredientEntry`; [`components/page-nav.md`](../components/page-nav.md)).
 - A `Skeleton` of shape `page`, through a `PARTS_OF_SECTION` entry in `src/lib/coven-path.ts`, so the loading shape matches.
 - The steps are drawn with `StepRow`, the presentation component M13.3 adds under `src/components/` (M13.3 lands before this task). This page renders it read-only, with no editing controls.
+- Picking a spell from the grimoire search's suggestions opens its recipe page, through `IngredientSearch`'s `pickHref`. Once M13.21 builds the spell's Quick Look, a pick opens that instead, under the owner's rule of 2026-10-27 that a pick opens the item's Quick Look, as an ingredient pick does (M13.21). Until this task a pick applies the title as the search (M10.11). `pick()` in `src/components/IngredientSearch/search-box.tsx` falls back to the search when a row carries no `match`, and a spell suggestion row carries none today, so this task gives spell rows a `match` holding the spell's id as well as passing `pickHref` (added 2026-10-27, from the M10.11 review).
 
 **Amended 2026-10-16 by the spell steps and workings plan** ([`design-decisions/m13.1-plan.md`](../design-decisions/m13.1-plan.md)): the page renders the spell's numbered steps in `position` order, an ingredient step with its quantity and unit and an instruction-only step as its text, plus an Ingredients summary above them, the ingredient steps in order, for gathering before starting (M13.1). It shows the spell's `note`, and it is the page M13.7's Record a Working control and M13.8's Workings section attach to.
 
@@ -1853,6 +1854,7 @@ _Acceptance criteria:_
 - A custom, one-off ingredient (MB.40) renders its own name and form in `position` order with the rest, marked as one-off, and links to no ingredient page
 - The page calls `requireSession()` and shows `LastEdit` under the title
 - A spell's card in the grimoire list links to this page
+- Picking a spell from the grimoire search's suggestions opens this page, through `IngredientSearch`'s `pickHref` (M13.21 later moves the pick to the spell's Quick Look)
 - The page has no Edit or Delete control; M13.10 and M13.11 each add their own
 - The loading skeleton is shape `page`
 - The page is the only view M10.22 styles for print

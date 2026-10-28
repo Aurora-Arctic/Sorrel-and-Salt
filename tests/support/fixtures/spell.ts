@@ -34,7 +34,7 @@ const DEFAULTS: SpellFixture = {
   workspaceId: WORKSPACE_W_ID,
   title: 'Hearth Warding Jar',
   intent: null,
-  jarSize: null,
+  jarDescription: null,
   sealWaxColor: null,
   moonPhase: null,
   dayOfWeek: null,

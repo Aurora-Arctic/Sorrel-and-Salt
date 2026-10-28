@@ -385,7 +385,7 @@ describe('createSpell, with its recipe', () => {
     const spell = await createSpell(asUser(B), WORKSPACE_W_ID, {
       title: 'Hearth Ward',
       intent: 'Keep the hearth safe',
-      jarSize: 'Small',
+      jarDescription: 'Small',
       sealWaxColor: 'Red',
       moonPhase: 'Waxing',
       dayOfWeek: 'Sunday',
@@ -395,7 +395,7 @@ describe('createSpell, with its recipe', () => {
     const [row] = await sql`select * from spells where id = ${spell.id}`;
     expect(row).toMatchObject({
       intent: 'Keep the hearth safe',
-      jar_size: 'Small',
+      jar_description: 'Small',
       seal_wax_color: 'Red',
       moon_phase: 'Waxing',
       day_of_week: 'Sunday',

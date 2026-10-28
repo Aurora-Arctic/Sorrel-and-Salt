@@ -26,6 +26,7 @@ export const IngredientSearchForm = ({
   searchHref,
   pickHref,
   pickHeading,
+  pickPlace,
   source,
   clear,
   className,
@@ -49,6 +50,7 @@ export const IngredientSearchForm = ({
           searchHref={searchHref}
           pickHref={pickHref}
           pickHeading={pickHeading}
+          pickPlace={pickPlace}
           source={source}
         />
         {children}

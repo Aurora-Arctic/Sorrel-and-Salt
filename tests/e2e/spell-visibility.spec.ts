@@ -22,7 +22,7 @@ test('a member writes a spell private, then shares it with the coven for good', 
     B: 'member',
   });
   await signInAgainAs(page, coven.users.B);
-  await page.goto(`/coven/${coven.slug}/grimoire/new`);
+  await page.goto(`/coven/${coven.slug}/grimoire?new=spell`);
 
   // A switch (the owner's call, 2026-10-27): on is the coven, off is private.
   const visibility = page.getByRole('switch', { name: 'Share With the Coven', exact: true });

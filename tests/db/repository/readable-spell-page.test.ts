@@ -2,6 +2,7 @@ import { beforeEach, describe, expect, it } from 'vitest';
 import { sql as sqlExpression } from 'drizzle-orm';
 import type postgres from 'postgres';
 import {
+  findGrimoireCategoryCounts,
   findGrimoireCount,
   findGrimoirePage,
   findManyInSpells,
@@ -410,6 +411,65 @@ describe('the grimoire search and category filter (M10.11)', () => {
     expect(await findGrimoireCount(membership, query, second.cursor)).toEqual({
       totalCount: 3,
       countBefore: 1,
+    });
+  });
+
+  /** Each category's count, keyed by its id, as the Categories filter reads it. */
+  const categoryCountsOf = async (user: User, query: GrimoireQuery) =>
+    Object.fromEntries(
+      (await findGrimoireCategoryCounts(await proofFor(user), query)).map(({ value, count }) => [
+        value,
+        count,
+      ]),
+    );
+
+  it('counts the spells in each category the reader can read, and never another member’s private one', async () => {
+    await grimoire();
+    const [cleansing, protection] = await Promise.all([
+      categoryId('Cleansing'),
+      categoryId('Protection'),
+    ]);
+    // The precondition: B's private spell carries both categories, and B counts it.
+    expect(await categoryCountsOf(B, { order: 'UPDATED_DESC' })).toEqual({
+      [cleansing]: 3,
+      [protection]: 3,
+    });
+
+    expect(await categoryCountsOf(A, { order: 'UPDATED_DESC' })).toEqual({
+      [cleansing]: 2,
+      [protection]: 2,
+    });
+  });
+
+  it('counts each category under the tab’s status and the search', async () => {
+    const ids = await grimoire();
+    await sql`update spells set status = 'complete' where id = ${ids.calm}`;
+    const [cleansing, protection] = await Promise.all([
+      categoryId('Cleansing'),
+      categoryId('Protection'),
+    ]);
+
+    expect(await categoryCountsOf(A, { order: 'UPDATED_DESC', query: 'hearth' })).toEqual({
+      [cleansing]: 1,
+      [protection]: 1,
+    });
+    expect(
+      await categoryCountsOf(A, { order: 'UPDATED_DESC', query: 'hearth', status: 'complete' }),
+    ).toEqual({ [cleansing]: 1 });
+  });
+
+  it('keeps the chosen categories in force under all, and sets them aside under any', async () => {
+    await grimoire();
+    const [cleansing, protection] = await Promise.all([
+      categoryId('Cleansing'),
+      categoryId('Protection'),
+    ]);
+    const chosen: GrimoireQuery = { order: 'UPDATED_DESC', categoryIds: [cleansing] };
+
+    expect(await categoryCountsOf(A, chosen)).toEqual({ [cleansing]: 2, [protection]: 1 });
+    expect(await categoryCountsOf(A, { ...chosen, categoryMode: 'any' })).toEqual({
+      [cleansing]: 2,
+      [protection]: 2,
     });
   });
 });

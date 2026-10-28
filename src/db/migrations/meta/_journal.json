@@ -596,6 +596,20 @@
       "when": 1793120994011,
       "tag": "0084_spells-revision-and-draft-title",
       "breakpoints": true
+    },
+    {
+      "idx": 85,
+      "version": "7",
+      "when": 1793137921414,
+      "tag": "0085_spells-unaccent-trgm",
+      "breakpoints": true
+    },
+    {
+      "idx": 86,
+      "version": "7",
+      "when": 1793145935307,
+      "tag": "0086_spells-jar-description",
+      "breakpoints": true
     }
   ]
 }
