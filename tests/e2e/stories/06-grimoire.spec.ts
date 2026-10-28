@@ -60,15 +60,17 @@ test('a member names a spell and states its intent', { tag: '@story-47' }, async
   await builder.getByRole('textbox', { name: 'Title' }).fill('Fixture Working');
   await expect(save).toBeEnabled();
   await save.click();
-  // Saved: nothing left to save, and the address now names the saved draft, so a reload or
-  // Back opens it rather than an empty form.
-  await expect(save).toBeDisabled();
-  await expect(save).not.toHaveAttribute('aria-busy', 'true');
+  // Saved: the address now names the saved draft, so a reload or Back opens it rather than an
+  // empty form, and the same dialog is headed as the saved spell, with nothing left to save.
   await expect(page).toHaveURL(new RegExp(`/coven/${coven.slug}/grimoire\\?edit=[0-9a-f-]{36}$`));
+  const drafted = page.getByRole('dialog', { name: 'Edit Spell, Fixture Working' });
+  const saved = drafted.getByRole('button', { name: 'Save' });
+  await expect(saved).toBeDisabled();
+  await expect(saved).not.toHaveAttribute('aria-busy', 'true');
   const draft = page.url();
   // Close saves what is unsaved before it closes, and asks nothing.
-  await builder.getByRole('textbox', { name: 'Intent' }).fill('To see clearly');
-  await builder.getByRole('button', { name: 'Close' }).click();
+  await drafted.getByRole('textbox', { name: 'Intent' }).fill('To see clearly');
+  await drafted.getByRole('button', { name: 'Close', exact: true }).click();
   await expect(page).toHaveURL(`/coven/${coven.slug}/grimoire`);
   await expect(page.getByRole('dialog')).toHaveCount(0);
   await page.goto(draft);
@@ -76,7 +78,7 @@ test('a member names a spell and states its intent', { tag: '@story-47' }, async
   // A saved spell opens its sections shut, each line naming what it holds.
   await edit.getByRole('button', { name: 'Open All' }).click();
   await expect(edit.getByRole('textbox', { name: 'Intent' })).toHaveValue('To see clearly');
-  await edit.getByRole('button', { name: 'Close' }).click();
+  await edit.getByRole('button', { name: 'Close', exact: true }).click();
   await expect(page).toHaveURL(`/coven/${coven.slug}/grimoire`);
   // A new spell is a draft, listed under the grimoire's Drafts tab (M10.11).
   await page.getByRole('link', { name: 'Drafts' }).click();
