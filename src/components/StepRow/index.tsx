@@ -47,6 +47,7 @@ export default function StepRow({
   onToggle,
   aside,
   handle,
+  nameField,
   formField,
   quantityField,
   unitField,
@@ -118,6 +119,7 @@ export default function StepRow({
         {open && (
           <div className="step-row__open" id={fieldsId}>
             <div className="step-row__inputs">
+              {nameField && <div className="step-row__name-field">{nameField}</div>}
               {formField && <div className="step-row__form">{formField}</div>}
               {quantityField && <div className="step-row__quantity">{quantityField}</div>}
               {unitField && <div className="step-row__unit">{unitField}</div>}
