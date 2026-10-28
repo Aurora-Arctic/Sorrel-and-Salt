@@ -31,14 +31,18 @@ for (const viewport of [
     await page.setViewportSize(viewport);
     await page.goto(`/coven/${coven.slug}/grimoire`);
     await page.getByRole('heading', { name: 'Grimoire', level: 1 }).waitFor();
+    // The Filters button exists only once the page has hydrated. Until then the grimoire's
+    // filter panel is a `<dialog>` drawn open, and New Spell's press is not yet the script's.
+    await expect(page.getByRole('button', { name: /^Filters/ })).toBeVisible();
 
-    // Every frame from the press on: the open dialog's height, and whether it holds the form.
+    // Every frame from the press on: the modal dialog's height, and whether it holds the form.
+    // `:modal` matches only a dialog opened over the page, never the filter panel.
     await page.evaluate(() => {
       const w = window as unknown as { frames: { height: number; form: boolean }[] };
       w.frames = [];
       const start = performance.now();
       const tick = () => {
-        const dialog = document.querySelector<HTMLDialogElement>('dialog[open]');
+        const dialog = document.querySelector<HTMLDialogElement>('dialog:modal');
         if (dialog) {
           w.frames.push({
             height: Math.round(dialog.getBoundingClientRect().height),
