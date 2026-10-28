@@ -108,11 +108,14 @@ function acceptUpdate() {
 function renderBuilder(props: Partial<SpellBuilderProps> = {}) {
   // The builder reads the coven's categories as it opens (M10.14).
   offerCategories([]);
-  return render(
+  const view = render(
     <QueryClientProvider client={makeQueryClient()}>
       <SpellBuilder workspaceId="w1" spell={SPELL} {...props} />
     </QueryClientProvider>,
   );
+  // A saved spell opens with its sections shut (M10.12): Open All shows its jar.
+  fireEvent.click(screen.getByRole('button', { name: 'Open All' }));
+  return view;
 }
 
 const steps = () => screen.getByRole('list', { name: 'Steps' });

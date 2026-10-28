@@ -3,8 +3,8 @@
 `src/components/SpellBuilder/` is the form that writes a spell's own fields
 (M10.12, story 47): its title, intent, jar description, seal wax colour, moon phase,
 day of the week and note, the categories it is assigned (M10.14, story 48),
-and its jar of ingredients (M10.15, stories 49, 50, 57 and 77). It is a client component, drawn in a wide modal
-over the grimoire's list (`SpellDialog`, `spell-dialog.tsx`; the owner's call,
+and its jar of ingredients (M10.15, stories 49, 50, 57 and 77). It is a client component, drawn in a modal
+over the grimoire's list, at the default column and laid out as Add Ingredient is (`SpellDialog`, `spell-dialog.tsx`; the owner's call,
 2026-10-27, [`design-decisions/m10.12-spell-builder-modal.md`](../design-decisions/m10.12-spell-builder-modal.md)).
 The address opens it, as it opens Add Ingredient: `?new=spell-<slug>` draws it empty,
 reached from New Spell at the Grimoire's heading, which only an owner or a
@@ -16,7 +16,7 @@ on any other page is sent to that coven's grimoire with a replace
 `?new=spell-<slug>` in the browser, with no server
 request, and the dialog draws the empty builder from the address itself, so
 it opens at its full size at once, with no skeleton before it
-([`modal.md`](modal.md), "A form the browser can draw skips the skeleton"). Reordering the steps (M10.16), instruction steps (M13.3) and Mark Complete (M10.20) are later tasks that extend it. There is
+([`modal.md`](modal.md), "A form the browser can draw skips the skeleton"). Its head names the coven the spell lands in, as Add Ingredient's does: the coven's name over the title, and the dialog named "New Spell to Whitethorn Coven" (`ModalHeading.destination`, [`modal.md`](modal.md)); a saved spell's stays "Edit Spell" over its title. Reordering the steps (M10.16), instruction steps (M13.3) and Mark Complete (M10.20) are later tasks that extend it. There is
 no `instructions` field: the ritual is the spell's steps (M13.1).
 
 ## Props
@@ -86,7 +86,8 @@ no `instructions` field: the ritual is the spell's steps (M13.1).
 ## Visibility
 
 Who can see the spell (M10.13): `SpellVisibilityField`, in
-`visibility-field.tsx`, drawn after Note. It is a `SwitchField`
+`visibility-field.tsx`, drawn after Note in the Notes section, whose shut line
+reads Shared or Private for it. It is a `SwitchField`
 ([`field.md`](field.md)) labelled Share With the Coven (the owner's call,
 2026-10-27): on is the coven (`workspace`), which every member can see, and
 off is private (`private`), which only its author can. A line under the
@@ -143,6 +144,36 @@ Closing the tab or reloading still asks the browser's own question, which no
 page can answer by saving. Undo and redo are the shared `FormHistoryButtons`
 (M12.9).
 
+## Sections
+
+The fields sit in four `CollapsibleSection`s at `h3`
+([`collapsible-section.md`](collapsible-section.md)), wrapped in
+`.collapsible-sections`, as Add Ingredient's are (M8.16; the owner, 2026-10-28,
+"Use add ingredient modal as reference"):
+
+| Section         | Fields                                               |
+| --------------- | ---------------------------------------------------- |
+| Purpose         | Title, Intent, Categories (M10.14)                   |
+| Jar             | Jar Description, Seal Wax Colour, the steps (M10.15) |
+| When to Work It | Moon Phase, Day of the Week                          |
+| Notes           | Note, Share With the Coven (M10.13)                  |
+
+A new spell opens with every section open, to be filled in order; a saved
+spell opens with every section shut. Shut, a section's line names the values
+it holds, each on one line and joined by a middle dot ("Waxing Moon ·
+Monday"), or reads "Nothing yet". The visibility switch reads as Shared or
+Private, so Notes always has a line, and the categories by name, joined by
+commas, once the categories are read (`useCategoryName`), so the line never
+shows an id, and the steps as a count of the ingredients laid ("3 ingredients",
+an instruction step not counted). Each section's values are its entry in
+`SECTIONS`, which flags the section holding an error, and `lineOfField`
+reads each value for the line. A save refused on a field opens that
+field's section, flagged "Has an error to fix", and leaves the rest as they
+were. What is typed in a shut section is kept. Open All / Close All
+(`FoldAll`) sits in the dialog's head before Undo and Redo, reading Close All
+while any section is open. The section names are this pass's, for the owner
+to confirm.
+
 ## The fields
 
 Each field has a one- or two-word placeholder and no info tip, since none
@@ -151,13 +182,8 @@ states a rule a person could trip on
 stored as typed: the columns are free text
 ([`../db/grimoire.md`](../db/grimoire.md)).
 
-- **Moon Phase and Day of the Week** sit together in a section headed "When
-  to Work It", a `CollapsibleSection` at `h3`
-  ([`collapsible-section.md`](collapsible-section.md)). It opens shut, for a
-  new spell and a saved one alike, so the form reads short; shut, its line
-  names the values it holds, joined by a middle dot ("Waxing Moon · Monday"),
-  or reads "Nothing yet". A save refused on either field opens it, flagged
-  "Has an error to fix". They are the recipe's timing, meaning when to work the
+- **Moon Phase and Day of the Week** sit together under When to Work It.
+  They are the recipe's timing, meaning when to work the
   spell, not a record of when it was worked. A working's own day and moon
   phase follow from its `workedOn` date (M13.4). Both are comboboxes
   ([`combobox.md`](combobox.md)), `SpellSuggestField` in
@@ -217,7 +243,9 @@ stored as typed: the columns are free text
 ## Steps
 
 `steps/` is the jar: the list of steps, the picker that adds to it, and the
-spell's derived categories.
+spell's derived categories. It sits in the Jar section after Seal Wax Colour;
+while a saved spell's steps are still being read it is a skeleton there, and
+if the read fails, an error in its place.
 
 - **Add to Jar** (`picker.tsx`, story 49) is a fieldset with a type-ahead,
   Search Ingredients, over `ingredientSuggestions`: the coven's own
@@ -295,10 +323,11 @@ instruction steps move alike.
 ## Styling
 
 No wrapper: the `<form className="form">` sits straight in the body of a
-`size="wide"` `RouteModal` ([`modal.md`](modal.md)), which scrolls the form
-when it is taller than the screen. `index.scss` holds the visibility switch's
-alignment (M10.13) and the step handle (M10.16), unboxed as the combobox's
-chip handle is. Its look past the tokens is the grimoire's design review's.
+`RouteModal` at the default column, Add Ingredient's (`size="wide"` until
+2026-10-28), its sections styled by `CollapsibleSection` ([`modal.md`](modal.md)),
+which scrolls the form when it is taller than the screen. `index.scss` holds the
+visibility switch's alignment (M10.13) and the step handle (M10.16), unboxed as
+the combobox's chip handle is. Its look past the tokens is the grimoire's design review's.
 
 ## Stories
 
@@ -312,14 +341,15 @@ Open Again to look once more after Close.
 
 `tests/components/SpellBuilder/index.test.tsx` uses role and label queries
 against MSW, which answers in the route's own error shape. It covers the
-empty fields and no Instructions box, When to Work It opening shut with its
-line, opening from its heading, keeping what was typed across a shut, and
-opening when a save is refused on one of its fields, no Cancel, nothing to save until a
+empty fields and no Instructions box, the four sections in order, open on a
+new spell and shut on a saved one with their lines, Close All and Open All,
+keeping what was typed across a shut, and opening the section a refused save
+names, no Cancel, nothing to save until a
 field holds something, a draft saved with its intent alone, the trimmed
 values sent, Save busy then disabled, a second save as an update at the
 revision, a saved spell opened and an emptied field cleared, both error
 surfaces. `tests/components/SpellBuilder/spell-dialog.test.tsx` covers the
-dialog: New Spell and Edit Spell's headings, the address moved once on the
+dialog: New Spell's heading naming its coven ("New Spell to Testwort Coven") and Edit Spell's, the address moved once on the
 first save and never on a saved spell's, no Cancel, a saved spell's steps
 read once it opens and sent with the next update, nothing sent before they
 land, and Close closing at

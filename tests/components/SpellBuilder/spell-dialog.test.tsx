@@ -95,6 +95,7 @@ function renderDialog(opened: SpellDialogProps['opened'], canCreate = true) {
       <SpellDialog
         workspaceId="w1"
         covenSlug="testwort-coven"
+        covenName="Testwort Coven"
         closeHref={CLOSE}
         opened={opened}
         canCreate={canCreate}
@@ -108,6 +109,8 @@ const field = (name: string) => within(dialog()).getByRole('textbox', { name });
 const type = (name: string, value: string) => fireEvent.change(field(name), { target: { value } });
 const save = () => within(dialog()).getByRole('button', { name: /^Sav/ });
 const close = () => within(dialog()).getByRole('button', { name: 'Close' });
+// A saved spell opens with its sections shut, as an edited ingredient does: Open All shows its fields.
+const openAll = () => fireEvent.click(within(dialog()).getByRole('button', { name: 'Open All' }));
 /** The jar's list of steps, drawn once a saved spell's steps have landed. */
 const stepsLanded = () => within(dialog()).findByRole('list', { name: 'Steps' });
 
@@ -169,10 +172,12 @@ describe('SpellDialog', () => {
     expect(screen.queryByRole('dialog')).not.toBeInTheDocument();
   });
 
-  it('opens New Spell as a wide dialog with the builder empty', () => {
+  // Headed as Add Ingredient is (M8.16): the coven it lands in over the title, the dialog named
+  // by the phrase.
+  it('opens New Spell to its coven, with the builder empty', () => {
     renderDialog({});
 
-    expect(screen.getByRole('dialog', { name: 'New Spell' })).toBeInTheDocument();
+    expect(screen.getByRole('dialog', { name: 'New Spell to Testwort Coven' })).toBeInTheDocument();
     expect(field('Title')).toHaveValue('');
     expect(field('Intent')).toHaveValue('');
   });
@@ -184,7 +189,7 @@ describe('SpellDialog', () => {
     address.search = 'new=spell-testwort-coven';
     renderDialog(undefined);
 
-    expect(screen.getByRole('dialog', { name: 'New Spell' })).toBeInTheDocument();
+    expect(screen.getByRole('dialog', { name: 'New Spell to Testwort Coven' })).toBeInTheDocument();
     expect(field('Title')).toHaveValue('');
   });
 
@@ -192,7 +197,7 @@ describe('SpellDialog', () => {
     address.search = 'new=spell';
     renderDialog(undefined);
 
-    expect(screen.getByRole('dialog', { name: 'New Spell' })).toBeInTheDocument();
+    expect(screen.getByRole('dialog', { name: 'New Spell to Testwort Coven' })).toBeInTheDocument();
   });
 
   it('opens nothing for another coven’s ?new=spell-<slug>', () => {
@@ -220,6 +225,7 @@ describe('SpellDialog', () => {
     renderDialog({ spell: SAVED });
 
     expect(screen.getByRole('dialog', { name: 'Edit Spell, Fixture Working' })).toBeInTheDocument();
+    openAll();
     expect(field('Title')).toHaveValue('Fixture Working');
     expect(field('Intent')).toHaveValue('Calm');
   });
@@ -228,6 +234,7 @@ describe('SpellDialog', () => {
     const reads = answerSteps([ROSEWORT_STEP]);
     const updated = acceptUpdate();
     renderDialog({ spell: SAVED });
+    openAll();
 
     // Until they land the jar shows its loading state, and there is nothing to save.
     expect(within(dialog()).getByRole('region', { name: 'Steps' })).toHaveAttribute(
@@ -251,6 +258,7 @@ describe('SpellDialog', () => {
     answerSteps([ROSEWORT_STEP], new Promise((resolve) => (land = resolve)));
     const updated = acceptUpdate();
     renderDialog({ spell: SAVED });
+    openAll();
     type('Intent', 'Calmer');
 
     expect(save()).toBeDisabled();
@@ -311,6 +319,7 @@ describe('SpellDialog', () => {
   it('does not swap the address on saving a spell it opened saved', async () => {
     const updated = acceptUpdate();
     renderDialog({ spell: SAVED });
+    openAll();
     await stepsLanded();
     type('Intent', 'Calmer');
 
@@ -363,6 +372,7 @@ describe('SpellDialog', () => {
     it('saves a saved spell’s change as an update before it closes', async () => {
       const updated = acceptUpdate();
       renderDialog({ spell: SAVED });
+      openAll();
       await stepsLanded();
       type('Intent', 'Calmer');
 
@@ -383,6 +393,7 @@ describe('SpellDialog', () => {
       answerSteps([ROSEWORT_STEP], new Promise((resolve) => (land = resolve)));
       const updated = acceptUpdate();
       renderDialog({ spell: SAVED });
+      openAll();
       type('Intent', 'Calmer');
 
       await act(async () => {
@@ -399,10 +410,26 @@ describe('SpellDialog', () => {
       expect(updated[0]?.input).toMatchObject({ intent: 'Calmer', steps: [ROSEWORT_SENT] });
     });
 
+    it('opens a saved spell’s shut Jar alone to show its steps could not be read', async () => {
+      mockGraphQLError('SpellBuilderSteps', { code: 'NOT_FOUND', message: 'No such spell' });
+      renderDialog({ spell: SAVED });
+      const jar = within(dialog()).getByRole('button', { name: 'Jar' });
+      // Shut as the saved spell opens, so without the opening the failure would be hidden.
+      expect(jar).toHaveAttribute('aria-expanded', 'false');
+
+      expect(await within(dialog()).findByRole('alert')).toBeVisible();
+      expect(jar).toHaveAttribute('aria-expanded', 'true');
+      expect(within(dialog()).getByRole('button', { name: 'Purpose' })).toHaveAttribute(
+        'aria-expanded',
+        'false',
+      );
+    });
+
     it('stays open and sends nothing when a saved spell’s steps cannot be read', async () => {
       mockGraphQLError('SpellBuilderSteps', { code: 'NOT_FOUND', message: 'No such spell' });
       const updated = acceptUpdate();
       renderDialog({ spell: SAVED });
+      openAll();
       type('Intent', 'Calmer');
 
       expect(await within(dialog()).findByRole('alert')).toBeInTheDocument();
