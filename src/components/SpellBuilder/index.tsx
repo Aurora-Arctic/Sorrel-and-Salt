@@ -2,7 +2,7 @@
 
 import { zodResolver } from '@hookform/resolvers/zod';
 import { useMutation } from '@tanstack/react-query';
-import { type ReactElement, type ReactNode, useEffect, useRef, useState } from 'react';
+import { type ReactElement, type ReactNode, useEffect, useId, useRef, useState } from 'react';
 import { FormProvider, type Resolver, useForm, useWatch } from 'react-hook-form';
 import { CollapsibleSection, FoldAll } from '../CollapsibleSection';
 import { graphql } from '../../gql';
@@ -71,7 +71,6 @@ const CreateSpellDocument = graphql(`
         form
         quantity
         unit
-        note
         body
         ingredient {
           id
@@ -129,7 +128,6 @@ const UpdateSpellDocument = graphql(`
         form
         quantity
         unit
-        note
         body
         ingredient {
           id
@@ -342,7 +340,8 @@ const SpellBuilder = ({
     ) ||
     stepsChanged(steps, (defaultValues?.steps ?? []) as SpellBuilderValues['steps']);
   // A unit the jar cannot be measured in holds Save, as the service would refuse it.
-  const unitRefused = unitIssues(steps).size > 0;
+  const unitIssueSteps = unitIssues(steps);
+  const unitRefused = unitIssueSteps.size > 0;
 
   // A new spell opens every section, to be filled in order; a saved one opens
   // them shut, each line saying what it holds, as Add Ingredient's do (M8.16).
@@ -469,6 +468,19 @@ const SpellBuilder = ({
   // A Close pressed while the steps are on their way saves once they land.
   const closeWaiting = useRef(false);
   const [jarReady, setJarReady] = useState(stepsRead === undefined);
+  // Why Save Spell is off, said beside it as text (second design review, 2026-10-28), so a
+  // disabled button is never a silent one. Left out while a save is on its way.
+  const saveReasonId = useId();
+  const firstUnitIssue = [...unitIssueSteps.keys()][0];
+  const saveReason = isSubmitting
+    ? null
+    : firstUnitIssue !== undefined
+      ? `Fix the unit in step ${firstUnitIssue + 1} to save`
+      : !jarReady
+        ? 'Waiting for the jar to load'
+        : !dirty
+          ? 'Nothing to save yet'
+          : null;
   // Steps that could not be read leave nothing a save would take, so Close closes, unsaved.
   const closeGuard = useSaveOnClose(dirty && stepsRead !== 'failed', isSubmitting, () => {
     if (!jarReady && stepsRead !== 'failed') closeWaiting.current = true;
@@ -621,7 +633,14 @@ const SpellBuilder = ({
             noun="Spell"
             dirty={dirty && !unitRefused && jarReady}
             submitting={isSubmitting}
-          />
+            saveDescribedBy={saveReason ? saveReasonId : undefined}
+          >
+            {saveReason && (
+              <p id={saveReasonId} className="spell-builder__save-reason">
+                {saveReason}
+              </p>
+            )}
+          </FormActions>
         </form>
       </FormHistoryContext.Provider>
     </FormProvider>

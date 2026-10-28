@@ -303,7 +303,7 @@ being read the column is a skeleton, and if the read fails, an error in its plac
   `ingredientId` and `variantId`, never the cupboard entry or the coven's
   jar it was found through (`stepInputOf` in `values.ts`); a one-off sends
   its `name` and `form`. A saved step sends its `id`. Quantity is sent as a
-  number, and a blank quantity, unit or note is left out.
+  number, and a blank quantity or unit is left out.
 - **Each row** (`step-row.tsx`'s `BuilderStepRow`, stories 50 and 80) is [`StepRow`](step-row.md), an
   open or a closed card. Closed, it shows the handle, the position, the form's icon, the name with
   its form, a summary of amount and instruction, the supply badge, a pencil to open it and Remove.
@@ -321,8 +321,9 @@ being read the column is a skeleton, and if the read fails, an error in its plac
   left out of the save. An instruction-only step with a blank one is refused
   at its own field, "Write the instruction, or remove it", before anything is
   sent (`stepInputOf` keeps the blank body on that kind of step so the schema
-  says it, rather than a step that says nothing). A step's `note` is not
-  edited here.
+  says it, rather than a step that says nothing). The step `note` is retired: `body` is the one text on a
+  step, and the Instruction field edits it
+  ([`pr1308-step-note-retired.md`](../design-decisions/pr1308-step-note-retired.md)).
 - **After a Remove** the focus goes to the handle of the row now in that place
   (the one before it for the last), and to Add an Instruction when the list is empty.
 - **The starting unit** (story 77): a form the coven keeps a jar of is added with that jar's unit already in the Unit field (`newStep` reads `jarUnit`, which the picker's lookup already returns in `stock`); a form with no jar, or a jar with no unit, starts blank. It is set once, as the step is added, so it never replaces a unit the member has chosen.
@@ -349,8 +350,7 @@ being read the column is a skeleton, and if the read fails, an error in its plac
 
 `jar-aside.tsx` is an `aside` named The Jar, the right column of the Jar section (the owner's
 placement, 2026-10-28; it was a block after the steps). In order: the jar drawing with Seal
-Wax Colour to its right (the drawing centred on the whole field, label and input), Jar Description beneath both at the aside's full width (at every width), a hairline one `space(1)` further down than the aside's usual gap, In Coven Inventory (`inventory.tsx`), a hairline,
-and the comparison. The drawing is `JarDrawing` and `pickJarShape` from the jar shelf
+Wax Colour to its right (the drawing centred on the whole field, label and input), Jar Description beneath both at the aside's full width (at every width), then In Coven Inventory (`inventory.tsx`) and the comparison. The heading, jar and description are one block (`spell-aside__block`, `space(2)` apart); the aside puts `space(6)` between its blocks and draws no hairline between them (second design review, 2026-10-28, which reverses the hairlines the first review left). Inside each block the gaps are `space(2)`. The drawing is `JarDrawing` and `pickJarShape` from the jar shelf
 ([`jar-shelf.md`](jar-shelf.md)), drawn empty and tinted by the seal wax.
 
 **The jar fills as ingredients are added.** `JarDrawing` takes `bands`, one entry per ingredient step (one-offs count, instructions do not), each entry the step's distinct category-group colours. Each band is the same height, stacked from the base and clipped to the vessel's body so it follows the shape. Eight bands fill the jar (`BANDS_FULL`, a typical spell); past eight the bands shrink so they keep fitting. A band with no known group colour is the jar's ink (`$text-primary`) in two alternating tints, 8% and 18% opacity, with a thin line (0.5 wide, 25%) along each boundary. Each band's top edge is one low crest across the jar (a quadratic curve, about 2% of the body high) and its bottom is the same curve, so bands tile; the lowest is flat on the base. The highest band's top edge is drawn as the level line of a held jar (`$accent`, 1.2 wide). A band that has group colours takes them instead (MB.35: the colours are data on the group row, so they reach the drawing as the custom properties `--band-dark` and `--band-light`, never as tokens). They are those of the step's categories in listed order (the ingredient's, then the form's), one colour per distinct group. One group fills the band. Several split it into equal vertical stripes in that order, each stripe its own clip. The colour is mixed 55% in the light theme and 65% in the dark with `color-mix`, picked by `light-dark()`, so the boundary lines and the top line stay legible. A step with no categories, or none whose group is loaded yet, keeps the muted tint. The group colours come from the categories the Category Match panel already reads (`useCategoryColors`), so the Jar adds no request. A band moves by a `transform` transition (none under reduced motion). The drawing stays `aria-hidden`, and an empty jar draws no band.
@@ -438,7 +438,13 @@ instruction steps move alike.
   `(spell_id, position)` partial unique index through a negative scratch
   place, never by removing a step and adding it again.
 
+## Why Save Spell is off
+
+While Save Spell is disabled, a muted line beside it says why (`spell-builder__save-reason`, text and not a tooltip; second design review, 2026-10-28, finding 6), and the button's `aria-describedby` names it. In this order: "Fix the unit in step N to save" (a unit the jar cannot be measured in), "Waiting for the jar to load", "Nothing to save yet". It is left out while a save is on its way.
+
 ## Styling
+
+Spacing, set by the second design review (2026-10-28, finding 3), which reverses earlier recorded choices (the hairlines in the aside and the card's `$text-muted` border): the step list's gap is `space(4)` (was `space(3)`); the add row sits `space(5)` above the list; the aside's blocks are `space(6)` apart and `space(2)` inside; an open section's fields end `space(6)` above the next section, set under `.spell-builder` so IngredientForm's `space(5)` stays. Values are in `rem`, so they are the same at 1280px and 390px; only the add row, which stacks in a narrow container, changes place, not size.
 
 No wrapper: the `<form className="form">` sits straight in the body of a `RouteModal` of
 `size="wide"` (55rem of content, 928px dialog, widened 2026-10-28 so the Jar's two columns fit;
@@ -455,7 +461,7 @@ visibility switch's alignment (M10.13) and the Jar section (the owner's design p
 - the list a column spaced by its `gap` alone, with no margin on a row and no room taken while
   empty. The list is the size container a row stacks by (`spell-steps`), declared in
   `StepRow`'s stylesheet;
-- the aside's hairlines in `$hairline`; its chips are `CategoryChips`, unstyled here; every colour is a token,
+- no hairlines between the aside's blocks (the second design review, 2026-10-28, removed them for `space(6)` of distance); its chips are `CategoryChips`, unstyled here; every colour is a token,
   so both themes follow.
 
 The row's own look, the card, is in [`step-row.md`](step-row.md), "The card".

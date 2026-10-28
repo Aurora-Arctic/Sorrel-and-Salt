@@ -33,6 +33,11 @@ contracts it, three things from before stay:
   number. `position` is nullable until M13.9, because the deploy before writes
   `layer_order` alone and a `NOT NULL` would refuse its inserts; `0083` filled
   `position` from `layer_order` for the rows already there.
+- **`spell_steps.note`**, the per-ingredient line, retired 2026-10-28. `0088`
+  copied each live step's note into `body` (after the body, a blank line
+  between) and rewrote the amount CHECK without it. Nothing reads or writes the
+  column; M13.9 drops it
+  ([`pr1308-step-note-retired.md`](../design-decisions/pr1308-step-note-retired.md)).
 - **`spells.instructions`**, the old name of `spells.note`, filled into it by
   `0083`. The saves write `note` alone and leave `instructions` as it was
   ("Saving a recipe" below).
@@ -220,8 +225,9 @@ this is what holds it in the database.
   `num_nonnulls(ingredient_id, name, body) >= 1`, so a step is never empty.
   The two replaced MB.40's `spell_ingredients_ingredient_or_name`,
   `num_nonnulls(ingredient_id, name) = 1`, in M13.1, once a row could be an
-  instruction alone. `spell_steps_amount_on_ingredient` refuses `quantity`,
-  `unit` or `note` on a step with no ingredient, since each describes one, and
+  instruction alone. `spell_steps_amount_on_ingredient` refuses `quantity`
+  or `unit` on a step with no ingredient, since each describes one (it named
+  `note` too until `0088`), and
   `spell_steps_body_not_blank` is the not-blank idiom on `body`.
   `spell_steps_form_only_on_custom` is
   `ingredient_id is null or form is null`, because `form` beside an ingredient

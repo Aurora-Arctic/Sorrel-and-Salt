@@ -51,7 +51,6 @@ export function stepValueOf(step: SpellBuilderStep): SpellStepValue {
     unit: step.unit ?? '',
     savedUnit: step.unit,
     body: step.body,
-    note: step.note,
     icon: step.variant?.formChoice?.group.icon ?? null,
     categories: categoriesOf(step),
     safety:
@@ -96,7 +95,6 @@ export const newStep = (
   unit: step.jarUnit ?? '',
   savedUnit: null,
   body: null,
-  note: null,
 });
 
 /** A new instruction-only step: no ingredient, and a blank text the member writes. */
@@ -175,7 +173,6 @@ export function stepInputOf(step: SpellStepValue): SpellStepSend {
     quantity: quantity === '' ? null : Number(quantity),
     unit: (step.unit || null) as Unit | null,
     body: step.body,
-    note: step.note,
   };
   const sent = present(
     step.ingredientId === null

@@ -82,7 +82,6 @@ export const SpellBuilderStepsDocument = graphql(`
         form
         quantity
         unit
-        note
         body
         ingredient {
           id
