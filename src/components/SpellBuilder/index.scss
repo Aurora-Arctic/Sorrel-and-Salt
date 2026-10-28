@@ -496,6 +496,7 @@ $spell-columns-switch: $spell-main-min + $spell-columns-gap + $spell-side;
   dt {
     flex: none;
     inline-size: 4.5rem;
+    text-align: end;
     color: $text-muted;
   }
 
