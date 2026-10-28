@@ -316,13 +316,14 @@ describe('the spell builder’s undo of step changes', () => {
     await moveByKeyboard(handle('Stir thrice'), 'ArrowUp');
     submit();
     await waitFor(() => expect(calls).toHaveLength(1));
-    await waitFor(() => expect(order()).toEqual([ROSEWORT, 'Testwort', 'Stir thrice']));
-    // The save answers with the spell as it was loaded, so the list starts again from that order.
-    await moveByKeyboard(handle('Stir thrice'), 'ArrowUp');
+    // A save keeps the values the form holds, so the list stays as it was moved.
     expect(order()).toEqual([ROSEWORT, 'Stir thrice', 'Testwort']);
+    await moveByKeyboard(handle('Stir thrice'), 'ArrowUp');
+    expect(order()).toEqual(['Stir thrice', ROSEWORT, 'Testwort']);
 
+    // Undo takes back the move made after the save, not the save.
     undo();
-    await waitFor(() => expect(order()).toEqual([ROSEWORT, 'Testwort', 'Stir thrice']));
+    await waitFor(() => expect(order()).toEqual([ROSEWORT, 'Stir thrice', 'Testwort']));
   });
 });
 

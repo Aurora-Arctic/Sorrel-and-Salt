@@ -195,6 +195,7 @@ describe('the spell builder’s saves', () => {
     vi.useFakeTimers({ shouldAdvanceTime: true });
 
     fireEvent.click(screen.getByRole('button', { name: 'Jar' }));
+    fireEvent.click(screen.getByRole('button', { name: 'Edit step 1' }));
     fireEvent.change(screen.getByRole('textbox', { name: /Instruction/ }), {
       target: { value: '' },
     });

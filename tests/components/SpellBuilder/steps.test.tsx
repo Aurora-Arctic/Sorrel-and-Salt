@@ -427,6 +427,8 @@ describe('the spell builder’s Add to Jar', () => {
     const quantity = () =>
       within(stepRow('Fixture Rosewort')).getByRole('spinbutton', { name: /^Quantity/ });
     fireEvent.change(quantity(), { target: { value: '7' } });
+    // The row is open after typing, and Remove shows only on a closed row.
+    fireEvent.click(screen.getByRole('button', { name: 'Close Fixture Rosewort' }));
     fireEvent.click(
       within(stepRow('Fixture Rosewort')).getByRole('button', { name: 'Remove Fixture Rosewort' }),
     );
