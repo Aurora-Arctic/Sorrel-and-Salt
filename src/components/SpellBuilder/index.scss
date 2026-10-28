@@ -270,10 +270,6 @@
     // The stroke is centred on the path, so a path on the box's bottom edge loses half its
     // width to the svg's clip; letting it overflow keeps the jar's base whole.
     overflow: visible;
-    // This vessel fills only the lower part of its 48 by 40 box (its ink spans y 11 to 40),
-    // so a box centred on the fields draws the jar low. Lifting it by the ink's offset from
-    // the box centre (5.5 of 40) centres what is seen.
-    transform: translateY(-13.75%);
   }
 
   .jar-shelf__glass,
