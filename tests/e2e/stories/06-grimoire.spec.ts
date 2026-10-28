@@ -545,7 +545,11 @@ test(
     await steps.first().getByRole('textbox', { name: 'Instruction' }).fill('Light the candle');
     const withIngredient = await addIngredientStep(page, 'Rosemary');
     await withIngredient.getByRole('textbox', { name: 'Instruction' }).fill('Crush it first');
-    await page.getByRole('button', { name: 'Save' }).click();
+    const save = page.getByRole('button', { name: 'Save' });
+    await save.click();
+    // The address names the saved spell once it is saved, so a reload reopens it.
+    await expect(page).toHaveURL(/\?edit=[0-9a-f-]{36}$/);
+    await expect(save).toBeDisabled();
     await page.reload();
     // A saved spell opens with its sections shut (M10.12).
     await page.getByRole('button', { name: 'Open All' }).click();

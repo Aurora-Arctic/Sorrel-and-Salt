@@ -92,6 +92,13 @@ function renderBuilder(props: Partial<SpellBuilderProps> = {}) {
   );
 }
 
+// A saved spell opens with its sections shut (M10.12): Open All shows its jar.
+function renderSaved() {
+  const view = renderBuilder({ spell: SPELL });
+  fireEvent.click(screen.getByRole('button', { name: 'Open All' }));
+  return view;
+}
+
 const steps = () => screen.getByRole('list', { name: 'Steps' });
 const rows = () => within(steps()).queryAllByRole('listitem');
 const instructions = () =>
@@ -161,7 +168,7 @@ describe('the spell builder’s step text', () => {
   });
 
   it('reads a saved spell’s texts back into their fields, an ingredient step’s beneath it', () => {
-    renderBuilder({ spell: SPELL });
+    renderSaved();
 
     expect(instructions().map((field) => field.value)).toEqual([
       'Light the candle',
@@ -173,7 +180,7 @@ describe('the spell builder’s step text', () => {
 
   it('saves an edited text on a saved step by its id, and leaves the other alone', async () => {
     const calls = acceptUpdate();
-    renderBuilder({ spell: SPELL });
+    renderSaved();
 
     fireEvent.change(instructions()[0] as HTMLElement, { target: { value: 'Snuff the candle' } });
     expect(save()).toBeEnabled();
@@ -188,7 +195,7 @@ describe('the spell builder’s step text', () => {
 
   it('drops a cleared instruction from an ingredient step, which needs none', async () => {
     const calls = acceptUpdate();
-    renderBuilder({ spell: SPELL });
+    renderSaved();
 
     fireEvent.change(instructions()[1] as HTMLElement, { target: { value: '' } });
     submit();
@@ -199,7 +206,7 @@ describe('the spell builder’s step text', () => {
 
   it('removes an instruction-only step, says so, and leaves it out of what is sent', async () => {
     const calls = acceptUpdate();
-    renderBuilder({ spell: SPELL });
+    renderSaved();
 
     fireEvent.click(screen.getByRole('button', { name: 'Remove Light the candle' }));
 
@@ -213,7 +220,7 @@ describe('the spell builder’s step text', () => {
   });
 
   it('keeps the focus in the list after a removal', () => {
-    renderBuilder({ spell: SPELL });
+    renderSaved();
 
     fireEvent.click(screen.getByRole('button', { name: 'Remove Light the candle' }));
 
