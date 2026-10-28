@@ -49,6 +49,9 @@ interface FormSpec {
   categories?: string[];
   /** The unit of the coven's jar of this form; left out, the coven holds none. */
   jar?: Unit;
+  /** How much that jar holds, and its low-stock threshold (M10.19); left out, it is held unweighed. */
+  held?: number | null;
+  threshold?: number | null;
   /** This form's own flag and notes (M10.18). */
   toxic?: boolean;
   safetyNotes?: string;
@@ -85,7 +88,16 @@ function suggestion(
         formChoice: form.icon === undefined ? null : { group: { icon: form.icon } },
       })),
       stock: forms.flatMap((form) =>
-        form.jar ? [{ unit: form.jar, variant: { id: form.id } }] : [],
+        form.jar
+          ? [
+              {
+                unit: form.jar,
+                quantityOnHand: form.held ?? null,
+                lowStockThreshold: form.threshold ?? null,
+                variant: { id: form.id },
+              },
+            ]
+          : [],
       ),
     },
   };
@@ -590,5 +602,100 @@ describe('the spell builder’s safety warning', () => {
     fireEvent.click(screen.getByRole('button', { name: 'Open All' }));
 
     expect(within(stepRow('Fixture Toxwort')).getByText('Toxic')).toBeInTheDocument();
+  });
+});
+
+// M10.19, story 54: what the cupboard says about a step as it is added and as its
+// amount is typed. The rule is tests/components/SpellBuilder/supply.test.ts; this is
+// that the builder draws each state, in words, and follows the amount.
+describe('the spell builder’s supply indicator', () => {
+  const HELD = suggestion('yours', ID.rosewort, 'Fixture Rosewort', [
+    { id: ID.roseLeaf, form: 'dried leaf', jar: 'g', held: 5 },
+  ]);
+  const text = () =>
+    stepRows()
+      .map((row) => row.textContent)
+      .join(' ');
+
+  it('flags a compendium form the coven holds no jar of as out of stock, on add', async () => {
+    suggest(MOCKROOT);
+    renderBuilder();
+
+    await add('Mock', /Fixture Mockroot/);
+
+    expect(
+      within(stepRow('Fixture Mockroot')).getByRole('button', { name: 'Out of Stock' }),
+    ).toBeInTheDocument();
+  });
+
+  it('flags an empty jar as out of stock', async () => {
+    suggest(
+      suggestion('yours', ID.rosewort, 'Fixture Rosewort', [
+        { id: ID.roseLeaf, form: 'leaf', jar: 'g', held: 0 },
+      ]),
+    );
+    renderBuilder();
+
+    await add('Rose', /Fixture Rosewort/);
+
+    expect(
+      within(stepRow('Fixture Rosewort')).getByRole('button', { name: 'Out of Stock' }),
+    ).toBeInTheDocument();
+  });
+
+  it('says Not Enough, and not Out of Stock, once the amount typed passes the jar, and clears when it fits', async () => {
+    suggest(HELD);
+    renderBuilder();
+    await add('Rose', /Fixture Rosewort/);
+    const row = stepRow('Fixture Rosewort');
+    expect(text()).not.toContain('Not Enough');
+
+    fireEvent.change(within(row).getByRole('spinbutton', { name: /^Quantity/ }), {
+      target: { value: '9' },
+    });
+    chooseUnit(row, 'g');
+
+    expect(await within(row).findByText(/Not Enough/)).toBeInTheDocument();
+    expect(within(row).queryByRole('button', { name: 'Out of Stock' })).toBeNull();
+
+    fireEvent.change(within(row).getByRole('spinbutton', { name: /^Quantity/ }), {
+      target: { value: '4' },
+    });
+    await waitFor(() => expect(text()).not.toContain('Not Enough'));
+  });
+
+  it('says Cannot Compare where the unit cannot be set against the jar’s', async () => {
+    suggest(HELD);
+    renderBuilder();
+    await add('Rose', /Fixture Rosewort/);
+    const row = stepRow('Fixture Rosewort');
+
+    fireEvent.change(within(row).getByRole('spinbutton', { name: /^Quantity/ }), {
+      target: { value: '1' },
+    });
+    chooseUnit(row, 'ml');
+
+    expect(await within(row).findByText('Cannot Compare')).toBeInTheDocument();
+    expect(text()).not.toContain('Not Enough');
+  });
+
+  it('marks a one-off One-Off, and not as out of stock; an instruction has no indicator', async () => {
+    renderBuilder();
+    suggest();
+    fireEvent.change(screen.getByRole('textbox', { name: 'One-Off Name' }), {
+      target: { value: 'Testwort' },
+    });
+    fireEvent.click(screen.getByRole('button', { name: 'Add One-Off Ingredient' }));
+    fireEvent.click(screen.getByRole('button', { name: 'Add a Step' }));
+
+    const [oneOff, instruction] = stepRows();
+    expect(within(oneOff as HTMLElement).getByText('One-Off')).toBeInTheDocument();
+    expect(
+      within(oneOff as HTMLElement).queryByRole('button', { name: 'Out of Stock' }),
+    ).toBeNull();
+    expect(
+      within(instruction as HTMLElement).queryByText(/One-Off|Not Enough|Cannot Compare/),
+    ).toBeNull();
+    expect(within(instruction as HTMLElement).queryByRole('button', { name: /Stock/ })).toBeNull();
   });
 });
