@@ -152,7 +152,9 @@ $step-ink-drop: 0.05rem;
   &.step-row--closed,
   &.step-row--open {
     grid-template-areas: 'handle position name summary marks edit remove';
-    grid-template-columns: auto auto minmax(0, auto) minmax(0, 1fr) auto auto auto;
+    // The summary keeps 8rem however long the name is: the name's column takes all it asks for
+    // before the 1fr column gets anything, so a long name squeezed the amount to nothing.
+    grid-template-columns: auto auto minmax(0, auto) minmax(8rem, 1fr) auto auto auto;
 
     // Everything on the first line sits on that line's centre, and not on the
     // centre of the whole row: a name that wraps, or the summary that stands
@@ -216,7 +218,10 @@ $step-ink-drop: 0.05rem;
     // Open, the pencil is an up chevron that closes the row. The owner's call: it is light, not the
     // pencil's green. It sits on the card's ground, so it takes the body ink (near-white in dark,
     // ink in light: literal white would fail on the light card), kept pointed at or focused.
+    // Open, Remove is hidden, so it takes Remove's place at the row's right edge (the owner's call).
     &--close {
+      grid-area: remove;
+
       &,
       &:hover,
       &:focus-visible {

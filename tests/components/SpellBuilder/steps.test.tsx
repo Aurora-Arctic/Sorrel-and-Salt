@@ -359,6 +359,23 @@ describe('the spell builder’s Add to Jar', () => {
     ]);
   });
 
+  it('shows a closed one-off’s quantity and unit in its row, as an ingredient step’s are', async () => {
+    suggest(ROSEWORT);
+    renderBuilder();
+    await addOneOff('Testwort');
+    const row = stepRow('Testwort');
+    fireEvent.change(within(row).getByRole('spinbutton', { name: /^Quantity/ }), {
+      target: { value: '2' },
+    });
+    chooseUnit(row, 'g');
+    await act(async () => {
+      fireEvent.click(within(row).getByRole('button', { name: 'Close Testwort' }));
+    });
+
+    expect(within(row).queryByRole('spinbutton', { name: /^Quantity/ })).toBeNull();
+    expect(row).toHaveTextContent('2 g');
+  });
+
   it('renames a one-off in its open row: the header follows, a repeat or a blank is refused, and the save carries the new name', async () => {
     suggest();
     const calls = acceptCreate();
