@@ -34,6 +34,9 @@
 
 .spell-recipe__steps {
   display: flex;
+  // The paragraphs' measure (_typography.scss), so the page's column reads as one width and
+  // the facts' and the note's hairlines end together.
+  max-width: $measure;
   flex-direction: column;
   gap: space(2);
   margin: 0;
@@ -70,7 +73,11 @@
   font-weight: 500;
 }
 
+// The name takes the rest of the first line and wraps within it, so a long one never drops
+// under the amount to the row's edge.
 .spell-recipe__steps .step-row__name {
+  flex: 1 1 0;
+  min-width: 0;
   font-weight: 400;
 }
 
@@ -86,8 +93,11 @@
   margin-inline-start: calc(2rem + #{space(2)});
 }
 
-// A step with no ingredient is the instruction alone, so it reads quieter.
+// A step with no ingredient is the instruction alone, so it reads quieter and sits on the
+// number's own line, filling it, rather than on a line of its own beneath.
 .spell-recipe__instruction .step-row__body {
+  flex: 1 1 0;
+  margin-inline-start: 0;
   color: $text-muted;
 }
 
@@ -102,6 +112,7 @@
 // The box is the container, since the column (page or modal) decides the width, not the window.
 .spell-recipe__facts-box {
   container-type: inline-size;
+  max-width: $measure;
   padding-block-start: space(3);
   border-top: 1px solid $hairline;
 }

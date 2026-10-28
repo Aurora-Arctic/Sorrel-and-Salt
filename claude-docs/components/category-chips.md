@@ -4,11 +4,12 @@ An entry's categories as a row of chips: the first `CATEGORY_CHIP_LIMIT` (2) sho
 
 ## Props
 
-| Prop         | Meaning                                                                                  |
-| ------------ | ---------------------------------------------------------------------------------------- |
-| `categories` | Each category with its group's colours; none draws no row                                |
-| `label`      | The entry's label, for the +N button's and the panel's accessible names                  |
-| `compact`    | The tighter chip size for a table cell; the card keeps the regular one (default `false`) |
+| Prop         | Meaning                                                                                                     |
+| ------------ | ----------------------------------------------------------------------------------------------------------- |
+| `categories` | Each category with its group's colours; none draws no row                                                   |
+| `label`      | The entry's label, for the +N button's and the panel's accessible names                                     |
+| `compact`    | The tighter chip size for a table cell; the card keeps the regular one (default `false`)                    |
+| `showAll`    | Every chip and no +N button, for a reading surface with room, as the spell recipe (M13.21; default `false`) |
 
 `CardCategory` and `CATEGORY_CHIP_LIMIT` live here; the card re-exports the type. The chips are full-level chips ([`styling.md`](../styling.md), "Category chips"), plain text and not links; the list is named "Categories".
 

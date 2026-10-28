@@ -17,16 +17,22 @@ holds the presentational body; `src/app/(shell)/coven/[slug]/grimoire/[id]/` hol
 ## The body
 
 Back link, title (Draft and Private badges), `LastEdit`, then the shared body, the "Recipe Card"
-layout (M13.21), top to bottom: the intent (muted), `CategoryChips`, a facts strip, the steps and
-the note. The facts strip is a `dl` under a hairline with up to four cells, Jar
-(`jarDescription`), Seal Wax (`sealWaxColor`), Moon Phase (`moonPhase`) and Day
-(`dayOfWeek`), each `dt` in the overline style; a blank or null value draws no cell and none set
-draws no strip. Four columns, two per row in a column narrower than `$narrow-column` (a container
-query on the strip's box). There is no Ingredients section: the steps carry the amounts, the amount
-leading the name in weight 500 with the name in 300, and an instruction-only step's text is muted.
-The steps are an `ol` named Steps with no visible heading, in `position` order, the position
-column 2rem and right-aligned. The note is a muted paragraph under its own hairline, drawn only
-when there is one. A spell with no steps says so.
+layout (M13.21), top to bottom: the intent (muted), `CategoryChips` with `showAll` (every
+chip, no +N fold: the owner, 2026-10-28), a facts strip, the steps and the note. The facts strip
+is a `dl` under a hairline with up to four cells, Jar (`jarDescription`), Seal Wax
+(`sealWaxColor`), Moon Phase (`moonPhase`) and Day (`dayOfWeek`), each `dt` in the overline
+style; a blank or null value draws no cell and none set draws no strip. The moon phase carries the
+builder's `MoonPhaseIcon` before its text, which draws nothing for a phase outside the builder's
+list. Four columns, two per row in a column narrower than `$narrow-column` (a container query on
+the strip's box). There is no Ingredients section: the steps carry the amounts, the amount leading
+the name in weight 500 with the name in 400, and an instruction-only step's text is muted and fills
+the number's line. The steps are an `ol` named Steps with no visible heading, in `position`
+order, the position column 2rem and right-aligned, the step's text and note indented to the name;
+the form icon `StepRow` draws is hidden here, as the mock-up's steps carry none. A one-off's mark
+is `badge badge--local`, the builder's `SupplyMark`'s, at the small badge size. The note is a
+muted paragraph under its own hairline, drawn only when there is one; the strip and the list are
+capped at the paragraphs' `$measure`, so the two hairlines end together on the page. A spell
+with no steps says so.
 
 - An ingredient links to its coven page, unless it has been deleted since or the service
   withheld it ("Unavailable Ingredient").
