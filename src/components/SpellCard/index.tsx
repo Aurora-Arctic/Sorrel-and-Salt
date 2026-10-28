@@ -3,6 +3,7 @@ import { PendingLink } from '../../lib/navigation';
 import { ingredientLinkTarget } from '../AppShell/site-target';
 import CategoryChips from '../CategoryChips';
 import LastEdit from '../LastEdit';
+import { EditLink } from '../IconTip';
 import LinkHint from '../LinkHint';
 import type { SpellCardProps } from './types';
 import './index.scss';
@@ -21,6 +22,7 @@ export const spellTitleId = (id: string): string => `spell-${id}-title`;
 const SpellCard = ({
   id,
   href,
+  editHref,
   title,
   intent,
   status,
@@ -49,6 +51,9 @@ const SpellCard = ({
             say nothing (the owner, 2026-10-27). Likewise only a private spell: the
             coven is the default, and a private one lists to its author alone, so
             the badge tells them no one else sees it (M10.13). */}
+        {editHref && (
+          <EditLink href={editHref} name={name} heading={{ eyebrow: 'Edit Spell', title: name }} />
+        )}
         {(status === 'draft' || visibility === 'private') && (
           <div className="specimen__badges">
             {status === 'draft' && <span className="badge badge--draft">Draft</span>}

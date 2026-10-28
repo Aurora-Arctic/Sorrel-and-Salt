@@ -1,12 +1,17 @@
+import { QueryClientProvider } from '@tanstack/react-query';
 import { render, screen, within } from '@testing-library/react';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { Forbidden, NotFound } from '@/lib/errors';
+import { makeQueryClient } from '@/lib/graphql-client';
+import { mockGraphQLQuery } from '../../../../../../support/msw/graphql';
+import { offerCategories } from '../../../../../../support/msw/ingredient-lookups';
 
 // MB.6: the spell recipe page. The guard and the services are mocked, since what they decide
 // is their own tests' (tests/modules/grimoire/services/spell-reads.test.ts proves a private
 // spell reads as NotFound to anyone but its author); here: the page guards itself, a refusal
 // is the 404, and what the services give is drawn.
 
+const SPELL_ID = '0f6d2c8e-3b1a-4e5f-9a7c-2d4b6e8f1a3c';
 const COVEN = { id: 'c0ffee00-0000-4000-8000-000000000001', slug: 'fixture-coven' };
 const session = { user: { id: 'fixture-user' } };
 const requireSession = vi.fn(async () => session);
@@ -17,7 +22,7 @@ vi.mock('next/navigation', () => ({
     throw new Error('NEXT_NOT_FOUND');
   },
   useRouter: () => ({ push: vi.fn(), replace: vi.fn(), refresh: vi.fn() }),
-  usePathname: () => '/coven/fixture-coven/grimoire/spell-1',
+  usePathname: () => `/coven/fixture-coven/grimoire/${SPELL_ID}`,
   useSearchParams: () => new URLSearchParams(),
 }));
 vi.mock('@/app/compendium-reads', () => ({
@@ -46,7 +51,7 @@ const { default: Page, generateMetadata } =
   await import('@/app/(shell)/coven/[slug]/grimoire/[id]/page');
 
 const SPELL = {
-  id: 'spell-1',
+  id: SPELL_ID,
   workspaceId: COVEN.id,
   title: 'Fixture Working',
   intent: 'To keep the testwort fresh.',
@@ -57,7 +62,7 @@ const SPELL = {
   updatedAt: new Date('2026-09-01T12:00:00.000Z'),
 };
 const stepRow = {
-  spellId: 'spell-1',
+  spellId: SPELL_ID,
   ingredientId: null,
   variantId: null,
   name: null,
@@ -69,13 +74,27 @@ const stepRow = {
   ingredient: null,
   variant: null,
 };
-const params = (id = 'spell-1') => ({
+const params = (id = SPELL_ID, search: Record<string, string> = {}) => ({
   params: Promise.resolve({ slug: 'fixture-coven', id }),
-  searchParams: Promise.resolve({}),
+  searchParams: Promise.resolve(search),
 });
+const draw = async (...args: Parameters<typeof params>) =>
+  render(
+    <QueryClientProvider client={makeQueryClient()}>
+      {await Page(params(...args))}
+    </QueryClientProvider>,
+  );
 
 beforeEach(() => {
   vi.clearAllMocks();
+  offerCategories([]);
+  mockGraphQLQuery('SpellBuilderSteps', ({ id }: { id: string }) => ({ spell: { id, steps: [] } }));
+  vi.stubGlobal('matchMedia', (query: string) => ({
+    matches: query.includes('min-width'),
+    media: query,
+    addEventListener: () => undefined,
+    removeEventListener: () => undefined,
+  }));
   requireCovenMembership.mockResolvedValue({ workspace: COVEN, membership: { role: 'member' } });
   readSpell.mockResolvedValue(SPELL);
   stepsOfSpells.mockResolvedValue([
@@ -99,14 +118,14 @@ beforeEach(() => {
 
 describe('the spell recipe page', () => {
   it('guards itself: the coven, then the session, then reads the spell in that coven', async () => {
-    render(await Page(params()));
+    await draw();
     expect(requireCovenMembership).toHaveBeenCalledWith('fixture-coven');
     expect(requireSession).toHaveBeenCalled();
-    expect(readSpell).toHaveBeenCalledWith(session, COVEN.id, 'spell-1');
+    expect(readSpell).toHaveBeenCalledWith(session, COVEN.id, SPELL_ID);
   });
 
   it('draws the title, intent, categories, steps in the order given, and the note', async () => {
-    render(await Page(params()));
+    await draw();
     expect(screen.getByRole('heading', { level: 1, name: 'Fixture Working' })).toBeInTheDocument();
     expect(screen.getByText('To keep the testwort fresh.')).toBeInTheDocument();
     expect(screen.getByRole('list', { name: 'Categories' })).toHaveTextContent('Testwarding');
@@ -117,6 +136,70 @@ describe('the spell recipe page', () => {
     ]);
     expect(screen.getByText('Best on a dry night.')).toBeInTheDocument();
     expect(screen.getAllByText(/Fixture Author/).length).toBeGreaterThan(0);
+  });
+
+  describe('editing (M13.10)', () => {
+    const as = (role: 'owner' | 'member' | 'viewer') =>
+      requireCovenMembership.mockResolvedValue({ workspace: COVEN, membership: { role } });
+    const SAVED = {
+      ...SPELL,
+      revision: 2,
+      jarDescription: null,
+      sealWaxColor: null,
+      moonPhase: null,
+      dayOfWeek: null,
+    };
+
+    it('gives a member an Edit link to ?edit=<id> on this page and opens no dialog until it is used', async () => {
+      as('member');
+      await draw();
+      const link = screen.getByRole('link', { name: 'Edit Fixture Working' });
+      expect(link).toHaveAttribute(
+        'href',
+        `/coven/fixture-coven/grimoire/${SPELL_ID}?edit=${SPELL_ID}`,
+      );
+      expect(screen.queryByRole('dialog')).not.toBeInTheDocument();
+    });
+
+    it('opens the spell in the dialog under ?edit=<its id>', async () => {
+      as('member');
+      readSpell.mockResolvedValue(SAVED);
+      await draw(SPELL_ID, { edit: SPELL_ID });
+      expect(
+        screen.getByRole('dialog', { name: 'Edit Spell, Fixture Working' }),
+      ).toBeInTheDocument();
+    });
+
+    it('shows a viewer no Edit link and opens no dialog under ?edit, though they read the same spell', async () => {
+      as('viewer');
+      await draw(SPELL_ID, { edit: SPELL_ID });
+      expect(
+        screen.getByRole('heading', { level: 1, name: 'Fixture Working' }),
+      ).toBeInTheDocument();
+      expect(screen.queryByRole('link', { name: /^Edit / })).not.toBeInTheDocument();
+      expect(screen.queryByRole('dialog')).not.toBeInTheDocument();
+    });
+
+    it('opens no dialog when ?edit names a different spell, which the page does not read', async () => {
+      as('member');
+      await draw(SPELL_ID, { edit: '9a1b2c3d-4e5f-4a6b-8c7d-0e1f2a3b4c5d' });
+      expect(
+        screen.getByRole('heading', { level: 1, name: 'Fixture Working' }),
+      ).toBeInTheDocument();
+      expect(screen.queryByRole('dialog')).not.toBeInTheDocument();
+      expect(readSpell).not.toHaveBeenCalledWith(
+        session,
+        COVEN.id,
+        '9a1b2c3d-4e5f-4a6b-8c7d-0e1f2a3b4c5d',
+      );
+    });
+
+    it("is the 404, with no dialog, for another member's private spell or another coven's", async () => {
+      as('member');
+      readSpell.mockRejectedValue(new NotFound('No such spell in this coven'));
+      await expect(Page(params(SPELL_ID, { edit: SPELL_ID }))).rejects.toThrow('NEXT_NOT_FOUND');
+      expect(readSpell).toHaveBeenCalledWith(session, COVEN.id, SPELL_ID);
+    });
   });
 
   it('is the 404 when the guard refuses a non-member', async () => {
