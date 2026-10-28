@@ -4,8 +4,24 @@
 // A form's section as a disclosure (MB.115, the owner's calls): flush, parted
 // by hairlines rather than set on the card ground, since what sits inside may
 // already be on it and a card in a card reads as nesting the form does not
-// have. The ingredient form's sections and the spell builder's When to Work It
-// share it; a variant's sections tighten it in IngredientForm's own sheet.
+// have. The ingredient form's sections and the spell builder's share it; a
+// variant's sections tighten it in IngredientForm's own sheet.
+
+// A form's run of sections: flush, one hairline between each, so the fields
+// inside keep the form's gap and the sections none. Nested, as below, so it
+// outweighs a form's own gap rules. Above the first, outside a modal, Open All
+// / Close All at the line's end (./fold-all.tsx); in a modal it is in the head.
+body .collapsible-sections {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+}
+
+.collapsible-sections__fold-all {
+  display: flex;
+  justify-content: flex-end;
+  margin-bottom: space(1);
+}
 
 // Nested, to outweigh layout-base's bare `body section`, whose gap and
 // margins would otherwise set the spacing in the app. The hairline is the
@@ -19,15 +35,6 @@ body .collapsible-section {
   border-top: 1px solid $hairline;
 
   &:last-child {
-    border-bottom: 1px solid $hairline;
-  }
-
-  // A section set among a form's fields, as the spell builder's When to Work
-  // It is, is parted from the field after it too. Its own rule, not added to
-  // :last-child's, so a browser without :has still closes a run of sections;
-  // that browser draws no line beneath this one, and loses nothing else. A
-  // variant's last section, followed by its Done, is left open as before.
-  &:has(+ .field) {
     border-bottom: 1px solid $hairline;
   }
 

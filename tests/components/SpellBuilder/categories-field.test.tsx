@@ -41,13 +41,17 @@ const CATEGORIES: CategoryNode[] = [
 ];
 const [TESTWARD, SHIELD] = CATEGORIES;
 
-function renderBuilder(props: Partial<SpellBuilderProps> = {}) {
+// A saved spell opens with its sections shut (M10.12), so its are opened
+// with Open All, as a person reaches the field in Purpose, unless `shut`.
+function renderBuilder(props: Partial<SpellBuilderProps> = {}, { shut = false } = {}) {
   offerCategories(CATEGORIES);
-  return render(
+  const view = render(
     <QueryClientProvider client={makeQueryClient()}>
       <SpellBuilder workspaceId="w1" {...props} />
     </QueryClientProvider>,
   );
+  if (props.spell && !shut) fireEvent.click(screen.getByRole('button', { name: 'Open All' }));
+  return view;
 }
 
 const save = () => screen.getByRole('button', { name: /^Sav/ });
@@ -175,6 +179,16 @@ describe('the spell builder’s categories', () => {
     submit();
     await waitFor(() => expect(calls).toHaveLength(2));
     expect(calls[1].input.categoryIds).toEqual([]);
+  });
+
+  it('names a saved spell’s categories on its shut Purpose line', async () => {
+    renderBuilder({ spell: savedSpell([TESTWARD.id, SHIELD.id]) }, { shut: true });
+    const purpose = screen.getByRole('button', { name: 'Purpose' });
+    expect(purpose).toHaveAttribute('aria-expanded', 'false');
+
+    await waitFor(() =>
+      expect(purpose).toHaveAccessibleDescription('Hedge Ward · Testward, Fixture Shield'),
+    );
   });
 
   it('leaves the categories out of a save that did not change them', async () => {

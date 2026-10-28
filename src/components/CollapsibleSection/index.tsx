@@ -3,6 +3,8 @@ import { ChevronIcon } from '../Combobox/icons';
 import type { CollapsibleSectionProps, FoldFlagProps, FoldIds, FoldIdsOptions } from './types';
 import './index.scss';
 
+export { FoldAll } from './fold-all';
+
 /**
  * What a folding block, a section or a variant's card, names its parts by:
  * the ids its toggle points at, its class with `is-open` and `is-invalid`,
@@ -35,8 +37,8 @@ export function FoldFlag({ id, className, shown }: FoldFlagProps): ReactNode {
 /**
  * A section of a form as a disclosure (MB.115, the owner's calls), under an
  * `h3`, or an `h4` for a section inside one: the ingredient form's six and
- * an open variant's five, and the spell builder's When to Work It (M10.12).
- * Shared since the spell builder took it up. Its heading's text is
+ * an open variant's five, and the spell builder's four (M10.12), each run
+ * wrapped in `.collapsible-sections` with a `FoldAll` (./fold-all.tsx). Its heading's text is
  * a button that opens and shuts it, with a chevron at the end of the line;
  * beneath the heading, while closed, one muted line of what has been entered,
  * and while it holds an error, a flag, open or closed. The button sits inside
