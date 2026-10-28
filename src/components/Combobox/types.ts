@@ -13,8 +13,10 @@ export interface ComboboxOption {
   /**
    * More small print on the note's line, after it, muted: an ingredient's categories.
    * The line stays one line and ends in an ellipsis where it runs long. Part of the name.
+   * A node rather than text so a caller can draw its words in colour (the spell picker's
+   * categories, in their groups' chips); only its text counts toward the name.
    */
-  meta?: string;
+  meta?: ReactNode;
   /** Which bucket it is in, curated or in use; left out by a source with one bucket. */
   curated?: boolean;
   /**
