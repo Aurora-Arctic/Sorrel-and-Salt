@@ -304,7 +304,7 @@ being read the column is a skeleton, and if the read fails, an error in its plac
   its form, a summary of amount and instruction, the supply badge, a pencil to open it and Remove.
   Open, it also shows Form (one-offs only), Quantity and Unit on one line, and Instruction full width on a line beneath. One row is open at a
   time: a new step opens, opening another closes the one before, and a step whose unit breaks the
-  rule is forced open so its error is seen. An instruction-only step is the same
+  rule is forced open so its error is seen. An open row also closes when a click or tap lands outside it or the focus leaves it; a new step stays open while the focus is in Add to Jar and closes on the next click or focus outside the box and the row. What was typed in a closed row is kept. An instruction-only step is the same
   card: closed, its text itself (a muted "Write the step" when empty) with a pencil ("Edit step N")
   and Remove; open, a text area in place of the text.
 - **Add a Step** (M13.3) is the last item of the left column: a `.btn` on wide, and on narrow the
