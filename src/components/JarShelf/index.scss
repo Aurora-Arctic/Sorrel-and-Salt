@@ -345,6 +345,17 @@ $-shake-duration: 500ms;
   opacity: 0.18;
 }
 
+// A layer drawn in its category group's colours (data on the row, so read from custom
+// properties, as a chip does): 55% in the light theme and 65% in the dark, so the boundary
+// line and the top line stay legible over it.
+.jar-shelf__band .jar-shelf__band-fill--group {
+  fill: light-dark(
+    color-mix(in srgb, var(--band-light) 55%, transparent),
+    color-mix(in srgb, var(--band-dark) 65%, transparent)
+  );
+  opacity: 1;
+}
+
 .jar-shelf__band-edge {
   fill: none;
   stroke: $text-primary;

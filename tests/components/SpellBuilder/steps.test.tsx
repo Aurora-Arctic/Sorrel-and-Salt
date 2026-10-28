@@ -166,9 +166,12 @@ function acceptUpdate(steps: SpellBuilderSpell['steps'] = []) {
   return calls;
 }
 
-function renderBuilder(props: Partial<SpellBuilderProps> = {}) {
+function renderBuilder(
+  props: Partial<SpellBuilderProps> = {},
+  categories: Parameters<typeof offerCategories>[0] = [],
+) {
   // The builder reads the coven's categories as it opens (M10.14).
-  offerCategories([]);
+  offerCategories(categories);
   return render(
     <QueryClientProvider client={makeQueryClient()}>
       <SpellBuilder workspaceId="w1" {...props} />
@@ -857,6 +860,45 @@ describe('the spell builder’s jar fill', () => {
 
     fireEvent.click(screen.getByRole('button', { name: 'Add an Instruction' }));
     expect(bands()).toBe(2);
+  });
+});
+
+describe('the spell builder’s jar fill colours', () => {
+  const fills = () =>
+    Array.from(
+      screen
+        .getByRole('complementary', { name: 'The Jar' })
+        .querySelectorAll<SVGPathElement>('svg .jar-shelf__band-fill'),
+    );
+  const group = (name: string, colorDark: string, colorLight: string) => ({
+    id: `g-${name}`,
+    name,
+    colorDark,
+    colorLight,
+  });
+  const node = (name: string, g: ReturnType<typeof group>) => ({
+    ...category(name),
+    description: null,
+    group: g,
+  });
+
+  it('draws a layer in the group colours of its categories, in order, and a layer whose categories have no group in the muted ink', async () => {
+    suggest(ROSEWORT, MOCKROOT);
+    // Rosewort carries Love and Calm, two groups; Mockroot carries Love, one group, and Protection, which has none known.
+    renderBuilder({}, [
+      node('Love', group('Love', '#cf6e87', '#a44c63')),
+      node('Calm', group('Calm', '#50a58e', '#1d755d')),
+    ] as never);
+    await add('Mock', /Fixture Mockroot/);
+    await add('Rose', /Fixture Rosewort/);
+
+    await waitFor(() => expect(fills()).toHaveLength(3));
+    const [mockroot, ...rosewort] = fills();
+    expect(mockroot.style.getPropertyValue('--band-light')).toBe('#a44c63');
+    expect(rosewort.map((path) => path.style.getPropertyValue('--band-light'))).toEqual([
+      '#a44c63',
+      '#1d755d',
+    ]);
   });
 });
 

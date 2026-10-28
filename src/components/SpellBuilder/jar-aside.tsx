@@ -1,8 +1,10 @@
 'use client';
 
-import { type ReactElement, type ReactNode, useId } from 'react';
+import { type ReactElement, type ReactNode, useId, useMemo } from 'react';
 import { useFormContext, useWatch } from 'react-hook-form';
+import type { GroupColors } from '../../lib/types';
 import { JarDrawing, pickJarShape } from '../JarShelf';
+import { useCategoryColors } from './category-colors';
 import { SpellComparison } from './comparison-panel';
 import { SpellInventory } from './inventory';
 import type { SpellStepsValues } from './steps/types';
@@ -15,6 +17,28 @@ import { isInstruction } from './steps/values';
 // claude-docs/components/spell-builder.md, "The aside".
 
 /**
+ * The colours of a layer: the group colours of the step's categories, in their listed order,
+ * once for each distinct group (a group's pair stands for it). A step with no category in a
+ * known group has none, and its layer stays the muted ink.
+ */
+function groupsOf(
+  categories: readonly { id: string }[],
+  colors: ReadonlyMap<string, GroupColors>,
+): GroupColors[] {
+  const seen = new Set<string>();
+  const found: GroupColors[] = [];
+  for (const { id } of categories) {
+    const pair = colors.get(id);
+    if (!pair) continue;
+    const key = `${pair.colorDark}/${pair.colorLight}`;
+    if (seen.has(key)) continue;
+    seen.add(key);
+    found.push(pair);
+  }
+  return found;
+}
+
+/**
  * A plain jar, muted: it stands for the spell's jar and is no stock, so it has no level.
  * Reuses the shelf's vessel; the seal wax colour is not drawn on it. It fills with one band
  * per ingredient step, one-offs included and instructions not.
@@ -22,7 +46,12 @@ import { isInstruction } from './steps/values';
 function SpellJar(): ReactElement {
   const { control } = useFormContext<SpellStepsValues>();
   const steps = useWatch({ control, name: 'steps' }) ?? [];
-  const bands = steps.filter((step) => !isInstruction(step)).length;
+  const colors = useCategoryColors();
+  const bands = useMemo(
+    () =>
+      steps.filter((step) => !isInstruction(step)).map((step) => groupsOf(step.categories, colors)),
+    [steps, colors],
+  );
   return (
     <span className="spell-jar">
       <JarDrawing shape={pickJarShape('spell', 'jar')} held={null} bands={bands} />
