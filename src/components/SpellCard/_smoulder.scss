@@ -1,0 +1,260 @@
+@use '../../scss/variables' as *;
+@use '../../scss/mixins' as *;
+
+// The spell card's hover: the parchment smouldering from its bottom-right corner (the
+// owner's pick from the hover options, in the review of M10.11).
+// claude-docs/components/spell-card.md, "The smouldering edge".
+//
+// What burns is gone: a hole in the card's foot corner filled with the page's own colour,
+// the same as the table round the card. Round its front run a thin bright ember line and a
+// thin dark char rim, and an SVG filter (`#spell-card-burn`, from `SpellCardFilters`) tears
+// the front ragged. Embers glow in the burnt part itself, brightest along the ember line
+// and at the advancing front and fading towards the corner, where the page shows plain;
+// a little of their warmth spills onto the table below the card, behind it.
+// The burn creeps along the bottom edge for 2.6s, then holds while the ember glows
+// unevenly. On leaving, the burn and the spill fade while both shrink back to the corner,
+// so a quick return burns on from where they have shrunk to, never from the full length.
+//
+// Nothing warm sits under text: the hole is under 1rem deep, half of it past the card's
+// edge, so with its rim and the tearing it stays inside the card's padding, and the glow
+// is behind the card, so only its spill past the bottom edge shows. The card's face takes
+// IngredientCard's hover tint and nothing else.
+//
+// Nothing transforms the card or any ancestor of it: a transformed ancestor becomes the
+// containing block of the category chips' `position: fixed` tip bubbles.
+//
+// Baseline: CSS `filter: url()` on an HTML element and SVG filters are Widely Available.
+// Where the filter does not apply, the burn front is a smooth curve.
+
+// The warm colours, the same in both themes, as light is: the dark theme's warning ochre
+// for the ember line and the dark theme's secondary red for the band behind it.
+$candle: $ochre-bright;
+$ember: $wax-warm;
+
+$burn-duration: $pulse-duration * 1.3;
+// The leave: the burn fades, and the hole and the glow shrink back, in this time.
+$burn-leave-duration: $motion-medium * 2;
+$burn-easing: cubic-bezier(0.25, 0.6, 0.35, 1);
+// How far the burn reaches along the bottom edge, and how deep at the corner. Both include
+// the 0.5rem the hole hangs past the card, so it starts outside.
+$burn-length: 10.9rem;
+$burn-depth: 1rem;
+// The glow's own breathing (4.7s) and the ember's (5.3s): periods that never line up.
+$burn-warmth-duration: $pulse-duration * 2.35;
+$burn-ember-duration: $pulse-duration * 2.65;
+// Kept low: the warmth is a faint spill, the ember line the bright part.
+$burn-glow-opacity: 0.22;
+
+// The ember along the front, uneven: it brightens, sinks, flares a little, sinks further.
+@keyframes spell-card-ember {
+  0%,
+  100% {
+    box-shadow:
+      0 0 0 1.5px rgba($candle, 0.95),
+      0 0 0 3px rgba($ember, 0.85),
+      0 0 1px 3.5px $burn-char;
+  }
+
+  27% {
+    box-shadow:
+      0 0 0 1.5px rgba($candle, 0.7),
+      0 0 0 2.5px rgba($ember, 0.6),
+      0 0 1px 3.5px $burn-char;
+  }
+
+  46% {
+    box-shadow:
+      0 0 1px 1.5px rgba($candle, 1),
+      0 0 0 3px rgba($ember, 0.9),
+      0 0 1px 3.75px $burn-char;
+  }
+
+  71% {
+    box-shadow:
+      0 0 0 1px rgba($candle, 0.6),
+      0 0 0 2.5px rgba($ember, 0.5),
+      0 0 1px 3.5px $burn-char;
+  }
+}
+
+// The glow breathing with the ember at its own pace. It runs through the filter's
+// `opacity()`, not the `opacity` property, so the property stays free to transition: an
+// animation that stops does not transition, and the glow would vanish at once on leave.
+@keyframes spell-card-warmth {
+  0%,
+  100% {
+    filter: blur(0.75rem) opacity(0.82);
+  }
+
+  38% {
+    filter: blur(0.75rem) opacity(0.5);
+  }
+
+  64% {
+    filter: blur(0.75rem) opacity(1);
+  }
+}
+
+// The embers in the burnt part breathing (3.7s), out of step with the glow below.
+@keyframes spell-card-embers {
+  0%,
+  100% {
+    opacity: 0.9;
+  }
+
+  41% {
+    opacity: 0.6;
+  }
+
+  67% {
+    opacity: 1;
+  }
+}
+
+// The resting state: everything hidden, and set to shrink back when it is left.
+@mixin smoulder-base {
+  // The glow on the table: anchored at the corner, behind the card (the list is the
+  // stacking context it joins, so a neighbour's face covers it too). It grows with the
+  // hole at the same pace and runs 0.75rem past the ember front, strongest just behind
+  // the front, fading back towards the corner, which burnt out first.
+  .spell-card__glow {
+    position: absolute;
+    inset: auto -0.5rem -1.25rem auto;
+    z-index: -1;
+    width: 0;
+    height: 2.5rem;
+    border-radius: 50%;
+    background: linear-gradient(
+      to right,
+      transparent,
+      rgba($candle, 0.75) 0.75rem,
+      rgba($ember, 0.4) 4.5rem,
+      rgba($ember, 0.16)
+    );
+    filter: blur(0.75rem);
+    opacity: 0;
+    pointer-events: none;
+    transition:
+      opacity $burn-leave-duration ease,
+      width $burn-leave-duration ease-in;
+  }
+
+  // Over the card, clipped to its rounded box, so nothing burns outside it.
+  .spell-card__burn {
+    position: absolute;
+    inset: 0;
+    z-index: 2;
+    overflow: hidden;
+    border-radius: radius('surface');
+    pointer-events: none;
+    opacity: 0;
+    transition: opacity $burn-leave-duration ease;
+  }
+
+  .spell-card__burn-paper {
+    position: absolute;
+    inset: 0;
+    filter: url('#spell-card-burn');
+  }
+
+  // A quarter ellipse whose curve is the burn front.
+  .spell-card__burn-hole {
+    position: absolute;
+    right: -0.5rem;
+    bottom: -0.5rem;
+    width: 0;
+    height: 0;
+    border-top-left-radius: 45% 100%;
+    background: $surface-page;
+    box-shadow:
+      0 0 0 1.5px rgba($candle, 0.95),
+      0 0 0 3px rgba($ember, 0.85),
+      0 0 1px 3.5px $burn-char;
+    transition:
+      width $burn-leave-duration ease-in,
+      height $burn-leave-duration ease-in;
+  }
+
+  // The embers in the burnt part, over the page colour: brightest along the ember line
+  // (the top edge, against the card) and at the advancing front (the left end), fading
+  // into the burnt-out part towards the corner, where the page shows plain. Sized to the
+  // hole, so it grows and shrinks with it.
+  .spell-card__burn-hole::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    border-radius: inherit;
+    background:
+      linear-gradient(
+        to bottom,
+        rgba($candle, 0.28),
+        rgba($ember, 0.15) 0.3rem,
+        transparent 0.6rem
+      ),
+      linear-gradient(
+        to right,
+        rgba($candle, 0.35),
+        rgba($ember, 0.22) 1.5rem,
+        rgba($ember, 0.08) 55%,
+        transparent 85%
+      );
+  }
+
+  @include reduced-motion {
+    .spell-card__glow,
+    .spell-card__burn,
+    .spell-card__burn-hole {
+      transition: none;
+    }
+  }
+}
+
+// The lit state, under the pointer or with focus inside; nested in the card's selector.
+// Reduced motion shows the finished burn at once, still.
+@mixin smoulder-lit {
+  .spell-card__glow {
+    width: calc(#{$burn-length} + 0.75rem);
+    opacity: $burn-glow-opacity;
+    transition:
+      opacity $pulse-duration * 0.6 ease,
+      width $burn-duration $burn-easing;
+    animation: spell-card-warmth $burn-warmth-duration ease-in-out $burn-duration infinite;
+  }
+
+  .spell-card__burn {
+    opacity: 1;
+    transition-duration: $motion-medium;
+  }
+
+  .spell-card__burn-hole {
+    width: $burn-length;
+    height: $burn-depth;
+    transition:
+      width $burn-duration $burn-easing,
+      height $burn-duration $burn-easing;
+    animation: spell-card-ember $burn-ember-duration ease-in-out $burn-duration infinite;
+  }
+
+  .spell-card__burn-hole::before {
+    animation: spell-card-embers $pulse-duration * 1.85 ease-in-out $burn-duration infinite;
+  }
+
+  @include reduced-motion {
+    .spell-card__glow,
+    .spell-card__burn,
+    .spell-card__burn-hole,
+    .spell-card__burn-hole::before {
+      transition: none;
+      animation: none;
+    }
+  }
+}
+
+// The whole hovered look: IngredientCard's tint and lifted shadow, and the lit smoulder.
+// index.scss applies it on hover and focus; the story holds it with no pointer.
+@mixin spell-card-hovered {
+  background-color: $surface-card-hover;
+  box-shadow: $shadow-lifted;
+
+  @include smoulder-lit;
+}

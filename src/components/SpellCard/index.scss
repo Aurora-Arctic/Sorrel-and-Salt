@@ -1,12 +1,46 @@
 @use '../../scss/variables' as *;
 @use '../../scss/mixins' as *;
+@use 'smoulder' as *;
 
 // The Foundations specimen (`.specimen` in _primitives.scss) carries the layout;
 // this adds IngredientCard's surface and padding, and the title's size. Tokens only.
+// Positioned, for the smoulder's layers, but with no z-index: one would make the card a
+// stacking context, and the glow behind it would then paint over its face.
 .spell-card {
   @include modal-surface($shadow-floating);
+  @include smoulder-base;
 
+  position: relative;
   padding: space(4);
+}
+
+// The hover, on pointers that can hover only, so a tap on a phone does not leave a card
+// burning: IngredientCard's tint and lifted shadow, and the smouldering edge (_smoulder.scss).
+@media (hover: hover) {
+  .spell-card {
+    // The theme switch's own transition on `color`, kept beside the hover's two.
+    transition:
+      background-color $motion-medium ease,
+      box-shadow $motion-medium ease,
+      color $theme-transition-duration $theme-transition-easing;
+
+    @include reduced-motion {
+      transition: none;
+    }
+  }
+
+  .spell-card:hover,
+  .spell-card:focus-within {
+    @include spell-card-hovered;
+  }
+}
+
+// The defs of `SpellCardFilters`: rendered for their filter only, taking no room.
+.spell-card-filters {
+  position: absolute;
+  width: 0;
+  height: 0;
+  overflow: hidden;
 }
 
 // h3's size, as an ingredient card's name: one of many in a grid.
