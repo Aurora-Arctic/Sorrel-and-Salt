@@ -119,10 +119,6 @@ export function SpellSteps({ workspaceId }: { workspaceId: string }): ReactEleme
     add(newInstruction());
   };
 
-  const taken = useMemo(
-    () => new Set(steps.flatMap((step) => (step.variantId ? [step.variantId] : []))),
-    [steps],
-  );
   const oneOffs = useMemo(
     () =>
       new Set(
@@ -153,7 +149,7 @@ export function SpellSteps({ workspaceId }: { workspaceId: string }): ReactEleme
           is one button, in the one place in the markup. */}
       <div className="spell-steps__body">
         <div className="spell-steps__box">
-          <StepPicker workspaceId={workspaceId} taken={taken} oneOffs={oneOffs} onAdd={add} />
+          <StepPicker workspaceId={workspaceId} oneOffs={oneOffs} onAdd={add} />
         </div>
         <button type="button" className="btn spell-steps__add-step" onClick={addStep}>
           <span className="spell-steps__next" aria-hidden="true">

@@ -288,16 +288,16 @@ describe('the spell builder’s Add to Jar', () => {
     expect(search()).toHaveFocus();
   });
 
-  it('will not add a form twice: its row is offered but cannot be picked', async () => {
+  it('adds a form again for another step: its row stays pickable and the jar gets two rows', async () => {
     suggest(ROSEWORT);
     renderBuilder();
     await add('Rose', /Fixture Rosewort/);
 
     const again = await lookUp('Rose', /Fixture Rosewort/);
-    expect(again).toHaveAttribute('aria-disabled', 'true');
+    expect(again).not.toHaveAttribute('aria-disabled', 'true');
     fireEvent.click(again);
 
-    expect(stepRows()).toHaveLength(1);
+    expect(stepRows()).toHaveLength(2);
   });
 
   it('adds a one-off ingredient from the box’s first row, drawn with the generic spoon, and opens it for its form', async () => {
