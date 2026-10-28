@@ -679,25 +679,28 @@ describe('the spell builder’s In Coven Inventory', () => {
     expect(line('Fixture Rosewort')).toHaveTextContent(/Fixture Rosewort.*Outhold none$/);
   });
 
-  it('says Not Enough, and not Out, once the amount typed passes the jar, and clears when it fits', async () => {
+  it('gives Not Enough as an icon button, and not Out, once the amount typed passes the jar, and clears when it fits', async () => {
     suggest(HELD);
     renderBuilder();
     await add('Rose', /Fixture Rosewort/);
     const row = stepRow('Fixture Rosewort');
-    expect(line('Fixture Rosewort')).not.toHaveTextContent('Not Enough');
+    const notEnough = () =>
+      within(line('Fixture Rosewort')).queryByRole('button', { name: 'Not Enough' });
+    expect(notEnough()).not.toBeInTheDocument();
 
     fireEvent.change(within(row).getByRole('spinbutton', { name: /^Quantity/ }), {
       target: { value: '9' },
     });
     chooseUnit(row, 'g');
 
-    await waitFor(() => expect(line('Fixture Rosewort')).toHaveTextContent('need 9 g · hold 5 g'));
+    await waitFor(() => expect(notEnough()).toBeInTheDocument());
+    expect(line('Fixture Rosewort')).toHaveTextContent('need 9 g · hold 5 g');
     expect(line('Fixture Rosewort')).not.toHaveTextContent('Out');
 
     fireEvent.change(within(row).getByRole('spinbutton', { name: /^Quantity/ }), {
       target: { value: '4' },
     });
-    await waitFor(() => expect(line('Fixture Rosewort')).not.toHaveTextContent('Not Enough'));
+    await waitFor(() => expect(notEnough()).not.toBeInTheDocument());
     expect(line('Fixture Rosewort')).toHaveTextContent('need 4 g · hold 5 g');
   });
 
@@ -717,7 +720,9 @@ describe('the spell builder’s In Coven Inventory', () => {
         within(line('Fixture Rosewort')).getByRole('button', { name: 'Units Differ' }),
       ).toBeInTheDocument(),
     );
-    expect(line('Fixture Rosewort')).not.toHaveTextContent('Not Enough');
+    expect(
+      within(line('Fixture Rosewort')).queryByRole('button', { name: 'Not Enough' }),
+    ).toBeNull();
   });
 
   it('says a one-off has nothing to hold, badges it One-Off in its row, and gives an instruction no line', async () => {

@@ -13,22 +13,40 @@ import type { SpellStepValue, SpellStepsValues } from './steps/types';
 import { isInstruction, stepNameOf } from './steps/values';
 
 // In Coven Inventory (the Jar's aside): one line for each ingredient step, in step order, saying
-// what the step needs against what the coven's jar holds, as `supplyOf` judges it. The
-// verdict is words (Low, Out, Not Enough, Units Differ) so no state rests on colour. All four
-// stand at the right end of the name's line, so the name is cut short before they are. Low and
-// Out take StockBadge's colour and symbol; Not Enough has its own jar-level symbol in Low's ink. Units Differ is that struck equals sign alone (supply-icon.tsx), muted, its words the button's name and its reason in an IconTip. A step with an instruction only has
+// what the step needs against what the coven's jar holds, as `supplyOf` judges it. All four
+// verdicts stand at the right end of the name's line, so the name is cut short before they are.
+// Low and Out are words beside StockBadge's symbol. Not Enough and Units Differ are a symbol
+// alone (supply-icon.tsx): the words are the button's name and the reason is its IconTip
+// (the owner's call, 2026-10-28), the verdict's `tip`. A step with an instruction only has
 // no line. See claude-docs/components/spell-builder.md, "The aside".
 
 const UNITS_DIFFER_TIP =
   'The spell’s unit can’t be checked against the jar’s, so it can’t tell if you have enough.';
+const NOT_ENOUGH_TIP = 'The jar holds less than this step needs.';
 
-type Verdict = { words: string; state: 'low' | 'out' | null; tone: string };
+/** `mark` set means the verdict is that symbol alone, the words naming a button that carries the tip. */
+type Verdict = {
+  words: string;
+  state: 'low' | 'out' | null;
+  tone: string;
+  mark?: { Icon: (props: { className: string }) => ReactElement; tip: string };
+};
 
 const VERDICTS: Record<StepSupply['kind'], Verdict> = {
   'one-off': { words: 'One-Off', state: null, tone: 'muted' },
   out: { words: 'Out', state: 'out', tone: 'out' },
-  short: { words: 'Not Enough', state: null, tone: 'low' },
-  'units-differ': { words: 'Units Differ', state: null, tone: 'muted' },
+  short: {
+    words: 'Not Enough',
+    state: null,
+    tone: 'low',
+    mark: { Icon: NotEnoughIcon, tip: NOT_ENOUGH_TIP },
+  },
+  'units-differ': {
+    words: 'Units Differ',
+    state: null,
+    tone: 'muted',
+    mark: { Icon: UnitsDifferIcon, tip: UNITS_DIFFER_TIP },
+  },
   low: { words: 'Low', state: 'low', tone: 'low' },
 };
 
@@ -68,19 +86,18 @@ function HoldLine({ step, seed }: { step: SpellStepValue; seed: string }): React
         <span className="spell-inventory__name">{stepNameOf(step)}</span>
         {verdict && (
           <span className={`spell-inventory__verdict is-${verdict.tone}`}>
-            {verdict.words === 'Units Differ' ? (
-              // The mark alone, its words the button's name and its reason in a tip (the owner's call, 2026-10-28).
-              <IconTip tip={UNITS_DIFFER_TIP}>
+            {verdict.mark ? (
+              <IconTip tip={verdict.mark.tip}>
                 <button type="button" className="spell-inventory__mark" aria-label={verdict.words}>
-                  <UnitsDifferIcon className="spell-inventory__icon" />
+                  <verdict.mark.Icon className="spell-inventory__icon" />
                 </button>
               </IconTip>
-            ) : verdict.state ? (
-              <StockIcon out={verdict.state === 'out'} className="spell-inventory__icon" />
             ) : (
-              <NotEnoughIcon className="spell-inventory__icon" />
+              <>
+                <StockIcon out={verdict.state === 'out'} className="spell-inventory__icon" />
+                {verdict.words}
+              </>
             )}
-            {verdict.words !== 'Units Differ' && verdict.words}
           </span>
         )}
       </span>
