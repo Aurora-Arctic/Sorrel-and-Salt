@@ -60,8 +60,20 @@ const ROSEWORT_STEP: SpellBuilderStep = {
   unit: 'g',
   note: null,
   body: null,
-  ingredient: { id: '00000000-0000-4000-8000-000000000001', categories: [], stock: [] },
-  variant: { id: '00000000-0000-4000-8000-000000000002', categories: [], formChoice: null },
+  ingredient: {
+    id: '00000000-0000-4000-8000-000000000001',
+    toxic: false,
+    safetyNotes: null,
+    categories: [],
+    stock: [],
+  },
+  variant: {
+    id: '00000000-0000-4000-8000-000000000002',
+    toxic: false,
+    safetyNotes: null,
+    categories: [],
+    formChoice: null,
+  },
 };
 
 /** `ROSEWORT_STEP` as an update sends it back. */
@@ -127,6 +139,7 @@ function answer(id: string, revision: number, input: CreateSpellMutationVariable
     dayOfWeek: input.dayOfWeek ?? null,
     note: input.note ?? null,
     visibility: input.visibility ?? ('workspace' as const),
+    status: input.status ?? ('draft' as const),
     steps: [],
   };
 }

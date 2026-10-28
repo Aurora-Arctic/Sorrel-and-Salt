@@ -90,6 +90,9 @@ function distinctSteps(spell: { steps?: StepIdentity[] }, context: z.RefinementC
   });
 }
 
+/** Said on the title when a spell with none is marked complete: the schema's and the builder's alike. */
+export const COMPLETE_NEEDS_TITLE = 'Give the spell a title before marking it complete';
+
 // Mirrors M13.15's CHECK, `status <> 'complete' OR title IS NOT NULL`, so the
 // database never refuses what validation passed. A draft saved as the member
 // types may have no title yet.
@@ -101,7 +104,7 @@ function titleRule(
     context.addIssue({
       code: 'custom',
       path: ['title'],
-      message: 'Give the spell a title before marking it complete',
+      message: COMPLETE_NEEDS_TITLE,
     });
   }
 }

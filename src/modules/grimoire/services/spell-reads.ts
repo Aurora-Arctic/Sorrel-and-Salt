@@ -15,7 +15,7 @@ import {
 import { Forbidden, NotFound } from '../../../lib/errors';
 import type { Session } from '../../../lib/session';
 import type { Cursor, PageCount, PageEntry, PageRequest } from '../../../lib/types';
-import { summarizeSpellCategories } from '../categories/summarize';
+import { summarizeSpellCategories } from '../validation/categories/summarize';
 import { spellCategories } from '../schema/spell-categories';
 import { spellSteps } from '../schema/spell-steps';
 import { stepsInSpells } from './step-views';

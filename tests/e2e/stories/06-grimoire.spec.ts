@@ -6,10 +6,12 @@ import {
   compendiumVariant,
   insertSpell,
   insertStock,
+  localIngredient,
   seedCoven,
   withSql,
 } from './coven-ingredients';
 import { categoryChip, pickCategoryIn } from './ingredient-dialogs';
+import { makeVariant } from '../../support/fixtures/ingredient';
 
 // Stories 47 to 57 and 76 to 80: the grimoire, from naming a spell to the
 // workings recorded against it. Every story here is a scaffold: the page it
@@ -218,9 +220,16 @@ test(
     await expect(steps.first()).toContainText('Rosemary');
     // Keyboard alone: pick the handle up, move it one place, put it down.
     const handle = page.getByRole('button', { name: 'Move Mugwort (Herb)' });
+    // Each key waits for what the last one said, as a person hears it. dnd-kit
+    // starts listening for the moving keys in a timer it sets at the lift, which
+    // can run after the lift is said, so the Up also waits one timer behind it.
+    const said = (text: string) => page.getByRole('status').filter({ hasText: text });
     await handle.focus();
     await page.keyboard.press('Space');
+    await expect(said('Picked up Mugwort (Herb), at position 2 of 2.')).toBeAttached();
+    await page.evaluate(() => new Promise((resolve) => setTimeout(resolve)));
     await page.keyboard.press('ArrowUp');
+    await expect(said('Mugwort (Herb) moved to position 1 of 2.')).toBeAttached();
     await page.keyboard.press('Space');
     await expect(
       page.getByRole('status').filter({ hasText: 'Mugwort (Herb) put down at position 1 of 2.' }),
@@ -249,15 +258,9 @@ test(
   },
 );
 
-test.fixme(
+test(
   'a member sees the gaps between intended and derived categories in both directions',
-  {
-    tag: '@story-52',
-    annotation: {
-      type: 'fixme',
-      description: 'M10.17 builds the comparison panel in the spell builder',
-    },
-  },
+  { tag: '@story-52' },
   async ({ page }) => {
     const coven = await seedCoven(page, 'Fixture Coven Fifty-Two', 'story-52.test', {
       A: 'owner',
@@ -266,7 +269,10 @@ test.fixme(
     await signInAgainAs(page, coven.users.B);
     await openBuilder(page, coven.slug);
     const panel = page.getByRole('complementary', { name: 'Intent Against Ingredients' });
-    await page.getByRole('combobox', { name: 'Categories' }).fill('Prosperity');
+    await page
+      .getByRole('group', { name: 'Categories', exact: true })
+      .getByRole('combobox')
+      .fill('Prosperity');
     await page.getByRole('option', { name: 'Prosperity' }).click();
     await expect(panel.getByRole('list', { name: 'Intended, Not Carried' })).toContainText(
       'Prosperity',
@@ -280,24 +286,26 @@ test.fixme(
   },
 );
 
-test.fixme(
+test(
   'a member is warned when an ingredient is flagged toxic or unsafe to burn',
-  {
-    tag: '@story-53',
-    annotation: {
-      type: 'fixme',
-      description: 'M10.18 builds the safety warning in the spell builder',
-    },
-  },
+  { tag: '@story-53' },
   async ({ page }) => {
     const coven = await seedCoven(page, 'Fixture Coven Fifty-Three', 'story-53.test', {
       A: 'owner',
       B: 'member',
     });
+    // The coven keeps an ingredient it has flagged toxic.
+    await withSql(async (sql) =>
+      localIngredient(sql, coven.id, coven.users.A, {
+        name: 'Fixture Toxwort',
+        toxic: true,
+        variants: [makeVariant({ form: 'Root' })],
+      }),
+    );
     await signInAgainAs(page, coven.users.B);
     await openBuilder(page, coven.slug);
-    const step = await addIngredientStep(page, 'Belladonna');
-    await expect(step.getByRole('img', { name: /Toxic/ })).toBeVisible();
+    const step = await addIngredientStep(page, 'Fixture Toxwort');
+    await expect(step.getByText('Toxic').first()).toBeVisible();
     // The warning does not block the addition: the step stays and can be saved.
     await page.getByRole('textbox', { name: 'Title' }).fill('Fixture Working');
     await expect(page.getByRole('button', { name: 'Save' })).toBeEnabled();
@@ -326,40 +334,40 @@ test.fixme(
   },
 );
 
-test.fixme(
-  'a member saves a spell as a draft',
-  {
-    tag: '@story-55',
-    annotation: { type: 'fixme', description: 'M10.20 builds save as draft and mark complete' },
-  },
-  async ({ page }) => {
-    const coven = await seedCoven(page, 'Fixture Coven Fifty-Five', 'story-55.test', {
-      A: 'owner',
-      B: 'member',
-    });
-    await signInAgainAs(page, coven.users.B);
-    await openBuilder(page, coven.slug);
-    await page.getByRole('textbox', { name: 'Title' }).fill('Fixture Working');
-    await page.getByRole('button', { name: 'Save' }).click();
-    await page.goto(`/coven/${coven.slug}/grimoire`);
-    const card = grimoireList(page).getByRole('listitem', { name: /Fixture Working/ });
-    await expect(card.getByText('Draft')).toBeVisible();
-    await card.getByRole('link', { name: /Fixture Working/ }).click();
-    await page.getByRole('button', { name: 'Mark Complete' }).click();
-    await expect(page.getByText('Complete')).toBeVisible();
-    // M13.10: a saved spell is edited from its card's pencil, and the change reads back on the
-    // card and on the recipe page. tests/e2e/spell-edit.spec.ts walks the same flow while M10.20 is open.
-    await page.goto(`/coven/${coven.slug}/grimoire`);
-    await grimoireList(page).getByRole('link', { name: 'Edit Fixture Working' }).click();
-    const edit = page.getByRole('dialog', { name: 'Edit Spell, Fixture Working' });
-    await edit.getByRole('textbox', { name: 'Title' }).fill('Fixture Working Renamed');
-    await edit.getByRole('button', { name: 'Close' }).click();
-    await expect(page).toHaveURL(`/coven/${coven.slug}/grimoire`);
-    await expect(
-      grimoireList(page).getByRole('link', { name: 'Fixture Working Renamed', exact: true }),
-    ).toBeVisible();
-  },
-);
+test('a member saves a spell as a draft', { tag: '@story-55' }, async ({ page }) => {
+  const coven = await seedCoven(page, 'Fixture Coven Fifty-Five', 'story-55.test', {
+    A: 'owner',
+    B: 'member',
+  });
+  await signInAgainAs(page, coven.users.B);
+  const dialog = await openBuilder(page, coven.slug);
+  await dialog.getByRole('textbox', { name: 'Title' }).fill('Fixture Working');
+  await dialog.getByRole('button', { name: 'Save Spell' }).click();
+  await expect(page).toHaveURL(new RegExp(`/coven/${coven.slug}/grimoire\\?edit=[0-9a-f-]{36}$`));
+  const draft = page.url();
+  // It lists as a draft.
+  await page.goto(`/coven/${coven.slug}/grimoire/drafts`);
+  const card = grimoireList(page).getByRole('listitem', { name: /Fixture Working/ });
+  await expect(card.getByText('Draft')).toBeVisible();
+  // Marking it complete is explicit, and reversible.
+  await page.goto(draft);
+  const edit = page.getByRole('dialog', { name: 'Edit Spell, Fixture Working' });
+  await edit.getByRole('button', { name: 'Mark Complete' }).click();
+  await expect(edit.getByRole('button', { name: 'Reopen as Draft' })).toBeVisible();
+  await edit.getByRole('button', { name: 'Reopen as Draft' }).click();
+  await expect(edit.getByRole('button', { name: 'Mark Complete' })).toBeVisible();
+  // A saved spell is edited from its card's link, and the change reads back on the card.
+  await page.goto(`/coven/${coven.slug}/grimoire/drafts`);
+  await grimoireList(page).getByRole('link', { name: 'Edit Fixture Working' }).click();
+  const renamed = page.getByRole('dialog', { name: 'Edit Spell, Fixture Working' });
+  await renamed.getByRole('button', { name: 'Open All' }).click();
+  await renamed.getByRole('textbox', { name: 'Title' }).fill('Fixture Working Renamed');
+  await renamed.getByRole('button', { name: 'Close', exact: true }).click();
+  await expect(page).toHaveURL(`/coven/${coven.slug}/grimoire/drafts`);
+  await expect(
+    grimoireList(page).getByRole('link', { name: 'Fixture Working Renamed', exact: true }),
+  ).toBeVisible();
+});
 
 test(
   'any member, a viewer included, reads every workspace-visible spell, and a private spell stays with its author',
@@ -545,12 +553,9 @@ test.fixme(
   },
 );
 
-test.fixme(
+test(
   "a member records a spell's steps in one order, each an instruction, an ingredient, or both",
-  {
-    tag: '@story-80',
-    annotation: { type: 'fixme', description: 'M13.3 builds step text in the spell builder' },
-  },
+  { tag: '@story-80' },
   async ({ page }) => {
     const coven = await seedCoven(page, 'Fixture Coven Eighty', 'story-80.test', {
       A: 'owner',
@@ -564,7 +569,11 @@ test.fixme(
     await steps.first().getByRole('textbox', { name: 'Instruction' }).fill('Light the candle');
     const withIngredient = await addIngredientStep(page, 'Rosemary');
     await withIngredient.getByRole('textbox', { name: 'Instruction' }).fill('Crush it first');
-    await page.getByRole('button', { name: 'Save' }).click();
+    const save = page.getByRole('button', { name: 'Save' });
+    await save.click();
+    // The address names the saved spell once it is saved, so a reload reopens it.
+    await expect(page).toHaveURL(/\?edit=[0-9a-f-]{36}$/);
+    await expect(save).toBeDisabled();
     await page.reload();
     // A saved spell opens with its sections shut (M10.12).
     await page.getByRole('button', { name: 'Open All' }).click();

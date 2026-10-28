@@ -15,7 +15,8 @@ run-name: >-
 # and gitflow always run; the rest are path-filtered by `changes`.
 # claude-docs/ci/aggregating-workflows.md, "Aggregating workflows" is the walkthrough.
 #
-# NO JOB HERE MAY CARRY A JOB-LEVEL `if:`. It makes GitHub report the check
+# NO JOB HERE MAY CARRY A JOB-LEVEL `if:`, bar `playwright-coverage`'s, which is no
+# required check and so has no name to satisfy. A job-level `if:` makes GitHub report the check
 # under a bare name ("checks" instead of "checks / lint") that never
 # satisfies the required check, permanently blocking the PR. Every job runs
 # unconditionally and passes its filter result down as a workflow_call input.
@@ -212,6 +213,8 @@ jobs:
               - 'Docker/Dockerfile.postgres'
               - 'Docker/postgres-init/**'
               - '.github/scripts/summarize-playwright.mjs'
+              - '.github/scripts/merge-playwright-coverage.mjs'
+              - '.github/workflows/playwright-coverage.yml'
               - '.github/scripts/lib/**'
               - 'Docker/Dockerfile.e2e'
               - 'src/**'
@@ -231,6 +234,8 @@ jobs:
               - 'Docker/Dockerfile.postgres'
               - 'Docker/postgres-init/**'
               - '.github/scripts/summarize-stories.mjs'
+              - '.github/scripts/merge-playwright-coverage.mjs'
+              - '.github/workflows/playwright-coverage.yml'
               - 'Docker/Dockerfile.e2e'
               - 'src/**'
               - 'tests/e2e/**'
@@ -334,6 +339,26 @@ jobs:
       suite: stories
       # No job-level `if:` — see the header.
       should-run: ${{ needs.changes.outputs.stories == 'true' }}
+
+  # The gate suite's and the story suite's JavaScript coverage, merged (M14.28):
+  # playwright-coverage.yml downloads whichever coverage artifacts the two
+  # uploaded and posts a "Playwright Coverage" comment. Never a required check
+  # (it carries `continue-on-error`, and nothing waits on it). Its `if:` is
+  # the one job-level `if:` in this file (see the header): without it a failed
+  # suite would skip the merge. It is a called workflow, not a job here, so
+  # that an edit's run which cancels itself in `changes` leaves it skipped like
+  # the other called workflows, not cancelled and failing.
+  playwright-coverage:
+    needs: [build-image, changes, playwright, stories]
+    if: ${{ !cancelled() }}
+    concurrency:
+      group: pr-gate-playwright-coverage-${{ github.event.pull_request.number }}
+      cancel-in-progress: true
+    uses: ./.github/workflows/playwright-coverage.yml
+    with:
+      image: ${{ needs.build-image.outputs.image }}
+      pr-number: ${{ github.event.pull_request.number }}
+      should-run: ${{ needs.changes.outputs.playwright == 'true' || needs.changes.outputs.stories == 'true' }}
 
   # The workshop specs (tests/e2e/workshop/, M12.31): a component measured in
   # its workshop story, `npm run e2e:workshop`. In the e2e image, as playwright.yml

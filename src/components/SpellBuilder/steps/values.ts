@@ -3,6 +3,7 @@ import type { Unit } from '@/modules/ingredients/schema/units';
 import { formLabel } from '@/modules/ingredients/validation/form-label';
 import { UNMEASURABLE_UNIT, measurable } from '@/modules/grimoire/validation/step-unit';
 import type { SpellStepSend, SpellStepValue, StepCategory } from './types';
+import type { SafetyMarkProps } from '../../SafetyNote/types';
 
 // The step list's values: a saved step as the builder holds it, a held step as
 // a save sends it, and what the list works out from its steps — the unit rule
@@ -36,6 +37,15 @@ export function stepValueOf(step: SpellBuilderStep): SpellStepValue {
     note: step.note,
     icon: step.variant?.formChoice?.group.icon ?? null,
     categories: categoriesOf(step),
+    safety:
+      step.ingredient === null
+        ? null
+        : {
+            toxic: step.ingredient.toxic,
+            safetyNotes: step.ingredient.safetyNotes,
+            formToxic: step.variant?.toxic ?? false,
+            formSafetyNotes: step.variant?.safetyNotes ?? null,
+          },
     jarUnit:
       variantId === null || step.ingredient === null
         ? null
@@ -47,7 +57,7 @@ export function stepValueOf(step: SpellBuilderStep): SpellStepValue {
 export const newStep = (
   step: Pick<
     SpellStepValue,
-    'ingredientId' | 'variantId' | 'name' | 'form' | 'icon' | 'categories' | 'jarUnit'
+    'ingredientId' | 'variantId' | 'name' | 'form' | 'icon' | 'categories' | 'safety' | 'jarUnit'
   >,
 ): SpellStepValue => ({
   ...step,
@@ -58,6 +68,60 @@ export const newStep = (
   body: null,
   note: null,
 });
+
+/** A new instruction-only step: no ingredient, and a blank text the member writes. */
+export const newInstruction = (): SpellStepValue => ({
+  ...newStep({
+    ingredientId: null,
+    variantId: null,
+    name: null,
+    form: null,
+    icon: null,
+    categories: [],
+    safety: null,
+    jarUnit: null,
+  }),
+  body: '',
+});
+
+/**
+ * The props `SafetyMark` and `SafetyNote` take for a step: its ingredient's flag and
+ * notes with the form laid. Null when the step has no entry to read, so a one-off
+ * draws nothing rather than something that reads as safe.
+ */
+export function safetyOf(
+  step: Pick<SpellStepValue, 'safety' | 'form'>,
+): (SafetyMarkProps & { variants: NonNullable<SafetyMarkProps['variants']> }) | null {
+  if (step.safety === null) return null;
+  return {
+    toxic: step.safety.toxic,
+    safetyNotes: step.safety.safetyNotes,
+    variants: [
+      {
+        form: step.form ?? '',
+        toxic: step.safety.formToxic,
+        safetyNotes: step.safety.formSafetyNotes,
+      },
+    ],
+  };
+}
+
+/**
+ * What a member who cannot see the badge is told as a step is added: that its
+ * ingredient is flagged toxic, or carries a caution; null when it has neither,
+ * and for a one-off, which has no entry to say (and is not called safe).
+ */
+export function warningOf(step: Pick<SpellStepValue, 'safety' | 'form'>): string | null {
+  const safety = safetyOf(step);
+  if (safety === null) return null;
+  if (safety.toxic || safety.variants.some((variant) => variant.toxic)) return 'Warning: Toxic.';
+  const noted = [safety.safetyNotes, ...safety.variants.map((variant) => variant.safetyNotes)];
+  return noted.some((notes) => (notes ?? '').trim() !== '') ? 'Caution: has safety notes.' : null;
+}
+
+/** Whether `step` is only an instruction: no ingredient and no one-off name. */
+export const isInstruction = (step: Pick<SpellStepValue, 'ingredientId' | 'name'>): boolean =>
+  step.ingredientId === null && step.name === null;
 
 /** `value` with its blank keys left out, so a save sends only what a step holds. */
 function present<T extends object>(value: T): Partial<T> {
@@ -82,11 +146,15 @@ export function stepInputOf(step: SpellStepValue): SpellStepSend {
     body: step.body,
     note: step.note,
   };
-  return present(
+  const sent = present(
     step.ingredientId === null
       ? { ...shared, name: step.name, form: step.form }
       : { ...shared, ingredientId: step.ingredientId, variantId: step.variantId },
   ) as SpellStepSend;
+  // A blank text is dropped from a step that has an ingredient, which needs
+  // none, but kept on an instruction-only step so the schema refuses it at
+  // its own field rather than as a step that says nothing (M13.3).
+  return isInstruction(step) ? { ...sent, body: step.body ?? '' } : sent;
 }
 
 /**
@@ -123,6 +191,9 @@ export function derivedCategories(steps: readonly SpellStepValue[]): StepCategor
 // name is read before every move of it and every Add and Remove.
 const INSTRUCTION_NAME_LENGTH = 40;
 
+/** What an instruction is called before anything is written in it. */
+const BLANK_INSTRUCTION = 'New Instruction';
+
 /**
  * What a step is called where it is read out: "Fixture Rosewort", or with its
  * form, "Fixture Rosewort (Dried Leaf)"; an instruction, by its text.
@@ -130,6 +201,7 @@ const INSTRUCTION_NAME_LENGTH = 40;
 export function stepNameOf({ name, form, body }: SpellStepValue): string {
   if (name === null) {
     const text = (body ?? '').trim();
+    if (text === '') return BLANK_INSTRUCTION;
     return text.length > INSTRUCTION_NAME_LENGTH
       ? `${text.slice(0, INSTRUCTION_NAME_LENGTH).trimEnd()}…`
       : text;

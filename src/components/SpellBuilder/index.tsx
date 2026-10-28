@@ -19,11 +19,13 @@ import MoonPhaseIcon from '../MoonPhaseIcon';
 import Notice from '../Notice';
 import Skeleton from '../Skeleton';
 import { SpellCategoriesField, sameCategories, useCategoryName } from './categories-field';
+import { SpellComparison } from './comparison-panel';
 import { DAYS_OF_THE_WEEK, MOON_PHASES } from './constants';
 import { useSaveOnClose } from './save-on-close';
 import { SpellSteps } from './steps';
 import type { SpellStepSend } from './steps/types';
 import { stepInputOf, stepValueOf, stepsChanged, unitIssues } from './steps/values';
+import { SpellStatusField } from './status-field';
 import { SpellSuggestField } from './suggest-field';
 import { SpellInput } from '@/modules/grimoire/validation/spell';
 import { SpellVisibilityField } from './visibility-field';
@@ -73,6 +75,8 @@ const CreateSpellDocument = graphql(`
         body
         ingredient {
           id
+          toxic
+          safetyNotes
           categories {
             id
             name
@@ -86,6 +90,8 @@ const CreateSpellDocument = graphql(`
         }
         variant {
           id
+          toxic
+          safetyNotes
           categories {
             id
             name
@@ -98,6 +104,7 @@ const CreateSpellDocument = graphql(`
         }
       }
       visibility
+      status
     }
   }
 `);
@@ -124,6 +131,8 @@ const UpdateSpellDocument = graphql(`
         body
         ingredient {
           id
+          toxic
+          safetyNotes
           categories {
             id
             name
@@ -137,6 +146,8 @@ const UpdateSpellDocument = graphql(`
         }
         variant {
           id
+          toxic
+          safetyNotes
           categories {
             id
             name
@@ -149,6 +160,7 @@ const UpdateSpellDocument = graphql(`
         }
       }
       visibility
+      status
     }
   }
 `);
@@ -225,6 +237,8 @@ function valuesOf(spell?: Partial<SpellBuilderSpell>): SpellBuilderValues {
     steps: (spell?.steps ?? []).map(stepValueOf),
     // A new spell is the coven's unless chosen otherwise (§5).
     visibility: spell?.visibility ?? 'workspace',
+    // A new spell is a draft (M10.20).
+    status: spell?.status ?? 'draft',
     categoryIds: [...(spell?.categoryIds ?? [])],
   };
 }
@@ -406,6 +420,7 @@ const SpellBuilder = ({
         string | null
       >),
       visibility: values.visibility,
+      status: values.status,
       steps: values.steps,
     };
     // The categories go only when the picks differ from the last save: left
@@ -537,6 +552,8 @@ const SpellBuilder = ({
                     <Skeleton shape="line" />
                   </section>
                 )}
+                {/* Intent against the jar's categories (M10.17), after the jar it reads. */}
+                {jarReady && <SpellComparison />}
               </>,
             )}
             {/* The recipe's timing: when to work the spell, not when it was worked,
@@ -576,7 +593,9 @@ const SpellBuilder = ({
             noun="Spell"
             dirty={dirty && !unitRefused && jarReady}
             submitting={isSubmitting}
-          />
+          >
+            <SpellStatusField save={send} />
+          </FormActions>
         </form>
       </FormHistoryContext.Provider>
     </FormProvider>

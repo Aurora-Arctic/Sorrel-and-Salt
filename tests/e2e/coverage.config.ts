@@ -4,8 +4,12 @@ import type { CoverageReportOptions } from 'monocart-coverage-reports';
 const coverageOptions: CoverageReportOptions = {
   name: 'Sorrel & Salt E2E Coverage',
   outputDir: './.reports/coverage-e2e',
-  // 'json-summary' feeds .github/scripts/summarize-playwright.mjs.
-  reports: ['v8', 'console-details', 'json-summary'],
+  // 'json-summary' feeds .github/scripts/summarize-playwright.mjs and
+  // summarize-stories.mjs. 'raw' keeps the unprocessed V8 data in `raw/`
+  // beside the report, so it travels inside the uploaded coverage artifact and
+  // .github/scripts/merge-playwright-coverage.mjs can merge the gate suite's
+  // and the story suite's runs with `inputDir`.
+  reports: ['v8', 'console-details', 'json-summary', 'raw'],
   // Order-sensitive: the first matching pattern wins, and plenty of packages
   // ship their own `src/` in their sourcemaps, so node_modules is excluded
   // before `src/**` is allowed.

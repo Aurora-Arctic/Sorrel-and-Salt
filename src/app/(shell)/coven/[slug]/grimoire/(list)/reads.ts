@@ -102,7 +102,7 @@ export async function readEditedSpell(
     const spell = await readSpell(session, workspaceId, id);
     const { revision, title, intent, jarDescription, sealWaxColor, moonPhase, dayOfWeek, note } =
       spell;
-    const { visibility } = spell;
+    const { visibility, status } = spell;
     // The categories its author assigned it, so the builder opens with them picked and a
     // save sends the set as edited, not as if it had none (M10.14).
     const [assigned] = await assignedCategoriesOf(session, [{ id, workspaceId }]);
@@ -118,6 +118,7 @@ export async function readEditedSpell(
       dayOfWeek,
       note,
       visibility,
+      status,
       categoryIds: assigned.map((category) => category.id),
     };
   } catch (error) {
