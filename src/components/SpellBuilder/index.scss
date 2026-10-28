@@ -14,14 +14,6 @@
   }
 }
 
-// The wide dialog (55rem) is for the Jar's two columns. A single text field (the title,
-// the intent, the moon phase, the day and the note) stops at the forms' column
-// (`$narrow-column`, 28rem: "a form's line is a field, not prose"), left-aligned, and
-// fills the dialog below it. Only the Jar section keeps the full width.
-.spell-field-cap {
-  max-inline-size: $narrow-column;
-}
-
 // The two-column rhythm the Purpose section and the Jar section share, so Categories and the
 // Jar's aside are one column: the main column's least width, the gap, the side column's width
 // (border-box, so its line and its padding are inside it) and the container width at which both

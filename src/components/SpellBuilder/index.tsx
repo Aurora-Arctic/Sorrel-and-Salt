@@ -519,23 +519,19 @@ const SpellBuilder = ({
                 <div className="spell-purpose">
                   <div className="spell-purpose__columns">
                     <div className="spell-purpose__text">
-                      <div className="spell-field-cap">
-                        <TextField<SpellBuilderValues>
-                          name="title"
-                          label="Title"
-                          placeholder="Add a title"
-                          autoComplete="off"
-                        />
-                      </div>
-                      <div className="spell-field-cap">
-                        <TextField<SpellBuilderValues>
-                          name="intent"
-                          label="Intent"
-                          placeholder="Add an intent"
-                          multiline
-                          rows={3}
-                        />
-                      </div>
+                      <TextField<SpellBuilderValues>
+                        name="title"
+                        label="Title"
+                        placeholder="Add a title"
+                        autoComplete="off"
+                      />
+                      <TextField<SpellBuilderValues>
+                        name="intent"
+                        label="Intent"
+                        placeholder="Add an intent"
+                        multiline
+                        rows={3}
+                      />
                     </div>
                     <SpellCategoriesField />
                   </div>
@@ -584,36 +580,30 @@ const SpellBuilder = ({
             {section(
               'When to Work It',
               <>
-                <div className="spell-field-cap">
-                  <SpellSuggestField
-                    name="moonPhase"
-                    label="Moon Phase"
-                    placeholder="Add a phase"
-                    options={MOON_PHASES}
-                    icon={moonPhaseIcon}
-                  />
-                </div>
-                <div className="spell-field-cap">
-                  <SpellSuggestField
-                    name="dayOfWeek"
-                    label="Day of the Week"
-                    placeholder="Add a day"
-                    options={DAYS_OF_THE_WEEK}
-                  />
-                </div>
+                <SpellSuggestField
+                  name="moonPhase"
+                  label="Moon Phase"
+                  placeholder="Add a phase"
+                  options={MOON_PHASES}
+                  icon={moonPhaseIcon}
+                />
+                <SpellSuggestField
+                  name="dayOfWeek"
+                  label="Day of the Week"
+                  placeholder="Add a day"
+                  options={DAYS_OF_THE_WEEK}
+                />
               </>,
             )}
             {section(
               'Notes',
               <>
-                <div className="spell-field-cap">
-                  <TextField<SpellBuilderValues>
-                    name="note"
-                    label="Note"
-                    placeholder="Add a note"
-                    multiline
-                  />
-                </div>
+                <TextField<SpellBuilderValues>
+                  name="note"
+                  label="Note"
+                  placeholder="Add a note"
+                  multiline
+                />
                 <SpellStatusField save={send} />
                 <SpellVisibilityField created={saved !== null} save={send} />
               </>,
