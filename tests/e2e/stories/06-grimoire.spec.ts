@@ -201,15 +201,9 @@ test(
   },
 );
 
-test.fixme(
+test(
   'a member reorders ingredients, so the layering sequence is recorded',
-  {
-    tag: '@story-51',
-    annotation: {
-      type: 'fixme',
-      description: 'M10.16 builds step reordering in the spell builder',
-    },
-  },
+  { tag: '@story-51' },
   async ({ page }) => {
     const coven = await seedCoven(page, 'Fixture Coven Fifty-One', 'story-51.test', {
       A: 'owner',
@@ -218,23 +212,47 @@ test.fixme(
     await signInAgainAs(page, coven.users.B);
     await openBuilder(page, coven.slug);
     await page.getByRole('textbox', { name: 'Title' }).fill('Fixture Working');
-    await addIngredientStep(page, 'Rosemary');
-    await addIngredientStep(page, 'Sage');
+    await addIngredientStep(page, 'Rosemary (Herb)');
+    await addIngredientStep(page, 'Mugwort (Herb)');
     const steps = stepList(page).getByRole('listitem');
     await expect(steps.first()).toContainText('Rosemary');
     // Keyboard alone: pick the handle up, move it one place, put it down.
-    await steps
-      .last()
-      .getByRole('button', { name: /Reorder Sage/ })
-      .focus();
+    const handle = page.getByRole('button', { name: 'Move Mugwort (Herb)' });
+    // Each key waits for what the last one said, as a person hears it. dnd-kit
+    // starts listening for the moving keys in a timer it sets at the lift, which
+    // can run after the lift is said, so the Up also waits one timer behind it.
+    const said = (text: string) => page.getByRole('status').filter({ hasText: text });
+    await handle.focus();
     await page.keyboard.press('Space');
+    await expect(said('Picked up Mugwort (Herb), at position 2 of 2.')).toBeAttached();
+    await page.evaluate(() => new Promise((resolve) => setTimeout(resolve)));
     await page.keyboard.press('ArrowUp');
+    await expect(said('Mugwort (Herb) moved to position 1 of 2.')).toBeAttached();
     await page.keyboard.press('Space');
-    await expect(page.getByRole('status')).toContainText('Sage');
-    await page.getByRole('button', { name: 'Save' }).click();
-    await page.reload();
-    await expect(steps.first()).toContainText('Sage');
-    await expect(steps.last()).toContainText('Rosemary');
+    await expect(
+      page.getByRole('status').filter({ hasText: 'Mugwort (Herb) put down at position 1 of 2.' }),
+    ).toBeAttached();
+    await expect(handle).toBeFocused();
+    await expect(steps.first()).toContainText('Mugwort');
+    const save = page.getByRole('button', { name: 'Save' });
+    await save.click();
+    await expect(save).toBeDisabled();
+    await expect(save).not.toHaveAttribute('aria-busy', 'true');
+    // The builder has no page to reopen a saved spell on until M13.10, so the
+    // order is read where the save left it: position and layer_order together.
+    const rows = await withSql(
+      (sql) => sql<{ name: string; position: number; layer_order: number }[]>`
+        select i.name, st.position, st.layer_order from spell_steps st
+        join spells s on s.id = st.spell_id
+        join ingredients i on i.id = st.ingredient_id
+        where s.workspace_id = ${coven.id} and s.title = 'Fixture Working'
+          and st.deleted_at is null
+        order by st.position`,
+    );
+    expect(rows).toEqual([
+      { name: 'Mugwort', position: 1, layer_order: 1 },
+      { name: 'Rosemary', position: 2, layer_order: 2 },
+    ]);
   },
 );
 
@@ -544,6 +562,8 @@ test.fixme(
     await withIngredient.getByRole('textbox', { name: 'Instruction' }).fill('Crush it first');
     await page.getByRole('button', { name: 'Save' }).click();
     await page.reload();
+    // A saved spell opens with its sections shut (M10.12).
+    await page.getByRole('button', { name: 'Open All' }).click();
     await expect(steps).toHaveCount(2);
     await expect(steps.first().getByRole('textbox', { name: 'Instruction' })).toHaveValue(
       'Light the candle',

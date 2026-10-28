@@ -244,8 +244,12 @@ stored as typed: the columns are free text
 
 ## Steps
 
-`steps/` is the jar: the list of steps, the picker that adds to it, and the
-spell's derived categories. It sits in the Jar section after Seal Wax Colour;
+`steps/` is the jar: the picker that adds to it, the list of steps, and the
+spell's derived categories, in that order. The picker leads so that a step
+added never pushes the search box, or the list open beneath it, down the
+dialog: the list is fixed under its box, and a box carried below the fold of
+the dialog's scrolling body opened its list off the screen (found by story
+51's flow). It sits in the Jar section after Seal Wax Colour;
 while a saved spell's steps are still being read it is a skeleton there, and
 if the read fails, an error in its place.
 
@@ -257,7 +261,10 @@ if the read fails, an error in its place.
   brackets, its form's icon, and the formal name as its note. A retired
   ingredient is not offered. A form already in the jar is listed but disabled,
   with the note "Already in the jar". Picking a row appends the step and
-  clears the search.
+  clears the search, and the focus stays in the search for the next
+  ingredient: the append passes `shouldFocus: false`, since react-hook-form
+  would otherwise move the focus to the new step's Quantity a render later and
+  close the list of whatever was typed meanwhile.
 - **A one-off ingredient** is a name and an optional form typed for this jar
   alone (One-Off Name, One-Off Form, Add One-Off Ingredient). It makes no
   ingredients row: the step saves its `name` and `form` with no ids. A name
@@ -267,9 +274,10 @@ if the read fails, an error in its place.
   jar it was found through (`stepInputOf` in `values.ts`); a one-off sends
   its `name` and `form`. A saved step sends its `id`. Quantity is sent as a
   number, and a blank quantity, unit or note is left out.
-- **Each row** (`step-row.tsx`, story 50) shows the form's icon and the name
-  with its form, a Quantity and a Unit for it, and Remove. An instruction step
-  (no name) shows its text only.
+- **Each row** (`step-row.tsx`, story 50) leads with its handle, Move and
+  the step's name (below), then shows the form's icon and the name with its
+  form, a Quantity and a Unit for it, and Remove. An instruction step (no
+  name) shows its handle and its text only.
 - **The unit rule** (story 77, `unitIssues`) is the service's, from
   `src/modules/grimoire/validation/step-unit.ts`: when the coven holds a jar
   of that form, the step's unit must be one the jar can be measured in (the
@@ -284,13 +292,51 @@ if the read fails, an error in its place.
   These are only ever derived; the categories a spell intends are assigned
   (M10.14), and the two are never mixed (DESIGN.md §5).
 
+## Reordering
+
+The steps are in the order they are laid (M10.16, story 51), and each is
+moved by its handle, a grip button named "Move" and the step's name
+(`stepNameOf` in `values.ts`: "Fixture Rosewort (Dried Leaf)", a one-off's
+name, or an instruction's text cut to 40 characters). Linked, one-off and
+instruction steps move alike.
+
+- **The list** (`steps/sortable.tsx`, `SortableSteps`) is a column on
+  dnd-kit's `verticalListSortingStrategy`. The sensors, the keyboard target,
+  the handle's instructions and the wording are the combobox's, shared from
+  [`src/lib/sortable`](../../src/lib/sortable/index.ts) (the Wave 13 review,
+  2026-10-23); only the layout and the keys are the list's own.
+- **By keyboard**, Space or Enter lifts the focused handle's step, Up and Down
+  move it a place, Home and End take it to either end, and it goes no
+  further. Space or Enter puts it down; Escape puts it back. Left and Right do
+  nothing in a column. The focus stays on the moved step's handle.
+- **By pointer**, the handle drags once the pointer has moved 4px, and the
+  step drops on the place whose centre is nearest.
+- **By touch**, the handle drags once a finger has rested on it for
+  `TOUCH_DRAG_DELAY_MS` (250ms, moving no more than 5px); a finger that
+  moves off at once does not drag. The delay is the owner's open question,
+  set in one constant in `src/lib/sortable` that the combobox shares.
+- **Every move, Add and Remove is said.** A move in dnd-kit's live region, in
+  the combobox's wording ("Picked up Testwort, at position 2 of 3.",
+  "Testwort moved to position 1 of 3.", "Testwort put down at position 1 of
+  3.", "Move cancelled. Testwort is back at position 2 of 3."); an Add or a
+  Remove in a region of the list's own, `@dnd-kit/accessibility`'s
+  `LiveRegion` ("Added Testwort, at position 4 of 4.", "Removed Testwort,
+  from position 2 of 4.").
+- **A move is a change to save.** The field array's `move` reorders the
+  steps, the dirty check compares them in order, and Save Spell sends them in
+  their new order, each saved one by id. The service writes `position` and
+  `layer_order` from that order, moving the live rows in place under the
+  `(spell_id, position)` partial unique index through a negative scratch
+  place, never by removing a step and adding it again.
+
 ## Styling
 
-No stylesheet of its own: the `<form className="form">` sits straight in
-the body of a `RouteModal` at the default column, Add Ingredient's
-(`size="wide"` until 2026-10-28), its sections styled by `CollapsibleSection` ([`modal.md`](modal.md)), which
-scrolls the form when it is taller than the screen. Its look past the tokens
-is the grimoire's design review's.
+No wrapper: the `<form className="form">` sits straight in the body of a
+`RouteModal` at the default column, Add Ingredient's (`size="wide"` until
+2026-10-28), its sections styled by `CollapsibleSection` ([`modal.md`](modal.md)),
+which scrolls the form when it is taller than the screen. `index.scss` holds the
+visibility switch's alignment (M10.13) and the step handle (M10.16), unboxed as
+the combobox's chip handle is. Its look past the tokens is the grimoire's design review's.
 
 ## Stories
 
@@ -337,14 +383,20 @@ jar: the two headings, one row per form, a pick adding its row and clearing
 the search, a form already in the jar disabled, a one-off and its two
 refusals, the ids sent, Remove updating Derived Categories, the unit rule both
 ways and with no jar, saved steps sent back by id, and a server issue placed
-on its step. `tests/modules/grimoire/services/spell-ingredient-steps.test.ts`
+on its step. `reorder.test.tsx` covers the order: a handle on every kind of
+step, a keyboard move said at each step with the focus kept, the new order
+sent by id, Home and End and no further, Escape putting a step back, a
+pointer drag, a touch drag held for the delay and not a quick one, and Add
+and Remove said. `spells.test.ts` asserts a reorder of
+linked, one-off and instruction steps moves the same rows, none soft-deleted.
+`tests/modules/grimoire/services/spell-ingredient-steps.test.ts`
 reads the rows a save leaves, and asserts a member of another coven and a
 viewer are refused by direct id.
 Stories 47 and 48 in
 `tests/e2e/stories/06-grimoire.spec.ts` walk it in a browser; story 48 picks
 two categories, removes one, saves, and finds the one left on the spell's
-card under Drafts. Stories 49, 50, 57 and 77 walk the jar.
-No story walks the visibility control, since §5's rule governs it rather than a
+card under Drafts. Stories 49, 50, 51, 57 and 77 walk the jar; story 51 moves a step by
+keyboard and reads the saved order from the database. No story walks the visibility control, since §5's rule governs it rather than a
 story, so `tests/e2e/spell-visibility.spec.ts` is its gate spec: a spell written private,
 then shared in one confirmed action and the control shut, each step read from the
 database. Story 56 checks the Private badge on the author's card.

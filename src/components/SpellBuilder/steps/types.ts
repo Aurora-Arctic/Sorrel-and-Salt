@@ -1,6 +1,7 @@
 import type { ComboboxOption } from '../../Combobox/types';
 import type { FormGroupIcon } from '@/modules/vocabulary/schema/form-group-icons';
 import type { Unit } from '@/modules/ingredients/schema/units';
+import type { ReactNode } from 'react';
 
 /** A category a step brings to the spell's derived ones. */
 export interface StepCategory {
@@ -59,4 +60,15 @@ export interface SpellStepSend {
   unit?: Unit;
   body?: string;
   note?: string;
+}
+
+/** The step list's order: the rows' keys and names, in order, and the rows. */
+export interface SortableStepsProps {
+  /** Each row's field-array key, in the list's order. */
+  ids: string[];
+  /** Each step's name, as `stepNameOf` reads it, in the same order. */
+  names: string[];
+  /** Moves the step at `from` to `to`. */
+  onMove: (from: number, to: number) => void;
+  children: ReactNode;
 }

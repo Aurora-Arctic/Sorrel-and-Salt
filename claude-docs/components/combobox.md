@@ -134,7 +134,12 @@ colour is never the only cue.
 - **It opens as text is typed, on ArrowDown, and from its chevron**, and only
   once there are rows: a list wanted while the lookup is pending opens as
   the rows arrive, the typed row counting as one. A box with no source never
-  opens.
+  opens. Typing sets the wish itself, in the input's own change handler,
+  rather than through Downshift's open callback alone: that callback fires
+  only when the open state differs from the props Downshift last committed,
+  so a key landing just after a pick closed the list, before that render
+  committed, read as no change and the list stayed shut (found by story 51's
+  flow, M10.16).
 - **Enter.** A highlighted row is picked. Otherwise, with `onCommit`, Enter is
   the caller's and never the form's submit: a list adds the text. Without
   `onCommit`, Enter closes an open list, and on a closed box reaches the form
@@ -630,10 +635,15 @@ standard package rather than a bespoke one, the task's preference
   chip's tooltip, as the ×'s does. A list that is not sortable draws its
   text bare, as before, with nothing to move it by.
 - **By pointer**, the chip is dragged onto another's place, the others
-  sliding aside, and dropped. A drag starts only once the pointer has moved
-  4px, so a press focuses the handle and opens its tooltip rather than
-  starting one. `touch-action: none` on the handle lets a touch drag move the
-  chip rather than the page. A pointer's chip is over whichever place's
+  sliding aside, and dropped. A mouse or pen drag starts only once the
+  pointer has moved 4px, so a press focuses the handle and opens its tooltip
+  rather than starting one. A finger drags once it has rested on the handle
+  for `TOUCH_DRAG_DELAY_MS` (250ms for now, moving no more than 5px), on
+  dnd-kit's `TouchSensor`; the pointer sensor skips touch pointers so the
+  two never race. The delay is the owner's open question (M10.16), and the
+  one constant in [`src/lib/sortable`](../../src/lib/sortable/index.ts)
+  changes it for every sortable list. `touch-action: none` on the handle lets
+  a touch drag move the chip rather than the page. A pointer's chip is over whichever place's
   centre is nearest its own, as dnd-kit's closest-centre collision has it.
 - **The chips making way sit where the row will put them.** dnd-kit's
   `rectSortingStrategy` moves each chip onto the box of the chip whose place
@@ -672,6 +682,12 @@ standard package rather than a bespoke one, the task's preference
   talk over the lift, so that one report is left unsaid. The region and the
   instructions take their ids from `useId`, since dnd-kit's own counter
   would number a server render and the browser's apart.
+- **Shared with the spell builder's steps** (M10.16): the sensors, the
+  keyboard target with its collision detection, the handle's instructions and
+  this wording live in [`src/lib/sortable`](../../src/lib/sortable/index.ts),
+  decided in the Wave 13 review. Each list keeps its own layout, sorting
+  strategy and arrow keys: the chips flow in a wrapping row, the steps stand
+  in a column ([spell-builder.md](spell-builder.md), "Reordering").
 
 ## A qualifier
 

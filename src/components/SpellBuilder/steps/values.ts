@@ -1,5 +1,6 @@
 import type { SpellBuilderStep } from '../types';
 import type { Unit } from '@/modules/ingredients/schema/units';
+import { formLabel } from '@/modules/ingredients/validation/form-label';
 import { UNMEASURABLE_UNIT, measurable } from '@/modules/grimoire/validation/step-unit';
 import type { SpellStepSend, SpellStepValue, StepCategory } from './types';
 
@@ -116,4 +117,22 @@ export const stepsChanged = (
 export function derivedCategories(steps: readonly SpellStepValue[]): StepCategory[] {
   const byId = new Map(steps.flatMap((step) => step.categories).map((c) => [c.id, c]));
   return [...byId.values()].sort((a, b) => a.name.localeCompare(b.name));
+}
+
+// An instruction is named by its text, cut short where it runs on, since its
+// name is read before every move of it and every Add and Remove.
+const INSTRUCTION_NAME_LENGTH = 40;
+
+/**
+ * What a step is called where it is read out: "Fixture Rosewort", or with its
+ * form, "Fixture Rosewort (Dried Leaf)"; an instruction, by its text.
+ */
+export function stepNameOf({ name, form, body }: SpellStepValue): string {
+  if (name === null) {
+    const text = (body ?? '').trim();
+    return text.length > INSTRUCTION_NAME_LENGTH
+      ? `${text.slice(0, INSTRUCTION_NAME_LENGTH).trimEnd()}…`
+      : text;
+  }
+  return form ? `${name} (${formLabel(form)})` : name;
 }
