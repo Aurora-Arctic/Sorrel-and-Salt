@@ -85,7 +85,7 @@ export function ComparisonPanel({ intended, steps }: ComparisonPanelProps): Reac
       <>
         {notCarried.length > 0 && (
           <section>
-            <h4>Intended, Not Carried</h4>
+            <h5>Intended, Not Carried</h5>
             <ul aria-label="Intended, Not Carried">
               {notCarried.map(({ id, name }) => (
                 <li key={id}>{name}: nothing in the jar carries it</li>
@@ -95,7 +95,7 @@ export function ComparisonPanel({ intended, steps }: ComparisonPanelProps): Reac
         )}
         {carried.length > 0 && (
           <section>
-            <h4>Carried, Not Intended</h4>
+            <h5>Carried, Not Intended</h5>
             <ul aria-label="Carried, Not Intended">
               {carried.map((stray) => (
                 <li
@@ -124,7 +124,7 @@ export function ComparisonPanel({ intended, steps }: ComparisonPanelProps): Reac
 
   return (
     <aside className="comparison-panel" aria-label="Intent Against Ingredients">
-      <h3>Intent Against Ingredients</h3>
+      <h4>Intent Against Ingredients</h4>
       {body}
     </aside>
   );

@@ -161,6 +161,8 @@ describe('the panel in the builder', () => {
         />
       </QueryClientProvider>,
     );
+    // A saved spell opens with its sections shut; the panel is in the Jar's.
+    fireEvent.click(screen.getByRole('button', { name: 'Open All' }));
     const list = await screen.findByRole('list', { name: 'Carried, Not Intended' });
     expect(list).toHaveTextContent('Fixture Rosewort');
     expect(screen.getByRole('list', { name: 'Intended, Not Carried' })).toHaveTextContent(
