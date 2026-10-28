@@ -134,7 +134,12 @@ colour is never the only cue.
 - **It opens as text is typed, on ArrowDown, and from its chevron**, and only
   once there are rows: a list wanted while the lookup is pending opens as
   the rows arrive, the typed row counting as one. A box with no source never
-  opens.
+  opens. Typing sets the wish itself, in the input's own change handler,
+  rather than through Downshift's open callback alone: that callback fires
+  only when the open state differs from the props Downshift last committed,
+  so a key landing just after a pick closed the list, before that render
+  committed, read as no change and the list stayed shut (found by story 51's
+  flow, M10.16).
 - **Enter.** A highlighted row is picked. Otherwise, with `onCommit`, Enter is
   the caller's and never the form's submit: a list adds the text. Without
   `onCommit`, Enter closes an open list, and on a closed box reaches the form

@@ -244,8 +244,12 @@ stored as typed: the columns are free text
 
 ## Steps
 
-`steps/` is the jar: the list of steps, the picker that adds to it, and the
-spell's derived categories. It sits in the Jar section after Seal Wax Colour;
+`steps/` is the jar: the picker that adds to it, the list of steps, and the
+spell's derived categories, in that order. The picker leads so that a step
+added never pushes the search box, or the list open beneath it, down the
+dialog: the list is fixed under its box, and a box carried below the fold of
+the dialog's scrolling body opened its list off the screen (found by story
+51's flow). It sits in the Jar section after Seal Wax Colour;
 while a saved spell's steps are still being read it is a skeleton there, and
 if the read fails, an error in its place.
 
@@ -257,7 +261,10 @@ if the read fails, an error in its place.
   brackets, its form's icon, and the formal name as its note. A retired
   ingredient is not offered. A form already in the jar is listed but disabled,
   with the note "Already in the jar". Picking a row appends the step and
-  clears the search.
+  clears the search, and the focus stays in the search for the next
+  ingredient: the append passes `shouldFocus: false`, since react-hook-form
+  would otherwise move the focus to the new step's Quantity a render later and
+  close the list of whatever was typed meanwhile.
 - **A one-off ingredient** is a name and an optional form typed for this jar
   alone (One-Off Name, One-Off Form, Add One-Off Ingredient). It makes no
   ingredients row: the step saves its `name` and `form` with no ids. A name
