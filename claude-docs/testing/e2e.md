@@ -630,6 +630,14 @@ of this file explains the warm-up that now follows each reclone.
 `.reports/coverage-e2e/` is written only under `E2E_COVERAGE=1`, which
 `.github/workflows/playwright.yml` sets.
 
+**Each suite's coverage, and the two merged (M14.28).** Both suites write
+`.reports/coverage-e2e/` in CI, including its `raw/` data, and upload it as
+`playwright-coverage` (gate) and `playwright-coverage-stories` (stories). Each
+suite's PR comment carries its own figure. The `playwright-coverage` job in
+`pr-gate.yml` merges whichever of the two ran into a "Playwright Coverage"
+comment and the `playwright-coverage-merged` artifact
+([`coverage.md`](coverage.md), "The merged report").
+
 **After the worker count changed** (lever 6): the gate suite (`npm run e2e`,
 62 tests) and the story suite (`npm run test:stories`, 51 run, 15 `fixme`)
 at `E2E_WORKERS` 6, 9 and 12, three runs each, interleaved (6, 9, 12, 6, 9,

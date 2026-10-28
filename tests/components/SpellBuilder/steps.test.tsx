@@ -270,6 +270,18 @@ describe('the spell builder’s Add to Jar', () => {
     expect(save()).toBeEnabled();
   });
 
+  // Story 51 typed its second ingredient as the first was added; the new
+  // step's Quantity took the focus a render later, and the list never opened.
+  it('keeps the focus in the search after a pick, so the next ingredient can be typed', async () => {
+    suggest(ROSEWORT);
+    renderBuilder();
+
+    await add('Rose', /Fixture Rosewort/);
+
+    expect(stepRows()).toHaveLength(1);
+    expect(search()).toHaveFocus();
+  });
+
   it('will not add a form twice: its row is offered but cannot be picked', async () => {
     suggest(ROSEWORT);
     renderBuilder();
