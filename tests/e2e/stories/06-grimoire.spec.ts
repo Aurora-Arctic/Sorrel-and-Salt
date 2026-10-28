@@ -88,6 +88,8 @@ test('a member names a spell and states its intent', { tag: '@story-47' }, async
   await expect(page.getByRole('dialog')).toHaveCount(0);
   await page.goto(draft);
   const edit = page.getByRole('dialog', { name: 'Edit Spell, Fixture Working' });
+  // A saved spell opens its sections shut, each line naming what it holds.
+  await edit.getByRole('button', { name: 'Open All' }).click();
   await expect(edit.getByRole('textbox', { name: 'Intent' })).toHaveValue('To see clearly');
   await edit.getByRole('button', { name: 'Close' }).click();
   await expect(page).toHaveURL(`/coven/${coven.slug}/grimoire`);
@@ -545,6 +547,8 @@ test(
     await withIngredient.getByRole('textbox', { name: 'Instruction' }).fill('Crush it first');
     await page.getByRole('button', { name: 'Save' }).click();
     await page.reload();
+    // A saved spell opens with its sections shut (M10.12).
+    await page.getByRole('button', { name: 'Open All' }).click();
     await expect(steps).toHaveCount(2);
     await expect(steps.first().getByRole('textbox', { name: 'Instruction' })).toHaveValue(
       'Light the candle',

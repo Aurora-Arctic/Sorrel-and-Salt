@@ -93,9 +93,10 @@ export function SpellSteps({ workspaceId }: { workspaceId: string }): ReactEleme
         Add a Step
       </button>
       <StepPicker workspaceId={workspaceId} taken={taken} oneOffs={oneOffs} onAdd={add} />
-      <h3 className="spell-steps__heading" id={derivedId}>
+      {/* h4: the jar sits in the builder's Jar section, whose heading is an h3. */}
+      <h4 className="spell-steps__heading" id={derivedId}>
         Derived Categories
-      </h3>
+      </h4>
       <ul className="spell-steps__categories" aria-labelledby={derivedId}>
         {derived.map((category) => (
           <li key={category.id}>{category.name}</li>

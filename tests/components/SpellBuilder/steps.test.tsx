@@ -405,6 +405,11 @@ describe('the spell builder’s Add to Jar', () => {
         ],
       },
     });
+    // A saved spell opens shut (M10.12): the Jar's line counts the ingredients laid.
+    const jar = screen.getByRole('button', { name: 'Jar' });
+    expect(jar).toHaveAttribute('aria-expanded', 'false');
+    expect(jar).toHaveAccessibleDescription('2 ingredients');
+    fireEvent.click(screen.getByRole('button', { name: 'Open All' }));
     const row = stepRow('Fixture Rosewort');
     expect(within(row).getByRole('spinbutton', { name: /^Quantity/ })).toHaveValue(3);
     expect(within(row).getByRole('combobox', { name: /^Unit/ })).toHaveTextContent('g');

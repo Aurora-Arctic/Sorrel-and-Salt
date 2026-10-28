@@ -35,23 +35,6 @@ $skeleton-fade: 300ms;
   }
 }
 
-// The ingredient's six sections, each a disclosure (MB.115, the owner's
-// calls): flush, parted by hairlines rather than set on the card ground,
-// since the variant cards and reference rows inside already sit on it and a
-// card in a card reads as nesting the form does not have. Under them all,
-// the one control that opens or closes every section, at the line's end.
-.ingredient-form .ingredient-form__folds {
-  display: flex;
-  flex-direction: column;
-  min-width: 0;
-}
-
-.ingredient-form__fold-all {
-  display: flex;
-  justify-content: flex-end;
-  margin-bottom: space(1);
-}
-
 // A switch here, Toxic on the ingredient and on each variant, stands at the
 // start of its column, its label and hint above it at the start too, as the
 // fields above it do (the owner's call, 2026-10-16). Not the primitive's
