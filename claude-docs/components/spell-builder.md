@@ -274,10 +274,24 @@ if the read fails, an error in its place.
   jar it was found through (`stepInputOf` in `values.ts`); a one-off sends
   its `name` and `form`. A saved step sends its `id`. Quantity is sent as a
   number, and a blank quantity, unit or note is left out.
-- **Each row** (`step-row.tsx`, story 50) leads with its handle, Move and
-  the step's name (below), then shows the form's icon and the name with its
-  form, a Quantity and a Unit for it, and Remove. An instruction step (no
-  name) shows its handle and its text only.
+- **Each row** (`step-row.tsx`'s `BuilderStepRow`, stories 50 and 80) is
+  [`StepRow`](step-row.md) with the builder's controls in it: the handle (Move
+  and the step's name, below), then the form's icon and the name with its
+  form, a Quantity and a Unit, an Instruction beneath, and Remove. An
+  instruction-only step has the handle and its Instruction alone.
+- **Add a Step** (M13.3) is a button beside Add to Jar that appends an
+  instruction-only step and puts the focus in its Instruction field. Until
+  something is written the step is named "New Instruction" where it is read
+  out. The Instruction field is a two-row text area; its placeholder is
+  "Light candle" on an instruction-only step and "Crush first" under an
+  ingredient. A step with an ingredient needs no instruction: a cleared one is
+  left out of the save. An instruction-only step with a blank one is refused
+  at its own field, "Write the instruction, or remove it", before anything is
+  sent (`stepInputOf` keeps the blank body on that kind of step so the schema
+  says it, rather than a step that says nothing). A step's `note` is not
+  edited here.
+- **After a Remove** the focus goes to the handle of the row now in that place
+  (the one before it for the last), and to Add a Step when the list is empty.
 - **The unit rule** (story 77, `unitIssues`) is the service's, from
   `src/modules/grimoire/validation/step-unit.ts`: when the coven holds a jar
   of that form, the step's unit must be one the jar can be measured in (the
@@ -347,6 +361,11 @@ or Refused After Saving, each in its `SpellDialog` over the app shell, with
 Open Again to look once more after Close.
 
 ## Testing
+
+`tests/components/SpellBuilder/step-text.test.tsx` covers the step text (M13.3): Add a Step with
+its focus and announcement, an instruction-only step sent as its text alone, a blank one refused at its
+field, a saved spell's texts read back and saved by id, a cleared text dropped from an ingredient step,
+and Remove.
 
 `tests/components/SpellBuilder/index.test.tsx` uses role and label queries
 against MSW, which answers in the route's own error shape. It covers the
