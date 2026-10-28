@@ -354,10 +354,10 @@ and the comparison. The drawing is `JarDrawing` and `pickJarShape` from the jar 
 ([`jar-shelf.md`](jar-shelf.md)), drawn empty and tinted by the seal wax.
 
 **In Coven Inventory** (`inventory.tsx`) lists each step's ingredient with the coven's stock of its form,
-as the jar shelf draws it: the vessel, and the verdict in words. A one-off reads "one-off, nothing
+as the jar shelf draws it: the vessel, and the verdict as a symbol. A one-off reads "one-off, nothing
 to hold", and its small jar is the plain solid empty outline in `$text-muted`, as the aside's own jar is: no dashes and no fade. All four verdicts stand on the name line at its right end, in one place, so the
 name is cut short with an ellipsis before the verdict is; the words line keeps "need … · hold …".
-Out and Low take StockBadge's symbol and colour, the word beside it. Not Enough has a small jar outline with a level part-way up, in Low's ink (`$stock-low-ink`), and Units Differ a struck equals sign in `$text-muted`; each stands alone, its words as the name of the button around it and, in an `IconTip`, a sentence saying why (the jar holds less than the step needs; the spell’s unit cannot be checked against the jar’s), the control for an icon-only mark as `StockTip` uses it. Both are drawn as `StockIcon` is and kept in `supply-icon.tsx`, being spell-builder-only (owner's call 2026-10-28). Both share one branch in `inventory.tsx`, a `mark` on the verdict. `steps/supply-mark.tsx` is used nowhere and was left as it was. All four are worded as in Supply below. With no steps it
+Every verdict is a symbol alone, its words the name of the button around it and, in an `IconTip`, a sentence saying why (the control for an icon-only mark, as `StockTip` uses it): Out takes StockBadge's symbol and colour (the jar is empty), Low its symbol and colour (the jar is at or below the coven’s Low mark), Not Enough a small jar outline with a level part-way up, in Low's ink (`$stock-low-ink`) (the jar holds less than the step needs), and Units Differ a struck equals sign in `$text-muted` (the spell’s unit cannot be checked against the jar’s). The last two are drawn as `StockIcon` is and kept in `supply-icon.tsx`, being spell-builder-only (owner's call 2026-10-28). All four share one branch in `inventory.tsx`, a `mark` on the verdict. `steps/supply-mark.tsx` is used nowhere and was left as it was. All four are worded as in Supply below. With no steps it
 reads that nothing is held yet.
 
 ## The comparison panel
