@@ -257,7 +257,10 @@ if the read fails, an error in its place.
   brackets, its form's icon, and the formal name as its note. A retired
   ingredient is not offered. A form already in the jar is listed but disabled,
   with the note "Already in the jar". Picking a row appends the step and
-  clears the search.
+  clears the search, and the focus stays in the search for the next
+  ingredient: the append passes `shouldFocus: false`, since react-hook-form
+  would otherwise move the focus to the new step's Quantity a render later and
+  close the list of whatever was typed meanwhile.
 - **A one-off ingredient** is a name and an optional form typed for this jar
   alone (One-Off Name, One-Off Form, Add One-Off Ingredient). It makes no
   ingredients row: the step saves its `name` and `form` with no ids. A name

@@ -26,7 +26,10 @@ export function SpellSteps({ workspaceId }: { workspaceId: string }): ReactEleme
   const regionId = useId();
 
   const add = (step: SpellStepValue) => {
-    append(step);
+    // The focus stays in Add to Jar for the next ingredient: react-hook-form
+    // would move it to the new step's Quantity a render later, closing the
+    // list of whatever was typed in the meantime.
+    append(step, { shouldFocus: false });
     const count = fields.length + 1;
     announce(`Added ${stepNameOf(step)}, at position ${count} of ${count}.`);
   };
