@@ -116,6 +116,27 @@ $drawer-shade-light: rgba($iron-gall, 0.22);
 $drawer-shade-fade-light: rgba($iron-gall, 0.2);
 $drawer-shade-edge-light: rgba($iron-gall, 0.12);
 
+// The moon phase icons' three fills (MoonPhaseIcon): the lit part always the
+// paler of lit and shadow, in either theme, and the maria between the two, so
+// they read on the lit part (the owner, 2026-10-27). Dark lights the moon in
+// chalk; light lights it in the card's own parchment, edged by the outline.
+$moon-lit-dark: $chalk;
+$moon-shadow-dark: rgba($chalk, 0.2);
+$moon-mare-dark: color.mix($chalk, $soot, 75%);
+$moon-lit-light: $parchment-raised;
+$moon-shadow-light: rgba($iron-gall, 0.55);
+$moon-mare-light: color.mix($iron-gall, $parchment-raised, 15%);
+
+// The dark char rim round a spell card's smouldering corner (SpellCard, on hover). Dark is the
+// shadow ink; light is iron-gall with a quarter of the ember red stirred in, so on parchment it
+// reads as scorched paper rather than an ink line.
+$burn-char-dark: rgba($shadow-ink-dark, 0.7);
+$burn-char-light: rgba(color.mix($iron-gall, $wax-warm, 75%), 0.6);
+// The thin charred line along the top of the burn, outside the char rim: each theme's darkest ink,
+// nearly opaque, so the paper reads as blackened before it glows.
+$burn-char-line-dark: rgba($shadow-ink-dark, 0.92);
+$burn-char-line-light: rgba($iron-gall, 0.85);
+
 // A 0.8-alpha shadow reads as a hole punched in parchment; light gets a softer one.
 $shadow-dark: rgba($shadow-ink-dark, 0.8);
 $shadow-light: rgba(35, 32, 26, 0.18);
@@ -446,6 +467,8 @@ $drawer-seam: var(--drawer-seam);
 $drawer-shade: var(--drawer-shade);
 $drawer-shade-fade: var(--drawer-shade-fade);
 $drawer-shade-edge: var(--drawer-shade-edge);
+$burn-char: var(--burn-char);
+$burn-char-line: var(--burn-char-line);
 $dismiss-ink: var(--dismiss-ink);
 $card-more-ink: var(--card-more-ink);
 // The Last Edit line's ink: the placeholder's mix in dark, where it holds 4.5:1; the muted ink in

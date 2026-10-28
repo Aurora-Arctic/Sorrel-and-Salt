@@ -1,4 +1,5 @@
 import type { ReactNode, Ref, RefObject } from 'react';
+import type { SectionFold } from '../CollapsibleSection/types';
 import type { RouteModalLink } from '../Modal/types';
 import type { z } from 'zod';
 import type {
@@ -659,44 +660,6 @@ export interface Claimant {
 /** One of the ingredient's six sections, each folding to a summary line (MB.115). */
 export type SectionKey = (typeof SECTION_KEYS)[number];
 
-/**
- * A folding section's state, which the form owns so that Save can open the
- * sections holding an error and Open All / Close All can reach every one.
- */
-export interface SectionFold {
-  open: boolean;
-  /** It holds an error: flagged beneath its heading, open or closed. */
-  invalid: boolean;
-  onToggle: () => void;
-}
-
-/** What `useFoldIds` is told of a fold: its block class, and whether it is open, holds an error, and shows its flag. */
-export interface FoldIdsOptions {
-  block: string;
-  open: boolean;
-  invalid: boolean;
-  /** The flag is drawn: a section's while it errs, a variant card's only while it is closed too. */
-  flagged: boolean;
-}
-
-/** What a fold names its parts by, from `useFoldIds`. */
-export interface FoldIds {
-  /** The base the other ids are made from, for a fold that names a part of its own. */
-  id: string;
-  summaryId: string;
-  flagId: string;
-  fieldsId: string;
-  className: string;
-  /** Its toggle's `aria-describedby`: the closed line, and the flag while shown; undefined for neither. */
-  describedBy: string | undefined;
-}
-
-export interface FoldFlagProps {
-  id: string;
-  className: string;
-  shown: boolean;
-}
-
 /** The closed line of one of the ingredient's sections. */
 export interface SectionSummaryProps {
   section: SectionKey;
@@ -750,26 +713,6 @@ export interface RestoredSections {
 export interface RestoredVariant {
   variantId?: string;
   form: string;
-}
-
-/**
- * A section as a disclosure, its heading the toggle: one of the ingredient's
- * own, its closed line drawn from `section`, or one of a variant's, a level
- * beneath, handed its closed line as `summary`.
- */
-export type CollapsibleSectionProps = CollapsibleSectionBase &
-  ({ section: SectionKey; summary?: never } | { summary: ReactNode; section?: never });
-
-interface CollapsibleSectionBase {
-  title: string;
-  fold: SectionFold;
-  /** Its heading's level: 3 for the ingredient's sections, 4 for a variant's, beneath the Variants heading. */
-  level?: 3 | 4;
-  /** An ⓘ beside the heading, outside the toggle, since a button cannot hold one. */
-  info?: ReactNode;
-  /** The toggle's id, for a group inside that is named by the heading. */
-  titleId?: string;
-  children: ReactNode;
 }
 
 /** A variant's field that its Copy From Ingredient fills from the ingredient's own. */

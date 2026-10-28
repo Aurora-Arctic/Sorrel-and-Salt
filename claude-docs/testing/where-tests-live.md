@@ -73,7 +73,8 @@ project) and by the whole tree passing `npm run lint`:
 - `modal-focus-return-through-modal` — was `focus-return.test.ts`: no
   hand-built `.focus()` return beside a dialog (M8.17).
 - `long-form-guards-leaving` — was `leave-guard.test.ts`: every form calls
-  `useDiscardGuard` or `useLeaveGuard` (M13.14).
+  `useDiscardGuard` or `useLeaveGuard` (M13.14), or the spell builder's
+  `useSaveOnClose`, which calls `useLeaveGuard` (M10.12).
 - `e2e-chained-tests-serial` — was `e2e-serial-chains.test.ts`: a Playwright
   spec whose tests chain is serial (M11.18; claude-docs/testing/e2e.md, "E2E").
   `.oxlintrc.json` turns it on for `tests/e2e/**/*.spec.ts` alone.

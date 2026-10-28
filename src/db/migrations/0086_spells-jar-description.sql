@@ -1,0 +1,1 @@
+ALTER TABLE "spells" RENAME COLUMN "jar_size" TO "jar_description";

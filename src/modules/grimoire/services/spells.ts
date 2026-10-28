@@ -42,7 +42,7 @@ async function readableSpell(membership: Membership, spellId: string): Promise<S
 function spellColumns(input: {
   title?: string | null;
   intent?: string | null;
-  jarSize?: string | null;
+  jarDescription?: string | null;
   sealWaxColor?: string | null;
   moonPhase?: string | null;
   dayOfWeek?: string | null;
@@ -50,12 +50,21 @@ function spellColumns(input: {
   status?: SpellRow['status'];
   visibility?: SpellRow['visibility'];
 }) {
-  const { title, intent, jarSize, sealWaxColor, moonPhase, dayOfWeek, note, status, visibility } =
-    input;
+  const {
+    title,
+    intent,
+    jarDescription,
+    sealWaxColor,
+    moonPhase,
+    dayOfWeek,
+    note,
+    status,
+    visibility,
+  } = input;
   const columns = {
     title,
     intent,
-    jarSize,
+    jarDescription,
     sealWaxColor,
     moonPhase,
     dayOfWeek,

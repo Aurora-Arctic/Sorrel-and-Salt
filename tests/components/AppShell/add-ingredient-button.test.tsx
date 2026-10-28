@@ -161,7 +161,7 @@ describe('AddIngredientButton', () => {
     const chevron = () => screen.getByRole('button', { name: 'Choose Where to Add' });
     const menuOf = () => screen.getByRole('menu');
 
-    it('lists the compendium then the coven for a curator, and a coven chosen on an admin page is a navigation to it', () => {
+    it('lists the compendium then the coven for a curator, and opens a coven chosen on an admin page in place', () => {
       pathname.mockReturnValue('/admin/users');
       draw(ADMIN, [FIXTURE]);
       expect(chevron()).toHaveAttribute('aria-haspopup', 'menu');
@@ -172,20 +172,21 @@ describe('AddIngredientButton', () => {
       const items = within(menuOf()).getAllByRole('menuitem');
       expect(items.map((item) => item.textContent)).toEqual(['to Compendium', 'to Fixture Coven']);
 
-      // An admin page's `?new` is its own dialog, so the coven's opens at the
-      // coven: a navigation there, where the address opens its dialog.
+      // The coven's value names it, so the admin page's own `?new` cannot take it,
+      // and the page stays where it is.
       press(items[1]!);
       expect(screen.queryByRole('menu')).toBeNull();
-      expect(push).toHaveBeenCalledExactlyOnceWith('/coven/fixture-coven?new');
+      expect(window.location.search).toBe('?new=ingredient-coven-fixture-coven');
       expect(target()).toBe('id-fixture-coven');
+      expect(push).not.toHaveBeenCalled();
     });
 
-    it('opens the coven chosen off the admin pages, naming it on the address when it is not the default', () => {
+    it('opens the coven chosen off the admin pages, naming it on the address', () => {
       draw(MEMBER, [FIXTURE, TESTWORT]);
       fireEvent.click(chevron());
       press(within(menuOf()).getByRole('menuitem', { name: 'to Testwort Circle' }));
 
-      expect(window.location.search).toBe('?new=testwort-circle');
+      expect(window.location.search).toBe('?new=ingredient-coven-testwort-circle');
       expect(
         screen.getByRole('dialog', { name: 'Add Ingredient to Testwort Circle' }),
       ).toBeInTheDocument();
@@ -198,7 +199,7 @@ describe('AddIngredientButton', () => {
       fireEvent.click(chevron());
       press(within(menuOf()).getByRole('menuitem', { name: 'to Compendium' }));
 
-      expect(push).toHaveBeenCalledWith('/admin/compendium?new');
+      expect(push).toHaveBeenCalledWith('/admin/compendium?new=ingredient-compendium');
       expect(screen.queryByRole('dialog')).toBeNull();
     });
 
@@ -207,7 +208,7 @@ describe('AddIngredientButton', () => {
       draw(ADMIN, [FIXTURE]);
       open();
 
-      expect(push).toHaveBeenCalledWith('/admin/compendium?new');
+      expect(push).toHaveBeenCalledWith('/admin/compendium?new=ingredient-compendium');
     });
 
     it('opens the coven the address names from the main part, a curator off the admin pages', () => {
@@ -300,36 +301,82 @@ describe('AddIngredientButton', () => {
   });
 
   describe('by its address', () => {
-    it('writes ?new onto the address when pressed, over the parameters already there', () => {
+    it('writes ?new=ingredient-coven-<slug> onto the address when pressed, over the parameters already there', () => {
       window.history.replaceState(null, '', '/coven/fixture-coven?query=rose');
       draw(MEMBER, [FIXTURE]);
       open();
 
-      expect(window.location.search).toBe('?query=rose&new');
+      expect(window.location.search).toBe('?query=rose&new=ingredient-coven-fixture-coven');
       expect(screen.getByRole('dialog')).toBeInTheDocument();
     });
 
     it('opens from the address alone, for the default coven and for a named one', () => {
-      window.history.replaceState(null, '', '/coven/fixture-coven?new');
-      const view = draw(MEMBER, [FIXTURE, TESTWORT]);
+      window.history.replaceState(null, '', '/coven/fixture-coven?new=ingredient');
+      let view = draw(MEMBER, [FIXTURE, TESTWORT]);
       expect(target()).toBe('id-fixture-coven');
       view.unmount();
 
-      window.history.replaceState(null, '', '/coven/fixture-coven?new=testwort-circle');
-      draw(MEMBER, [FIXTURE, TESTWORT]);
+      // A bare `?new` is read as `?new=ingredient`, so a link saved before the value
+      // existed still opens the default coven's dialog.
+      window.history.replaceState(null, '', '/coven/fixture-coven?new');
+      view = draw(MEMBER, [FIXTURE, TESTWORT]);
+      expect(target()).toBe('id-fixture-coven');
+      view.unmount();
+
+      window.history.replaceState(
+        null,
+        '',
+        '/coven/fixture-coven?new=ingredient-coven-testwort-circle',
+      );
+      view = draw(MEMBER, [FIXTURE, TESTWORT]);
       expect(target()).toBe('id-testwort-circle');
+      view.unmount();
+
+      // On an admin page too, where a bare `?new` is the page's own.
+      pathname.mockReturnValue('/admin/users');
+      window.history.replaceState(null, '', '/admin/users?new=ingredient-coven-fixture-coven');
+      view = draw(ADMIN, [FIXTURE, TESTWORT]);
+      expect(target()).toBe('id-fixture-coven');
+      view.unmount();
+
+      window.history.replaceState(null, '', '/admin/users?new=ingredient');
+      draw(ADMIN, [FIXTURE, TESTWORT]);
+      expect(target()).toBe('id-fixture-coven');
     });
 
-    it('opens nothing for a coven the viewer cannot write to, or on an admin page', () => {
-      window.history.replaceState(null, '', '/coven/fixture-coven?new=testwort-circle');
+    it('opens nothing for a coven the viewer cannot write to, or for an admin page’s own ?new', () => {
+      window.history.replaceState(
+        null,
+        '',
+        '/coven/fixture-coven?new=ingredient-coven-testwort-circle',
+      );
       const view = draw(MEMBER, [FIXTURE, VIEW_ONLY]);
       expect(screen.queryByRole('dialog')).toBeNull();
       view.unmount();
 
       pathname.mockReturnValue('/admin/users');
       window.history.replaceState(null, '', '/admin/users?new');
-      draw(ADMIN, [FIXTURE]);
+      let admin = draw(ADMIN, [FIXTURE]);
       expect(screen.queryByRole('dialog')).toBeNull();
+      admin.unmount();
+
+      pathname.mockReturnValue('/admin/compendium');
+      window.history.replaceState(null, '', '/admin/compendium?new=ingredient-compendium');
+      admin = draw(ADMIN, [FIXTURE]);
+      expect(screen.queryByRole('dialog')).toBeNull();
+    });
+
+    it('opens nothing for a spell’s ?new, the grimoire’s New Spell, on any page', () => {
+      // The same writer and coven that open the dialog under ?new=ingredient, so only the
+      // value keeps it shut.
+      pathname.mockReturnValue('/coven/fixture-coven/ingredients');
+      for (const value of ['spell', 'spell-fixture-coven']) {
+        window.history.replaceState(null, '', `/coven/fixture-coven/ingredients?new=${value}`);
+        const view = draw(MEMBER, [FIXTURE]);
+        expect(screen.queryByRole('dialog')).toBeNull();
+        expect(window.location.search).toBe(`?new=${value}`);
+        view.unmount();
+      }
     });
 
     it('drops ?new from the address on close, keeping the rest, and the focus returns to the button', async () => {

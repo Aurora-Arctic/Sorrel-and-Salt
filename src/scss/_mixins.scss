@@ -1105,12 +1105,17 @@ $-entry-tablet: calc(#{$shell-tablet-width} + 0.01rem);
   --drawer-shade: #{$drawer-shade-dark};
   --drawer-shade-fade: #{$drawer-shade-fade-dark};
   --drawer-shade-edge: #{$drawer-shade-edge-dark};
+  --burn-char: #{$burn-char-dark};
+  --burn-char-line: #{$burn-char-line-dark};
   --dismiss-ink: #{$dismiss-ink-dark};
   --card-more-ink: #{$card-more-ink-dark};
   --last-edit-ink: color-mix(in srgb, var(--text-muted) 85%, var(--surface-card));
   --notice-button-ink: var(--accent);
   --ornament-screen: 0.3;
   --ornament-multiply: 0;
+  --moon-lit: #{$moon-lit-dark};
+  --moon-shadow: #{$moon-shadow-dark};
+  --moon-mare: #{$moon-mare-dark};
 
   @include semantic-tokens(dark);
   @include font-smoothing-antialiased;
@@ -1146,11 +1151,16 @@ $-entry-tablet: calc(#{$shell-tablet-width} + 0.01rem);
   --drawer-shade: #{$drawer-shade-light};
   --drawer-shade-fade: #{$drawer-shade-fade-light};
   --drawer-shade-edge: #{$drawer-shade-edge-light};
+  --burn-char: #{$burn-char-light};
+  --burn-char-line: #{$burn-char-line-light};
   --dismiss-ink: var(--text-primary);
   --card-more-ink: #{$iron-gall};
   --last-edit-ink: var(--text-muted);
   --ornament-screen: 0;
   --ornament-multiply: 0.4;
+  --moon-lit: #{$moon-lit-light};
+  --moon-shadow: #{$moon-shadow-light};
+  --moon-mare: #{$moon-mare-light};
 
   @include semantic-tokens(light);
 

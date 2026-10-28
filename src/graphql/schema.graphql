@@ -1745,7 +1745,7 @@ type Spell {
   derivedCategories: [Category!]!
   id: ID!
   intent: String
-  jarSize: String
+  jarDescription: String
   moonPhase: String
   note: String
 
@@ -1770,7 +1770,7 @@ type Spell {
 input SpellInput {
   dayOfWeek: String
   intent: String
-  jarSize: String
+  jarDescription: String
   moonPhase: String
   note: String
   sealWaxColor: String
@@ -1943,7 +1943,7 @@ input UpdateSpellInput {
   """
   expectedRevision: Int
   intent: String
-  jarSize: String
+  jarDescription: String
   moonPhase: String
   note: String
   sealWaxColor: String

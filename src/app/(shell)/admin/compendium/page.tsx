@@ -13,6 +13,7 @@ import ReviewMark from '../../../../components/IngredientEntry/review-mark';
 import IngredientSummary from '../../../../components/IngredientEntry/summary';
 import type { ListDialog } from '../../../../lib/types';
 import { single } from '../../../../lib/search-params';
+import { NEW_COMPENDIUM_ENTRY } from '../../../../lib/coven-path';
 import { compendiumFacetCounts } from '../../../../components/CompendiumList/facets';
 import type {
   CompendiumCategoryChoice,
@@ -59,16 +60,17 @@ const ADD_TITLE = 'Add Ingredient';
 const ADD_HEADING: ModalHeading = { destination: 'Compendium', title: ADD_TITLE };
 
 // The global compendium, for an admin to add to, edit and retire (M5.5). A
-// wide modal over the list does the writing, opened by the address — `?new`,
-// or `?edit=<slug>` — so it can be linked to and Back closes it, as on the
-// categories page. The list narrows by name, by forms, deities, zodiac
+// wide modal over the list does the writing, opened by the address —
+// `?new=ingredient-compendium` (or a bare `?new`, an older link's), or
+// `?edit=<slug>` — so it can be linked to and Back closes it, as on the
+// categories page. Any other `?new` is the shell's Add Ingredient over the list. The list narrows by name, by forms, deities, zodiac
 // signs, celestial bodies, elements, toxic and categories, and to the entries citing
 // nothing, the admin's to-do list; each filter offers its choices with how
 // many entries each would list (M12.4).
 export default async function AdminCompendiumPage({ searchParams }: AdminCompendiumPageProps) {
   const session = await requireCuratorSession();
   const params: CompendiumSearchParams = await searchParams;
-  const place = readListPlace(params);
+  const place = readListPlace(params, NEW_COMPENDIUM_ENTRY);
   const { after, before, adding } = place;
   // Every filter, read through the parameter table (CompendiumList/params.ts).
   const filter: CompendiumListFilter = COMPENDIUM_PARAMS.read(params);

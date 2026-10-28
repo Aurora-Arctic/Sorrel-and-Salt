@@ -14,7 +14,7 @@ import type {
 import { graphqlRequest } from '../../lib/graphql-client';
 import { placeServerIssues } from '../../lib/graphql-failure';
 import BusyButton from '../BusyButton';
-import { ConfirmQuestion, useDiscardGuard, useModalHeaderNote, useModalHeaderSlot } from '../Modal';
+import { ConfirmQuestion, useDiscardGuard, useModalHeaderNote } from '../Modal';
 import { PanelChangesContext, usePanelChanges } from './panel-changes';
 import { DiscardAskingContext } from './remove-question';
 import {
@@ -31,7 +31,9 @@ import { NAMELESS_KIND, UNSETTLED_KIND } from '@/modules/ingredients/schema/ingr
 import { CategoryField } from './categories';
 import { NameField, useDuplicateWarning } from './duplicates';
 import { ReferencesField } from './references';
-import { CollapsibleSection } from './section';
+import { CollapsibleSection, FoldAll } from '../CollapsibleSection';
+import type { SectionFold } from '../CollapsibleSection/types';
+import { SectionSummary } from './summaries';
 import { SubstituteForms } from './substitute-forms';
 import { EntryHrefContext } from './substitute-summary';
 import {
@@ -67,7 +69,6 @@ import type {
   RedirectQuestion,
   RestoredVariant,
   SavedIngredient,
-  SectionFold,
   SectionKey,
 } from './types';
 import {
@@ -333,21 +334,17 @@ const IngredientForm = ({
   // over itself, as Undo and Redo are then, the owner's call: a control that
   // cannot be used reads as one, rather than faded with the form behind.
   const anyOpen = open.size > 0;
-  const headerSlot = useModalHeaderSlot();
   const headerNote = useModalHeaderNote();
   const compendiumNotice = <Notice kind="plain">{COMPENDIUM_EDIT_NOTICE}</Notice>;
   const foldAll = (
-    <button
-      type="button"
-      className="btn btn--small btn--quiet"
+    <FoldAll
+      anyOpen={anyOpen}
       disabled={discard.asking || deleting || question !== null}
-      onClick={() => {
+      onToggle={() => {
         setOpen(new Set(anyOpen ? [] : SECTION_KEYS));
         variantFolds.setAll(!anyOpen, getValues('variants').length);
       }}
-    >
-      {anyOpen ? 'Close All' : 'Open All'}
-    </button>
+    />
   );
 
   // Undo and redo (M12.9, adopted here by M12.10), off while a save is in
@@ -631,15 +628,15 @@ const IngredientForm = ({
               opens or closes them all sits beside the modal's title, the
               owner's call (MB.115); outside a modal, at the end of the line
               above the first section. */}
-                  <div className="ingredient-form__folds">
-                    {headerSlot ? (
-                      createPortal(foldAll, headerSlot)
-                    ) : (
-                      <div className="ingredient-form__fold-all">{foldAll}</div>
-                    )}
+                  <div className="collapsible-sections">
+                    {foldAll}
                     {/* After Open All, so the header reads Open All, Undo, Redo. */}
                     <FormHistoryButtons />
-                    <CollapsibleSection title="Identity" section="identity" fold={fold('identity')}>
+                    <CollapsibleSection
+                      title="Identity"
+                      summary={<SectionSummary section="identity" />}
+                      fold={fold('identity')}
+                    >
                       {/* Warns beneath it of the entries its name resembles (story 16),
             and a save stops on the warning until it is answered. */}
                       <NameField
@@ -711,7 +708,7 @@ const IngredientForm = ({
                     </CollapsibleSection>
                     <CollapsibleSection
                       title="Details & Care"
-                      section="details"
+                      summary={<SectionSummary section="details" />}
                       fold={fold('details')}
                     >
                       <TextField<IngredientFormValues>
@@ -733,7 +730,7 @@ const IngredientForm = ({
                     </CollapsibleSection>
                     <CollapsibleSection
                       title="Correspondences"
-                      section="correspondences"
+                      summary={<SectionSummary section="correspondences" />}
                       fold={fold('correspondences')}
                     >
                       {/* Several at once, in the order chosen (MB.159); none chosen is
@@ -795,7 +792,7 @@ const IngredientForm = ({
                     </CollapsibleSection>
                     <CollapsibleSection
                       title="Relations"
-                      section="relations"
+                      summary={<SectionSummary section="relations" />}
                       fold={fold('relations')}
                     >
                       {/* First in Relations, on the owner's call at MB.115 (MB.126 had put it
@@ -817,7 +814,11 @@ const IngredientForm = ({
                       {/* Which form of each linked ingredient, when it comes in several (MB.215). */}
                       <SubstituteForms name="substitutes" />
                     </CollapsibleSection>
-                    <CollapsibleSection title="Sources" section="sources" fold={fold('sources')}>
+                    <CollapsibleSection
+                      title="Sources"
+                      summary={<SectionSummary section="sources" />}
+                      fold={fold('sources')}
+                    >
                       {/* Last, as a bibliography is (MB.154): the sources picked, each
             with its locator, and a panel for a new one. */}
                       <ReferencesField workspaceId={workspaceId} />

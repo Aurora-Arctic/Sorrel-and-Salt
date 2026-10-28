@@ -1,7 +1,9 @@
 import { type ReactElement, type ReactNode, useId } from 'react';
 import { ChevronIcon } from '../Combobox/icons';
-import { SectionSummary } from './summaries';
 import type { CollapsibleSectionProps, FoldFlagProps, FoldIds, FoldIdsOptions } from './types';
+import './index.scss';
+
+export { FoldAll } from './fold-all';
 
 /**
  * What a folding block, a section or a variant's card, names its parts by:
@@ -33,9 +35,10 @@ export function FoldFlag({ id, className, shown }: FoldFlagProps): ReactNode {
 }
 
 /**
- * A section of the form as a disclosure (MB.115, the owner's calls): one of
- * the ingredient's own six, under an `h3`, or one of an open variant's five,
- * a level beneath the Variants heading, under an `h4`. Its heading's text is
+ * A section of a form as a disclosure (MB.115, the owner's calls), under an
+ * `h3`, or an `h4` for a section inside one: the ingredient form's six and
+ * an open variant's five, and the spell builder's four (M10.12), each run
+ * wrapped in `.collapsible-sections` with a `FoldAll` (./fold-all.tsx). Its heading's text is
  * a button that opens and shuts it, with a chevron at the end of the line;
  * beneath the heading, while closed, one muted line of what has been entered,
  * and while it holds an error, a flag, open or closed. The button sits inside
@@ -44,11 +47,10 @@ export function FoldFlag({ id, className, shown }: FoldFlagProps): ReactNode {
  * and whose own toggle would fight the form opening a section on Save. The
  * fields stay in the page while closed, hidden, so nothing typed in them is
  * lost, and an error can still be set on them
- * (claude-docs/components/ingredient-form.md, "Sections").
+ * (claude-docs/components/collapsible-section.md).
  */
 export function CollapsibleSection({
   title,
-  section,
   summary,
   fold: { open, invalid, onToggle },
   level = 3,
@@ -58,7 +60,7 @@ export function CollapsibleSection({
 }: CollapsibleSectionProps): ReactElement {
   // Flagged open or closed: the heading stays in view either way.
   const { summaryId, flagId, fieldsId, className, describedBy } = useFoldIds({
-    block: 'ingredient-form__fold',
+    block: 'collapsible-section',
     open,
     invalid,
     flagged: invalid,
@@ -66,13 +68,13 @@ export function CollapsibleSection({
   const Heading = level === 4 ? 'h4' : 'h3';
   return (
     <section className={className}>
-      <div className="ingredient-form__fold-head">
-        <div className="ingredient-form__fold-line">
-          <Heading className="ingredient-form__section-title">
+      <div className="collapsible-section__head">
+        <div className="collapsible-section__line">
+          <Heading className="collapsible-section__title">
             <button
               id={titleId}
               type="button"
-              className="ingredient-form__fold-toggle"
+              className="collapsible-section__toggle"
               aria-expanded={open}
               aria-controls={fieldsId}
               aria-describedby={describedBy}
@@ -83,16 +85,16 @@ export function CollapsibleSection({
           </Heading>
           {info}
           {/* Drawn only: the whole line is the button's, through its overlay. */}
-          <span className="ingredient-form__fold-chevron" aria-hidden="true">
+          <span className="collapsible-section__chevron" aria-hidden="true">
             <ChevronIcon />
           </span>
         </div>
-        <span id={summaryId} className="ingredient-form__fold-summary" hidden={open}>
-          {section === undefined ? summary : <SectionSummary section={section} />}
+        <span id={summaryId} className="collapsible-section__summary" hidden={open}>
+          {summary}
         </span>
-        <FoldFlag id={flagId} className="ingredient-form__fold-flag" shown={invalid} />
+        <FoldFlag id={flagId} className="collapsible-section__flag" shown={invalid} />
       </div>
-      <div id={fieldsId} className="ingredient-form__fold-fields" hidden={!open}>
+      <div id={fieldsId} className="collapsible-section__fields" hidden={!open}>
         {children}
       </div>
     </section>

@@ -51,3 +51,57 @@ the card has no drawer behind it, since nothing opens from it.
 The layout is the Foundations specimen (`.specimen` in `_primitives.scss`). `index.scss`
 adds IngredientCard's surface and padding, and sets the title at h3's size, as an
 ingredient card's name. Tokens only.
+
+## The smouldering edge
+
+On hover, or with focus inside the card, the card's bottom edge burns, as parchment
+smouldering from its bottom-right corner (found in the owner's review of M10.11, picked
+from a set of hover options). The card's face also takes IngredientCard's hover tint and
+lifted shadow, and nothing else: nothing moves the card.
+
+What the effect is, in `_smoulder.scss`:
+
+- **A true hole.** The burnt part is gone, through the card's face and its shadow both, so
+  the page itself shows through it. The card's face and shadow are not on the `article` but
+  on a layer of their own, `.spell-card__face`: the face is the wide spread shadow of a
+  hole-shaped box, so it is everything but the hole, and the card's shadow is a
+  `drop-shadow()` of that, so it follows the burnt edge and shrinks with the burn instead of
+  staying a rectangle. The hole runs along the bottom edge, hanging 0.5rem past the card and
+  1rem deep in all, so along the bottom it stays inside the card's padding. At the corner it
+  bites deeper and curves about 1.25rem up the right edge (an elliptical corner radius,
+  `$burn-corner-radius`), where no text runs.
+- **An ember line, a char rim and a char line.** A thin bright line (`$ochre-bright`,
+  `$wax-warm`) runs round the burn front, with a dark char rim (`--burn-char`) outside it,
+  and outside that a thin soft near-black line (`--burn-char-line`) where the paper is
+  charred but not yet alight. Both char colours are tokens per theme, taken from the
+  theme's darkest ink, never pure black. One SVG filter, `#spell-card-burn` from
+  `SpellCardFilters`, tears the hole in the face and the rim alike, so their ragged edges
+  meet exactly.
+- **One glow.** A single soft warm glow sits behind the face: it shows through the hole and
+  spills onto the table below the card as one continuous layer, so there is no dark row
+  between the glow inside the hole and the glow off the card. It runs 1.5rem past the ember
+  front, at opacity 0.4 under a 1.25rem blur, kept below the ember line's brightness (the
+  owner, 2026-10-28).
+- **Timing.** The burn creeps along the edge for 1.3s, and the glow grows with it. On
+  leaving, the burn fades while the hole, the face's shadow and the glow shrink back to the
+  corner, so a quick return burns on from where they had shrunk to.
+- **Reduced motion** shows the finished burn at once, still. **Touch** gets no hover at all:
+  the rules sit inside `@media (hover: hover)`, so a tap does not leave a card burning.
+
+The layers are three `aria-hidden` spans in the `article`, so the card's name is still its
+title alone: the glow and the face before the content, and the burn's rim after it. They
+stack by the order of the markup, with `position: relative` on each child and no `z-index`
+anywhere. A `z-index` on a layer behind the card would need a stacking context round the
+card, and one on the card itself would trap the category chips' tips beneath the next card.
+
+Nothing transforms the card or any ancestor of it: a transformed ancestor becomes the
+containing block of the category chips' `position: fixed` tip bubbles.
+
+Light theme: the page is `$parchment` (#efe9da) and the card `$parchment-raised`
+(#f9f5ea), lifted to #fcfaf4 on hover, a contrast of 1.11 and 1.16 against the page. That
+difference is the app's own tokens. The burnt part is the page itself. Below the hole, the
+warm glow on parchment, together with the card's shadow, is slightly darker than the page,
+as any warm tint on parchment is. On the hovered card the intent measures 6.95:1 (light)
+and 7.99:1 (dark), the title 15.56:1 and 12.20:1.
+
+The Workshop's `Hover` story holds the effect lit on one card and leaves a second to hover.

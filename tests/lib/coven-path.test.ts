@@ -33,8 +33,15 @@ describe('pathInCoven', () => {
 });
 
 describe('isReservedCovenSlug', () => {
-  it('reserves the create page’s segment and nothing else', () => {
+  it('reserves the create page’s segment and the values of `?new` that open a dialog, and nothing else', () => {
     expect(isReservedCovenSlug('new')).toBe(true);
+    // The values of `?new` that open a dialog rather than name a coven (M10.12).
+    expect(isReservedCovenSlug('spell')).toBe(true);
+    expect(isReservedCovenSlug('ingredient')).toBe(true);
+    // A value naming a coven is a prefix and then the whole slug, so a slug may start
+    // with either word and still read one way.
+    expect(isReservedCovenSlug('spell-circle')).toBe(false);
+    expect(isReservedCovenSlug('ingredient-compendium')).toBe(false);
     expect(isReservedCovenSlug('new-2')).toBe(false);
     expect(isReservedCovenSlug('fixture-coven')).toBe(false);
   });
@@ -103,5 +110,9 @@ describe('covenTarget', () => {
     expect(covenTarget('/coven/a/grimoire')).toEqual(list);
     expect(covenTarget('/coven/a/grimoire/drafts')).toEqual(list);
     expect(covenTarget('/coven/a/grimoire/some-id')).toEqual({ region: 'coven', shape: 'page' });
+  });
+
+  it('draws the new-spell page as a form', () => {
+    expect(covenTarget('/coven/a/grimoire/new')).toEqual({ region: 'coven', shape: 'form' });
   });
 });

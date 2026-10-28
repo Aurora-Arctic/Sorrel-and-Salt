@@ -25,7 +25,7 @@ beforeEach(async () => {
   await sql`truncate spells, ingredients cascade`;
 });
 
-const SPELL = `id title status visibility revision jarSize
+const SPELL = `id title status visibility revision jarDescription
   steps { position body name form ingredient { id } variant { form } }`;
 
 const CREATE = `mutation ($workspaceId: ID!, $input: SpellInput!) {
@@ -46,7 +46,7 @@ type SpellNode = {
   status: string;
   visibility: string;
   revision: number;
-  jarSize: string | null;
+  jarDescription: string | null;
   steps: {
     position: number;
     body: string | null;
@@ -81,7 +81,7 @@ describe('createSpell', () => {
       input: {
         title: 'Testing Jar',
         status: 'complete',
-        jarSize: 'Small',
+        jarDescription: 'Small',
         steps: [{ body: 'Stir three times.' }, root, { name: 'River Water', form: 'Bottled' }],
       },
     });
@@ -90,7 +90,7 @@ describe('createSpell', () => {
     expect(result.data!.createSpell).toMatchObject({
       title: 'Testing Jar',
       status: 'complete',
-      jarSize: 'Small',
+      jarDescription: 'Small',
       revision: 1,
       steps: [
         { position: 1, body: 'Stir three times.', ingredient: null },

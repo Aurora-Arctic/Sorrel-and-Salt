@@ -20,7 +20,6 @@ compendium page wrap it rather than containing their own form.
 | `reference-panel.tsx`    | The new reference panel (MB.154): `createReference`, each kind's fields, `toReferenceInput`, and its own react-hook-form                                                                                                                                             |
 | `variants.tsx`           | The Variants section (MB.221): `VariantsField`, the New Form box that adds a form, each variant's summary line and the fields that form adds, `variantSummary`, and `useVariantFolds`, which of each variant's sections are open                                     |
 | `copy.tsx`               | A variant's Copy From Ingredient (MB.115): `CopyFromIngredient`, and what each field takes from the ingredient's                                                                                                                                                     |
-| `section.tsx`            | `CollapsibleSection`, a section as a disclosure: one of the ingredient's six at `h3`, or one of an open variant's five at `h4`                                                                                                                                       |
 | `summaries.tsx`          | `SectionSummary`, the one line a closed section reads, each section's watching its own fields, and `variantSectionSummary`, a variant's section's line                                                                                                               |
 | `icons.tsx`              | The rows' icons: `EditIcon` (IconTip's pencil, re-exported), `RemoveIcon`, and Edit Source's `SourceEditIcon`                                                                                                                                                        |
 | `substitute-forms.tsx`   | `SubstituteForms`, the ingredient's own substitute list's second pickers: which form of each linked ingredient a substitute names                                                                                                                                    |
@@ -266,21 +265,12 @@ field shows none: the browser draws its own format there.
 
 **The ingredient's six sections fold** (MB.115, the owner's calls on the
 collapsible-sections proposal), so an edit reads at a glance and opens only
-where the change is:
+where the change is. Each is a `CollapsibleSection` at `h3`
+([`collapsible-section.md`](collapsible-section.md)): its heading is the
+toggle, a muted line says what a closed one holds, and its fields stay in the
+page while closed. The Variants section's ⓘ is its `info`.
 
-- **The heading is the toggle.** Its text is a button inside the `h3`, with
-  `aria-expanded` and `aria-controls` naming the section's fields, and a
-  chevron at the end of the line, down while closed and turned over while
-  open, at once, so there is no motion to reduce. The button's `::after`
-  stretches over the whole heading block, so a press on the summary or the
-  chevron opens it too, while the button alone takes the keyboard's focus.
-  The Variants section's ⓘ sits beside its heading, lifted over that
-  overlay, since a button cannot hold another. Not `<details>`/`<summary>`:
-  a `<summary>` is a button itself, so a heading inside it stops being one a
-  screen reader moves by, and its own toggle would fight the form opening a
-  section on Save.
-- **Closed, a muted line says what it holds**, beneath the heading, cut with
-  an ellipsis, and describes the button. `SectionSummary` (`summaries.tsx`)
+- **Closed, a muted line says what it holds.** `SectionSummary` (`summaries.tsx`)
   draws it, each section's watching its own fields, so a keystroke redraws one
   line, not the form. A list of one is named and a longer one counted
   ("Mercury · 2 colours"); categories are always counted; the forms are
@@ -304,8 +294,6 @@ where the change is:
   its summary lines, the view the sections are for, and a new entry, all
   open, offers Close All at once.
 - **Validation runs on leaving a field, and on each change once a field is in error** (`mode: 'onTouched'`, `reValidateMode: 'onChange'`; story 31, M8.16), as well as on submit; but an error is _shown_ only after a submit, or on a field the person has both left (`touchedFields`) and edited at some point since the form started (`useEditedFields`; typing a name and deleting it still counts, which `dirtyFields` would not, and `clear()` runs beside each `reset`). The rule lives once, in `errorShown` beside `useField` (`src/components/Field/use-field.ts`), and the section flags read it too, so a section is never flagged for an error no field in it draws. So a required field typed into and left empty is flagged as the person moves on, while one merely passed through, or flagged only by another field's change (a classification pick raising the formal-name rule), stays quiet until it is edited and left itself or a submit. The error is the same element the submit sets, linked by `aria-describedby`. The check is asynchronous, so a test that moves the focus settles before it ends. Both tiers get it, the form being shared.
-- **The fields stay in the page while closed**, hidden by the `hidden`
-  attribute, so nothing typed is lost and an error can still be set on them.
 - **Save opens every section holding an error**, the schema's or the
   server's, and the focus moves to the first field marked invalid as before.
   `sectionsWithErrors` (`values.ts`) finds them by each error's first key, a
@@ -1792,14 +1780,9 @@ legend and its box a step further apart than a single field's label and
 control. The duplicate warning's region cancels the field's gap while it is
 empty, since a live region stays in the page, and its notice puts the gap
 back, with a step more padding beneath Create Anyway than the notice's own.
-The ingredient's sections sit flush, parted by hairlines, the muted ink at
-45% (MB.115): not on the card ground, since the variant cards and reference
-rows inside already sit on it, and a card in a card reads as nesting the form
-does not have. Each heading block is `space(3)` deep above and below, its
-`h3` in the display face at 1.25rem, a step under `h4`, the summary in the
-muted ink at the caption size, weight 300, and the error flag in the error
-red; open, its fields follow at the form's gap, `space(5)` short of the
-next hairline. A variant's sections fold the same way, flush between the
+The ingredient's sections are `CollapsibleSection`'s own look, flush between
+hairlines ([`collapsible-section.md`](collapsible-section.md), "Styling").
+A variant's sections fold the same way, flush between the
 same hairlines inside the card, a step closer for the narrower card: each
 heading block `space(2)` deep above and below, its `h4` at 1.125rem, the
 fields `space(4)` apart, `space(3)` short of the next hairline, and Done

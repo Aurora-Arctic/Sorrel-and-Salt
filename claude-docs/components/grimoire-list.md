@@ -24,7 +24,10 @@ match comes first and that order breaks a tie (M10.9's `grimoire` query).
 
 The route group `src/app/(shell)/coven/[slug]/grimoire/(list)/` holds them. Its `layout.tsx`
 runs the membership guard (`requireCovenMembership`, which calls `requireSession()`) and
-draws the tab row; `page.tsx` and `drafts/page.tsx` set their titles and each call
+draws the tab row, with New Spell at the heading's end for an owner or a member, the roles that
+may create a spell, opening the builder in a wide modal over the open tab at `?new=spell`, the
+tab, filter and page kept (M10.12; [`spell-builder.md`](spell-builder.md)); a viewer
+sees no New Spell; `page.tsx` and `drafts/page.tsx` set their titles and each call
 `grimoireTab()` (`grimoire-tab.tsx`) with its status. `grimoireTab` is an async function the
 page returns, rather than a component, so a page test can await the page whole. It reads the
 address through `GRIMOIRE_PARAMS`, the page through `readNumberedPage` at `CARD_PAGE_SIZE`
@@ -85,7 +88,7 @@ variables, so a search and its categories live in the address and combine.
     already names the filter, so this says only what to do.
 
   Which one is the search sentence's own test (`hasFilter`), so the two never disagree.
-  Neither offers a first spell: the builder is M10.12's.
+  Neither offers a first spell: New Spell at the heading does.
 
 - **No link yet.** A card does not open its spell until MB.6 builds the spell's page and
   adds the link.
@@ -99,6 +102,8 @@ variables, so a search and its categories live in the address and combine.
 ## Styling
 
 Tokens only, before the section's design review. `index.scss` sets the two empty regions as the coven's empty cupboard is (`CovenCards/index.scss`): the empty tab's sentence centred and larger than body copy, the no-match hint in muted body copy. The cards are `SpellCard`'s own.
+
+One thing in the list exists for the cards' smouldering edge ([spell-card.md](spell-card.md), "The smouldering edge"): **one `SpellCardFilters` before the list.** It holds the SVG filter the burn front uses, by id. An id must be unique on the page, so the list renders it once rather than each card. The list needs no stacking context of its own: the card's layers stack by the order of the markup, with no `z-index`.
 
 ## Testing
 

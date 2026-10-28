@@ -23,13 +23,40 @@ export const COVEN_LANDING_PATH = `/${COVEN}`;
 /** The create-workspace page's address. */
 export const NEW_COVEN_PATH = `/${COVEN}/${NEW}`;
 
+/** The value of `?new` that opens the current grimoire's New Spell (M10.12). */
+export const NEW_SPELL = 'spell';
+
+/** The value of `?new` that opens the default coven's Add Ingredient (M10.12). */
+export const NEW_INGREDIENT = 'ingredient';
+
 /**
- * Whether a slug is an address the router already answers, and so one no
- * workspace may take. The creation service asks before writing a slug, the
- * one place a workspace slug is minted.
+ * The value of `?new` that opens the compendium's New Entry on `/admin/compendium`. A bare
+ * `?new` there still reads as it, so a link saved before the value existed keeps working.
+ */
+export const NEW_COMPENDIUM_ENTRY = 'ingredient-compendium';
+
+/** `?new=ingredient-coven-<slug>` opens that coven's Add Ingredient, on any page in the shell. */
+export const NEW_COVEN_INGREDIENT_PREFIX = 'ingredient-coven-';
+
+/** `?new=spell-<slug>` opens that coven's New Spell, over its grimoire. */
+export const NEW_SPELL_PREFIX = 'spell-';
+
+/**
+ * The values of `?new` that are a word alone, reserved as slugs. Each value naming a coven
+ * starts with a fixed prefix and ends with the whole slug, so the prefixes need no
+ * reservation: `spell-` or `ingredient-coven-` followed by any slug reads one way. The two
+ * words stay reserved so that no coven's address reads as a dialog's word
+ * (claude-docs/design-decisions/m10.12-spell-builder-modal.md).
+ */
+const DIALOG_VALUES = new Set([NEW_SPELL, NEW_INGREDIENT]);
+
+/**
+ * Whether a slug is an address the router already answers, or a value of
+ * `?new` that opens a dialog, and so one no workspace may take. The creation
+ * service asks before writing a slug, the one place a workspace slug is minted.
  */
 export function isReservedCovenSlug(slug: string): boolean {
-  return slug === NEW;
+  return slug === NEW || DIALOG_VALUES.has(slug);
 }
 
 /** The workspace slug an address is in, or `null` outside any workspace, the create page included. */
@@ -113,6 +140,9 @@ export function covenTarget(pathname: string): NavigationTarget {
     return { region: 'coven', shape: 'page', frame: 'with-nav', head: 'eyebrow' };
   if (slug && section === 'ingredients' && beneath)
     return { region: 'coven', shape: 'page', frame: 'entry', head: 'eyebrow' };
+  // The new-spell page is the spell builder, a form (M10.12).
+  if (slug && section === 'grimoire' && beneath === 'new')
+    return { region: 'coven', shape: 'form' };
   // Drafts is the grimoire's second tab, its list too; anything else beneath it is a spell's own page.
   if (slug && section === 'grimoire' && beneath && beneath !== 'drafts')
     return { region: 'coven', shape: 'page' };

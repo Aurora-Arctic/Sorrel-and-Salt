@@ -948,7 +948,7 @@ const ENTRY = {
  * open variant's card, it opens that variant's section of the name.
  */
 function openSection(title: string, root: ParentNode = document): void {
-  [...root.querySelectorAll<HTMLButtonElement>('.ingredient-form__fold-toggle')]
+  [...root.querySelectorAll<HTMLButtonElement>('.collapsible-section__toggle')]
     .find((button) => button.textContent === title && button.ariaExpanded === 'false')
     ?.click();
 }

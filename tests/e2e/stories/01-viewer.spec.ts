@@ -155,18 +155,18 @@ test.fixme(
     });
 
     await test.step('the viewer is refused at every write address', async () => {
-      // The people pages answer a viewer as a stranger (tests/e2e/coven.spec.ts),
-      // and so does the spell builder's address (M10.12): a page the viewer
-      // could only write through. There is no edit address for an ingredient
-      // row: M9.9 edits it in place and M8.17's modal opens from the row.
-      for (const path of [
-        `/coven/${coven.slug}/invitations`,
-        `/coven/${coven.slug}/members`,
-        `/coven/${coven.slug}/grimoire/new`,
-      ]) {
+      // The people pages answer a viewer as a stranger (tests/e2e/coven.spec.ts).
+      // There is no edit address for an ingredient row: M9.9 edits it in place
+      // and M8.17's modal opens from the row.
+      for (const path of [`/coven/${coven.slug}/invitations`, `/coven/${coven.slug}/members`]) {
         const response = await page.goto(path);
         expect(response?.status(), path).toBe(404);
       }
+      // The spell builder is a dialog over the grimoire (M10.12): its address
+      // shows a viewer the grimoire, and no dialog.
+      await page.goto(`/coven/${coven.slug}/grimoire?new=spell-${coven.slug}`);
+      await expect(page.getByRole('heading', { name: 'Grimoire' })).toBeVisible();
+      await expect(page.getByRole('dialog')).toHaveCount(0);
     });
 
     await test.step('every write sent straight to /api/graphql is refused, with nothing changed', async () => {

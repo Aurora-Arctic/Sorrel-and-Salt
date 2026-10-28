@@ -190,6 +190,25 @@ refreshes, reports a refusal), and `tests/e2e/coven.spec.ts` (`@story-5`: the
 tab, the list, Invite on both tabs, a revoke, a member's missing tab and 404,
 the axe scans, the open dialog included).
 
+## The spell builder's dialog (M10.12)
+
+The spell builder has no page of its own: it opens in a modal over a Grimoire
+tab ([`components/spell-builder.md`](../components/spell-builder.md)), so it
+sits behind the tab's coven guard. The tab (`grimoire/(list)/grimoire-tab.tsx`)
+opens it empty under `?new=spell` only when
+`rolePermits(role, { spell: ['create'] })`, and reads a saved spell under
+`?edit=<id>` only when `rolePermits(role, { spell: ['update'] })`, so a
+viewer, who writes nothing, gets the tab with no dialog and no spell is read
+for them. Hiding the dialog is a convenience: `createSpell` and `updateSpell`
+check the permission again, so a viewer is refused by the API too. New Spell,
+drawn by `grimoire/(list)/layout.tsx` under the same `rolePermits` check, is
+never shown to a viewer.
+
+Tests: `tests/app/(shell)/coven/[slug]/grimoire/(list)/page.test.tsx` (an
+owner and a member get the dialog under either address, a viewer gets
+neither and nothing is read; an owner and a member get New Spell, a viewer
+does not).
+
 ## The create page (M9.16)
 
 `/coven/new` is where someone holding `canCreateWorkspace` names a new

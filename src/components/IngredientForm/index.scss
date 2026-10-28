@@ -35,139 +35,6 @@ $skeleton-fade: 300ms;
   }
 }
 
-// The ingredient's six sections, each a disclosure (MB.115, the owner's
-// calls): flush, parted by hairlines rather than set on the card ground,
-// since the variant cards and reference rows inside already sit on it and a
-// card in a card reads as nesting the form does not have. Under them all,
-// the one control that opens or closes every section, at the line's end.
-.ingredient-form .ingredient-form__folds {
-  display: flex;
-  flex-direction: column;
-  min-width: 0;
-}
-
-.ingredient-form__fold-all {
-  display: flex;
-  justify-content: flex-end;
-  margin-bottom: space(1);
-}
-
-// Nested, to outweigh layout-base's bare `body section`, whose gap and
-// margins would otherwise set the spacing in the app. The hairline is the
-// muted ink thinned, so it parts the sections without boxing them.
-.ingredient-form .ingredient-form__fold {
-  display: flex;
-  flex-direction: column;
-  gap: 0;
-  min-width: 0;
-  margin: 0;
-  border-top: 1px solid $hairline;
-
-  &:last-child {
-    border-bottom: 1px solid $hairline;
-  }
-
-  // A section holding an error takes the field's error edge along its top.
-  &.is-invalid {
-    border-top-color: $secondary;
-  }
-}
-
-// The heading, its summary and its flag: the whole block one target, the
-// toggle's `::after` stretched over it, so a press on the summary or the
-// chevron opens the section too, while the button alone is what a keyboard
-// reaches and what is announced.
-.ingredient-form__fold-head {
-  position: relative;
-  display: flex;
-  flex-direction: column;
-  gap: space(1);
-  padding-block: space(3);
-}
-
-.ingredient-form__fold-line {
-  display: flex;
-  align-items: center;
-  gap: space(1);
-
-  // An ⓘ beside the heading, lifted over the toggle's overlay so it is its own target.
-  .info-tip {
-    position: relative;
-    z-index: 1;
-  }
-}
-
-.ingredient-form__fold-toggle {
-  @include button-reset;
-
-  text-align: start;
-
-  &::after {
-    content: '';
-    position: absolute;
-    inset: 0;
-  }
-
-  &:focus-visible {
-    outline: none;
-  }
-
-  &:focus-visible::after {
-    @include focus-ring;
-  }
-}
-
-// The chevron at the line's end, down while closed and turned over while
-// open, as the admin menu's is: at once, so there is no motion to reduce.
-.ingredient-form__fold-chevron {
-  // Pointed at, the chevron darkens and grows a quarter (the owner's call),
-  // eased with the flip; `scale` composes with the open state's `transform`.
-  @include disclosure-chevron('.is-open > .ingredient-form__fold-head', color, scale);
-
-  margin-inline-start: auto;
-
-  .ingredient-form__fold-head:hover & {
-    color: $text-primary;
-    scale: 1.25;
-  }
-}
-
-// What has been entered, one line in the muted ink at the caption size, cut
-// with an ellipsis when it runs past the column.
-.ingredient-form__fold-summary {
-  display: block;
-  color: $text-muted;
-  font-size: type-size('caption');
-  font-weight: 300;
-
-  @include truncate;
-
-  &[hidden] {
-    display: none;
-  }
-}
-
-// An error inside, open or closed, as a variant card flags one.
-.ingredient-form__fold-flag {
-  color: $secondary;
-  font-size: type-size('caption');
-}
-
-// Open, its fields beneath the heading at the form's own gap, as far from the
-// next hairline as the heading is from its own.
-.ingredient-form .ingredient-form__fold-fields {
-  display: flex;
-  flex-direction: column;
-  gap: space(5);
-  min-width: 0;
-  padding-block: space(1) space(5);
-
-  // Closed is the attribute's, which the display above would otherwise undo.
-  &[hidden] {
-    display: none;
-  }
-}
-
 // A switch here, Toxic on the ingredient and on each variant, stands at the
 // start of its column, its label and hint above it at the start too, as the
 // fields above it do (the owner's call, 2026-10-16). Not the primitive's
@@ -179,16 +46,6 @@ $skeleton-fade: 300ms;
   .field__label {
     text-align: start;
   }
-}
-
-// The section's heading, at a size off the type scale as a heading's may be:
-// the display face, a step under h4, so it heads its fields without
-// outweighing the dialog's title. Nested, to outweigh typography-base's
-// `body h3` and `body h4`, whose margins would add to the line's padding.
-.ingredient-form .ingredient-form__section-title {
-  margin: 0;
-  font-size: 1.25rem;
-  line-height: 1.2;
 }
 
 // A list's box and its Add button, one line; the box grows with its entries.
@@ -912,16 +769,16 @@ $panel-head-gap: space(3);
 // under `h4`s a step smaller, and each spacing a step closer, for the
 // narrower card.
 .ingredient-form .ingredient-form__variant-fields {
-  .ingredient-form__fold-head {
+  .collapsible-section__head {
     padding-block: space(2);
   }
 
-  .ingredient-form__fold-fields {
+  .collapsible-section__fields {
     gap: space(4);
     padding-block: space(1) space(3);
   }
 
-  .ingredient-form__section-title {
+  .collapsible-section__title {
     font-size: 1.125rem;
   }
 }

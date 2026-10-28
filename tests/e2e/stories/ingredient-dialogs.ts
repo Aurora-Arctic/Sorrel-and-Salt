@@ -15,7 +15,7 @@ import { expect } from '../fixtures';
  * Found inside the banner, the bar's `header`, so the empty list's own Add
  * Ingredient (M9.11) is never taken for it. Its main part, a button that
  * opens a coven's dialog or, for the compendium, goes to the admin
- * Compendium's `?new` (M8.16); a link is matched too, so "none" means neither.
+ * Compendium's `?new=ingredient-compendium` (M8.16); a link is matched too, so "none" means neither.
  */
 export function shellAddIngredient(page: Page): Locator {
   const banner = page.getByRole('banner');

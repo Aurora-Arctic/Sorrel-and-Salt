@@ -25,7 +25,9 @@ it directly.
 - **One `h1` per page, and this is it** on every page that renders it.
 - **A `lead` stays out of the heading.** With one, the `h1` and the lead share a `.page-header__title` row, so the heading reads as the title alone and the lead keeps its own name; the row takes the place the bare `h1` takes in the header’s layout.
 - **The action is the caller's element**: an Add link to the page's `?new`
-  address (the admin lists' `AddAction`, which opens its modal at once), or a client component of its own. A page with no action leaves it
+  address (the admin lists' `AddAction`, which opens its modal at once, and
+  the Grimoire's New Spell at `?new=spell`, M10.12), or a client component
+  of its own. A page with no action leaves it
   out and keeps the same heading.
 - **Server-safe.** It has no client directive and no hook, so a server page
   renders it directly.

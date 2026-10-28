@@ -3,6 +3,7 @@ import { cache } from 'react';
 import { readCategories } from '@/app/compendium-reads';
 import type { GrimoireSpell } from '@/components/GrimoireList/types';
 import type { CardCategory } from '@/components/IngredientCard/types';
+import { Forbidden, NotFound } from '@/lib/errors';
 import { readNumberedPage } from '@/lib/numbered-page';
 import { CARD_PAGE_SIZE } from '@/lib/pagination';
 import { requireSession } from '@/lib/request-session';
@@ -11,9 +12,11 @@ import {
   countGrimoire,
   countGrimoireCategories,
   listGrimoire,
+  readSpell,
 } from '@/modules/grimoire';
 import type { SpellStatus } from '@/modules/grimoire';
 import { displayNamesOf } from '@/modules/identity';
+import type { SpellBuilderSpell } from '@/components/SpellBuilder/types';
 
 // The read a grimoire tab makes (M10.11), twin of the Ingredients page's `reads.ts`. The
 // spells are the coven's, so the read goes through the services for the signed-in
@@ -79,6 +82,39 @@ export const readGrimoire = cache(
     return { ...page, spells };
   },
 );
+
+/**
+ * The spell `?edit=<id>` opens the builder's dialog on (M10.12), read as the signed-in
+ * member, with the fields the builder edits. Nothing for a spell the service will not give
+ * this member, a private one of another member's included, so the tab opens no dialog, as
+ * the Ingredients page's `readEditedEntry` does. Any other failure of the read is let
+ * through rather than called no spell.
+ */
+export async function readEditedSpell(
+  workspaceId: string,
+  id: string,
+): Promise<SpellBuilderSpell | undefined> {
+  const session = await requireSession();
+  try {
+    const spell = await readSpell(session, workspaceId, id);
+    const { revision, title, intent, jarDescription, sealWaxColor, moonPhase, dayOfWeek, note } =
+      spell;
+    return {
+      id,
+      revision,
+      title,
+      intent,
+      jarDescription,
+      sealWaxColor,
+      moonPhase,
+      dayOfWeek,
+      note,
+    };
+  } catch (error) {
+    if (error instanceof NotFound || error instanceof Forbidden) return undefined;
+    throw error;
+  }
+}
 
 /**
  * How many spells of one status each category holds under the filter, as a map from the

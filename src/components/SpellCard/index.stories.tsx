@@ -1,6 +1,7 @@
 import type { Meta, StoryObj } from '@storybook/nextjs-vite';
 import { StatesGrid } from '../../../.storybook/states-grid';
-import SpellCard from '.';
+import SpellCard, { SpellCardFilters } from '.';
+import './index.stories.scss';
 
 // Render-only; what shows and when is asserted in tests/components/SpellCard.
 const meta = {
@@ -20,6 +21,8 @@ const CATEGORIES = [
   },
 ];
 
+const LAST_EDIT = { by: 'Testa Fixture', at: '2026-10-20T10:00:00Z' };
+
 const BASE = {
   id: 'story',
   title: 'Hearth Warding Jar',
@@ -29,24 +32,49 @@ const BASE = {
 };
 
 // Every state of the card in one grid. The cell is the grimoire's narrowest column.
+// The burn filter of the smouldering edge rides along, so hovering any card shows it.
 export const States: Story = {
   render: () => (
-    <StatesGrid
-      cell="22rem"
-      states={{
-        Complete: <SpellCard {...BASE} id="complete" />,
-        Draft: <SpellCard {...BASE} id="draft" status="draft" title="Dreaming Sachet" />,
-        Untitled: <SpellCard {...BASE} id="untitled" status="draft" title={null} />,
-        'No Intent': <SpellCard {...BASE} id="no-intent" intent={null} />,
-        'No Categories': <SpellCard {...BASE} id="no-categories" categories={[]} />,
-        'Long Title': (
-          <SpellCard
-            {...BASE}
-            id="long"
-            title="A Very Long Spell Title for Banishing the Damp from Grandmother's Cellar"
-          />
-        ),
-      }}
-    />
+    <>
+      <SpellCardFilters />
+      <StatesGrid
+        cell="22rem"
+        states={{
+          Complete: <SpellCard {...BASE} id="complete" />,
+          Draft: <SpellCard {...BASE} id="draft" status="draft" title="Dreaming Sachet" />,
+          Untitled: <SpellCard {...BASE} id="untitled" status="draft" title={null} />,
+          'No Intent': <SpellCard {...BASE} id="no-intent" intent={null} />,
+          'No Categories': <SpellCard {...BASE} id="no-categories" categories={[]} />,
+          'Long Title': (
+            <SpellCard
+              {...BASE}
+              id="long"
+              title="A Very Long Spell Title for Banishing the Damp from Grandmother's Cellar"
+            />
+          ),
+        }}
+      />
+    </>
+  ),
+};
+
+// The hover, the parchment smouldering from the foot corner: one card held in its
+// finished hovered state, and one at rest to hover with the pointer.
+export const Hover: Story = {
+  render: () => (
+    <>
+      <SpellCardFilters />
+      <StatesGrid
+        cell="22rem"
+        states={{
+          Held: (
+            <div className="spell-card-story-held">
+              <SpellCard {...BASE} id="held" lastEdit={LAST_EDIT} />
+            </div>
+          ),
+          'Hover It': <SpellCard {...BASE} id="hover" lastEdit={LAST_EDIT} />,
+        }}
+      />
+    </>
   ),
 };

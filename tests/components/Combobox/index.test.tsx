@@ -407,6 +407,60 @@ describe('Combobox', () => {
     });
   });
 
+  // M10.12: a typed row that only repeats a suggestion is no choice of its own.
+  describe('the typed row when a suggestion matches it', () => {
+    const BANE: Suggestions = { options: [{ value: 'Fixture Bane' }], pending: false };
+
+    it('is offered for text no suggestion matches', () => {
+      render(<Harness suggestions={BANE} />);
+
+      type('fixture ban');
+
+      expect(options()).toEqual(['Use what you typed: fixture ban', 'Fixture Bane']);
+    });
+
+    it('is left out when a suggestion matches, spaces and case aside', () => {
+      render(<Harness suggestions={BANE} />);
+
+      type('  fixture BANE ');
+
+      expect(options()).toEqual(['Fixture Bane']);
+    });
+
+    it('leaves Enter on the first row to pick the matching suggestion', () => {
+      const onPick = vi.fn();
+      render(<Harness suggestions={BANE} onPick={onPick} />);
+
+      type('fixture bane');
+      key('ArrowDown');
+      key('Enter');
+
+      expect(onPick).toHaveBeenCalledWith('Fixture Bane', BANE.options[0]);
+    });
+
+    it('leaves Enter alone to pick it in a box that highlights its first row', () => {
+      const onPick = vi.fn();
+      render(<Harness suggestions={BANE} onPick={onPick} highlightFirst />);
+
+      type('Fixture Bane');
+      key('Enter');
+
+      expect(onPick).toHaveBeenCalledWith('Fixture Bane', BANE.options[0]);
+    });
+
+    it('is offered when only a suggestion’s value matches, its row reading otherwise', () => {
+      const labelled: Suggestions = {
+        options: [{ value: 'Fixture Bane', label: 'Fixture Bane (Root)' }],
+        pending: false,
+      };
+      render(<Harness suggestions={labelled} />);
+
+      type('fixture bane');
+
+      expect(options()).toEqual(['Use what you typed: fixture bane', 'Fixture Bane (Root)']);
+    });
+  });
+
   // MB.174: a list withholds the typed row for text it would refuse.
   describe('the typed row withheld', () => {
     it('offers the suggestions without it', () => {

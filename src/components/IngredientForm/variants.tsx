@@ -29,8 +29,9 @@ import { ListField, MultiSelectField, ToggleField } from './fields';
 import { ELEMENT_OPTIONS } from './options';
 import { ReferencesField } from './references';
 import { RemoveQuestion } from './remove-question';
-import { CollapsibleSection, FoldFlag, useFoldIds } from './section';
-import { variantSectionSummary, variantSummary } from './summaries';
+import { CollapsibleSection, FoldFlag, useFoldIds } from '../CollapsibleSection';
+import type { SectionFold } from '../CollapsibleSection/types';
+import { SectionSummary, variantSectionSummary, variantSummary } from './summaries';
 import {
   FormField,
   LookupListField,
@@ -47,7 +48,6 @@ import type {
   IngredientFormValues,
   ListOption,
   RestoredVariant,
-  SectionFold,
   VariantFieldsetProps,
   VariantFoldList,
   VariantFolds,
@@ -261,7 +261,7 @@ export function VariantsField({ workspaceId, fold, folds }: VariantsFieldProps):
     // fieldset is by its legend: the New Form box and the cards.
     <CollapsibleSection
       title="Variants"
-      section="variants"
+      summary={<SectionSummary section="variants" />}
       fold={fold}
       titleId={legendId}
       info={
@@ -497,7 +497,7 @@ function VariantFieldset({
           far as a form's fields go (MB.115, the owner's call): its Form is
           its identity. A level beneath the Variants heading, each folding
           as the ingredient's do, its closed line read as theirs is. */}
-        <div className="ingredient-form__folds">
+        <div className="collapsible-sections">
           <CollapsibleSection
             title="Identity"
             level={4}

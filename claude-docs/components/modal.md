@@ -278,6 +278,16 @@ the tab, reloading, and on a page form a link (see the last point below).
   `<output>`, a polite live region, alternating a trailing no-break space so
   a repeat is a change and is read again. Keep Editing sets the count back
   to 0.
+- **The spell builder saves instead of asking** (M10.12, the owner's call on
+  2026-10-27). Its dialog's Close, Escape and a click outside save anything
+  unsaved, then close, with no Discard Changes question: a spell's draft is
+  kept, never thrown away. `useSaveOnClose`
+  (`SpellBuilder/save-on-close.ts`) fills the same `CloseGuardContext` slot,
+  holding the close until the save lands; a refused save keeps the dialog
+  open with the refusal shown. Closing the tab or reloading still raises the
+  browser's question, through `useLeaveGuard`
+  ([`spell-builder.md`](spell-builder.md), "Closing";
+  [`design-decisions/m10.12-spell-builder-modal.md`](../design-decisions/m10.12-spell-builder-modal.md)).
 - **Undo can release the guard.** A form with undo and redo ([`field.md`](field.md#undo-and-redo)) that is undone back to its starting values is no longer dirty, so Cancel and the other ways out close at once again. The undo is off while the question is asked.
 - **Leaving the page asks too** (M13.14, story 32). `useDiscardGuard` calls
   `useLeaveGuard(dirty, request)` from `src/lib/navigation/leave-guard.tsx`:
@@ -607,20 +617,40 @@ Where to Add`, `aria-haspopup="menu"`) opens a menu listing every
 destination by name, the compendium first (`add-ingredient-menu.tsx`, a
 `MenuButton` with the chevron as its icon). The default is, on `/admin/*`, the compendium for a curator;
 otherwise the coven the address names, else the first coven they may write to.
-Choosing the compendium is a `navigate` (`usePendingNavigation`) to `/admin/compendium?new` (the
-admin layout’s route-modal provider sits below the shell, so the button cannot
-open that dialog itself, and the page draws it for a direct request). A coven’s
-dialog is opened by the page’s address too (the owner’s call, 2026-10-18):
-`?new` on any page in the shell opens the default coven’s, `?new=<slug>` a
-named one’s, so a reload keeps it, Back leaves it and the address can be
-shared. The press writes the address with the browser’s own `pushState`,
-which Next’s router follows, rather than a navigation, since nothing on the
-server is needed to draw the form; closing replaces the address without
-`?new`, as `RouteModal` does, so Back does not open it again; a save’s move
-to the new entry’s page closes it by leaving the address. On an admin page
-`?new` is the page’s own compendium dialog, so a coven chosen there is a
-navigation to that coven’s index with `?new`. A slug the viewer cannot write
-to opens nothing. The address is built by `AppShell/add-href.ts` (`openHref`,
+Choosing the compendium is a `navigate` (`usePendingNavigation`) to
+`/admin/compendium?new=ingredient-compendium` (the admin layout’s route-modal provider sits
+below the shell, so the button cannot open that dialog itself, and the page draws it for a
+direct request). A coven’s dialog is opened by the page’s address too (the owner’s call,
+2026-10-18), with one form on every page in the shell, admin pages included (the owner’s
+call, 2026-10-28):
+
+| Value of `?new`           | Opens                                                                      |
+| ------------------------- | -------------------------------------------------------------------------- |
+| `ingredient-coven-<slug>` | Add Ingredient for the coven with that slug, on any page in the shell      |
+| `ingredient`              | Add Ingredient for the default coven                                       |
+| none (a bare `?new`)      | Off the admin pages, the same as `ingredient`; on them, the page’s own add |
+| `ingredient-compendium`   | The compendium’s New Entry, on `/admin/compendium`                         |
+| `spell-<slug>`            | That coven’s New Spell ([`spell-builder.md`](spell-builder.md))            |
+| `spell`                   | New Spell for the grimoire the page is on                                  |
+
+A reload keeps the dialog, Back leaves it and the address can be shared. The control always
+writes `?new=ingredient-coven-<slug>`, so picking a coven from the menu never changes the
+page, on an admin page as on any other. A value naming a coven is a fixed prefix
+(`ingredient-coven-` or `spell-`) and then the whole slug, so a slug’s own hyphens read
+one way: `ingredient-compendium` does not start with `ingredient-coven-`, and a coven
+slugged `ingredient-compendium` would be `ingredient-coven-ingredient-compendium`. Only
+`spell`, `ingredient` and `new` are reserved coven slugs (`isReservedCovenSlug`,
+`src/lib/coven-path.ts`), since a bare word is the one place a slug could be read as
+something else. The shell opens nothing for a spell’s value; `?new=spell-<slug>` on a page
+other than that coven’s grimoire is sent there with a replace (`NewSpellElsewhere`,
+`AppShell/new-spell-elsewhere.tsx`), since New Spell is a dialog over the grimoire. The
+press writes the address with the browser’s own `pushState`, which Next’s router follows,
+rather than a navigation, since nothing on the server is needed to draw the form; closing
+replaces the address without `?new`, as `RouteModal` does, so Back does not open it
+again; a save’s move to the new entry’s page closes it by leaving the address. While any
+`?new` is present an admin list page holds its `?edit` back, so the two dialogs never
+stack. The admin pages other than the compendium still open their own add on a bare `?new`
+alone. A slug the viewer cannot write to opens nothing. The address is built by `AppShell/add-href.ts` (`openHref`,
 `closedHref`), which a coven’s empty Ingredients list shares for its own Add
 Ingredient button (M9.11), so that button opens this same dialog rather than a
 second one.
@@ -647,7 +677,8 @@ status. The question is the form's
 ## RouteModal
 
 A modal opened by its page's address, `?new` or `?edit=<slug>`: the shape
-every admin page's add and edit modal takes. A page renders it always, at one
+every admin page's add and edit modal takes, and the spell builder's, under
+`?new=spell-<slug>` or `?edit=<id>` over the grimoire (M10.12). A page renders it always, at one
 fixed place (M9.18). It shows its `content` when the address opens a modal, a
 skeleton under the pressed row's head while a press is on its way
 ("Opening at once"), and nothing otherwise. Eight wrappers under
@@ -679,7 +710,9 @@ skipped the fade.
   back supersedes the one on its way, which Next discards.
 - **A caller needing more of the router keeps its own.** The compendium's
   form moves from `?new` to `?edit=` after a save without closing, through
-  its own `useRouter`.
+  its own `useRouter`. The spell builder's dialog moves from `?new=spell-<slug>` to
+  `?edit=<id>` on a draft's first save the same way, through
+  `usePendingNavigation`'s `navigate` with `replace`.
 
 ## Opening at once
 
@@ -736,6 +769,15 @@ The form arrives in the same dialog.
   it unnamed.
 - **A direct request** to `?edit=` or `?new` (a bookmark, a new tab) still
   renders the modal on the server, with no skeleton.
+- **A form the browser can draw skips the skeleton.** New Spell needs nothing
+  from the server to draw its empty builder, so its press writes `?new=spell-<slug>`
+  with the browser's `pushState` (`AddAction`'s `drawnHere`), as the shell's
+  Add Ingredient does, and `SpellDialog` reads the address itself
+  (`useSearchParams`). The dialog opens at its full size in its first frame.
+  Through the skeleton it opened at the skeleton's height and grew when the
+  form replaced it, and since the dialog is centred, its top jumped up under
+  the pointer (the owner's report in M10.12's review; 518px to 720px at 1280
+  by 800). `tests/e2e/spell-dialog-size.spec.ts` holds it.
 - **A row deleted since the list was drawn.** The navigation lands with no
   `content`, the dialog goes, and the page's `MissingNotice` says so.
 - **No GraphQL query.** The form's contents could have been fetched from
