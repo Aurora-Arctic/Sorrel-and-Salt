@@ -1,7 +1,6 @@
 import type { Metadata, Route } from 'next';
 import { notFound } from 'next/navigation';
 import { cache } from 'react';
-import { readCategories } from '@/app/compendium-reads';
 import { RouteModalProvider } from '@/components/Modal/route-modal-provider';
 import { EditLink } from '@/components/IconTip';
 import SpellDialog from '@/components/SpellBuilder/spell-dialog';
@@ -11,10 +10,9 @@ import { Forbidden, NotFound } from '@/lib/errors';
 import { RowId } from '@/lib/validation';
 import { rolePermits } from '@/modules/coven';
 import { requireCovenMembership, requireSession } from '@/lib/request-session';
-import { assignedCategoriesOf, readSpell, stepsOfSpells } from '@/modules/grimoire';
-import { displayNamesOf } from '@/modules/identity';
+import { readSpell } from '@/modules/grimoire';
 import { readEditedSpell } from '../(list)/reads';
-import { recipeStepsOf } from './recipe-steps';
+import { readRecipeOf } from '../recipe-read';
 import type { SpellRecipeParams } from './types';
 
 // One saved spell as a page (MB.6): the read surface for a spell, at /coven/[slug]/grimoire/[id].
@@ -49,15 +47,7 @@ export async function generateMetadata({ params }: SpellRecipeParams): Promise<M
 export default async function SpellRecipePage({ params, searchParams }: SpellRecipeParams) {
   const { slug, id } = await params;
   const { workspace, membership, session, spell } = await spellOf(slug, id);
-  const ref = [{ id: spell.id, workspaceId: spell.workspaceId }];
-  const [[steps], [assigned], known, [editor]] = await Promise.all([
-    stepsOfSpells(session, ref),
-    assignedCategoriesOf(session, ref),
-    readCategories(),
-    displayNamesOf(session, [spell.updatedBy]),
-  ]);
-  if (steps instanceof Error || assigned instanceof Error)
-    throw steps instanceof Error ? steps : assigned;
+  const recipe = await readRecipeOf(session, spell, workspace.slug);
   const canUpdate = rolePermits(membership.role, { spell: ['update'] });
   const recipePath = `/coven/${workspace.slug}/grimoire/${spell.id}` as Route;
   const edit = (await searchParams).edit;
@@ -66,7 +56,6 @@ export default async function SpellRecipePage({ params, searchParams }: SpellRec
     canUpdate && wanted?.success && wanted.data === spell.id
       ? await readEditedSpell(workspace.id, spell.id)
       : undefined;
-  const byId = new Map(known.map((category) => [category.id, category]));
   return (
     <main>
       <RouteModalProvider>
@@ -75,15 +64,10 @@ export default async function SpellRecipePage({ params, searchParams }: SpellRec
           intent={spell.intent}
           status={spell.status}
           visibility={spell.visibility}
-          categories={(assigned ?? []).flatMap(({ id: categoryId }) => {
-            const category = byId.get(categoryId);
-            return category
-              ? [{ category: { id: categoryId, name: category.name }, group: category.group }]
-              : [];
-          })}
-          lastEdit={{ by: editor ?? null, at: spell.updatedAt.toISOString() }}
+          categories={recipe.categories}
+          lastEdit={recipe.lastEdit}
           note={spell.note}
-          steps={recipeStepsOf(steps ?? [], workspace.slug)}
+          steps={recipe.steps}
           action={
             canUpdate && (
               <EditLink

@@ -2,6 +2,8 @@ import type { Route } from 'next';
 import type { ReactElement } from 'react';
 import { readCategories } from '@/app/compendium-reads';
 import GrimoireList from '@/components/GrimoireList';
+import SpellRecipeBody from '@/components/SpellRecipe/body';
+import SpellLookDialog from '@/components/SpellRecipe/look-dialog';
 import SpellDialog from '@/components/SpellBuilder/spell-dialog';
 import { GRIMOIRE_PARAMS, VISIBILITIES } from '@/components/GrimoireList/params';
 import type { GrimoireFacets, GrimoireListFilter } from '@/components/GrimoireList/types';
@@ -17,6 +19,7 @@ import {
   readGrimoire,
   readGrimoireCategoryCounts,
   readGrimoireFacetCounts,
+  readLookedSpell,
 } from './reads';
 import type { GrimoireTabProps } from './types';
 
@@ -35,6 +38,10 @@ import type { GrimoireTabProps } from './types';
 /** `closeHref` with a saved spell's dialog open over it. */
 const editHrefOf = (closeHref: Route, id: string): Route =>
   `${closeHref}${closeHref.includes('?') ? '&' : '?'}${new URLSearchParams({ edit: id })}` as Route;
+
+/** `closeHref` with a spell's Quick Look open over it. */
+const lookHrefOf = (closeHref: Route, id: string): Route =>
+  `${closeHref}${closeHref.includes('?') ? '&' : '?'}${new URLSearchParams({ spell: id })}` as Route;
 
 const VISIBILITY_LABELS: Record<(typeof VISIBILITIES)[number], string> = {
   private: 'Private',
@@ -123,6 +130,17 @@ export async function grimoireTab({
           )
         : undefined;
 
+  // Quick Look (M13.21): `?spell=<id>` opens a read-only modal for any role, and waits beneath
+  // another dialog the way `?edit` does. Its Edit link is the card pencil's own check.
+  const look = query.spell;
+  const lookId =
+    adding === undefined && opened === undefined && typeof look === 'string'
+      ? RowId.safeParse(look)
+      : undefined;
+  const looked = lookId?.success
+    ? await readLookedSpell(workspace.id, workspace.slug, lookId.data)
+    : undefined;
+
   return (
     <>
       <GrimoireList
@@ -130,11 +148,11 @@ export async function grimoireTab({
         workspaceId={workspace.id}
         covenSlug={workspace.slug}
         status={status}
-        spells={
-          canUpdate
-            ? page.spells.map((spell) => ({ ...spell, editHref: editHrefOf(closeHref, spell.id) }))
-            : page.spells
-        }
+        spells={page.spells.map((spell) => ({
+          ...spell,
+          lookHref: lookHrefOf(closeHref, spell.id),
+          ...(canUpdate && { editHref: editHrefOf(closeHref, spell.id) }),
+        }))}
         filter={filter}
         categories={counted}
         facets={facets}
@@ -152,6 +170,29 @@ export async function grimoireTab({
         opened={opened}
         canCreate={canCreate}
         userId={membership.userId}
+      />
+      <SpellLookDialog
+        closeHref={closeHref}
+        failed={looked !== undefined && 'failed' in looked}
+        opened={
+          looked && !('failed' in looked)
+            ? {
+                title: looked.spell.title,
+                lastEdit: looked.recipe.lastEdit,
+                recipeHref: `/coven/${workspace.slug}/grimoire/${looked.spell.id}` as Route,
+                ...(canUpdate && { editHref: editHrefOf(closeHref, looked.spell.id) }),
+                children: (
+                  <SpellRecipeBody
+                    title={looked.spell.title}
+                    intent={looked.spell.intent}
+                    categories={looked.recipe.categories}
+                    note={looked.spell.note}
+                    steps={looked.recipe.steps}
+                  />
+                ),
+              }
+            : undefined
+        }
       />
     </>
   );

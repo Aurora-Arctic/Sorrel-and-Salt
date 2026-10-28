@@ -17,6 +17,7 @@ import {
 } from '@/modules/grimoire';
 import type { SpellStatus } from '@/modules/grimoire';
 import { displayNamesOf } from '@/modules/identity';
+import { readRecipeOf } from '../recipe-read';
 import type { SpellDialogSpell } from '@/components/SpellBuilder/types';
 
 // The read a grimoire tab makes (M10.11), twin of the Ingredients page's `reads.ts`. The
@@ -176,3 +177,21 @@ export const readGrimoireFacetCounts = cache(
     };
   },
 );
+
+/**
+ * The spell `?spell=<id>` opens Quick Look on (M13.21), read as the signed-in member through
+ * `readSpell`, with what the recipe body shows. `undefined` for a spell the service will not
+ * give this member (another member's private spell, another coven's, one that is gone), so the
+ * tab opens nothing and tells a stranger nothing. Any other failure is `failed`, which the
+ * modal says in a Notice rather than drawing an empty spell.
+ */
+export async function readLookedSpell(workspaceId: string, covenSlug: string, id: string) {
+  const session = await requireSession();
+  try {
+    const spell = await readSpell(session, workspaceId, id);
+    return { spell, recipe: await readRecipeOf(session, spell, covenSlug) };
+  } catch (error) {
+    if (error instanceof NotFound || error instanceof Forbidden) return undefined;
+    return { failed: true as const };
+  }
+}
