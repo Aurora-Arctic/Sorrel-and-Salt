@@ -314,7 +314,7 @@ describe('the spell builder’s Add to Jar', () => {
       target: { value: 'Dried Root' },
     });
     expect(within(row).getByRole('textbox', { name: /^Form/ })).toHaveValue('Dried Root');
-    expect(within(row).getByText(/Goes in this jar and nowhere else/)).toBeInTheDocument();
+    expect(within(row).getByText(/Used in this spell only/)).toBeInTheDocument();
   });
 
   it('offers no one-off row for an empty box, and refuses one already in the jar', async () => {

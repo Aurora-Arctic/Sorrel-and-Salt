@@ -159,11 +159,7 @@ export function BuilderStepRow({
             ? `· ${summary.join(' · ')}`
             : null
       }
-      aside={
-        oneOff
-          ? 'Goes in this jar and nowhere else: it makes no ingredient in your cupboard.'
-          : null
-      }
+      aside={oneOff ? 'Used in this spell only; not kept in your cupboard.' : null}
       edit={
         <button
           ref={edit}

@@ -255,8 +255,11 @@ $step-ink-drop: 0.05rem;
     margin-block-start: space(2);
   }
 
+  // The one-off line: caption size in muted ink, as the compact safety note's text, no block padding.
   .step-row__aside {
     margin-block-end: 0;
+    padding-block: 0;
+    font-size: type-size('caption');
     color: $text-muted;
   }
 
