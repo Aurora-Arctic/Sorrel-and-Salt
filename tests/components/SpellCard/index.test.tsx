@@ -84,7 +84,7 @@ describe('SpellCard', () => {
     render(<SpellCard {...BASE} />);
     const card = screen.getByRole('article', { name: 'Fixture Working' });
     const layers = card.querySelectorAll(':scope > [aria-hidden="true"]');
-    expect(layers).toHaveLength(2);
+    expect(layers).toHaveLength(3);
     layers.forEach((layer) => expect(layer).toHaveTextContent(/^$/));
   });
 

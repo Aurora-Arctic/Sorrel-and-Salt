@@ -59,9 +59,7 @@ export const States: Story = {
 };
 
 // The hover, the parchment smouldering from the foot corner: one card held in its
-// finished hovered state, and one at rest to hover with the pointer. Each wrapper is
-// isolated, as the grimoire's list is (GrimoireList/index.scss), because the glow behind
-// the card needs a stacking context to join.
+// finished hovered state, and one at rest to hover with the pointer.
 export const Hover: Story = {
   render: () => (
     <>
@@ -70,15 +68,11 @@ export const Hover: Story = {
         cell="22rem"
         states={{
           Held: (
-            <div className="spell-card-story-held" style={{ isolation: 'isolate' }}>
+            <div className="spell-card-story-held">
               <SpellCard {...BASE} id="held" lastEdit={LAST_EDIT} />
             </div>
           ),
-          'Hover It': (
-            <div style={{ isolation: 'isolate' }}>
-              <SpellCard {...BASE} id="hover" lastEdit={LAST_EDIT} />
-            </div>
-          ),
+          'Hover It': <SpellCard {...BASE} id="hover" lastEdit={LAST_EDIT} />,
         }}
       />
     </>

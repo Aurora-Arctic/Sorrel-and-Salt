@@ -16,12 +16,3 @@
   display: block;
   color: $text-muted;
 }
-
-// The list is the stacking context each spell card's smouldering glow joins (SpellCard's
-// _smoulder.scss): the glow sits at `z-index: -1` behind its card, and without a context
-// here it would drop behind the page's own background and never show. Isolated, it paints
-// above the list's background and below every card, so a neighbour's face covers a glow
-// that reaches it. On this list only: the ingredient card lists keep their stacking as it is.
-.grimoire-list__cards {
-  isolation: isolate;
-}

@@ -3,32 +3,34 @@
 @use 'smoulder' as *;
 
 // The Foundations specimen (`.specimen` in _primitives.scss) carries the layout;
-// this adds IngredientCard's surface and padding, and the title's size. Tokens only.
-// Positioned, for the smoulder's layers, but with no z-index: one would make the card a
-// stacking context, and the glow behind it would then paint over its face.
+// this adds IngredientCard's padding, and the title's size. Tokens only. The card's face
+// and shadow are not on the article but on the `.spell-card__face` layer (_smoulder.scss),
+// so the smouldering edge can burn through both.
 .spell-card {
-  @include modal-surface($shadow-floating);
   @include smoulder-base;
+  @include theme-transition(color);
 
   position: relative;
   padding: space(4);
+  color: $text-primary;
+  border-radius: radius('surface');
+
+  @include reduced-motion {
+    transition: none;
+  }
+
+  // The content, positioned so it paints over the face and the glow before it, in the
+  // order of the markup, with no z-index anywhere: a z-index on the card, or on a layer
+  // behind it, needs a stacking context round the card, and one on the card would trap
+  // the category chips' tips beneath the next card.
+  > * {
+    position: relative;
+  }
 }
 
 // The hover, on pointers that can hover only, so a tap on a phone does not leave a card
 // burning: IngredientCard's tint and lifted shadow, and the smouldering edge (_smoulder.scss).
 @media (hover: hover) {
-  .spell-card {
-    // The theme switch's own transition on `color`, kept beside the hover's two.
-    transition:
-      background-color $motion-medium ease,
-      box-shadow $motion-medium ease,
-      color $theme-transition-duration $theme-transition-easing;
-
-    @include reduced-motion {
-      transition: none;
-    }
-  }
-
   .spell-card:hover,
   .spell-card:focus-within {
     @include spell-card-hovered;

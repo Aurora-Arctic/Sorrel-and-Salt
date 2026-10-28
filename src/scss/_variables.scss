@@ -121,6 +121,10 @@ $drawer-shade-edge-light: rgba($iron-gall, 0.12);
 // reads as scorched paper rather than an ink line.
 $burn-char-dark: rgba($shadow-ink-dark, 0.7);
 $burn-char-light: rgba(color.mix($iron-gall, $wax-warm, 75%), 0.6);
+// The thin charred line along the top of the burn, outside the char rim: each theme's darkest ink,
+// nearly opaque, so the paper reads as blackened before it glows.
+$burn-char-line-dark: rgba($shadow-ink-dark, 0.92);
+$burn-char-line-light: rgba($iron-gall, 0.85);
 
 // A 0.8-alpha shadow reads as a hole punched in parchment; light gets a softer one.
 $shadow-dark: rgba($shadow-ink-dark, 0.8);
@@ -453,6 +457,7 @@ $drawer-shade: var(--drawer-shade);
 $drawer-shade-fade: var(--drawer-shade-fade);
 $drawer-shade-edge: var(--drawer-shade-edge);
 $burn-char: var(--burn-char);
+$burn-char-line: var(--burn-char-line);
 $dismiss-ink: var(--dismiss-ink);
 $card-more-ink: var(--card-more-ink);
 // The Last Edit line's ink: the placeholder's mix in dark, where it holds 4.5:1; the muted ink in

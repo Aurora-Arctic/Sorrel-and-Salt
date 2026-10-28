@@ -100,10 +100,7 @@ variables, so a search and its categories live in the address and combine.
 
 Tokens only, before the section's design review. `index.scss` sets the two empty regions as the coven's empty cupboard is (`CovenCards/index.scss`): the empty tab's sentence centred and larger than body copy, the no-match hint in muted body copy. The cards are `SpellCard`'s own.
 
-Two things in the list exist for the cards' smouldering edge ([spell-card.md](spell-card.md), "The smouldering edge"):
-
-- **`isolation: isolate` on `.grimoire-list__cards`.** The glow sits behind its card at `z-index: -1`. The list makes a stacking context for it to join, so the glow paints above the page but under every card face, a neighbour's included. The rule is scoped to this list, not to `li` in general. The cost: a category tip that spills out of the list could paint under a positioned page element after the list. The tips are `position: fixed` at the floating layer, so none does today.
-- **One `SpellCardFilters` before the list.** It holds the SVG filter the burn front uses, by id. An id must be unique on the page, so the list renders it once rather than each card.
+One thing in the list exists for the cards' smouldering edge ([spell-card.md](spell-card.md), "The smouldering edge"): **one `SpellCardFilters` before the list.** It holds the SVG filter the burn front uses, by id. An id must be unique on the page, so the list renders it once rather than each card. The list needs no stacking context of its own: the card's layers stack by the order of the markup, with no `z-index`.
 
 ## Testing
 
