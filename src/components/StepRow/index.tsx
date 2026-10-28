@@ -57,7 +57,8 @@ export default function StepRow({
           {/* The generic spoon for a one-off, which names no form group. */}
           <FormIcon name={icon} />
           {name}
-          {badge}
+          {/* A card's badge stands with the marks at the right; the bare line keeps it here. */}
+          {!collapsible && badge}
         </p>
       )}
     </>
@@ -83,7 +84,10 @@ export default function StepRow({
       <li ref={rowRef} className={className_} style={style}>
         {identity}
         {!open && summary && <p className="step-row__summary">{summary}</p>}
-        <div className="step-row__marks">{marks}</div>
+        <div className="step-row__marks">
+          {badge}
+          {marks}
+        </div>
         {edit}
         {actions}
         {/* Fields exist only while open; their values are the form's, so they persist. */}

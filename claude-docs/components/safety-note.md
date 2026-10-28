@@ -26,12 +26,13 @@ each use these two as they are, and none of them draws a warning of its own. In 
 
 `SafetyNoteProps` (`types.ts`):
 
-| Prop          | What it is                                                                                                                                                                                    |
-| ------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `safetyNotes` | The ingredient's own notes, shown first. `null`, empty or blank counts as none                                                                                                                |
-| `variants`    | The forms the consumer shows (`SafetyVariant[]`): each one's notes follow, by name                                                                                                            |
-| `level`       | The Caution heading's level, 2–6, one below the heading it sits under; 3 if unset                                                                                                             |
-| `footnote`    | A line after the notes, inside the caution, for a consumer that shows no forms: the details modal names the forms that carry their own (M12.5). With it, the caution shows even with no notes |
+| Prop          | What it is                                                                                                                                                                                                     |
+| ------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `safetyNotes` | The ingredient's own notes, shown first. `null`, empty or blank counts as none                                                                                                                                 |
+| `variants`    | The forms the consumer shows (`SafetyVariant[]`): each one's notes follow, by name                                                                                                                             |
+| `level`       | The Caution heading's level, 2–6, one below the heading it sits under; 3 if unset                                                                                                                              |
+| `compact`     | A small block for a crowded place (the spell builder's open step, 2026-10-28): the Caution heading is body-sized ink and runs on in the line with the notes. The bar and the word still say it. Off unless set |
+| `footnote`    | A line after the notes, inside the caution, for a consumer that shows no forms: the details modal names the forms that carry their own (M12.5). With it, the caution shows even with no notes                  |
 
 `CautionMarkProps`: `safetyNotes` (the ingredient's own) and `variants`; notes on
 either show the mark, and blank counts as none.

@@ -158,7 +158,7 @@ $step-ink-drop: 0.05rem;
 
     .step-row__marks {
       grid-area: marks;
-      grid-column: auto;
+      grid-column: marks;
       margin-block-start: 0;
       margin-inline-start: space(2);
     }
@@ -227,6 +227,24 @@ $step-ink-drop: 0.05rem;
     min-width: 0;
   }
 
+  // An instruction starts two lines high (the `rows` the field gives it), not the 6rem a
+  // plain textarea keeps, and grows as lines are typed. Growing is `field-sizing`, which is
+  // not Baseline widely available, so it sits in @supports: without it the box stays two
+  // lines and scrolls inside, and its resize handle still opens it by hand.
+  .step-row__instruction .textarea,
+  .step-row__field .textarea {
+    min-height: 0;
+  }
+
+  @supports (field-sizing: content) {
+    .step-row__instruction .textarea,
+    .step-row__field .textarea {
+      // Two lines of the textarea's 1.5 line height, its padding and border.
+      min-height: calc(2 * 1.5em + 2 * #{space(2)} + 2px);
+      field-sizing: content;
+    }
+  }
+
   .step-row__note,
   .step-row__aside {
     margin-block-start: space(2);
@@ -237,10 +255,8 @@ $step-ink-drop: 0.05rem;
     color: $text-muted;
   }
 
-  // The badge after a one-off's name, a little clear of it.
-  .step-row__name .badge {
-    margin-inline-start: space(2);
-  }
+  // A card's badge (a one-off's) stands in the marks, at the right of the first line before
+  // the pencil, so it never wraps into the name.
 }
 
 // An instruction is words, not a thing laid in the jar, but it keeps the card's own
@@ -262,9 +278,16 @@ $step-ink-drop: 0.05rem;
     margin-block-start: space(2);
   }
 
+  // The number stands where the text's first line does, closed or open, so it does not move
+  // when the textarea takes the text's place: the same box in both, not a shared baseline.
   .step-row__position {
-    align-self: baseline;
-    padding-block-start: space(2);
+    align-self: start;
+    display: flex;
+    align-items: center;
+    min-height: $step-line;
+    margin-block-start: space(2);
+    padding-block: 0;
+    line-height: $step-line;
   }
 
   .step-row__field {
@@ -346,6 +369,12 @@ $step-ink-drop: 0.05rem;
       '. . summary summary summary summary';
     grid-template-columns: auto auto minmax(0, 1fr) auto auto auto;
     align-items: start;
+
+    // Two badges stack and keep the right edge, so the name keeps the width they would take.
+    .step-row__marks {
+      flex-direction: column;
+      align-items: flex-end;
+    }
 
     .step-row__open {
       grid-row: 3;
