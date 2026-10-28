@@ -72,6 +72,7 @@ export const readGrimoire = cache(
         title: node.title,
         intent: node.intent,
         status: node.status,
+        visibility: node.visibility,
         categories: answer.flatMap(({ id }): CardCategory[] => {
           const category = byId.get(id);
           return category ? [{ category: { id, name: category.name }, group: category.group }] : [];
@@ -99,6 +100,7 @@ export async function readEditedSpell(
     const spell = await readSpell(session, workspaceId, id);
     const { revision, title, intent, jarDescription, sealWaxColor, moonPhase, dayOfWeek, note } =
       spell;
+    const { visibility } = spell;
     return {
       id,
       revision,
@@ -109,6 +111,7 @@ export async function readEditedSpell(
       moonPhase,
       dayOfWeek,
       note,
+      visibility,
     };
   } catch (error) {
     if (error instanceof NotFound || error instanceof Forbidden) return undefined;

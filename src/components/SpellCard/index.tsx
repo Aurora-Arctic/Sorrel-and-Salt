@@ -5,7 +5,7 @@ import type { SpellCardProps } from './types';
 import './index.scss';
 
 // One spell in the grimoire's list (M10.11): its title, its intent, a Draft badge on
-// a draft, the categories its author assigned it, and who last edited it. Presentational, in IngredientCard's
+// a draft, a Private badge on a private spell (M10.13), the categories its author assigned it, and who last edited it. Presentational, in IngredientCard's
 // pattern: the Foundations specimen for the layout and the card's surface, with no
 // drawer, since nothing opens from it yet. Not a link until the spell page exists
 // (MB.6), so the title is plain text. claude-docs/components/spell-card.md.
@@ -21,6 +21,7 @@ const SpellCard = ({
   title,
   intent,
   status,
+  visibility,
   categories,
   lastEdit,
   level = 2,
@@ -47,10 +48,13 @@ const SpellCard = ({
           {name}
         </Heading>
         {/* Only a draft is marked: complete is the default, so a Complete badge would
-            say nothing (the owner, 2026-10-27). */}
-        {status === 'draft' && (
+            say nothing (the owner, 2026-10-27). Likewise only a private spell: the
+            coven is the default, and a private one lists to its author alone, so
+            the badge tells them no one else sees it (M10.13). */}
+        {(status === 'draft' || visibility === 'private') && (
           <div className="specimen__badges">
-            <span className="badge badge--draft">Draft</span>
+            {status === 'draft' && <span className="badge badge--draft">Draft</span>}
+            {visibility === 'private' && <span className="badge badge--private">Private</span>}
           </div>
         )}
       </div>

@@ -28,6 +28,7 @@ const SAVED: SpellBuilderSpell = {
   moonPhase: 'Waxing Gibbous',
   dayOfWeek: 'Monday',
   note: null,
+  visibility: 'workspace',
 };
 
 // In its wide dialog over the grimoire, as the Grimoire's tabs open it under `?new=spell-<slug>` or
@@ -64,6 +65,10 @@ const typeTitle = () => {
   if (input) setInputValue(input, 'Fixture Working');
 };
 
+// Turning Share With the Coven on for a private spell, which asks before it shares.
+const pickCoven = () =>
+  document.querySelector<HTMLInputElement>('input[name="visibility"][value="workspace"]')?.click();
+
 const BUILDER_STATES: Record<string, ReactNode> = {
   // The usual visit: every field empty, nothing to save until one holds something.
   Empty: <Page />,
@@ -71,6 +76,10 @@ const BUILDER_STATES: Record<string, ReactNode> = {
   // A saved spell, as its Edit opens it: its values, nothing to
   // save yet. Its moon phase is one of the eight, so the box draws its icon.
   'Saved Spell': <Page spell={SAVED} />,
+  // Its author alone sees it, so the visibility control is still open (M10.13);
+  // the saved spell above is the coven's, its control shut with the reason.
+  'Private Spell': <Page spell={{ ...SAVED, visibility: 'private' }} />,
+  'Share Question': <Page spell={{ ...SAVED, visibility: 'private' }} steps={[pickCoven]} />,
   // A moon phase saved before the list existed: its words, with no icon.
   'Phase Outside the List': <Page spell={{ ...SAVED, moonPhase: 'Dark' }} />,
   // The workshop reaches no server, so the save fails into the notice.

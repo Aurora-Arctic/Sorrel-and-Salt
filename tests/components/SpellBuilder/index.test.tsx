@@ -56,6 +56,7 @@ function saved(id: string, revision: number, input: CreateSpellMutationVariables
     moonPhase: input.moonPhase ?? null,
     dayOfWeek: input.dayOfWeek ?? null,
     note: input.note ?? null,
+    visibility: input.visibility ?? 'workspace',
   };
 }
 
@@ -148,6 +149,7 @@ describe('SpellBuilder', () => {
         moonPhase: null,
         dayOfWeek: null,
         note: null,
+        visibility: 'workspace',
       },
     });
   });
@@ -174,6 +176,7 @@ describe('SpellBuilder', () => {
       moonPhase: 'Waxing gibbous',
       dayOfWeek: 'Monday',
       note: 'Kept on the sill',
+      visibility: 'workspace',
     });
   });
 
@@ -229,6 +232,7 @@ describe('SpellBuilder', () => {
         moonPhase: null,
         dayOfWeek: 'Monday',
         note: null,
+        visibility: 'workspace',
       },
     });
 
@@ -254,6 +258,7 @@ describe('SpellBuilder', () => {
         moonPhase: null,
         dayOfWeek: 'Monday',
         note: null,
+        visibility: 'workspace',
         expectedRevision: 4,
       },
     });
@@ -379,6 +384,7 @@ describe('SpellBuilder', () => {
           moonPhase: 'Full',
           dayOfWeek: 'saturday',
           note: null,
+          visibility: 'workspace',
         },
       });
       openAll();
@@ -407,6 +413,7 @@ describe('SpellBuilder', () => {
       moonPhase: 'Waxing Moon',
       dayOfWeek: 'Monday',
       note: null,
+      visibility: 'private' as const,
     };
 
     it('opens a new spell with its four sections in order, each open on its own fields', () => {
@@ -433,6 +440,10 @@ describe('SpellBuilder', () => {
           ).toBeVisible();
         }
       }
+      // M10.13's switch folds with the note.
+      expect(
+        within(fieldsOf('Notes')).getByRole('switch', { name: 'Share With the Coven' }),
+      ).toBeVisible();
     });
 
     it('opens a saved spell with every section shut, each line naming what it holds', () => {
@@ -444,7 +455,8 @@ describe('SpellBuilder', () => {
       expect(section('Purpose')).toHaveAccessibleDescription('Fixture Working · To see clearly');
       expect(section('Jar')).toHaveAccessibleDescription('4 oz · Blue');
       expect(when()).toHaveAccessibleDescription('Waxing Moon · Monday');
-      expect(section('Notes')).toHaveAccessibleDescription('Nothing yet');
+      // Notes holds no note, so its line is the visibility switch's alone.
+      expect(section('Notes')).toHaveAccessibleDescription('Private');
     });
 
     it('shuts every section with Close All, then opens every one with Open All', () => {
@@ -509,6 +521,16 @@ describe('SpellBuilder', () => {
       window.dispatchEvent(event);
       return event.defaultPrevented;
     };
+
+    it('has the browser ask before the tab closes on an unsaved visibility choice', () => {
+      renderBuilder();
+      // Why the tab could have closed: nothing typed, so no question yet.
+      expect(tabCloseAsks()).toBe(false);
+
+      fireEvent.click(screen.getByRole('switch', { name: 'Share With the Coven' }));
+
+      expect(tabCloseAsks()).toBe(true);
+    });
 
     it('has the browser ask before the tab closes on unsaved changes, and not once they are saved', async () => {
       acceptCreate();

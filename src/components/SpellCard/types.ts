@@ -1,6 +1,6 @@
 import type { CardCategory } from '../CategoryChips/types';
 import type { LastEditProps } from '../LastEdit/types';
-import type { SpellStatus } from '@/modules/grimoire';
+import type { SpellStatus, SpellVisibility } from '@/modules/grimoire';
 
 export interface SpellCardProps {
   /** The spell's id, which names its title heading for the list item (`spellTitleId`). */
@@ -10,6 +10,8 @@ export interface SpellCardProps {
   /** What the spell is for, in the member's words; none draws no paragraph. */
   intent: string | null;
   status: SpellStatus;
+  /** Who can see it; a private spell, listed to its author alone, is badged Private (M10.13). */
+  visibility: SpellVisibility;
   /** The categories its author assigned it, what it intends; never the derived ones. */
   categories: readonly CardCategory[];
   /**

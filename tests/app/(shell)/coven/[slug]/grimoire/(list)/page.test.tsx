@@ -75,13 +75,19 @@ const { default: DraftsPage } =
   await import('@/app/(shell)/coven/[slug]/grimoire/(list)/drafts/page');
 const { default: Layout } = await import('@/app/(shell)/coven/[slug]/grimoire/(list)/layout');
 
-const spell = (id: string, title: string | null, status = 'complete') => ({
+const spell = (
+  id: string,
+  title: string | null,
+  status = 'complete',
+  visibility = 'workspace',
+) => ({
   node: {
     id,
     workspaceId: COVEN.id,
     title,
     intent: null,
     status,
+    visibility,
     updatedAt: EDITED_AT,
     updatedBy: `editor-${id}`,
   },
@@ -208,6 +214,20 @@ describe('the Grimoire tabs', () => {
     const first = within(list).getByRole('listitem', { name: 'Fixture Working' });
     expect(within(first).getByText('Testwarding')).toBeInTheDocument();
     expect(within(list).getByRole('listitem', { name: 'Testwort Charm' })).toBeInTheDocument();
+  });
+
+  // The service lists a private spell to its author alone (M10.6), so the card
+  // badges what it is handed (M10.13).
+  it('badges a private spell Private, and a spell shared with the coven with nothing', async () => {
+    listGrimoire.mockResolvedValue([
+      spell('s1', 'Fixture Working', 'complete', 'private'),
+      spell('s2', 'Testwort Charm'),
+    ]);
+    await renderTab(SpellsPage);
+    const list = screen.getByRole('list', { name: 'Grimoire' });
+    const card = (name: string) => within(within(list).getByRole('listitem', { name }));
+    expect(card('Fixture Working').getByText('Private')).toBeInTheDocument();
+    expect(card('Testwort Charm').queryByText('Private')).not.toBeInTheDocument();
   });
 
   it('says on each card who last edited it and when, the editors named in one batch', async () => {

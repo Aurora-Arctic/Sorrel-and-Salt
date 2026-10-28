@@ -283,6 +283,14 @@ $badge-palettes: (
       treatment: tinted,
       dark: $chalk-muted,
       light: $ink-muted,
+    ),
+  // A spell its author alone can see (M10.13): a fact about it, like Draft, so
+  // Draft's muted tint and checked inks; the word, not the colour, tells the two
+  // apart. A spell shared with the coven takes no badge: that is the default.
+  'private': (
+      treatment: tinted,
+      dark: $chalk-muted,
+      light: $ink-muted,
     )
 );
 

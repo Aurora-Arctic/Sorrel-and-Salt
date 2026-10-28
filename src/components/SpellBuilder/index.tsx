@@ -21,12 +21,15 @@ import { DAYS_OF_THE_WEEK, MOON_PHASES } from './constants';
 import { useSaveOnClose } from './save-on-close';
 import { SpellSuggestField } from './suggest-field';
 import { SpellInput } from '@/modules/grimoire/validation/spell';
+import { SpellVisibilityField } from './visibility-field';
 import type {
   SpellBuilderField,
+  SpellBuilderInput,
   SpellBuilderProps,
   SpellBuilderSpell,
   SpellBuilderValues,
 } from './types';
+import './index.scss';
 
 // The spell builder (M10.12): a spell's title, intent, jar and note, in a
 // modal over the grimoire (./spell-dialog.tsx), opened empty by New Spell and
@@ -55,6 +58,7 @@ const CreateSpellDocument = graphql(`
       moonPhase
       dayOfWeek
       note
+      visibility
     }
   }
 `);
@@ -71,6 +75,7 @@ const UpdateSpellDocument = graphql(`
       moonPhase
       dayOfWeek
       note
+      visibility
     }
   }
 `);
@@ -85,17 +90,20 @@ const FIELDS: readonly SpellBuilderField[] = [
   'note',
 ];
 
+/** A value the form holds, which a section folds. */
+type SectionField = keyof SpellBuilderValues;
+
 /**
- * The builder's sections, in order, and the fields each folds. Later fields
- * join these: M10.14's categories Purpose, M10.15's steps Jar, M10.13's
- * visibility switch Notes.
+ * The builder's sections, in order, and the values each folds: what flags a
+ * section holding an error, and what its shut line reads. Later fields join
+ * these: M10.14's categories Purpose, M10.15's steps Jar.
  */
 const SECTIONS = {
   Purpose: ['title', 'intent'],
   Jar: ['jarDescription', 'sealWaxColor'],
   'When to Work It': ['moonPhase', 'dayOfWeek'],
-  Notes: ['note'],
-} as const satisfies Record<string, readonly SpellBuilderField[]>;
+  Notes: ['note', 'visibility'],
+} as const satisfies Record<string, readonly SectionField[]>;
 
 type SectionName = keyof typeof SECTIONS;
 
@@ -104,17 +112,29 @@ const SECTION_NAMES = Object.keys(SECTIONS) as SectionName[];
 /** A value as one line: a multi-line intent or note reads on a shut section's line. */
 const oneLine = (text: string): string => text.trim().replace(/\s+/g, ' ');
 
-/** The fields as the save sends them: trimmed, and null for blank, as the schema reads them. */
-type SpellBuilderInput = Record<SpellBuilderField, string | null>;
+/** A value as its shut section's line reads it, blank for none. */
+function lineOfField(field: SectionField, values: SpellBuilderValues): string {
+  switch (field) {
+    case 'visibility':
+      return values.visibility === 'workspace' ? 'Shared' : 'Private';
+    default:
+      return oneLine(values[field] ?? '');
+  }
+}
 
 const isField = (key: unknown): key is SpellBuilderField =>
   FIELDS.includes(key as SpellBuilderField);
 
 /** The form's values for a spell: none for a new one, and blank for a field it has not set. */
 function valuesOf(spell?: Partial<SpellBuilderSpell>): SpellBuilderValues {
-  return Object.fromEntries(
-    FIELDS.map((field) => [field, spell?.[field] ?? '']),
-  ) as SpellBuilderValues;
+  return {
+    ...(Object.fromEntries(FIELDS.map((field) => [field, spell?.[field] ?? ''])) as Record<
+      SpellBuilderField,
+      string
+    >),
+    // A new spell is the coven's unless chosen otherwise (§5).
+    visibility: spell?.visibility ?? 'workspace',
+  };
 }
 
 /**
@@ -154,11 +174,17 @@ const SpellBuilder = ({ workspaceId, spell, onCreated }: SpellBuilderProps): Rea
   } = methods;
 
   // Something to save: a field that reads differently from the last save,
-  // blank and spaces alike reading as none, as the schema reads them.
+  // blank and spaces alike reading as none, as the schema reads them, or a
+  // visibility other than the last save's, which is a choice worth saving on
+  // its own (the owner's call, 2026-10-27).
   const typed = useWatch({ control, name: [...FIELDS] });
-  const dirty = FIELDS.some(
-    (field, index) => (typed[index] ?? '').trim() !== (defaultValues?.[field] ?? '').trim(),
-  );
+  const visibility = useWatch({ control, name: 'visibility' });
+  const values = useWatch({ control }) as SpellBuilderValues;
+  const dirty =
+    visibility !== defaultValues?.visibility ||
+    FIELDS.some(
+      (field, index) => (typed[index] ?? '').trim() !== (defaultValues?.[field] ?? '').trim(),
+    );
 
   // A new spell opens every section, to be filled in order; a saved one opens
   // them shut, each line saying what it holds, as Add Ingredient's do (M8.16).
@@ -173,7 +199,7 @@ const SpellBuilder = ({ workspaceId, spell, onCreated }: SpellBuilderProps): Rea
     });
   const lineOf = (name: SectionName): string =>
     SECTIONS[name]
-      .map((field) => oneLine(typed[FIELDS.indexOf(field)] ?? ''))
+      .map((field) => lineOfField(field, values))
       .filter(Boolean)
       .join(' · ') || 'Nothing yet';
   /** Opens each section one of whose fields now holds an error, so the error is seen. */
@@ -224,9 +250,13 @@ const SpellBuilder = ({ workspaceId, spell, onCreated }: SpellBuilderProps): Rea
   const send = async (values: SpellBuilderInput): Promise<void> => {
     // Only the builder's fields: the schema's defaults (an empty recipe)
     // would otherwise replace a saved spell's steps.
-    const input = Object.fromEntries(
-      FIELDS.map((field) => [field, values[field] ?? null]),
-    ) as SpellBuilderInput;
+    const input = {
+      ...(Object.fromEntries(FIELDS.map((field) => [field, values[field] ?? null])) as Record<
+        SpellBuilderField,
+        string | null
+      >),
+      visibility: values.visibility,
+    };
     try {
       const created = saved === null;
       const answer = await save.mutateAsync(input);
@@ -254,7 +284,7 @@ const SpellBuilder = ({ workspaceId, spell, onCreated }: SpellBuilderProps): Rea
   return (
     <FormProvider {...methods}>
       <FormHistoryContext.Provider value={history}>
-        <form ref={root} className="form" onSubmit={submit} noValidate>
+        <form ref={root} className="form spell-builder" onSubmit={submit} noValidate>
           {errors.root?.message && <Notice kind="error">{errors.root.message}</Notice>}
           <div className="collapsible-sections">
             <FoldAll
@@ -319,12 +349,15 @@ const SpellBuilder = ({ workspaceId, spell, onCreated }: SpellBuilderProps): Rea
             )}
             {section(
               'Notes',
-              <TextField<SpellBuilderValues>
-                name="note"
-                label="Note"
-                placeholder="Add a note"
-                multiline
-              />,
+              <>
+                <TextField<SpellBuilderValues>
+                  name="note"
+                  label="Note"
+                  placeholder="Add a note"
+                  multiline
+                />
+                <SpellVisibilityField created={saved !== null} save={send} />
+              </>,
             )}
           </div>
           <FormActions noun="Spell" dirty={dirty} submitting={isSubmitting} />
