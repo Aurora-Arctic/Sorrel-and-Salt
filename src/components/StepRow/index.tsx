@@ -17,9 +17,15 @@ import type { StepRowProps } from './types';
 const plainQuantity = (quantity: string): string =>
   quantity.includes('.') ? quantity.replace(/0+$/, '').replace(/\.$/, '') : quantity;
 
-/** The amount and unit as one phrase, "2 tsp", or null where there is neither. */
-const amountOf = (quantity?: string | null, unit?: string | null): string | null =>
-  [quantity && plainQuantity(quantity), unit].filter(Boolean).join(' ') || null;
+/**
+ * The amount and unit as one phrase, "2 tsp", or null where there is neither. A unit with no
+ * quantity reads "— tsp", an en dash where the number would be: a missing amount, not an
+ * amount of nothing, which "0 tsp" would claim (the owner, 2026-10-28).
+ */
+const amountOf = (quantity?: string | null, unit?: string | null): string | null => {
+  if (!quantity && !unit) return null;
+  return [quantity ? plainQuantity(quantity) : '—', unit].filter(Boolean).join(' ');
+};
 
 export default function StepRow({
   position,

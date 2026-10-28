@@ -87,4 +87,13 @@ describe('StepRow', () => {
     expect(rows[1]).toHaveTextContent('2.5 tsp');
     expect(rows[2]).toHaveTextContent('10 g');
   });
+  it('shows a dash before a unit that has no quantity', () => {
+    render(
+      <ol>
+        <StepRow position={1} name="Testwort" unit="tsp" />
+      </ol>,
+    );
+
+    expect(row()).toHaveTextContent('— tsp');
+  });
 });
