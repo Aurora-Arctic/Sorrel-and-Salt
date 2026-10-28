@@ -32,6 +32,16 @@ except Steps, which says the spell has no steps.
 - No `PageNav`: the sections fit one screen. No print rules: M10.22 styles this page.
 - Steps are drawn by the component read-only. M13.3's `StepRow` replaces this when it lands.
 
+## Quick Look
+
+The body below the head is `SpellRecipeBody` (`body.tsx`): intent, `CategoryChips`, Ingredients,
+Steps and Note. The recipe page and the grimoire list's Quick Look modal (M13.21) both render it,
+so nothing is drawn twice. `look-dialog.tsx` (`SpellLookDialog`) puts it in a `RouteModal`: the
+title as the heading, `LastEdit` above it, an Edit link (`formalActions`) when given an
+`editHref`, and a foot bar with "See Recipe Page" linking to the page. `failed` draws a Notice
+that the spell could not be read. The page and the modal read through `readRecipeOf`
+(`grimoire/recipe-read.ts`).
+
 ## Decisions
 
 - The form is stored lower case and set in title case by the component. The form icon is not drawn on steps, as the step view carries no form group.

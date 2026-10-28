@@ -41,17 +41,17 @@ named in one batch too: the page reads through the services rather than GraphQL,
 
 `GrimoireListProps` (`types.ts`):
 
-| Prop                       | What it is                                                                  |
-| -------------------------- | --------------------------------------------------------------------------- |
-| `path`                     | The tab's own address: the filter's GET target and what Clear All opens     |
-| `workspaceId`              | The coven the title search suggests from                                    |
-| `status`                   | The tab's status, which the title search keeps to and the empty state names |
-| `spells`                   | The page's spells, each as its card draws it                                |
-| `filter`                   | The address's filter: the search text, the categories and their Match mode  |
-| `categories`               | Every category the filter offers, by slug, each with its count on this tab  |
-| `position`                 | The page number and the page count, for the pager                           |
-| `total`                    | How many spells the filter found on this tab, every page                    |
-| `previousHref`, `nextHref` | The pager's links, which keep the tab's path and the filter                 |
+| Prop                       | What it is                                                                                                        |
+| -------------------------- | ----------------------------------------------------------------------------------------------------------------- |
+| `path`                     | The tab's own address: the filter's GET target and what Clear All opens                                           |
+| `workspaceId`              | The coven the title search suggests from                                                                          |
+| `status`                   | The tab's status, which the title search keeps to and the empty state names                                       |
+| `spells`                   | The page's spells, each as its card draws it, with its `lookHref` and, for a role that may update, its `editHref` |
+| `filter`                   | The address's filter: the search text, the categories and their Match mode                                        |
+| `categories`               | Every category the filter offers, by slug, each with its count on this tab                                        |
+| `position`                 | The page number and the page count, for the pager                                                                 |
+| `total`                    | How many spells the filter found on this tab, every page                                                          |
+| `previousHref`, `nextHref` | The pager's links, which keep the tab's path and the filter                                                       |
 
 `GRIMOIRE_PARAMS` (`params.ts`) is the grimoire's parameter set in `defineSearchParams`:
 `query`, `categories` and `categoryMode`. It reads the address and writes the GraphQL
@@ -114,6 +114,18 @@ variables, so a search and its categories live in the address and combine.
 - **The loading shape** is `PARTS_OF_SECTION.grimoire` in `src/lib/coven-path.ts`: cards
   under a title, the tab row and a filter. Drafts is the grimoire's second tab, so it draws
   the same; any other path beneath `grimoire` draws as a spell's own page.
+
+## Quick Look
+
+`?spell=<id>` on either tab opens `SpellLookDialog` over the list (M13.21), for every role. The
+tab reads it with `readLookedSpell` (`reads.ts`): `readSpell` for the signed-in member, which
+keeps another member's private spell and another coven's spell as a NotFound, so the tab opens
+nothing and says nothing of the spell. Any other failure draws the modal's own Notice. The steps,
+assigned categories and editor come from `readRecipeOf` (`grimoire/recipe-read.ts`), the same
+function the recipe page calls, with the editor named in one `displayNamesOf` call. A malformed
+id reads nothing, and `?new` or `?edit` hold the modal back so one dialog shows at a time. The
+modal's Edit shows for the same `rolePermits(role, { spell: ['update'] })` check as the card's
+pencil and links to `?edit=<id>` in place of `?spell=<id>`.
 
 ## The Compact switch
 

@@ -1,6 +1,10 @@
 import type { Route } from 'next';
 import type { Meta, StoryObj } from '@storybook/nextjs-vite';
+import { Reopenable } from '../../../.storybook/reopenable';
 import SpellRecipe from '.';
+import SpellRecipeBody from './body';
+import SpellLookDialog from './look-dialog';
+import type { RecipeStep } from './types';
 
 // Render-only; what shows and when is asserted in tests/components/SpellRecipe.
 const meta = {
@@ -8,6 +12,8 @@ const meta = {
 } satisfies Meta;
 export default meta;
 type Story = StoryObj;
+
+const STEPS: RecipeStep[] = [{ kind: 'instruction', id: 'b', body: 'Stir three times, sunwise.' }];
 
 export const Complete: Story = {
   render: () => (
@@ -52,5 +58,51 @@ export const Complete: Story = {
         },
       ]}
     />
+  ),
+};
+
+// Quick Look (M13.21): the recipe's body in a modal over the grimoire list. The workshop's
+// router goes nowhere, so Close, Escape and the links leave Open Again (`Reopenable`).
+const look = (editHref?: Route) => (
+  <Reopenable>
+    {() => (
+      <SpellLookDialog
+        closeHref={'/coven/fixture-coven/grimoire' as Route}
+        opened={{
+          title: 'Hearth Warding Jar',
+          lastEdit: { by: 'Fixture Author', at: '2026-10-01T12:00:00.000Z' },
+          recipeHref: '/coven/fixture-coven/grimoire/s1' as Route,
+          editHref,
+          children: (
+            <SpellRecipeBody
+              title="Hearth Warding Jar"
+              intent="To keep the house safe through the winter."
+              categories={[]}
+              note="Best made on a dry night."
+              steps={STEPS}
+            />
+          ),
+        }}
+      />
+    )}
+  </Reopenable>
+);
+
+export const QuickLookForMember: Story = {
+  name: 'Quick Look',
+  render: () => look('/coven/fixture-coven/grimoire?edit=s1' as Route),
+};
+
+export const QuickLookForViewer: Story = {
+  name: 'Quick Look, Read Only',
+  render: () => look(),
+};
+
+export const QuickLookFailed: Story = {
+  name: 'Quick Look, Read Failed',
+  render: () => (
+    <Reopenable>
+      {() => <SpellLookDialog closeHref={'/coven/fixture-coven/grimoire' as Route} failed />}
+    </Reopenable>
   ),
 };

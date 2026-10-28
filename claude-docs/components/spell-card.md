@@ -17,17 +17,18 @@ The card is presentational: it takes props and works nothing out from the data, 
 
 ## Props
 
-| Prop         | What it is                                                                                           |
-| ------------ | ---------------------------------------------------------------------------------------------------- |
-| `id`         | The spell's id. It names the title heading, `spellTitleId(id)`                                       |
-| `title`      | The title, or null. Null or blank lists as "Untitled Spell"                                          |
-| `intent`     | The intent, or null. Without one the card draws no paragraph                                         |
-| `status`     | `draft` or `complete`                                                                                |
-| `visibility` | `private` or `workspace`: who can see it                                                             |
-| `categories` | The assigned categories, each with its group's colours. Never the derived ones (DESIGN.md §5)        |
-| `lastEdit`   | Who last edited it and when, `{ by, at }`, worked out by the caller. None draws no line              |
-| `editHref`   | Where the Edit pencil opens the spell, the tab's own address plus `?edit=<id>`. None draws no pencil |
-| `level`      | The title's heading level, 2 by default                                                              |
+| Prop         | What it is                                                                                            |
+| ------------ | ----------------------------------------------------------------------------------------------------- |
+| `id`         | The spell's id. It names the title heading, `spellTitleId(id)`                                        |
+| `title`      | The title, or null. Null or blank lists as "Untitled Spell"                                           |
+| `intent`     | The intent, or null. Without one the card draws no paragraph                                          |
+| `status`     | `draft` or `complete`                                                                                 |
+| `visibility` | `private` or `workspace`: who can see it                                                              |
+| `categories` | The assigned categories, each with its group's colours. Never the derived ones (DESIGN.md §5)         |
+| `lastEdit`   | Who last edited it and when, `{ by, at }`, worked out by the caller. None draws no line               |
+| `editHref`   | Where the Edit pencil opens the spell, the tab's own address plus `?edit=<id>`. None draws no pencil  |
+| `lookHref`   | Where the Quick Look eye opens the spell, the tab's own address plus `?spell=<id>`. None draws no eye |
+| `level`      | The title's heading level, 2 by default                                                               |
 
 ## Its name
 
@@ -71,6 +72,15 @@ card's top-right corner, as IngredientEntry's pencil is drawn (M13.10). The grim
 out and passes it only for a role that may update a spell (`rolePermits(role, { spell:
 ['update'] })`), so a viewer's cards have none. It keeps the tab's filter, page and tab in
 the address, so closing the dialog returns to the list as it was.
+
+## The Quick Look eye
+
+Given a `lookHref`, the card draws a `QuickLookLink` (an eye icon link, named "Quick Look <title>")
+in the corner beside the Edit pencil (M13.21), opening the `look` modal place
+(`SPELL_LOOK_PLACE`) so it is independent of the spell builder's dialog. The grimoire tab passes
+it for every role, since a viewer may read the spell; it keeps the tab's filter, page and tab in
+the address, and closing returns there with focus back on the eye. What the modal shows is
+`SpellLookDialog` (claude-docs/components/spell-recipe.md, "Quick Look").
 
 ## Styling
 
