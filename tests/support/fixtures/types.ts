@@ -128,7 +128,7 @@ export interface SpellFixture extends Required<
     | 'workspaceId'
     | 'title'
     | 'intent'
-    | 'jarSize'
+    | 'jarDescription'
     | 'sealWaxColor'
     | 'moonPhase'
     | 'dayOfWeek'

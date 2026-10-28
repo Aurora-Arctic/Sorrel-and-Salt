@@ -23,7 +23,7 @@ const SAVED: SpellBuilderSpell = {
   revision: 3,
   title: 'Fixture Working',
   intent: 'To see clearly',
-  jarSize: '4 oz',
+  jarDescription: '4 oz',
   sealWaxColor: 'Blue',
   moonPhase: 'Waxing Gibbous',
   dayOfWeek: 'Monday',

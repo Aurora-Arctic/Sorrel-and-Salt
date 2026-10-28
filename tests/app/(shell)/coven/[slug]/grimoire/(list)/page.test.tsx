@@ -254,7 +254,7 @@ describe('the spell builder over a Grimoire tab', () => {
     workspaceId: COVEN.id,
     title: 'Fixture Working',
     intent: 'Calm',
-    jarSize: '4 oz',
+    jarDescription: '4 oz',
     sealWaxColor: null,
     moonPhase: 'Full Moon',
     dayOfWeek: null,
@@ -297,7 +297,7 @@ describe('the spell builder over a Grimoire tab', () => {
     expect(readSpell).toHaveBeenCalledWith(session, COVEN.id, SPELL_ID);
     const dialog = screen.getByRole('dialog', { name: 'Edit Spell, Fixture Working' });
     expect(within(dialog).getByRole('textbox', { name: 'Intent' })).toHaveValue('Calm');
-    expect(within(dialog).getByRole('textbox', { name: 'Jar Size' })).toHaveValue('4 oz');
+    expect(within(dialog).getByRole('textbox', { name: 'Jar Description' })).toHaveValue('4 oz');
   });
 
   it('reads nothing and opens nothing under ?edit=<id> for a viewer', async () => {

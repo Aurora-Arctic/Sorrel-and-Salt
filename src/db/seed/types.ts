@@ -128,7 +128,7 @@ export type SeedSpell = Pick<
   typeof spells.$inferInsert,
   | 'title'
   | 'intent'
-  | 'jarSize'
+  | 'jarDescription'
   | 'sealWaxColor'
   | 'moonPhase'
   | 'dayOfWeek'

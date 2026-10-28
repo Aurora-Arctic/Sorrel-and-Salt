@@ -47,7 +47,7 @@ function saved(id: string, revision: number, input: CreateSpellMutationVariables
     revision,
     title: input.title ?? null,
     intent: input.intent ?? null,
-    jarSize: input.jarSize ?? null,
+    jarDescription: input.jarDescription ?? null,
     sealWaxColor: input.sealWaxColor ?? null,
     moonPhase: input.moonPhase ?? null,
     dayOfWeek: input.dayOfWeek ?? null,
@@ -88,7 +88,7 @@ function acceptUpdate() {
 const LABELS = [
   'Title',
   'Intent',
-  'Jar Size',
+  'Jar Description',
   'Seal Wax Colour',
   'Moon Phase',
   'Day of the Week',
@@ -140,7 +140,7 @@ describe('SpellBuilder', () => {
       input: {
         title: null,
         intent: 'To see clearly',
-        jarSize: null,
+        jarDescription: null,
         sealWaxColor: null,
         moonPhase: null,
         dayOfWeek: null,
@@ -155,7 +155,7 @@ describe('SpellBuilder', () => {
 
     type('Title', '  Fixture Working ');
     type('Intent', 'To see clearly');
-    type('Jar Size', '4 oz');
+    type('Jar Description', '4 oz');
     type('Seal Wax Colour', 'Blue');
     openWhen();
     type('Moon Phase', 'Waxing gibbous');
@@ -167,7 +167,7 @@ describe('SpellBuilder', () => {
     expect(calls[0]?.input).toEqual({
       title: 'Fixture Working',
       intent: 'To see clearly',
-      jarSize: '4 oz',
+      jarDescription: '4 oz',
       sealWaxColor: 'Blue',
       moonPhase: 'Waxing gibbous',
       dayOfWeek: 'Monday',
@@ -222,7 +222,7 @@ describe('SpellBuilder', () => {
         revision: 4,
         title: 'Fixture Working',
         intent: 'To see clearly',
-        jarSize: '4 oz',
+        jarDescription: '4 oz',
         sealWaxColor: 'Blue',
         moonPhase: null,
         dayOfWeek: 'Monday',
@@ -231,7 +231,7 @@ describe('SpellBuilder', () => {
     });
 
     expect(field('Title')).toHaveValue('Fixture Working');
-    expect(field('Jar Size')).toHaveValue('4 oz');
+    expect(field('Jar Description')).toHaveValue('4 oz');
     openWhen();
     expect(field('Moon Phase')).toHaveValue('');
     expect(save()).toBeDisabled();
@@ -247,7 +247,7 @@ describe('SpellBuilder', () => {
       input: {
         title: 'Fixture Working',
         intent: 'To see clearly',
-        jarSize: '4 oz',
+        jarDescription: '4 oz',
         sealWaxColor: null,
         moonPhase: null,
         dayOfWeek: 'Monday',
@@ -376,7 +376,7 @@ describe('SpellBuilder', () => {
           revision: 1,
           title: null,
           intent: null,
-          jarSize: null,
+          jarDescription: null,
           sealWaxColor: null,
           moonPhase: 'Full',
           dayOfWeek: 'saturday',
@@ -417,7 +417,7 @@ describe('SpellBuilder', () => {
       const fields = whenFields();
       expect(within(fields).getByRole('combobox', { name: 'Moon Phase' })).toBeVisible();
       expect(within(fields).getByRole('combobox', { name: 'Day of the Week' })).toBeVisible();
-      expect(within(fields).queryByRole('textbox', { name: 'Jar Size' })).toBeNull();
+      expect(within(fields).queryByRole('textbox', { name: 'Jar Description' })).toBeNull();
     });
 
     it('opens a saved spell shut, its line naming the values it holds', () => {
@@ -427,7 +427,7 @@ describe('SpellBuilder', () => {
           revision: 1,
           title: null,
           intent: null,
-          jarSize: null,
+          jarDescription: null,
           sealWaxColor: null,
           moonPhase: 'Waxing Moon',
           dayOfWeek: 'Monday',

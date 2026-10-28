@@ -97,8 +97,19 @@ export async function readEditedSpell(
   const session = await requireSession();
   try {
     const spell = await readSpell(session, workspaceId, id);
-    const { revision, title, intent, jarSize, sealWaxColor, moonPhase, dayOfWeek, note } = spell;
-    return { id, revision, title, intent, jarSize, sealWaxColor, moonPhase, dayOfWeek, note };
+    const { revision, title, intent, jarDescription, sealWaxColor, moonPhase, dayOfWeek, note } =
+      spell;
+    return {
+      id,
+      revision,
+      title,
+      intent,
+      jarDescription,
+      sealWaxColor,
+      moonPhase,
+      dayOfWeek,
+      note,
+    };
   } catch (error) {
     if (error instanceof NotFound || error instanceof Forbidden) return undefined;
     throw error;

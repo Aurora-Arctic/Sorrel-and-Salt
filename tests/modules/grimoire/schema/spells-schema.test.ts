@@ -14,7 +14,7 @@ const OWN_COLUMNS = [
   'workspace_id',
   'title',
   'intent',
-  'jar_size',
+  'jar_description',
   'seal_wax_color',
   'moon_phase',
   'day_of_week',
@@ -91,7 +91,7 @@ describe('spells table', () => {
     expect(row.title).toBe('Hearth Guard');
     for (const column of [
       'intent',
-      'jar_size',
+      'jar_description',
       'seal_wax_color',
       'moon_phase',
       'day_of_week',
