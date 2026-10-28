@@ -15,39 +15,41 @@ import { isInstruction, stepNameOf } from './steps/values';
 // In Coven Inventory (the Jar's aside): one line for each ingredient step, in step order, saying
 // what the step needs against what the coven's jar holds, as `supplyOf` judges it. All four
 // verdicts stand at the right end of the name's line, so the name is cut short before they are.
-// Low and Out are words beside StockBadge's symbol. Not Enough and Units Differ are a symbol
-// alone (supply-icon.tsx): the words are the button's name and the reason is its IconTip
-// (the owner's call, 2026-10-28), the verdict's `tip`. A step with an instruction only has
+// Every verdict is a symbol alone (StockBadge's for Out and Low, supply-icon.tsx's for Not Enough
+// and Units Differ): the words are the button's name and the reason is its IconTip (the owner's
+// call, 2026-10-28), the verdict's `mark`. A step with an instruction only has
 // no line. See claude-docs/components/spell-builder.md, "The aside".
 
 const UNITS_DIFFER_TIP =
   'The spell’s unit can’t be checked against the jar’s, so it can’t tell if you have enough.';
 const NOT_ENOUGH_TIP = 'The jar holds less than this step needs.';
 
-/** `mark` set means the verdict is that symbol alone, the words naming a button that carries the tip. */
+const OUT_TIP = 'The jar is empty, so there is nothing to put in.';
+const LOW_TIP = 'The jar is at or below the coven’s Low mark.';
+
+const OutIcon = ({ className }: { className: string }): ReactElement => (
+  <StockIcon out className={className} />
+);
+const LowIcon = ({ className }: { className: string }): ReactElement => (
+  <StockIcon out={false} className={className} />
+);
+
+/** The verdict is its `mark` alone: the symbol in a button named `words`, whose IconTip says why. */
 type Verdict = {
   words: string;
-  state: 'low' | 'out' | null;
   tone: string;
-  mark?: { Icon: (props: { className: string }) => ReactElement; tip: string };
+  mark: { Icon: (props: { className: string }) => ReactElement; tip: string };
 };
 
-const VERDICTS: Record<StepSupply['kind'], Verdict> = {
-  'one-off': { words: 'One-Off', state: null, tone: 'muted' },
-  out: { words: 'Out', state: 'out', tone: 'out' },
-  short: {
-    words: 'Not Enough',
-    state: null,
-    tone: 'low',
-    mark: { Icon: NotEnoughIcon, tip: NOT_ENOUGH_TIP },
-  },
+const VERDICTS: Partial<Record<StepSupply['kind'], Verdict>> = {
+  out: { words: 'Out', tone: 'out', mark: { Icon: OutIcon, tip: OUT_TIP } },
+  short: { words: 'Not Enough', tone: 'low', mark: { Icon: NotEnoughIcon, tip: NOT_ENOUGH_TIP } },
   'units-differ': {
     words: 'Units Differ',
-    state: null,
     tone: 'muted',
     mark: { Icon: UnitsDifferIcon, tip: UNITS_DIFFER_TIP },
   },
-  low: { words: 'Low', state: 'low', tone: 'low' },
+  low: { words: 'Low', tone: 'low', mark: { Icon: LowIcon, tip: LOW_TIP } },
 };
 
 /** The line's words after the name, as the parts to join: need, hold, the verdict. */
@@ -65,7 +67,7 @@ export function holdWords(step: SpellStepValue): { parts: string[]; verdict: Ver
         : `hold ${amountText(jar.quantity, jar.unit)}`;
   return {
     parts: [need, hold].filter((part): part is string => part !== null),
-    verdict: supply === null ? null : VERDICTS[supply.kind],
+    verdict: (supply && VERDICTS[supply.kind]) ?? null,
   };
 }
 
@@ -86,18 +88,11 @@ function HoldLine({ step, seed }: { step: SpellStepValue; seed: string }): React
         <span className="spell-inventory__name">{stepNameOf(step)}</span>
         {verdict && (
           <span className={`spell-inventory__verdict is-${verdict.tone}`}>
-            {verdict.mark ? (
-              <IconTip tip={verdict.mark.tip}>
-                <button type="button" className="spell-inventory__mark" aria-label={verdict.words}>
-                  <verdict.mark.Icon className="spell-inventory__icon" />
-                </button>
-              </IconTip>
-            ) : (
-              <>
-                <StockIcon out={verdict.state === 'out'} className="spell-inventory__icon" />
-                {verdict.words}
-              </>
-            )}
+            <IconTip tip={verdict.mark.tip}>
+              <button type="button" className="spell-inventory__mark" aria-label={verdict.words}>
+                <verdict.mark.Icon className="spell-inventory__icon" />
+              </button>
+            </IconTip>
           </span>
         )}
       </span>

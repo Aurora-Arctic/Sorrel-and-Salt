@@ -663,7 +663,10 @@ describe('the spell builder’s In Coven Inventory', () => {
 
     await add('Mock', /Fixture Mockroot/);
 
-    expect(line('Fixture Mockroot')).toHaveTextContent(/Fixture Mockroot.*Outhold none$/);
+    expect(
+      within(line('Fixture Mockroot')).getByRole('button', { name: 'Out' }),
+    ).toBeInTheDocument();
+    expect(line('Fixture Mockroot')).toHaveTextContent('hold none');
   });
 
   it('flags an empty jar as Out', async () => {
@@ -676,7 +679,10 @@ describe('the spell builder’s In Coven Inventory', () => {
 
     await add('Rose', /Fixture Rosewort/);
 
-    expect(line('Fixture Rosewort')).toHaveTextContent(/Fixture Rosewort.*Outhold none$/);
+    expect(
+      within(line('Fixture Rosewort')).getByRole('button', { name: 'Out' }),
+    ).toBeInTheDocument();
+    expect(line('Fixture Rosewort')).toHaveTextContent('hold none');
   });
 
   it('gives Not Enough as an icon button, and not Out, once the amount typed passes the jar, and clears when it fits', async () => {
@@ -695,7 +701,7 @@ describe('the spell builder’s In Coven Inventory', () => {
 
     await waitFor(() => expect(notEnough()).toBeInTheDocument());
     expect(line('Fixture Rosewort')).toHaveTextContent('need 9 g · hold 5 g');
-    expect(line('Fixture Rosewort')).not.toHaveTextContent('Out');
+    expect(within(line('Fixture Rosewort')).queryByRole('button', { name: 'Out' })).toBeNull();
 
     fireEvent.change(within(row).getByRole('spinbutton', { name: /^Quantity/ }), {
       target: { value: '4' },
