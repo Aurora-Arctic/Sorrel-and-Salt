@@ -222,12 +222,12 @@ The fields sit in four `CollapsibleSection`s at `h3`
 `.collapsible-sections`, as Add Ingredient's are (M8.16; the owner, 2026-10-28,
 "Use add ingredient modal as reference"):
 
-| Section         | Fields                                                                                                                       |
-| --------------- | ---------------------------------------------------------------------------------------------------------------------------- |
-| Purpose         | Title, Intent, Categories (M10.14)                                                                                           |
-| Jar             | The Jar aside (Jar Description, Seal Wax Colour, In Coven Inventory, the comparison) beside What Goes In (the steps, M10.15) |
-| When to Work It | Moon Phase, Day of the Week                                                                                                  |
-| Notes           | Note, Share With the Coven (M10.13)                                                                                          |
+| Section         | Fields                                                                                                                |
+| --------------- | --------------------------------------------------------------------------------------------------------------------- |
+| Purpose         | Title, Intent, Categories (M10.14)                                                                                    |
+| Jar             | The Jar aside (Jar Description, Seal Wax, In Coven Inventory, the comparison) beside What Goes In (the steps, M10.15) |
+| When to Work It | Moon Phase, Day                                                                                                       |
+| Notes           | Note, Share With the Coven (M10.13)                                                                                   |
 
 A new spell opens with every section open, to be filled in order; a saved
 spell opens with every section shut. Shut, a section's line names the values
@@ -253,7 +253,7 @@ states a rule a person could trip on
 stored as typed: the columns are free text
 ([`../db/grimoire.md`](../db/grimoire.md)).
 
-- **Moon Phase and Day of the Week** sit together under When to Work It.
+- **Moon Phase and Day** sit together under When to Work It.
   They are the recipe's timing, meaning when to work the
   spell, not a record of when it was worked. A working's own day and moon
   phase follow from its `workedOn` date (M13.4). Both are comboboxes
@@ -307,9 +307,9 @@ stored as typed: the columns are free text
   as the picker's chips; the grimoire's spell card shows the saved ones with
   `CategoryChips`. A saved spell opens with its categories picked: the
   `?edit=<id>` read (`readEditedSpell`) loads them with `assignedCategoriesOf`.
-- **Jar Description and Seal Wax Colour** stay plain text boxes, with no list, by
+- **Jar Description and Seal Wax** stay plain text boxes, with no list, by
   the owner's decision (2026-10-27).
-- **Intent and Note** are multi-line. Title, Jar Description and Seal Wax Colour are
+- **Intent and Note** are multi-line. Title, Jar Description and Seal Wax are
   `autoComplete="off"`.
 
 ## Steps
@@ -321,7 +321,7 @@ side once the section is 50rem wide (list at least 28rem, a 1rem gap, the aside 
 content beside its 1rem of padding and its hairline; the `spell-jar` container query in `index.scss`)
 and stack below it, the list first. A hairline in `$hairline` is the aside's own border: beside
 the list when side by side, above the aside when stacked. The two headings share a line, and
-the jar drawing is centred on the Seal Wax Colour input box (its box is `$control-height`). The
+the jar drawing is centred on the Seal Wax input box (its box is `$control-height`). The
 `wide` dialog is 55rem of content, so two columns fit at desktop width and stack at phone
 width (gate spec `tests/e2e/spell-dialog-size.spec.ts`). While a saved spell's steps are still
 being read the column is a skeleton, and if the read fails, an error in its place.
@@ -492,7 +492,7 @@ No wrapper: the `<form className="form">` sits straight in the body of a `RouteM
 [`modal.md`](modal.md)), its sections styled by `CollapsibleSection`. `index.scss` holds the
 visibility switch's alignment (M10.13) and the Jar section (the owner's design pass, 2026-10-28):
 
-- a single text field (Title, Intent, Moon Phase, Day of the Week, Note) fills its column, with no cap (the owner's call, 2026-10-28; it was stopped at `$narrow-column`, 28rem, before): Title and Intent the Purpose section's left track. Moon Phase, Day of the Week and Note (with Status and the visibility switch, in the same column) end where the Jar's What Goes In column ends: `.spell-main-column` is a size container and `.spell-main-column__fields` takes the same two-track grid as the Purpose section from `$spell-columns-switch` up, leaving the side track empty, and the whole width below it;
+- a single text field (Title, Intent, Moon Phase, Day, Note) fills its column, with no cap (the owner's call, 2026-10-28; it was stopped at `$narrow-column`, 28rem, before): Title and Intent the Purpose section's left track. Moon Phase, Day and Note (with Status and the visibility switch, in the same column) end where the Jar's What Goes In column ends: `.spell-main-column` is a size container and `.spell-main-column__fields` takes the same two-track grid as the Purpose section from `$spell-columns-switch` up, leaving the side track empty, and the whole width below it;
 - the Purpose section is two columns (the owner's call, 2026-10-28): Title and Intent at the left, filling that track, and Categories at the right, top-aligned with Title. It is the Jar aside's column: `.spell-purpose` is a size container (`spell-purpose`) and both sections take their numbers from the same Sass variables and mixins at the top of `index.scss` (`$spell-main-min`, `$spell-side`, `$spell-columns-gap`, `$spell-columns-switch`, `spell-side-stacked`, `spell-side-beside`). So they switch at the same width (50rem of container), Categories is 21rem wide at the same left edge as the aside, and both carry the same `$hairline` drawn as the column's own border (beside it when side by side, above it when stacked, with 1rem of padding on the content's side). Both tracks are `minmax(0, …)`, so a long chip row wraps rather than widens the dialog;
 - the section is a container (`spell-jar`): a two-column row, the list at least 28rem and the
   aside 21rem, stacking below 50rem;
