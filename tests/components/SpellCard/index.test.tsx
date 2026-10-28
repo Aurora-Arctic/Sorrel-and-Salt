@@ -1,7 +1,7 @@
 import type { Route } from 'next';
 import { render, screen, within } from '@testing-library/react';
 import { describe, expect, it, vi } from 'vitest';
-import SpellCard, { spellTitleId } from '@/components/SpellCard';
+import SpellCard, { SpellCardFilters, spellTitleId } from '@/components/SpellCard';
 
 // The title link navigates through the shared hook (M12.33), so the App Router is mocked.
 vi.mock('next/navigation', () => ({
@@ -111,6 +111,22 @@ describe('SpellCard', () => {
   it('is not a link until the spell page exists (MB.6)', () => {
     render(<SpellCard {...BASE} />);
     expect(screen.queryByRole('link')).not.toBeInTheDocument();
+  });
+  // The smouldering edge (spell-card.md): layers drawn on hover, which a screen reader must
+  // not meet. Hidden layers have no role, so they are found by the attribute that hides them.
+  it('draws the smoulder as hidden decoration, leaving the card named by its title alone', () => {
+    render(<SpellCard {...BASE} />);
+    const card = screen.getByRole('article', { name: 'Fixture Working' });
+    const layers = card.querySelectorAll(':scope > [aria-hidden="true"]');
+    expect(layers).toHaveLength(3);
+    layers.forEach((layer) => expect(layer).toHaveTextContent(/^$/));
+  });
+
+  it('renders the burn filter the stylesheet names, hidden from assistive technology', () => {
+    const { container } = render(<SpellCardFilters />);
+    const svg = container.querySelector('svg');
+    expect(svg).toHaveAttribute('aria-hidden', 'true');
+    expect(svg?.querySelector('filter#spell-card-burn')).not.toBeNull();
   });
 });
 
