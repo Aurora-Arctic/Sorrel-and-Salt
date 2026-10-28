@@ -98,6 +98,15 @@ variables, so a search and its categories live in the address and combine.
   under a title, the tab row and a filter. Drafts is the grimoire's second tab, so it draws
   the same; any other path beneath `grimoire` draws as a spell's own page.
 
+## The Compact switch
+
+The filter row ends with `CardDensitySwitch` ([card-density-switch.md](card-density-switch.md)),
+where the coven Ingredients filter draws it. It is a view setting: it sits inside the search
+landmark and submits nothing. The list carries `data-density="compact"`, and the stored choice
+(`data-card-density="regular"` on `<html>`) turns the compact look off in CSS, so one choice
+serves this list and the Ingredients list and works before hydration. `SpellCard`'s compact
+look is [spell-card.md](spell-card.md), "Compact".
+
 ## Styling
 
 Tokens only, before the section's design review. `index.scss` sets the two empty regions as the coven's empty cupboard is (`CovenCards/index.scss`): the empty tab's sentence centred and larger than body copy, the no-match hint in muted body copy. The cards are `SpellCard`'s own.
@@ -109,6 +118,7 @@ One thing in the list exists for the cards' smouldering edge ([spell-card.md](sp
 - `tests/components/GrimoireList/index.test.tsx`: the named list and items, the three empty
   regions, the title search's address, the category pick applied as a slug, and each category
   offered with its count, a category at zero not offered.
+  The Compact switch: on by default, the list's `data-density`, and the stored choice it writes.
 - `tests/app/(shell)/coven/[slug]/grimoire/(list)/page.test.tsx`: the membership guard on
   both tabs and the layout, each tab's status and page size, the address read into the
   query, the tab's status winning, the categories and the editors each read in one batch,

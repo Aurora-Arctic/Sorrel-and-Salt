@@ -1,7 +1,7 @@
 import type { Route } from 'next';
-import { act, fireEvent, render, screen, within } from '@testing-library/react';
+import { act, cleanup, fireEvent, render, screen, within } from '@testing-library/react';
 import type { ReactElement } from 'react';
-import { beforeEach, describe, expect, it, vi } from 'vitest';
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { QueryClientProvider } from '@tanstack/react-query';
 import GrimoireList from '@/components/GrimoireList';
 import type { GrimoireListProps } from '@/components/GrimoireList/types';
@@ -94,6 +94,38 @@ describe('GrimoireList', () => {
       'href',
       '/coven/fixture-coven/grimoire/s2',
     );
+  });
+
+  describe('Compact', () => {
+    const html = document.documentElement;
+    afterEach(() => {
+      cleanup(); // unmount first, so clearing the attribute reaches no mounted switch
+      html.removeAttribute('data-card-density');
+      window.localStorage.clear();
+    });
+
+    it('offers the Compact switch in the filter row, on by default, and draws the cards compact', () => {
+      render(<List {...props()} />);
+      const control = screen.getByRole('switch', { name: 'Compact' });
+      expect(control).toBeChecked();
+      expect(screen.getByRole('list', { name: 'Grimoire' })).toHaveAttribute(
+        'data-density',
+        'compact',
+      );
+    });
+
+    it('turning it off writes the one stored choice the Ingredients list reads', () => {
+      render(<List {...props()} />);
+      fireEvent.click(screen.getByRole('switch', { name: 'Compact' }));
+      expect(html.getAttribute('data-card-density')).toBe('regular');
+      expect(window.localStorage.getItem('card-density')).toBe('regular');
+    });
+
+    it('starts off when the page already carries a stored regular choice', () => {
+      html.setAttribute('data-card-density', 'regular');
+      render(<List {...props()} />);
+      expect(screen.getByRole('switch', { name: 'Compact' })).not.toBeChecked();
+    });
   });
 
   it('says there are no spells, and no list, when the tab holds none and no filter is in force', () => {

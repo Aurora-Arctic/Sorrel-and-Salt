@@ -1,6 +1,7 @@
 'use client';
 
 import type { Route } from 'next';
+import CardDensitySwitch from '../CardDensitySwitch';
 import { type ReactElement, useMemo, useState } from 'react';
 import type { CategoryMode } from '@/modules/ingredients/schema/ingredient-enums';
 import { CategoryLine } from '../FacetPanel/category-line';
@@ -136,6 +137,9 @@ const GrimoireFilterRow = ({
         held={held}
         onHeld={setHeld}
       />
+      {/* A view setting, not a filter: it sits in the row, inside the search landmark, and
+          submits nothing. One stored choice serves this list and the Ingredients list. */}
+      <CardDensitySwitch />
     </IngredientSearchForm>
   );
 };

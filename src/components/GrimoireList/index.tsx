@@ -53,7 +53,7 @@ const GrimoireList = ({
         <ul
           className="ingredient-card-list grimoire-list__cards"
           aria-label="Grimoire"
-          data-density="regular"
+          data-density="compact"
         >
           {spells.map((spell) => (
             <li key={spell.id} aria-labelledby={spellTitleId(spell.id)}>
