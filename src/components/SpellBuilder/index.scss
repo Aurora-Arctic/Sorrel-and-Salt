@@ -165,7 +165,7 @@ $spell-columns-switch: $spell-main-min + $spell-columns-gap + $spell-side;
   color: $text-muted;
 }
 
-// The box, Add a Step and the list in one grid, so that one button can sit after the box
+// The box, Add an Instruction and the list in one grid, so that one button can sit after the box
 // on a wide column and be the list's last line on a narrow one, by `order` alone. The
 // column is its own container for the query, named for it.
 .spell-steps {
