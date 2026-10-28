@@ -277,7 +277,7 @@ test(
     });
     await signInAgainAs(page, coven.users.B);
     await openBuilder(page, coven.slug);
-    const panel = page.getByRole('region', { name: 'Intent Against Ingredients' });
+    const panel = page.getByRole('region', { name: 'Category Match' });
     await page
       .getByRole('group', { name: 'Categories', exact: true })
       .getByRole('combobox')
@@ -336,11 +336,11 @@ test(
     await openBuilder(page, coven.slug);
     // Rosemary is in the compendium and not in this coven's cupboard.
     await addIngredientStep(page, 'Rosemary (Herb)');
-    // What You Hold says so in words, beside the step's name.
-    const hold = page.getByRole('region', { name: 'What You Hold' });
-    await expect(hold.getByRole('listitem').filter({ hasText: 'Rosemary' })).toContainText(
-      'hold none · Out',
-    );
+    // In Coven Inventory says so in words, beside the step's name.
+    const hold = page.getByRole('region', { name: 'In Coven Inventory' });
+    const rosemary = hold.getByRole('listitem').filter({ hasText: 'Rosemary' });
+    await expect(rosemary).toContainText('hold none');
+    await expect(rosemary).toContainText('Out');
   },
 );
 

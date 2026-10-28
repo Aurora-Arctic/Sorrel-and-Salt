@@ -279,14 +279,14 @@
   }
 }
 
-// What You Hold: a small jar, the name, and the words under it.
-.spell-hold {
+// In Coven Inventory: a small jar, the name, and the words under it.
+.spell-inventory {
   display: flex;
   flex-direction: column;
   gap: space(2);
 }
 
-.spell-hold__list {
+.spell-inventory__list {
   display: flex;
   flex-direction: column;
   gap: space(2);
@@ -294,7 +294,7 @@
   @include list-reset;
 }
 
-.spell-hold__line {
+.spell-inventory__line {
   display: grid;
   grid-template-areas:
     'jar name'
@@ -304,7 +304,7 @@
 
   // A one-off holds no stock, so its jar is the plain empty outline the aside's own jar is,
   // solid and muted, not the dashed outline of a form with no jar, and not faded.
-  &.is-one-off .spell-hold__jar {
+  &.is-one-off .spell-inventory__jar {
     .jar-shelf__glass,
     .jar-shelf__lid,
     .jar-shelf__facet {
@@ -313,7 +313,7 @@
   }
 }
 
-.spell-hold__jar {
+.spell-inventory__jar {
   grid-area: jar;
   align-self: center;
 
@@ -328,7 +328,7 @@
 
 // The name line: the name, which is cut short with an ellipsis, then the Low or Out state,
 // which is not.
-.spell-hold__title {
+.spell-inventory__title {
   display: flex;
   grid-area: name;
   gap: space(2);
@@ -336,7 +336,7 @@
   min-width: 0;
 }
 
-.spell-hold__name {
+.spell-inventory__name {
   min-width: 0;
   overflow: hidden;
   font-weight: 500;
@@ -344,12 +344,12 @@
   white-space: nowrap;
 }
 
-.spell-hold__words {
+.spell-inventory__words {
   grid-area: words;
   color: $text-muted;
 }
 
-.spell-hold__verdict {
+.spell-inventory__verdict {
   display: inline-flex;
   flex: none;
   // Pushed to the line's right end; the name keeps the rest and is the one cut short.
@@ -367,20 +367,20 @@
   }
 }
 
-.spell-hold__icon {
+.spell-inventory__icon {
   inline-size: 1em;
   block-size: 1em;
   flex: none;
 }
 
 @container spell-column (max-width: #{$narrow-column}) {
-  .spell-hold__name {
+  .spell-inventory__name {
     overflow: visible;
     white-space: normal;
   }
 }
 
-// Intent Against Ingredients: Carried, Missing and Stray, each a row of chips.
+// Category Match: Carried, Missing and Stray, each a row of chips.
 .comparison-panel {
   display: flex;
   flex-direction: column;

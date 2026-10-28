@@ -13,7 +13,7 @@ import { summarizeSpellCategories } from '@/modules/grimoire/validation/categori
 import type { SpellStepValue, StepCategory } from './steps/types';
 import { stepNameOf } from './steps/values';
 
-// Intent Against Ingredients (M10.17, story 52), in the Jar's aside: the categories the
+// Category Match (M10.17, story 52), in the Jar's aside: the categories the
 // author assigned set beside the ones the jar's ingredients carry, in three rows. Carried
 // is intended and present, Missing intended and absent from the jar, Stray present but not
 // intended. A row with nothing in it is
@@ -99,7 +99,7 @@ export function ComparisonPanel({ intended, steps, groups }: ComparisonPanelProp
 
   return (
     <section className="comparison-panel" aria-labelledby={headingId}>
-      <h5 id={headingId}>Intent Against Ingredients</h5>
+      <h5 id={headingId}>Category Match</h5>
       {body}
     </section>
   );

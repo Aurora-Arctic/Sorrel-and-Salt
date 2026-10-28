@@ -3,7 +3,7 @@
 import { type ReactElement, type ReactNode, useId } from 'react';
 import { JarDrawing, pickJarShape } from '../JarShelf';
 import { SpellComparison } from './comparison-panel';
-import { SpellHold } from './hold';
+import { SpellInventory } from './inventory';
 
 // The Jar section's right-hand column (the owner's Option C2, 2026-10-28): the jar drawn
 // with the Seal Wax Colour field to its right and the Jar Description beneath both, then what the coven holds against the steps, then the
@@ -47,7 +47,7 @@ export function JarAside({
       {ready && (
         <>
           <hr className="spell-aside__rule" />
-          <SpellHold />
+          <SpellInventory />
           <hr className="spell-aside__rule" />
           <SpellComparison />
         </>

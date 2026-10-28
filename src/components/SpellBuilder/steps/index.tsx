@@ -14,7 +14,7 @@ import { isInstruction, newInstruction, stepNameOf, warningOf } from './values';
 // each (M10.16), and an Add or a Remove is said in a live region of its own,
 // as a move is said in dnd-kit's. One step is open at a time, the newest at
 // once; the rest are a line each. What the jar holds and the spell's intent set
-// against it are the aside's (hold.tsx, comparison-panel.tsx).
+// against it are the aside's (inventory.tsx, comparison-panel.tsx).
 // See claude-docs/components/spell-builder.md, "Steps".
 
 export function SpellSteps({ workspaceId }: { workspaceId: string }): ReactElement {

@@ -638,12 +638,12 @@ describe('the spell builder’s safety warning', () => {
 
 // M10.19, story 54: what the cupboard says about a step as it is added and as its
 // amount is typed. The rule is tests/components/SpellBuilder/supply.test.ts; this is
-// that What You Hold (the Jar's aside) says each state in words, and follows the amount.
-describe('the spell builder’s What You Hold', () => {
+// that In Coven Inventory (the Jar's aside) says each state in words, and follows the amount.
+describe('the spell builder’s In Coven Inventory', () => {
   const HELD = suggestion('yours', ID.rosewort, 'Fixture Rosewort', [
     { id: ID.roseLeaf, form: 'dried leaf', jar: 'g', held: 5 },
   ]);
-  const hold = () => screen.getByRole('region', { name: 'What You Hold' });
+  const hold = () => screen.getByRole('region', { name: 'In Coven Inventory' });
   const line = (name: string) => {
     const item = within(hold())
       .getAllByRole('listitem')
