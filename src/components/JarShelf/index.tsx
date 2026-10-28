@@ -60,12 +60,18 @@ function Part({ part }: { part: JarPart }): ReactElement {
  * around the group that moves, since a clip on a transformed element moves
  * with it. Each jar's clip has an id of its own, as two on a page cannot share.
  */
+/** How many bands fill the spell's jar; past it the bands shrink to keep fitting. */
+export const BANDS_FULL = 8;
+
 export function JarDrawing({
   shape,
   held,
+  bands = 0,
 }: {
   shape: keyof typeof SHAPES;
   held: Pick<HeldJar, 'quantity' | 'threshold'> | null;
+  /** Equal horizontal bands stacked from the base, one per ingredient (the spell's jar); 0 draws none. */
+  bands?: number;
 }): ReactElement {
   const clip = `jar-shelf-clip-${useId().replace(/\W/g, '')}`;
   const S = SHAPES[shape];
@@ -88,6 +94,23 @@ export function JarDrawing({
           <g className="jar-shelf__rise" style={{ transform: `translateY(${level}px)` }}>
             <rect className="jar-shelf__level" x={0} y={0} width={48} height={40} />
           </g>
+        </g>
+      )}
+      {bands > 0 && (
+        <g clipPath={url}>
+          {Array.from({ length: bands }, (_, i) => {
+            const height = (40 - S.full) / Math.max(bands, BANDS_FULL);
+            return (
+              <g
+                key={i}
+                className="jar-shelf__band"
+                style={{ transform: `translateY(${+(40 - height * (i + 1)).toFixed(2)}px)` }}
+              >
+                <rect x={0} y={0} width={48} height={+height.toFixed(2)} />
+                <line x1={0} y1={0} x2={48} y2={0} />
+              </g>
+            );
+          })}
         </g>
       )}
       {S.shaded && held && (

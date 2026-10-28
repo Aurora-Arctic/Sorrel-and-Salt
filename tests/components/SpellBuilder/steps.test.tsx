@@ -806,6 +806,30 @@ describe('the spell builder’s In Coven Inventory', () => {
   });
 });
 
+// The Jar aside's drawing fills with one band per ingredient step. It is decorative and has no
+// text alternative, so the bands are counted as the drawing's own elements.
+describe('the spell builder’s jar fill', () => {
+  const bands = () =>
+    screen
+      .getByRole('complementary', { name: 'The Jar' })
+      .querySelectorAll('svg .jar-shelf__band rect').length;
+
+  it('draws a band for each ingredient step, a one-off too, and none for an instruction', async () => {
+    suggest(MOCKROOT);
+    renderBuilder();
+    expect(bands()).toBe(0);
+
+    await add('Mock', /Fixture Mockroot/);
+    expect(bands()).toBe(1);
+
+    await addOneOff('Testwort');
+    expect(bands()).toBe(2);
+
+    fireEvent.click(screen.getByRole('button', { name: 'Add a Step' }));
+    expect(bands()).toBe(2);
+  });
+});
+
 describe('the spell builder’s open and closed steps', () => {
   it('opens a new step at once, and one row at a time', async () => {
     suggest(ROSEWORT, MOCKROOT);

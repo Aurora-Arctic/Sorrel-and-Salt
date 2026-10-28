@@ -353,6 +353,8 @@ Wax Colour to its right (the drawing centred on the whole field, label and input
 and the comparison. The drawing is `JarDrawing` and `pickJarShape` from the jar shelf
 ([`jar-shelf.md`](jar-shelf.md)), drawn empty and tinted by the seal wax.
 
+**The jar fills as ingredients are added.** `JarDrawing` takes a `bands` count, and the aside passes the number of ingredient steps (one-offs count, instructions do not). Each band is the same height, stacked from the base and clipped to the vessel's body so it follows the shape. Eight bands fill the jar (`BANDS_FULL`, a typical spell); past eight the bands shrink so they keep fitting. A band is the jar's ink (`$text-primary`) at 10% opacity, with a 0.5 hairline of the same ink at 18% on its top edge, so the line between ingredients is quiet. All bands are one tone: none is coloured by its ingredient. A band moves by a `transform` transition (none under reduced motion). The drawing stays `aria-hidden`, and an empty jar draws no band.
+
 **In Coven Inventory** (`inventory.tsx`) lists each step's ingredient with the coven's stock of its form,
 as the jar shelf draws it: the vessel, and the verdict as a symbol. A one-off reads "one-off, nothing
 to hold", and its small jar is the plain solid empty outline in `$text-muted`, as the aside's own jar is: no dashes and no fade. All four verdicts stand on the name line at its right end, in one place, so the

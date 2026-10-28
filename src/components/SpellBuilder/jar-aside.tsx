@@ -1,9 +1,12 @@
 'use client';
 
 import { type ReactElement, type ReactNode, useId } from 'react';
+import { useFormContext, useWatch } from 'react-hook-form';
 import { JarDrawing, pickJarShape } from '../JarShelf';
 import { SpellComparison } from './comparison-panel';
 import { SpellInventory } from './inventory';
+import type { SpellStepsValues } from './steps/types';
+import { isInstruction } from './steps/values';
 
 // The Jar section's right-hand column (the owner's Option C2, 2026-10-28): the jar drawn
 // with the Seal Wax Colour field to its right and the Jar Description beneath both, then what the coven holds against the steps, then the
@@ -13,12 +16,16 @@ import { SpellInventory } from './inventory';
 
 /**
  * A plain jar, muted: it stands for the spell's jar and is no stock, so it has no level.
- * Reuses the shelf's vessel; the seal wax colour is not drawn on it.
+ * Reuses the shelf's vessel; the seal wax colour is not drawn on it. It fills with one band
+ * per ingredient step, one-offs included and instructions not.
  */
 function SpellJar(): ReactElement {
+  const { control } = useFormContext<SpellStepsValues>();
+  const steps = useWatch({ control, name: 'steps' }) ?? [];
+  const bands = steps.filter((step) => !isInstruction(step)).length;
   return (
     <span className="spell-jar">
-      <JarDrawing shape={pickJarShape('spell', 'jar')} held={null} />
+      <JarDrawing shape={pickJarShape('spell', 'jar')} held={null} bands={bands} />
     </span>
   );
 }
