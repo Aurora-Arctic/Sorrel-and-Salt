@@ -72,5 +72,17 @@ for (const viewport of [
       .evaluate((dialog) => Math.round(dialog.getBoundingClientRect().width));
     if (viewport.width >= 1280) expect(width).toBe(928);
     else expect(width).toBeLessThan(viewport.width);
+
+    // The Jar's two columns: side by side in the wide dialog, one above the other on a phone.
+    const list = await page.getByRole('heading', { name: 'What Goes In' }).boundingBox();
+    const aside = await page.getByRole('complementary', { name: 'The Jar' }).boundingBox();
+    if (!list || !aside) throw new Error('The Jar draws no columns');
+    if (viewport.width >= 1280) {
+      expect(aside.x).toBeGreaterThan(list.x + 200);
+      expect(Math.abs(aside.y - list.y)).toBeLessThan(40);
+    } else {
+      expect(aside.y).toBeGreaterThan(list.y);
+      expect(Math.abs(aside.x - list.x)).toBeLessThan(40);
+    }
   });
 }
