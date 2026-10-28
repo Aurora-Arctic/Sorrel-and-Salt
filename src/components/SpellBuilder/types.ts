@@ -3,7 +3,7 @@ import type { ReactNode } from 'react';
 import type { SpellBuilderStepsQuery } from '../../gql/graphql';
 import type { FieldProps } from '../Field/types';
 import type { SpellStepSend, SpellStepValue } from './steps/types';
-import type { SpellVisibility } from '@/modules/grimoire';
+import type { SpellStatus, SpellVisibility } from '@/modules/grimoire';
 
 /**
  * A saved step as the builder opens it. Typed off the steps read; both save
@@ -23,6 +23,8 @@ export type SpellBuilderField =
  */
 export type SpellBuilderValues = Record<SpellBuilderField, string> & {
   visibility: SpellVisibility;
+  /** Draft or complete (M10.20): the saved spell's, changed only by the status control. */
+  status: SpellStatus;
   categoryIds: string[];
   steps: SpellStepValue[];
 };
@@ -34,6 +36,7 @@ export type SpellBuilderValues = Record<SpellBuilderField, string> & {
  */
 export type SpellBuilderInput = Record<SpellBuilderField, string | null> & {
   visibility: SpellVisibility;
+  status: SpellStatus;
   categoryIds?: string[];
   steps: SpellStepSend[];
 };
@@ -45,6 +48,8 @@ export type SpellBuilderSpell = {
   revision: number;
   /** Who can see it: its author alone, or the whole coven, which is for good (M10.13). */
   visibility: SpellVisibility;
+  /** Draft or complete (M10.20); left out, a draft. */
+  status?: SpellStatus;
   /** Its recipe in order (M10.15): required, so a page opening a saved spell must read them. */
   steps: SpellBuilderStep[];
 } & Record<SpellBuilderField, string | null> & {
@@ -113,6 +118,11 @@ export interface SpellSuggestFieldProps extends Pick<FieldProps, 'label' | 'hint
    * box; `null` for a value with none, such as one typed outside the list.
    */
   icon?: (value: string) => ReactNode;
+}
+
+export interface SpellStatusFieldProps {
+  /** Saves the form with the given values, as Save Spell does; it reports a refusal itself. */
+  save: (values: SpellBuilderInput) => Promise<void>;
 }
 
 export interface SpellVisibilityFieldProps {

@@ -65,7 +65,9 @@ function acceptCreate() {
     'CreateSpell',
     (variables) => {
       calls.push(variables);
-      return { createSpell: { ...SPELL, id: 's1', revision: 1, steps: [] } };
+      return {
+        createSpell: { ...SPELL, id: 's1', revision: 1, status: 'draft', steps: [] },
+      };
     },
   );
   return calls;
@@ -77,7 +79,7 @@ function acceptUpdate() {
     'UpdateSpell',
     (variables) => {
       calls.push(variables);
-      return { updateSpell: { ...SPELL, revision: 5 } };
+      return { updateSpell: { ...SPELL, revision: 5, status: 'draft' } };
     },
   );
   return calls;

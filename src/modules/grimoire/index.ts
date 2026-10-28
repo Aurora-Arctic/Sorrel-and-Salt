@@ -22,6 +22,6 @@ export type {
   SpellUpdate,
   SpellVisibility,
 } from './types';
-export * from './categories/summarize';
-export * from './categories/compare';
-export type { StepCategories, CategoryComparison } from './categories/types';
+export * from './validation/categories/summarize';
+export * from './validation/categories/compare';
+export type { StepCategories, CategoryComparison } from './validation/categories/types';

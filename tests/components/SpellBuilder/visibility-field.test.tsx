@@ -77,6 +77,7 @@ function answer(
     dayOfWeek: input.dayOfWeek ?? null,
     note: input.note ?? null,
     visibility: input.visibility ?? visibility,
+    status: input.status ?? 'draft',
     steps: [],
   };
 }

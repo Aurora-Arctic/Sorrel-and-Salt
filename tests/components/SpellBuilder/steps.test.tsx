@@ -125,6 +125,7 @@ function answer(id: string, revision: number, steps: SpellBuilderSpell['steps'] 
     dayOfWeek: null,
     note: null,
     visibility: 'workspace' as const,
+    status: 'draft' as const,
     steps,
   };
 }

@@ -139,6 +139,7 @@ function answer(id: string, revision: number, input: CreateSpellMutationVariable
     dayOfWeek: input.dayOfWeek ?? null,
     note: input.note ?? null,
     visibility: input.visibility ?? ('workspace' as const),
+    status: input.status ?? ('draft' as const),
     steps: [],
   };
 }

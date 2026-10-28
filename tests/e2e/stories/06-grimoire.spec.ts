@@ -246,15 +246,9 @@ test(
   },
 );
 
-test.fixme(
+test(
   'a member sees the gaps between intended and derived categories in both directions',
-  {
-    tag: '@story-52',
-    annotation: {
-      type: 'fixme',
-      description: 'M10.17 builds the comparison panel in the spell builder',
-    },
-  },
+  { tag: '@story-52' },
   async ({ page }) => {
     const coven = await seedCoven(page, 'Fixture Coven Fifty-Two', 'story-52.test', {
       A: 'owner',
@@ -263,7 +257,10 @@ test.fixme(
     await signInAgainAs(page, coven.users.B);
     await openBuilder(page, coven.slug);
     const panel = page.getByRole('complementary', { name: 'Intent Against Ingredients' });
-    await page.getByRole('combobox', { name: 'Categories' }).fill('Prosperity');
+    await page
+      .getByRole('group', { name: 'Categories', exact: true })
+      .getByRole('combobox')
+      .fill('Prosperity');
     await page.getByRole('option', { name: 'Prosperity' }).click();
     await expect(panel.getByRole('list', { name: 'Intended, Not Carried' })).toContainText(
       'Prosperity',
@@ -325,29 +322,30 @@ test.fixme(
   },
 );
 
-test.fixme(
-  'a member saves a spell as a draft',
-  {
-    tag: '@story-55',
-    annotation: { type: 'fixme', description: 'M10.20 builds save as draft and mark complete' },
-  },
-  async ({ page }) => {
-    const coven = await seedCoven(page, 'Fixture Coven Fifty-Five', 'story-55.test', {
-      A: 'owner',
-      B: 'member',
-    });
-    await signInAgainAs(page, coven.users.B);
-    await openBuilder(page, coven.slug);
-    await page.getByRole('textbox', { name: 'Title' }).fill('Fixture Working');
-    await page.getByRole('button', { name: 'Save' }).click();
-    await page.goto(`/coven/${coven.slug}/grimoire`);
-    const card = grimoireList(page).getByRole('listitem', { name: /Fixture Working/ });
-    await expect(card.getByText('Draft')).toBeVisible();
-    await card.getByRole('link', { name: /Fixture Working/ }).click();
-    await page.getByRole('button', { name: 'Mark Complete' }).click();
-    await expect(page.getByText('Complete')).toBeVisible();
-  },
-);
+test('a member saves a spell as a draft', { tag: '@story-55' }, async ({ page }) => {
+  const coven = await seedCoven(page, 'Fixture Coven Fifty-Five', 'story-55.test', {
+    A: 'owner',
+    B: 'member',
+  });
+  await signInAgainAs(page, coven.users.B);
+  const dialog = await openBuilder(page, coven.slug);
+  await dialog.getByRole('textbox', { name: 'Title' }).fill('Fixture Working');
+  await dialog.getByRole('button', { name: 'Save Spell' }).click();
+  await expect(page).toHaveURL(new RegExp(`/coven/${coven.slug}/grimoire\\?edit=[0-9a-f-]{36}$`));
+  const draft = page.url();
+  // It lists as a draft.
+  await page.goto(`/coven/${coven.slug}/grimoire/drafts`);
+  const card = grimoireList(page).getByRole('listitem', { name: /Fixture Working/ });
+  await expect(card.getByText('Draft')).toBeVisible();
+  // Marking it complete is explicit, and reversible.
+  await page.goto(draft);
+  const edit = page.getByRole('dialog', { name: 'Edit Spell, Fixture Working' });
+  await edit.getByRole('button', { name: 'Open All' }).click();
+  await edit.getByRole('button', { name: 'Mark Complete' }).click();
+  await expect(edit.getByRole('button', { name: 'Reopen as Draft' })).toBeVisible();
+  await edit.getByRole('button', { name: 'Reopen as Draft' }).click();
+  await expect(edit.getByRole('button', { name: 'Mark Complete' })).toBeVisible();
+});
 
 test(
   'any member, a viewer included, reads every workspace-visible spell, and a private spell stays with its author',
