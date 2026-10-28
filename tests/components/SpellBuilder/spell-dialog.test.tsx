@@ -425,11 +425,12 @@ describe('SpellDialog', () => {
       );
     });
 
-    it('stays open and sends nothing when a saved spell’s steps cannot be read', async () => {
+    it('closes and sends nothing when a saved spell’s steps cannot be read, though a field changed', async () => {
       mockGraphQLError('SpellBuilderSteps', { code: 'NOT_FOUND', message: 'No such spell' });
       const updated = acceptUpdate();
       renderDialog({ spell: SAVED });
       openAll();
+      // A change, so Close has something it would save, and a save would be refused.
       type('Intent', 'Calmer');
 
       expect(await within(dialog()).findByRole('alert')).toBeInTheDocument();
@@ -438,9 +439,8 @@ describe('SpellDialog', () => {
         fireEvent.click(close());
       });
 
+      expect(router.replace).toHaveBeenCalledWith(CLOSE);
       expect(updated).toHaveLength(0);
-      expect(router.replace).not.toHaveBeenCalled();
-      expect(field('Intent')).toHaveValue('Calmer');
     });
 
     it('stays open with the refusal shown when the save on Close is refused', async () => {
