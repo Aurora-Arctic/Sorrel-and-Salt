@@ -112,7 +112,10 @@ function renderName(
       // The admin page's: the details' own place beneath the form's modal (M12.5).
       <Navigating push={router.push}>
         <RouteModalProvider>
-          <RouteModal place={DETAILS_PLACE} closeHref="/admin/compendium?new" />
+          <RouteModal
+            place={DETAILS_PLACE}
+            closeHref="/admin/compendium?new=ingredient-compendium"
+          />
           <Harness />
         </RouteModalProvider>
       </Navigating>

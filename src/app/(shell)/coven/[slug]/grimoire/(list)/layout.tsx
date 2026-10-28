@@ -17,7 +17,7 @@ import NewSpellAction from './new-spell-action';
 // New Spell (M10.12) stands at the heading line's end for a role that may create a spell, the
 // same on both tabs, so it is the page's action rather than a per-tab `@action` slot like the
 // members page's Invite. It is the admin lists' Add (`AddAction`), opening the spell
-// builder's dialog under `?new=spell` over the open tab, which each tab draws (M10.12;
+// builder's dialog under `?new=spell-<slug>` over the open tab, which each tab draws (M10.12;
 // claude-docs/design-decisions/m10.12-spell-builder-modal.md). The layout is the
 // RouteModalProvider, so the dialog opens at once on the press and holds across the tabs.
 export default async function GrimoireLayout({ children, params }: CovenLayoutProps) {
