@@ -66,6 +66,10 @@ export function SpellSteps({ workspaceId }: { workspaceId: string }): ReactEleme
       const index = fields.findIndex((field) => field.id === openId);
       const row = root.current?.querySelectorAll('.spell-steps__list > li')[index];
       if (row?.contains(target)) return;
+      // A click on a part of the row that cannot take the focus (a label, a gap, the padding) drops
+      // the focus onto the dialog around everything: focus that fell back to a container of the row
+      // has not gone anywhere else, so it is not leaving.
+      if (event.type === 'focusin' && row && target.contains(row)) return;
       if (
         addedId.current === openId &&
         root.current?.querySelector('.spell-steps__box')?.contains(target)
