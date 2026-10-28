@@ -40,6 +40,8 @@ export interface SpellDialogProps {
   workspaceId: string;
   /** That coven's slug, which `?new=spell-<slug>` names. */
   covenSlug: string;
+  /** That coven's name, which New Spell's head names as where the spell lands. */
+  covenName: string;
   /**
    * The grimoire tab it opened over, as it was, the dialog's parameter dropped. A new
    * draft's first save moves to it with `edit=<id>` added.
