@@ -290,8 +290,14 @@
   grid-template-columns: 2rem minmax(0, 1fr);
   column-gap: space(2);
 
-  &.is-one-off {
-    opacity: 0.7;
+  // A one-off holds no stock, so its jar is the plain empty outline the aside's own jar is,
+  // solid and muted, not the dashed outline of a form with no jar, and not faded.
+  &.is-one-off .spell-hold__jar {
+    .jar-shelf__glass,
+    .jar-shelf__lid,
+    .jar-shelf__facet {
+      stroke: $text-muted;
+    }
   }
 }
 

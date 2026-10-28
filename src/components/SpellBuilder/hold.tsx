@@ -53,11 +53,7 @@ function HoldLine({ step, seed }: { step: SpellStepValue; seed: string }): React
   // The form only picks the vessel's shape here; it is not shown.
   const { form: formKey } = step;
   const state = jar ? stockState(jar.quantity, jar.threshold) : 'out';
-  const modifier = oneOff
-    ? 'jar-shelf__jar--empty'
-    : state === 'ok'
-      ? ''
-      : `jar-shelf__jar--${state}`;
+  const modifier = oneOff || state === 'ok' ? '' : `jar-shelf__jar--${state}`;
   return (
     <li className={`spell-hold__line${oneOff ? ' is-one-off' : ''}`}>
       <span className={`spell-hold__jar ${modifier}`}>
