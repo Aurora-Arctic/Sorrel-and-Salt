@@ -57,6 +57,7 @@ function saved(id: string, revision: number, input: CreateSpellMutationVariables
     moonPhase: input.moonPhase ?? null,
     dayOfWeek: input.dayOfWeek ?? null,
     note: input.note ?? null,
+    steps: [],
     visibility: input.visibility ?? 'workspace',
   };
 }
@@ -153,6 +154,7 @@ describe('SpellBuilder', () => {
         moonPhase: null,
         dayOfWeek: null,
         note: null,
+        steps: [],
         visibility: 'workspace',
       },
     });
@@ -180,6 +182,7 @@ describe('SpellBuilder', () => {
       moonPhase: 'Waxing gibbous',
       dayOfWeek: 'Monday',
       note: 'Kept on the sill',
+      steps: [],
       visibility: 'workspace',
     });
   });
@@ -229,6 +232,7 @@ describe('SpellBuilder', () => {
       spell: {
         id: 's3',
         revision: 4,
+        steps: [],
         title: 'Fixture Working',
         intent: 'To see clearly',
         jarDescription: '4 oz',
@@ -262,6 +266,7 @@ describe('SpellBuilder', () => {
         moonPhase: null,
         dayOfWeek: 'Monday',
         note: null,
+        steps: [],
         visibility: 'workspace',
         expectedRevision: 4,
       },
@@ -381,6 +386,7 @@ describe('SpellBuilder', () => {
         spell: {
           id: 's3',
           revision: 1,
+          steps: [],
           title: null,
           intent: null,
           jarDescription: null,
@@ -418,6 +424,7 @@ describe('SpellBuilder', () => {
       dayOfWeek: 'Monday',
       note: null,
       visibility: 'private' as const,
+      steps: [],
     };
 
     it('opens a new spell with its four sections in order, each open on its own fields', () => {
@@ -429,7 +436,13 @@ describe('SpellBuilder', () => {
       expect(expanded()).toEqual(['true', 'true', 'true', 'true']);
       const HELD = {
         Purpose: ['Title', 'Intent', 'Category'],
-        Jar: ['Jar Description', 'Seal Wax Colour'],
+        Jar: [
+          'Jar Description',
+          'Seal Wax Colour',
+          'Search Ingredients',
+          'One-Off Name',
+          'One-Off Form',
+        ],
         'When to Work It': ['Moon Phase', 'Day of the Week'],
         Notes: ['Note'],
       } as const;

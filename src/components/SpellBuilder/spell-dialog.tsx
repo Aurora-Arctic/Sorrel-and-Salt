@@ -1,14 +1,17 @@
 'use client';
 
+import { useQuery } from '@tanstack/react-query';
 import type { Route } from 'next';
 import { useSearchParams } from 'next/navigation';
 import { type ReactElement, useState } from 'react';
 import { NEW, opensNewSpell } from '../AppShell/add-href';
+import { graphqlQuery } from '../../lib/graphql-client';
 import { usePendingNavigation } from '../../lib/navigation';
 import { RouteModal } from '../Modal';
 import type { ModalHeading } from '../Modal/types';
 import { UNTITLED_SPELL } from '../SpellCard';
 import SpellBuilder from '.';
+import { SpellBuilderStepsDocument } from './steps/documents';
 import type { SpellDialogProps } from './types';
 
 // The spell builder as a modal over the grimoire (M10.12), the owner's call on
@@ -26,6 +29,9 @@ import type { SpellDialogProps } from './types';
 // once, at its full size, as Add Ingredient does: a skeleton the server's form replaced
 // grew the centred dialog and moved it under the pointer. Any other `?new` is Add
 // Ingredient's, and holds a saved spell's dialog back until it closes.
+// A saved spell's steps are read here, through /api/graphql, once it opens: the page's
+// server read gives its fields alone, and the builder sends nothing until the steps
+// land, since an update's steps are the whole recipe (M10.15).
 
 /**
  * `closeHref` with a saved spell's dialog open over it, `?edit=<id>`. Built here rather than
@@ -61,6 +67,18 @@ export default function SpellDialog({
   const [created, setCreated] = useState<string | null>(null);
   if (!opened && created !== null) setCreated(null);
   const spell = opened?.spell;
+  // The saved spell this dialog opened on, rather than the draft its builder created,
+  // which holds its steps from its own save's answer.
+  const editing = spell && spell.id !== created ? spell : undefined;
+  const stepsRead = useQuery({
+    ...graphqlQuery(SpellBuilderStepsDocument, { workspaceId, id: editing?.id ?? '' }),
+    enabled: editing !== undefined,
+    // Read afresh each time it opens: a step saved since must not be sent back as removed.
+    staleTime: 0,
+    gcTime: 0,
+    throwOnError: false,
+  });
+  const steps = stepsRead.data?.spell.steps;
   const heading: ModalHeading = spell
     ? { eyebrow: 'Edit Spell', title: spell.title?.trim() || UNTITLED_SPELL }
     : newSpellHeading(covenName);
@@ -74,7 +92,14 @@ export default function SpellDialog({
             <SpellBuilder
               key={spell && spell.id !== created ? spell.id : 'new'}
               workspaceId={workspaceId}
-              spell={spell}
+              spell={spell && { ...spell, steps: steps ?? [] }}
+              stepsRead={
+                editing === undefined || steps !== undefined
+                  ? undefined
+                  : stepsRead.isError
+                    ? 'failed'
+                    : 'loading'
+              }
               onCreated={({ id }) => {
                 setCreated(id);
                 // Replaced, so Back goes to the grimoire and not to an empty New Spell.

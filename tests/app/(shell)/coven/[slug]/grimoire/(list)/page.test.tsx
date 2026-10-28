@@ -6,6 +6,7 @@ import { NotFound } from '@/lib/errors';
 import { makeQueryClient } from '@/lib/graphql-client';
 import { CARD_PAGE_SIZE } from '@/lib/pagination';
 import { offerCategories } from '../../../../../../support/msw/ingredient-lookups';
+import { mockGraphQLQuery } from '../../../../../../support/msw/graphql';
 
 // The Grimoire's two tabs (M10.11): Spells and Drafts. The guard and the services are mocked,
 // since what they decide is their own tests' (which spells a reader may list is
@@ -107,6 +108,8 @@ async function renderTab(Page: PageFn, search: Record<string, string | string[]>
 beforeEach(() => {
   vi.clearAllMocks();
   offerCategories([]);
+  // The dialog reads a saved spell's steps once it opens on ?edit=<id>.
+  mockGraphQLQuery('SpellBuilderSteps', ({ id }: { id: string }) => ({ spell: { id, steps: [] } }));
   address.path = '/coven/fixture-coven/grimoire';
   address.search = '';
   vi.stubGlobal('matchMedia', (query: string) => ({

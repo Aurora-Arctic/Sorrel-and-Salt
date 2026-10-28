@@ -16,7 +16,7 @@ import {
 } from '@/modules/grimoire';
 import type { SpellStatus } from '@/modules/grimoire';
 import { displayNamesOf } from '@/modules/identity';
-import type { SpellBuilderSpell } from '@/components/SpellBuilder/types';
+import type { SpellDialogSpell } from '@/components/SpellBuilder/types';
 
 // The read a grimoire tab makes (M10.11), twin of the Ingredients page's `reads.ts`. The
 // spells are the coven's, so the read goes through the services for the signed-in
@@ -86,15 +86,16 @@ export const readGrimoire = cache(
 
 /**
  * The spell `?edit=<id>` opens the builder's dialog on (M10.12), read as the signed-in
- * member, with the fields the builder edits and the categories it is assigned. Nothing for a spell the service will not give
- * this member, a private one of another member's included, so the tab opens no dialog, as
- * the Ingredients page's `readEditedEntry` does. Any other failure of the read is let
- * through rather than called no spell.
+ * member, with the fields the builder edits and the categories it is assigned. Not its
+ * steps: the dialog reads those through /api/graphql once it opens (M10.15). Nothing for a
+ * spell the service will not give this member, a private one of another member's included,
+ * so the tab opens no dialog, as the Ingredients page's `readEditedEntry` does. Any other
+ * failure of the read is let through rather than called no spell.
  */
 export async function readEditedSpell(
   workspaceId: string,
   id: string,
-): Promise<SpellBuilderSpell | undefined> {
+): Promise<SpellDialogSpell | undefined> {
   const session = await requireSession();
   try {
     const spell = await readSpell(session, workspaceId, id);

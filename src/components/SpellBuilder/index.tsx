@@ -2,7 +2,7 @@
 
 import { zodResolver } from '@hookform/resolvers/zod';
 import { useMutation } from '@tanstack/react-query';
-import { type ReactElement, type ReactNode, useRef, useState } from 'react';
+import { type ReactElement, type ReactNode, useEffect, useRef, useState } from 'react';
 import { FormProvider, type Resolver, useForm, useWatch } from 'react-hook-form';
 import { CollapsibleSection, FoldAll } from '../CollapsibleSection';
 import { graphql } from '../../gql';
@@ -17,9 +17,13 @@ import {
 } from '../Field';
 import MoonPhaseIcon from '../MoonPhaseIcon';
 import Notice from '../Notice';
+import Skeleton from '../Skeleton';
 import { SpellCategoriesField, sameCategories, useCategoryName } from './categories-field';
 import { DAYS_OF_THE_WEEK, MOON_PHASES } from './constants';
 import { useSaveOnClose } from './save-on-close';
+import { SpellSteps } from './steps';
+import type { SpellStepSend } from './steps/types';
+import { stepInputOf, stepValueOf, stepsChanged, unitIssues } from './steps/values';
 import { SpellSuggestField } from './suggest-field';
 import { SpellInput } from '@/modules/grimoire/validation/spell';
 import { SpellVisibilityField } from './visibility-field';
@@ -59,6 +63,40 @@ const CreateSpellDocument = graphql(`
       moonPhase
       dayOfWeek
       note
+      steps {
+        id
+        name
+        form
+        quantity
+        unit
+        note
+        body
+        ingredient {
+          id
+          categories {
+            id
+            name
+          }
+          stock(workspaceId: $workspaceId) {
+            unit
+            variant {
+              id
+            }
+          }
+        }
+        variant {
+          id
+          categories {
+            id
+            name
+          }
+          formChoice {
+            group {
+              icon
+            }
+          }
+        }
+      }
       visibility
     }
   }
@@ -76,6 +114,40 @@ const UpdateSpellDocument = graphql(`
       moonPhase
       dayOfWeek
       note
+      steps {
+        id
+        name
+        form
+        quantity
+        unit
+        note
+        body
+        ingredient {
+          id
+          categories {
+            id
+            name
+          }
+          stock(workspaceId: $workspaceId) {
+            unit
+            variant {
+              id
+            }
+          }
+        }
+        variant {
+          id
+          categories {
+            id
+            name
+          }
+          formChoice {
+            group {
+              icon
+            }
+          }
+        }
+      }
       visibility
     }
   }
@@ -97,11 +169,11 @@ type SectionField = keyof SpellBuilderValues;
 /**
  * The builder's sections, in order, and the values each folds: what flags a
  * section holding an error, and what its shut line reads. Later fields join
- * these: M10.15's steps Jar.
+ * these.
  */
 const SECTIONS = {
   Purpose: ['title', 'intent', 'categoryIds'],
-  Jar: ['jarDescription', 'sealWaxColor'],
+  Jar: ['jarDescription', 'sealWaxColor', 'steps'],
   'When to Work It': ['moonPhase', 'dayOfWeek'],
   Notes: ['note', 'visibility'],
 } as const satisfies Record<string, readonly SectionField[]>;
@@ -116,7 +188,8 @@ const oneLine = (text: string): string => text.trim().replace(/\s+/g, ' ');
 /**
  * A value as its shut section's line reads it, blank for none: the
  * categories by name, as the picker's chips read (`named`), each once the
- * categories are read, so the line never shows an id.
+ * categories are read, so the line never shows an id; the steps as a count
+ * of the ingredients laid.
  */
 function lineOfField(
   field: SectionField,
@@ -128,6 +201,12 @@ function lineOfField(
       return (values.categoryIds ?? []).flatMap((id) => named(id) ?? []).join(', ');
     case 'visibility':
       return values.visibility === 'workspace' ? 'Shared' : 'Private';
+    case 'steps': {
+      // The steps that lay something: an instruction step (M13.3) has no name.
+      const laid = (values.steps ?? []).filter((step) => step.name !== null).length;
+      if (laid === 0) return '';
+      return laid === 1 ? '1 ingredient' : `${laid} ingredients`;
+    }
     default:
       return oneLine(values[field] ?? '');
   }
@@ -143,6 +222,7 @@ function valuesOf(spell?: Partial<SpellBuilderSpell>): SpellBuilderValues {
       SpellBuilderField,
       string
     >),
+    steps: (spell?.steps ?? []).map(stepValueOf),
     // A new spell is the coven's unless chosen otherwise (§5).
     visibility: spell?.visibility ?? 'workspace',
     categoryIds: [...(spell?.categoryIds ?? [])],
@@ -150,15 +230,40 @@ function valuesOf(spell?: Partial<SpellBuilderSpell>): SpellBuilderValues {
 }
 
 /**
- * The shared schema's reading of the builder's fields: trimmed, and null for
- * blank, so the form sends what the service will store, and refuses what it
- * would. Only the builder's own fields are read: the recipe is M13.3's.
+ * The shared schema's reading of the builder's fields and steps: trimmed, and
+ * null for blank, so the form sends what the service will store, and refuses
+ * what it would.
  */
-const resolver = zodResolver(SpellInput) as unknown as Resolver<
-  SpellBuilderValues,
+const schemaResolver = zodResolver(SpellInput) as unknown as Resolver<
+  Omit<SpellBuilderValues, 'steps'> & { steps: SpellStepSend[] },
   unknown,
   SpellBuilderInput
 >;
+
+/**
+ * The schema's reading of the steps as a save sends them, and story 77's unit
+ * rule, which needs the coven's jars and so is not the schema's: a refused
+ * unit is said beside it, under the step's `unit`, as the service says it.
+ */
+const resolver: Resolver<SpellBuilderValues, unknown, SpellBuilderInput> = async (
+  values,
+  context,
+  options,
+) => {
+  const result = await schemaResolver(
+    { ...values, steps: values.steps.map(stepInputOf) },
+    context,
+    options as unknown as Parameters<typeof schemaResolver>[2],
+  );
+  const issues = unitIssues(values.steps);
+  if (issues.size === 0) return result as Awaited<ReturnType<typeof resolver>>;
+  const errors: Record<string, unknown> = { ...result.errors };
+  const steps: Record<string, unknown>[] = Array.isArray(errors.steps) ? [...errors.steps] : [];
+  for (const [index, message] of issues) {
+    steps[index] = { ...steps[index], unit: { type: 'unit', message } };
+  }
+  return { values: {}, errors: { ...errors, steps } } as Awaited<ReturnType<typeof resolver>>;
+};
 
 // A moon phase's drawing beside its name, null for a phase typed outside
 // the list so the box draws no empty mark. Module-level so the field's
@@ -166,7 +271,19 @@ const resolver = zodResolver(SpellInput) as unknown as Resolver<
 const moonPhaseIcon = (phase: string): ReactElement | null =>
   (MOON_PHASES as readonly string[]).includes(phase) ? <MoonPhaseIcon phase={phase} /> : null;
 
-const SpellBuilder = ({ workspaceId, spell, onCreated }: SpellBuilderProps): ReactElement => {
+/** Said in the jar's place, and above the fields when a save is tried, while a saved spell's steps cannot be read. */
+const STEPS_FAILED =
+  "The spell's steps could not be loaded, so nothing can be saved. Reload the page to try again.";
+
+/** Said above the fields when a save is tried before a saved spell's steps have landed. */
+const STEPS_LOADING = "The spell's steps are still loading. Try again once they show.";
+
+const SpellBuilder = ({
+  workspaceId,
+  spell,
+  onCreated,
+  stepsRead,
+}: SpellBuilderProps): ReactElement => {
   // The spell this builder saves to: the one it opened, else the one its first save created.
   const [saved, setSaved] = useState(spell ? { id: spell.id, revision: spell.revision } : null);
   const methods = useForm<SpellBuilderValues, unknown, SpellBuilderInput>({
@@ -181,18 +298,22 @@ const SpellBuilder = ({ workspaceId, spell, onCreated }: SpellBuilderProps): Rea
     control,
     handleSubmit,
     reset,
+    getValues,
     setError,
+    setValue,
     formState: { errors, isSubmitting, defaultValues },
   } = methods;
 
   // Something to save: a field that reads differently from the last save,
   // blank and spaces alike reading as none, as the schema reads them, or a
   // visibility other than the last save's, which is a choice worth saving on
-  // its own (the owner's call, 2026-10-27).
+  // its own (the owner's call, 2026-10-27), a changed category pick, or a
+  // changed step.
   const typed = useWatch({ control, name: [...FIELDS] });
   const picked = useWatch({ control, name: 'categoryIds' });
   const categoriesChanged = !sameCategories(picked, defaultValues?.categoryIds);
   const visibility = useWatch({ control, name: 'visibility' });
+  const steps = useWatch({ control, name: 'steps' });
   const values = useWatch({ control }) as SpellBuilderValues;
   const categoryName = useCategoryName();
   const dirty =
@@ -200,7 +321,10 @@ const SpellBuilder = ({ workspaceId, spell, onCreated }: SpellBuilderProps): Rea
     visibility !== defaultValues?.visibility ||
     FIELDS.some(
       (field, index) => (typed[index] ?? '').trim() !== (defaultValues?.[field] ?? '').trim(),
-    );
+    ) ||
+    stepsChanged(steps, (defaultValues?.steps ?? []) as SpellBuilderValues['steps']);
+  // A unit the jar cannot be measured in holds Save, as the service would refuse it.
+  const unitRefused = unitIssues(steps).size > 0;
 
   // A new spell opens every section, to be filled in order; a saved one opens
   // them shut, each line saying what it holds, as Add Ingredient's do (M8.16).
@@ -232,7 +356,10 @@ const SpellBuilder = ({ workspaceId, spell, onCreated }: SpellBuilderProps): Rea
       summary={lineOf(name)}
       fold={{
         open: open.has(name),
-        invalid: SECTIONS[name].some((field) => errors[field] !== undefined),
+        // A failed read of a saved spell's steps is the jar's error too.
+        invalid:
+          SECTIONS[name].some((field) => errors[field] !== undefined) ||
+          (name === 'Jar' && stepsRead === 'failed'),
         onToggle: () => toggle(name),
       }}
     >
@@ -264,14 +391,22 @@ const SpellBuilder = ({ workspaceId, spell, onCreated }: SpellBuilderProps): Rea
    * M13.17's autosave.
    */
   const send = async (values: SpellBuilderInput): Promise<void> => {
-    // Only the builder's fields: the schema's defaults (an empty recipe)
-    // would otherwise replace a saved spell's steps.
+    // Steps not yet read would go out as none, and an update's steps remove the rest.
+    if (!jarReady) {
+      closeGuard.refused();
+      setError('root', { message: stepsRead === 'failed' ? STEPS_FAILED : STEPS_LOADING });
+      return;
+    }
+    // The fields, who can see the spell, and the whole recipe: on an update,
+    // the steps sent are the spell's steps, and a saved step left out of them
+    // is removed.
     const input: SpellBuilderInput = {
       ...(Object.fromEntries(FIELDS.map((field) => [field, values[field] ?? null])) as Record<
         SpellBuilderField,
         string | null
       >),
       visibility: values.visibility,
+      steps: values.steps,
     };
     // The categories go only when the picks differ from the last save: left
     // out, the service keeps the spell's set as it is (M10.14).
@@ -293,7 +428,16 @@ const SpellBuilder = ({ workspaceId, spell, onCreated }: SpellBuilderProps): Rea
         if (field === 'categoryIds') {
           return rest.length === 0 ? 'categoryIds' : `categoryIds.${Number(rest[0])}`;
         }
-        return rest.length === 0 && isField(field) ? field : undefined;
+        if (rest.length === 0 && isField(field)) return field;
+        // A step's amount, beside it; anything else of a step above the form.
+        const [index, part] = rest;
+        if (
+          field === 'steps' &&
+          typeof index === 'number' &&
+          (part === 'quantity' || part === 'unit')
+        )
+          return `steps.${index}.${part}` as const;
+        return undefined;
       });
       openErred();
     }
@@ -303,7 +447,41 @@ const SpellBuilder = ({ workspaceId, spell, onCreated }: SpellBuilderProps): Rea
     closeGuard.refused();
     openErred();
   });
-  const closeGuard = useSaveOnClose(dirty, isSubmitting, () => void submit());
+  // A Close pressed while the steps are on their way saves once they land.
+  const closeWaiting = useRef(false);
+  const [jarReady, setJarReady] = useState(stepsRead === undefined);
+  // Steps that could not be read leave nothing a save would take, so Close closes, unsaved.
+  const closeGuard = useSaveOnClose(dirty && stepsRead !== 'failed', isSubmitting, () => {
+    if (!jarReady && stepsRead !== 'failed') closeWaiting.current = true;
+    else void submit();
+  });
+  // The steps landed: the form starts from them, as from the rest of the saved spell, and
+  // only then is the jar drawn, since its list reads the steps once, as it mounts.
+  const stepsLanded = stepsRead === undefined;
+  useEffect(() => {
+    if (!stepsLanded || jarReady || !spell) return;
+    // A reset, then what was typed meanwhile put back: `resetField` skips a field
+    // nothing has registered, and the jar's list registers the steps only once drawn.
+    const typedMeanwhile = getValues();
+    reset(valuesOf(spell));
+    for (const name of [...FIELDS, 'visibility', 'categoryIds'] as const) {
+      setValue(name, typedMeanwhile[name]);
+    }
+    setJarReady(true);
+    // Run when the steps land, never again for a later answer: a save resets the form itself.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [stepsLanded]);
+  // The held Close's save, from the render that drew the jar, whose `send` sends.
+  useEffect(() => {
+    if (!jarReady || !closeWaiting.current) return;
+    closeWaiting.current = false;
+    void submit();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [jarReady]);
+  // The failed read is said in the jar, so its shut section opens to show it.
+  useEffect(() => {
+    if (stepsRead === 'failed') setOpen((was) => new Set([...was, 'Jar' as const]));
+  }, [stepsRead]);
 
   return (
     <FormProvider {...methods}>
@@ -350,6 +528,15 @@ const SpellBuilder = ({ workspaceId, spell, onCreated }: SpellBuilderProps): Rea
                   placeholder="Add a colour"
                   autoComplete="off"
                 />
+                {jarReady ? (
+                  <SpellSteps workspaceId={workspaceId} />
+                ) : stepsRead === 'failed' ? (
+                  <Notice kind="error">{STEPS_FAILED}</Notice>
+                ) : (
+                  <section className="spell-steps" aria-label="Steps" aria-busy="true">
+                    <Skeleton shape="line" />
+                  </section>
+                )}
               </>,
             )}
             {/* The recipe's timing: when to work the spell, not when it was worked,
@@ -385,7 +572,11 @@ const SpellBuilder = ({ workspaceId, spell, onCreated }: SpellBuilderProps): Rea
               </>,
             )}
           </div>
-          <FormActions noun="Spell" dirty={dirty} submitting={isSubmitting} />
+          <FormActions
+            noun="Spell"
+            dirty={dirty && !unitRefused && jarReady}
+            submitting={isSubmitting}
+          />
         </form>
       </FormHistoryContext.Provider>
     </FormProvider>

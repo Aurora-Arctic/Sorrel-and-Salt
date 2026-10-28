@@ -1,17 +1,21 @@
 import { QueryClientProvider } from '@tanstack/react-query';
 import { act, fireEvent, render, screen, waitFor, within } from '@testing-library/react';
+import { HttpResponse } from 'msw';
 import type { Route } from 'next';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 import type {
   CreateSpellMutation,
   CreateSpellMutationVariables,
+  SpellBuilderStepsQuery,
+  SpellBuilderStepsQueryVariables,
   UpdateSpellMutation,
   UpdateSpellMutationVariables,
 } from '@/gql/graphql';
 import { makeQueryClient } from '@/lib/graphql-client';
-import type { SpellDialogProps } from '@/components/SpellBuilder/types';
-import { mockGraphQLError, mockGraphQLMutation } from '../../support/msw/graphql';
+import type { SpellBuilderStep, SpellDialogProps } from '@/components/SpellBuilder/types';
+import { graphqlLink, mockGraphQLError, mockGraphQLMutation } from '../../support/msw/graphql';
 import { offerCategories } from '../../support/msw/ingredient-lookups';
+import { server } from '../../support/msw/server';
 
 const router = vi.hoisted(() => ({ push: vi.fn(), replace: vi.fn(), refresh: vi.fn() }));
 // The address as the browser has it, which New Spell's press writes without a server read.
@@ -27,7 +31,8 @@ const { default: SpellDialog } = await import('@/components/SpellBuilder/spell-d
 // claude-docs/design-decisions/m10.12-spell-builder-modal.md): `?new=spell` opens it
 // empty, its first save swaps the address for `?edit=<id>` so a reload or Back
 // opens the saved draft, and Close saves what is unsaved before it closes,
-// with no question. The saves are answered by MSW in /api/graphql's shape.
+// with no question. A saved spell's steps are read once it opens, and nothing is
+// sent before they land. The reads and saves are answered by MSW in /api/graphql's shape.
 
 const CLOSE = '/coven/fixture-coven/grimoire' as Route;
 const editHref = (id: string) => `/coven/fixture-coven/grimoire?edit=${id}` as Route;
@@ -43,7 +48,46 @@ const SAVED = {
   dayOfWeek: null,
   note: null,
   visibility: 'workspace' as const,
+  steps: [],
 };
+
+/** A saved step, as the dialog's read of a saved spell's steps answers it. */
+const ROSEWORT_STEP: SpellBuilderStep = {
+  id: '00000000-0000-4000-8000-000000000008',
+  name: 'Fixture Rosewort',
+  form: 'dried leaf',
+  quantity: 3,
+  unit: 'g',
+  note: null,
+  body: null,
+  ingredient: { id: '00000000-0000-4000-8000-000000000001', categories: [], stock: [] },
+  variant: { id: '00000000-0000-4000-8000-000000000002', categories: [], formChoice: null },
+};
+
+/** `ROSEWORT_STEP` as an update sends it back. */
+const ROSEWORT_SENT = {
+  id: ROSEWORT_STEP.id,
+  ingredientId: ROSEWORT_STEP.ingredient?.id,
+  variantId: ROSEWORT_STEP.variant?.id,
+  quantity: 3,
+  unit: 'g',
+};
+
+/** Answers the read of a saved spell's steps with `steps`, once `landed` settles. */
+function answerSteps(steps: SpellBuilderStep[] = [], landed?: Promise<void>) {
+  const reads: SpellBuilderStepsQueryVariables[] = [];
+  server.use(
+    graphqlLink.query<SpellBuilderStepsQuery, SpellBuilderStepsQueryVariables>(
+      'SpellBuilderSteps',
+      async ({ variables }) => {
+        reads.push(variables);
+        await landed;
+        return HttpResponse.json({ data: { spell: { id: String(variables.id), steps } } });
+      },
+    ),
+  );
+  return reads;
+}
 
 function renderDialog(opened: SpellDialogProps['opened'], canCreate = true) {
   return render(
@@ -67,6 +111,8 @@ const save = () => within(dialog()).getByRole('button', { name: /^Sav/ });
 const close = () => within(dialog()).getByRole('button', { name: 'Close' });
 // A saved spell opens with its sections shut, as an edited ingredient does: Open All shows its fields.
 const openAll = () => fireEvent.click(within(dialog()).getByRole('button', { name: 'Open All' }));
+/** The jar's list of steps, drawn once a saved spell's steps have landed. */
+const stepsLanded = () => within(dialog()).findByRole('list', { name: 'Steps' });
 
 /** The spell as the server answers a save: every field as sent, at `revision`. */
 function answer(id: string, revision: number, input: CreateSpellMutationVariables['input']) {
@@ -81,6 +127,7 @@ function answer(id: string, revision: number, input: CreateSpellMutationVariable
     dayOfWeek: input.dayOfWeek ?? null,
     note: input.note ?? null,
     visibility: input.visibility ?? ('workspace' as const),
+    steps: [],
   };
 }
 
@@ -111,6 +158,7 @@ function acceptUpdate() {
 
 beforeEach(() => {
   offerCategories([]);
+  answerSteps();
   address.search = '';
   router.push.mockReset();
   router.replace.mockReset();
@@ -182,6 +230,52 @@ describe('SpellDialog', () => {
     expect(field('Intent')).toHaveValue('Calm');
   });
 
+  it('reads a saved spell’s steps once it opens, and sends them with the next update', async () => {
+    const reads = answerSteps([ROSEWORT_STEP]);
+    const updated = acceptUpdate();
+    renderDialog({ spell: SAVED });
+    openAll();
+
+    // Until they land the jar shows its loading state, and there is nothing to save.
+    expect(within(dialog()).getByRole('region', { name: 'Steps' })).toHaveAttribute(
+      'aria-busy',
+      'true',
+    );
+    const steps = await stepsLanded();
+    expect(within(steps).getByRole('listitem')).toHaveTextContent('Fixture Rosewort');
+    expect(reads).toEqual([{ workspaceId: 'w1', id: SAVED.id }]);
+    expect(save()).toBeDisabled();
+
+    type('Intent', 'Calmer');
+    fireEvent.click(save());
+
+    await waitFor(() => expect(updated).toHaveLength(1));
+    expect(updated[0]?.input.steps).toEqual([ROSEWORT_SENT]);
+  });
+
+  it('sends nothing while a saved spell’s steps are on their way: Save is off', async () => {
+    let land = () => {};
+    answerSteps([ROSEWORT_STEP], new Promise((resolve) => (land = resolve)));
+    const updated = acceptUpdate();
+    renderDialog({ spell: SAVED });
+    openAll();
+    type('Intent', 'Calmer');
+
+    expect(save()).toBeDisabled();
+    // Enter in a field submits the form even with Save off.
+    fireEvent.submit(field('Title').closest('form') as HTMLFormElement);
+    await act(async () => {});
+    expect(updated).toHaveLength(0);
+
+    land();
+    await stepsLanded();
+    // The change typed while they loaded is kept, and now saves with them.
+    expect(field('Intent')).toHaveValue('Calmer');
+    fireEvent.click(save());
+    await waitFor(() => expect(updated).toHaveLength(1));
+    expect(updated[0]?.input).toMatchObject({ intent: 'Calmer', steps: [ROSEWORT_SENT] });
+  });
+
   it('names a saved spell with no title Untitled Spell, as its card does', () => {
     renderDialog({ spell: { ...SAVED, title: null } });
 
@@ -226,6 +320,7 @@ describe('SpellDialog', () => {
     const updated = acceptUpdate();
     renderDialog({ spell: SAVED });
     openAll();
+    await stepsLanded();
     type('Intent', 'Calmer');
 
     fireEvent.click(save());
@@ -278,6 +373,7 @@ describe('SpellDialog', () => {
       const updated = acceptUpdate();
       renderDialog({ spell: SAVED });
       openAll();
+      await stepsLanded();
       type('Intent', 'Calmer');
 
       await act(async () => {
@@ -290,6 +386,61 @@ describe('SpellDialog', () => {
         id: 's9',
         input: { expectedRevision: 3, intent: 'Calmer' },
       });
+    });
+
+    it('holds a Close pressed before a saved spell’s steps land, then saves with them and closes', async () => {
+      let land = () => {};
+      answerSteps([ROSEWORT_STEP], new Promise((resolve) => (land = resolve)));
+      const updated = acceptUpdate();
+      renderDialog({ spell: SAVED });
+      openAll();
+      type('Intent', 'Calmer');
+
+      await act(async () => {
+        fireEvent.click(close());
+      });
+      // Held: a save now would send no steps, and an update's steps are the whole recipe.
+      expect(updated).toHaveLength(0);
+      expect(router.replace).not.toHaveBeenCalled();
+
+      land();
+
+      await waitFor(() => expect(router.replace).toHaveBeenCalledWith(CLOSE));
+      expect(updated).toHaveLength(1);
+      expect(updated[0]?.input).toMatchObject({ intent: 'Calmer', steps: [ROSEWORT_SENT] });
+    });
+
+    it('opens a saved spell’s shut Jar alone to show its steps could not be read', async () => {
+      mockGraphQLError('SpellBuilderSteps', { code: 'NOT_FOUND', message: 'No such spell' });
+      renderDialog({ spell: SAVED });
+      const jar = within(dialog()).getByRole('button', { name: 'Jar' });
+      // Shut as the saved spell opens, so without the opening the failure would be hidden.
+      expect(jar).toHaveAttribute('aria-expanded', 'false');
+
+      expect(await within(dialog()).findByRole('alert')).toBeVisible();
+      expect(jar).toHaveAttribute('aria-expanded', 'true');
+      expect(within(dialog()).getByRole('button', { name: 'Purpose' })).toHaveAttribute(
+        'aria-expanded',
+        'false',
+      );
+    });
+
+    it('closes and sends nothing when a saved spell’s steps cannot be read, though a field changed', async () => {
+      mockGraphQLError('SpellBuilderSteps', { code: 'NOT_FOUND', message: 'No such spell' });
+      const updated = acceptUpdate();
+      renderDialog({ spell: SAVED });
+      openAll();
+      // A change, so Close has something it would save, and a save would be refused.
+      type('Intent', 'Calmer');
+
+      expect(await within(dialog()).findByRole('alert')).toBeInTheDocument();
+      expect(save()).toBeDisabled();
+      await act(async () => {
+        fireEvent.click(close());
+      });
+
+      expect(router.replace).toHaveBeenCalledWith(CLOSE);
+      expect(updated).toHaveLength(0);
     });
 
     it('stays open with the refusal shown when the save on Close is refused', async () => {

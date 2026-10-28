@@ -2,7 +2,8 @@
 
 `src/components/SpellBuilder/` is the form that writes a spell's own fields
 (M10.12, story 47): its title, intent, jar description, seal wax colour, moon phase,
-day of the week and note, and the categories it is assigned (M10.14, story 48). It is a client component, drawn in a modal
+day of the week and note, the categories it is assigned (M10.14, story 48),
+and its jar of ingredients (M10.15, stories 49, 50, 57 and 77). It is a client component, drawn in a modal
 over the grimoire's list, at the default column and laid out as Add Ingredient is (`SpellDialog`, `spell-dialog.tsx`; the owner's call,
 2026-10-27, [`design-decisions/m10.12-spell-builder-modal.md`](../design-decisions/m10.12-spell-builder-modal.md)).
 The address opens it, as it opens Add Ingredient: `?new=spell-<slug>` draws it empty,
@@ -15,17 +16,18 @@ on any other page is sent to that coven's grimoire with a replace
 `?new=spell-<slug>` in the browser, with no server
 request, and the dialog draws the empty builder from the address itself, so
 it opens at its full size at once, with no skeleton before it
-([`modal.md`](modal.md), "A form the browser can draw skips the skeleton"). Its head names the coven the spell lands in, as Add Ingredient's does: the coven's name over the title, and the dialog named "New Spell to Whitethorn Coven" (`ModalHeading.destination`, [`modal.md`](modal.md)); a saved spell's stays "Edit Spell" over its title. The recipe's steps (M10.15, M10.16, M13.3) and Mark Complete (M10.20) are later tasks that extend it. There is
+([`modal.md`](modal.md), "A form the browser can draw skips the skeleton"). Its head names the coven the spell lands in, as Add Ingredient's does: the coven's name over the title, and the dialog named "New Spell to Whitethorn Coven" (`ModalHeading.destination`, [`modal.md`](modal.md)); a saved spell's stays "Edit Spell" over its title. Reordering the steps (M10.16), instruction steps (M13.3) and Mark Complete (M10.20) are later tasks that extend it. There is
 no `instructions` field: the ritual is the spell's steps (M13.1).
 
 ## Props
 
 `SpellBuilderProps` (`types.ts`):
 
-| Prop          | What it is                                                                                                                                                         |
-| ------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
-| `workspaceId` | The coven the spell belongs to, sent with every save                                                                                                               |
-| `spell`       | Optional: a saved spell, its `id`, `revision`, `visibility`, the seven fields (null for one not set) and its `categoryIds` (left out, none). Without it, all empty |
+| Prop          | What it is                                                                                                                                                                  |
+| ------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `workspaceId` | The coven the spell belongs to, sent with every save                                                                                                                        |
+| `spell`       | Optional: a saved spell, its `id`, `revision`, `visibility`, `steps`, the seven fields (null for one not set) and its `categoryIds` (left out, none). Without it, all empty |
+| `stepsRead`   | Optional: `loading` while `spell`'s steps are on their way, `failed` when they could not be read. Left out, `spell.steps` are its steps                                     |
 
 ## Saving
 
@@ -44,14 +46,15 @@ no `instructions` field: the ritual is the spell's steps (M13.1).
   set to the revision the last save answered. Opened with a `spell`, every
   Save is an update. This is the shape M13.17's autosave adapter takes.
 - **What it sends.** The seven fields, trimmed, and null for a blank one, so
-  an emptied field is cleared rather than left as it was, and `visibility`
-  (below). Only these:
-  the schema's default empty `steps` is never sent, so a save from here
-  cannot replace a saved spell's recipe. The categories go as
-  `categoryIds` only when the picks differ from the last save, as a set in
-  any order; left out, the service keeps the spell's set as it is, and an
-  empty list clears it ([`../db/grimoire.md`](../db/grimoire.md), "Saving its
-  categories"). A changed pick turns Save on like a changed field.
+  an emptied field is cleared rather than left as it was, `visibility`
+  (below), and every step, as "Steps" below sets out. The steps are the whole
+  recipe: on an update the service keeps the steps sent by id, adds the new
+  ones and removes the rest, so a step the builder does not send is deleted. A
+  saved instruction step is read in and sent back unchanged for that reason.
+  The categories go as `categoryIds` only when the picks differ from the last
+  save, as a set in any order; left out, the service keeps the spell's set as
+  it is, and an empty list clears it ([`../db/grimoire.md`](../db/grimoire.md),
+  "Saving its categories"). A changed pick turns Save on like a changed field.
 - **After a save the form starts again from the answer**, so Save goes
   disabled until the next change.
 - **The first save moves the address to the draft.** A create replaces
@@ -61,6 +64,25 @@ no `instructions` field: the ritual is the spell's steps (M13.1).
   save was made, so M13.17's autosave moves the address the same way. The
   dialog keeps the same builder under the new address, so nothing typed is
   lost. A create made by Close skips the move and closes.
+- **A saved spell's steps are read after it opens.** The grimoire page's
+  server read for `?edit=<id>` (`readEditedSpell`) gives the fields alone, and
+  the dialog reads the steps through /api/graphql (`SpellBuilderSteps`, in
+  `steps/documents.ts`) once it opens, afresh each time. Until they land the
+  builder holds them as `stepsRead`: the jar shows its loading state, Save is
+  off, and nothing is sent, since an update's steps are the whole recipe and
+  one sent now would delete the steps not yet shown. A Close pressed meanwhile
+  saves once they land, then closes. Fields typed meanwhile are kept. If the
+  read fails the jar says so and opens its section, nothing can be saved, Close
+  closes without saving, since the save would be refused, and a reload tries again.
+  A draft the dialog created needs no read: its save's answer holds its steps.
+- **A saved step's selection is written out three times, not shared as a
+  fragment.** The steps read and both save mutations each list a step's
+  fields in full. Through a fragment spread, the jar's `stock { variant { id } }`
+  and the form's `formChoice { group { icon } }` were 8 levels deep, past the
+  API's limit of 7 (DESIGN.md §7; [`graphql/protections.md`](../graphql/protections.md)),
+  and every save was refused. The answers are all typed as `SpellBuilderStep`
+  (`types.ts`, off the steps read) where the builder reads them, so a copy
+  missing a field fails the type check.
 
 ## Visibility
 
@@ -105,7 +127,8 @@ As in the ingredient form (M5.9): the shared schema runs as the form's
 resolver, so a field it refuses shows its error beneath that field before
 the save, and a `VALIDATION` answer's `fieldErrors` for one of the seven
 fields, or for a pick at `['categoryIds', index]`, show beneath that field after, through the same element (`aria-invalid` and
-`aria-describedby`). Anything else, such as a viewer's `FORBIDDEN`, goes to
+`aria-describedby`), as does an issue the server places on a step's
+quantity or unit (`steps.<i>.quantity`, `steps.<i>.unit`). Anything else, such as a viewer's `FORBIDDEN`, goes to
 the `Notice` above the fields, in the server's words. The reading is
 `placeServerIssues`. Today no builder field has a rule the schema can break
 in the browser: the title rule needs `status: complete`, which M10.20 adds.
@@ -129,12 +152,12 @@ The fields sit in four `CollapsibleSection`s at `h3`
 `.collapsible-sections`, as Add Ingredient's are (M8.16; the owner, 2026-10-28,
 "Use add ingredient modal as reference"):
 
-| Section         | Fields                              | Later fields   |
-| --------------- | ----------------------------------- | -------------- |
-| Purpose         | Title, Intent, Categories (M10.14)  |                |
-| Jar             | Jar Description, Seal Wax Colour    | M10.15's steps |
-| When to Work It | Moon Phase, Day of the Week         |                |
-| Notes           | Note, Share With the Coven (M10.13) |                |
+| Section         | Fields                                               |
+| --------------- | ---------------------------------------------------- |
+| Purpose         | Title, Intent, Categories (M10.14)                   |
+| Jar             | Jar Description, Seal Wax Colour, the steps (M10.15) |
+| When to Work It | Moon Phase, Day of the Week                          |
+| Notes           | Note, Share With the Coven (M10.13)                  |
 
 A new spell opens with every section open, to be filled in order; a saved
 spell opens with every section shut. Shut, a section's line names the values
@@ -142,7 +165,8 @@ it holds, each on one line and joined by a middle dot ("Waxing Moon ·
 Monday"), or reads "Nothing yet". The visibility switch reads as Shared or
 Private, so Notes always has a line, and the categories by name, joined by
 commas, once the categories are read (`useCategoryName`), so the line never
-shows an id. Each section's values are its entry in
+shows an id, and the steps as a count of the ingredients laid ("3 ingredients",
+an instruction step not counted). Each section's values are its entry in
 `SECTIONS`, which flags the section holding an error, and `lineOfField`
 reads each value for the line. A save refused on a field opens that
 field's section, flagged "Has an error to fix", and leaves the rest as they
@@ -218,6 +242,48 @@ stored as typed: the columns are free text
 - **Intent and Note** are multi-line. Title, Jar Description and Seal Wax Colour are
   `autoComplete="off"`.
 
+## Steps
+
+`steps/` is the jar: the list of steps, the picker that adds to it, and the
+spell's derived categories. It sits in the Jar section after Seal Wax Colour;
+while a saved spell's steps are still being read it is a skeleton there, and
+if the read fails, an error in its place.
+
+- **Add to Jar** (`picker.tsx`, story 49) is a fieldset with a type-ahead,
+  Search Ingredients, over `ingredientSuggestions`: the coven's own
+  ingredients under Your Ingredients and the compendium's under Compendium,
+  one row per form, since a step lays a form and not a whole ingredient. A row
+  reads the cupboard's label (or the ingredient's name) with the form in
+  brackets, its form's icon, and the formal name as its note. A retired
+  ingredient is not offered. A form already in the jar is listed but disabled,
+  with the note "Already in the jar". Picking a row appends the step and
+  clears the search.
+- **A one-off ingredient** is a name and an optional form typed for this jar
+  alone (One-Off Name, One-Off Form, Add One-Off Ingredient). It makes no
+  ingredients row: the step saves its `name` and `form` with no ids. A name
+  already in the jar as a one-off is refused beneath the name field.
+- **What a step saves.** A step picked from the type-ahead sends its
+  `ingredientId` and `variantId`, never the cupboard entry or the coven's
+  jar it was found through (`stepInputOf` in `values.ts`); a one-off sends
+  its `name` and `form`. A saved step sends its `id`. Quantity is sent as a
+  number, and a blank quantity, unit or note is left out.
+- **Each row** (`step-row.tsx`, story 50) shows the form's icon and the name
+  with its form, a Quantity and a Unit for it, and Remove. An instruction step
+  (no name) shows its text only.
+- **The unit rule** (story 77, `unitIssues`) is the service's, from
+  `src/modules/grimoire/validation/step-unit.ts`: when the coven holds a jar
+  of that form, the step's unit must be one the jar can be measured in (the
+  same unit, or weight with weight, volume with volume; a count only matches
+  itself). It is checked as the unit is chosen, its error shows on the step's
+  Unit, and Save Spell stays disabled while any step breaks it. A step with no
+  unit, a form the coven holds no jar of, and a saved step whose unit is
+  unchanged all pass, as on the server.
+- **Derived Categories** lists the union of the steps' categories, the
+  ingredient's and the form's, once each and sorted by name. It is worked
+  out from the steps as they stand, so a Remove takes a category off at once.
+  These are only ever derived; the categories a spell intends are assigned
+  (M10.14), and the two are never mixed (DESIGN.md §5).
+
 ## Styling
 
 No stylesheet of its own: the `<form className="form">` sits straight in
@@ -247,8 +313,11 @@ values sent, Save busy then disabled, a second save as an update at the
 revision, a saved spell opened and an emptied field cleared, both error
 surfaces. `tests/components/SpellBuilder/spell-dialog.test.tsx` covers the
 dialog: New Spell's heading naming its coven ("New Spell to Testwort Coven") and Edit Spell's, the address moved once on the
-first save and never on a saved spell's, no Cancel, and Close closing at
-once, saving first with no question, or staying open on a refused save, and
+first save and never on a saved spell's, no Cancel, a saved spell's steps
+read once it opens and sent with the next update, nothing sent before they
+land, and Close closing at
+once, saving first with no question, held until a saved spell's steps land,
+or staying open on a refused save or a failed steps read, and
 `?new=spell-<slug>` and `?new=spell` opening the empty builder from the address alone for a role that
 may create a spell, and nothing for one that may not. The
 grimoire page's test,
@@ -263,10 +332,18 @@ Categories field: the picks sent with a first save, Save on with a pick and
 off once it is removed, a saved spell's categories opened and the set left
 after a removal sent (an empty set to clear them), the categories left out of
 a save that did not change them, and a refused pick shown beside the field
-by name. Stories 47 and 48 in
+by name. `steps.test.tsx` covers the
+jar: the two headings, one row per form, a pick adding its row and clearing
+the search, a form already in the jar disabled, a one-off and its two
+refusals, the ids sent, Remove updating Derived Categories, the unit rule both
+ways and with no jar, saved steps sent back by id, and a server issue placed
+on its step. `tests/modules/grimoire/services/spell-ingredient-steps.test.ts`
+reads the rows a save leaves, and asserts a member of another coven and a
+viewer are refused by direct id.
+Stories 47 and 48 in
 `tests/e2e/stories/06-grimoire.spec.ts` walk it in a browser; story 48 picks
 two categories, removes one, saves, and finds the one left on the spell's
-card under Drafts.
+card under Drafts. Stories 49, 50, 57 and 77 walk the jar.
 No story walks the visibility control, since §5's rule governs it rather than a
 story, so `tests/e2e/spell-visibility.spec.ts` is its gate spec: a spell written private,
 then shared in one confirmed action and the control shut, each step read from the

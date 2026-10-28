@@ -28,6 +28,7 @@ const SAVED: SpellBuilderSpell = {
   moonPhase: 'Waxing Gibbous',
   dayOfWeek: 'Monday',
   note: null,
+  steps: [],
   visibility: 'workspace',
 };
 

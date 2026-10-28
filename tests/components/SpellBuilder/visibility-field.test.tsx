@@ -56,6 +56,7 @@ const SPELL: SpellBuilderSpell = {
   dayOfWeek: null,
   note: null,
   visibility: 'private',
+  steps: [],
 };
 
 /** The spell as the server answers a save: every field as sent, at `revision`. */
@@ -76,6 +77,7 @@ function answer(
     dayOfWeek: input.dayOfWeek ?? null,
     note: input.note ?? null,
     visibility: input.visibility ?? visibility,
+    steps: [],
   };
 }
 

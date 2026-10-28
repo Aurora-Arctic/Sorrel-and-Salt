@@ -21,6 +21,15 @@ validation error and `data` is absent. Depth counts field levels, so `{ ok }`
 is 1, and is pinned in the file although 7 is not the package default.
 Introspection queries (`__schema`) do not count towards it.
 
+**A fragment spread counts as a level of its own.** armor's `flattenFragments`
+is off, its default, so `steps { ...Step }` puts the fragment's fields two levels
+deeper than writing them out beneath `steps` would. The type checker cannot see this: M10.15's save
+mutations spread a step fragment whose deepest field sat 8 levels down, and
+every save was refused. `tests/guards/document-depth.test.ts` sends each
+operation codegen typed through these protections over the committed SDL, so a
+browser document past the limit fails in the diff that writes it. Keep the
+limit, and write a deep selection out instead of spreading it.
+
 **Cost belongs to the complexity plugin, not to armor.** armor's own cost
 check is off (`costLimit: { enabled: false }`). It runs at validation, before
 variables are bound, so it multiplied a subtree by a _literal_ `first` only:

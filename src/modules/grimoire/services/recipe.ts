@@ -4,11 +4,11 @@ import { spellSteps } from '../schema/spell-steps';
 import { ValidationError } from '../../../lib/errors';
 import type { ValidationIssue } from '../../../lib/types';
 import type { Membership } from '@/modules/coven';
-import { jarsOfForms, unitConvert } from '@/modules/ingredients';
-import type { Unit } from '../../ingredients/schema/units';
+import { jarsOfForms } from '@/modules/ingredients';
 import type { SpellStepRow } from '../types';
 import type { z } from 'zod';
 import type { SpellStepInput } from '../validation/spell-step';
+import { UNMEASURABLE_UNIT, measurable } from '../validation/step-unit';
 
 // How a save writes a spell's recipe (M10.10): the steps a member sends are
 // the whole recipe, in order, so a step's place is its index, a saved step
@@ -106,16 +106,6 @@ export async function checkRecipe(
 }
 
 /**
- * Whether an amount in `unit` can be taken out of a jar kept in `jarUnit`:
- * `unitConvert` accepts the pair, which it does within weight and within
- * volume, or the two are one count unit, since `unitConvert` refuses every
- * count pair and a working subtracts a count without it (M13.5).
- */
-function measurable(unit: Unit, jarUnit: Unit): boolean {
-  return unit === jarUnit || unitConvert(1, unit, jarUnit).ok;
-}
-
-/**
  * Story 77 (M13.2): a step laying a form the coven holds a jar of, in a unit
  * that jar cannot be measured in, so a working could not take it out of stock.
  * One read for every step's jar, under the caller's proof, so only this
@@ -145,7 +135,7 @@ async function unmeasurableSteps(
     return [
       {
         path: ['steps', index, 'unit'],
-        message: 'Choose a unit your coven’s stock of this can be measured in',
+        message: UNMEASURABLE_UNIT,
       },
     ];
   });

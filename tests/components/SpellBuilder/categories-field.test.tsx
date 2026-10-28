@@ -83,6 +83,7 @@ function answer(id: string, revision: number, input: CreateSpellMutationVariable
     dayOfWeek: input.dayOfWeek ?? null,
     note: input.note ?? null,
     visibility: input.visibility ?? ('workspace' as const),
+    steps: [],
   };
 }
 
@@ -128,6 +129,7 @@ const savedSpell = (categoryIds: string[]): SpellBuilderSpell => ({
   dayOfWeek: null,
   note: null,
   visibility: 'workspace',
+  steps: [],
   categoryIds,
 });
 
