@@ -1,5 +1,7 @@
 import 'server-only';
 import {
+  type FacetCount,
+  findGrimoireCategoryCounts,
   findGrimoireCount,
   findGrimoirePage,
   findManyByIds,
@@ -71,6 +73,23 @@ export async function countGrimoire(
 ): Promise<PageCount> {
   const membership = await assertMembership(session, workspaceId, { spell: ['read'] });
   return findGrimoireCount(membership, searchable(query), start);
+}
+
+/**
+ * How many spells `listGrimoire` would list in each category under the rest
+ * of `query`: the Categories filter's counts (M10.11), each a category's id
+ * and its count, a category no readable spell carries absent. A private
+ * spell counts for its author alone, as it lists.
+ *
+ * @throws {Forbidden} the caller is not a member of this coven.
+ */
+export async function countGrimoireCategories(
+  session: Session,
+  workspaceId: string,
+  query: GrimoireQuery,
+): Promise<FacetCount[]> {
+  const membership = await assertMembership(session, workspaceId, { spell: ['read'] });
+  return findGrimoireCategoryCounts(membership, searchable(query));
 }
 
 /**

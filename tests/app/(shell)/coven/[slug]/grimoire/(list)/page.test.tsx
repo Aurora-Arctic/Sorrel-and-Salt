@@ -1,7 +1,8 @@
 import { QueryClientProvider } from '@tanstack/react-query';
-import { render, screen, within } from '@testing-library/react';
+import { act, fireEvent, render, screen, waitFor, within } from '@testing-library/react';
 import type { ReactElement } from 'react';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
+import { NotFound } from '@/lib/errors';
 import { makeQueryClient } from '@/lib/graphql-client';
 import { CARD_PAGE_SIZE } from '@/lib/pagination';
 
@@ -10,15 +11,20 @@ import { CARD_PAGE_SIZE } from '@/lib/pagination';
 // tests/db/repository/readable-spell-page.test.ts's and
 // tests/modules/grimoire/services/spell-reads.test.ts's); the tabs' own read runs for real over
 // them. Here: the guard on the slug from the address, one page of 24 of the tab's status, the
-// address becoming the query, each card's assigned categories, and the pager's addresses.
+// address becoming the query, each card's assigned categories, and the pager's addresses; and
+// the spell builder's dialog over the tab (M10.12), `?new=spell` and `?edit=<id>`, beside the shell's
+// Add Ingredient, `?new=ingredient`.
 
 const COVEN = { id: '5b8f4a10-2d6e-4c19-8a37-0e9d1c2b3a44', slug: 'fixture-coven' };
 const session = { user: { id: 'fixture-user' } };
 
 const router = { push: vi.fn(), replace: vi.fn(), refresh: vi.fn() };
+// The address the layout's New Spell reads, as the browser has it.
+const address = vi.hoisted(() => ({ path: '/coven/fixture-coven/grimoire', search: '' }));
 vi.mock('next/navigation', () => ({
   useRouter: () => router,
-  usePathname: () => '/coven/fixture-coven/grimoire',
+  usePathname: () => address.path,
+  useSearchParams: () => new URLSearchParams(address.search),
 }));
 
 const requireCovenMembership = vi.fn();
@@ -39,8 +45,16 @@ vi.mock('@/app/compendium-reads', () => ({ readCategories: async () => [CATEGORY
 
 const listGrimoire = vi.fn();
 const countGrimoire = vi.fn();
+const countGrimoireCategories = vi.fn();
 const assignedCategoriesOf = vi.fn();
-vi.mock('@/modules/grimoire', () => ({ listGrimoire, countGrimoire, assignedCategoriesOf }));
+const readSpell = vi.fn();
+vi.mock('@/modules/grimoire', () => ({
+  listGrimoire,
+  countGrimoire,
+  countGrimoireCategories,
+  assignedCategoriesOf,
+  readSpell,
+}));
 
 const displayNamesOf = vi.fn();
 // Partial: the layout reads `rolePermits` from @/modules/coven, whose GraphQL
@@ -87,6 +101,8 @@ async function renderTab(Page: PageFn, search: Record<string, string | string[]>
 
 beforeEach(() => {
   vi.clearAllMocks();
+  address.path = '/coven/fixture-coven/grimoire';
+  address.search = '';
   vi.stubGlobal('matchMedia', (query: string) => ({
     matches: query.includes('min-width'),
     media: query,
@@ -99,6 +115,7 @@ beforeEach(() => {
   });
   listGrimoire.mockResolvedValue([spell('s1', 'Fixture Working'), spell('s2', 'Testwort Charm')]);
   countGrimoire.mockResolvedValue({ totalCount: 2, countBefore: null });
+  countGrimoireCategories.mockResolvedValue([{ value: 'c1', count: 4 }]);
   assignedCategoriesOf.mockResolvedValue([[{ id: 'c1', name: 'Testwarding' }], []]);
   displayNamesOf.mockImplementation(async (_s: unknown, ids: string[]) =>
     ids.map((id) => (id === 'editor-s1' ? 'Fixture A' : null)),
@@ -148,6 +165,33 @@ describe('the Grimoire tabs', () => {
       categoryIds: ['c1'],
       categoryMode: 'any',
     });
+  });
+
+  /** The Categories filter's suggestions, the panel opened. */
+  function openCategories() {
+    fireEvent.click(screen.getByRole('button', { name: /^Filters/ }));
+    screen.getByRole('combobox', { name: 'Category' }).focus();
+    fireEvent.click(screen.getByRole('button', { name: 'Show Category suggestions' }));
+  }
+
+  it('counts the categories under the tab’s status and the address’s query, and offers each with its count', async () => {
+    await renderTab(DraftsPage, { query: 'hearth' });
+    expect(countGrimoireCategories).toHaveBeenCalledWith(session, COVEN.id, {
+      order: 'UPDATED_DESC',
+      status: 'draft',
+      query: 'hearth',
+    });
+
+    openCategories();
+    expect(screen.getByRole('option', { name: /^Testwarding\D*4/ })).toBeInTheDocument();
+  });
+
+  it('offers no category the count leaves out, since no spell here carries it', async () => {
+    countGrimoireCategories.mockResolvedValue([]);
+    await renderTab(SpellsPage);
+
+    openCategories();
+    expect(screen.queryByRole('option', { name: /^Testwarding/ })).not.toBeInTheDocument();
   });
 
   it('keeps the tab’s status over a status written into the address', async () => {
@@ -222,6 +266,126 @@ describe('the Grimoire tabs', () => {
   });
 });
 
+describe('the spell builder over a Grimoire tab', () => {
+  const SPELL_ID = '0f6d2c8e-3b1a-4e5f-9a7c-2d4b6e8f1a3c';
+  const SPELL = {
+    id: SPELL_ID,
+    revision: 4,
+    workspaceId: COVEN.id,
+    title: 'Fixture Working',
+    intent: 'Calm',
+    jarSize: '4 oz',
+    sealWaxColor: null,
+    moonPhase: 'Full Moon',
+    dayOfWeek: null,
+    note: null,
+  };
+
+  function as(role: 'owner' | 'member' | 'viewer') {
+    requireCovenMembership.mockResolvedValue({
+      workspace: COVEN,
+      membership: { workspaceId: COVEN.id, userId: 'fixture-user', role },
+    });
+  }
+
+  it.each(['owner', 'member'] as const)(
+    'opens New Spell over the tab under ?new=spell for a coven %s, the list still beneath it',
+    async (role) => {
+      as(role);
+      await renderTab(SpellsPage, { new: 'spell' });
+
+      const dialog = screen.getByRole('dialog', { name: 'New Spell' });
+      expect(within(dialog).getByRole('textbox', { name: 'Title' })).toHaveValue('');
+      expect(screen.getAllByRole('heading', { name: 'Fixture Working' }).length).toBeGreaterThan(0);
+    },
+  );
+
+  it('opens nothing under ?new=spell for a viewer, who may not create a spell', async () => {
+    as('viewer');
+    await renderTab(SpellsPage, { new: 'spell' });
+
+    // The tab drew for this viewer: the missing dialog is the role's, not a refusal.
+    expect(screen.getAllByRole('heading', { name: 'Fixture Working' }).length).toBeGreaterThan(0);
+    expect(screen.queryByRole('dialog')).not.toBeInTheDocument();
+  });
+
+  it('opens a saved draft under ?edit=<id> with its values, read for the signed-in member', async () => {
+    as('member');
+    readSpell.mockResolvedValue(SPELL);
+    await renderTab(DraftsPage, { edit: SPELL_ID });
+
+    expect(readSpell).toHaveBeenCalledWith(session, COVEN.id, SPELL_ID);
+    const dialog = screen.getByRole('dialog', { name: 'Edit Spell, Fixture Working' });
+    expect(within(dialog).getByRole('textbox', { name: 'Intent' })).toHaveValue('Calm');
+    expect(within(dialog).getByRole('textbox', { name: 'Jar Size' })).toHaveValue('4 oz');
+  });
+
+  it('reads nothing and opens nothing under ?edit=<id> for a viewer', async () => {
+    as('viewer');
+    readSpell.mockResolvedValue(SPELL);
+    await renderTab(DraftsPage, { edit: SPELL_ID });
+
+    expect(readSpell).not.toHaveBeenCalled();
+    expect(screen.queryByRole('dialog')).not.toBeInTheDocument();
+  });
+
+  it('opens nothing for a spell the service will not give this member', async () => {
+    as('member');
+    readSpell.mockRejectedValue(new NotFound('No such spell in this coven'));
+    await renderTab(DraftsPage, { edit: SPELL_ID });
+
+    expect(readSpell).toHaveBeenCalledWith(session, COVEN.id, SPELL_ID);
+    expect(screen.queryByRole('dialog')).not.toBeInTheDocument();
+  });
+
+  it('reads nothing for an ?edit that is not an id', async () => {
+    as('member');
+    await renderTab(DraftsPage, { edit: 'not-an-id' });
+
+    expect(readSpell).not.toHaveBeenCalled();
+    expect(screen.queryByRole('dialog')).not.toBeInTheDocument();
+  });
+
+  it.each(['', 'ingredient'])(
+    "opens no saved spell while the shell's Add Ingredient holds ?new=%s, so one dialog shows",
+    async (value) => {
+      as('member');
+      readSpell.mockResolvedValue(SPELL);
+      await renderTab(SpellsPage, { new: value, edit: SPELL_ID });
+
+      // The tab drew for a member who may edit a spell: the builder waits for ?new to go.
+      expect(screen.getAllByRole('heading', { name: 'Fixture Working' }).length).toBeGreaterThan(0);
+      expect(readSpell).not.toHaveBeenCalled();
+      expect(screen.queryByRole('dialog')).not.toBeInTheDocument();
+    },
+  );
+
+  it('opens New Spell, not the saved spell, when the address holds both ?new=spell and ?edit', async () => {
+    as('member');
+    readSpell.mockResolvedValue(SPELL);
+    await renderTab(SpellsPage, { new: 'spell', edit: SPELL_ID });
+
+    expect(screen.getByRole('dialog', { name: 'New Spell' })).toBeInTheDocument();
+    expect(readSpell).not.toHaveBeenCalled();
+  });
+
+  it('closes back to the tab as it was, its filter kept and the dialog dropped', async () => {
+    as('member');
+    await renderTab(DraftsPage, { query: 'fixture', new: 'spell' });
+
+    await act(async () => {
+      fireEvent.click(screen.getByRole('button', { name: 'Close' }));
+    });
+
+    // The modal fades out first: this test's media query leaves motion on.
+    await waitFor(() =>
+      expect(router.replace).toHaveBeenCalledWith(
+        '/coven/fixture-coven/grimoire/drafts?query=fixture',
+      ),
+    );
+  });
+});
+
 describe('the Grimoire layout', () => {
   it('heads the tabs Grimoire, with Spells and Drafts each at its own address', async () => {
     const page = (await Layout({
@@ -258,15 +422,27 @@ describe('the Grimoire layout', () => {
   }
 
   it.each(['owner', 'member'] as const)(
-    'links New Spell to the builder at the heading for a coven %s, who may create a spell',
+    'links New Spell to the open tab under ?new=spell at the heading for a coven %s, who may create a spell',
     async (role) => {
       await renderLayoutAs(role);
       expect(screen.getByRole('link', { name: 'New Spell' })).toHaveAttribute(
         'href',
-        '/coven/fixture-coven/grimoire/new',
+        '/coven/fixture-coven/grimoire?new=spell',
       );
     },
   );
+
+  it('keeps the open tab’s filter and page in New Spell’s address, and no other dialog', async () => {
+    address.path = '/coven/fixture-coven/grimoire/drafts';
+    address.search =
+      'query=fixture&after=c1&new=ingredient&edit=0f6d2c8e-3b1a-4e5f-9a7c-2d4b6e8f1a3c';
+    await renderLayoutAs('member');
+
+    expect(screen.getByRole('link', { name: 'New Spell' })).toHaveAttribute(
+      'href',
+      '/coven/fixture-coven/grimoire/drafts?query=fixture&after=c1&new=spell',
+    );
+  });
 
   it('draws no New Spell for a viewer, who reads the grimoire but may not create a spell', async () => {
     await renderLayoutAs('viewer');

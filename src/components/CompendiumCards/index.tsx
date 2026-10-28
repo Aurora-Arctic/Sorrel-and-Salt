@@ -109,6 +109,7 @@ const CompendiumCards = ({
   nextHref,
   position,
   total,
+  cursor,
   action,
   workspaceId,
   covens,
@@ -125,6 +126,7 @@ const CompendiumCards = ({
         vocabulary={vocabulary}
         total={total}
         covens={myCovens}
+        cursor={cursor}
       />
     }
     previousHref={previousHref}

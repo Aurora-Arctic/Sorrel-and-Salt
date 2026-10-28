@@ -1,0 +1,143 @@
+@use '../../scss/variables' as *;
+@use '../../scss/mixins' as *;
+
+// A form's section as a disclosure (MB.115, the owner's calls): flush, parted
+// by hairlines rather than set on the card ground, since what sits inside may
+// already be on it and a card in a card reads as nesting the form does not
+// have. The ingredient form's sections and the spell builder's When to Work It
+// share it; a variant's sections tighten it in IngredientForm's own sheet.
+
+// Nested, to outweigh layout-base's bare `body section`, whose gap and
+// margins would otherwise set the spacing in the app. The hairline is the
+// muted ink thinned, so it parts the sections without boxing them.
+body .collapsible-section {
+  display: flex;
+  flex-direction: column;
+  gap: 0;
+  min-width: 0;
+  margin: 0;
+  border-top: 1px solid $hairline;
+
+  &:last-child {
+    border-bottom: 1px solid $hairline;
+  }
+
+  // A section set among a form's fields, as the spell builder's When to Work
+  // It is, is parted from the field after it too. Its own rule, not added to
+  // :last-child's, so a browser without :has still closes a run of sections;
+  // that browser draws no line beneath this one, and loses nothing else. A
+  // variant's last section, followed by its Done, is left open as before.
+  &:has(+ .field) {
+    border-bottom: 1px solid $hairline;
+  }
+
+  // A section holding an error takes the field's error edge along its top.
+  &.is-invalid {
+    border-top-color: $secondary;
+  }
+}
+
+// The heading, its summary and its flag: the whole block one target, the
+// toggle's `::after` stretched over it, so a press on the summary or the
+// chevron opens the section too, while the button alone is what a keyboard
+// reaches and what is announced.
+.collapsible-section__head {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  gap: space(1);
+  padding-block: space(3);
+}
+
+.collapsible-section__line {
+  display: flex;
+  align-items: center;
+  gap: space(1);
+
+  // An ⓘ beside the heading, lifted over the toggle's overlay so it is its own target.
+  .info-tip {
+    position: relative;
+    z-index: 1;
+  }
+}
+
+.collapsible-section__toggle {
+  @include button-reset;
+
+  text-align: start;
+
+  &::after {
+    content: '';
+    position: absolute;
+    inset: 0;
+  }
+
+  &:focus-visible {
+    outline: none;
+  }
+
+  &:focus-visible::after {
+    @include focus-ring;
+  }
+}
+
+// The chevron at the line's end, down while closed and turned over while
+// open, as the admin menu's is: at once, so there is no motion to reduce.
+.collapsible-section__chevron {
+  // Pointed at, the chevron darkens and grows a quarter (the owner's call),
+  // eased with the flip; `scale` composes with the open state's `transform`.
+  @include disclosure-chevron('.is-open > .collapsible-section__head', color, scale);
+
+  margin-inline-start: auto;
+
+  .collapsible-section__head:hover & {
+    color: $text-primary;
+    scale: 1.25;
+  }
+}
+
+// What has been entered, one line in the muted ink at the caption size, cut
+// with an ellipsis when it runs past the column.
+.collapsible-section__summary {
+  display: block;
+  color: $text-muted;
+  font-size: type-size('caption');
+  font-weight: 300;
+
+  @include truncate;
+
+  &[hidden] {
+    display: none;
+  }
+}
+
+// An error inside, open or closed, as a variant card flags one.
+.collapsible-section__flag {
+  color: $secondary;
+  font-size: type-size('caption');
+}
+
+// Open, its fields beneath the heading at the form's own gap, as far from the
+// next hairline as the heading is from its own.
+body .collapsible-section__fields {
+  display: flex;
+  flex-direction: column;
+  gap: space(5);
+  min-width: 0;
+  padding-block: space(1) space(5);
+
+  // Closed is the attribute's, which the display above would otherwise undo.
+  &[hidden] {
+    display: none;
+  }
+}
+
+// The section's heading, at a size off the type scale as a heading's may be:
+// the display face, a step under h4, so it heads its fields without
+// outweighing the dialog's title. Nested, to outweigh typography-base's
+// `body h3` and `body h4`, whose margins would add to the line's padding.
+body .collapsible-section__title {
+  margin: 0;
+  font-size: 1.25rem;
+  line-height: 1.2;
+}

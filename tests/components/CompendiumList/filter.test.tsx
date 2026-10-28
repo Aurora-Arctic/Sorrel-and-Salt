@@ -1,7 +1,11 @@
 import { act, fireEvent, render, screen, within } from '@testing-library/react';
 import { type ReactElement, useState } from 'react';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
-import { compendiumHref } from '@/components/CompendiumList/href';
+import {
+  PUBLIC_COMPENDIUM_PATH,
+  compendiumHref,
+  covenIngredientsHref,
+} from '@/components/CompendiumList/href';
 import type {
   CompendiumFacetCounts,
   CompendiumListFilter,
@@ -240,44 +244,84 @@ describe('CompendiumList filter', () => {
     ]);
   });
 
-  // The owner's call (M8.10): a pick opens the entry over the list as it
-  // stands, so the text typed and not searched is not applied.
+  // The owner's rule of 2026-10-27: a pick opens the entry's Quick Look, its details modal
+  // (M12.5), over the list as it stands, the page and the filter kept and the text typed and
+  // not searched not applied. Each list keys its details as its own eye does.
   describe('picking a name from the dropdown', () => {
+    const PAGE = { after: 'cursor-x' };
+    const TESTWORT = {
+      id: 'i1',
+      slug: 'testwort',
+      name: 'Testwort',
+      canonicalName: 'Fixtura testalis',
+      nomenclature: 'botanical',
+    };
+    const offerTestwort = () => {
+      const answer = { pageInfo: { hasNextPage: false }, edges: [{ node: TESTWORT }] };
+      mockGraphQLQuery('IngredientSearchMatches', () => ({ compendium: answer }));
+      mockGraphQLQuery('IngredientSearchCupboardMatches', () => ({
+        workspaceIngredients: {
+          ...answer,
+          edges: [{ node: { ...TESTWORT, cupboardEntry: null } }],
+        },
+      }));
+    };
+    const pickTestwort = async (label: string) => {
+      const box = screen.getByRole('combobox', { name: label });
+      act(() => box.focus());
+      typeIn(box, 'fixt');
+      await act(async () => {
+        await vi.advanceTimersByTimeAsync(DEBOUNCE_MS);
+      });
+      fireEvent.click(await screen.findByRole('option', { name: /Testwort/ }));
+      await waitFor(() => expect(router.push).toHaveBeenCalled());
+    };
+
     beforeEach(() => {
       vi.useFakeTimers({ shouldAdvanceTime: true });
+      offerTestwort();
     });
     afterEach(() => {
       vi.useRealTimers();
     });
 
-    it('opens that entry\x27s modal over the filter shown, not the text typed', async () => {
-      mockGraphQLQuery('IngredientSearchMatches', () => ({
-        compendium: {
-          pageInfo: { hasNextPage: false },
-          edges: [
-            {
-              node: {
-                id: 'i1',
-                slug: 'testwort',
-                name: 'Testwort',
-                canonicalName: 'Fixtura testalis',
-                nomenclature: 'botanical',
-              },
-            },
-          ],
-        },
-      }));
-      render(<FilterRow {...props({ filter: SHOWN })} />);
+    it("opens the admin's details by slug over the page and filter shown, not the text typed", async () => {
+      render(<FilterRow {...props({ filter: SHOWN })} cursor={PAGE} />);
 
-      act(() => nameBox().focus());
-      typeIn(nameBox(), 'fixt');
-      await act(async () => {
-        await vi.advanceTimersByTimeAsync(DEBOUNCE_MS);
-      });
-      fireEvent.click(await screen.findByRole('option', { name: /Testwort/ }));
+      await pickTestwort('Name');
 
-      await waitFor(() => expect(router.push).toHaveBeenCalled());
-      expect(router.push.mock.calls).toEqual([[compendiumHref(SHOWN, { edit: 'testwort' })]]);
+      expect(router.push.mock.calls).toEqual([
+        [compendiumHref({ ...SHOWN, ...PAGE, entry: 'testwort' })],
+      ]);
+    });
+
+    it("opens the public compendium's details by id over the page and filter shown", async () => {
+      render(<FilterRow {...props({ filter: SHOWN })} audience="public" cursor={PAGE} />);
+
+      await pickTestwort('Name');
+
+      expect(router.push.mock.calls).toEqual([
+        [compendiumHref({ ...SHOWN, ...PAGE, entry: 'i1' }, undefined, PUBLIC_COMPENDIUM_PATH)],
+      ]);
+    });
+
+    it("opens a coven's details by id over its page and filter shown, not the entry's page", async () => {
+      const filter = { ...SHOWN, source: 'local' as const };
+      render(
+        <FilterRow
+          {...props({ filter })}
+          audience="coven"
+          covenSlug="fixture-coven"
+          workspaceId="w1"
+          cursor={PAGE}
+        />,
+      );
+
+      await pickTestwort('Name');
+
+      expect(router.push.mock.calls).toEqual([
+        [covenIngredientsHref('fixture-coven', { ...filter, ...PAGE, entry: 'i1' })],
+      ]);
     });
   });
 

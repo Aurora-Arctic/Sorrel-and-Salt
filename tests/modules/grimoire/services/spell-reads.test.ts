@@ -5,6 +5,7 @@ import { Forbidden, NotFound } from '@/lib/errors';
 import {
   assignedCategoriesOf,
   countGrimoire,
+  countGrimoireCategories,
   derivedCategoriesOf,
   listGrimoire,
   readSpell,
@@ -123,6 +124,36 @@ describe('countGrimoire', () => {
     await expect(
       countGrimoire(asUser(D), WORKSPACE_W_ID, NEWEST, undefined),
     ).rejects.toBeInstanceOf(Forbidden);
+  });
+});
+
+describe('countGrimoireCategories', () => {
+  it('counts the spells in each category, a private one for its author alone, and drops a one-character search', async () => {
+    await seed(B, 'workspace', { title: 'Shared Working', categories: ['Protection'] });
+    await seed(B, 'private', { title: 'Private Working', categories: ['Protection'] });
+    const counted = async (user: typeof A, query: string | undefined = undefined) =>
+      (await countGrimoireCategories(asUser(user), WORKSPACE_W_ID, { ...NEWEST, query })).map(
+        ({ count }) => count,
+      );
+    // Why the private spell's absence from A's count is the rule's: B counts it.
+    await expect(counted(B)).resolves.toEqual([2]);
+
+    await expect(counted(A)).resolves.toEqual([1]);
+    // One character matches no title here, so a count of one is the search set aside.
+    await expect(counted(A, 'z')).resolves.toEqual([1]);
+  });
+
+  it('refuses a non-member', async () => {
+    await seed(B, 'workspace', { categories: ['Protection'] });
+    // Why this could have succeeded: D counts their own coven's grimoire.
+    await seed(D, 'workspace', { categories: ['Protection'] }, WORKSPACE_X_ID);
+    await expect(countGrimoireCategories(asUser(D), WORKSPACE_X_ID, NEWEST)).resolves.toEqual([
+      expect.objectContaining({ count: 1 }),
+    ]);
+
+    await expect(countGrimoireCategories(asUser(D), WORKSPACE_W_ID, NEWEST)).rejects.toBeInstanceOf(
+      Forbidden,
+    );
   });
 });
 
