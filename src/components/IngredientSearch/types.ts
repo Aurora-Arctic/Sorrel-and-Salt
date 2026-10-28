@@ -104,6 +104,10 @@ export type SearchSentenceFacet =
   | 'covens'
   | 'covensNot'
   | 'categories'
+  | 'moonPhases'
+  | 'daysOfWeek'
+  | 'visibilities'
+  | 'makers'
   | 'forms'
   | 'deities'
   | 'zodiac'
@@ -129,6 +133,14 @@ export interface SearchSentenceFilter {
   categories?: readonly string[];
   /** `all` (the default) lists entries in every category, `any` in at least one. */
   categoryMode?: 'all' | 'any';
+  /** The grimoire's moon phases, as the spells word them (M13.22). */
+  moonPhases?: readonly string[];
+  /** The grimoire's days of the week, as the spells word them. */
+  daysOfWeek?: readonly string[];
+  /** The grimoire's visibilities: `private`, `workspace`. */
+  visibilities?: readonly string[];
+  /** The grimoire's makers, by user id. */
+  makers?: readonly string[];
   forms?: readonly string[];
   /** Deity slugs. */
   deities?: readonly string[];
@@ -155,7 +167,15 @@ export interface SearchSentenceFilter {
 
 /** The kinds that choose from a vocabulary, and so take display labels. */
 export type SearchSentenceLabelFacet =
-  'covens' | 'categories' | 'forms' | 'deities' | 'zodiac' | 'celestialBodies' | 'elements';
+  | 'covens'
+  | 'categories'
+  | 'visibilities'
+  | 'makers'
+  | 'forms'
+  | 'deities'
+  | 'zodiac'
+  | 'celestialBodies'
+  | 'elements';
 
 /** Display labels by chosen value. A value with no label is named by itself. */
 export type SearchSentenceLabels = Partial<

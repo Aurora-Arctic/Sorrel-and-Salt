@@ -12,6 +12,21 @@ export type GrimoireListFilter = SearchFilter<typeof GRIMOIRE_PARAMS.entries>;
 /** One spell as its card draws it. */
 export type GrimoireSpell = Omit<SpellCardProps, 'level'>;
 
+/** One value a grimoire facet offers, with how many spells of the tab it would leave. */
+export interface GrimoireFacetChoice {
+  value: string;
+  label: string;
+  count: number;
+}
+
+/** The four facets' choices (M13.22): every value on offer, picked or not, in the order shown. */
+export interface GrimoireFacets {
+  moonPhases: readonly GrimoireFacetChoice[];
+  daysOfWeek: readonly GrimoireFacetChoice[];
+  visibilities: readonly GrimoireFacetChoice[];
+  makers: readonly GrimoireFacetChoice[];
+}
+
 export interface GrimoireListProps {
   /** The tab's own address, Spells' or Drafts': the filter's GET target and what Clear All opens. */
   path: Route;
@@ -25,6 +40,8 @@ export interface GrimoireListProps {
   filter: GrimoireListFilter;
   /** Every category the filter offers, by slug. */
   categories: readonly CompendiumCategoryChoice[];
+  /** Moon Phase, Day of Week, Visibility and Coven Member, each with its counts. */
+  facets: GrimoireFacets;
   position?: PagePosition;
   /** How many spells the filter found on this tab, every page. */
   total: number;
@@ -34,7 +51,7 @@ export interface GrimoireListProps {
 
 export interface GrimoireFilterProps extends Pick<
   GrimoireListProps,
-  'path' | 'workspaceId' | 'covenSlug' | 'status' | 'filter' | 'categories' | 'total'
+  'path' | 'workspaceId' | 'covenSlug' | 'status' | 'filter' | 'categories' | 'facets' | 'total'
 > {}
 
 export interface EmptyGrimoireProps extends Pick<GrimoireListProps, 'status' | 'filter'> {}

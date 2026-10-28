@@ -75,6 +75,27 @@ describe('buildSearchSentence', () => {
     );
   });
 
+  it("says the grimoire's four facets after the categories, each as an or list (M13.22)", () => {
+    const labels = {
+      visibilities: { private: 'Private', workspace: 'Shared with the Coven' },
+      makers: { u1: 'Testwort', u2: 'Testmoor' },
+    };
+    expect(
+      text(
+        {
+          moonPhases: ['Waxing', 'Full'],
+          daysOfWeek: ['Friday'],
+          visibilities: ['workspace'],
+          makers: ['u1', 'u2'],
+        },
+        3,
+        { labels },
+      ),
+    ).toBe(
+      '3 ingredients, in the moon phase Waxing or Full, for the day Friday, that are shared with the coven, made by Testwort or Testmoor',
+    );
+  });
+
   it('writes the text query as matching', () => {
     expect(text({ query: 'rue' }, 1)).toBe('1 ingredient, matching rue');
     expect(text({ query: '  rue ' }, 1)).toBe('1 ingredient, matching rue');

@@ -11,6 +11,7 @@ import {
   assignedCategoriesOf,
   countGrimoire,
   countGrimoireCategories,
+  countGrimoireFacets,
   listGrimoire,
   readSpell,
 } from '@/modules/grimoire';
@@ -139,5 +140,39 @@ export const readGrimoireCategoryCounts = cache(
     const query: Query = { order: 'UPDATED_DESC', ...JSON.parse(variables), status };
     const counts = await countGrimoireCategories(session, workspaceId, query);
     return new Map(counts.map(({ value, count }) => [value, count]));
+  },
+);
+
+/**
+ * How many spells of one status each Moon Phase, Day of Week, Visibility and Coven Member
+ * holds under the filter (M13.22): the four facets' counts, one grouped read each, each
+ * dropping its own picks so a second pick can still be added. A private spell is counted for
+ * its author alone (the service's rule), and nothing is data-cached. The makers are named in
+ * one `displayNamesOf` batch; one the viewer cannot name is left out of the offer.
+ */
+export const readGrimoireFacetCounts = cache(
+  async (workspaceId: string, variables: string, status: SpellStatus) => {
+    const session = await requireSession();
+    const query: Query = { order: 'UPDATED_DESC', ...JSON.parse(variables), status };
+    const counts = await countGrimoireFacets(session, workspaceId, query);
+    // A maker picked but holding no spell under the other facets is not in the counts; the
+    // chip still needs the name, so the picks are named in the same batch and offered at 0.
+    const picked: string[] = query.makerIds ? [...query.makerIds] : [];
+    const counted = new Map(counts.makers.map(({ value, count }) => [value, count]));
+    const makers = [
+      ...counts.makers.map(({ value }) => value),
+      ...picked.filter((id) => !counted.has(id)),
+    ];
+    const names = await displayNamesOf(session, makers);
+    return {
+      moonPhases: counts.moonPhases,
+      daysOfWeek: counts.daysOfWeek,
+      visibilities: counts.visibilities,
+      makers: makers.flatMap((value, i) => {
+        // One the viewer cannot name is offered only when picked, so its chip can be removed.
+        const label = names[i] ?? (picked.includes(value) ? 'Unknown Member' : undefined);
+        return label ? [{ value, label, count: counted.get(value) ?? 0 }] : [];
+      }),
+    };
   },
 );

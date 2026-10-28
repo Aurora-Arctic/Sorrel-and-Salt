@@ -33,6 +33,21 @@ describe('SpellCard', () => {
     );
   });
 
+  it('keeps the Edit link out of the title link, so the stretched title link never swallows it', () => {
+    render(
+      <SpellCard
+        {...BASE}
+        href={'/coven/x/grimoire/spell-1' as Route}
+        editHref={'/here?edit=spell-1' as Route}
+      />,
+    );
+    const title = screen.getByRole('link', { name: /^Fixture Working/ });
+    const edit = screen.getByRole('link', { name: 'Edit Fixture Working' });
+    expect(title).not.toBe(edit);
+    expect(title.contains(edit)).toBe(false);
+    expect(edit.contains(title)).toBe(false);
+  });
+
   it('names the card by its title, under the id a list item points at', () => {
     render(<SpellCard {...BASE} />);
     const card = screen.getByRole('article', { name: 'Fixture Working' });

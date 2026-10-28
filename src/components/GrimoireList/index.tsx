@@ -23,6 +23,7 @@ const GrimoireList = ({
   spells,
   filter,
   categories,
+  facets,
   position,
   total,
   previousHref,
@@ -38,6 +39,7 @@ const GrimoireList = ({
         status={status}
         filter={filter}
         categories={categories}
+        facets={facets}
         total={total}
       />
     }
@@ -53,7 +55,7 @@ const GrimoireList = ({
         <ul
           className="ingredient-card-list grimoire-list__cards"
           aria-label="Grimoire"
-          data-density="regular"
+          data-density="compact"
         >
           {spells.map((spell) => (
             <li key={spell.id} aria-labelledby={spellTitleId(spell.id)}>

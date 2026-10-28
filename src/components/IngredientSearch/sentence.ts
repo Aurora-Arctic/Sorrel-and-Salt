@@ -11,7 +11,7 @@ import type {
 // function, so the component only draws it: it returns typed fragments, and the
 // component turns each `value` into a link to the same filter without that value.
 // Clauses always come in this order, whatever order the address holds them:
-// text query, the viewer's covens, categories, forms, deities, zodiac, celestial bodies, elements, toxic,
+// text query, the viewer's covens, categories, the grimoire's moon phases, days, visibilities and makers, forms, deities, zodiac, celestial bodies, elements, toxic,
 // then a coven's source, in stock and low stock, then the admin-only nomenclature, No Refs, No Form and Reviewed
 // (claude-docs/components/ingredient-search.md, "The search sentence").
 
@@ -137,6 +137,30 @@ export function buildSearchSentence({
       ...valueList('categories', categories, any ? OR : AND, (v) => lower(label('categories', v))),
       text(!any && categories.length > 1 ? ' categories' : ' category'),
     );
+  }
+
+  // The grimoire's four facets (M13.22), after the categories.
+  const moonPhases = picked(filter.moonPhases);
+  if (moonPhases.length > 0) {
+    clause(text('in the moon phase '), ...valueList('moonPhases', moonPhases, OR, (v) => v));
+  }
+
+  const daysOfWeek = picked(filter.daysOfWeek);
+  if (daysOfWeek.length > 0) {
+    clause(text('for the day '), ...valueList('daysOfWeek', daysOfWeek, OR, (v) => v));
+  }
+
+  const visibilities = picked(filter.visibilities);
+  if (visibilities.length > 0) {
+    clause(
+      text('that are '),
+      ...valueList('visibilities', visibilities, OR, (v) => lower(label('visibilities', v))),
+    );
+  }
+
+  const makers = picked(filter.makers);
+  if (makers.length > 0) {
+    clause(text('made by '), ...valueList('makers', makers, OR, (v) => label('makers', v)));
   }
 
   const forms = picked(filter.forms);
