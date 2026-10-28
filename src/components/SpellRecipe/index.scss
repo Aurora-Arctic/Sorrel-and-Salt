@@ -93,12 +93,19 @@
   margin-inline-start: calc(2rem + #{space(2)});
 }
 
-// A step with no ingredient is the instruction alone, so it reads quieter and sits on the
-// number's own line, filling it, rather than on a line of its own beneath.
+// A step's text reads as its note does, `.meta` (the owner, 2026-10-28): caption size, muted,
+// under the amount and name. Hand-written here rather than the class, since StepRow sets the
+// class names and its other callers keep the body at text size.
+.spell-recipe__steps .step-row__body {
+  color: $text-muted;
+  font-size: type-size('caption');
+}
+
+// A step with no ingredient is the instruction alone, so it sits on the number's own line,
+// filling it, rather than on a line of its own beneath.
 .spell-recipe__instruction .step-row__body {
   flex: 1 1 0;
   margin-inline-start: 0;
-  color: $text-muted;
 }
 
 // The one-off mark at the size the builder's supply marks take.
