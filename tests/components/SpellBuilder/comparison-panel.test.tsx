@@ -31,6 +31,7 @@ function step(name: string, categories: string[], extra: Partial<SpellStepValue>
     icon: null,
     categories: categories.map(cat),
     jarUnit: null,
+    safety: null,
     ...extra,
   } satisfies SpellStepValue;
 }
@@ -153,8 +154,20 @@ describe('the panel in the builder', () => {
                 unit: null,
                 note: null,
                 body: null,
-                ingredient: { id: id(4), categories: [{ id: id(5), name: 'Calm' }], stock: [] },
-                variant: { id: id(6), categories: [], formChoice: null },
+                ingredient: {
+                  id: id(4),
+                  toxic: false,
+                  safetyNotes: null,
+                  categories: [{ id: id(5), name: 'Calm' }],
+                  stock: [],
+                },
+                variant: {
+                  id: id(6),
+                  toxic: false,
+                  safetyNotes: null,
+                  categories: [],
+                  formChoice: null,
+                },
               },
             ],
           }}

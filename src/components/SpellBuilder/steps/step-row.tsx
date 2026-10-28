@@ -6,10 +6,11 @@ import type { ReactElement } from 'react';
 import { useFormContext } from 'react-hook-form';
 import { GripIcon } from '../../Combobox/icons';
 import { SelectField, TextField } from '../../Field';
+import SafetyNote, { SafetyMark } from '../../SafetyNote';
 import StepRow from '../../StepRow';
 import { UNIT_OPTIONS } from '../../StockFields';
 import type { SpellStepValue, SpellStepsValues } from './types';
-import { isInstruction, stepNameOf } from './values';
+import { isInstruction, safetyOf, stepNameOf } from './values';
 
 // One step of the jar (M10.15, M13.3): the handle it is moved by (M10.16), then
 // StepRow's drawing of it with the controls around it — an ingredient's amount
@@ -57,6 +58,7 @@ export function BuilderStepRow({ id, index, step, onRemove }: BuilderStepRowProp
   const unit = `steps.${index}.unit` as const;
   const name = stepNameOf(step);
   const instruction = isInstruction(step);
+  const safety = safetyOf(step);
   const handle = <StepHandle name={name} sortable={sortable} />;
   const body = (
     <TextField<SpellStepsValues>
@@ -81,6 +83,10 @@ export function BuilderStepRow({ id, index, step, onRemove }: BuilderStepRowProp
       position={index + 1}
       name={instruction ? null : name}
       icon={step.icon}
+      // The care the ingredient needs, kept in view beside the step and never in the way of
+      // saving it (M10.18). A one-off has none to show: it draws nothing, not "safe".
+      marks={safety && <SafetyMark {...safety} />}
+      note={safety && <SafetyNote level={5} {...safety} />}
       handle={handle}
       bodyField={body}
       quantityField={

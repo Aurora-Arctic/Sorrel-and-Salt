@@ -7,7 +7,7 @@ import { StepPicker, oneOffKey } from './picker';
 import { SortableSteps } from './sortable';
 import { BuilderStepRow } from './step-row';
 import type { SpellStepValue, SpellStepsValues } from './types';
-import { derivedCategories, newInstruction, stepNameOf } from './values';
+import { derivedCategories, newInstruction, stepNameOf, warningOf } from './values';
 
 // The jar's steps (M10.15): the picker that adds to them, the list, and the
 // spell's derived categories, worked out from the steps as they stand so a
@@ -49,7 +49,11 @@ export function SpellSteps({ workspaceId }: { workspaceId: string }): ReactEleme
     // list of whatever was typed in the meantime.
     append(step, { shouldFocus: false });
     const count = fields.length + 1;
-    announce(`Added ${stepNameOf(step)}, at position ${count} of ${count}.`);
+    announce(
+      [`Added ${stepNameOf(step)}, at position ${count} of ${count}.`, warningOf(step)]
+        .filter(Boolean)
+        .join(' '),
+    );
   };
   const removeAt = (index: number) => {
     announce(`Removed ${names[index]}, from position ${index + 1} of ${fields.length}.`);

@@ -12,6 +12,10 @@ export interface StepRowProps {
   quantity?: string | null;
   /** The unit, as text. Read-only; `unitField` replaces it. */
   unit?: string | null;
+  /** A badge beside the name, such as the safety mark (M10.18). Only drawn beside a name. */
+  marks?: ReactNode;
+  /** A block beneath the row's controls, the width of the row, such as the safety note (M10.18). */
+  note?: ReactNode;
   /** The step's instruction. Read-only; `bodyField` replaces it. */
   body?: string | null;
   /** The editing controls around the step, each drawn in place of the plain text it stands for. */

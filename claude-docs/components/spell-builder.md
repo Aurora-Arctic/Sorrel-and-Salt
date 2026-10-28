@@ -332,6 +332,14 @@ if the read fails, an error in its place.
   out from the steps as they stand, so a Remove takes a category off at once.
   These are only ever derived; the categories a spell intends are assigned
   (M10.14), and the two are never mixed (DESIGN.md §5).
+- **Safety (M10.18, story 53).** A step carries the ingredient's and the form's
+  `toxic` and `safetyNotes`, from the picker row or the saved spell, and draws
+  `SafetyMark` beside its name and `SafetyNote` (heading level 5) beneath
+  it, as the ingredient card does: Toxic, else Caution, else nothing. Only the
+  form laid is shown. Adding a step announces "Warning: Toxic." or "Caution:
+  has safety notes." in the live region. The warning never blocks the add or
+  the save. A one-off, or an instruction, has no safety value (null) and draws
+  nothing: it is not called safe either.
 
 ## The comparison panel
 
