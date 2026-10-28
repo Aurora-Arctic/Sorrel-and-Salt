@@ -420,14 +420,18 @@ No wrapper: the `<form className="form">` sits straight in the body of a
 `RouteModal` at the default column, Add Ingredient's (`size="wide"` until
 2026-10-28), its sections styled by `CollapsibleSection` ([`modal.md`](modal.md)),
 which scrolls the form when it is taller than the screen. `index.scss` holds the
-visibility switch's alignment (M10.13) and the jar's list (the owner's pass,
-2026-10-28): the handle unboxed in `$text-muted` with the shared focus ring; the
-lifted step (`.spell-step.is-dragging`) in `$shadow-lifted` with an `$accent`
-border while the other rows stay as they are; the section a size container
-(`container-type: inline-size`) so that a step row stacks by the width it is
-given; the picker and Add a Step on one line (`.spell-steps__add`) above the
-list; and the list a column spaced by its `gap` alone, with no margin on a row
-and no room taken while empty. The row's own look is `StepRow`'s. Its look past the tokens is the grimoire's design review's.
+visibility switch's alignment (M10.13) and the jar's list (the owner's design
+pass, 2026-10-28):
+
+- the handle unboxed in `$text-muted`, with the shared focus ring;
+- the lifted step (`.step-row.spell-step.is-dragging`) in `$shadow-lifted` with an
+  `$accent` border, while the other rows stay as they are;
+- the picker and Add a Step on one line (`.spell-steps__add`) above the list;
+- the list a column spaced by its `gap` alone, with no margin on a row and no
+  room taken while empty. The list is the size container a row stacks by,
+  declared in `StepRow`'s stylesheet.
+
+The row's own look, the card, is in [`step-row.md`](step-row.md), "The card".
 
 ## Stories
 

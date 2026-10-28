@@ -38,8 +38,9 @@
 
 // The step being moved is lifted off the list: a deeper shadow and the accent
 // on its edge. The rows it passes are not restyled; dnd-kit slides them aside.
-// Only the border's colour is set here, the row owns its width.
-.spell-step.is-dragging {
+// Both classes, so that this outranks the card's own border and shadow
+// (`.step-row.step-row--card`); only the colour is set, the row owns the width.
+.step-row.spell-step.is-dragging {
   position: relative;
   z-index: 1;
   border-color: $accent;
@@ -48,14 +49,13 @@
 
 // The jar's list and what surrounds it (the owner's pass, 2026-10-28): one
 // column, spaced by its gap alone, so a row carries no margin of its own. The
-// section is a size container so that a step row can stack at the narrow
-// column by the width it is given and not the screen's.
+// list is the size container the row stacks by, declared in StepRow's
+// stylesheet beside its only query.
 .spell-steps {
   display: flex;
   flex-direction: column;
   align-items: stretch;
   gap: space(4);
-  container-type: inline-size;
 }
 
 // The picker and Add a Step on one line above the list, both against its left
