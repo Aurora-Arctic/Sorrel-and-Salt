@@ -2,6 +2,7 @@
 
 import type { Route } from 'next';
 import { moonPhaseIcon } from '../SpellBuilder/moon-phase-icon';
+import { RadioGroupField } from '../Field/radio-group-field';
 import FacetCombobox from '../FacetCombobox';
 import CardDensitySwitch from '../CardDensitySwitch';
 import { type ReactElement, useMemo, useState } from 'react';
@@ -31,7 +32,7 @@ interface Held {
   categoryMode: CategoryMode;
   moonPhases: readonly string[];
   daysOfWeek: readonly string[];
-  visibilities: readonly string[];
+  visibility: GrimoireListFilter['visibility'];
   makers: readonly string[];
 }
 
@@ -40,14 +41,14 @@ const heldOf = ({
   categoryMode,
   moonPhases,
   daysOfWeek,
-  visibilities,
+  visibility,
   makers,
 }: GrimoireListFilter): Held => ({
   categories,
   categoryMode,
   moonPhases,
   daysOfWeek,
-  visibilities,
+  visibility,
   makers,
 });
 
@@ -56,7 +57,7 @@ const NONE: Held = {
   categoryMode: 'all',
   moonPhases: [],
   daysOfWeek: [],
-  visibilities: [],
+  visibility: '',
   makers: [],
 };
 
@@ -72,7 +73,7 @@ const hrefFor = (path: Route, filter: GrimoireListFilter, held: Held, query: str
         categoryMode: held.categories.length >= 2 ? held.categoryMode : 'all',
         moonPhases: [...held.moonPhases],
         daysOfWeek: [...held.daysOfWeek],
-        visibilities: [...held.visibilities] as GrimoireListFilter['visibilities'],
+        visibility: held.visibility,
         makers: [...held.makers],
       },
     ),
@@ -108,7 +109,7 @@ const PanelCategories = ({
         held.categories.length +
         held.moonPhases.length +
         held.daysOfWeek.length +
-        held.visibilities.length +
+        (held.visibility === '' ? 0 : 1) +
         held.makers.length
       }
       clearHref={path}
@@ -164,16 +165,20 @@ const PanelCategories = ({
       </div>
       <div className="facet-panel__line">
         <div className="facet-panel__grow">
-          <FacetCombobox
-            label="Visibility"
+          <RadioGroupField
+            legend="Visibility"
             name="visibility"
-            placeholder="Add Visibility"
-            removeNoun="Visibility"
-            loading={pending}
-            hideZeros={false}
-            choices={facets.visibilities}
-            values={held.visibilities}
-            onChange={(visibilities) => onHeld({ ...held, visibilities })}
+            layout="segmented"
+            options={[
+              { value: '', label: 'Any' },
+              ...facets.visibilities.map(({ value, label, count }) => ({
+                value: value as Held['visibility'],
+                label,
+                count,
+              })),
+            ]}
+            value={held.visibility}
+            onChange={(visibility) => onHeld({ ...held, visibility })}
           />
         </div>
         <div className="facet-panel__grow">
