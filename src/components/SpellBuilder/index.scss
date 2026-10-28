@@ -179,6 +179,12 @@
 .spell-jar-layout__list {
   flex: 999 1 30rem;
   min-width: 0;
+
+  // The steps section's bare-`section` rhythm margin (_layout.scss) would push What Goes In
+  // below The Jar, which has none: the two headings share a line.
+  .spell-steps {
+    margin: 0;
+  }
 }
 
 .spell-aside {
@@ -209,7 +215,9 @@
 // The jar drawing with the two fields beside it.
 .spell-aside__jar {
   display: flex;
-  align-items: flex-start;
+  // The jar is centred on the input box, not the label above it: the wax field ends at its
+  // input, and the jar's own box is the input's height with the drawing centred in it.
+  align-items: flex-end;
   gap: space(3);
 }
 
@@ -222,12 +230,15 @@
 }
 
 .spell-jar {
-  display: block;
+  display: flex;
   flex: none;
+  align-items: center;
   inline-size: 4rem;
+  block-size: $control-height;
 
   svg {
     display: block;
+    flex: none;
     inline-size: 100%;
     block-size: auto;
   }
