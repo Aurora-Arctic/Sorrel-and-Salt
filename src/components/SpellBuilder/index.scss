@@ -514,3 +514,9 @@ body .spell-builder .collapsible-section__fields {
     margin: 0;
   }
 }
+
+// Why Save Spell is off, beside it in the form's action row: muted text, not a tooltip.
+.spell-builder__save-reason {
+  margin: 0;
+  color: $text-muted;
+}

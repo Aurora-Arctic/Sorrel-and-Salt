@@ -438,6 +438,10 @@ instruction steps move alike.
   `(spell_id, position)` partial unique index through a negative scratch
   place, never by removing a step and adding it again.
 
+## Why Save Spell is off
+
+While Save Spell is disabled, a muted line beside it says why (`spell-builder__save-reason`, text and not a tooltip; second design review, 2026-10-28, finding 6), and the button's `aria-describedby` names it. In this order: "Fix the unit in step N to save" (a unit the jar cannot be measured in), "Waiting for the jar to load", "Nothing to save yet". It is left out while a save is on its way.
+
 ## Styling
 
 Spacing, set by the second design review (2026-10-28, finding 3), which reverses earlier recorded choices (the hairlines in the aside and the card's `$text-muted` border): the step list's gap is `space(4)` (was `space(3)`); the add row sits `space(5)` above the list; the aside's blocks are `space(6)` apart and `space(2)` inside; an open section's fields end `space(6)` above the next section, set under `.spell-builder` so IngredientForm's `space(5)` stays. Values are in `rem`, so they are the same at 1280px and 390px; only the add row, which stacks in a narrow container, changes place, not size.
