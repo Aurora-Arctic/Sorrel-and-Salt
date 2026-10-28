@@ -625,7 +625,6 @@ const SpellBuilder = ({
                   placeholder="Add a note"
                   multiline
                 />
-                <SpellStatusField flush={flush} />
                 <SpellVisibilityField
                   created={opened !== undefined || createdId !== null}
                   flush={flush}
@@ -639,6 +638,7 @@ const SpellBuilder = ({
             submitting={autosave.status === 'saving'}
             onSave={() => void saveNow()}
           >
+            <SpellStatusField flush={flush} />
             <SaveStatus
               status={autosave.status}
               savedAt={autosave.savedAt}
