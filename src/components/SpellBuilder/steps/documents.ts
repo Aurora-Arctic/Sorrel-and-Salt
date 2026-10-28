@@ -51,6 +51,8 @@ export const SpellIngredientSuggestionsDocument = graphql(`
           }
           stock(workspaceId: $workspaceId) {
             unit
+            quantityOnHand
+            lowStockThreshold
             variant {
               id
             }
@@ -92,6 +94,8 @@ export const SpellBuilderStepsDocument = graphql(`
           }
           stock(workspaceId: $workspaceId) {
             unit
+            quantityOnHand
+            lowStockThreshold
             variant {
               id
             }

@@ -32,6 +32,7 @@ function step(name: string, categories: string[], extra: Partial<SpellStepValue>
     categories: categories.map(cat),
     jarUnit: null,
     safety: null,
+    jar: null,
     ...extra,
   } satisfies SpellStepValue;
 }

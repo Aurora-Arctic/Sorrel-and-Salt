@@ -312,15 +312,9 @@ test(
   },
 );
 
-test.fixme(
+test(
   'a member sees when they are adding something the coven has none of',
-  {
-    tag: '@story-54',
-    annotation: {
-      type: 'fixme',
-      description: 'M10.19 builds the out-of-stock indicator in the spell builder',
-    },
-  },
+  { tag: '@story-54' },
   async ({ page }) => {
     const coven = await seedCoven(page, 'Fixture Coven Fifty-Four', 'story-54.test', {
       A: 'owner',
@@ -329,8 +323,8 @@ test.fixme(
     await signInAgainAs(page, coven.users.B);
     await openBuilder(page, coven.slug);
     // Rosemary is in the compendium and not in this coven's cupboard.
-    const step = await addIngredientStep(page, 'Rosemary');
-    await expect(step.getByText('Out of Stock')).toBeVisible();
+    const step = await addIngredientStep(page, 'Rosemary (Herb)');
+    await expect(step.getByRole('button', { name: 'Out of Stock' })).toBeVisible();
   },
 );
 
