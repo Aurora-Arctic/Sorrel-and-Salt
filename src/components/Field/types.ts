@@ -58,6 +58,8 @@ export interface FieldShellProps extends FieldProps, Omit<FieldDescription, 'ari
   after?: ReactNode;
   /** At the right end of the label row: a control acting on the field, a variant's Copy From Ingredient. */
   action?: ReactNode;
+  /** Where the error is drawn instead of beneath the control, a node elsewhere on the page: a step row's Unit says its error across the whole row of inputs, not in its narrow column. */
+  errorInto?: HTMLElement | null;
   /** A class beside `field` on the block: a filter's type-ahead, `filter-row__choice`. */
   className?: string;
 }
@@ -122,6 +124,8 @@ export interface SelectFieldProps<V extends FieldValues = FieldValues> extends F
   /** Shut, for a field the form has no use for yet: the select-only box only. */
   disabled?: boolean;
   deps?: FieldPath<V>[];
+  /** See `FieldShellProps.errorInto`. */
+  errorInto?: HTMLElement | null;
   /** Runs on a new choice, before the field and its `deps` revalidate. */
   onChange?: (value: string) => void;
 }

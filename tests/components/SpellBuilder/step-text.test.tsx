@@ -184,7 +184,7 @@ describe('the spell builder’s step text', () => {
 
   it('reads a saved spell’s texts back into their fields, an ingredient step’s beneath it', () => {
     renderSaved();
-    fireEvent.click(screen.getByRole('button', { name: 'Edit Testwort' }));
+    fireEvent.click(screen.getByRole('button', { name: /^(Edit|Close) Testwort$/ }));
     // The instruction-only step reads as its text while closed, and as a field once opened.
     expect(within(rows()[0] as HTMLElement).getByText('Light the candle')).toBeInTheDocument();
     expect(instructions().map((field) => field.value)).toEqual(['Crush it first']);
@@ -214,7 +214,7 @@ describe('the spell builder’s step text', () => {
     const calls = acceptUpdate();
     renderSaved();
 
-    fireEvent.click(screen.getByRole('button', { name: 'Edit Testwort' }));
+    fireEvent.click(screen.getByRole('button', { name: /^(Edit|Close) Testwort$/ }));
     fireEvent.change(instructions()[0] as HTMLElement, { target: { value: '' } });
     submit();
 
@@ -232,7 +232,7 @@ describe('the spell builder’s step text', () => {
     expect(first).toHaveAttribute('aria-expanded', 'true');
     expect(instructions().map((field) => field.value)).toEqual(['Light the candle']);
 
-    fireEvent.click(screen.getByRole('button', { name: 'Edit Testwort' }));
+    fireEvent.click(screen.getByRole('button', { name: /^(Edit|Close) Testwort$/ }));
     expect(first).toHaveAttribute('aria-expanded', 'false');
     expect(instructions().map((field) => field.value)).toEqual(['Crush it first']);
   });
@@ -241,7 +241,7 @@ describe('the spell builder’s step text', () => {
     const calls = acceptUpdate();
     renderSaved();
 
-    fireEvent.click(screen.getByRole('button', { name: 'Remove Light the candle' }));
+    fireEvent.click(screen.getByRole('button', { name: 'Remove step 1' }));
 
     expect(announced()).toContain('Removed Light the candle, from position 1 of 2.');
     expect(rows()).toHaveLength(1);
@@ -255,7 +255,7 @@ describe('the spell builder’s step text', () => {
   it('keeps the focus in the list after a removal', () => {
     renderSaved();
 
-    fireEvent.click(screen.getByRole('button', { name: 'Remove Light the candle' }));
+    fireEvent.click(screen.getByRole('button', { name: 'Remove step 1' }));
 
     expect(steps().contains(document.activeElement)).toBe(true);
   });

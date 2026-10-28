@@ -116,6 +116,15 @@ $spell-columns-switch: $spell-main-min + $spell-columns-gap + $spell-side;
   border-radius: radius('sharp');
   touch-action: none;
 
+  // The grip is drawn 8 by 16 px; its hit area reaches 24 px wide and 44 px tall around it (WCAG
+  // 2.5.8, the control floor) without changing the drawing. The row positions the handle.
+  &::before {
+    content: '';
+    position: absolute;
+    inset-block: -14px;
+    inset-inline: -8px;
+  }
+
   &:focus-visible {
     @include focus-ring;
   }

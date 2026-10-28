@@ -26,6 +26,7 @@ export function SelectField<V extends FieldValues = FieldValues>({
   disabled,
   required,
   deps,
+  errorInto,
   onChange,
 }: SelectFieldProps<V>): ReactElement {
   const { control } = useFormContext<V>();
@@ -33,7 +34,14 @@ export function SelectField<V extends FieldValues = FieldValues>({
   const { aria, ...shell } = useField<V>(name, hint);
   const Box = typeahead ? ComboboxTypeahead : ComboboxSelect;
   return (
-    <FieldShell label={label} labelSuffix={labelSuffix} hint={hint} required={required} {...shell}>
+    <FieldShell
+      label={label}
+      labelSuffix={labelSuffix}
+      hint={hint}
+      required={required}
+      errorInto={errorInto}
+      {...shell}
+    >
       <Box
         id={shell.controlId}
         label={labelSuffix ? `${label}, ${labelSuffix}` : label}

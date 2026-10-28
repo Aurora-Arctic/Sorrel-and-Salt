@@ -34,6 +34,12 @@
   align-items: center;
   gap: 0.25rem 0.5rem;
 
+  // The owner's call (second design review): the Caution, Toxic and One-Off badges take the
+  // site's compact size, the one the compact ingredient card uses, so they read as one quiet pair.
+  .badge {
+    @include badge-size('small');
+  }
+
   &:empty {
     display: none;
   }
@@ -99,7 +105,7 @@
     margin: 0;
     padding-block-end: space(2);
     font-weight: 500;
-    overflow-wrap: anywhere;
+    overflow-wrap: break-word;
 
     // The group's mark, a little clear of the form's name.
     .form-icon {
@@ -123,28 +129,6 @@
 
     grid-area: remove;
     margin-block-end: space(1);
-  }
-
-  // An open ingredient row's Remove is this up chevron instead, in the same place: it closes the row.
-  .step-row__close {
-    @include icon-button;
-    @include icon-button-edit;
-
-    grid-area: remove;
-    margin-block-end: space(1);
-
-    // The owner's call: the chevron is light, not the pencil's green. It sits on the card's ground,
-    // so it takes the body ink (near-white in dark, ink in light: literal white would fail on the
-    // light card), and keeps it pointed at, focused or open, over the mixin's tint.
-    &,
-    &:hover,
-    &:focus-visible {
-      color: $text-primary;
-    }
-
-    .chevron-icon {
-      transform: rotate(180deg);
-    }
   }
 }
 
@@ -200,8 +184,7 @@ $step-ink-drop: 0.05rem;
     }
 
     .step-row__edit,
-    .step-row__remove,
-    .step-row__close {
+    .step-row__remove {
       margin-block: calc(($step-line - $icon-size) / 2) 0;
     }
   }
@@ -209,8 +192,7 @@ $step-ink-drop: 0.05rem;
   .step-row__handle,
   .step-row__marks,
   .step-row__edit,
-  .step-row__remove,
-  .step-row__close {
+  .step-row__remove {
     position: relative;
     inset-block-start: $step-ink-drop;
   }
@@ -230,6 +212,21 @@ $step-ink-drop: 0.05rem;
     @include icon-button-edit;
 
     grid-area: edit;
+
+    // Open, the pencil is an up chevron that closes the row. The owner's call: it is light, not the
+    // pencil's green. It sits on the card's ground, so it takes the body ink (near-white in dark,
+    // ink in light: literal white would fail on the light card), kept pointed at or focused.
+    &--close {
+      &,
+      &:hover,
+      &:focus-visible {
+        color: $text-primary;
+      }
+
+      .chevron-icon {
+        transform: rotate(180deg);
+      }
+    }
   }
 
   // The opened fields, in the name's column to the card's edge.
@@ -242,8 +239,14 @@ $step-ink-drop: 0.05rem;
   .step-row__inputs {
     display: flex;
     flex-wrap: wrap;
-    align-items: flex-end;
+    // From the top, so an error under one field never drops its neighbours to its foot.
+    align-items: flex-start;
     gap: space(2);
+  }
+
+  // A field's error, across the whole row of inputs and not wrapped in its narrow column.
+  .step-row__inputs-error:empty {
+    display: none;
   }
 
   .step-row__name-field {
@@ -341,8 +344,7 @@ $step-ink-drop: 0.05rem;
     margin-block-start: 0;
   }
 
-  .step-row__remove,
-  .step-row__close {
+  .step-row__remove {
     margin-block-start: space(2) + ($step-line - $icon-size) / 2;
   }
 
@@ -362,7 +364,7 @@ $step-ink-drop: 0.05rem;
     min-width: 0;
     margin: 0;
     padding-block: space(2);
-    overflow-wrap: anywhere;
+    overflow-wrap: break-word;
     white-space: pre-wrap;
   }
 
@@ -402,8 +404,7 @@ $step-ink-drop: 0.05rem;
       margin-block-start: space(2);
     }
 
-    .step-row__remove,
-    .step-row__close {
+    .step-row__remove {
       margin-block-end: 0;
     }
   }
