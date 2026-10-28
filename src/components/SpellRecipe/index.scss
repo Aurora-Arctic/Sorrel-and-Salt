@@ -32,7 +32,6 @@
   white-space: pre-line;
 }
 
-.spell-recipe__ingredients,
 .spell-recipe__steps {
   display: flex;
   flex-direction: column;
@@ -47,14 +46,78 @@
   margin: 0;
 }
 
-.spell-recipe__amount {
-  font-weight: 600;
+// The steps (M13.21): the amount leads the name, in a heavier weight, and the position column is
+// as wide for every row, so the numbers line up down the list. The flex row honours `order`;
+// the position stays first because it is the one child with a lower one.
+.spell-recipe__steps .step-row__position {
+  order: -2;
+  flex: 0 0 2rem;
+  text-align: end;
+  color: $text-muted;
+  font-variant-numeric: tabular-nums;
 }
 
-// The same sections inside the Quick Look modal (M13.21): the page's column without its
-// width, centring and padding, since the modal supplies its own.
-.spell-recipe-look {
-  display: flex;
-  flex-direction: column;
-  gap: space(4);
+.spell-recipe__steps .step-row__amount {
+  order: -1;
+  font-weight: 500;
+}
+
+.spell-recipe__steps .step-row__name {
+  font-weight: 300;
+}
+
+// A step with no ingredient is the instruction alone, so it reads quieter.
+.spell-recipe__instruction .step-row__body {
+  color: $text-muted;
+}
+
+// The facts strip (M13.21): up to four cells under a hairline, two to a row in a narrow column.
+// The box is the container, since the column (page or modal) decides the width, not the window.
+.spell-recipe__facts-box {
+  container-type: inline-size;
+  padding-block-start: space(3);
+  border-top: 1px solid $hairline;
+}
+
+.spell-recipe__facts {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: space(3);
+  margin: 0;
+
+  @container (max-width: #{$narrow-column}) {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  dt {
+    font-size: type-size('overline');
+    font-weight: 500;
+    letter-spacing: 0.16em;
+    text-transform: uppercase;
+    color: $text-muted;
+  }
+
+  dd {
+    margin: 0;
+    overflow-wrap: anywhere;
+  }
+}
+
+// The note, under its own hairline, only where there is one.
+.spell-recipe__note {
+  padding-block-start: space(3);
+  border-top: 1px solid $hairline;
+}
+
+// The Quick Look foot (M13.21): the bar of `ingredient-details-foot` (in _primitives.scss),
+// with See Recipe Page at the start and Edit Spell at the end. With See Recipe Page alone the
+// bar's own centred two-thirds button stands.
+.ingredient-details-foot.spell-look-foot:has(> .btn:nth-child(2)) {
+  justify-content: space-between;
+  gap: space(3);
+  padding-inline: space(4);
+
+  > .btn {
+    width: auto;
+  }
 }

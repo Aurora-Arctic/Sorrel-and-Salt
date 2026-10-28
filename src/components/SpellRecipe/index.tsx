@@ -7,7 +7,7 @@ import SpellRecipeBody from './body';
 import type { SpellRecipeProps } from './types';
 import './index.scss';
 
-// A saved spell as a page (MB.6): what it is for, the ingredients it uses, then its steps in
+// A saved spell as a page (MB.6): what it is for, its four facts, then its steps in
 // order, then its note (those are `SpellRecipeBody`, which the Quick Look modal draws too, M13.21). Read-only: Edit is the `action` slot's, for a role that may update
 // the spell (M13.10), and there is no Delete. Presentational: the page reads through the
 // service and hands the values here. The steps are drawn here, read-only, until M13.3's
@@ -23,6 +23,10 @@ const SpellRecipe = ({
   lastEdit,
   note,
   steps,
+  jarDescription,
+  sealWaxColor,
+  moonPhase,
+  dayOfWeek,
   back,
   action,
 }: SpellRecipeProps): ReactElement => {
@@ -49,6 +53,10 @@ const SpellRecipe = ({
         categories={categories}
         note={note}
         steps={steps}
+        jarDescription={jarDescription}
+        sealWaxColor={sealWaxColor}
+        moonPhase={moonPhase}
+        dayOfWeek={dayOfWeek}
       />
     </article>
   );

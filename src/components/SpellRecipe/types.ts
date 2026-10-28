@@ -54,6 +54,11 @@ export interface SpellRecipeProps {
   /** The spell's single free-text note. */
   note: string | null;
   steps: readonly RecipeStep[];
+  /** The four facts the body's strip draws; null or blank draws no cell. */
+  jarDescription?: string | null;
+  sealWaxColor?: string | null;
+  moonPhase?: string | null;
+  dayOfWeek?: string | null;
   /** The way back to the grimoire. */
   back: { href: Route; label: string };
   /** The Edit control, for a role that may update the spell (M13.10). */
@@ -63,7 +68,15 @@ export interface SpellRecipeProps {
 /** What the body below a spell's head draws, shared by the recipe page and the Quick Look modal. */
 export type SpellRecipeBodyProps = Pick<
   SpellRecipeProps,
-  'title' | 'intent' | 'categories' | 'note' | 'steps'
+  | 'title'
+  | 'intent'
+  | 'categories'
+  | 'note'
+  | 'steps'
+  | 'jarDescription'
+  | 'sealWaxColor'
+  | 'moonPhase'
+  | 'dayOfWeek'
 >;
 
 /** The spell a Quick Look modal is open on (M13.21); the body arrives as the page's rendered children. */
@@ -73,7 +86,7 @@ export interface SpellLookOpened {
   lastEdit: LastEditProps | null;
   /** The spell's recipe page (MB.6), which the foot links to. */
   recipeHref: Route;
-  /** Where Edit opens the spell in the builder, for a role that may update it; none draws no Edit. */
+  /** Where Edit Spell opens the spell in the builder, for a role that may update it; none draws no Edit Spell. */
   editHref?: Route;
   children: ReactNode;
 }

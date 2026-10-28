@@ -16,10 +16,17 @@ holds the presentational body; `src/app/(shell)/coven/[slug]/grimoire/[id]/` hol
 
 ## The body
 
-Back link, title (Draft and Private badges), `LastEdit`, intent, `CategoryChips`, then
-sections: Ingredients (a summary of the ingredient steps), Steps (an ordered list in
-`position` order, quantity and unit on ingredient steps) and Note. Empty sections are left out,
-except Steps, which says the spell has no steps.
+Back link, title (Draft and Private badges), `LastEdit`, then the shared body, the "Recipe Card"
+layout (M13.21), top to bottom: the intent (muted), `CategoryChips`, a facts strip, the steps and
+the note. The facts strip is a `dl` under a hairline with up to four cells, Jar
+(`jarDescription`), Seal Wax (`sealWaxColor`), Moon Phase (`moonPhase`) and Day
+(`dayOfWeek`), each `dt` in the overline style; a blank or null value draws no cell and none set
+draws no strip. Four columns, two per row in a column narrower than `$narrow-column` (a container
+query on the strip's box). There is no Ingredients section: the steps carry the amounts, the amount
+leading the name in weight 500 with the name in 300, and an instruction-only step's text is muted.
+The steps are an `ol` named Steps with no visible heading, in `position` order, the position
+column 2rem and right-aligned. The note is a muted paragraph under its own hairline, drawn only
+when there is one. A spell with no steps says so.
 
 - An ingredient links to its coven page, unless it has been deleted since or the service
   withheld it ("Unavailable Ingredient").
@@ -34,12 +41,14 @@ except Steps, which says the spell has no steps.
 
 ## Quick Look
 
-The body below the head is `SpellRecipeBody` (`body.tsx`): intent, `CategoryChips`, Ingredients,
-Steps and Note. The recipe page and the grimoire list's Quick Look modal (M13.21) both render it,
-so nothing is drawn twice. `look-dialog.tsx` (`SpellLookDialog`) puts it in a `RouteModal`: the
-title as the heading, `LastEdit` above it, an Edit link (`formalActions`) when given an
-`editHref`, and a foot bar with "See Recipe Page" linking to the page. `failed` draws a Notice
-that the spell could not be read. The page and the modal read through `readRecipeOf`
+The body below the head is `SpellRecipeBody` (`body.tsx`), described above. The recipe page and
+the grimoire list's Quick Look modal (M13.21) both render it, so nothing is drawn twice.
+`look-dialog.tsx` (`SpellLookDialog`) puts it in a `RouteModal`: the title as the heading,
+`LastEdit` above it, no pencil, and a foot bar (`ingredient-details-foot spell-look-foot`, the bar
+shared with the ingredient's Quick Look and defined in `_primitives.scss`) holding See Recipe
+Page at its start and, only when given an `editHref`, Edit Spell (`btn--solid`) at its end; See
+Recipe Page alone stands centred. Edit Spell is a link to the `?edit=<id>` address, so one
+dialog shows at a time. `failed` draws a Notice that the spell could not be read. The page and the modal read through `readRecipeOf`
 (`grimoire/recipe-read.ts`).
 
 ## Decisions

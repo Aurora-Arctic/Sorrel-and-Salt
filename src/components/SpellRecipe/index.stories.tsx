@@ -25,6 +25,10 @@ export const Complete: Story = {
       categories={[]}
       lastEdit={{ by: 'Fixture Author', at: '2026-10-01T12:00:00.000Z' }}
       note="Best made on a dry night."
+      jarDescription="4 oz jar"
+      sealWaxColor="Green"
+      moonPhase="Waxing Crescent"
+      dayOfWeek="Thursday"
       back={{ href: '/coven/fixture-coven/grimoire' as Route, label: 'Grimoire' }}
       steps={[
         {
@@ -79,6 +83,10 @@ const look = (editHref?: Route) => (
               intent="To keep the house safe through the winter."
               categories={[]}
               note="Best made on a dry night."
+              jarDescription="4 oz jar"
+              sealWaxColor="Green"
+              moonPhase="Waxing Crescent"
+              dayOfWeek="Thursday"
               steps={STEPS}
             />
           ),

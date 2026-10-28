@@ -53,9 +53,7 @@ test('the eye opens a spell in a modal over the list, and the modal is closed, e
   await eye.click();
   await page
     .getByRole('dialog', { name: 'Fixture Working' })
-    .getByRole('link', {
-      name: 'Edit Fixture Working',
-    })
+    .getByRole('link', { name: 'Edit Spell', exact: true })
     .click();
   await expect(page).toHaveURL(`${grimoire}?query=fixture&edit=${shared}`);
   await expect(page.getByRole('dialog', { name: 'Edit Spell, Fixture Working' })).toBeVisible();

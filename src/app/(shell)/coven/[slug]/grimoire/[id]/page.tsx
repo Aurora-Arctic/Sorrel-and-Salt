@@ -67,6 +67,10 @@ export default async function SpellRecipePage({ params, searchParams }: SpellRec
           categories={recipe.categories}
           lastEdit={recipe.lastEdit}
           note={spell.note}
+          jarDescription={spell.jarDescription}
+          sealWaxColor={spell.sealWaxColor}
+          moonPhase={spell.moonPhase}
+          dayOfWeek={spell.dayOfWeek}
           steps={recipe.steps}
           action={
             canUpdate && (

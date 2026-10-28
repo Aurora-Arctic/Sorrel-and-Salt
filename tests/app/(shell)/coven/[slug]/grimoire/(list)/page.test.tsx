@@ -573,7 +573,7 @@ describe('Quick Look over a Grimoire tab', () => {
     await renderTab(SpellsPage, { query: 'fixture', spell: SPELL_ID });
 
     const dialog = screen.getByRole('dialog', { name: 'Fixture Working' });
-    const edit = within(dialog).queryByRole('link', { name: 'Edit Fixture Working' });
+    const edit = within(dialog).queryByRole('link', { name: 'Edit Spell' });
     if (shown) {
       expect(edit).toHaveAttribute(
         'href',

@@ -79,14 +79,38 @@ describe('SpellRecipe', () => {
     expect(items[1]).toHaveTextContent('Testwort');
   });
 
-  it('summarises the ingredients above the steps, leaving out instructions', () => {
+  it('draws no Ingredients section, the steps carrying the amounts', () => {
     render(
       <SpellRecipe
         {...props({ steps: [instruction('a', 'Stir.'), ingredient('b', { quantity: '1' })] })}
       />,
     );
-    const list = screen.getByRole('list', { name: 'Ingredients' });
-    expect(within(list).getAllByRole('listitem')).toHaveLength(1);
+    expect(screen.queryByRole('heading', { name: 'Ingredients' })).toBeNull();
+    expect(screen.queryByRole('list', { name: 'Ingredients' })).toBeNull();
+    expect(screen.queryByRole('heading', { name: 'Steps' })).toBeNull();
+    expect(screen.getAllByRole('list')).toHaveLength(1);
+  });
+
+  it('draws the facts that are set as a strip, and leaves out blank ones', () => {
+    render(
+      <SpellRecipe
+        {...props({
+          jarDescription: '4 oz jar',
+          sealWaxColor: '  ',
+          moonPhase: 'Waxing Crescent',
+          dayOfWeek: null,
+        })}
+      />,
+    );
+    const terms = screen.getAllByRole('term').map((term) => term.textContent);
+    expect(terms).toEqual(['Jar', 'Moon Phase']);
+    expect(screen.getByText('4 oz jar')).toBeInTheDocument();
+    expect(screen.getByText('Waxing Crescent')).toBeInTheDocument();
+  });
+
+  it('draws no facts strip when none is set', () => {
+    render(<SpellRecipe {...props()} />);
+    expect(screen.queryByRole('term')).toBeNull();
   });
 
   it('shows the formal name beside a label two ingredients share', () => {
@@ -119,12 +143,12 @@ describe('SpellRecipe', () => {
     expect(within(steps).getByText(/One-Off/)).toBeInTheDocument();
   });
 
-  it('shows the note under its own heading, and none when blank', () => {
+  it('shows the note, with no heading, and none when blank', () => {
     const { rerender } = render(<SpellRecipe {...props({ note: 'Best at dusk.' })} />);
-    expect(screen.getByRole('heading', { name: 'Note' })).toBeInTheDocument();
     expect(screen.getByText('Best at dusk.')).toBeInTheDocument();
-    rerender(<SpellRecipe {...props({ note: '  ' })} />);
     expect(screen.queryByRole('heading', { name: 'Note' })).toBeNull();
+    rerender(<SpellRecipe {...props({ note: '  ' })} />);
+    expect(screen.queryByText('Best at dusk.')).toBeNull();
   });
 
   it('draws no Edit or Delete control of its own, and draws the action it is given', () => {

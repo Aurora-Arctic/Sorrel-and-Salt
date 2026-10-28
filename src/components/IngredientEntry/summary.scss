@@ -138,28 +138,9 @@
   color: $text-muted;
 }
 
-// The details modal's foot (the owner's call, 2026-10-20): the bar holding the
-// link to the entry's page, in the Modal's `foot` slot under the body rather than inside it, so the
-// body is the only thing that scrolls and its scrollbar ends above the bar
-// (the owner's report, 2026-10-20: the track ran down past it). It runs to the
-// dialog's edges, on the modal's surface, with a hairline along its top. The
-// link is the site's plain `.btn`, a green outline on a clear ground with the normal size and its own hover and focus, centred in the bar and
-// two thirds of its width, a fraction of the bar rather than a length so it
-// holds at every window width; the bar takes no side padding, so the third is
-// of the bar itself, and the label stands centred in the button.
+// The details modal's foot bar itself is in _primitives.scss, which every page loads (the Quick Look
+// of a spell draws it too). Only its variant with a control beside the link is here.
 .ingredient-details-foot {
-  display: flex;
-  justify-content: center;
-  padding: space(3) 0;
-  border-top: 1px solid $hairline;
-  background: $surface-card;
-  @include theme-transition(background-color, border-color);
-
-  > .btn {
-    width: 66.6%;
-    text-align: center;
-  }
-
   // With a control beside the link (the admin's review switch, M14.8) the two share the bar, the
   // link taking what the control leaves.
   &--control {

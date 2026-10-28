@@ -187,6 +187,10 @@ export async function grimoireTab({
                     intent={looked.spell.intent}
                     categories={looked.recipe.categories}
                     note={looked.spell.note}
+                    jarDescription={looked.spell.jarDescription}
+                    sealWaxColor={looked.spell.sealWaxColor}
+                    moonPhase={looked.spell.moonPhase}
+                    dayOfWeek={looked.spell.dayOfWeek}
                     steps={looked.recipe.steps}
                   />
                 ),
