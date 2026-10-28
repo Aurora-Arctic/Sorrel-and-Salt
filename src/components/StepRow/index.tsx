@@ -39,6 +39,8 @@ export default function StepRow({
 }: StepRowProps): ReactElement {
   const amount = amountOf(quantity, unit);
   const collapsible = open !== undefined && name !== null;
+  // An instruction-only step opens and closes too, but is one line of text, not a card of fields.
+  const textCard = open !== undefined && name === null;
   const className_ = [
     'step-row',
     collapsible && (open ? 'step-row--open' : 'step-row--closed'),
@@ -60,6 +62,22 @@ export default function StepRow({
       )}
     </>
   );
+  if (textCard) {
+    return (
+      <li ref={rowRef} className={className_} style={style}>
+        {identity}
+        {open ? (
+          <div className="step-row__field" id={fieldsId}>
+            {bodyField}
+          </div>
+        ) : (
+          <p className="step-row__text">{summary}</p>
+        )}
+        {edit}
+        {actions}
+      </li>
+    );
+  }
   if (collapsible) {
     return (
       <li ref={rowRef} className={className_} style={style}>

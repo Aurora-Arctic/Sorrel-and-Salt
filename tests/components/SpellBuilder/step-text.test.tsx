@@ -106,6 +106,11 @@ const steps = () => screen.getByRole('list', { name: 'Steps' });
 const rows = () => within(steps()).queryAllByRole('listitem');
 const instructions = () =>
   within(steps()).queryAllByRole('textbox', { name: /^Instruction/ }) as HTMLTextAreaElement[];
+/** Opens a step row by its pencil, unless it is open already. */
+const openStep = (n: number) => {
+  const pencil = screen.getByRole('button', { name: `Edit step ${n}` });
+  if (pencil.getAttribute('aria-expanded') !== 'true') fireEvent.click(pencil);
+};
 const save = () => screen.getByRole('button', { name: /^Sav/ });
 const submit = () => fireEvent.submit(save().closest('form') as HTMLFormElement);
 const announced = () =>
@@ -149,7 +154,9 @@ describe('the spell builder’s step text', () => {
     addStep();
     fireEvent.change(instructions()[0] as HTMLElement, { target: { value: 'Light the candle' } });
     await addOneOff('Testwort');
-    fireEvent.change(instructions()[1] as HTMLElement, { target: { value: 'Crush it first' } });
+    // Only one row is open at a time: the new ingredient step is, the instruction step is closed.
+    expect(instructions()).toHaveLength(1);
+    fireEvent.change(instructions()[0] as HTMLElement, { target: { value: 'Crush it first' } });
     submit();
 
     await waitFor(() => expect(calls).toHaveLength(1));
@@ -179,12 +186,12 @@ describe('the spell builder’s step text', () => {
   it('reads a saved spell’s texts back into their fields, an ingredient step’s beneath it', () => {
     renderSaved();
     fireEvent.click(screen.getByRole('button', { name: 'Edit Testwort' }));
-
-    expect(instructions().map((field) => field.value)).toEqual([
-      'Light the candle',
-      'Crush it first',
-    ]);
+    // The instruction-only step reads as its text while closed, and as a field once opened.
+    expect(within(rows()[0] as HTMLElement).getByText('Light the candle')).toBeInTheDocument();
+    expect(instructions().map((field) => field.value)).toEqual(['Crush it first']);
     expect(within(rows()[1] as HTMLElement).getByRole('spinbutton')).toBeInTheDocument();
+    openStep(1);
+    expect(instructions().map((field) => field.value)).toEqual(['Light the candle']);
     expect(save()).toBeDisabled();
   });
 
@@ -192,6 +199,7 @@ describe('the spell builder’s step text', () => {
     const calls = acceptUpdate();
     renderSaved();
 
+    openStep(1);
     fireEvent.change(instructions()[0] as HTMLElement, { target: { value: 'Snuff the candle' } });
     expect(save()).toBeEnabled();
     submit();
@@ -208,11 +216,26 @@ describe('the spell builder’s step text', () => {
     renderSaved();
 
     fireEvent.click(screen.getByRole('button', { name: 'Edit Testwort' }));
-    fireEvent.change(instructions()[1] as HTMLElement, { target: { value: '' } });
+    fireEvent.change(instructions()[0] as HTMLElement, { target: { value: '' } });
     submit();
 
     await waitFor(() => expect(calls).toHaveLength(1));
     expect(calls[0]?.input.steps?.[1]).toEqual({ id: ID.stepCrush, name: 'Testwort' });
+  });
+
+  it('shows a closed instruction step as its text, opens one row at a time, and opens a blank one on its error', async () => {
+    renderSaved();
+    const first = screen.getByRole('button', { name: 'Edit step 1' });
+    expect(first).toHaveAttribute('aria-expanded', 'false');
+    expect(instructions()).toHaveLength(0);
+
+    fireEvent.click(first);
+    expect(first).toHaveAttribute('aria-expanded', 'true');
+    expect(instructions().map((field) => field.value)).toEqual(['Light the candle']);
+
+    fireEvent.click(screen.getByRole('button', { name: 'Edit Testwort' }));
+    expect(first).toHaveAttribute('aria-expanded', 'false');
+    expect(instructions().map((field) => field.value)).toEqual(['Crush it first']);
   });
 
   it('removes an instruction-only step, says so, and leaves it out of what is sent', async () => {

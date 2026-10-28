@@ -29,17 +29,15 @@ export function SpellSteps({ workspaceId }: { workspaceId: string }): ReactEleme
   // field, or what is left after a Remove (the row now in that place, else the
   // Add a Step button).
   const root = useRef<HTMLElement>(null);
-  const focusAfter = useRef<{ index: number; target: 'field' | 'handle' } | null>(null);
+  const focusAfter = useRef<{ index: number; target: 'handle' } | null>(null);
   useEffect(() => {
     const next = focusAfter.current;
     if (next === null) return;
     focusAfter.current = null;
     const row = root.current?.querySelectorAll<HTMLElement>('.spell-steps__list > li')[next.index];
     const target =
-      next.target === 'field'
-        ? row?.querySelector<HTMLElement>('textarea')
-        : (row?.querySelector<HTMLElement>('.spell-step__handle') ??
-          root.current?.querySelector<HTMLElement>('.spell-steps__add-step'));
+      row?.querySelector<HTMLElement>('.spell-step__handle') ??
+      root.current?.querySelector<HTMLElement>('.spell-steps__add-step');
     target?.focus();
   }, [fields.length]);
 
@@ -52,9 +50,21 @@ export function SpellSteps({ workspaceId }: { workspaceId: string }): ReactEleme
     openNew.current = false;
     setOpenId(fields[fields.length - 1]?.id ?? null);
   }, [fields]);
+  // A new instruction takes the focus into its field once it is open and drawn: a closed
+  // instruction has no field to focus.
+  const focusField = useRef(false);
+  useEffect(() => {
+    if (!focusField.current || openId === null) return;
+    focusField.current = false;
+    const index = fields.findIndex((field) => field.id === openId);
+    root.current
+      ?.querySelectorAll<HTMLElement>('.spell-steps__list > li')
+      [index]?.querySelector<HTMLElement>('textarea')
+      ?.focus();
+  }, [openId, fields]);
 
   const add = (step: SpellStepValue) => {
-    openNew.current = !isInstruction(step);
+    openNew.current = true;
     // The focus stays in Add to Jar for the next ingredient: react-hook-form
     // would move it to the new step's Quantity a render later, closing the
     // list of whatever was typed in the meantime.
@@ -73,7 +83,7 @@ export function SpellSteps({ workspaceId }: { workspaceId: string }): ReactEleme
   };
 
   const addStep = () => {
-    focusAfter.current = { index: fields.length, target: 'field' };
+    focusField.current = true;
     add(newInstruction());
   };
 

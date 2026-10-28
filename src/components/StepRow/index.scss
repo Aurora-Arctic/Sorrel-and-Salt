@@ -213,8 +213,8 @@
 // the page's own ground, so that it reads as a note between the cards and not
 // as one of them. Its field fills the row between the number and Remove.
 .step-row.step-row--instruction {
-  grid-template-areas: 'handle position field remove';
-  grid-template-columns: auto auto minmax(0, 1fr) auto;
+  grid-template-areas: 'handle position field edit remove';
+  grid-template-columns: auto auto minmax(0, 1fr) auto auto;
   align-items: start;
   border: 1px dashed $hairline;
   background-color: transparent;
@@ -230,6 +230,33 @@
 
   .step-row__remove {
     margin-block-start: space(1);
+  }
+
+  .step-row__edit {
+    @include icon-button;
+    @include icon-button-edit;
+
+    grid-area: edit;
+    margin-block-start: space(1);
+  }
+
+  // Closed, the instruction is its own words, wrapping; open, its textarea stands in
+  // its place. The label above that textarea is kept for the name, out of sight.
+  .step-row__text {
+    grid-area: field;
+    min-width: 0;
+    margin: 0;
+    padding-block: space(2);
+    overflow-wrap: anywhere;
+    white-space: pre-wrap;
+  }
+
+  .step-row__placeholder {
+    color: $text-muted;
+  }
+
+  .field__label-row {
+    @include visually-hidden;
   }
 }
 

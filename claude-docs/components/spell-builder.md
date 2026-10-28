@@ -301,8 +301,9 @@ being read the column is a skeleton, and if the read fails, an error in its plac
   its form, a summary of amount and instruction, the supply badge, a pencil to open it and Remove.
   Open, it also shows Form (one-offs only), Quantity, Unit and Instruction. One row is open at a
   time: a new step opens, opening another closes the one before, and a step whose unit breaks the
-  rule is forced open so its error is seen. An instruction-only step has the handle and its
-  Instruction alone.
+  rule is forced open so its error is seen. An instruction-only step is the same
+  card: closed, its text itself (a muted "Write the step" when empty) with a pencil ("Edit step N")
+  and Remove; open, a text area in place of the text.
 - **Add a Step** (M13.3) is the last item of the left column: a `.btn` on wide, and on narrow the
   dashed numbered last line of the list. It appends an instruction-only step, opens it and puts the
   focus in its Instruction field. Until something is written the step is named "New Instruction"

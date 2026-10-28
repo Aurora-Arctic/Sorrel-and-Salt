@@ -82,7 +82,11 @@ export function BuilderStepRow({
     name: [`steps.${index}.quantity`, `steps.${index}.unit`, `steps.${index}.body`],
   }) as [string | undefined, string | undefined, string | null | undefined];
   // A unit the jar cannot be measured in is said on the Unit field, so its row is open.
-  const open = openWanted || errors.steps?.[index]?.unit !== undefined;
+  // An instruction refused as blank is said at its own field, so that row is open too.
+  const open =
+    openWanted ||
+    errors.steps?.[index]?.unit !== undefined ||
+    (isInstruction(step) && errors.steps?.[index]?.body !== undefined);
   const oneOff = !instruction && step.ingredientId === null;
   const summary = [
     [quantity, unitChosen].filter(Boolean).join(' '),
@@ -128,7 +132,7 @@ export function BuilderStepRow({
         transform: CSS.Translate.toString(sortable.transform),
         transition: sortable.transition,
       }}
-      open={instruction ? undefined : open}
+      open={open}
       fieldsId={fieldsId}
       position={index + 1}
       name={instruction ? null : name}
@@ -138,29 +142,35 @@ export function BuilderStepRow({
       marks={safety && <SafetyMark {...safety} />}
       note={safety && <SafetyNote level={5} {...safety} />}
       badge={oneOff ? <span className="badge badge--local">One-Off</span> : null}
-      summary={summary.length > 0 ? `· ${summary.join(' · ')}` : null}
+      summary={
+        instruction
+          ? (bodyTyped ?? '').trim() || (
+              <span className="step-row__placeholder">Write the step</span>
+            )
+          : summary.length > 0
+            ? `· ${summary.join(' · ')}`
+            : null
+      }
       aside={
         oneOff
           ? 'Goes in this jar and nowhere else: it makes no ingredient in your cupboard.'
           : null
       }
       edit={
-        instruction ? null : (
-          <button
-            ref={edit}
-            type="button"
-            className="step-row__edit"
-            aria-label={`Edit ${step.name}`}
-            aria-expanded={open}
-            aria-controls={fieldsId}
-            onClick={() => {
-              focusOnOpen.current = !open;
-              onToggle();
-            }}
-          >
-            <EditIcon />
-          </button>
-        )
+        <button
+          ref={edit}
+          type="button"
+          className="step-row__edit"
+          aria-label={instruction ? `Edit step ${index + 1}` : `Edit ${step.name}`}
+          aria-expanded={open}
+          aria-controls={fieldsId}
+          onClick={() => {
+            focusOnOpen.current = !open;
+            onToggle();
+          }}
+        >
+          <EditIcon />
+        </button>
       }
       formField={
         oneOff ? (

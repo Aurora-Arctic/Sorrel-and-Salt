@@ -575,6 +575,9 @@ test(
     // A saved spell opens with its sections shut (M10.12).
     await page.getByRole('button', { name: 'Open All' }).click();
     await expect(steps).toHaveCount(2);
+    // A saved instruction step is shut too, and reads as its text; its pencil opens the field.
+    await expect(steps.first()).toContainText('Light the candle');
+    await steps.first().getByRole('button', { name: 'Edit step 1' }).click();
     await expect(steps.first().getByRole('textbox', { name: 'Instruction' })).toHaveValue(
       'Light the candle',
     );
