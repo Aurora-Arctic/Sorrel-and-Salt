@@ -25,6 +25,8 @@ export const SpellIngredientSuggestionsDocument = graphql(`
           name
           canonicalName
           retired
+          toxic
+          safetyNotes
           cupboardEntry(workspaceId: $workspaceId) {
             label
           }
@@ -35,6 +37,8 @@ export const SpellIngredientSuggestionsDocument = graphql(`
           variants {
             id
             form
+            toxic
+            safetyNotes
             categories {
               id
               name
@@ -80,6 +84,8 @@ export const SpellBuilderStepsDocument = graphql(`
         body
         ingredient {
           id
+          toxic
+          safetyNotes
           categories {
             id
             name
@@ -93,6 +99,8 @@ export const SpellBuilderStepsDocument = graphql(`
         }
         variant {
           id
+          toxic
+          safetyNotes
           categories {
             id
             name

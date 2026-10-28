@@ -1,13 +1,13 @@
 'use client';
 
 import { LiveRegion, useAnnouncement } from '@dnd-kit/accessibility';
-import { type ReactElement, useId, useMemo } from 'react';
+import { type ReactElement, useEffect, useId, useMemo, useRef } from 'react';
 import { useFieldArray, useFormContext, useWatch } from 'react-hook-form';
 import { StepPicker, oneOffKey } from './picker';
 import { SortableSteps } from './sortable';
-import { StepRow } from './step-row';
+import { BuilderStepRow } from './step-row';
 import type { SpellStepValue, SpellStepsValues } from './types';
-import { derivedCategories, stepNameOf } from './values';
+import { derivedCategories, newInstruction, stepNameOf, warningOf } from './values';
 
 // The jar's steps (M10.15): the list, the picker that adds to it, and the
 // spell's derived categories, worked out from the steps as they stand so a
@@ -25,14 +25,42 @@ export function SpellSteps({ workspaceId }: { workspaceId: string }): ReactEleme
   const { announce, announcement } = useAnnouncement();
   const regionId = useId();
 
+  // Where focus goes once the row it names has been drawn: a new instruction's
+  // field, or what is left after a Remove (the row now in that place, else the
+  // Add a Step button).
+  const root = useRef<HTMLElement>(null);
+  const focusAfter = useRef<{ index: number; target: 'field' | 'handle' } | null>(null);
+  useEffect(() => {
+    const next = focusAfter.current;
+    if (next === null) return;
+    focusAfter.current = null;
+    const row = root.current?.querySelectorAll<HTMLElement>('.spell-steps__list > li')[next.index];
+    const target =
+      next.target === 'field'
+        ? row?.querySelector<HTMLElement>('textarea')
+        : (row?.querySelector<HTMLElement>('.spell-step__handle') ??
+          root.current?.querySelector<HTMLElement>('.spell-steps__add-step'));
+    target?.focus();
+  }, [fields.length]);
+
   const add = (step: SpellStepValue) => {
-    append(step);
+    append(step, { shouldFocus: false });
     const count = fields.length + 1;
-    announce(`Added ${stepNameOf(step)}, at position ${count} of ${count}.`);
+    announce(
+      [`Added ${stepNameOf(step)}, at position ${count} of ${count}.`, warningOf(step)]
+        .filter(Boolean)
+        .join(' '),
+    );
   };
   const removeAt = (index: number) => {
     announce(`Removed ${names[index]}, from position ${index + 1} of ${fields.length}.`);
+    focusAfter.current = { index: Math.min(index, fields.length - 2), target: 'handle' };
     remove(index);
+  };
+
+  const addStep = () => {
+    focusAfter.current = { index: fields.length, target: 'field' };
+    add(newInstruction());
   };
 
   const taken = useMemo(
@@ -52,10 +80,10 @@ export function SpellSteps({ workspaceId }: { workspaceId: string }): ReactEleme
   const derivedId = useId();
 
   return (
-    <section className="spell-steps">
+    <section className="spell-steps" ref={root}>
       <SortableSteps ids={fields.map((field) => field.id)} names={names} onMove={move}>
         {fields.map((field, index) => (
-          <StepRow
+          <BuilderStepRow
             key={field.id}
             id={field.id}
             index={index}
@@ -65,6 +93,9 @@ export function SpellSteps({ workspaceId }: { workspaceId: string }): ReactEleme
         ))}
       </SortableSteps>
       <LiveRegion id={regionId} announcement={announcement} />
+      <button type="button" className="btn btn--small spell-steps__add-step" onClick={addStep}>
+        Add a Step
+      </button>
       <StepPicker workspaceId={workspaceId} taken={taken} oneOffs={oneOffs} onAdd={add} />
       {/* h4: the jar sits in the builder's Jar section, whose heading is an h3. */}
       <h4 className="spell-steps__heading" id={derivedId}>

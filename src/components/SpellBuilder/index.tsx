@@ -75,6 +75,8 @@ const CreateSpellDocument = graphql(`
         body
         ingredient {
           id
+          toxic
+          safetyNotes
           categories {
             id
             name
@@ -88,6 +90,8 @@ const CreateSpellDocument = graphql(`
         }
         variant {
           id
+          toxic
+          safetyNotes
           categories {
             id
             name
@@ -127,6 +131,8 @@ const UpdateSpellDocument = graphql(`
         body
         ingredient {
           id
+          toxic
+          safetyNotes
           categories {
             id
             name
@@ -140,6 +146,8 @@ const UpdateSpellDocument = graphql(`
         }
         variant {
           id
+          toxic
+          safetyNotes
           categories {
             id
             name

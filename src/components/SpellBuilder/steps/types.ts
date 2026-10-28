@@ -35,8 +35,22 @@ export interface SpellStepValue {
   icon: FormGroupIcon | null;
   /** The ingredient's categories and the form's own. */
   categories: StepCategory[];
+  /** The care this step's ingredient needs (M10.18); null where there is no entry to say. */
+  safety: StepSafety | null;
   /** The unit of the coven's jar of this form; null where it holds none, or one with no unit. */
   jarUnit: Unit | null;
+}
+
+/**
+ * What the compendium or the coven's own entry says about the care a step needs: the
+ * ingredient's flag and notes, and the form laid's own. A step with none of this to read
+ * (a one-off, an instruction) holds `null`, never a "safe" value.
+ */
+export interface StepSafety {
+  toxic: boolean;
+  safetyNotes: string | null;
+  formToxic: boolean;
+  formSafetyNotes: string | null;
 }
 
 /** The builder's values with its steps. */
