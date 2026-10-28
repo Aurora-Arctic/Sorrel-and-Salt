@@ -231,15 +231,13 @@ $step-line: type-size('body') * 1.65;
   }
 }
 
-// An instruction is words, not a thing laid in the jar: a dashed hairline on
-// the page's own ground, so that it reads as a note between the cards and not
-// as one of them. Its field fills the row between the number and Remove.
+// An instruction is words, not a thing laid in the jar, but it keeps the card's own
+// border and ground (the owner's call, 2026-10-28: it was a dashed hairline on the
+// page's ground). Its field fills the row between the number and Remove.
 .step-row.step-row--instruction {
   grid-template-areas: 'handle position field edit remove';
   grid-template-columns: auto auto minmax(0, 1fr) auto auto;
   align-items: start;
-  border: 1px dashed $hairline;
-  background-color: transparent;
 
   // The handle, number and buttons line up with the text's first line: the number shares
   // its baseline (the text's own line is taller than the number's), and the handle and the
