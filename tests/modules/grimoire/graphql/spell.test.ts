@@ -44,7 +44,7 @@ const SPELL = `
   categories { name }
   derivedCategories { name }
   categoryGaps { intendedNotPresent { name } presentNotIntended { name } }
-  steps { position body name form quantity unit note ingredient { id } variant { form } }
+  steps { position body name form quantity unit ingredient { id } variant { form } }
   audit { createdBy }
 `;
 

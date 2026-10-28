@@ -52,7 +52,6 @@ export type SpellStepInput = {
   form?: string | null;
   quantity?: SpellStepRow['quantity'];
   unit?: SpellStepRow['unit'];
-  note?: string | null;
   body?: string | null;
 };
 

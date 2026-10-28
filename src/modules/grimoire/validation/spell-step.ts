@@ -1,5 +1,5 @@
 import { z } from 'zod';
-import { optionalText, requiredText } from '../../../lib/validation';
+import { requiredText } from '../../../lib/validation';
 import { MAX_QUANTITY } from '../../ingredients/schema/quantities';
 import { UNITS } from '../../ingredients/schema/units';
 
@@ -39,7 +39,6 @@ export const SpellStepInput = z
     quantity: quantity.nullish(),
     // The units module's list, never a second one here.
     unit: z.enum(UNITS, { error: 'Choose a unit from the list' }).nullish(),
-    note: optionalText(),
   })
   .superRefine((step, context) => {
     const hasIngredient = step.ingredientId != null;
@@ -81,12 +80,12 @@ export const SpellStepInput = z
     }
     // spell_steps_amount_on_ingredient
     if (!hasIdentity) {
-      for (const field of ['quantity', 'unit', 'note'] as const) {
+      for (const field of ['quantity', 'unit'] as const) {
         if (step[field] != null) {
           context.addIssue({
             code: 'custom',
             path: [field],
-            message: 'An amount and a note belong to an ingredient, so add one or remove this',
+            message: 'An amount belongs to an ingredient, so add one or remove this',
           });
         }
       }

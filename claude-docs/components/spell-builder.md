@@ -303,7 +303,7 @@ being read the column is a skeleton, and if the read fails, an error in its plac
   `ingredientId` and `variantId`, never the cupboard entry or the coven's
   jar it was found through (`stepInputOf` in `values.ts`); a one-off sends
   its `name` and `form`. A saved step sends its `id`. Quantity is sent as a
-  number, and a blank quantity, unit or note is left out.
+  number, and a blank quantity or unit is left out.
 - **Each row** (`step-row.tsx`'s `BuilderStepRow`, stories 50 and 80) is [`StepRow`](step-row.md), an
   open or a closed card. Closed, it shows the handle, the position, the form's icon, the name with
   its form, a summary of amount and instruction, the supply badge, a pencil to open it and Remove.
@@ -321,8 +321,9 @@ being read the column is a skeleton, and if the read fails, an error in its plac
   left out of the save. An instruction-only step with a blank one is refused
   at its own field, "Write the instruction, or remove it", before anything is
   sent (`stepInputOf` keeps the blank body on that kind of step so the schema
-  says it, rather than a step that says nothing). A step's `note` is not
-  edited here.
+  says it, rather than a step that says nothing). The step `note` is retired: `body` is the one text on a
+  step, and the Instruction field edits it
+  ([`pr1308-step-note-retired.md`](../design-decisions/pr1308-step-note-retired.md)).
 - **After a Remove** the focus goes to the handle of the row now in that place
   (the one before it for the last), and to Add an Instruction when the list is empty.
 - **The starting unit** (story 77): a form the coven keeps a jar of is added with that jar's unit already in the Unit field (`newStep` reads `jarUnit`, which the picker's lookup already returns in `stock`); a form with no jar, or a jar with no unit, starts blank. It is set once, as the step is added, so it never replaces a unit the member has chosen.

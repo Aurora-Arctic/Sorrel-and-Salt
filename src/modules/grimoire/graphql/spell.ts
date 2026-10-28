@@ -91,7 +91,6 @@ const SpellStepRef = builder.objectRef<SpellStepView>('SpellStep').implement({
     }),
     quantity: t.float({ nullable: true, resolve: (step) => amount(step.quantity) }),
     unit: t.expose('unit', { type: InventoryUnitEnum, nullable: true }),
-    note: t.exposeString('note', { nullable: true }),
     audit: t.field({ type: AuditInfo, resolve: (step) => step }),
   }),
 });
@@ -209,7 +208,6 @@ const SpellStepInputRef = builder.inputType('SpellStepInput', {
     form: t.string(),
     quantity: t.float(),
     unit: t.field({ type: InventoryUnitEnum }),
-    note: t.string(),
   }),
 });
 

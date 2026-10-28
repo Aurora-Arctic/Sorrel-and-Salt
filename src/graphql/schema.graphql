@@ -1813,7 +1813,6 @@ type SpellStep {
   The linked ingredient's name in this coven; the one-off row's own otherwise; null on an instruction-only step.
   """
   name: String
-  note: String
   position: Int!
   quantity: Float
   unit: InventoryUnit
@@ -1833,7 +1832,6 @@ input SpellStepInput {
   id: ID
   ingredientId: ID
   name: String
-  note: String
   quantity: Float
   unit: InventoryUnit
 

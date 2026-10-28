@@ -228,7 +228,7 @@ describe('a custom, one-off ingredient row', () => {
 
     // Why the refusals are the rule's: the author and the owner both write the shared one.
     await updateSpellStep(asUser(A), WORKSPACE_W_ID, shared, (await stepOf(shared)).id, {
-      note: 'Owner note',
+      body: 'Owner note',
     });
     const added = await addSpellStep(asUser(B), WORKSPACE_W_ID, hidden, {
       name: 'Fixture Salt',
@@ -238,25 +238,25 @@ describe('a custom, one-off ingredient row', () => {
 
     const hiddenStep = await stepOf(hidden);
     await expect(
-      updateSpellStep(asUser(A), WORKSPACE_W_ID, hidden, hiddenStep.id, { note: 'Sneaky' }),
+      updateSpellStep(asUser(A), WORKSPACE_W_ID, hidden, hiddenStep.id, { body: 'Sneaky' }),
     ).rejects.toBeInstanceOf(NotFound);
     await expect(
       addSpellStep(asUser(A), WORKSPACE_W_ID, hidden, { name: 'Sneaky Salt' }),
     ).rejects.toBeInstanceOf(NotFound);
     await expect(
       updateSpellStep(asUser(C), WORKSPACE_W_ID, shared, (await stepOf(shared)).id, {
-        note: 'Viewer note',
+        body: 'Viewer note',
       }),
     ).rejects.toBeInstanceOf(Forbidden);
     await expect(
       addSpellStep(asUser(C), WORKSPACE_W_ID, shared, { name: 'Viewer Salt' }),
     ).rejects.toBeInstanceOf(Forbidden);
     await expect(
-      updateSpellStep(asUser(D), WORKSPACE_W_ID, hidden, hiddenStep.id, { note: 'Foreign' }),
+      updateSpellStep(asUser(D), WORKSPACE_W_ID, hidden, hiddenStep.id, { body: 'Foreign' }),
     ).rejects.toBeInstanceOf(Forbidden);
 
-    expect((await stepOf(hidden)).note).toBeNull();
-    expect((await stepOf(shared)).note).toBe('Owner note');
+    expect((await stepOf(hidden)).body).toBeNull();
+    expect((await stepOf(shared)).body).toBe('Owner note');
     expect(
       (
         await sql`select count(*) from spell_steps where name like 'Viewer%' or name like 'Sneaky%'`
@@ -270,7 +270,7 @@ describe('a custom, one-off ingredient row', () => {
     const stepOfOther = (await readWithSteps(asUser(B), WORKSPACE_W_ID, other)).steps[0];
 
     await expect(
-      updateSpellStep(asUser(B), WORKSPACE_W_ID, mine, stepOfOther.id, { note: 'Crossed' }),
+      updateSpellStep(asUser(B), WORKSPACE_W_ID, mine, stepOfOther.id, { body: 'Crossed' }),
     ).rejects.toBeInstanceOf(NotFound);
   });
 });
@@ -412,7 +412,7 @@ describe('createSpell, with its recipe', () => {
       title: 'Layered Jar',
       steps: [
         { body: 'Cleanse the jar.' },
-        { ...coven, quantity: 2, unit: 'tsp', note: 'Packed down', body: 'Lay the leaf.' },
+        { ...coven, quantity: 2, unit: 'tsp', body: 'Lay the leaf.' },
         { name: 'Fixture Pebble', form: 'whole' },
         compendium,
       ],
@@ -430,7 +430,6 @@ describe('createSpell, with its recipe', () => {
       variant_id: coven.variantId,
       quantity: '2.000',
       unit: 'tsp',
-      note: 'Packed down',
       body: 'Lay the leaf.',
     });
     // The instruction-only step reads back in its place.
@@ -604,7 +603,7 @@ describe('updateSpell, with its recipe', () => {
     await updateSpell(asUser(B), WORKSPACE_W_ID, id, {
       expectedRevision: null,
       steps: [
-        { id: ids[1], ...gone, note: 'Kept' },
+        { id: ids[1], ...gone, body: 'Kept' },
         { id: ids[0], body: 'Begin.' },
       ],
     });

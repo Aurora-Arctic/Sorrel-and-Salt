@@ -55,7 +55,6 @@ const SPELL: SpellBuilderSpell = {
       form: 'dried leaf',
       quantity: 3,
       unit: 'g',
-      note: null,
       body: null,
       ingredient: { id: ID.rosewort, toxic: false, safetyNotes: null, categories: [], stock: [] },
       variant: {
@@ -72,7 +71,6 @@ const SPELL: SpellBuilderSpell = {
       form: null,
       quantity: null,
       unit: null,
-      note: null,
       body: null,
       ingredient: null,
       variant: null,
@@ -83,7 +81,6 @@ const SPELL: SpellBuilderSpell = {
       form: null,
       quantity: null,
       unit: null,
-      note: null,
       body: 'Stir thrice',
       ingredient: null,
       variant: null,

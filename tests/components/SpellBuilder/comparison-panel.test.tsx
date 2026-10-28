@@ -27,7 +27,6 @@ function step(name: string, categories: string[], extra: Partial<SpellStepValue>
     unit: '',
     savedUnit: null,
     body: null,
-    note: null,
     icon: null,
     categories: categories.map(cat),
     jarUnit: null,
@@ -226,7 +225,6 @@ describe('the panel in the builder', () => {
                 form: 'dried leaf',
                 quantity: null,
                 unit: null,
-                note: null,
                 body: null,
                 ingredient: {
                   id: id(4),

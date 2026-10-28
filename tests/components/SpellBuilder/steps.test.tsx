@@ -522,7 +522,6 @@ describe('the spell builder’s Add to Jar', () => {
             form: 'dried leaf',
             quantity: 3,
             unit: 'g',
-            note: null,
             body: null,
             ingredient: {
               id: ID.rosewort,
@@ -545,7 +544,6 @@ describe('the spell builder’s Add to Jar', () => {
             form: null,
             quantity: null,
             unit: null,
-            note: null,
             body: null,
             ingredient: null,
             variant: null,
@@ -691,7 +689,6 @@ describe('the spell builder’s safety warning', () => {
             form: 'root',
             quantity: null,
             unit: null,
-            note: null,
             body: null,
             ingredient: {
               id: ID.mockroot,

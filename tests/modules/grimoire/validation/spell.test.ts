@@ -35,15 +35,19 @@ describe('SpellStepInput', () => {
     expect(SpellStepInput.safeParse({ name: 'Testwort', form: 'dried' }).success).toBe(true);
   });
 
-  it('takes an instruction beside an identity, with an amount and a note', () => {
+  it('takes an instruction beside an identity, with an amount', () => {
     const input = {
       body: 'Layer it first',
       name: 'Testwort',
       quantity: 2.5,
       unit: 'g',
-      note: 'for grounding',
     };
     expect(SpellStepInput.parse(input)).toMatchObject(input);
+  });
+
+  // The step note is retired: `body` is the one text (pr1308-step-note-retired.md).
+  it('drops a note an old client still sends', () => {
+    expect(SpellStepInput.parse({ body: 'Stir', note: 'old' })).toEqual({ body: 'Stir' });
   });
 
   // spell_steps_not_empty
@@ -63,15 +67,14 @@ describe('SpellStepInput', () => {
   it.each([
     ['quantity', { quantity: 1 }],
     ['unit', { unit: 'g' }],
-    ['note', { note: 'a line' }],
   ])('refuses %s on an instruction-only step', (field, extra) => {
     expect(failedPaths({ body: 'Stir', ...extra })).toEqual([[field]]);
   });
 
-  it('takes null for the amount and note on an instruction-only step', () => {
-    expect(
-      SpellStepInput.safeParse({ body: 'Stir', quantity: null, unit: null, note: null }).success,
-    ).toBe(true);
+  it('takes null for the amount on an instruction-only step', () => {
+    expect(SpellStepInput.safeParse({ body: 'Stir', quantity: null, unit: null }).success).toBe(
+      true,
+    );
   });
 
   // spell_steps_form_only_on_custom
