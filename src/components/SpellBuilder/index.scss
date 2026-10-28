@@ -22,10 +22,37 @@
   max-inline-size: $narrow-column;
 }
 
+// The two-column rhythm the Purpose section and the Jar section share, so Categories and the
+// Jar's aside are one column: the main column's least width, the gap, the side column's width
+// (border-box, so its line and its padding are inside it) and the container width at which both
+// fit. The side column's content starts `$spell-side-inset` past its edge, in both sections.
+$spell-main-min: 28rem;
+$spell-side: 21rem;
+$spell-columns-gap: space(4);
+$spell-side-inset: space(4);
+$spell-columns-switch: $spell-main-min + $spell-columns-gap + $spell-side;
+
+// The side column's dividing line, drawn as its own border so no element is added for a screen
+// reader, with the same padding on the content's side: above it when the columns stack, beside
+// it when they sit side by side. Both sections use these, so the line and the content line up.
+@mixin spell-side-stacked {
+  box-sizing: border-box;
+  padding-block-start: space(4);
+  border-block-start: 1px solid $hairline;
+}
+
+@mixin spell-side-beside {
+  padding-block-start: 0;
+  padding-inline-start: $spell-side-inset;
+  border-block-start: 0;
+  border-inline-start: 1px solid $hairline;
+}
+
 // The Purpose section's two columns: Title and Intent at the left, capped as above, and
 // Categories at the right, top-aligned with Title. The section's own width is the container
 // (not the screen's), so the pair stacks (Title, Intent, Categories) when the dialog is too
-// narrow for both. The right column needs 18rem to be usable, beside the cap and the gap.
+// narrow for both: at the Jar's own switch point, with Categories the Jar aside's width and
+// left edge (the shared numbers above).
 // `minmax(0, ...)` on each track lets a long chip row shrink rather than push the dialog wider.
 .spell-purpose {
   container: spell-purpose / inline-size;
@@ -39,11 +66,21 @@
   min-width: 0;
 }
 
-@container spell-purpose (min-width: #{$narrow-column + space(5) + 18rem}) {
+.spell-purpose__columns > :last-child {
+  @include spell-side-stacked;
+}
+
+@container spell-purpose (min-width: #{$spell-columns-switch}) {
   .spell-purpose__columns {
     display: grid;
-    grid-template-columns: minmax(0, $narrow-column) minmax(0, 1fr);
-    align-items: start;
+    grid-template-columns: minmax(0, 1fr) $spell-side;
+    column-gap: $spell-columns-gap;
+    // Stretched, so Categories' line runs the height of Title and Intent, as the aside's does.
+    align-items: stretch;
+  }
+
+  .spell-purpose__columns > :last-child {
+    @include spell-side-beside;
   }
 }
 
@@ -199,12 +236,12 @@
   display: flex;
   flex-wrap: wrap;
   align-items: flex-start;
-  gap: space(4);
+  gap: $spell-columns-gap;
   container: spell-jar / inline-size;
 }
 
 .spell-jar-layout__list {
-  flex: 999 1 28rem;
+  flex: 999 1 $spell-main-min;
   min-width: 0;
 
   // The steps section's bare-`section` rhythm margin (_layout.scss) would push What Goes In
@@ -219,12 +256,11 @@
 .spell-aside {
   display: flex;
   box-sizing: border-box;
-  flex: 1 1 21rem;
+  flex: 1 1 $spell-side;
   flex-direction: column;
   gap: space(3);
   min-width: 0;
-  padding-block-start: space(4);
-  border-block-start: 1px solid $hairline;
+  @include spell-side-stacked;
 
   h4,
   h5 {
@@ -232,13 +268,10 @@
   }
 }
 
-// 50rem is the width at which both columns fit: 28rem, 1rem, 21rem.
-@container spell-jar (min-width: 50rem) {
+// The width at which both columns fit (`$spell-columns-switch`, 50rem).
+@container spell-jar (min-width: #{$spell-columns-switch}) {
   .spell-aside {
-    padding-block-start: 0;
-    padding-inline-start: space(4);
-    border-block-start: 0;
-    border-inline-start: 1px solid $hairline;
+    @include spell-side-beside;
   }
 }
 
