@@ -120,6 +120,30 @@ says `private` and is refused by the service (`assertWidens`, M10.6); the
 refusal's words, which explain the rule and name Delete, show in the
 `Notice`, never a bare "Forbidden".
 
+## Draft and complete
+
+Whether the spell is finished (M10.20, story 55): `SpellStatusField`, in
+`status-field.tsx`, drawn in the Notes section before the visibility switch.
+A spell is a `draft` until it is marked `complete`. The control is one
+button that says what it will do: Mark Complete on a draft, Reopen as Draft on
+a complete spell, with a line above it saying what the state means. Like Share
+With the Coven, a click saves the whole form with the other status at once, so
+the status is never a pick left pending.
+
+- **A new spell** is a draft (`valuesOf` reads a missing status as one).
+- **A blank title** is refused before anything is sent: the form holds the asked-for status while it validates, so the schema's rule shows it on the title field,
+  with `COMPLETE_NEEDS_TITLE` (validation/spell.ts), the words for the
+  database's `spells_complete_has_title` check (M13.15). Focus goes to the title.
+- **Reopening** keeps the spell's workings. Refusing a new working on a draft
+  belongs to the workings service, which does not exist yet; this control only
+  sets the status.
+- **Autosave:** Mark Complete will flush a pending autosave first once M13.17
+  exists. Until then the save it sends already carries every unsaved change.
+- **The list** shows status already: the Drafts tab, and a Draft badge on each
+  draft's card (M10.11).
+- The stock check's `unitConvert` refusals are shown as text by the stock
+  check itself (M10.19), not by this control.
+
 ## Two error surfaces
 
 As in the ingredient form (M5.9): the shared schema runs as the form's

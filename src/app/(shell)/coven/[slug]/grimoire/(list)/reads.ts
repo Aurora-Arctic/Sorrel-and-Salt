@@ -101,7 +101,7 @@ export async function readEditedSpell(
     const spell = await readSpell(session, workspaceId, id);
     const { revision, title, intent, jarDescription, sealWaxColor, moonPhase, dayOfWeek, note } =
       spell;
-    const { visibility } = spell;
+    const { visibility, status } = spell;
     return {
       id,
       revision,
@@ -113,6 +113,7 @@ export async function readEditedSpell(
       dayOfWeek,
       note,
       visibility,
+      status,
     };
   } catch (error) {
     if (error instanceof NotFound || error instanceof Forbidden) return undefined;
