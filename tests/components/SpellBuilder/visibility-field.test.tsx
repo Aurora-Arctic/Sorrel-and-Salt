@@ -25,12 +25,16 @@ beforeEach(() => offerCategories([]));
 // narrowing is tests/modules/grimoire/services/spells.test.ts's (M10.6); here
 // the builder shows that refusal's words in its notice.
 
+// A saved spell opens with its sections shut (M10.12), so each is opened
+// with Open All, as a person reaches the switch in Notes.
 function renderBuilder(props: Partial<SpellBuilderProps> = {}) {
-  return render(
+  const view = render(
     <QueryClientProvider client={makeQueryClient()}>
       <SpellBuilder workspaceId="w1" {...props} />
     </QueryClientProvider>,
   );
+  if (props.spell) fireEvent.click(screen.getByRole('button', { name: 'Open All' }));
+  return view;
 }
 
 // A switch (the owner's call, 2026-10-27): on is the coven, off is private.

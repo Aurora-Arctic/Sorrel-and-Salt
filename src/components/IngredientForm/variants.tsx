@@ -497,7 +497,7 @@ function VariantFieldset({
           far as a form's fields go (MB.115, the owner's call): its Form is
           its identity. A level beneath the Variants heading, each folding
           as the ingredient's do, its closed line read as theirs is. */}
-        <div className="ingredient-form__folds">
+        <div className="collapsible-sections">
           <CollapsibleSection
             title="Identity"
             level={4}

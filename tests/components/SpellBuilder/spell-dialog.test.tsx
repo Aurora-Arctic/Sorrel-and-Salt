@@ -51,6 +51,7 @@ function renderDialog(opened: SpellDialogProps['opened'], canCreate = true) {
       <SpellDialog
         workspaceId="w1"
         covenSlug="testwort-coven"
+        covenName="Testwort Coven"
         closeHref={CLOSE}
         opened={opened}
         canCreate={canCreate}
@@ -64,6 +65,8 @@ const field = (name: string) => within(dialog()).getByRole('textbox', { name });
 const type = (name: string, value: string) => fireEvent.change(field(name), { target: { value } });
 const save = () => within(dialog()).getByRole('button', { name: /^Sav/ });
 const close = () => within(dialog()).getByRole('button', { name: 'Close' });
+// A saved spell opens with its sections shut, as an edited ingredient does: Open All shows its fields.
+const openAll = () => fireEvent.click(within(dialog()).getByRole('button', { name: 'Open All' }));
 
 /** The spell as the server answers a save: every field as sent, at `revision`. */
 function answer(id: string, revision: number, input: CreateSpellMutationVariables['input']) {
@@ -121,10 +124,12 @@ describe('SpellDialog', () => {
     expect(screen.queryByRole('dialog')).not.toBeInTheDocument();
   });
 
-  it('opens New Spell as a wide dialog with the builder empty', () => {
+  // Headed as Add Ingredient is (M8.16): the coven it lands in over the title, the dialog named
+  // by the phrase.
+  it('opens New Spell to its coven, with the builder empty', () => {
     renderDialog({});
 
-    expect(screen.getByRole('dialog', { name: 'New Spell' })).toBeInTheDocument();
+    expect(screen.getByRole('dialog', { name: 'New Spell to Testwort Coven' })).toBeInTheDocument();
     expect(field('Title')).toHaveValue('');
     expect(field('Intent')).toHaveValue('');
   });
@@ -136,7 +141,7 @@ describe('SpellDialog', () => {
     address.search = 'new=spell-testwort-coven';
     renderDialog(undefined);
 
-    expect(screen.getByRole('dialog', { name: 'New Spell' })).toBeInTheDocument();
+    expect(screen.getByRole('dialog', { name: 'New Spell to Testwort Coven' })).toBeInTheDocument();
     expect(field('Title')).toHaveValue('');
   });
 
@@ -144,7 +149,7 @@ describe('SpellDialog', () => {
     address.search = 'new=spell';
     renderDialog(undefined);
 
-    expect(screen.getByRole('dialog', { name: 'New Spell' })).toBeInTheDocument();
+    expect(screen.getByRole('dialog', { name: 'New Spell to Testwort Coven' })).toBeInTheDocument();
   });
 
   it('opens nothing for another coven’s ?new=spell-<slug>', () => {
@@ -172,6 +177,7 @@ describe('SpellDialog', () => {
     renderDialog({ spell: SAVED });
 
     expect(screen.getByRole('dialog', { name: 'Edit Spell, Fixture Working' })).toBeInTheDocument();
+    openAll();
     expect(field('Title')).toHaveValue('Fixture Working');
     expect(field('Intent')).toHaveValue('Calm');
   });
@@ -219,6 +225,7 @@ describe('SpellDialog', () => {
   it('does not swap the address on saving a spell it opened saved', async () => {
     const updated = acceptUpdate();
     renderDialog({ spell: SAVED });
+    openAll();
     type('Intent', 'Calmer');
 
     fireEvent.click(save());
@@ -270,6 +277,7 @@ describe('SpellDialog', () => {
     it('saves a saved spell’s change as an update before it closes', async () => {
       const updated = acceptUpdate();
       renderDialog({ spell: SAVED });
+      openAll();
       type('Intent', 'Calmer');
 
       await act(async () => {

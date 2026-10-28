@@ -12,3 +12,8 @@ export interface GrimoireTabProps extends GrimoireTabParams {
   /** '' for Spells, the grimoire itself; '/drafts' for Drafts. */
   beneath: '' | '/drafts';
 }
+
+/** New Spell's press, which draws the dialog's head at once, naming the coven the spell lands in. */
+export interface NewSpellActionProps {
+  covenName: string;
+}
