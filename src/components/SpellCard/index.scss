@@ -81,6 +81,18 @@
   }
 }
 
+// The words and the badges are positioned so they paint over the face and the glow, as the
+// card's direct children do (the top row is left static above, for the overlay's sake). The
+// badges also pass a click through to the overlay.
+.spell-card__title-text {
+  position: relative;
+}
+
+.spell-card .spell-card__heading > .specimen__badges {
+  position: relative;
+  pointer-events: none;
+}
+
 // The title block and the Edit pencil share the top row; the title's first word decides
 // when the pencil wraps below, as an ingredient card's name does.
 .spell-card__heading {

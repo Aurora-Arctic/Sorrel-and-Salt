@@ -51,14 +51,20 @@ const SpellCard = ({
       <div className="specimen__top">
         <div className="spell-card__heading">
           <Heading id={spellTitleId(id)} className="spell-card__title">
+            {/* The words are their own positioned span, inside the link so the link's overlay
+                is not placed against it: the top row is unpositioned so the overlay is placed
+                against the article, and unpositioned words would paint under the smouldering
+                face (index.scss). */}
             {href ? (
               // The recipe page draws its own frame while it loads, so the link names it (MB.6).
               // The link stretches over the whole card, as an ingredient card's name does.
               <PendingLink href={href} navigationTarget={ingredientLinkTarget(href)}>
-                {name} <LinkHint />
+                <span className="spell-card__title-text">
+                  {name} <LinkHint />
+                </span>
               </PendingLink>
             ) : (
-              name
+              <span className="spell-card__title-text">{name}</span>
             )}
           </Heading>
           {/* Only a draft is marked: complete is the default, so a Complete badge would
