@@ -5,7 +5,8 @@ import fs from 'node:fs';
 import { buildCoverageSection } from './lib/coverage-table.mjs';
 
 const RESULTS_PATH = '/app/stories.json';
-// This run's own report: not merged with the gate suite's or Vitest's.
+// This run's own report. The gate suite's is merged with it by
+// merge-playwright-coverage.mjs, in a comment of its own; Vitest's never is.
 const COVERAGE_SUMMARY_PATH = '/app/.reports/coverage-e2e/coverage-summary.json';
 const REPO_ROOT = '/app';
 

@@ -92,7 +92,10 @@ after them. It calls `playwright.yml` with
 (`.github/scripts/summarize-stories.mjs`), the check name and the comment
 thread (marker `stories`). Its comment carries the story suite's own coverage
 figure and per-file table (M14.28), and the coverage artifact is named
-`playwright-coverage-stories`. It is never a
+`playwright-coverage-stories`. The `playwright-coverage` job then merges
+this suite's coverage with the gate suite's and posts the merged figure in a
+"Playwright Coverage" comment of its own (`testing/coverage.md`, "The merged
+report"); like the suite, it is never a required check. It is never a
 required check, and the run step carries `continue-on-error: true` (a job that
 calls a workflow cannot carry it), so a red scaffold or an unfinished story
 shows in the PR's Stories comment, read from `steps.run.outcome`, without
