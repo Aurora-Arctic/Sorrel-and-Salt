@@ -198,12 +198,29 @@
   markdown checklist), the check name, the comment thread
   (`marker-slug: stories`) and the report artifact's name (`stories-report`,
   since one workflow run may not upload two artifacts under one name), and
-  skips the coverage artifact. The run step carries `continue-on-error: true`
+  the coverage artifact's (`playwright-coverage-stories`, M14.28). The
+  summariser adds this run's own coverage figure and table through
+  `lib/coverage-table.mjs`, as `summarize-playwright.mjs` does, and posts the
+  checklist alone when no report was written. Both suites' coverage artifacts
+  hold monocart's raw data too, for the `playwright-coverage` job below. The run step carries `continue-on-error: true`
   for stories, since a job that calls a workflow cannot, so a red story never
   fails the job; the comment reads the real result from `steps.run.outcome`,
   and so does the report upload. It is never a required check, which keeps red
   scaffolds off the merge path, and nothing waits on it, which keeps the
   gate's time down (`claude-docs/testing/acceptance.md`).
+- **`playwright-coverage.yml`** (M14.28) — the two Playwright suites'
+  coverage, merged, called by `pr-gate.yml`'s `playwright-coverage` job in the
+  `testing` image. That job `needs` `playwright` and `stories` and runs after
+  both whatever their result (its `!cancelled()` is the one job-level `if:` in
+  the file, safe because it is no required check; the workflow carries
+  `continue-on-error` too). It is a called workflow, not a job with its own
+  runner, so an edit's run that cancels itself leaves it skipped, as for the
+  other called workflows. Its steps run only when `changes` says a suite ran
+  (`should-run`), and post nothing otherwise. It downloads each coverage artifact
+  by name into a folder of its own, `merge-playwright-coverage.mjs` merges the
+  `raw/` data that is there, and the job uploads `playwright-coverage-merged`, writes the job
+  summary and comments as "Playwright Coverage" (`marker-slug: playwright-coverage`).
+  The summary line names the suites included.
 - **`playwright.yml`** (M1.14) — `npm run e2e` against the servers
   `webServer` builds and starts: one per worker slot on 8001 and up — four
   on GitHub's 4-vCPU runner, since the job sets `E2E_WORKERS: 4` over the
@@ -215,7 +232,7 @@
   as `vitest.yml`, fed by the same caller-built `build-db-image` job (one
   build, shared by both — see `vitest.yml`'s entry above). Uploads
   `.reports/playwright-report/`/`.reports/test-results/` on failure and
-  `.reports/coverage-e2e/` always (parallel to `vitest.yml`'s
+  `.reports/coverage-e2e/` always (named `playwright-coverage`; parallel to `vitest.yml`'s
   `.reports/coverage/` upload). Its reporters (`list`, `json`, `html`) come
   from `playwright.config.ts` under `CI`, not from the command line: a CLI
   `--reporter` replaces the config's list and with it the html report's
