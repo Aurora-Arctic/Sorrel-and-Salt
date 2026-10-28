@@ -1,6 +1,7 @@
 'use client';
 
 import { type ReactElement, useState } from 'react';
+import { flushSync } from 'react-dom';
 import { useFormContext, useFormState } from 'react-hook-form';
 import BusyButton from '../BusyButton';
 import type { SpellBuilderInput, SpellBuilderValues, SpellStatusFieldProps } from './types';
@@ -11,8 +12,8 @@ import type { SpellBuilderInput, SpellBuilderValues, SpellStatusFieldProps } fro
 // saves everything the form holds with the other status, as Share With the Coven
 // does, so the status is never a pick left pending. A complete spell needs a title
 // (M13.15's CHECK): its absence is said on the title field, before anything is sent.
-// Marking complete will flush a pending autosave first once M13.17 exists; there is
-// no autosave to flush yet, and this save already carries every unsaved change.
+// Marking complete flushes the autosave with the other status, which carries every unsaved
+// change in the same save.
 // claude-docs/components/spell-builder.md, "Draft and complete".
 
 /** What each saved status says about itself, and the action that changes it. */
@@ -31,7 +32,7 @@ const STATES = {
   },
 } as const;
 
-export function SpellStatusField({ save }: SpellStatusFieldProps): ReactElement {
+export function SpellStatusField({ flush }: SpellStatusFieldProps): ReactElement {
   const { control, getValues, handleSubmit, setFocus, setValue } = useFormContext<
     SpellBuilderValues,
     unknown,
@@ -46,17 +47,24 @@ export function SpellStatusField({ save }: SpellStatusFieldProps): ReactElement 
     // The form holds the status being asked for while it validates, so the
     // schema's title rule (the CHECK's mirror) refuses a blank title through
     // the same submit as any field, shown on the title field with focus on it.
-    // It is put back after, so the form's own status is only ever a save's.
+    // It is put back if the title is refused or the save fails, so the form's
+    // own status is never one the server has not taken. Drawn before the flush
+    // so the autosave has seen the change when it is asked to save.
     const before = getValues('status');
-    setValue('status', state.next);
+    flushSync(() => setValue('status', state.next));
     setBusy(true);
     try {
       await handleSubmit(
-        (values) => save({ ...values, status: state.next }),
-        () => setFocus('title'),
+        () => flush(),
+        () => {
+          setValue('status', before);
+          setFocus('title');
+        },
       )();
-    } finally {
+    } catch {
+      // The refusal is shown beside Save and on its field.
       setValue('status', before);
+    } finally {
       setBusy(false);
     }
   };

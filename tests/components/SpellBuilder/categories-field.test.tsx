@@ -228,6 +228,9 @@ describe('the spell builder’s categories', () => {
     expect(box()).toHaveAccessibleDescription(/Fixture Shield/);
     expect(box()).not.toHaveAccessibleDescription(/Testward/);
     // Placed beside its field, so no notice above the form repeats it.
-    expect(screen.queryByRole('alert')).toBeNull();
+    // Only the save status speaks; no notice repeats the field’s error.
+    expect(
+      screen.queryAllByRole('alert').filter((a) => !/Couldn.t save/.test(a.textContent ?? '')),
+    ).toEqual([]);
   });
 });

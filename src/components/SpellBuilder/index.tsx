@@ -1,12 +1,19 @@
 'use client';
 
 import { zodResolver } from '@hookform/resolvers/zod';
-import { useMutation } from '@tanstack/react-query';
 import { type ReactElement, type ReactNode, useEffect, useRef, useState } from 'react';
 import { FormProvider, type Resolver, useForm, useWatch } from 'react-hook-form';
 import { CollapsibleSection, FoldAll } from '../CollapsibleSection';
-import { graphql } from '../../gql';
-import { graphqlRequest } from '../../lib/graphql-client';
+import {
+  type MirrorEntry,
+  type SaveContext,
+  type SaveResult,
+  clearMirror,
+  mirrorKey,
+  readMirror,
+  useAutosave,
+} from '../../lib/autosave';
+import { GraphQLClientError, StaleWriteError } from '../../lib/graphql-client-error';
 import { placeServerIssues } from '../../lib/graphql-failure';
 import {
   FormActions,
@@ -15,16 +22,26 @@ import {
   TextField,
   useFormHistory,
 } from '../Field';
+import { clockTime } from '../LastEdit/relative';
 import MoonPhaseIcon from '../MoonPhaseIcon';
 import Notice from '../Notice';
+import SaveStatus from '../SaveStatus';
 import Skeleton from '../Skeleton';
 import { SpellCategoriesField, sameCategories, useCategoryName } from './categories-field';
 import { SpellComparison } from './comparison-panel';
 import { DAYS_OF_THE_WEEK, MOON_PHASES } from './constants';
+import { saveSpell } from './autosave';
 import { useSaveOnClose } from './save-on-close';
 import { SpellSteps } from './steps';
 import type { SpellStepSend } from './steps/types';
-import { stepInputOf, stepValueOf, stepsChanged, unitIssues } from './steps/values';
+import {
+  isBlankNewInstruction,
+  isBlankSavedInstruction,
+  stepInputOf,
+  stepValueOf,
+  stepsChanged,
+  unitIssues,
+} from './steps/values';
 import { SpellStatusField } from './status-field';
 import { SpellSuggestField } from './suggest-field';
 import { SpellInput } from '@/modules/grimoire/validation/spell';
@@ -45,129 +62,12 @@ import './index.scss';
 // line naming what it holds, and Open All / Close All in the dialog's head. Moon phase and day of the week suggest a
 // fixed list and still take what is typed (./constants). No field is
 // required: a draft may be saved with any of them, and a title is asked for
-// only when the spell is marked complete (M10.20). Save creates the spell
-// once and the builder then holds its id and revision, so every later Save
-// updates that spell, as the autosave adapter will
-// (claude-docs/design-decisions/m13.14-plan.md); `onCreated` hears of the
-// first, so the dialog's address can become the draft's. There is no Cancel:
-// Close saves what is unsaved, then closes (./save-on-close.ts). See
-// claude-docs/components/spell-builder.md.
-
-const CreateSpellDocument = graphql(`
-  mutation CreateSpell($workspaceId: ID!, $input: SpellInput!) {
-    createSpell(workspaceId: $workspaceId, input: $input) {
-      id
-      revision
-      title
-      intent
-      jarDescription
-      sealWaxColor
-      moonPhase
-      dayOfWeek
-      note
-      steps {
-        id
-        name
-        form
-        quantity
-        unit
-        note
-        body
-        ingredient {
-          id
-          toxic
-          safetyNotes
-          categories {
-            id
-            name
-          }
-          stock(workspaceId: $workspaceId) {
-            unit
-            quantityOnHand
-            lowStockThreshold
-            variant {
-              id
-            }
-          }
-        }
-        variant {
-          id
-          toxic
-          safetyNotes
-          categories {
-            id
-            name
-          }
-          formChoice {
-            group {
-              icon
-            }
-          }
-        }
-      }
-      visibility
-      status
-    }
-  }
-`);
-
-const UpdateSpellDocument = graphql(`
-  mutation UpdateSpell($workspaceId: ID!, $id: ID!, $input: UpdateSpellInput!) {
-    updateSpell(workspaceId: $workspaceId, id: $id, input: $input) {
-      id
-      revision
-      title
-      intent
-      jarDescription
-      sealWaxColor
-      moonPhase
-      dayOfWeek
-      note
-      steps {
-        id
-        name
-        form
-        quantity
-        unit
-        note
-        body
-        ingredient {
-          id
-          toxic
-          safetyNotes
-          categories {
-            id
-            name
-          }
-          stock(workspaceId: $workspaceId) {
-            unit
-            quantityOnHand
-            lowStockThreshold
-            variant {
-              id
-            }
-          }
-        }
-        variant {
-          id
-          toxic
-          safetyNotes
-          categories {
-            id
-            name
-          }
-          formChoice {
-            group {
-              icon
-            }
-          }
-        }
-      }
-      visibility
-      status
-    }
-  }
-`);
+// only when the spell is marked complete (M10.20). The builder autosaves
+// (M13.17, ./autosave.ts): a change saves 3 s after the last, Save saves at
+// once, and the first save creates the spell, after which the builder holds
+// its id and revision and `onCreated` moves the dialog's address to it. There
+// is no Cancel: Close saves what is unsaved, then closes (./save-on-close.ts).
+// See claude-docs/components/spell-builder.md.
 
 const FIELDS: readonly SpellBuilderField[] = [
   'title',
@@ -240,7 +140,7 @@ function valuesOf(spell?: Partial<SpellBuilderSpell>): SpellBuilderValues {
     >),
     steps: (spell?.steps ?? []).map(stepValueOf),
     // A new spell is the coven's unless chosen otherwise (§5).
-    visibility: spell?.visibility ?? 'workspace',
+    visibility: spell?.visibility ?? 'private',
     // A new spell is a draft (M10.20).
     status: spell?.status ?? 'draft',
     categoryIds: [...(spell?.categoryIds ?? [])],
@@ -268,19 +168,38 @@ const resolver: Resolver<SpellBuilderValues, unknown, SpellBuilderInput> = async
   context,
   options,
 ) => {
+  // A new blank instruction is not checked until a save is asked for (Save
+  // or Close), since the autosave leaves it out and says nothing of it.
+  const asked = (context as { current: boolean } | undefined)?.current === true;
+  const kept = values.steps.flatMap((step, index) =>
+    asked || !isBlankNewInstruction(step) ? [index] : [],
+  );
   const result = await schemaResolver(
-    { ...values, steps: values.steps.map(stepInputOf) },
+    { ...values, steps: kept.map((index) => stepInputOf(values.steps[index]!)) },
     context,
     options as unknown as Parameters<typeof schemaResolver>[2],
   );
   const issues = unitIssues(values.steps);
-  if (issues.size === 0) return result as Awaited<ReturnType<typeof resolver>>;
-  const errors: Record<string, unknown> = { ...result.errors };
-  const steps: Record<string, unknown>[] = Array.isArray(errors.steps) ? [...errors.steps] : [];
+  const { steps: checked, ...otherErrors } = result.errors as Record<string, unknown>;
+  // The errors name the steps by their place among those checked: back to the form's.
+  const found: Record<string, unknown>[] = [];
+  if (Array.isArray(checked)) {
+    checked.forEach((error: Record<string, unknown>, at: number) => {
+      if (error && kept[at] !== undefined) found[kept[at]!] = error;
+    });
+  }
+  if (issues.size === 0 && !found.some(Boolean) && Object.keys(otherErrors).length === 0) {
+    return { values: result.values, errors: {} } as Awaited<ReturnType<typeof resolver>>;
+  }
+  const errors: Record<string, unknown> = { ...otherErrors };
+  const steps: Record<string, unknown>[] = [...found];
   for (const [index, message] of issues) {
     steps[index] = { ...steps[index], unit: { type: 'unit', message } };
   }
-  return { values: {}, errors: { ...errors, steps } } as Awaited<ReturnType<typeof resolver>>;
+  return {
+    values: {},
+    errors: { ...errors, ...(steps.some(Boolean) ? { steps } : {}) },
+  } as Awaited<ReturnType<typeof resolver>>;
 };
 
 // A moon phase's drawing beside its name, null for a phase typed outside
@@ -289,24 +208,38 @@ const resolver: Resolver<SpellBuilderValues, unknown, SpellBuilderInput> = async
 const moonPhaseIcon = (phase: string): ReactElement | null =>
   (MOON_PHASES as readonly string[]).includes(phase) ? <MoonPhaseIcon phase={phase} /> : null;
 
-/** Said in the jar's place, and above the fields when a save is tried, while a saved spell's steps cannot be read. */
+/** Said in the jar's place while a saved spell's steps cannot be read. */
 const STEPS_FAILED =
   "The spell's steps could not be loaded, so nothing can be saved. Reload the page to try again.";
 
-/** Said above the fields when a save is tried before a saved spell's steps have landed. */
-const STEPS_LOADING = "The spell's steps are still loading. Try again once they show.";
+/** Said on the form when a save is tried while a field holds an error the form shows. */
+const FIX_FIELDS = 'Some fields need fixing before this can be saved.';
+
+/** The error a save throws for a form the browser's own check refused: a refusal, so the hook does not retry it. */
+const fieldsRefused = (): GraphQLClientError =>
+  new GraphQLClientError({
+    status: 400,
+    errors: [{ message: FIX_FIELDS, extensions: { code: 'VALIDATION' } }],
+  });
 
 const SpellBuilder = ({
   workspaceId,
+  userId,
   spell,
   onCreated,
   stepsRead,
 }: SpellBuilderProps): ReactElement => {
-  // The spell this builder saves to: the one it opened, else the one its first save created.
-  const [saved, setSaved] = useState(spell ? { id: spell.id, revision: spell.revision } : null);
+  // The spell this builder opened on. The dialog hands the builder a different
+  // `spell` once the builder's own first save has moved the address to it; the
+  // builder keeps what it opened with and carries the id its save returned.
+  const [opened] = useState(spell);
+  const [createdId, setCreatedId] = useState<string | null>(null);
+  // True while a save the person asked for runs: the resolver then checks a blank new instruction too.
+  const asked = useRef(false);
   const methods = useForm<SpellBuilderValues, unknown, SpellBuilderInput>({
     defaultValues: valuesOf(spell),
     resolver,
+    context: asked,
     // A field is checked when it is first left, and on every change after,
     // as the ingredient form's are (M5.9).
     mode: 'onTouched',
@@ -314,35 +247,43 @@ const SpellBuilder = ({
   });
   const {
     control,
-    handleSubmit,
     reset,
     getValues,
     setError,
     setValue,
-    formState: { errors, isSubmitting, defaultValues },
+    trigger,
+    handleSubmit,
+    clearErrors,
+    formState: { errors, defaultValues },
   } = methods;
 
   // Something to save: a field that reads differently from the last save,
   // blank and spaces alike reading as none, as the schema reads them, or a
-  // visibility other than the last save's, which is a choice worth saving on
-  // its own (the owner's call, 2026-10-27), a changed category pick, or a
-  // changed step.
+  // visibility or status other than the last save's, which is a choice worth
+  // saving on its own (the owner's call, 2026-10-27), a changed category pick,
+  // or a changed step.
   const typed = useWatch({ control, name: [...FIELDS] });
   const picked = useWatch({ control, name: 'categoryIds' });
   const categoriesChanged = !sameCategories(picked, defaultValues?.categoryIds);
   const visibility = useWatch({ control, name: 'visibility' });
+  const status = useWatch({ control, name: 'status' });
   const steps = useWatch({ control, name: 'steps' });
   const values = useWatch({ control }) as SpellBuilderValues;
   const categoryName = useCategoryName();
+  // The autosave never sends a blank new instruction: it stays in the form, unsaved and unmentioned.
+  const sendable = steps.filter((step) => !isBlankNewInstruction(step));
   const dirty =
     categoriesChanged ||
     visibility !== defaultValues?.visibility ||
+    status !== defaultValues?.status ||
     FIELDS.some(
       (field, index) => (typed[index] ?? '').trim() !== (defaultValues?.[field] ?? '').trim(),
     ) ||
-    stepsChanged(steps, (defaultValues?.steps ?? []) as SpellBuilderValues['steps']);
+    stepsChanged(sendable, (defaultValues?.steps ?? []) as SpellBuilderValues['steps']);
   // A unit the jar cannot be measured in holds Save, as the service would refuse it.
   const unitRefused = unitIssues(steps).size > 0;
+  // A saved instruction cleared of its text cannot be left out (that would delete it), so the autosave waits.
+  const blankSaved = steps.some(isBlankSavedInstruction);
 
   // A new spell opens every section, to be filled in order; a saved one opens
   // them shut, each line saying what it holds, as Add Ingredient's do (M8.16).
@@ -388,92 +329,191 @@ const SpellBuilder = ({
   const root = useRef<HTMLFormElement>(null);
   const history = useFormHistory(methods, { root });
 
-  const save = useMutation({
-    mutationFn: async (input: SpellBuilderInput): Promise<SpellBuilderSpell> => {
-      if (saved === null) {
-        const { createSpell } = await graphqlRequest(CreateSpellDocument, { workspaceId, input });
-        return createSpell;
+  // The steps of a saved spell are on their way, or could not be read: until
+  // they are in the form nothing is saved, since an update's steps are the
+  // whole recipe and one sent now would remove the rest.
+  const [jarReady, setJarReady] = useState(stepsRead === undefined);
+
+  /** Places a refused save's issues beside their fields, or above them all. */
+  const placeIssues = (error: unknown) => {
+    placeServerIssues(error, setError, ({ path: [field, ...rest] }) => {
+      // A refused pick is pathed to its index, as the ids were sent.
+      if (field === 'categoryIds') {
+        return rest.length === 0 ? 'categoryIds' : `categoryIds.${Number(rest[0])}`;
       }
-      const { updateSpell } = await graphqlRequest(UpdateSpellDocument, {
-        workspaceId,
-        id: saved.id,
-        input: { ...input, expectedRevision: saved.revision },
-      });
-      return updateSpell;
-    },
-  });
+      if (rest.length === 0 && isField(field)) return field;
+      // A step's amount, beside it; anything else of a step above the form.
+      const [index, part] = rest;
+      if (
+        field === 'steps' &&
+        typeof index === 'number' &&
+        (part === 'quantity' || part === 'unit')
+      )
+        return `steps.${index}.${part}` as const;
+      return undefined;
+    });
+    openErred();
+  };
 
   /**
-   * Saves the fields; a refusal lands beside its field, or above them all.
-   * The one save every way in calls: Save, Close (`useSaveOnClose`) and
-   * M13.17's autosave.
+   * What a save answered is the form's new start: Save goes off until the next
+   * change. The values stay as they are, so what was typed while the save was
+   * in flight is not lost and reads as the next change. A step this save
+   * created takes its new id, or the next save would create it again.
    */
-  const send = async (values: SpellBuilderInput): Promise<void> => {
-    // Steps not yet read would go out as none, and an update's steps remove the rest.
-    if (!jarReady) {
-      closeGuard.refused();
-      setError('root', { message: stepsRead === 'failed' ? STEPS_FAILED : STEPS_LOADING });
-      return;
+  const rebase = (answer: SpellBuilderSpell, sent: SpellBuilderValues) => {
+    reset(
+      { ...valuesOf(answer), categoryIds: sent.categoryIds },
+      { keepValues: true, keepErrors: true },
+    );
+    // The save left out any blank new instruction, so its steps are placed among the form's that were sendable.
+    const now = getValues('steps')
+      .map((step, at) => ({ step, at }))
+      .filter(({ step }) => !isBlankNewInstruction(step));
+    sent.steps.forEach((step, index) => {
+      const created = answer.steps[index];
+      const current = now[index]?.step;
+      if (
+        step.stepId !== null ||
+        !created ||
+        !current ||
+        current.stepId !== null ||
+        JSON.stringify(stepInputOf(current)) !== JSON.stringify(stepInputOf(step))
+      )
+        return;
+      setValue(`steps.${now[index]!.at}.stepId`, created.id);
+    });
+  };
+
+  // The first save's answer, held until the address may move to it: a Close
+  // waiting on that save closes, and leaves the address be.
+  const closing = useRef(false);
+  const createdAnswer = useRef<SpellBuilderSpell | null>(null);
+  const announce = () => {
+    const answer = createdAnswer.current;
+    createdAnswer.current = null;
+    if (answer) onCreated?.(answer);
+  };
+
+  /**
+   * The one save every way in goes through (the autosave's, Save's, Close's,
+   * Mark Complete's and Share's): checked as the schema reads the form, then
+   * sent to the spell this builder holds, or created. A refusal lands beside
+   * its field, or above them all, and is thrown for the autosave to report.
+   */
+  const persist = async (sent: SpellBuilderValues, context: SaveContext): Promise<SaveResult> => {
+    // The checks run on the form as it is now; the values sent are the ones the autosave handed over.
+    const checked = (await trigger())
+      ? SpellInput.safeParse({ ...sent, steps: sent.steps.map(stepInputOf) })
+      : null;
+    if (!checked?.success) {
+      openErred();
+      throw fieldsRefused();
     }
-    // The fields, who can see the spell, and the whole recipe: on an update,
-    // the steps sent are the spell's steps, and a saved step left out of them
-    // is removed.
-    const input: SpellBuilderInput = {
-      ...(Object.fromEntries(FIELDS.map((field) => [field, values[field] ?? null])) as Record<
-        SpellBuilderField,
-        string | null
-      >),
-      visibility: values.visibility,
-      status: values.status,
-      steps: values.steps,
-    };
     // The categories go only when the picks differ from the last save: left
     // out, the service keeps the spell's set as it is (M10.14).
-    const categoryIds = values.categoryIds ?? [];
-    if (!sameCategories(categoryIds, defaultValues?.categoryIds)) input.categoryIds = categoryIds;
+    const { categoryIds: picks = [], ...rest } = checked.data;
+    const input = rest as unknown as SpellBuilderInput;
+    if (!sameCategories(picks, defaultValues?.categoryIds)) input.categoryIds = picks;
+    const id = context.id ?? opened?.id ?? null;
+    let answer: SpellBuilderSpell;
     try {
-      const created = saved === null;
-      const answer = await save.mutateAsync(input);
-      setSaved({ id: answer.id, revision: answer.revision });
-      // What was saved is the new start: Save goes off until the next change.
-      reset({ ...valuesOf(answer), categoryIds });
-      // A Close waiting on this save closes now, and leaves the address be.
-      if (closeGuard.saved()) return;
-      if (created) onCreated?.(answer);
+      answer = await saveSpell(
+        workspaceId,
+        id === null
+          ? { kind: 'new' }
+          : { kind: 'spell', id, revision: context.force ? null : context.revision },
+        input,
+      );
     } catch (error) {
-      closeGuard.refused();
-      placeServerIssues(error, setError, ({ path: [field, ...rest] }) => {
-        // A refused pick is pathed to its index, as the ids were sent.
-        if (field === 'categoryIds') {
-          return rest.length === 0 ? 'categoryIds' : `categoryIds.${Number(rest[0])}`;
-        }
-        if (rest.length === 0 && isField(field)) return field;
-        // A step's amount, beside it; anything else of a step above the form.
-        const [index, part] = rest;
-        if (
-          field === 'steps' &&
-          typeof index === 'number' &&
-          (part === 'quantity' || part === 'unit')
-        )
-          return `steps.${index}.${part}` as const;
-        return undefined;
-      });
-      openErred();
+      if (error instanceof GraphQLClientError && !(error instanceof StaleWriteError)) {
+        placeIssues(error);
+      }
+      throw error;
+    }
+    rebase(answer, sent);
+    clearErrors('root');
+    if (id === null) {
+      setCreatedId(answer.id);
+      createdAnswer.current = answer;
+      if (!closing.current) announce();
+    }
+    return { revision: answer.revision, savedAt: new Date(), id: answer.id };
+  };
+
+  const mirror = userId
+    ? mirrorKey({ entity: 'spell', id: createdId ?? opened?.id ?? null, userId })
+    : undefined;
+  const autosave = useAutosave({
+    value: { ...values, steps: sendable },
+    dirty,
+    enabled: jarReady && !unitRefused && !blankSaved,
+    save: persist,
+    mirror,
+    revision: opened?.revision ?? null,
+    root,
+  });
+  const { flush } = autosave;
+
+  /**
+   * Marks the form submitted, so every error it holds is drawn: a save the
+   * person asked for (Save, Enter, Close) shows what is wrong, where the
+   * autosave stays quiet on a field not yet visited.
+   */
+  const markSubmitted = () =>
+    handleSubmit(
+      () => undefined,
+      () => undefined,
+    )();
+  /** Saves now, for Save and Enter; a refusal is shown by the status beside Save. */
+  const saveNow = async () => {
+    asked.current = true;
+    try {
+      await markSubmitted();
+      // The autosave holds back a cleared saved instruction, so the error just drawn is the answer.
+      if (getValues('steps').some(isBlankSavedInstruction)) return;
+      await flush().catch(() => undefined);
+    } finally {
+      asked.current = false;
     }
   };
 
-  const submit = handleSubmit(send, () => {
-    closeGuard.refused();
-    openErred();
-  });
   // A Close pressed while the steps are on their way saves once they land.
-  const closeWaiting = useRef(false);
-  const [jarReady, setJarReady] = useState(stepsRead === undefined);
+  const jarWaiters = useRef<(() => void)[]>([]);
+  useEffect(() => {
+    if (!jarReady) return;
+    for (const resume of jarWaiters.current.splice(0)) resume();
+  }, [jarReady]);
+  /** Saves for Close, answering whether the server has everything; a refusal keeps the dialog open. */
+  const saveForClose = async (): Promise<boolean> => {
+    closing.current = true;
+    try {
+      if (!jarReady) await new Promise<void>((resume) => jarWaiters.current.push(resume));
+      // The autosave holds back a unit the jar cannot take, so Close says why instead.
+      const held = getValues('steps');
+      if (unitIssues(held).size > 0 || held.some(isBlankSavedInstruction)) {
+        asked.current = true;
+        await markSubmitted();
+        asked.current = false;
+        openErred();
+        throw fieldsRefused();
+      }
+      asked.current = true;
+      await markSubmitted();
+      await flush();
+      return true;
+    } catch {
+      closing.current = false;
+      announce();
+      return false;
+    } finally {
+      closing.current = false;
+      asked.current = false;
+    }
+  };
   // Steps that could not be read leave nothing a save would take, so Close closes, unsaved.
-  const closeGuard = useSaveOnClose(dirty && stepsRead !== 'failed', isSubmitting, () => {
-    if (!jarReady && stepsRead !== 'failed') closeWaiting.current = true;
-    else void submit();
-  });
+  useSaveOnClose(dirty && stepsRead !== 'failed', saveForClose);
+
   // The steps landed: the form starts from them, as from the rest of the saved spell, and
   // only then is the jar drawn, since its list reads the steps once, as it mounts.
   const stepsLanded = stepsRead === undefined;
@@ -487,25 +527,69 @@ const SpellBuilder = ({
       setValue(name, typedMeanwhile[name]);
     }
     setJarReady(true);
-    // Run when the steps land, never again for a later answer: a save resets the form itself.
+    // Run when the steps land, never again for a later answer: a save rebases the form itself.
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [stepsLanded]);
-  // The held Close's save, from the render that drew the jar, whose `send` sends.
-  useEffect(() => {
-    if (!jarReady || !closeWaiting.current) return;
-    closeWaiting.current = false;
-    void submit();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [jarReady]);
   // The failed read is said in the jar, so its shut section opens to show it.
   useEffect(() => {
     if (stepsRead === 'failed') setOpen((was) => new Set([...was, 'Jar' as const]));
   }, [stepsRead]);
 
+  // A copy of the form this browser kept that the server may not have: offered
+  // back once, when the builder opens, since the first change writes over it.
+  const [recovered, setRecovered] = useState<MirrorEntry<SpellBuilderValues> | null>(null);
+  useEffect(() => {
+    if (!mirror) return;
+    const entry = readMirror<SpellBuilderValues>(mirror);
+    if (!entry) return;
+    // A copy no newer than the saved row is what the row already holds.
+    const savedAt = opened?.updatedAt ? new Date(opened.updatedAt) : null;
+    if (
+      (savedAt && entry.at.getTime() <= savedAt.getTime()) ||
+      !Array.isArray(entry.value?.steps)
+    ) {
+      clearMirror(mirror);
+      return;
+    }
+    setRecovered(entry);
+    // Only as it opens: a later key is the same spell once created.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+  const keepRecovered = () => {
+    if (!recovered) return;
+    reset(recovered.value, { keepDefaultValues: true });
+    setRecovered(null);
+  };
+  const discardRecovered = () => {
+    if (mirror) clearMirror(mirror);
+    setRecovered(null);
+  };
+
   return (
     <FormProvider {...methods}>
       <FormHistoryContext.Provider value={history}>
-        <form ref={root} className="form spell-builder" onSubmit={submit} noValidate>
+        <form
+          ref={root}
+          className="form spell-builder"
+          onSubmit={(event) => {
+            event.preventDefault();
+            void saveNow();
+          }}
+          noValidate
+        >
+          {recovered && jarReady && (
+            <Notice kind="plain" block>
+              <span>Restored unsaved changes from {clockTime(recovered.at)}</span>
+              <span className="spell-builder__recovered">
+                <button type="button" className="btn btn--small" onClick={keepRecovered}>
+                  Keep
+                </button>
+                <button type="button" className="btn btn--small" onClick={discardRecovered}>
+                  Discard
+                </button>
+              </span>
+            </Notice>
+          )}
           {errors.root?.message && <Notice kind="error">{errors.root.message}</Notice>}
           <div className="collapsible-sections">
             <FoldAll
@@ -589,16 +673,32 @@ const SpellBuilder = ({
                   placeholder="Add a note"
                   multiline
                 />
-                <SpellVisibilityField created={saved !== null} save={send} />
+                <SpellVisibilityField
+                  created={opened !== undefined || createdId !== null}
+                  flush={flush}
+                />
               </>,
             )}
           </div>
           <FormActions
             noun="Spell"
             dirty={dirty && !unitRefused && jarReady}
-            submitting={isSubmitting}
+            submitting={autosave.status === 'saving'}
+            onSave={() => void saveNow()}
           >
-            <SpellStatusField save={send} />
+            <SpellStatusField flush={flush} />
+            <SaveStatus
+              status={autosave.status}
+              savedAt={autosave.savedAt}
+              draft={defaultValues?.status !== 'complete'}
+              conflictMessage="This spell was changed elsewhere."
+              onRetry={autosave.retry}
+              onReload={() => {
+                // Reloading the page reads the saved row afresh (the proper reload is M13.18's).
+                void autosave.resolveConflict('reload').then(() => window.location.reload());
+              }}
+              onKeepMine={() => void autosave.resolveConflict('keep-mine').catch(() => undefined)}
+            />
           </FormActions>
         </form>
       </FormHistoryContext.Provider>

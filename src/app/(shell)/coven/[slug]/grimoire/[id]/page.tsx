@@ -102,6 +102,7 @@ export default async function SpellRecipePage({ params, searchParams }: SpellRec
           closeHref={recipePath}
           opened={saved && { spell: saved }}
           canCreate={false}
+          userId={membership.userId}
         />
       </RouteModalProvider>
     </main>

@@ -109,6 +109,7 @@ export async function readEditedSpell(
     return {
       id,
       revision,
+      updatedAt: spell.updatedAt.toISOString(),
       title,
       intent,
       jarDescription,

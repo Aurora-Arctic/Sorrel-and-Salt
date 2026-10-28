@@ -8,8 +8,9 @@ import SpellDialog from './spell-dialog';
 import type { SpellBuilderSpell } from './types';
 
 // Render-only; behaviour is asserted in tests/components/SpellBuilder. The
-// builder talks to the network only on Save, so nothing is mocked: a save in
-// the workshop fails into the notice. The TanStack Query client comes from the
+// builder talks to the network only when it saves (the autosave, three seconds
+// after a change, or Save), so nothing is mocked: a save in the workshop fails,
+// and the status beside Save reads "Couldn't save" with Retry (M13.17). The TanStack Query client comes from the
 // workshop's global provider (.storybook/components.tsx).
 const meta = {
   title: 'Grimoire / Spell Builder',
@@ -49,6 +50,7 @@ const Page = ({
         {() => (
           <SpellDialog
             workspaceId="fixture-coven"
+            userId="fixture-user"
             covenSlug="fixture-coven"
             covenName="Fixture Coven"
             closeHref={'/coven/fixture-coven/grimoire' as Route}
@@ -83,7 +85,7 @@ const BUILDER_STATES: Record<string, ReactNode> = {
   'Share Question': <Page spell={{ ...SAVED, visibility: 'private' }} steps={[pickCoven]} />,
   // A moon phase saved before the list existed: its words, with no icon.
   'Phase Outside the List': <Page spell={{ ...SAVED, moonPhase: 'Dark' }} />,
-  // The workshop reaches no server, so the save fails into the notice.
+  // The workshop reaches no server, so the save fails: the status reads Couldn't save.
   'Refused After Saving': <Page steps={[typeTitle, () => submitForm('form.form')]} />,
 };
 

@@ -14,7 +14,7 @@ test.beforeAll(async () => {
   await recreateE2eDatabase();
 });
 
-test('a draft moves between private and shared freely, and completing it shares it for good', async ({
+test('a new spell starts private, a draft moves between private and shared freely, and completing it shares it for good', async ({
   page,
 }) => {
   const coven = await seedCoven(page, 'Fixture Coven Visibility', 'spell-visibility.test', {
@@ -24,12 +24,11 @@ test('a draft moves between private and shared freely, and completing it shares 
   await signInAgainAs(page, coven.users.B);
   await page.goto(`/coven/${coven.slug}/grimoire?new=spell-${coven.slug}`);
 
-  // A switch (the owner's call, 2026-10-27): on is the coven, off is private.
+  // A switch (the owner's call, 2026-10-27): on is the coven, off is private; a new spell starts off (2026-10-28).
   const visibility = page.getByRole('switch', { name: 'Share With the Coven', exact: true });
   const save = page.getByRole('button', { name: 'Save Spell' });
-  await expect(visibility).toBeChecked();
+  await expect(visibility).not.toBeChecked();
 
-  await visibility.uncheck();
   await page.getByRole('textbox', { name: 'Title' }).fill('Fixture Hidden Working');
   await save.click();
   await expect(save).toBeDisabled();

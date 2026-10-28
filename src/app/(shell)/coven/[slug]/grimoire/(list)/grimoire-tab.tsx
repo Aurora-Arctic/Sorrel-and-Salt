@@ -105,6 +105,7 @@ export async function grimoireTab({
         closeHref={closeHref}
         opened={opened}
         canCreate={canCreate}
+        userId={membership.userId}
       />
     </>
   );
