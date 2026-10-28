@@ -67,8 +67,9 @@ export const spellSteps = pgTable(
     position: integer('position'),
     // The instruction: what to do at this step, in the member's words.
     body: text('body'),
-    // A short line on this ingredient's role in the jar — unrelated to the
-    // deferred notes subsystem (§13).
+    // Retired 2026-10-28: `body` is the one text on a step, and migration 0088
+    // copied each note into it. Nothing reads or writes this column; M13.9
+    // drops it (claude-docs/design-decisions/pr1308-step-note-retired.md).
     note: text('note'),
     ...auditColumns,
   },
@@ -96,11 +97,11 @@ export const spellSteps = pgTable(
     // sees.
     check('spell_steps_one_identity', sql`num_nonnulls(ingredient_id, name) <= 1`),
     check('spell_steps_not_empty', sql`num_nonnulls(ingredient_id, name, body) >= 1`),
-    // An amount and a note describe an ingredient's place in the jar, so an
-    // instruction-only step carries neither.
+    // An amount describes an ingredient's place in the jar, so an
+    // instruction-only step carries none.
     check(
       'spell_steps_amount_on_ingredient',
-      sql`(ingredient_id is not null or name is not null) or (quantity is null and unit is null and note is null)`,
+      sql`(ingredient_id is not null or name is not null) or (quantity is null and unit is null)`,
     ),
     // Beside an ingredient id, `form` would shadow half that ingredient's identity.
     check('spell_steps_form_only_on_custom', sql`ingredient_id is null or form is null`),
