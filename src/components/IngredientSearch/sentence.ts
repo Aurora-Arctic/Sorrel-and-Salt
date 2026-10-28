@@ -150,7 +150,7 @@ export function buildSearchSentence({
     clause(text('for the day '), ...valueList('daysOfWeek', daysOfWeek, OR, (v) => v));
   }
 
-  const visibilities = picked(filter.visibilities);
+  const visibilities = picked(filter.visibility ? [filter.visibility] : []);
   if (visibilities.length > 0) {
     clause(
       text('that are '),

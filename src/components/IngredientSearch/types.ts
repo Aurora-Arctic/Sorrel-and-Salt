@@ -137,8 +137,8 @@ export interface SearchSentenceFilter {
   moonPhases?: readonly string[];
   /** The grimoire's days of the week, as the spells word them. */
   daysOfWeek?: readonly string[];
-  /** The grimoire's visibilities: `private`, `workspace`. */
-  visibilities?: readonly string[];
+  /** The grimoire's visibility, one of `private`, `workspace`; empty or left out is Any. */
+  visibility?: string;
   /** The grimoire's makers, by user id. */
   makers?: readonly string[];
   forms?: readonly string[];

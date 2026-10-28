@@ -38,7 +38,7 @@ const editHrefOf = (closeHref: Route, id: string): Route =>
 
 const VISIBILITY_LABELS: Record<(typeof VISIBILITIES)[number], string> = {
   private: 'Private',
-  workspace: 'Shared with the Coven',
+  workspace: 'Shared',
 };
 
 /**

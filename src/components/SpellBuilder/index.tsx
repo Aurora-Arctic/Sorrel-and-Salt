@@ -23,7 +23,7 @@ import {
   useFormHistory,
 } from '../Field';
 import { clockTime } from '../LastEdit/relative';
-import MoonPhaseIcon from '../MoonPhaseIcon';
+import { moonPhaseIcon } from './moon-phase-icon';
 import Notice from '../Notice';
 import SaveStatus from '../SaveStatus';
 import Skeleton from '../Skeleton';
@@ -201,12 +201,6 @@ const resolver: Resolver<SpellBuilderValues, unknown, SpellBuilderInput> = async
     errors: { ...errors, ...(steps.some(Boolean) ? { steps } : {}) },
   } as Awaited<ReturnType<typeof resolver>>;
 };
-
-// A moon phase's drawing beside its name, null for a phase typed outside
-// the list so the box draws no empty mark. Module-level so the field's
-// suggestions are not rebuilt each render.
-const moonPhaseIcon = (phase: string): ReactElement | null =>
-  (MOON_PHASES as readonly string[]).includes(phase) ? <MoonPhaseIcon phase={phase} /> : null;
 
 /** Said in the jar's place while a saved spell's steps cannot be read. */
 const STEPS_FAILED =
