@@ -102,10 +102,12 @@
 }
 
 // A step with no ingredient is the instruction alone, so it sits on the number's own line,
-// filling it, rather than on a line of its own beneath.
+// filling it, rather than on a line of its own beneath, at the ingredients' size while keeping
+// the text's muted colour and weight (the owner, 2026-10-28).
 .spell-recipe__instruction .step-row__body {
   flex: 1 1 0;
   margin-inline-start: 0;
+  font-size: type-size('body');
 }
 
 // The one-off mark at the size the builder's supply marks take.
