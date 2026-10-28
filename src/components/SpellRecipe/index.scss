@@ -102,11 +102,12 @@
 }
 
 // A step with no ingredient is the instruction alone, so it sits on the number's own line,
-// filling it, rather than on a line of its own beneath, at the ingredients' size while keeping
-// the text's muted colour and weight (the owner, 2026-10-28).
+// filling it, rather than on a line of its own beneath, at the ingredients' size and colour,
+// keeping the text's weight (the owner, 2026-10-28).
 .spell-recipe__instruction .step-row__body {
   flex: 1 1 0;
   margin-inline-start: 0;
+  color: $text;
   font-size: type-size('body');
 }
 
