@@ -444,11 +444,11 @@ sizes are the card's alone, applied to the `.badge`s inside it. The components t
 badges (`EntryMarks`, `CautionMark`, `ToxicMark`, `StockBadge`) take no size prop: the card
 decides, from its own selector, so one badge reads the same wherever it is rendered.
 
-| Size      | Text            | Padding (block, inline) | Least height | Used by                 |
-| --------- | --------------- | ----------------------- | ------------ | ----------------------- |
-| `default` | caption (13px)  | 2px, 7px                | none         | every badge, everywhere |
-| `medium`  | overline (12px) | 2px, 7px                | 24px         | the regular card        |
-| `small`   | overline (12px) | 2px, 5px                | 24px         | the compact card        |
+| Size      | Text            | Padding (block, inline) | Least height | Used by                                         |
+| --------- | --------------- | ----------------------- | ------------ | ----------------------------------------------- |
+| `default` | caption (13px)  | 2px, 7px                | none         | every badge, everywhere                         |
+| `medium`  | overline (12px) | 2px, 7px                | 24px         | the regular card                                |
+| `small`   | overline (12px) | 2px, 5px                | 24px         | the compact card, the spell builder's step rows |
 
 The 24px floor is the least a badge with a tip may be as a target.
 

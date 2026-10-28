@@ -34,6 +34,12 @@
   align-items: center;
   gap: 0.25rem 0.5rem;
 
+  // The owner's call (second design review): the Caution, Toxic and One-Off badges take the
+  // site's compact size, the one the compact ingredient card uses, so they read as one quiet pair.
+  .badge {
+    @include badge-size('small');
+  }
+
   &:empty {
     display: none;
   }
