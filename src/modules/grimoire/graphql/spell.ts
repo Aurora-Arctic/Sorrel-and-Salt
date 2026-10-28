@@ -237,7 +237,7 @@ const SpellInputRef = builder.inputType('SpellInput', {
 
 const UpdateSpellInputRef = builder.inputType('UpdateSpellInput', {
   description:
-    'Changes a spell: a field left out keeps its value, and null clears it. Visibility only widens.',
+    'Changes a spell: a field left out keeps its value, and null clears it. Visibility only widens once the spell is complete.',
   fields: (t) => ({
     title: t.string({ description: 'Required once the status is complete.' }),
     intent: t.string(),

@@ -139,8 +139,10 @@ are [`m5.3-spells-keep-deleted-ingredients.md`](../design-decisions/m5.3-spells-
 ### Writing: the one-way rule
 
 `src/modules/grimoire/services/spell-visibility.ts`'s `setSpellVisibility(session, workspaceId,
-spellId, visibility)`. `private` may be widened to `workspace`; `workspace` may
-never be narrowed back, for §5's reason. The narrowing is refused with a
+spellId, visibility)`. `private` may be widened to `workspace`; a `complete` `workspace` spell may
+never be narrowed back, for §5's reason. A stored `draft` may be (the owner,
+2026-10-28; [`m13.17-draft-unshare`](../design-decisions/m13.17-draft-unshare.md)),
+unless the same write completes it. The narrowing is refused with a
 `Forbidden` **carrying a message that says so**, not the bare one: the caller
 holds the permission, and a two-word refusal would send them looking for a
 role they already have. The rule governs visibility and not existence — a
