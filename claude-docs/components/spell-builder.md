@@ -317,6 +317,7 @@ being read the column is a skeleton, and if the read fails, an error in its plac
   edited here.
 - **After a Remove** the focus goes to the handle of the row now in that place
   (the one before it for the last), and to Add a Step when the list is empty.
+- **The starting unit** (story 77): a form the coven keeps a jar of is added with that jar's unit already in the Unit field (`newStep` reads `jarUnit`, which the picker's lookup already returns in `stock`); a form with no jar, or a jar with no unit, starts blank. It is set once, as the step is added, so it never replaces a unit the member has chosen.
 - **The unit rule** (story 77, `unitIssues`) is the service's, from
   `src/modules/grimoire/validation/step-unit.ts`: when the coven holds a jar
   of that form, the step's unit must be one the jar can be measured in (the

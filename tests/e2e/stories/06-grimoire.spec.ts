@@ -482,6 +482,8 @@ test(
     const step = await addIngredientStep(page, 'Rosemary (Herb)');
     const unit = step.getByRole('combobox', { name: /^Unit/ });
     const save = page.getByRole('button', { name: 'Save' });
+    // The step starts in the unit the jar is kept in.
+    await expect(unit).toHaveText('g');
     // A volume is refused with a reason, and nothing can be saved.
     await pickUnit(step, 'ml');
     await expect(unit).toHaveAttribute('aria-invalid', 'true');

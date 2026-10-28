@@ -74,7 +74,7 @@ export function stepValueOf(step: SpellBuilderStep): SpellStepValue {
   };
 }
 
-/** A new step, as the picker or the one-off adds it: no amount yet. */
+/** A new step, as the picker or the one-off adds it: no quantity yet, and the unit its jar is kept in. */
 export const newStep = (
   step: Pick<
     SpellStepValue,
@@ -92,7 +92,8 @@ export const newStep = (
   ...step,
   stepId: null,
   quantity: '',
-  unit: '',
+  // The unit its form is stocked in, where the coven holds some: a start the member can change.
+  unit: step.jarUnit ?? '',
   savedUnit: null,
   body: null,
   note: null,

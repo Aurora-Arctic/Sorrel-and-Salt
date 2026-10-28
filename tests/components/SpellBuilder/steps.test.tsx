@@ -386,6 +386,22 @@ describe('the spell builder’s Add to Jar', () => {
     expect(save()).toBeEnabled();
   });
 
+  it('starts a stocked form in the unit it is stocked in, and an unstocked one blank', async () => {
+    suggest(ROSEWORT, MOCKROOT);
+    renderBuilder();
+
+    await add('Fixture', /Fixture Rosewort/);
+    const unit = (name: string) => within(stepRow(name)).getByRole('combobox', { name: /^Unit/ });
+    expect(unit('Fixture Rosewort')).toHaveTextContent('g');
+    // The member can still change it.
+    chooseUnit(stepRow('Fixture Rosewort'), 'kg');
+    expect(unit('Fixture Rosewort')).toHaveTextContent('kg');
+
+    // A form with no jar starts blank; adding it closes the first row.
+    await add('Fixture', /Fixture Mockroot/);
+    expect(unit('Fixture Mockroot')).not.toHaveTextContent(/\b(g|kg|ml)\b/);
+  });
+
   it('takes any unit for a form the coven holds no jar of', async () => {
     suggest(MOCKROOT);
     renderBuilder();
