@@ -527,12 +527,9 @@ test.fixme(
   },
 );
 
-test.fixme(
+test(
   "a member records a spell's steps in one order, each an instruction, an ingredient, or both",
-  {
-    tag: '@story-80',
-    annotation: { type: 'fixme', description: 'M13.3 builds step text in the spell builder' },
-  },
+  { tag: '@story-80' },
   async ({ page }) => {
     const coven = await seedCoven(page, 'Fixture Coven Eighty', 'story-80.test', {
       A: 'owner',

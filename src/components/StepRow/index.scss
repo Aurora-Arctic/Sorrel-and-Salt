@@ -1,0 +1,13 @@
+// A step's row (M13.3). Laid out no further than the tokens until the
+// grimoire's design review.
+.step-row {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.step-row__body {
+  flex: 1 1 100%;
+  white-space: pre-wrap;
+}
