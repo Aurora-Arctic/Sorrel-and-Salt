@@ -6,6 +6,7 @@ import ThemeToggle from '../ThemeToggle';
 import AddIngredientButton from './add-ingredient-button';
 import BrandName from './brand-name';
 import MainBody from './main-body';
+import NewSpellElsewhere from './new-spell-elsewhere';
 import SiteNav from './site-nav';
 import type { AppShellProps, SiteLink } from './types';
 import './index.scss';
@@ -57,6 +58,7 @@ const AppShell = ({ viewer, workspaces, children }: AppShellProps): ReactElement
           <div className="app-shell__end">
             {/* The shell’s one global action; its target follows the area (add-ingredient-button.tsx). */}
             <AddIngredientButton viewer={viewer} workspaces={workspaces} />
+            <NewSpellElsewhere />
             <AccountMenu
               name={viewer.name}
               verified={viewer.verified}

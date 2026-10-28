@@ -32,7 +32,7 @@ const SAVED: SpellBuilderSpell = {
   visibility: 'workspace',
 };
 
-// In its wide dialog over the grimoire, as the Grimoire's tabs open it under `?new=spell` or
+// In its wide dialog over the grimoire, as the Grimoire's tabs open it under `?new=spell-<slug>` or
 // `?edit=<id>` (src/components/SpellBuilder/spell-dialog.tsx), so the workshop shows
 // what the app shows. Close closes it, with Open Again to look once more.
 const Page = ({
@@ -49,6 +49,7 @@ const Page = ({
         {() => (
           <SpellDialog
             workspaceId="fixture-coven"
+            covenSlug="fixture-coven"
             closeHref={'/coven/fixture-coven/grimoire' as Route}
             opened={spell ? { spell } : {}}
             canCreate

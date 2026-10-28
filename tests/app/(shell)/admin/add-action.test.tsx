@@ -3,7 +3,7 @@ import { render, screen } from '@testing-library/react';
 import { describe, expect, it, vi } from 'vitest';
 import AddAction from '@/app/(shell)/admin/add-action';
 
-const NEW_SPELL_HREF = '/coven/fixture/grimoire?new=spell' as Route;
+const NEW_SPELL_HREF = '/coven/fixture/grimoire?new=spell-fixture' as Route;
 
 describe('AddAction', () => {
   it('is named by its label at every width, the plus hidden from assistive technology', () => {
@@ -35,7 +35,7 @@ describe('AddAction', () => {
       const press = new MouseEvent('click', { bubbles: true, cancelable: true, button: 0 });
       screen.getByRole('link', { name: 'New Spell' }).dispatchEvent(press);
 
-      expect(push).toHaveBeenCalledWith(null, '', '/coven/fixture/grimoire?new=spell');
+      expect(push).toHaveBeenCalledWith(null, '', '/coven/fixture/grimoire?new=spell-fixture');
       // The precondition: the browser's own follow of the link was stopped.
       expect(press.defaultPrevented).toBe(true);
       push.mockRestore();

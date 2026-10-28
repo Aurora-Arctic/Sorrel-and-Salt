@@ -278,7 +278,9 @@ describe('CovenCards', () => {
     const state = emptyState();
     expect(state).not.toBeNull();
     fireEvent.click(within(state!).getByRole('button', { name: 'Add Ingredient' }));
-    expect(new URLSearchParams(window.location.search).get('new')).toBe('fixture-coven');
+    expect(new URLSearchParams(window.location.search).get('new')).toBe(
+      'ingredient-coven-fixture-coven',
+    );
     expect(within(state!).queryByRole('link')).toBeNull();
   });
 
