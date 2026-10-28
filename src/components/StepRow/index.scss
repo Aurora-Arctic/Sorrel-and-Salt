@@ -123,6 +123,10 @@
 // line where they fit, the Instruction on its own line beneath.
 // The height of a paragraph's line (typography-base's 1.65), which the name takes.
 $step-line: type-size('body') * 1.65;
+// A name's lettering (mostly lowercase) sits a little below the middle of its line, measured
+// at 0.8px under 16px type, so an icon centred on the line looks high beside it. Each icon
+// on the first line (the handle, the marks, the pencil and Remove) takes this one drop.
+$step-ink-drop: 0.05rem;
 
 .step-row.step-row--card {
   &.step-row--closed,
@@ -163,6 +167,14 @@ $step-line: type-size('body') * 1.65;
     .step-row__remove {
       margin-block: calc(($step-line - $icon-size) / 2) 0;
     }
+  }
+
+  .step-row__handle,
+  .step-row__marks,
+  .step-row__edit,
+  .step-row__remove {
+    position: relative;
+    inset-block-start: $step-ink-drop;
   }
 
   .step-row__summary {

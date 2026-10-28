@@ -1,7 +1,12 @@
 {
   "compilerOptions": {
     "target": "ES2020",
-    "lib": ["dom", "dom.iterable", "es2020", "es2021.intl"],
+    "lib": [
+      "dom",
+      "dom.iterable",
+      "es2020",
+      "es2021.intl"
+    ],
     "jsx": "react-jsx",
     "module": "esnext",
     "moduleResolution": "bundler",
@@ -29,7 +34,9 @@
       }
     ],
     "paths": {
-      "@/*": ["./src/*"]
+      "@/*": [
+        "./src/*"
+      ]
     }
   },
   // tests/ is listed because `tsc` is the only thing that typechecks it:
@@ -54,7 +61,11 @@
     // reaches the component stories; the dot-directory is named because a
     // `**` glob skips it otherwise.
     ".storybook/**/*.ts",
-    ".storybook/**/*.tsx"
+    ".storybook/**/*.tsx",
+    ".next-8230/types/**/*.ts",
+    ".next-8230/dev/types/**/*.ts"
   ],
-  "exclude": ["node_modules"]
+  "exclude": [
+    "node_modules"
+  ]
 }
