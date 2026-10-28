@@ -81,9 +81,10 @@ export const spellSteps = pgTable(
     liveUnique('spell_steps_spell_id_position_unique', table, table.spellId, table.position),
     liveUnique('spell_steps_spell_id_layer_order_unique', table, table.spellId, table.layerOrder),
 
-    // One form per jar (MB.217): wanted at two depths is one row with a note.
-    // A custom row's null `variant_id` collides with nothing in a btree.
-    liveUnique('spell_steps_spell_id_variant_id_unique', table, table.spellId, table.variantId),
+    // No unique index on a jar's forms: a spell may lay one form in several
+    // steps, at different depths or for different purposes (the owner, 2026-10-28;
+    // before it, MB.217 allowed one step per form). A custom row is still
+    // identified by its name, below.
     // Its mirror over the custom rows, on name alone: a custom row is matched
     // against nothing, so `form` is part of no key.
     uniqueIndex('spell_steps_spell_id_custom_name_unique')

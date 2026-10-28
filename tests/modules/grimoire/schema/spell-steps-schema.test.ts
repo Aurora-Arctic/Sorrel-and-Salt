@@ -28,7 +28,6 @@ const OWN_COLUMNS = [
 // surrogate id and the place is unique among live rows — claude-docs/db/grimoire.md,
 // "Position is the identity, and what that costs the reorder".
 const POSITION_INDEX = 'spell_steps_spell_id_position_unique';
-const VARIANT_INDEX = 'spell_steps_spell_id_variant_id_unique';
 const VARIANT_KEY = 'spell_steps_variant_fk';
 const CHECK_VARIANT_WITH_INGREDIENT = 'spell_steps_variant_with_ingredient';
 const CUSTOM_NAME_INDEX = 'spell_steps_spell_id_custom_name_unique';
@@ -406,14 +405,10 @@ describe('spell_steps table', () => {
     });
   });
 
-  // The old primary key's guarantee, now a partial index over linked rows'
-  // variants and its mirror over custom rows: inside one jar an ambiguous
-  // label is a mistake, not a distinction.
-  describe('one variant per jar, one custom name per jar', () => {
-    // The pair is unique, not either half: another form of the ingredient in
-    // the spell, and the same one in another spell, are both admitted, so a
-    // jar may lay Mugwort herb and Mugwort oil (MB.217).
-    it('refuses the same variant twice in one spell, and admits another form of it', async () => {
+  // A custom row is matched against nothing, so inside one jar its name is its
+  // identity; a linked form is not (the owner, 2026-10-28).
+  describe('one custom name per jar, any form any number of times', () => {
+    it('admits the same variant twice in one spell, as well as another form of it', async () => {
       const [oil] = await sql`
         insert into ingredient_variants ${sql({
           ingredient_id: MUGWORT,
@@ -424,17 +419,14 @@ describe('spell_steps table', () => {
         returning id
       `;
       await layer();
-
-      const error = await failureOf(layer({ position: 2 }));
-      await layer({ variantId: oil.id as string, position: 2 });
+      await layer({ position: 2 });
+      await layer({ variantId: oil.id as string, position: 3 });
       await layer({ spellId: otherSpell });
 
-      expect(error.code).toBe('23505');
-      expect(error.constraint_name).toBe(VARIANT_INDEX);
       const forms = await sql`
         select count(*)::int as count from spell_steps where spell_id = ${hearthGuard}
       `;
-      expect(forms[0].count).toBe(2);
+      expect(forms[0].count).toBe(3);
     });
 
     it('refuses the same custom name twice in one spell, whatever its case', async () => {
