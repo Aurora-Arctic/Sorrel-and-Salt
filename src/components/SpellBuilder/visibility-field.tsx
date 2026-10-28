@@ -11,18 +11,19 @@ import type { SpellVisibility } from '@/modules/grimoire';
 // Who can see a spell (M10.13): its author alone, or every member of the coven.
 // A switch, Share With the Coven, on for the coven and off for private (the owner's
 // call, 2026-10-27), with a line under it saying what its state means. A new spell
-// starts private (the owner's call, 2026-10-28: the autosave would otherwise
-// share it 3 s after the first keystroke, for good), and takes either, and
-// the choice goes out with its first save. A saved private spell is shared by
-// switching it on, which asks first and then saves at once, so that one action
-// with its confirmation shares it. A spell shared with the coven never goes back
-// (DESIGN.md §5's one-way rule, held by the service), so the control then reads
-// only and says so, rather than leave a person to find out from a refusal.
+// starts private (the owner's call, 2026-10-28: the autosave would otherwise share
+// it 3 s after the first keystroke), and takes either, and the choice goes out with
+// its first save. A draft moves either way, as often as wanted, with no question
+// (M10.20): sharing it is reversible. A complete spell obeys DESIGN.md §5's one-way
+// rule, held by the service: a private one is shared by switching it on, which asks
+// first and then saves at once, so that one action with its confirmation shares it;
+// a shared one never goes back, so the control then reads only and says so, rather
+// than leave a person to find out from a refusal.
 // claude-docs/components/spell-builder.md, "Visibility".
 
 /** What each state means, said under the switch. */
 const MEANS = {
-  workspace: 'Every member of the coven can see it. Once shared, it stays shared.',
+  workspace: 'Every member of the coven can see it. Once the spell is complete, it stays shared.',
   private: 'Only you can see it, until you share it with the coven.',
 } as const satisfies Record<SpellVisibility, string>;
 
@@ -38,12 +39,14 @@ export function SpellVisibilityField({ created, flush }: SpellVisibilityFieldPro
   const [sharing, setSharing] = useState(false);
 
   // The saved spell's visibility is the last save's, which the form starts from.
-  const shared = created && defaultValues?.visibility === 'workspace';
+  // The one-way rule binds a complete spell only; the lock is read from the saved status.
+  const complete = created && defaultValues?.status === 'complete';
+  const shared = complete && defaultValues?.visibility === 'workspace';
 
   const choose = (on: boolean) => {
     const visibility: SpellVisibility = on ? 'workspace' : 'private';
-    // A saved private spell is shared by a confirmed save, never by a pick left pending.
-    if (created && visibility === 'workspace') setAsking(true);
+    // A complete private spell is shared by a confirmed save, never by a pick left pending.
+    if (complete && visibility === 'workspace') setAsking(true);
     else field.onChange(visibility);
   };
 

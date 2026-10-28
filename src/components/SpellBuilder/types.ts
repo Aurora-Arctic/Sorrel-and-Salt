@@ -131,7 +131,7 @@ export interface SpellStatusFieldProps {
 }
 
 export interface SpellVisibilityFieldProps {
-  /** The spell is saved, so its visibility is the saved one's: Only Me may widen, Coven is for good. */
+  /** The spell is saved, so its visibility is the saved one's: a draft's moves either way, a complete one's only widens. */
   created: boolean;
   /** Saves everything the form holds now (the autosave's flush); rejects when the save is refused. */
   flush: () => Promise<void>;
