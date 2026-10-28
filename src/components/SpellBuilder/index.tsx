@@ -450,7 +450,8 @@ const SpellBuilder = ({
   // A Close pressed while the steps are on their way saves once they land.
   const closeWaiting = useRef(false);
   const [jarReady, setJarReady] = useState(stepsRead === undefined);
-  const closeGuard = useSaveOnClose(dirty, isSubmitting, () => {
+  // Steps that could not be read leave nothing a save would take, so Close closes, unsaved.
+  const closeGuard = useSaveOnClose(dirty && stepsRead !== 'failed', isSubmitting, () => {
     if (!jarReady && stepsRead !== 'failed') closeWaiting.current = true;
     else void submit();
   });

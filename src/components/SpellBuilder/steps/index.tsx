@@ -9,7 +9,7 @@ import { BuilderStepRow } from './step-row';
 import type { SpellStepValue, SpellStepsValues } from './types';
 import { derivedCategories, newInstruction, stepNameOf } from './values';
 
-// The jar's steps (M10.15): the list, the picker that adds to it, and the
+// The jar's steps (M10.15): the picker that adds to them, the list, and the
 // spell's derived categories, worked out from the steps as they stand so a
 // Remove takes its categories off at once. The steps are moved by a handle
 // each (M10.16), and an Add or a Remove is said in a live region of its own,
@@ -44,6 +44,9 @@ export function SpellSteps({ workspaceId }: { workspaceId: string }): ReactEleme
   }, [fields.length]);
 
   const add = (step: SpellStepValue) => {
+    // The focus stays in Add to Jar for the next ingredient: react-hook-form
+    // would move it to the new step's Quantity a render later, closing the
+    // list of whatever was typed in the meantime.
     append(step, { shouldFocus: false });
     const count = fields.length + 1;
     announce(`Added ${stepNameOf(step)}, at position ${count} of ${count}.`);
@@ -77,6 +80,12 @@ export function SpellSteps({ workspaceId }: { workspaceId: string }): ReactEleme
 
   return (
     <section className="spell-steps" ref={root}>
+      {/* The picker leads the list rather than following it, so a step added
+          never pushes the box being typed in, nor its list, down the dialog. */}
+      <StepPicker workspaceId={workspaceId} taken={taken} oneOffs={oneOffs} onAdd={add} />
+      <button type="button" className="btn btn--small spell-steps__add-step" onClick={addStep}>
+        Add a Step
+      </button>
       <SortableSteps ids={fields.map((field) => field.id)} names={names} onMove={move}>
         {fields.map((field, index) => (
           <BuilderStepRow
@@ -89,10 +98,6 @@ export function SpellSteps({ workspaceId }: { workspaceId: string }): ReactEleme
         ))}
       </SortableSteps>
       <LiveRegion id={regionId} announcement={announcement} />
-      <button type="button" className="btn btn--small spell-steps__add-step" onClick={addStep}>
-        Add a Step
-      </button>
-      <StepPicker workspaceId={workspaceId} taken={taken} oneOffs={oneOffs} onAdd={add} />
       {/* h4: the jar sits in the builder's Jar section, whose heading is an h3. */}
       <h4 className="spell-steps__heading" id={derivedId}>
         Derived Categories
