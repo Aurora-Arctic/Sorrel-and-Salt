@@ -1,4 +1,4 @@
-import type { SpellBuilderStepFragment } from '../../../gql/graphql';
+import type { SpellBuilderStep } from '../types';
 import type { Unit } from '@/modules/ingredients/schema/units';
 import { formLabel } from '@/modules/ingredients/validation/form-label';
 import { UNMEASURABLE_UNIT, measurable } from '@/modules/grimoire/validation/step-unit';
@@ -9,7 +9,7 @@ import type { SpellStepSend, SpellStepValue, StepCategory } from './types';
 // (story 77) and the derived categories. No React here.
 
 /** The categories a step brings: its ingredient's and its form's, once each. */
-const categoriesOf = (step: SpellBuilderStepFragment): StepCategory[] => [
+const categoriesOf = (step: SpellBuilderStep): StepCategory[] => [
   ...(step.ingredient?.categories ?? []),
   ...(step.variant?.categories ?? []),
 ];
@@ -21,7 +21,7 @@ export const jarUnitOf = (
 ): Unit | null => (stock.find((jar) => jar.variant.id === variantId)?.unit as Unit | null) ?? null;
 
 /** A saved step as the builder holds it. */
-export function stepValueOf(step: SpellBuilderStepFragment): SpellStepValue {
+export function stepValueOf(step: SpellBuilderStep): SpellStepValue {
   const variantId = step.variant?.id ?? null;
   return {
     stepId: step.id,
