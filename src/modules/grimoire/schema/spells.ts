@@ -32,7 +32,7 @@ export const spells = pgTable(
     // What the spell is *for*, in the member's words; nothing compares it.
     intent: text('intent'),
     // Free text, member-written: a vocabulary a member writes is text (§5).
-    jarSize: text('jar_size'),
+    jarDescription: text('jar_description'),
     sealWaxColor: text('seal_wax_color'),
     moonPhase: text('moon_phase'),
     dayOfWeek: text('day_of_week'),

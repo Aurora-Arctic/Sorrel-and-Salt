@@ -98,14 +98,15 @@ export async function readEditedSpell(
   const session = await requireSession();
   try {
     const spell = await readSpell(session, workspaceId, id);
-    const { revision, title, intent, jarSize, sealWaxColor, moonPhase, dayOfWeek, note } = spell;
+    const { revision, title, intent, jarDescription, sealWaxColor, moonPhase, dayOfWeek, note } =
+      spell;
     const { visibility } = spell;
     return {
       id,
       revision,
       title,
       intent,
-      jarSize,
+      jarDescription,
       sealWaxColor,
       moonPhase,
       dayOfWeek,

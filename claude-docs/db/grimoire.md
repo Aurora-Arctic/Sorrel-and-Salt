@@ -366,7 +366,7 @@ joined to their `spell_categories` pairs and each pair's live category,
   `status <> 'complete' OR title IS NOT NULL`, keeps the rule that a finished
   spell has a name, in the table, so no code path can complete an untitled
   spell. `src/modules/grimoire/validation/spell.ts` states the same rule for
-  the form. `intent`, `jarSize`,
+  the form. `intent`, `jarDescription`,
   `sealWaxColor`, `moonPhase`, `dayOfWeek` and `note` are all nullable
   free text — §5's rule that a vocabulary a member writes is text, and there is
   no curated vocabulary table of moon phases, days or wax colours to make a

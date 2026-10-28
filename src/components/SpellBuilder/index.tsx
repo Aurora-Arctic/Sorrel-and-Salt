@@ -52,7 +52,7 @@ const CreateSpellDocument = graphql(`
       revision
       title
       intent
-      jarSize
+      jarDescription
       sealWaxColor
       moonPhase
       dayOfWeek
@@ -69,7 +69,7 @@ const UpdateSpellDocument = graphql(`
       revision
       title
       intent
-      jarSize
+      jarDescription
       sealWaxColor
       moonPhase
       dayOfWeek
@@ -82,7 +82,7 @@ const UpdateSpellDocument = graphql(`
 const FIELDS: readonly SpellBuilderField[] = [
   'title',
   'intent',
-  'jarSize',
+  'jarDescription',
   'sealWaxColor',
   'moonPhase',
   'dayOfWeek',
@@ -258,9 +258,9 @@ const SpellBuilder = ({ workspaceId, spell, onCreated }: SpellBuilderProps): Rea
           />
           <SpellCategoriesField />
           <TextField<SpellBuilderValues>
-            name="jarSize"
-            label="Jar Size"
-            placeholder="Add a size"
+            name="jarDescription"
+            label="Jar Description"
+            placeholder="Add a description"
             autoComplete="off"
           />
           <TextField<SpellBuilderValues>
