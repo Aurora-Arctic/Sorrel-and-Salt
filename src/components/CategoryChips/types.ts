@@ -13,4 +13,9 @@ export interface CategoryChipsProps {
   label: string;
   /** The tighter chip size, for a table cell; the card keeps the regular one. */
   compact?: boolean;
+  /**
+   * Every chip in the row and no +N button: for a reading surface with room, as the spell
+   * recipe (M13.21); a card or a table cell keeps the fold.
+   */
+  showAll?: boolean;
 }

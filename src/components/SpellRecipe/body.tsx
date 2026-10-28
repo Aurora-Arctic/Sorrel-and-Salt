@@ -4,6 +4,7 @@ import { ingredientLinkTarget } from '../AppShell/site-target';
 import CategoryChips from '../CategoryChips';
 import StepRow from '../StepRow';
 import LinkHint from '../LinkHint';
+import MoonPhaseIcon from '../MoonPhaseIcon';
 import { formLabel } from '../../modules/ingredients/validation/form-label';
 import { UNTITLED_SPELL } from '../SpellCard';
 import type { IngredientRecipeStep, RecipeStep, SpellRecipeBodyProps } from './types';
@@ -29,7 +30,8 @@ const Name = ({ step }: { step: IngredientRecipeStep }): ReactElement => (
       <span>{labelOf(step)}</span>
     )}
     {step.formal !== null && <span className="meta spell-recipe__formal"> ({step.formal})</span>}
-    {step.oneOff && <span className="badge spell-recipe__one-off"> One-Off</span>}
+    {/* The mark the builder's SupplyMark gives a one-off, so the two read alike. */}
+    {step.oneOff && <span className="badge badge--local spell-recipe__one-off">One-Off</span>}
     {step.deleted && <span className="meta"> (Deleted)</span>}
   </>
 );
@@ -62,7 +64,7 @@ const SpellRecipeBody = ({
   return (
     <>
       {purpose !== '' && <p className="spell-recipe__intent">{purpose}</p>}
-      <CategoryChips categories={categories} label={name} />
+      <CategoryChips categories={categories} label={name} showAll />
 
       {facts.length > 0 && (
         <div className="spell-recipe__facts-box">
@@ -70,7 +72,11 @@ const SpellRecipeBody = ({
             {facts.map(({ label, text }) => (
               <div key={label}>
                 <dt>{label}</dt>
-                <dd>{text}</dd>
+                <dd>
+                  {/* The builder's drawing beside the phase; a phase outside its list draws nothing. */}
+                  {label === 'Moon Phase' && <MoonPhaseIcon phase={text} />}
+                  {text}
+                </dd>
               </div>
             ))}
           </dl>

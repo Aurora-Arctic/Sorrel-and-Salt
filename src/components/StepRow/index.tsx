@@ -8,9 +8,18 @@ import type { StepRowProps } from './types';
 // hands it editing controls, the recipe page (MB.6) none, and a working's
 // deduction lines (M13.8) draw theirs with it. See claude-docs/components/step-row.md.
 
+/**
+ * The quantity as the person typed it rather than as the column stores it: "1.000" is
+ * "1" and "2.500" is "2.5", so only the decimals that carry information show (the owner,
+ * 2026-10-28). A plain string edit, not a Number round trip, which would lose a quantity
+ * past 15 digits.
+ */
+const plainQuantity = (quantity: string): string =>
+  quantity.includes('.') ? quantity.replace(/0+$/, '').replace(/\.$/, '') : quantity;
+
 /** The amount and unit as one phrase, "2 tsp", or null where there is neither. */
 const amountOf = (quantity?: string | null, unit?: string | null): string | null =>
-  [quantity, unit].filter(Boolean).join(' ') || null;
+  [quantity && plainQuantity(quantity), unit].filter(Boolean).join(' ') || null;
 
 export default function StepRow({
   position,

@@ -13,8 +13,10 @@ const CategoryChips = ({
   categories,
   label,
   compact = false,
+  showAll = false,
 }: CategoryChipsProps): ReactElement | null => {
   if (categories.length === 0) return null;
+  const limit = showAll ? categories.length : CATEGORY_CHIP_LIMIT;
   return (
     <ul
       className={
@@ -24,16 +26,16 @@ const CategoryChips = ({
       }
       aria-label="Categories"
     >
-      {categories.slice(0, CATEGORY_CHIP_LIMIT).map(({ category, group }) => (
+      {categories.slice(0, limit).map(({ category, group }) => (
         <li key={category.id}>
           <span className="chip" style={chipColors(group)}>
             {category.name}
           </span>
         </li>
       ))}
-      {categories.length > CATEGORY_CHIP_LIMIT && (
+      {categories.length > limit && (
         <li className="category-more-item">
-          <CategoryMore categories={categories.slice(CATEGORY_CHIP_LIMIT)} label={label} />
+          <CategoryMore categories={categories.slice(limit)} label={label} />
         </li>
       )}
     </ul>

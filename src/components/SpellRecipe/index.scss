@@ -46,9 +46,16 @@
   margin: 0;
 }
 
-// The steps (M13.21): the amount leads the name, in a heavier weight, and the position column is
-// as wide for every row, so the numbers line up down the list. The flex row honours `order`;
-// the position stays first because it is the one child with a lower one.
+// The steps (M13.21), as the Recipe Card mock-up draws them: a 2rem position column that
+// the numbers line up in, beside it the amount leading the name on the first line, and the
+// step's text and note on lines of their own, indented to the name rather than the number.
+// The position stays a flex item (an absolute one would not share the first line's
+// baseline), so the wrapped lines indent themselves by the column it takes.
+.spell-recipe__steps .step-row {
+  align-items: baseline;
+  gap: space(1) space(2);
+}
+
 .spell-recipe__steps .step-row__position {
   order: -2;
   flex: 0 0 2rem;
@@ -57,18 +64,38 @@
   font-variant-numeric: tabular-nums;
 }
 
+// The flex row honours `order`: the amount leads the name.
 .spell-recipe__steps .step-row__amount {
   order: -1;
   font-weight: 500;
 }
 
 .spell-recipe__steps .step-row__name {
-  font-weight: 300;
+  font-weight: 400;
+}
+
+// The mock-up's steps carry no form icon: the recipe is read, not picked from, and the
+// builder's rows keep theirs. Hidden here rather than left out of StepRow, which draws it
+// for every caller.
+.spell-recipe__steps .step-row__name > .form-icon {
+  display: none;
+}
+
+.spell-recipe__steps .step-row__body,
+.spell-recipe__steps .step-row__note {
+  margin-inline-start: calc(2rem + #{space(2)});
 }
 
 // A step with no ingredient is the instruction alone, so it reads quieter.
 .spell-recipe__instruction .step-row__body {
   color: $text-muted;
+}
+
+// The one-off mark at the size the builder's supply marks take.
+.spell-recipe__one-off {
+  @include badge-size('small');
+  margin-inline-start: space(1);
+  vertical-align: middle;
 }
 
 // The facts strip (M13.21): up to four cells under a hairline, two to a row in a narrow column.
@@ -98,6 +125,9 @@
   }
 
   dd {
+    display: flex;
+    gap: space(1);
+    align-items: center;
     margin: 0;
     overflow-wrap: anywhere;
   }
@@ -107,6 +137,13 @@
 .spell-recipe__note {
   padding-block-start: space(3);
   border-top: 1px solid $hairline;
+}
+
+// The Quick Look body (M13.21): the recipe body's sections in a column, spaced as the page's.
+.spell-recipe-look {
+  display: flex;
+  flex-direction: column;
+  gap: space(4);
 }
 
 // The Quick Look foot (M13.21): the bar of `ingredient-details-foot` (in _primitives.scss),

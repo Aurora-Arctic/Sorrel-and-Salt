@@ -72,4 +72,19 @@ describe('StepRow', () => {
     expect(within(row()).getByRole('textbox', { name: 'Quantity' })).toBeInTheDocument();
     expect(row()).not.toHaveTextContent('Plain');
   });
+  it('shows an amount with only the decimals that carry information', () => {
+    render(
+      <ol>
+        <StepRow position={1} name="Testwort" quantity="1.000" unit="tbsp" />
+        <StepRow position={2} name="Testwort" quantity="2.500" unit="tsp" />
+        <StepRow position={3} name="Testwort" quantity="10" unit="g" />
+      </ol>,
+    );
+
+    const rows = within(screen.getByRole('list')).getAllByRole('listitem');
+    expect(rows[0]).toHaveTextContent('1 tbsp');
+    expect(rows[0]).not.toHaveTextContent('1.000');
+    expect(rows[1]).toHaveTextContent('2.5 tsp');
+    expect(rows[2]).toHaveTextContent('10 g');
+  });
 });

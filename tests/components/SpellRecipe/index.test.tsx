@@ -108,6 +108,27 @@ describe('SpellRecipe', () => {
     expect(screen.getByText('Waxing Crescent')).toBeInTheDocument();
   });
 
+  it('draws the moon phase with its drawing, and a phase with no drawing as its text alone', () => {
+    const { rerender } = render(<SpellRecipe {...props({ moonPhase: 'Waxing Crescent' })} />);
+    const phase = () => screen.getByText(/Waxing Crescent|Blue Moon/).closest('dd')!;
+    expect(phase().querySelector('svg[aria-hidden="true"]')).not.toBeNull();
+
+    rerender(<SpellRecipe {...props({ moonPhase: 'Blue Moon' })} />);
+    expect(phase().querySelector('svg')).toBeNull();
+  });
+
+  it('shows every category as a chip, with none folded behind a +N button', () => {
+    const categories = Array.from({ length: 4 }, (_, i) => ({
+      category: { id: `c${i}`, name: `Fixture Category ${i + 1}` },
+      group: { colorDark: '#112233', colorLight: '#445566' },
+    }));
+    render(<SpellRecipe {...props({ categories })} />);
+
+    const list = screen.getByRole('list', { name: 'Categories' });
+    expect(within(list).getAllByRole('listitem')).toHaveLength(4);
+    expect(screen.queryByRole('button', { name: /more categories/i })).toBeNull();
+  });
+
   it('draws no facts strip when none is set', () => {
     render(<SpellRecipe {...props()} />);
     expect(screen.queryByRole('term')).toBeNull();
