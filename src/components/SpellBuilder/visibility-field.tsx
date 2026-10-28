@@ -11,7 +11,8 @@ import type { SpellVisibility } from '@/modules/grimoire';
 // Who can see a spell (M10.13): its author alone, or every member of the coven.
 // A switch, Share With the Coven, on for the coven and off for private (the owner's
 // call, 2026-10-27), with a line under it saying what its state means. A new spell
-// takes either, the coven by default (§5), and
+// starts private (the owner's call, 2026-10-28: the autosave would otherwise
+// share it 3 s after the first keystroke, for good), and takes either, and
 // the choice goes out with its first save. A saved private spell is shared by
 // switching it on, which asks first and then saves at once, so that one action
 // with its confirmation shares it. A spell shared with the coven never goes back

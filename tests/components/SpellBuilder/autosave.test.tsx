@@ -134,6 +134,20 @@ describe('the spell builder’s saves', () => {
     expect(created[0].input.title).toBeNull();
   });
 
+  it('stores a new spell private on its first autosave, with nothing pressed', async () => {
+    const { created } = accept();
+    renderBuilder();
+    vi.useFakeTimers({ shouldAdvanceTime: true });
+
+    type('Title', 'Fixture Working');
+    await act(async () => {
+      await vi.advanceTimersByTimeAsync(3100);
+    });
+
+    await waitFor(() => expect(created).toHaveLength(1));
+    expect(created[0].input.visibility).toBe('private');
+  });
+
   it('saves a change by itself, three seconds after the last one', async () => {
     const { updated } = accept();
     renderBuilder({ spell: SPELL });

@@ -58,7 +58,7 @@ function saved(id: string, revision: number, input: CreateSpellMutationVariables
     dayOfWeek: input.dayOfWeek ?? null,
     note: input.note ?? null,
     steps: [],
-    visibility: input.visibility ?? 'workspace',
+    visibility: input.visibility ?? 'private',
     status: input.status ?? 'draft',
   };
 }
@@ -156,7 +156,7 @@ describe('SpellBuilder', () => {
         dayOfWeek: null,
         note: null,
         steps: [],
-        visibility: 'workspace',
+        visibility: 'private',
         status: 'draft',
       },
     });
@@ -186,7 +186,7 @@ describe('SpellBuilder', () => {
       note: 'Kept on the sill',
       steps: [],
       status: 'draft',
-      visibility: 'workspace',
+      visibility: 'private',
     });
   });
 

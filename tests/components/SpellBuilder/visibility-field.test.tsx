@@ -119,44 +119,44 @@ const NARROWING_REFUSED =
   'Delete it instead if it should not be there.';
 
 describe('SpellBuilder visibility', () => {
-  it('opens a new spell shared with the coven, saying what each state means', () => {
+  it('opens a new spell private, saying what each state means', () => {
     renderBuilder();
-
-    expect(toggle()).toBeChecked();
-    expect(toggle()).toBeEnabled();
-    expect(toggle()).toHaveAccessibleDescription(/every member/i);
-
-    fireEvent.click(toggle());
 
     expect(toggle()).not.toBeChecked();
+    expect(toggle()).toBeEnabled();
     expect(toggle()).toHaveAccessibleDescription(/only you/i);
-  });
-
-  it('creates the spell for the coven when nothing else is chosen', async () => {
-    const calls = acceptCreate();
-    renderBuilder();
-
-    fireEvent.change(title(), { target: { value: 'Fixture Working' } });
-    submit();
-
-    await waitFor(() => expect(calls).toHaveLength(1));
-    expect(calls[0]?.input).toMatchObject({ visibility: 'workspace' });
-  });
-
-  it('creates the spell private when the switch is turned off, and keeps the choice open', async () => {
-    const calls = acceptCreate();
-    renderBuilder();
 
     fireEvent.click(toggle());
+
+    expect(toggle()).toBeChecked();
+    expect(toggle()).toHaveAccessibleDescription(/every member/i);
+  });
+
+  it('creates the spell private when nothing else is chosen', async () => {
+    const calls = acceptCreate();
+    renderBuilder();
+
     fireEvent.change(title(), { target: { value: 'Fixture Working' } });
     submit();
 
     await waitFor(() => expect(calls).toHaveLength(1));
     expect(calls[0]?.input).toMatchObject({ visibility: 'private' });
+  });
+
+  it('creates the spell for the coven when the switch is turned on', async () => {
+    const calls = acceptCreate();
+    renderBuilder();
+
+    fireEvent.click(toggle());
+    fireEvent.change(title(), { target: { value: 'Fixture Working' } });
+    submit();
+
+    await waitFor(() => expect(calls).toHaveLength(1));
+    expect(calls[0]?.input).toMatchObject({ visibility: 'workspace' });
     await waitFor(() => expect(save()).toBeDisabled());
-    // Still private, and still free to be shared.
-    expect(toggle()).not.toBeChecked();
-    expect(toggle()).toBeEnabled();
+    // Shared for good, so the switch is shut.
+    expect(toggle()).toBeChecked();
+    expect(toggle()).toBeDisabled();
   });
 
   // A choice of who can see it is something to save (the owner's call, 2026-10-27).
@@ -167,7 +167,7 @@ describe('SpellBuilder visibility', () => {
 
     fireEvent.click(toggle());
 
-    expect(toggle()).not.toBeChecked();
+    expect(toggle()).toBeChecked();
     expect(save()).toBeEnabled();
 
     fireEvent.click(toggle());
@@ -260,10 +260,11 @@ describe('SpellBuilder visibility', () => {
       expect(toggle()).toHaveAccessibleDescription(/Duplicate/);
     });
 
-    it('becomes read-only once a new spell is saved for the coven', async () => {
+    it('becomes read-only once a new spell is shared with the coven', async () => {
       acceptCreate();
       renderBuilder();
 
+      fireEvent.click(toggle());
       fireEvent.change(title(), { target: { value: 'Fixture Working' } });
       submit();
 

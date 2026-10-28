@@ -133,7 +133,7 @@ function valuesOf(spell?: Partial<SpellBuilderSpell>): SpellBuilderValues {
     >),
     steps: (spell?.steps ?? []).map(stepValueOf),
     // A new spell is the coven's unless chosen otherwise (§5).
-    visibility: spell?.visibility ?? 'workspace',
+    visibility: spell?.visibility ?? 'private',
     // A new spell is a draft (M10.20).
     status: spell?.status ?? 'draft',
     categoryIds: [...(spell?.categoryIds ?? [])],

@@ -126,8 +126,9 @@ ingredient form's Toxic switch does, rather than centred as in a filter bar
 (`index.scss`, on the form's `spell-builder` class).
 The rule it follows is DESIGN.md §5's: visibility only widens.
 
-- **A new spell** opens with the switch on, the coven being the database's
-  default, and it may be turned either way. The choice goes out with the first save. A choice alone is
+- **A new spell** opens with the switch off, private (the owner's call, 2026-10-28: the
+  autosave saves it 3 s after the first keystroke, and a shared spell never goes back; the
+  database's column default stays `workspace`, since every write sends the value). It may be turned either way. The choice goes out with the first save. A choice alone is
   something to save (the owner's call, 2026-10-27): a visibility other than
   the last save's makes the form dirty, so Save Spell enables, Close saves
   it, and the browser asks before the tab closes.
@@ -498,8 +499,8 @@ grimoire page's test,
 `tests/app/(shell)/coven/[slug]/grimoire/(list)/page.test.tsx`, covers which
 address opens which dialog for an owner and a member, and that a viewer's
 `?new=spell-<slug>` or `?edit=<id>` opens nothing. `visibility-field.test.tsx` covers the
-visibility control: on by default and sent with a create, off sent as private and
-left open, a choice alone saveable, the share question kept and
+visibility control: off by default and sent as private with a create, on sent as workspace and
+shut; a new spell's first autosave stores private (`autosave.test.tsx`), a choice alone saveable, the share question kept and
 confirmed, a refused share, a refused narrowing shown in the notice, and the
 control shut with its reason on a shared spell. `tests/components/SpellBuilder/categories-field.test.tsx` covers the
 Categories field: the picks sent with a first save, Save on with a pick and
