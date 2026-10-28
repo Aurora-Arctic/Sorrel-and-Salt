@@ -176,7 +176,8 @@ $spell-columns-switch: $spell-main-min + $spell-columns-gap + $spell-side;
   display: grid;
   grid-template-columns: minmax(0, 1fr) auto;
   align-items: start;
-  gap: space(3);
+  // The add row sits with the heading's group, then space(5) to the list.
+  gap: space(5) space(3);
 }
 
 .spell-steps__box {
@@ -229,11 +230,13 @@ $spell-columns-switch: $spell-main-min + $spell-columns-gap + $spell-side;
   }
 }
 
-// The steps themselves: unnumbered, unindented, a gap between them.
+// The steps themselves: unnumbered, unindented, a gap between them: space(4),
+// where it was space(3), so the cards do not blur into one column (design review,
+// 2026-10-28, finding 3).
 .spell-steps__list {
   display: flex;
   flex-direction: column;
-  gap: space(3);
+  gap: space(4);
   margin: 0;
   padding: 0;
   list-style: none;
@@ -277,7 +280,9 @@ $spell-columns-switch: $spell-main-min + $spell-columns-gap + $spell-side;
   box-sizing: border-box;
   flex: 1 1 $spell-side;
   flex-direction: column;
-  gap: space(3);
+  // Its blocks are told apart by distance alone: space(6) between them, and no
+  // hairline (design review, 2026-10-28, finding 3).
+  gap: space(6);
   min-width: 0;
   @include spell-side-stacked;
 
@@ -294,19 +299,8 @@ $spell-columns-switch: $spell-main-min + $spell-columns-gap + $spell-side;
   }
 }
 
-.spell-aside__rule {
-  width: 100%;
-  margin: 0;
-  border: 0;
-  border-block-start: 1px solid $hairline;
-  // The aside's space(3) gap plus space(1) on each side: every hairline has space(4) above
-  // and below it, so a heading sits as far under a line as the block above sits over it.
-  margin-block: space(1);
-}
-
 // The aside's own gap spaces these sections. A bare `section` carries space(4) of margin
-// (_layout.scss), which sat on top of the gap and left the space below a hairline 12px
-// larger than the space above it.
+// (_layout.scss), which would sit on top of the gap.
 .spell-aside > section {
   margin-block: 0;
 }
@@ -316,12 +310,27 @@ $spell-columns-switch: $spell-main-min + $spell-columns-gap + $spell-side;
   color: $text-muted;
 }
 
+// The builder's sections: space(6) under the fields of an open one, so the gap between
+// sections is plainly bigger than the space(5) between fields (design review,
+// 2026-10-28). Here and not in the shared component, which IngredientForm also uses.
+body .spell-builder .collapsible-section__fields {
+  padding-block-end: space(6);
+}
+
+// The first block: heading, jar and description, space(2) apart. The aside's space(6) gap
+// separates it from the blocks after it.
+.spell-aside__block {
+  display: flex;
+  flex-direction: column;
+  gap: space(2);
+}
+
 // The jar drawing with the two fields beside it.
 .spell-aside__jar {
   display: flex;
   // The jar is centred on the whole Seal Wax Colour field, its label as well as its input.
   align-items: center;
-  gap: space(3);
+  gap: space(2);
 }
 
 .spell-aside__fields {

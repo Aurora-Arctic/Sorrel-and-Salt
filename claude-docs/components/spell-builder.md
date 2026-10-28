@@ -350,8 +350,7 @@ being read the column is a skeleton, and if the read fails, an error in its plac
 
 `jar-aside.tsx` is an `aside` named The Jar, the right column of the Jar section (the owner's
 placement, 2026-10-28; it was a block after the steps). In order: the jar drawing with Seal
-Wax Colour to its right (the drawing centred on the whole field, label and input), Jar Description beneath both at the aside's full width (at every width), a hairline one `space(1)` further down than the aside's usual gap, In Coven Inventory (`inventory.tsx`), a hairline,
-and the comparison. The drawing is `JarDrawing` and `pickJarShape` from the jar shelf
+Wax Colour to its right (the drawing centred on the whole field, label and input), Jar Description beneath both at the aside's full width (at every width), then In Coven Inventory (`inventory.tsx`) and the comparison. The heading, jar and description are one block (`spell-aside__block`, `space(2)` apart); the aside puts `space(6)` between its blocks and draws no hairline between them (second design review, 2026-10-28, which reverses the hairlines the first review left). Inside each block the gaps are `space(2)`. The drawing is `JarDrawing` and `pickJarShape` from the jar shelf
 ([`jar-shelf.md`](jar-shelf.md)), drawn empty and tinted by the seal wax.
 
 **The jar fills as ingredients are added.** `JarDrawing` takes a `bands` count, and the aside passes the number of ingredient steps (one-offs count, instructions do not). Each band is the same height, stacked from the base and clipped to the vessel's body so it follows the shape. Eight bands fill the jar (`BANDS_FULL`, a typical spell); past eight the bands shrink so they keep fitting. A band is the jar's ink (`$text-primary`) at 10% opacity, with a 0.5 hairline of the same ink at 18% on its top edge, so the line between ingredients is quiet. All bands are one tone: none is coloured by its ingredient. A band moves by a `transform` transition (none under reduced motion). The drawing stays `aria-hidden`, and an empty jar draws no band.
@@ -441,6 +440,8 @@ instruction steps move alike.
 
 ## Styling
 
+Spacing, set by the second design review (2026-10-28, finding 3), which reverses earlier recorded choices (the hairlines in the aside and the card's `$text-muted` border): the step list's gap is `space(4)` (was `space(3)`); the add row sits `space(5)` above the list; the aside's blocks are `space(6)` apart and `space(2)` inside; an open section's fields end `space(6)` above the next section, set under `.spell-builder` so IngredientForm's `space(5)` stays. Values are in `rem`, so they are the same at 1280px and 390px; only the add row, which stacks in a narrow container, changes place, not size.
+
 No wrapper: the `<form className="form">` sits straight in the body of a `RouteModal` of
 `size="wide"` (55rem of content, 928px dialog, widened 2026-10-28 so the Jar's two columns fit;
 [`modal.md`](modal.md)), its sections styled by `CollapsibleSection`. `index.scss` holds the
@@ -456,7 +457,7 @@ visibility switch's alignment (M10.13) and the Jar section (the owner's design p
 - the list a column spaced by its `gap` alone, with no margin on a row and no room taken while
   empty. The list is the size container a row stacks by (`spell-steps`), declared in
   `StepRow`'s stylesheet;
-- the aside's hairlines in `$hairline`; its chips are `CategoryChips`, unstyled here; every colour is a token,
+- no hairlines between the aside's blocks (the second design review, 2026-10-28, removed them for `space(6)` of distance); its chips are `CategoryChips`, unstyled here; every colour is a token,
   so both themes follow.
 
 The row's own look, the card, is in [`step-row.md`](step-row.md), "The card".
