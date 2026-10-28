@@ -166,9 +166,12 @@ function acceptUpdate(steps: SpellBuilderSpell['steps'] = []) {
   return calls;
 }
 
-function renderBuilder(props: Partial<SpellBuilderProps> = {}) {
+function renderBuilder(
+  props: Partial<SpellBuilderProps> = {},
+  categories: Parameters<typeof offerCategories>[0] = [],
+) {
   // The builder reads the coven's categories as it opens (M10.14).
-  offerCategories([]);
+  offerCategories(categories);
   return render(
     <QueryClientProvider client={makeQueryClient()}>
       <SpellBuilder workspaceId="w1" {...props} />
@@ -314,7 +317,10 @@ describe('the spell builder’s Add to Jar', () => {
       target: { value: 'Dried Root' },
     });
     expect(within(row).getByRole('textbox', { name: /^Form/ })).toHaveValue('Dried Root');
-    expect(within(row).getByText(/Used in this spell only/)).toBeInTheDocument();
+    expect(within(row).getByRole('button', { name: 'One-Off' })).toHaveAccessibleDescription(
+      'Used in this spell only; not kept in your cupboard.',
+    );
+    expect(within(row).queryByText(/Used in this spell only/, { selector: 'p' })).toBeNull();
   });
 
   it('offers no one-off row for an empty box, and refuses one already in the jar', async () => {
@@ -353,6 +359,53 @@ describe('the spell builder’s Add to Jar', () => {
     ]);
   });
 
+  it('renames a one-off in its open row: the header follows, a repeat or a blank is refused, and the save carries the new name', async () => {
+    suggest();
+    const calls = acceptCreate();
+    renderBuilder();
+    await addOneOff('Testwort');
+    const row = () => stepRows()[0] as HTMLElement;
+    const name = () => within(row()).getByRole('textbox', { name: /^Name/ });
+
+    fireEvent.change(name(), { target: { value: 'Mockwort' } });
+    expect(row()).toHaveTextContent('Mockwort');
+    expect(within(row()).getByRole('button', { name: 'Close Mockwort' })).toBeInTheDocument();
+
+    fireEvent.change(name(), { target: { value: '' } });
+    fireEvent.blur(name());
+    await waitFor(() => expect(name()).toHaveAccessibleDescription('Give the ingredient a name'));
+
+    fireEvent.change(name(), { target: { value: 'Mockwort' } });
+    submit();
+    await waitFor(() => expect(calls).toHaveLength(1));
+    expect(calls[0]?.input.steps).toEqual([{ name: 'Mockwort' }]);
+  });
+
+  it('refuses a one-off renamed to a name already in the jar, in the Name field', async () => {
+    suggest();
+    renderBuilder();
+    await addOneOff('Testwort');
+    await addOneOff('Mockwort');
+    const name = () => within(stepRows()[1] as HTMLElement).getByRole('textbox', { name: /^Name/ });
+
+    fireEvent.change(name(), { target: { value: 'testwort' } });
+    fireEvent.blur(name());
+    submit();
+
+    await waitFor(() =>
+      expect(name()).toHaveAccessibleDescription('This ingredient is already in the jar'),
+    );
+  });
+
+  it('shows a linked ingredient’s name read-only: no Name field', async () => {
+    suggest(ROSEWORT);
+    renderBuilder();
+    await add('Rose', /Fixture Rosewort/);
+    expect(
+      within(stepRow('Fixture Rosewort')).queryByRole('textbox', { name: /^Name/ }),
+    ).toBeNull();
+  });
+
   it('takes a step out with Remove', async () => {
     suggest(ROSEWORT, MOCKROOT);
     renderBuilder();
@@ -365,6 +418,36 @@ describe('the spell builder’s Add to Jar', () => {
 
     expect(stepRows()).toHaveLength(1);
     expect(stepRows()[0]).toHaveTextContent('Fixture Mockroot');
+  });
+
+  it('undoes a Remove, putting the step back with what was typed, and redoes it', async () => {
+    suggest(ROSEWORT);
+    renderBuilder();
+    await add('Fixture', /Fixture Rosewort/);
+    const quantity = () =>
+      within(stepRow('Fixture Rosewort')).getByRole('spinbutton', { name: /^Quantity/ });
+    fireEvent.change(quantity(), { target: { value: '7' } });
+    fireEvent.click(
+      within(stepRow('Fixture Rosewort')).getByRole('button', { name: 'Remove Fixture Rosewort' }),
+    );
+    expect(stepRows()).toHaveLength(0);
+
+    fireEvent.click(screen.getByRole('button', { name: 'Undo' }));
+    await waitFor(() => expect(stepRows()).toHaveLength(1));
+    expect(stepRow('Fixture Rosewort')).toHaveTextContent('7');
+
+    fireEvent.click(screen.getByRole('button', { name: 'Redo' }));
+    await waitFor(() => expect(stepRows()).toHaveLength(0));
+  });
+
+  it('undoes an added step', async () => {
+    suggest(ROSEWORT);
+    renderBuilder();
+    await add('Fixture', /Fixture Rosewort/);
+    expect(stepRows()).toHaveLength(1);
+
+    fireEvent.click(screen.getByRole('button', { name: 'Undo' }));
+    await waitFor(() => expect(stepRows()).toHaveLength(0));
   });
 
   it('opens a closed ingredient row from a click on its name, and a click on Remove removes it without opening it', async () => {
@@ -836,6 +919,16 @@ describe('the spell builder’s In Coven Inventory', () => {
     ).toBeNull();
   });
 
+  it('follows a one-off’s new name in its inventory line', async () => {
+    suggest();
+    renderBuilder();
+    await addOneOff('Testwort');
+    fireEvent.change(within(stepRows()[0] as HTMLElement).getByRole('textbox', { name: /^Name/ }), {
+      target: { value: 'Mockwort' },
+    });
+    expect(line('Mockwort')).toHaveTextContent('one-off · nothing to hold');
+  });
+
   it('says a one-off has nothing to hold, badges it One-Off in its row, and gives an instruction no line', async () => {
     suggest();
     renderBuilder();
@@ -856,7 +949,7 @@ describe('the spell builder’s jar fill', () => {
   const bands = () =>
     screen
       .getByRole('complementary', { name: 'The Jar' })
-      .querySelectorAll('svg .jar-shelf__band rect').length;
+      .querySelectorAll('svg .jar-shelf__band-fill').length;
 
   it('draws a band for each ingredient step, a one-off too, and none for an instruction', async () => {
     suggest(MOCKROOT);
@@ -871,6 +964,45 @@ describe('the spell builder’s jar fill', () => {
 
     fireEvent.click(screen.getByRole('button', { name: 'Add an Instruction' }));
     expect(bands()).toBe(2);
+  });
+});
+
+describe('the spell builder’s jar fill colours', () => {
+  const fills = () =>
+    Array.from(
+      screen
+        .getByRole('complementary', { name: 'The Jar' })
+        .querySelectorAll<SVGPathElement>('svg .jar-shelf__band-fill'),
+    );
+  const group = (name: string, colorDark: string, colorLight: string) => ({
+    id: `g-${name}`,
+    name,
+    colorDark,
+    colorLight,
+  });
+  const node = (name: string, g: ReturnType<typeof group>) => ({
+    ...category(name),
+    description: null,
+    group: g,
+  });
+
+  it('draws a layer in the group colours of its categories, in order, and a layer whose categories have no group in the muted ink', async () => {
+    suggest(ROSEWORT, MOCKROOT);
+    // Rosewort carries Love and Calm, two groups; Mockroot carries Love, one group, and Protection, which has none known.
+    renderBuilder({}, [
+      node('Love', group('Love', '#cf6e87', '#a44c63')),
+      node('Calm', group('Calm', '#50a58e', '#1d755d')),
+    ] as never);
+    await add('Mock', /Fixture Mockroot/);
+    await add('Rose', /Fixture Rosewort/);
+
+    await waitFor(() => expect(fills()).toHaveLength(3));
+    const [mockroot, ...rosewort] = fills();
+    expect(mockroot.style.getPropertyValue('--band-light')).toBe('#a44c63');
+    expect(rosewort.map((path) => path.style.getPropertyValue('--band-light'))).toEqual([
+      '#a44c63',
+      '#1d755d',
+    ]);
   });
 });
 

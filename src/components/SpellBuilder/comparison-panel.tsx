@@ -3,8 +3,9 @@
 import { useQuery } from '@tanstack/react-query';
 import { type ReactElement, useId, useMemo } from 'react';
 import { useFormContext, useWatch } from 'react-hook-form';
-import { graphqlQuery } from '../../lib/graphql-client';
 import { CategoriesDocument } from '../IngredientForm/categories';
+import { graphqlQuery } from '../../lib/graphql-client';
+import { useCategoryColors } from './category-colors';
 import CategoryChips, { type CardCategory } from '../CategoryChips';
 import type { GroupColors } from '../../lib/types';
 import type { SpellBuilderValues } from './types';
@@ -115,16 +116,7 @@ export function SpellComparison(): ReactElement {
   const watchedPicks = useWatch({ control, name: 'categoryIds' });
   const steps = useWatch({ control, name: 'steps' }) ?? [];
   const { data } = useQuery({ ...graphqlQuery(CategoriesDocument), throwOnError: false });
-  const groups = useMemo(
-    () =>
-      new Map(
-        (data?.categories.edges ?? []).map(({ node }) => [
-          node.id,
-          { colorDark: node.group.colorDark, colorLight: node.group.colorLight },
-        ]),
-      ),
-    [data],
-  );
+  const groups = useCategoryColors();
   const intended = useMemo(() => {
     const byId = new Map(data?.categories.edges.map(({ node }) => [node.id, node]));
     // A pick whose name has not landed yet is left out until it does.

@@ -112,6 +112,22 @@ function acceptUpdate() {
   return calls;
 }
 
+/** Like `acceptUpdate`, but the answer holds the steps as they were sent, as the server's does. */
+function acceptUpdateEchoingSteps() {
+  const calls: UpdateSpellMutationVariables[] = [];
+  mockGraphQLMutation<UpdateSpellMutation, UpdateSpellMutationVariables>(
+    'UpdateSpell',
+    (variables) => {
+      calls.push(variables);
+      const steps = (variables.input.steps ?? []).flatMap(({ id }) =>
+        SPELL.steps.filter((step) => step.id === id),
+      );
+      return { updateSpell: { ...SPELL, steps, status: 'draft' as const, revision: 5 } };
+    },
+  );
+  return calls;
+}
+
 function renderBuilder(props: Partial<SpellBuilderProps> = {}) {
   // The builder reads the coven's categories as it opens (M10.14).
   offerCategories([]);
@@ -248,5 +264,85 @@ describe('the spell builder’s step order', () => {
     fireEvent.click(screen.getByRole('button', { name: 'Remove Testwort' }));
     expect(announced()).toContain('Removed Testwort, from position 2 of 4.');
     expect(order()).toEqual([ROSEWORT, 'Stir thrice', 'Fixture Glimmerseed']);
+  });
+});
+
+describe('the spell builder’s undo of step changes', () => {
+  beforeEach(() => layOutRows());
+  afterEach(() => vi.restoreAllMocks());
+
+  const undo = () => fireEvent.click(screen.getByRole('button', { name: 'Undo' }));
+  const redo = () => fireEvent.click(screen.getByRole('button', { name: 'Redo' }));
+
+  it('undoes and redoes a move as one entry', async () => {
+    renderBuilder();
+    await moveByKeyboard(handle('Stir thrice'), 'ArrowUp');
+    expect(order()).toEqual([ROSEWORT, 'Stir thrice', 'Testwort']);
+
+    undo();
+    await waitFor(() => expect(order()).toEqual([ROSEWORT, 'Testwort', 'Stir thrice']));
+    redo();
+    await waitFor(() => expect(order()).toEqual([ROSEWORT, 'Stir thrice', 'Testwort']));
+  });
+
+  it('undoes and redoes the removal of an instruction', async () => {
+    renderBuilder();
+    fireEvent.click(screen.getByRole('button', { name: 'Remove Stir thrice' }));
+    expect(order()).toEqual([ROSEWORT, 'Testwort']);
+
+    undo();
+    await waitFor(() => expect(order()).toEqual([ROSEWORT, 'Testwort', 'Stir thrice']));
+    redo();
+    await waitFor(() => expect(order()).toEqual([ROSEWORT, 'Testwort']));
+  });
+
+  it('undoes and redoes an added instruction', async () => {
+    renderBuilder();
+    fireEvent.click(screen.getByRole('button', { name: 'Add an Instruction' }));
+    await waitFor(() => expect(within(steps()).getAllByRole('listitem')).toHaveLength(4));
+
+    undo();
+    await waitFor(() => expect(within(steps()).getAllByRole('listitem')).toHaveLength(3));
+    redo();
+    await waitFor(() => expect(within(steps()).getAllByRole('listitem')).toHaveLength(4));
+  });
+
+  it('undoes a move made after a save, and not the save', async () => {
+    const calls = acceptUpdate();
+    renderBuilder();
+    await moveByKeyboard(handle('Stir thrice'), 'ArrowUp');
+    submit();
+    await waitFor(() => expect(calls).toHaveLength(1));
+    await waitFor(() => expect(order()).toEqual([ROSEWORT, 'Testwort', 'Stir thrice']));
+    // The save answers with the spell as it was loaded, so the list starts again from that order.
+    await moveByKeyboard(handle('Stir thrice'), 'ArrowUp');
+    expect(order()).toEqual([ROSEWORT, 'Stir thrice', 'Testwort']);
+
+    undo();
+    await waitFor(() => expect(order()).toEqual([ROSEWORT, 'Testwort', 'Stir thrice']));
+  });
+});
+
+describe('the spell builder’s undo across a save', () => {
+  beforeEach(() => layOutRows());
+  afterEach(() => vi.restoreAllMocks());
+
+  it('still undoes and redoes a step removed before the save, and marks the form changed again', async () => {
+    const calls = acceptUpdateEchoingSteps();
+    renderBuilder();
+    const rows = () => within(steps()).getAllByRole('listitem');
+    fireEvent.click(screen.getByRole('button', { name: 'Remove Stir thrice' }));
+    await waitFor(() => expect(rows()).toHaveLength(2));
+    submit();
+    await waitFor(() => expect(calls).toHaveLength(1));
+    await waitFor(() => expect(save()).toBeDisabled());
+    const kept = rows().length;
+
+    fireEvent.click(screen.getByRole('button', { name: 'Undo' }));
+    await waitFor(() => expect(rows()).toHaveLength(kept + 1));
+    await waitFor(() => expect(save()).toBeEnabled());
+
+    fireEvent.click(screen.getByRole('button', { name: 'Redo' }));
+    await waitFor(() => expect(rows()).toHaveLength(kept));
   });
 });

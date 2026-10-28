@@ -182,7 +182,10 @@ export function stepInputOf(step: SpellStepValue): SpellStepSend {
   // A blank text is dropped from a step that has an ingredient, which needs
   // none, but kept on an instruction-only step so the schema refuses it at
   // its own field rather than as a step that says nothing (M13.3).
-  return isInstruction(step) ? { ...sent, body: step.body ?? '' } : sent;
+  if (isInstruction(step)) return { ...sent, body: step.body ?? '' };
+  // A one-off's name emptied in its Name field is still sent, so the schema refuses it at that
+  // field and not as a step with no identity.
+  return step.ingredientId === null && step.name !== null ? { ...sent, name: step.name } : sent;
 }
 
 /**
