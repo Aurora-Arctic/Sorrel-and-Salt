@@ -129,15 +129,20 @@ function createEngine<TValue>(
     // A change made while the save was in flight is not on the server yet,
     // and the mirror holds it.
     if (!unsaved) clearMirrored();
+    // A flush that arrived mid-save queues a follow-up, but only a change
+    // made since gives it something to send.
+    const again = queued && unsaved && latest.current.enabled;
+    queued = false;
     set({
-      status: queued ? 'saving' : delayTimer ? 'pending' : 'saved',
+      status: again ? 'saving' : delayTimer ? 'pending' : 'saved',
       savedAt: result.savedAt,
       error: null,
       conflict: null,
       id: result.id,
     });
-    if (queued) start();
-    else if (!delayTimer) settle();
+    if (again) {
+      start();
+    } else if (!delayTimer) settle();
   }
 
   function failed(thrown: unknown) {
@@ -242,6 +247,9 @@ function createEngine<TValue>(
 
     attach() {
       attached = true;
+      // A change made while detached (the page hidden and shown again, as a
+      // navigation does) was kept but not published.
+      publish(view);
     },
 
     /** Unmounted: stop every timer. The mirror keeps anything not yet saved. */

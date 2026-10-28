@@ -575,3 +575,44 @@ test(
     );
   },
 );
+
+test(
+  'a member’s typing in the spell builder is saved without a press',
+  { tag: '@story-81' },
+  async ({ page }) => {
+    const coven = await seedCoven(page, 'Fixture Coven Eighty-One', 'story-81.test', {
+      A: 'owner',
+      B: 'member',
+    });
+    await signInAgainAs(page, coven.users.B);
+    await openBuilder(page, coven.slug);
+    // The dialog is renamed to Edit Spell once the first save lands, so it is found by role alone.
+    const dialog = page.getByRole('dialog');
+    await dialog.getByRole('textbox', { name: 'Title' }).fill('Fixture Working');
+    // Nothing is pressed: three seconds after the last change the draft is saved, and the address names it.
+    await expect(dialog.getByRole('status').filter({ hasText: /^Draft saved/ })).toBeVisible({
+      timeout: 15_000,
+    });
+    await expect(page).toHaveURL(/\?edit=[0-9a-f-]{36}$/);
+    await dialog.getByRole('textbox', { name: 'Intent' }).fill('To see clearly');
+    await expect(dialog.getByRole('button', { name: 'Save Spell' })).toBeDisabled({
+      timeout: 15_000,
+    });
+    await page.reload();
+    const reopened = page.getByRole('dialog', { name: 'Edit Spell, Fixture Working' });
+    await reopened.getByRole('button', { name: 'Open All' }).click();
+    await expect(reopened.getByRole('textbox', { name: 'Intent' })).toHaveValue('To see clearly');
+    // Offline, the save fails after its retries and says so; back online, Retry saves it.
+    await reopened.getByRole('textbox', { name: 'Intent' }).fill('To see clearly, offline');
+    await page.context().setOffline(true);
+    await expect(reopened.getByText(/Couldn.t save/)).toBeVisible({ timeout: 45_000 });
+    await page.context().setOffline(false);
+    await reopened.getByRole('button', { name: 'Retry' }).click();
+    await expect(reopened.getByRole('status').filter({ hasText: /^Draft saved/ })).toBeVisible();
+    await page.reload();
+    await page.getByRole('button', { name: 'Open All' }).click();
+    await expect(page.getByRole('textbox', { name: 'Intent' })).toHaveValue(
+      'To see clearly, offline',
+    );
+  },
+);
