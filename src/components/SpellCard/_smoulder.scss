@@ -15,7 +15,7 @@
 // so their edges meet. Faint embers glow in the burnt part itself, brightest along the
 // ember line and fading towards the corner; a little warmth spills onto the table below
 // the card, behind it, and shows through the hole.
-// The burn creeps along the bottom edge for 2.6s, then holds while the ember glows
+// The burn creeps along the bottom edge for 1.3s, then holds while the ember glows
 // unevenly. On leaving, the burn fades while the hole and the spill shrink back to the
 // corner, so a quick return burns on from where they have shrunk to.
 //
@@ -36,9 +36,9 @@
 $candle: $ochre-bright;
 $ember: $wax-warm;
 
-$burn-duration: $pulse-duration * 1.3;
+$burn-duration: $pulse-duration * 0.65;
 // The leave: the burn fades, and the hole and the glow shrink back, in this time.
-$burn-leave-duration: $motion-medium * 2;
+$burn-leave-duration: $motion-medium;
 $burn-easing: cubic-bezier(0.25, 0.6, 0.35, 1);
 // How far the burn reaches along the bottom edge, and how deep at the corner. Both include
 // the 0.5rem the hole hangs past the card, so it starts outside.

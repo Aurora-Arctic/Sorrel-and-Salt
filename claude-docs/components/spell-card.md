@@ -82,7 +82,7 @@ What the effect is, in `_smoulder.scss`:
   between the glow inside the hole and the glow off the card. It runs 1.5rem past the ember
   front, at opacity 0.4 under a 1.25rem blur, kept below the ember line's brightness (the
   owner, 2026-10-28).
-- **Timing.** The burn creeps along the edge for 2.6s, and the glow grows with it. On
+- **Timing.** The burn creeps along the edge for 1.3s, and the glow grows with it. On
   leaving, the burn fades while the hole, the face's shadow and the glow shrink back to the
   corner, so a quick return burns on from where they had shrunk to.
 - **Reduced motion** shows the finished burn at once, still. **Touch** gets no hover at all:
