@@ -38,7 +38,7 @@ const linked = {
   id: 's-1',
   ingredientId: 'ing-1',
   variantId: 'v-1',
-  quantity: '2',
+  quantity: '2.000',
   unit: 'tsp',
   ingredient: { id: 'ing-1', workspaceId: null, name: 'Testwort', deleted: false },
   variant: {

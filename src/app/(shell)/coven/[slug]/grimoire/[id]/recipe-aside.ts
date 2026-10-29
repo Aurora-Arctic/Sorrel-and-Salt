@@ -93,7 +93,8 @@ export async function readRecipeAsideOf(
       variantId: variant?.id ?? null,
       name: ingredient ? ingredient.name : view.name,
       form: ingredient ? (variant?.form ?? null) : view.form,
-      quantity: view.quantity === null ? '' : String(view.quantity),
+      // The row's numeric is a string with its scale ("1.000"); the builder holds the number's own text.
+      quantity: view.quantity === null ? '' : String(Number(view.quantity)),
       unit: view.unit ?? '',
       savedUnit: view.unit,
       body: view.body,
