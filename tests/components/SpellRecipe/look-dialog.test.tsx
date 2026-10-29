@@ -11,7 +11,7 @@ const { RouteModalProvider } = await import('@/components/Modal');
 const { default: SpellLookDialog } = await import('@/components/SpellRecipe/look-dialog');
 
 // The Quick Look modal a grimoire card's eye opens (
-// claude-docs/components/spell-recipe.md, "The Quick Look modal"): a spell read over the list,
+// claude-docs/components/spell-recipe.md, "Quick Look"): a spell read over the list,
 // a way through to its recipe page, and, for a role that may update it, an Edit.
 
 const LIST = '/coven/fixture-coven/grimoire' as Route;

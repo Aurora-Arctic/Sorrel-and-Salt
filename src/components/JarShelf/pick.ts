@@ -15,7 +15,7 @@ export function hash(text: string): number {
 /**
  * The vessel for a form of an ingredient: the same pair always gets the same one, a liquid form
  * from the bottles and anything else from the jars (claude-docs/components/jar-shelf.md,
- * "Component notes").
+ * "Choosing and drawing the vessel").
  */
 export function pick(seed: string, form: string): JarShapeName {
   const pool = LIQUID.test(form) ? BOTTLES : JARS;

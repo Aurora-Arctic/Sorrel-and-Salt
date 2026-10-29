@@ -32,8 +32,7 @@ $jump-link-line: 1.25;
   @media (min-width: calc(#{$shell-phone-width} + 0.01rem)) {
     > .page-nav {
       // The menu's first link ("Details") level with the Details h2: the menu drops by half of what
-      // the h2's line has over the link's. (claude-docs/components/ingredient-entry.md, "Style
-      // notes")
+      // the h2's line has over the link's. (claude-docs/components/ingredient-entry.md, "Styling")
       margin-block-start: calc(
         (#{heading-size(2)} * 1.15 - #{$jump-link-size} * #{$jump-link-line} - 2 * #{space(1)}) / 2
       );
@@ -74,8 +73,7 @@ $jump-link-line: 1.25;
 }
 
 // With New or Updated there, the two are one pair ending flush with the pencil at the text column's
-// right end, in flow so nothing clips at 390. (claude-docs/components/ingredient-entry.md, "Style
-// notes")
+// right end, in flow so nothing clips at 390. (claude-docs/components/ingredient-entry.md, "Styling")
 .ingredient-entry__bar > .recency-mark + .badge {
   margin-inline-start: calc(#{space(2)} - #{space(3)});
 }

@@ -23,8 +23,7 @@ import './index.scss';
 import './summary.scss';
 
 // The details modal's body: the entry page's Details section cut to a glance, drawn by the page's
-// own blocks and leaving out what is empty (claude-docs/components/ingredient-entry.md, "Component
-// notes").
+// own blocks and leaving out what is empty (claude-docs/components/ingredient-entry.md, "The details modal").
 
 /** "The Oil form", "The Oil and Root forms", "The Oil, Root and Tincture forms". */
 function formsCarrying(labels: readonly string[]): string {

@@ -154,8 +154,7 @@
   transition: height $motion-medium ease-in-out;
 
   // The fade: the surface the text stands on, in from clear at the top, so the last lines go into
-  // the bar; it lets the pointer through. (claude-docs/components/ingredient-entry.md, "Style
-  // notes")
+  // the bar; it lets the pointer through. (claude-docs/components/ingredient-entry.md, "Styling")
   &::after {
     content: '';
     position: absolute;

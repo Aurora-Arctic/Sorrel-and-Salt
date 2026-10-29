@@ -165,8 +165,7 @@ export default function CupboardActions(
     ),
   );
 
-  // Edit Stock, first in More on either page (claude-docs/components/ingredient-entry.md, "Cupboard
-  // actions layout").
+  // Edit Stock, first in More on either page (claude-docs/components/ingredient-entry.md, "What the cupboard actions draw").
   const stockers = places.flatMap(({ workspaceId, name: coven, held, stock }): StockPlace[] =>
     held && stock ? [{ workspaceId, name: coven, stock }] : [],
   );

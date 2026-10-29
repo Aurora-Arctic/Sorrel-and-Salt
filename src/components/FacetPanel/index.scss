@@ -448,8 +448,7 @@ $sheet-slide: 250ms ease-out;
 }
 
 // A tip in the panel opens below its label (`--tip-placement`, read by `useTip`), because one above
-// Match would cover the panel's own header (claude-docs/components/facet-panel.md, "Styling
-// notes").
+// Match would cover the panel's own header (claude-docs/components/facet-panel.md, "Styling").
 .facet-panel {
   --tip-placement: bottom;
 }

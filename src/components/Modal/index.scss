@@ -337,7 +337,7 @@ $eyebrow-line: calc(#{type-size('overline')} * 1.65);
 
   // Held while a question is asked, as the form is, so its buttons take the disabled look, as Undo
   // and Redo do when off, not a fade or a scrim over the row (claude-docs/components/modal.md,
-  // "Styling notes"). The ingredient form disables its Close All then too.
+  // "Styling"). The ingredient form disables its Close All then too.
   &[inert] .btn {
     @include btn-disabled;
   }
