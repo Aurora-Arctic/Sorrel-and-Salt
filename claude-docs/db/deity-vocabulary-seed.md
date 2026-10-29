@@ -2,16 +2,16 @@
 
 The starting list for `deity_traditions` and `deities`
 ([the model](deity-vocabulary.md)), recorded by MB.127 for MB.129 to seed:
-thirty-five traditions and 216 deities, in the order the two tables below give
+87 traditions and 290 deities, in the order the two tables below give
 them. The owner asked for a broad list, 100 to 200, across the practices the
 project serves, and that the deities be grouped by tradition; the five
 African traditions added on review carried it past 200. The seed's literal
-transcribes both tables, every deity filed under one of the thirty-five;
+transcribes both tables, every deity filed under one of the 87;
 review holds the two in step, and `deities.test.ts` what a re-run leaves of
 an admin's edits (MB.225).
 
 The list lives here rather than in DESIGN.md §5, where the celestial body and zodiac
-values are, because 216 rows with their descriptions are data, not
+values are, because 290 rows with their descriptions are data, not
 specification: §5 states the model and points here.
 
 **Names are written as their tradition spells them in English**, one spelling
@@ -193,43 +193,95 @@ refusal is per tradition, so both stand.
 
 ### Traditions
 
-| Name                               | Description                                                                                                                                        |
-| ---------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------- |
-| Greek                              | The gods of ancient Greece: the Olympians, the Titans, the primordial powers, and the heroes and enchantresses honoured as gods.                   |
-| Roman                              | The gods of ancient Rome, many identified with Greek counterparts, beside the native Italic powers of field, door and hearth.                      |
-| Anatolian                          | The gods of Phrygia and ancient Anatolia, whose Great Mother's cult spread to Greece and Rome.                                                     |
-| Egyptian                           | The gods of ancient Egypt, of the Sun, the Nile, the dead and the order of the world.                                                              |
-| Sumerian                           | The gods of Sumer, the oldest Mesopotamian record, whose names the later cities carried into their own.                                            |
-| Akkadian & Babylonian              | The gods of Akkad, Babylon and Assyria, many of them the Sumerian gods under Akkadian names.                                                       |
-| Canaanite & Phoenician             | The gods of Canaan, Ugarit and the Phoenician cities of the Levant.                                                                                |
-| Persian                            | The gods of ancient Iran, the yazatas of the Zoroastrian tradition and those before it.                                                            |
-| Norse                              | The gods of the Norse, the Aesir and the Vanir, as the Eddas and the sagas record them.                                                            |
-| Anglo-Saxon & Continental Germanic | The gods and goddesses of the Anglo-Saxons and the continental Germanic peoples, known from Bede, Tacitus and later folklore.                      |
-| Irish                              | The gods of Ireland, the Tuatha De Danann and the figures of Irish literature honoured as gods today.                                              |
-| Welsh                              | The gods of Wales, the figures of the Mabinogi and Welsh literature honoured as gods today.                                                        |
-| Gaulish & British                  | The gods of Gaul and Roman Britain, known from altars, inscriptions and the Romans who named them.                                                 |
-| Slavic                             | The gods of the Slavic peoples and the figures of their folklore.                                                                                  |
-| Baltic                             | The gods of the Lithuanians and Latvians, whose old religion lasted longest in Europe.                                                             |
-| Finnish                            | The gods and forest spirits of Finnish and Karelian tradition, many named in the Kalevala.                                                         |
-| Hindu                              | The gods of Hinduism, from the Vedic hymns to living worship.                                                                                      |
-| Taoist                             | The gods and immortals of religious Taoism.                                                                                                        |
-| Chinese Buddhist                   | The buddhas and bodhisattvas as Chinese Buddhism honours them, and as folk religion honours them beside it.                                        |
-| Chinese folk                       | The gods of Chinese folk religion: culture heroes, city and household gods, and the deified dead.                                                  |
-| Japanese                           | The kami of Shinto, and the gods Japanese Buddhism brought with it.                                                                                |
-| Akan                               | The abosom of the Akan peoples of Ghana and Ivory Coast, the Asante, Fante and Bono among them, beneath the sky god Nyame and the earth Asase Yaa. |
-| Igbo                               | The alusi of the Igbo people of south-eastern Nigeria, the spirits the creator Chukwu set over the earth, the sky, the river and the farm.         |
-| Fon & Ewe                          | The vodun of the Fon and Ewe peoples of Benin and Togo, the Vodun of the old kingdom of Dahomey from which Haitian Vodou grew.                     |
-| Yoruba                             | The orishas of the Yoruba religion and of the traditions it carried to the Americas: Lucumi, Santeria and Candomble.                               |
-| Kongo                              | The gods and nature spirits of the Bakongo of central Africa, whose religion also underlies Palo in Cuba.                                          |
-| Zulu                               | The gods and the Lord of the Sky of the Zulu people of southern Africa, honoured beside the ancestral shades.                                      |
-| Haitian Vodou                      | The lwa of Haitian Vodou, grown from the vodun of Dahomey and the religions of the Kongo and the Yoruba.                                           |
-| Aztec                              | The gods of the Mexica and the Nahua peoples of central Mexico.                                                                                    |
-| Maya                               | The gods of the Maya peoples of Yucatan, Guatemala and the highlands.                                                                              |
-| Inca                               | The gods of the Inca and of the Quechua and Aymara peoples of the Andes, honoured there still.                                                     |
-| Hawaiian                           | The akua of Hawaiian religion, and their kin across Polynesia.                                                                                     |
-| Wicca                              | The god and goddess of Wicca and of the modern pagan witchcraft that grew from it.                                                                 |
-| English folklore                   | Figures of English folklore and church carving honoured as gods in modern practice.                                                                |
-| Italian folk witchcraft            | Figures of Italian folk witchcraft as Charles Leland recorded it, honoured in Stregheria and modern practice.                                      |
+| Name                               | Description                                                                                                                                                |
+| ---------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Greek                              | The gods of ancient Greece: the Olympians, the Titans, the primordial powers, and the heroes and enchantresses honoured as gods.                           |
+| Roman                              | The gods of ancient Rome, many identified with Greek counterparts, beside the native Italic powers of field, door and hearth.                              |
+| Anatolian                          | The gods of Phrygia and ancient Anatolia, whose Great Mother's cult spread to Greece and Rome.                                                             |
+| Egyptian                           | The gods of ancient Egypt, of the Sun, the Nile, the dead and the order of the world.                                                                      |
+| Sumerian                           | The gods of Sumer, the oldest Mesopotamian record, whose names the later cities carried into their own.                                                    |
+| Akkadian & Babylonian              | The gods of Akkad, Babylon and Assyria, many of them the Sumerian gods under Akkadian names.                                                               |
+| Canaanite & Phoenician             | The gods of Canaan, Ugarit and the Phoenician cities of the Levant.                                                                                        |
+| Persian                            | The gods of ancient Iran, the yazatas of the Zoroastrian tradition and those before it.                                                                    |
+| Norse                              | The gods of the Norse, the Aesir and the Vanir, as the Eddas and the sagas record them.                                                                    |
+| Anglo-Saxon & Continental Germanic | The gods and goddesses of the Anglo-Saxons and the continental Germanic peoples, known from Bede, Tacitus and later folklore.                              |
+| Irish                              | The gods of Ireland, the Tuatha De Danann and the figures of Irish literature honoured as gods today.                                                      |
+| Welsh                              | The gods of Wales, the figures of the Mabinogi and Welsh literature honoured as gods today.                                                                |
+| Gaulish & British                  | The gods of Gaul and Roman Britain, known from altars, inscriptions and the Romans who named them.                                                         |
+| Slavic                             | The gods of the Slavic peoples and the figures of their folklore.                                                                                          |
+| Baltic                             | The gods of the Lithuanians and Latvians, whose old religion lasted longest in Europe.                                                                     |
+| Finnish                            | The gods and forest spirits of Finnish and Karelian tradition, many named in the Kalevala.                                                                 |
+| Hindu                              | The gods of Hinduism, from the Vedic hymns to living worship.                                                                                              |
+| Taoist                             | The gods and immortals of religious Taoism.                                                                                                                |
+| Chinese Buddhist                   | The buddhas and bodhisattvas as Chinese Buddhism honours them, and as folk religion honours them beside it.                                                |
+| Chinese folk                       | The gods of Chinese folk religion: culture heroes, city and household gods, and the deified dead.                                                          |
+| Japanese                           | The kami of Shinto, and the gods Japanese Buddhism brought with it.                                                                                        |
+| Akan                               | The abosom of the Akan peoples of Ghana and Ivory Coast, the Asante, Fante and Bono among them, beneath the sky god Nyame and the earth Asase Yaa.         |
+| Igbo                               | The alusi of the Igbo people of south-eastern Nigeria, the spirits the creator Chukwu set over the earth, the sky, the river and the farm.                 |
+| Fon & Ewe                          | The vodun of the Fon and Ewe peoples of Benin and Togo, the Vodun of the old kingdom of Dahomey from which Haitian Vodou grew.                             |
+| Yoruba                             | The orishas of the Yoruba religion and of the traditions it carried to the Americas: Lucumi, Santeria and Candomble.                                       |
+| Kongo                              | The gods and nature spirits of the Bakongo of central Africa, whose religion also underlies Palo in Cuba.                                                  |
+| Zulu                               | The gods and the Lord of the Sky of the Zulu people of southern Africa, honoured beside the ancestral shades.                                              |
+| Haitian Vodou                      | The lwa of Haitian Vodou, grown from the vodun of Dahomey and the religions of the Kongo and the Yoruba.                                                   |
+| Aztec                              | The gods of the Mexica and the Nahua peoples of central Mexico.                                                                                            |
+| Maya                               | The gods of the Maya peoples of Yucatan, Guatemala and the highlands.                                                                                      |
+| Inca                               | The gods of the Inca and of the Quechua and Aymara peoples of the Andes, honoured there still.                                                             |
+| Hawaiian                           | The akua of Hawaiian religion, and their kin across Polynesia.                                                                                             |
+| Wicca                              | The god and goddess of Wicca and of the modern pagan witchcraft that grew from it.                                                                         |
+| English folklore                   | Figures of English folklore and church carving honoured as gods in modern practice.                                                                        |
+| Italian folk witchcraft            | Figures of Italian folk witchcraft as Charles Leland recorded it, honoured in Stregheria and modern practice.                                              |
+| Arara                              | The Arara religion of Cuba, which grew in the late nineteenth century among descendants of people from the Dahomey kingdom of West Africa.                 |
+| Winti                              | The Afro-Surinamese religion of Suriname, joining African beliefs brought mainly by enslaved Akan, Fon and Kongo people.                                   |
+| Bwiti                              | The spiritual discipline of the Punu, Mitsogo and Fang peoples of Gabon, joining animism, ancestor worship and, in some forms, Christianity.               |
+| Buddhist                           | Buddhism, the Indian religion and philosophy based on teachings attributed to the Buddha, who lived in the 6th or 5th century BCE.                         |
+| Jain                               | Jainism, the Indian religion that teaches spiritual purity through disciplined nonviolence to all living creatures, guided by 24 tirthankaras.             |
+| Theravada Buddhist                 | Theravada, the oldest existing school of Buddhism, which keeps the Buddha’s teaching in the Pali Canon.                                                    |
+| Shugendo                           | An Esoteric Buddhist religion of ascetic practice that began in Nara-period Japan.                                                                         |
+| Tripuri                            | The Tibeto-Burman-speaking people of the Indian state of Tripura and of Bangladesh, descended from the inhabitants of the Tripura kingdom.                 |
+| Aboriginal Australian              | The Indigenous peoples of the Australian mainland and many of its islands, formed over time into as many as 500 linguistic and territorial groups.         |
+| Maori                              | The Indigenous Polynesian people of mainland New Zealand, descended from East Polynesian settlers.                                                         |
+| Polynesian                         | The closely related peoples native to Polynesia, the islands within the Polynesian Triangle in the Pacific Ocean.                                          |
+| Melanesian                         | The Indigenous inhabitants of Melanesia, in an area stretching from New Guinea to the Fiji Islands.                                                        |
+| Malay                              | The Austronesian people native to the Malay Peninsula, eastern Sumatra and coastal Borneo.                                                                 |
+| Javanese                           | The Austronesian people native to the central and eastern parts of the island of Java, in Indonesia.                                                       |
+| Sundanese                          | The Austronesian people native to the western part of the island of Java, in Indonesia.                                                                    |
+| Tongan                             | The Polynesian people native to Tonga, an archipelago in the Pacific Ocean.                                                                                |
+| Samoan                             | The Indigenous Polynesian people of the Samoan Islands, an archipelago in Polynesia.                                                                       |
+| Fijian                             | The Austronesian people native to Fiji, the major Indigenous people of the Fiji Islands of Melanesia.                                                      |
+| Mazatec                            | The Indigenous people of Mexico who live in the Sierra Mazateca in Oaxaca and in nearby parts of Puebla and Veracruz.                                      |
+| Chumash                            | The Native American people of the central and southern coastal regions of California.                                                                      |
+| Moche                              | The civilisation that flourished in northern Peru from about 100 to 800 AD.                                                                                |
+| Nazca                              | The culture that flourished from about 100 BC to 800 AD beside the arid southern coast of Peru.                                                            |
+| Chavin                             | The pre-Columbian civilisation of the northern Andean highlands of Peru, from about 900 to 250 BCE.                                                        |
+| Olmec                              | The early Mesoamerican civilisation of the Mexican states of Veracruz and Tabasco, from roughly 1200 to 400 BC.                                            |
+| Tongva                             | The Indigenous people of California from the Los Angeles Basin and the Southern Channel Islands.                                                           |
+| Taino                              | The Indigenous peoples of most of the West Indies, in the Caribbean, whose culture descendants and revivalist communities continue.                        |
+| Quechua                            | The Indigenous peoples of South America who speak the Quechuan languages, which originated among the Indigenous people of Peru.                            |
+| Ojibwe                             | The Anishinaabe people whose homeland covers much of the Great Lakes region and the northern plains.                                                       |
+| Potawatomi                         | The Indigenous North American tribe of the Great Plains, the upper Mississippi River and the western Great Lakes region, who speak an Algonquian language. |
+| Menominee                          | The Native American tribe of Wisconsin and the Upper Peninsula of Michigan.                                                                                |
+| Dakota                             | The Native American tribe and First Nations band government that forms two of the three main subcultures of the Sioux.                                     |
+| Lakota                             | The Native American people also known as the Teton Sioux, with lands in North and South Dakota.                                                            |
+| Blackfeet                          | The linguistically related groups of the Blackfoot Confederacy, the Blackfoot or Blackfeet people.                                                         |
+| Zuni                               | The Native American Pueblo people of the Zuni River valley, in New Mexico.                                                                                 |
+| Hopi                               | The Native Americans who live mainly in northeastern Arizona.                                                                                              |
+| Cherokee                           | One of the Indigenous peoples of the Southeastern Woodlands of the United States.                                                                          |
+| Muscogee                           | The group of related Indigenous peoples of the Southeastern Woodlands of the United States, also known as Creek.                                           |
+| Tlingit                            | The Indigenous people of the Pacific Northwest Coast of North America, who speak a Na-Dene language.                                                       |
+| Tsimshian                          | The Indigenous people of the Pacific Northwest Coast of North America, mostly in coastal British Columbia.                                                 |
+| Haida                              | The Indigenous people of the Pacific Northwest Coast of North America, whose traditional territory includes Haida Gwaii.                                   |
+| Inuit                              | The culturally and historically similar Indigenous peoples of the Arctic and Subarctic regions of North America and Russia.                                |
+| Khoikhoi                           | The traditionally nomadic pastoralist Indigenous population of Southern Africa.                                                                            |
+| Malagasy                           | The Austronesian-speaking people and nation Indigenous to the island country of Madagascar.                                                                |
+| Swazi                              | The Bantu ethnic group native to Southern Africa, in Eswatini and South Africa’s Mpumalanga province.                                                      |
+| Taita                              | The Bantu-speaking ethnic group of Taita-Taveta County, in Kenya.                                                                                          |
+| Maasai                             | The Eastern Nilotic ethnic group native to Kenya and northern Tanzania.                                                                                    |
+| Basotho                            | The Sotho-Tswana ethnic group Indigenous to Southern Africa, in Lesotho, South Africa, Botswana and Namibia.                                               |
+| Tuareg                             | The Amazigh ethnic group of nomadic pastoralists who live mainly in the Sahara, from southwestern Libya to southern Algeria, Niger, Mali and Burkina Faso. |
+| Bedouin                            | The semi-nomadic Arab tribes who have historically lived in the desert regions of the Arabian Peninsula, North Africa, the Levant and Mesopotamia.         |
+| Jewish                             | The Jewish people, an ethnoreligious group and nation originating in the Israelites of ancient Israel and Judah, and their religion, Judaism.              |
+| Christian                          | Christianity, the Abrahamic religion based on the Bible and the teachings of Jesus.                                                                        |
+| Scottish Gaelic                    | The Gaels of Scotland, whose Gaelic language and culture extended from Ireland into western Scotland.                                                      |
 
 ### Deities
 
@@ -451,6 +503,80 @@ refusal is per tradition, so both stand.
 | Green Man        | English folklore                   | English folklore's leaf-masked face of church carving, honoured in modern practice as a spirit of vegetation and the greenwood.                                                                                                                  |
 | Herne            | English folklore                   | English folklore's antlered hunter of Windsor Forest, honoured as a horned god in modern practice; Herne the Hunter.                                                                                                                             |
 | Aradia           | Italian folk witchcraft            | Italian witch goddess of Leland's Aradia, or the Gospel of the Witches, daughter of Diana, who taught witchcraft to the oppressed.                                                                                                               |
+| Achilles         | Greek                              | Greek hero of the Trojan War, known as the greatest of the Greek warriors; son of the Nereid Thetis and Peleus, and central character of Homer’s Iliad.                                                                                          |
+| Amphitrite       | Greek                              | Greek goddess and queen of the sea, consort of Poseidon; Roman Salacia.                                                                                                                                                                          |
+| Ariadne          | Greek                              | Cretan princess of Greek myth, daughter of King Minos, who helped Theseus escape the Minotaur and later married Dionysus.                                                                                                                        |
+| Eos              | Greek                              | Greek goddess and personification of the dawn, who rose each morning from the edge of the river Oceanus.                                                                                                                                         |
+| Hebe             | Greek                              | Greek goddess of youth, or of the prime of life, and cup-bearer to the gods of Mount Olympus.                                                                                                                                                    |
+| Leto             | Greek                              | Greek mother of Apollo and Artemis, daughter of the Titans Coeus and Phoebe.                                                                                                                                                                     |
+| Nike             | Greek                              | Greek personification of victory, goddess of victory in battle and in other contests.                                                                                                                                                            |
+| Nemesis          | Greek                              | Greek goddess who personified retribution for hubris, arrogance before the gods; also Rhamnousia.                                                                                                                                                |
+| Morpheus         | Greek                              | God of sleep and dreams, who in Ovid’s Metamorphoses appears in dreams in human form.                                                                                                                                                            |
+| Prometheus       | Greek                              | Greek Titan who stole fire from the Olympian gods and gave it to humanity, and is credited with creating and aiding humankind.                                                                                                                   |
+| Uranus           | Greek                              | Greek personification of the sky and one of the primordial deities, husband and son of Gaia and father of the first Titans; also Ouranos.                                                                                                        |
+| Hymen            | Greek                              | Greek god of marriage ceremonies, who inspires feasts and song; also Hymenaios.                                                                                                                                                                  |
+| Daphne           | Greek                              | Greek figure of myth, a mortal woman or a nymph and daughter of a river god, who prayed for escape from Apollo’s pursuit and was turned into a tree.                                                                                             |
+| Medea            | Greek                              | Greek sorceress, daughter of King Aeetes of Colchis and granddaughter of the sun god Helios, skilled in medicinal magic and often shown as a priestess of Hecate.                                                                                |
+| Moirai           | Greek                              | Greek personifications of destiny, in some accounts three sisters, Clotho, Lachesis and Atropos; Roman Parcae; also Fates.                                                                                                                       |
+| Erinyes          | Greek                              | Greek chthonic goddesses of vengeance, also called the Eumenides, the “gracious ones”; also Eumenides.                                                                                                                                           |
+| Charites         | Greek                              | Greek goddesses who personify beauty and grace, named by Hesiod Aglaia, Euphrosyne and Thalia; also Graces.                                                                                                                                      |
+| Cronus           | Greek                              | Greek leader and youngest of the Titans, who overthrew his father Uranus and ruled in the Golden Age until his son Zeus overthrew him; also Cronos, Kronos.                                                                                      |
+| Eirene           | Greek                              | Greek goddess and personification of peace, one of the Horae, daughter of Zeus and Themis.                                                                                                                                                       |
+| Hercules         | Roman                              | Roman form of the Greek divine hero Heracles, son of Jupiter and the mortal Alcmena, famous for superhuman strength and far-ranging adventures.                                                                                                  |
+| Bellona          | Roman                              | Roman goddess of war, embodying the destructive and brutal side of warfare.                                                                                                                                                                      |
+| Bona Dea         | Roman                              | The Roman “Good Goddess”, associated with chastity and fertility among married women, healing and the protection of the state.                                                                                                                   |
+| Lares            | Roman                              | Guardian deities of Roman religion, believed to watch over and protect all that happened within the bounds of their place or function.                                                                                                           |
+| Lucina           | Roman                              | Title of the Roman goddess Juno, and sometimes Diana, as goddess of childbirth who safeguarded women in labour.                                                                                                                                  |
+| Luna             | Roman                              | Roman divine embodiment of the Moon, the female complement of the Sun god Sol.                                                                                                                                                                   |
+| Fides            | Roman                              | Roman goddess and embodiment of trust, faithfulness and good faith.                                                                                                                                                                              |
+| Aurora           | Roman                              | Roman goddess and personification of the dawn; Latin for dawn.                                                                                                                                                                                   |
+| Atum             | Egyptian                           | Primordial Egyptian god from whom all else arose, father of Shu and Tefnut and closely associated with the evening sun.                                                                                                                          |
+| Mut              | Egyptian                           | Egyptian mother goddess, whose name means “mother”, regarded as a primal deity of the primordial waters of Nu.                                                                                                                                   |
+| Nefertem         | Egyptian                           | Egyptian god who arose from the primal waters at the creation of the world and stood for the first sunlight and a delightful scent; also Nefertum.                                                                                               |
+| Wepwawet         | Egyptian                           | Egyptian jackal god of funerary rites, war and royalty, whose name means “opener of the ways” and whose cult centre was Asyut.                                                                                                                   |
+| Harpocrates      | Egyptian                           | God of silence, secrets and confidentiality, adapted by the Greeks of Ptolemaic Alexandria from the Egyptian child god Horus.                                                                                                                    |
+| Brahma           | Hindu                              | Hindu god called the Creator within the Trimurti beside Vishnu and Shiva, associated with creation, knowledge and the Vedas.                                                                                                                     |
+| Indra            | Hindu                              | Vedic god of weather and king of the devas, the deity most often named in the Rigveda.                                                                                                                                                           |
+| Shakti           | Hindu                              | The divine feminine energy of Hinduism, of which the many Hindu goddesses are personifications.                                                                                                                                                  |
+| Rama             | Hindu                              | Hindu deity worshipped as an avatar of Vishnu, the ideal man and hero of the Ramayana.                                                                                                                                                           |
+| Yama             | Hindu                              | Hindu god of death and justice, who in the Vedic tradition was the first mortal to die; also Dharmaraja.                                                                                                                                         |
+| Varuna           | Hindu                              | Hindu god who in the early Vedic era ruled the sky as god-sovereign, and chief of the Adityas.                                                                                                                                                   |
+| Dattatreya       | Hindu                              | Hindu god and paradigmatic monk, a lord of yoga considered an avatar and combined form of Brahma, Vishnu and Shiva.                                                                                                                              |
+| Ran              | Norse                              | Norse goddess and personification of the sea, wife of Aegir, who uses a net to capture sea-goers.                                                                                                                                                |
+| Aegir            | Norse                              | Norse giant and personification of the sea, who hosts the gods in his halls and is associated with brewing ale.                                                                                                                                  |
+| Norns            | Norse                              | Norse group of deities who shape the course of human destinies, often three goddesses, Urd, Verdandi and Skuld.                                                                                                                                  |
+| Badb             | Irish                              | Irish war goddess who takes the form of a crow and causes fear and confusion among soldiers.                                                                                                                                                     |
+| Banba            | Irish                              | Irish matron goddess of Ireland, daughter of Delbaeth and Ernmas of the Tuatha De Danann.                                                                                                                                                        |
+| Macha            | Irish                              | Irish sovereignty goddess associated with Ulster, Navan Fort and Armagh, said to be one of the three Morrigna.                                                                                                                                   |
+| Cu Chulainn      | Irish                              | Irish warrior hero and demigod of the Ulster Cycle, believed an incarnation of the god Lugh, who is also his father.                                                                                                                             |
+| Lir              | Irish                              | Irish sea god and personification of the sea, father of Manannan mac Lir; also Ler.                                                                                                                                                              |
+| Don              | Welsh                              | Welsh ancestor figure, mother of the Children of Don, among them Gwydion, Arianrhod and Gilfaethwy.                                                                                                                                              |
+| Modron           | Welsh                              | Welsh mother figure whose name means “mother”, mother of the hero Mabon ap Modron.                                                                                                                                                               |
+| Olwen            | Welsh                              | Welsh heroine of Culhwch and Olwen in the Mabinogion, daughter of the giant Ysbaddaden.                                                                                                                                                          |
+| Llyr             | Welsh                              | Welsh sea god, father of Bran, Branwen and Manawydan, related to the Irish Ler.                                                                                                                                                                  |
+| Brigantia        | Gaulish & British                  | Goddess of Roman Britain and tutelary deity of the Brigantes, known from Latin votive inscriptions.                                                                                                                                              |
+| Coventina        | Gaulish & British                  | Romano-British goddess of wells and springs, known from inscriptions near Carrawburgh on Hadrian’s Wall.                                                                                                                                         |
+| Centeotl         | Aztec                              | Aztec deity of the staple crop, son of the earth goddess Tlazolteotl and the solar deity Piltzintecuhtli.                                                                                                                                        |
+| Chicomecoatl     | Aztec                              | Aztec goddess of agriculture, food, drink and human livelihood, “Seven Serpent”; female counterpart of Centeotl.                                                                                                                                 |
+| Huitzilopochtli  | Aztec                              | Aztec solar and war deity of sacrifice, patron god of the Aztecs and of their capital Tenochtitlan.                                                                                                                                              |
+| Ixtlilton        | Aztec                              | Aztec god of medicine and healing, a gentle god who came from an obsidian mask.                                                                                                                                                                  |
+| Xiuhtecuhtli     | Aztec                              | Aztec god of fire, day and heat, the “Turquoise Lord” or “Lord of Fire”; also Xiuhtecutli.                                                                                                                                                       |
+| Yacatecuhtli     | Aztec                              | Aztec patron god of commerce and travellers, especially business travellers; his symbol is a bundle of sticks.                                                                                                                                   |
+| Buddha           | Buddhist                           | Siddhartha Gautama, the wandering religious teacher of the 6th or 5th century BCE who founded Buddhism; “the awakened one”.                                                                                                                      |
+| Yahweh           | Jewish                             | Ancient Semitic deity of the southeastern Levant who became the national god of the Iron Age kingdoms of Israel-Samaria and Judah.                                                                                                               |
+| Raphael          | Christian                          | Archangel whose name means “God has healed”, first mentioned in the Book of Tobit and in 1 Enoch.                                                                                                                                                |
+| Zoroaster        | Persian                            | Iranian religious reformer and spiritual founder of Zoroastrianism, traditionally believed to have authored the Gathas; also Zarathustra.                                                                                                        |
+| Tiamat           | Akkadian & Babylonian              | Mesopotamian cosmic ocean that mates with Abzu to produce the Babylonian pantheon in the Enuma Elish.                                                                                                                                            |
+| Belili           | Sumerian                           | Mesopotamian goddess, a sister of Dumuzi in the texts on his death and a primordial deity paired with Alala.                                                                                                                                     |
+| Izanami          | Japanese                           | Japanese Shinto mother goddess, creator of both creation and death, who with her brother-husband Izanagi was among the last of seven generations of primordial deities.                                                                          |
+| Ek Chuah         | Maya                               | Postclassic Maya merchant deity, known as God M in the classification of codical gods.                                                                                                                                                           |
+| Kanaloa          | Hawaiian                           | Hawaiian god symbolised by the squid or the octopus, a complementary power to Kane.                                                                                                                                                              |
+| Kanehekili       | Hawaiian                           | Hawaiian god of thunder, brother of Pele and Hiiaka, born of Haumea; also Kane-hekili.                                                                                                                                                           |
+| Maui             | Polynesian                         | Great culture hero and trickster of Polynesian mythology, very rarely worshipped and more a demigod and folk hero than a deity.                                                                                                                  |
+| Puck             | English folklore                   | Demon or fairy of English folklore, a domestic or nature sprite, also known as a goodfellow; also Robin Goodfellow.                                                                                                                              |
+| Sedna            | Inuit                              | Inuit goddess of the sea and marine animals, the Mother of the Sea, who rules Adlivun, the underworld.                                                                                                                                           |
+| Cailleach        | Scottish Gaelic                    | Divine hag of Gaelic myth, linked with the shaping of the landscape and with weather, especially storms and winter; in Scotland Beira, Queen of Winter; also Cailleach Bheur, Beira.                                                             |
+| Seonaidh         | Scottish Gaelic                    | Water spirit of the isle of Lewis, propitiated with a cup of ale; also Shony, Shoney.                                                                                                                                                            |
 
 ### What is left out, and why
 
@@ -460,16 +586,21 @@ it (§5, MB.162). These were left out on purpose, and each
 is the owner's to revisit:
 
 - **Figures their own traditions do not call deities**: Jesus, the Virgin
-  Mary, the saints and the Buddha. Folk practice that names them on an herb,
-  as many do, writes them as free text. Kuan Yin is the exception: she is a
+  Mary and the saints. Folk practice that names them on an herb, as many
+  do, writes them as free text. Kuan Yin is the exception: she is a
   bodhisattva in Buddhism, but Chinese folk religion widely honours her as a
-  goddess of mercy.
-- **Mortal and legendary enchantresses**: Medea and Morgan le Fay. Circe is
-  listed because Homer calls her a goddess.
+  goddess of mercy. M14.15 changed this for the Buddha and Raphael: the
+  compendium's herb sources name them on herbs, so they are rows (Buddha
+  under Buddhist, Raphael under Christian). Mary stays out, because the
+  one note that names "Marian" does not say whether it means her.
+- **Mortal and legendary enchantresses**: Morgan le Fay. Circe is listed
+  because Homer calls her a goddess. M14.15 added Medea (Greek), because
+  the compendium's herb sources name her, with the reason in her row:
+  the sources call her a sorceress and granddaughter of Helios, not a goddess.
 - **White Buffalo Calf Woman**, a sacred figure of a closed Lakota
   tradition, is not the project's to curate into a general list.
 - **Tricksters and culture heroes their sources do not call gods**: Anansi,
-  whom the Akan sources call a folk hero, by the rule that keeps Medea off.
+  whom the Akan sources call a folk hero.
 - **Spirits a tradition keeps apart from its gods**: the Igbo Ikenga and
   Ekwensu, a personal spirit and a boundary spirit; Mami Wata, who belongs
   to no one tradition here; the Zulu Inkosazana, folded into Nomkhubulwane
@@ -1430,3 +1561,270 @@ Heviosso, the peer-reviewed reference's over Benin's; and Legba, Gu and Dan
 as Fon & Ewe rows beside Yoruba's Elegba and Ogun and Vodou's Papa Legba
 and Damballah, one god under several traditions as Apollo is Greek and
 Roman.
+
+#### Widened by M14.15
+
+M14.15 added 52 traditions and 74 deities that the compendium's herb sources
+name, each read on Wikipedia on October 29, 2026 and cited by the permanent link to
+the revision read. The descriptions gloss the page cited; none names an herb or plant.
+Wikipedia is the source for each row, the owner's call for these rows; an academic
+source is better where one is found, and a reader may add it.
+
+Traditions:
+
+- **Arara** (The Arara religion of Cuba, which grew in the late nineteenth century among descendants of people from the Dahomey kingdom of West Africa)
+  - Wikipedia, under "Arará." Last modified October 20, 2025. Accessed October 29, 2026. https://en.wikipedia.org/w/index.php?title=Arar%C3%A1&oldid=1317924544.
+- **Winti** (The Afro-Surinamese religion of Suriname, joining African beliefs brought mainly by enslaved Akan, Fon and Kongo people)
+  - Wikipedia, under "Winti." Last modified September 6, 2026. Accessed October 29, 2026. https://en.wikipedia.org/w/index.php?title=Winti&oldid=1373474757.
+- **Bwiti** (The spiritual discipline of the Punu, Mitsogo and Fang peoples of Gabon, joining animism, ancestor worship and, in some forms, Christianity)
+  - Wikipedia, under "Bwiti." Last modified July 13, 2026. Accessed October 29, 2026. https://en.wikipedia.org/w/index.php?title=Bwiti&oldid=1363918198.
+- **Buddhist** (Buddhism, the Indian religion and philosophy based on teachings attributed to the Buddha, who lived in the 6th or 5th century BCE)
+  - Wikipedia, under "Buddhism." Last modified October 26, 2026. Accessed October 29, 2026. https://en.wikipedia.org/w/index.php?title=Buddhism&oldid=1381999574.
+- **Jain** (Jainism, the Indian religion that teaches spiritual purity through disciplined nonviolence to all living creatures, guided by 24 tirthankaras)
+  - Wikipedia, under "Jainism." Last modified October 12, 2026. Accessed October 29, 2026. https://en.wikipedia.org/w/index.php?title=Jainism&oldid=1379809603.
+- **Theravada Buddhist** (Theravada, the oldest existing school of Buddhism, which keeps the Buddha’s teaching in the Pali Canon)
+  - Wikipedia, under "Theravada." Last modified October 25, 2026. Accessed October 29, 2026. https://en.wikipedia.org/w/index.php?title=Theravada&oldid=1381859205.
+- **Shugendo** (An Esoteric Buddhist religion of ascetic practice that began in Nara-period Japan)
+  - Wikipedia, under "Shugendō." Last modified October 18, 2026. Accessed October 29, 2026. https://en.wikipedia.org/w/index.php?title=Shugend%C5%8D&oldid=1380885211.
+- **Tripuri** (The Tibeto-Burman-speaking people of the Indian state of Tripura and of Bangladesh, descended from the inhabitants of the Tripura kingdom)
+  - Wikipedia, under "Tripuri people." Last modified October 25, 2026. Accessed October 29, 2026. https://en.wikipedia.org/w/index.php?title=Tripuri_people&oldid=1381882281.
+- **Aboriginal Australian** (The Indigenous peoples of the Australian mainland and many of its islands, formed over time into as many as 500 linguistic and territorial groups)
+  - Wikipedia, under "Aboriginal Australians." Last modified October 21, 2026. Accessed October 29, 2026. https://en.wikipedia.org/w/index.php?title=Aboriginal_Australians&oldid=1381366397.
+- **Maori** (The Indigenous Polynesian people of mainland New Zealand, descended from East Polynesian settlers)
+  - Wikipedia, under "Māori people." Last modified October 6, 2026. Accessed October 29, 2026. https://en.wikipedia.org/w/index.php?title=M%C4%81ori_people&oldid=1378825744.
+- **Polynesian** (The closely related peoples native to Polynesia, the islands within the Polynesian Triangle in the Pacific Ocean)
+  - Wikipedia, under "Polynesians." Last modified October 24, 2026. Accessed October 29, 2026. https://en.wikipedia.org/w/index.php?title=Polynesians&oldid=1381804636.
+- **Melanesian** (The Indigenous inhabitants of Melanesia, in an area stretching from New Guinea to the Fiji Islands)
+  - Wikipedia, under "Melanesians." Last modified October 2, 2026. Accessed October 29, 2026. https://en.wikipedia.org/w/index.php?title=Melanesians&oldid=1377930515.
+- **Malay** (The Austronesian people native to the Malay Peninsula, eastern Sumatra and coastal Borneo)
+  - Wikipedia, under "Malays (ethnic group)." Last modified October 19, 2026. Accessed October 29, 2026. https://en.wikipedia.org/w/index.php?title=Malays_(ethnic_group)&oldid=1380977461.
+- **Javanese** (The Austronesian people native to the central and eastern parts of the island of Java, in Indonesia)
+  - Wikipedia, under "Javanese people." Last modified October 27, 2026. Accessed October 29, 2026. https://en.wikipedia.org/w/index.php?title=Javanese_people&oldid=1382296008.
+- **Sundanese** (The Austronesian people native to the western part of the island of Java, in Indonesia)
+  - Wikipedia, under "Sundanese people." Last modified October 2, 2026. Accessed October 29, 2026. https://en.wikipedia.org/w/index.php?title=Sundanese_people&oldid=1377925136.
+- **Tongan** (The Polynesian people native to Tonga, an archipelago in the Pacific Ocean)
+  - Wikipedia, under "Tongans." Last modified September 16, 2026. Accessed October 29, 2026. https://en.wikipedia.org/w/index.php?title=Tongans&oldid=1375147569.
+- **Samoan** (The Indigenous Polynesian people of the Samoan Islands, an archipelago in Polynesia)
+  - Wikipedia, under "Samoans." Last modified September 21, 2026. Accessed October 29, 2026. https://en.wikipedia.org/w/index.php?title=Samoans&oldid=1376083534.
+- **Fijian** (The Austronesian people native to Fiji, the major Indigenous people of the Fiji Islands of Melanesia)
+  - Wikipedia, under "Fijians." Last modified October 2, 2026. Accessed October 29, 2026. https://en.wikipedia.org/w/index.php?title=Fijians&oldid=1377929601.
+- **Mazatec** (The Indigenous people of Mexico who live in the Sierra Mazateca in Oaxaca and in nearby parts of Puebla and Veracruz)
+  - Wikipedia, under "Mazatec." Last modified September 28, 2026. Accessed October 29, 2026. https://en.wikipedia.org/w/index.php?title=Mazatec&oldid=1377291554.
+- **Chumash** (The Native American people of the central and southern coastal regions of California)
+  - Wikipedia, under "Chumash people." Last modified September 27, 2026. Accessed October 29, 2026. https://en.wikipedia.org/w/index.php?title=Chumash_people&oldid=1377112604.
+- **Moche** (The civilisation that flourished in northern Peru from about 100 to 800 AD)
+  - Wikipedia, under "Moche culture." Last modified October 14, 2026. Accessed October 29, 2026. https://en.wikipedia.org/w/index.php?title=Moche_culture&oldid=1380295875.
+- **Nazca** (The culture that flourished from about 100 BC to 800 AD beside the arid southern coast of Peru)
+  - Wikipedia, under "Nazca culture." Last modified September 21, 2026. Accessed October 29, 2026. https://en.wikipedia.org/w/index.php?title=Nazca_culture&oldid=1376028463.
+- **Chavin** (The pre-Columbian civilisation of the northern Andean highlands of Peru, from about 900 to 250 BCE)
+  - Wikipedia, under "Chavín culture." Last modified July 25, 2026. Accessed October 29, 2026. https://en.wikipedia.org/w/index.php?title=Chav%C3%ADn_culture&oldid=1365963586.
+- **Olmec** (The early Mesoamerican civilisation of the Mexican states of Veracruz and Tabasco, from roughly 1200 to 400 BC)
+  - Wikipedia, under "Olmecs." Last modified September 12, 2026. Accessed October 29, 2026. https://en.wikipedia.org/w/index.php?title=Olmecs&oldid=1374556317.
+- **Tongva** (The Indigenous people of California from the Los Angeles Basin and the Southern Channel Islands)
+  - Wikipedia, under "Tongva." Last modified October 22, 2026. Accessed October 29, 2026. https://en.wikipedia.org/w/index.php?title=Tongva&oldid=1381484719.
+- **Taino** (The Indigenous peoples of most of the West Indies, in the Caribbean, whose culture descendants and revivalist communities continue)
+  - Wikipedia, under "Taíno." Last modified October 12, 2026. Accessed October 29, 2026. https://en.wikipedia.org/w/index.php?title=Ta%C3%ADno&oldid=1379961989.
+- **Quechua** (The Indigenous peoples of South America who speak the Quechuan languages, which originated among the Indigenous people of Peru)
+  - Wikipedia, under "Quechua people." Last modified October 21, 2026. Accessed October 29, 2026. https://en.wikipedia.org/w/index.php?title=Quechua_people&oldid=1381294213.
+- **Ojibwe** (The Anishinaabe people whose homeland covers much of the Great Lakes region and the northern plains)
+  - Wikipedia, under "Ojibwe." Last modified October 2, 2026. Accessed October 29, 2026. https://en.wikipedia.org/w/index.php?title=Ojibwe&oldid=1377952351.
+- **Potawatomi** (The Indigenous North American tribe of the Great Plains, the upper Mississippi River and the western Great Lakes region, who speak an Algonquian language)
+  - Wikipedia, under "Potawatomi." Last modified September 25, 2026. Accessed October 29, 2026. https://en.wikipedia.org/w/index.php?title=Potawatomi&oldid=1376657238.
+- **Menominee** (The Native American tribe of Wisconsin and the Upper Peninsula of Michigan)
+  - Wikipedia, under "Menominee." Last modified October 4, 2026. Accessed October 29, 2026. https://en.wikipedia.org/w/index.php?title=Menominee&oldid=1378480345.
+- **Dakota** (The Native American tribe and First Nations band government that forms two of the three main subcultures of the Sioux)
+  - Wikipedia, under "Dakota people." Last modified September 27, 2026. Accessed October 29, 2026. https://en.wikipedia.org/w/index.php?title=Dakota_people&oldid=1377114585.
+- **Lakota** (The Native American people also known as the Teton Sioux, with lands in North and South Dakota)
+  - Wikipedia, under "Lakota people." Last modified October 26, 2026. Accessed October 29, 2026. https://en.wikipedia.org/w/index.php?title=Lakota_people&oldid=1382082825.
+- **Blackfeet** (The linguistically related groups of the Blackfoot Confederacy, the Blackfoot or Blackfeet people)
+  - Wikipedia, under "Blackfoot Confederacy." Last modified October 2, 2026. Accessed October 29, 2026. https://en.wikipedia.org/w/index.php?title=Blackfoot_Confederacy&oldid=1377940194.
+- **Zuni** (The Native American Pueblo people of the Zuni River valley, in New Mexico)
+  - Wikipedia, under "Zuni people." Last modified October 22, 2026. Accessed October 29, 2026. https://en.wikipedia.org/w/index.php?title=Zuni_people&oldid=1381407565.
+- **Hopi** (The Native Americans who live mainly in northeastern Arizona)
+  - Wikipedia, under "Hopi." Last modified October 29, 2026. Accessed October 29, 2026. https://en.wikipedia.org/w/index.php?title=Hopi&oldid=1382604614.
+- **Cherokee** (One of the Indigenous peoples of the Southeastern Woodlands of the United States)
+  - Wikipedia, under "Cherokee." Last modified October 21, 2026. Accessed October 29, 2026. https://en.wikipedia.org/w/index.php?title=Cherokee&oldid=1381355468.
+- **Muscogee** (The group of related Indigenous peoples of the Southeastern Woodlands of the United States, also known as Creek)
+  - Wikipedia, under "Muscogee." Last modified October 19, 2026. Accessed October 29, 2026. https://en.wikipedia.org/w/index.php?title=Muscogee&oldid=1381004656.
+- **Tlingit** (The Indigenous people of the Pacific Northwest Coast of North America, who speak a Na-Dene language)
+  - Wikipedia, under "Tlingit." Last modified October 26, 2026. Accessed October 29, 2026. https://en.wikipedia.org/w/index.php?title=Tlingit&oldid=1382136160.
+- **Tsimshian** (The Indigenous people of the Pacific Northwest Coast of North America, mostly in coastal British Columbia)
+  - Wikipedia, under "Tsimshian." Last modified October 20, 2026. Accessed October 29, 2026. https://en.wikipedia.org/w/index.php?title=Tsimshian&oldid=1381234792.
+- **Haida** (The Indigenous people of the Pacific Northwest Coast of North America, whose traditional territory includes Haida Gwaii)
+  - Wikipedia, under "Haida people." Last modified October 9, 2026. Accessed October 29, 2026. https://en.wikipedia.org/w/index.php?title=Haida_people&oldid=1379430690.
+- **Inuit** (The culturally and historically similar Indigenous peoples of the Arctic and Subarctic regions of North America and Russia)
+  - Wikipedia, under "Inuit." Last modified October 2, 2026. Accessed October 29, 2026. https://en.wikipedia.org/w/index.php?title=Inuit&oldid=1377934585.
+- **Khoikhoi** (The traditionally nomadic pastoralist Indigenous population of Southern Africa)
+  - Wikipedia, under "Khoekhoe." Last modified October 22, 2026. Accessed October 29, 2026. https://en.wikipedia.org/w/index.php?title=Khoekhoe&oldid=1381457914.
+- **Malagasy** (The Austronesian-speaking people and nation Indigenous to the island country of Madagascar)
+  - Wikipedia, under "Malagasy peoples." Last modified October 26, 2026. Accessed October 29, 2026. https://en.wikipedia.org/w/index.php?title=Malagasy_peoples&oldid=1382096995.
+- **Swazi** (The Bantu ethnic group native to Southern Africa, in Eswatini and South Africa’s Mpumalanga province)
+  - Wikipedia, under "Swazi people." Last modified October 2, 2026. Accessed October 29, 2026. https://en.wikipedia.org/w/index.php?title=Swazi_people&oldid=1377931683.
+- **Taita** (The Bantu-speaking ethnic group of Taita-Taveta County, in Kenya)
+  - Wikipedia, under "Taita people." Last modified October 28, 2026. Accessed October 29, 2026. https://en.wikipedia.org/w/index.php?title=Taita_people&oldid=1382323422.
+- **Maasai** (The Eastern Nilotic ethnic group native to Kenya and northern Tanzania)
+  - Wikipedia, under "Maasai people." Last modified October 20, 2026. Accessed October 29, 2026. https://en.wikipedia.org/w/index.php?title=Maasai_people&oldid=1381150029.
+- **Basotho** (The Sotho-Tswana ethnic group Indigenous to Southern Africa, in Lesotho, South Africa, Botswana and Namibia)
+  - Wikipedia, under "Sotho people." Last modified October 21, 2026. Accessed October 29, 2026. https://en.wikipedia.org/w/index.php?title=Sotho_people&oldid=1381269975.
+- **Tuareg** (The Amazigh ethnic group of nomadic pastoralists who live mainly in the Sahara, from southwestern Libya to southern Algeria, Niger, Mali and Burkina Faso)
+  - Wikipedia, under "Tuareg people." Last modified October 29, 2026. Accessed October 29, 2026. https://en.wikipedia.org/w/index.php?title=Tuareg_people&oldid=1382635493.
+- **Bedouin** (The semi-nomadic Arab tribes who have historically lived in the desert regions of the Arabian Peninsula, North Africa, the Levant and Mesopotamia)
+  - Wikipedia, under "Bedouin." Last modified October 16, 2026. Accessed October 29, 2026. https://en.wikipedia.org/w/index.php?title=Bedouin&oldid=1380556686.
+- **Jewish** (The Jewish people, an ethnoreligious group and nation originating in the Israelites of ancient Israel and Judah, and their religion, Judaism)
+  - Wikipedia, under "Jews." Last modified October 29, 2026. Accessed October 29, 2026. https://en.wikipedia.org/w/index.php?title=Jews&oldid=1382609807.
+  - Wikipedia, under "Judaism." Last modified October 28, 2026. Accessed October 29, 2026. https://en.wikipedia.org/w/index.php?title=Judaism&oldid=1382448162.
+- **Christian** (Christianity, the Abrahamic religion based on the Bible and the teachings of Jesus)
+  - Wikipedia, under "Christianity." Last modified October 28, 2026. Accessed October 29, 2026. https://en.wikipedia.org/w/index.php?title=Christianity&oldid=1382348243.
+- **Scottish Gaelic** (The Gaels of Scotland, whose Gaelic language and culture extended from Ireland into western Scotland)
+  - Wikipedia, under "Gaels." Last modified October 2, 2026. Accessed October 29, 2026. https://en.wikipedia.org/w/index.php?title=Gaels&oldid=1377933923.
+
+Per-deity:
+
+- **Achilles** (filed Greek)
+  - Wikipedia, under "Achilles." Last modified September 27, 2026. Accessed October 29, 2026. https://en.wikipedia.org/w/index.php?title=Achilles&oldid=1377070946.
+- **Amphitrite** (filed Greek)
+  - Wikipedia, under "Amphitrite." Last modified October 13, 2026. Accessed October 29, 2026. https://en.wikipedia.org/w/index.php?title=Amphitrite&oldid=1380072680.
+- **Ariadne** (filed Greek)
+  - Wikipedia, under "Ariadne." Last modified October 24, 2026. Accessed October 29, 2026. https://en.wikipedia.org/w/index.php?title=Ariadne&oldid=1381802164.
+- **Eos** (filed Greek)
+  - Wikipedia, under "Eos." Last modified October 9, 2026. Accessed October 29, 2026. https://en.wikipedia.org/w/index.php?title=Eos&oldid=1379347874.
+- **Hebe** (filed Greek)
+  - Wikipedia, under "Hebe (mythology)." Last modified October 22, 2026. Accessed October 29, 2026. https://en.wikipedia.org/w/index.php?title=Hebe_(mythology)&oldid=1381443717.
+- **Leto** (filed Greek)
+  - Wikipedia, under "Leto." Last modified October 9, 2026. Accessed October 29, 2026. https://en.wikipedia.org/w/index.php?title=Leto&oldid=1379319218.
+- **Nike** (filed Greek)
+  - Wikipedia, under "Nike (mythology)." Last modified October 28, 2026. Accessed October 29, 2026. https://en.wikipedia.org/w/index.php?title=Nike_(mythology)&oldid=1382489374.
+- **Nemesis** (filed Greek; also Rhamnousia)
+  - Wikipedia, under "Nemesis." Last modified October 12, 2026. Accessed October 29, 2026. https://en.wikipedia.org/w/index.php?title=Nemesis&oldid=1379894387.
+- **Morpheus** (filed Greek)
+  - Wikipedia, under "Morpheus." Last modified October 28, 2026. Accessed October 29, 2026. https://en.wikipedia.org/w/index.php?title=Morpheus&oldid=1382405106.
+- **Prometheus** (filed Greek)
+  - Wikipedia, under "Prometheus." Last modified October 24, 2026. Accessed October 29, 2026. https://en.wikipedia.org/w/index.php?title=Prometheus&oldid=1381775303.
+- **Uranus** (filed Greek; also Ouranos)
+  - Wikipedia, under "Uranus (mythology)." Last modified October 24, 2026. Accessed October 29, 2026. https://en.wikipedia.org/w/index.php?title=Uranus_(mythology)&oldid=1381772217.
+- **Hymen** (filed Greek; also Hymenaios)
+  - Wikipedia, under "Hymen (god)." Last modified August 27, 2026. Accessed October 29, 2026. https://en.wikipedia.org/w/index.php?title=Hymen_(god)&oldid=1371611022.
+- **Daphne** (filed Greek)
+  - Wikipedia, under "Daphne." Last modified October 8, 2026. Accessed October 29, 2026. https://en.wikipedia.org/w/index.php?title=Daphne&oldid=1379196335.
+- **Medea** (filed Greek)
+  - Wikipedia, under "Medea." Last modified September 27, 2026. Accessed October 29, 2026. https://en.wikipedia.org/w/index.php?title=Medea&oldid=1377073088.
+- **Moirai** (filed Greek; also Fates)
+  - Wikipedia, under "Moirai." Last modified October 24, 2026. Accessed October 29, 2026. https://en.wikipedia.org/w/index.php?title=Moirai&oldid=1381762900.
+- **Erinyes** (filed Greek; also Eumenides)
+  - Wikipedia, under "Erinyes." Last modified October 19, 2026. Accessed October 29, 2026. https://en.wikipedia.org/w/index.php?title=Erinyes&oldid=1381082118.
+- **Charites** (filed Greek; also Graces)
+  - Wikipedia, under "Charites." Last modified October 8, 2026. Accessed October 29, 2026. https://en.wikipedia.org/w/index.php?title=Charites&oldid=1379193511.
+- **Cronus** (filed Greek; also Cronos, Kronos)
+  - Wikipedia, under "Cronus." Last modified October 25, 2026. Accessed October 29, 2026. https://en.wikipedia.org/w/index.php?title=Cronus&oldid=1381845208.
+- **Eirene** (filed Greek)
+  - Wikipedia, under "Eirene (goddess)." Last modified August 5, 2026. Accessed October 29, 2026. https://en.wikipedia.org/w/index.php?title=Eirene_(goddess)&oldid=1367827846.
+- **Hercules** (filed Roman)
+  - Wikipedia, under "Hercules." Last modified October 20, 2026. Accessed October 29, 2026. https://en.wikipedia.org/w/index.php?title=Hercules&oldid=1381201460.
+- **Bellona** (filed Roman)
+  - Wikipedia, under "Bellona (goddess)." Last modified October 25, 2026. Accessed October 29, 2026. https://en.wikipedia.org/w/index.php?title=Bellona_(goddess)&oldid=1381936628.
+- **Bona Dea** (filed Roman)
+  - Wikipedia, under "Bona Dea." Last modified September 9, 2026. Accessed October 29, 2026. https://en.wikipedia.org/w/index.php?title=Bona_Dea&oldid=1374093521.
+- **Lares** (filed Roman)
+  - Wikipedia, under "Lares." Last modified October 17, 2026. Accessed October 29, 2026. https://en.wikipedia.org/w/index.php?title=Lares&oldid=1380792178.
+- **Lucina** (filed Roman)
+  - Wikipedia, under "Lucina (mythology)." Last modified June 11, 2026. Accessed October 29, 2026. https://en.wikipedia.org/w/index.php?title=Lucina_(mythology)&oldid=1358917007.
+- **Luna** (filed Roman)
+  - Wikipedia, under "Luna (goddess)." Last modified May 18, 2026. Accessed October 29, 2026. https://en.wikipedia.org/w/index.php?title=Luna_(goddess)&oldid=1354733662.
+- **Fides** (filed Roman)
+  - Wikipedia, under "Fides (deity)." Last modified July 15, 2026. Accessed October 29, 2026. https://en.wikipedia.org/w/index.php?title=Fides_(deity)&oldid=1364187641.
+- **Aurora** (filed Roman)
+  - Wikipedia, under "Aurora (mythology)." Last modified June 18, 2026. Accessed October 29, 2026. https://en.wikipedia.org/w/index.php?title=Aurora_(mythology)&oldid=1360043424.
+- **Atum** (filed Egyptian)
+  - Wikipedia, under "Atum." Last modified October 28, 2026. Accessed October 29, 2026. https://en.wikipedia.org/w/index.php?title=Atum&oldid=1382414927.
+- **Mut** (filed Egyptian)
+  - Wikipedia, under "Mut." Last modified October 24, 2026. Accessed October 29, 2026. https://en.wikipedia.org/w/index.php?title=Mut&oldid=1381746411.
+- **Nefertem** (filed Egyptian; also Nefertum)
+  - Wikipedia, under "Nefertem." Last modified June 12, 2026. Accessed October 29, 2026. https://en.wikipedia.org/w/index.php?title=Nefertem&oldid=1359040097.
+- **Wepwawet** (filed Egyptian)
+  - Wikipedia, under "Wepwawet." Last modified August 18, 2026. Accessed October 29, 2026. https://en.wikipedia.org/w/index.php?title=Wepwawet&oldid=1369926244.
+- **Harpocrates** (filed Egyptian)
+  - Wikipedia, under "Harpocrates." Last modified August 14, 2026. Accessed October 29, 2026. https://en.wikipedia.org/w/index.php?title=Harpocrates&oldid=1369373136.
+- **Brahma** (filed Hindu)
+  - Wikipedia, under "Brahma." Last modified October 12, 2026. Accessed October 29, 2026. https://en.wikipedia.org/w/index.php?title=Brahma&oldid=1379835512.
+- **Indra** (filed Hindu)
+  - Wikipedia, under "Indra." Last modified October 27, 2026. Accessed October 29, 2026. https://en.wikipedia.org/w/index.php?title=Indra&oldid=1382177172.
+- **Shakti** (filed Hindu)
+  - Wikipedia, under "Shakti." Last modified October 29, 2026. Accessed October 29, 2026. https://en.wikipedia.org/w/index.php?title=Shakti&oldid=1382633201.
+- **Rama** (filed Hindu)
+  - Wikipedia, under "Rama." Last modified October 24, 2026. Accessed October 29, 2026. https://en.wikipedia.org/w/index.php?title=Rama&oldid=1381773089.
+- **Yama** (filed Hindu; also Dharmaraja)
+  - Wikipedia, under "Yama." Last modified September 15, 2026. Accessed October 29, 2026. https://en.wikipedia.org/w/index.php?title=Yama&oldid=1375058267.
+- **Varuna** (filed Hindu)
+  - Wikipedia, under "Varuna." Last modified October 3, 2026. Accessed October 29, 2026. https://en.wikipedia.org/w/index.php?title=Varuna&oldid=1378105449.
+- **Dattatreya** (filed Hindu)
+  - Wikipedia, under "Dattatreya." Last modified May 29, 2026. Accessed October 29, 2026. https://en.wikipedia.org/w/index.php?title=Dattatreya&oldid=1356721756.
+- **Ran** (filed Norse)
+  - Wikipedia, under "Rán." Last modified October 10, 2026. Accessed October 29, 2026. https://en.wikipedia.org/w/index.php?title=R%C3%A1n&oldid=1379599736.
+- **Aegir** (filed Norse)
+  - Wikipedia, under "Ægir." Last modified October 13, 2026. Accessed October 29, 2026. https://en.wikipedia.org/w/index.php?title=%C3%86gir&oldid=1379986440.
+- **Norns** (filed Norse)
+  - Wikipedia, under "Norns." Last modified September 23, 2026. Accessed October 29, 2026. https://en.wikipedia.org/w/index.php?title=Norns&oldid=1376309455.
+- **Badb** (filed Irish)
+  - Wikipedia, under "Badb." Last modified June 12, 2026. Accessed October 29, 2026. https://en.wikipedia.org/w/index.php?title=Badb&oldid=1358951917.
+- **Banba** (filed Irish)
+  - Wikipedia, under "Banba." Last modified August 3, 2026. Accessed October 29, 2026. https://en.wikipedia.org/w/index.php?title=Banba&oldid=1367535269.
+- **Macha** (filed Irish)
+  - Wikipedia, under "Macha." Last modified June 12, 2026. Accessed October 29, 2026. https://en.wikipedia.org/w/index.php?title=Macha&oldid=1358951759.
+- **Cu Chulainn** (filed Irish)
+  - Wikipedia, under "Cú Chulainn." Last modified September 7, 2026. Accessed October 29, 2026. https://en.wikipedia.org/w/index.php?title=C%C3%BA_Chulainn&oldid=1373713547.
+- **Lir** (filed Irish; also Ler)
+  - Wikipedia, under "Lir." Last modified August 24, 2026. Accessed October 29, 2026. https://en.wikipedia.org/w/index.php?title=Lir&oldid=1371043505.
+- **Don** (filed Welsh)
+  - Wikipedia, under "Dôn." Last modified October 1, 2026. Accessed October 29, 2026. https://en.wikipedia.org/w/index.php?title=D%C3%B4n&oldid=1377825207.
+- **Modron** (filed Welsh)
+  - Wikipedia, under "Modron." Last modified October 7, 2026. Accessed October 29, 2026. https://en.wikipedia.org/w/index.php?title=Modron&oldid=1379042548.
+- **Olwen** (filed Welsh)
+  - Wikipedia, under "Olwen." Last modified October 26, 2026. Accessed October 29, 2026. https://en.wikipedia.org/w/index.php?title=Olwen&oldid=1382117820.
+- **Llyr** (filed Welsh)
+  - Wikipedia, under "Llŷr." Last modified October 1, 2026. Accessed October 29, 2026. https://en.wikipedia.org/w/index.php?title=Ll%C5%B7r&oldid=1377825184.
+- **Brigantia** (filed Gaulish & British)
+  - Wikipedia, under "Brigantia (goddess)." Last modified July 9, 2026. Accessed October 29, 2026. https://en.wikipedia.org/w/index.php?title=Brigantia_(goddess)&oldid=1363396512.
+- **Coventina** (filed Gaulish & British)
+  - Wikipedia, under "Coventina." Last modified August 14, 2026. Accessed October 29, 2026. https://en.wikipedia.org/w/index.php?title=Coventina&oldid=1369410557.
+- **Centeotl** (filed Aztec)
+  - Wikipedia, under "Centeōtl." Last modified May 22, 2026. Accessed October 29, 2026. https://en.wikipedia.org/w/index.php?title=Cente%C5%8Dtl&oldid=1355468639.
+- **Chicomecoatl** (filed Aztec)
+  - Wikipedia, under "Chicomecōātl." Last modified July 16, 2026. Accessed October 29, 2026. https://en.wikipedia.org/w/index.php?title=Chicomec%C5%8D%C4%81tl&oldid=1364484020.
+- **Huitzilopochtli** (filed Aztec)
+  - Wikipedia, under "Huītzilōpōchtli." Last modified September 30, 2026. Accessed October 29, 2026. https://en.wikipedia.org/w/index.php?title=Hu%C4%ABtzil%C5%8Dp%C5%8Dchtli&oldid=1377676028.
+- **Ixtlilton** (filed Aztec)
+  - Wikipedia, under "Ixtlilton." Last modified March 24, 2025. Accessed October 29, 2026. https://en.wikipedia.org/w/index.php?title=Ixtlilton&oldid=1282154418.
+- **Xiuhtecuhtli** (filed Aztec; also Xiuhtecutli)
+  - Wikipedia, under "Xiuhtecuhtli." Last modified January 5, 2026. Accessed October 29, 2026. https://en.wikipedia.org/w/index.php?title=Xiuhtecuhtli&oldid=1331352674.
+- **Yacatecuhtli** (filed Aztec)
+  - Wikipedia, under "Yacatecuhtli." Last modified April 25, 2026. Accessed October 29, 2026. https://en.wikipedia.org/w/index.php?title=Yacatecuhtli&oldid=1351000306.
+- **Buddha** (filed Buddhist)
+  - Wikipedia, under "The Buddha." Last modified October 21, 2026. Accessed October 29, 2026. https://en.wikipedia.org/w/index.php?title=The_Buddha&oldid=1381286756.
+- **Yahweh** (filed Jewish)
+  - Wikipedia, under "Yahweh." Last modified October 26, 2026. Accessed October 29, 2026. https://en.wikipedia.org/w/index.php?title=Yahweh&oldid=1382119195.
+- **Raphael** (filed Christian)
+  - Wikipedia, under "Raphael (archangel)." Last modified September 9, 2026. Accessed October 29, 2026. https://en.wikipedia.org/w/index.php?title=Raphael_(archangel)&oldid=1374119218.
+- **Zoroaster** (filed Persian; also Zarathustra)
+  - Wikipedia, under "Zoroaster." Last modified October 24, 2026. Accessed October 29, 2026. https://en.wikipedia.org/w/index.php?title=Zoroaster&oldid=1381765092.
+- **Tiamat** (filed Akkadian & Babylonian)
+  - Wikipedia, under "Tiamat." Last modified October 12, 2026. Accessed October 29, 2026. https://en.wikipedia.org/w/index.php?title=Tiamat&oldid=1379792563.
+- **Belili** (filed Sumerian)
+  - Wikipedia, under "Belili." Last modified September 30, 2026. Accessed October 29, 2026. https://en.wikipedia.org/w/index.php?title=Belili&oldid=1377619751.
+- **Izanami** (filed Japanese)
+  - Wikipedia, under "Izanami." Last modified October 16, 2026. Accessed October 29, 2026. https://en.wikipedia.org/w/index.php?title=Izanami&oldid=1380529673.
+- **Ek Chuah** (filed Maya)
+  - Wikipedia, under "Ek Chuah." Last modified August 26, 2025. Accessed October 29, 2026. https://en.wikipedia.org/w/index.php?title=Ek_Chuah&oldid=1307860347.
+- **Kanaloa** (filed Hawaiian)
+  - Wikipedia, under "Kanaloa." Last modified August 20, 2026. Accessed October 29, 2026. https://en.wikipedia.org/w/index.php?title=Kanaloa&oldid=1370250022.
+- **Kanehekili** (filed Hawaiian; also Kane-hekili)
+  - Wikipedia, under "Kanehekili." Last modified July 30, 2026. Accessed October 29, 2026. https://en.wikipedia.org/w/index.php?title=Kanehekili&oldid=1366759315.
+- **Maui** (filed Polynesian)
+  - Wikipedia, under "Māui." Last modified October 14, 2026. Accessed October 29, 2026. https://en.wikipedia.org/w/index.php?title=M%C4%81ui&oldid=1380163481.
+- **Puck** (filed English folklore; also Robin Goodfellow)
+  - Wikipedia, under "Puck (folklore)." Last modified October 1, 2026. Accessed October 29, 2026. https://en.wikipedia.org/w/index.php?title=Puck_(folklore)&oldid=1377834823.
+- **Sedna** (filed Inuit)
+  - Wikipedia, under "Sedna (mythology)." Last modified October 20, 2026. Accessed October 29, 2026. https://en.wikipedia.org/w/index.php?title=Sedna_(mythology)&oldid=1381219426.
+- **Cailleach** (filed Scottish Gaelic; also Cailleach Bheur, Beira)
+  - Wikipedia, under "Cailleach." Last modified October 3, 2026. Accessed October 29, 2026. https://en.wikipedia.org/w/index.php?title=Cailleach&oldid=1378141247.
+- **Seonaidh** (filed Scottish Gaelic; also Shony, Shoney)
+  - Wikipedia, under "Seonaidh." Last modified August 19, 2026. Accessed October 29, 2026. https://en.wikipedia.org/w/index.php?title=Seonaidh&oldid=1370081242.
