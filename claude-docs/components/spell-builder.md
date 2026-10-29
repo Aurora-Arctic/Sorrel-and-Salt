@@ -427,7 +427,7 @@ once each and sorted by name.
   in the jar carries; **Stray** each category the jar carries that was not assigned. The row is its chips and nothing
   else: no line, tip or other place names the ingredients that bring a stray category (the owner's
   call, 2026-10-28).
-  The words carry the difference; the chips are coloured by group, as they are everywhere. On 2026-10-29 the owner chose the group colours over the second design review's finding 6a (neutral chips), so the review is not current on this point.
+  The words carry the difference; the chips are coloured by group, as they are everywhere. On 2026-10-29 the owner chose the group colours over the second design review's finding 6a (neutral chips), so the review is not current on this point. The review's spacing stays: the chips are the compact size (`CategoryChips` with `compact`, which applies `chip($size: compact)`: overline text, 0.4375rem side padding), the row labels are the 5.5rem caption column, and rows are `space(2)` apart.
 - With none of the three, it reads "Intent and ingredients match." With no category assigned the
   panel does not list every ingredient as a stray: it asks for categories first. With nothing
   assigned and nothing in the jar it reads "Nothing to compare yet."
