@@ -48,7 +48,7 @@ export default function SpellRecipeAside({
     <>
       {/* Category Match first, over the inventory (the owner, 2026-10-29): the builder's order reversed. */}
       <ComparisonPanel intended={intended} steps={steps} groups={colours} heading="h2" />
-      <InCovenInventory steps={steps} heading="h2" doorsOf={doorsOf} />
+      <InCovenInventory steps={steps} doorsOf={doorsOf} />
     </>
   );
 }

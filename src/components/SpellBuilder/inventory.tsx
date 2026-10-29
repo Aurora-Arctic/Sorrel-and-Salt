@@ -1,49 +1,30 @@
 'use client';
 
 import type { ReactElement, ReactNode } from 'react';
-import { useFormContext, useWatch } from 'react-hook-form';
-import IconTip from '../IconTip';
 import { JarDrawing, pickJarShape } from '../JarShelf';
 import { formLabel } from '@/modules/ingredients/validation/form-label';
-import { StockIcon } from '../StockBadge';
 import { StockJarButton } from '../StockDialog';
 import type { StockDialogProps } from '../StockDialog/types';
 import { stockState } from '../StockBadge/stock-state';
 import { amountText } from '../StockBadge/stock-words';
-import { type QuickLookCoven, StepQuickLook } from './step-quick-look';
-import { UnitsDifferIcon, NotEnoughIcon } from './supply-icon';
-import { needOf, type StepSupply, supplyOf } from './steps/supply';
-import type { SpellStepValue, SpellStepsValues } from './steps/types';
+import { needOf, supplyOf } from './steps/supply';
+import type { SpellStepValue } from './steps/types';
+import { verdictOf, type VerdictKind, VerdictMark } from './verdict-mark';
 import { isInstruction, stepNameOf } from './steps/values';
 
-// In Coven Inventory (the Jar's aside): one line for each form, at its first step's place,
-// saying what all its steps need together (`needOf`) against what the coven's jar holds, as
-// `supplyOf` judges it; a one-off keeps a line for each step. All four
-// verdicts stand at the right end of the name's line, so the name is cut short before they are.
-// Every verdict is a symbol alone (StockBadge's for Out and Low, supply-icon.tsx's for Not Enough
-// and Units Differ): the words are the button's name and the reason is its IconTip (the owner's
-// call, 2026-10-28), the verdict's `mark`. A step with an instruction only has
-// no line. On the spell's recipe page (M13.21) a line may carry doors (`doorsOf`): a Quick
-// Look eye in a column of its own at the line's right, and Edit Stock behind the jar and the name (a `StockJarButton`
-// stretched over both, as the entry page's shelf stretches it over a jar). The builder's
-// lines carry none. See claude-docs/components/spell-builder.md, "The aside".
-
-const UNITS_DIFFER_TIP = 'The units don’t match, so it can’t tell if you have enough.';
-const NOT_ENOUGH_TIP = 'The jar holds less than this step needs.';
-
-const OUT_TIP = 'The jar is empty, so there is nothing to put in.';
-const LOW_TIP = 'The jar is at or below the coven’s Low mark.';
+// In Coven Inventory, in the spell's recipe page's side column (M13.21): one line for each form,
+// at its first step's place, saying what all its steps need together (`needOf`) against what the
+// coven's jar holds, as `supplyOf` judges it; a one-off keeps a line for each step, and a step
+// with an instruction only has none. The verdict's mark (`VerdictMark`) stands at the right end
+// of the name's line, so the name is cut short before it is. A line may carry doors (`doorsOf`):
+// a Quick Look eye in a column of its own at the line's right, and Edit Stock behind the jar and
+// the name (a `StockJarButton` stretched over both, as the entry page's shelf stretches it over a
+// jar). The builder draws no stock (the owner's call, 2026-10-29), so this serves the page alone.
+// See claude-docs/components/spell-recipe.md, "The side column".
 
 // A one-off holds no stock, but its jar is drawn with something in it, as a stocked jar is: an
 // unmeasured jar stands at the middling level, in muted ink (index.scss). The One-Off badge says why.
 const ONE_OFF_HELD = { quantity: null, threshold: null };
-
-const OutIcon = ({ className }: { className: string }): ReactElement => (
-  <StockIcon out className={className} />
-);
-const LowIcon = ({ className }: { className: string }): ReactElement => (
-  <StockIcon out={false} className={className} />
-);
 
 /** What a line opens, where the page offers it: the Quick Look eye, and the Edit Stock dialog. */
 export interface LineDoors {
@@ -51,29 +32,11 @@ export interface LineDoors {
   edit?: StockDialogProps;
 }
 
-/** The verdict is its `mark` alone: the symbol in a button named `words`, whose IconTip says why. */
-type Verdict = {
-  words: string;
-  tone: string;
-  mark: { Icon: (props: { className: string }) => ReactElement; tip: string };
-};
-
-const VERDICTS: Partial<Record<StepSupply['kind'], Verdict>> = {
-  out: { words: 'Out', tone: 'out', mark: { Icon: OutIcon, tip: OUT_TIP } },
-  short: { words: 'Not Enough', tone: 'low', mark: { Icon: NotEnoughIcon, tip: NOT_ENOUGH_TIP } },
-  'units-differ': {
-    words: 'Units Differ',
-    tone: 'muted',
-    mark: { Icon: UnitsDifferIcon, tip: UNITS_DIFFER_TIP },
-  },
-  low: { words: 'Low', tone: 'low', mark: { Icon: LowIcon, tip: LOW_TIP } },
-};
-
 /** The line's words after the name, as the parts to join: need, have, the verdict ("have", not "hold": the owner, 2026-10-29). */
 export function holdWords(
   step: SpellStepValue,
   steps: readonly SpellStepValue[] = [step],
-): { parts: string[]; verdict: Verdict | null } {
+): { parts: string[]; verdict: VerdictKind | null } {
   const supply = supplyOf(step, steps);
   if (step.ingredientId === null) return { parts: ['one-off', 'not kept'], verdict: null };
   const jar = step.jar;
@@ -90,7 +53,7 @@ export function holdWords(
           : `have ${amountText(jar.quantity, jar.unit)}`;
   return {
     parts: [need, hold].filter((part): part is string => part !== null),
-    verdict: (supply && VERDICTS[supply.kind]) ?? null,
+    verdict: verdictOf(supply),
   };
 }
 
@@ -99,10 +62,7 @@ function HoldLine({
   steps,
   seed,
   doors,
-  look,
 }: {
-  /** The builder's Quick Look: the coven's ids; left out, no line has the eye of its own. */
-  look?: QuickLookCoven;
   step: SpellStepValue;
   steps: readonly SpellStepValue[];
   seed: string;
@@ -141,27 +101,10 @@ function HoldLine({
       </span>
       {/* The eye in a column of its own at the line's right, so it stands in one place down the
           list whatever the name's length (the owner, 2026-10-29, the mock's Option C). */}
-      {doors?.look ? (
-        <span className="spell-inventory__look">{doors.look}</span>
-      ) : (
-        look &&
-        step.ingredientId !== null && (
-          <span className="spell-inventory__look">
-            <StepQuickLook ingredientId={step.ingredientId} name={step.name ?? ''} look={look} />
-          </span>
-        )
-      )}
+      {doors?.look && <span className="spell-inventory__look">{doors.look}</span>}
       <span className="spell-inventory__words">
         {/* The verdict's mark opens the words it is about: the need and the have. */}
-        {verdict && (
-          <span className={`spell-inventory__verdict is-${verdict.tone}`}>
-            <IconTip tip={verdict.mark.tip}>
-              <button type="button" className="spell-inventory__mark" aria-label={verdict.words}>
-                <verdict.mark.Icon className="spell-inventory__icon" />
-              </button>
-            </IconTip>
-          </span>
-        )}
+        {verdict && <VerdictMark kind={verdict} />}
         <span>{parts.join(' · ')}</span>
       </span>
     </li>
@@ -170,17 +113,11 @@ function HoldLine({
 
 export function InCovenInventory({
   steps,
-  heading: Heading = 'h5',
   doorsOf,
-  look,
 }: {
   steps: readonly SpellStepValue[];
-  /** The heading's level: h5 under the builder's Jar heading, h2 on the recipe page (M13.21). */
-  heading?: 'h2' | 'h5';
-  /** A line's doors, where the page offers them (the recipe page); none in the builder. */
+  /** A line's doors, where the page offers them. */
   doorsOf?: (step: SpellStepValue) => LineDoors | undefined;
-  /** The builder's Quick Look: the coven to look in; left out, a line has no eye of its own. */
-  look?: QuickLookCoven;
 }): ReactElement {
   const ingredients = steps.filter((step) => !isInstruction(step));
   // A form laid in several steps is one line, at its first step's place (One Line Per Form).
@@ -192,7 +129,7 @@ export function InCovenInventory({
   );
   return (
     <section className="spell-inventory" aria-labelledby="spell-inventory-heading">
-      <Heading id="spell-inventory-heading">In Coven Inventory</Heading>
+      <h2 id="spell-inventory-heading">In Coven Inventory</h2>
       {lines.length === 0 ? (
         <p className="spell-aside__empty">Nothing in the jar yet.</p>
       ) : (
@@ -204,18 +141,10 @@ export function InCovenInventory({
               steps={ingredients}
               seed={step.ingredientId ?? step.name ?? ''}
               doors={doorsOf?.(step)}
-              look={look}
             />
           ))}
         </ul>
       )}
     </section>
   );
-}
-
-/** In Coven Inventory on the builder's own values, as the amounts stand as they are typed. */
-export function SpellInventory({ look }: { look?: QuickLookCoven }): ReactElement {
-  const { control } = useFormContext<SpellStepsValues>();
-  const steps = useWatch({ control, name: 'steps' }) ?? [];
-  return <InCovenInventory steps={steps} look={look} />;
 }
