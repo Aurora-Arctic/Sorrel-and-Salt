@@ -9,3 +9,10 @@ listings:
     nameBasis: stated
     source: wikipedia-iucn-commiphora-wightii
     locator: 'Taxobox: status = CR, status_system = IUCN3.1; its status_ref reads: "Commiphora wightii", Ved, D., 2015, 10.2305/IUCN.UK.2015-2.RLTS.T31231A50131117.en'
+  - list: cites
+    name: CITES Appendices I, II and III, valid from 5 March 2026
+    value: Appendix II
+    listedAs: Commiphora wightii
+    nameBasis: stated
+    source: cites-appendices
+    locator: 'p. 63, Appendix II column, family BURSERACEAE: "Commiphora wightii", annotation #19: "Extracts (including resins, gums and essential oils) and powder, except the following finished products, packaged and ready for retail trade"'

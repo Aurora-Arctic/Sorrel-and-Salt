@@ -450,6 +450,7 @@ One line per entry: `<nomenclature>/<entry-file-slug>`. An entry with an ethics 
 - zoological/egg-gallus-gallus-domesticus
 - zoological/red-coral-corallium
 - zoological/snakeskin-serpentes
+- Checked against: United Plant Savers Species At-Risk List (current page, 2026-10-29); the IUCN category and any other conservation statement printed in the entry's English Wikipedia page (revisions in `compendium/ethics/sources/`); the CITES Appendices valid from 5 March 2026, matched locally by formal name (`cites-appendices`); a keyword scan for animal-part and closed-practice statements; and a targeted reread of the animal-product entries and the entries linked to Indigenous or initiatory traditions. An entry whose canonical name is blank (18 entries: the unnamed mineral and chemical rows) was not matched against CITES, and an entry with no Wikipedia page has no IUCN check. Absence from a list is not a statement that an entry is safe.
 
 ## M14.17
 

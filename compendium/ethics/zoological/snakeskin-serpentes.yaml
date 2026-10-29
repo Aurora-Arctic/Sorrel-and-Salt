@@ -1,0 +1,5 @@
+# Gathered for M14.29; the seed never reads this folder.
+entry: zoological/snakeskin-serpentes
+status: needs-review
+questions:
+  - 'The CITES Appendices (valid from 5 March 2026) list many snake species, genera and families (the section headed "SERPENTES" starts on p. 43, with families such as BOIDAE), but not the order as a whole. The entry is the order Serpentes, which the Appendices do not list in full. Recommendation: no listing row; keep this question.'
