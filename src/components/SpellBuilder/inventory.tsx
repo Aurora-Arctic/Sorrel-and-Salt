@@ -153,11 +153,7 @@ export function InCovenInventory({
 }
 
 /** In Coven Inventory on the builder's own values, as the amounts stand as they are typed. */
-export function SpellInventory({
-  look,
-}: {
-  look?: QuickLookCoven;
-}): ReactElement {
+export function SpellInventory({ look }: { look?: QuickLookCoven }): ReactElement {
   const { control } = useFormContext<SpellStepsValues>();
   const steps = useWatch({ control, name: 'steps' }) ?? [];
   return <InCovenInventory steps={steps} look={look} />;
