@@ -112,10 +112,8 @@ export type SeedLayerIngredient =
   | { tier: 'custom'; name: string; form: string };
 
 /**
- * One step: an instruction (`body`), a layer (`ingredient`), or both. Its
- * `position` is its place in `SeedSpell['steps']`, so two steps cannot share
- * one. An amount belongs to a layer, so an instruction-only step carries
- * none, as the table's CHECK requires.
+ * One step: an instruction (`body`), a layer (`ingredient`), or both. Its `position` is its place in `SeedSpell['steps']`. An
+ * amount belongs to a layer, so an instruction-only step carries none, as the table's CHECK requires.
  */
 export type SeedStep =
   | (Pick<typeof spellSteps.$inferInsert, 'quantity' | 'unit'> & {
@@ -172,11 +170,8 @@ export interface TwoTierVocabulary<
   /** Capitalised, for the error naming an item whose group is missing: `Category`, `Form`, `Deity`. */
   itemNoun: string;
   /**
-   * An item's slug, given its name and the name of the group it is filed
-   * under now: `slugify(name)` when absent. A form's carries its group,
-   * and a deity's its tradition, so two items of one name
-   * under two groups hold two addresses. Given, every live item's slug is
-   * brought to it on each run too.
+   * An item's slug, given its name and its group's: `slugify(name)` when absent. A form's carries its group and a deity's its
+   * tradition, so one name under two groups holds two addresses. Given, every live item's slug is brought to it on each run.
    */
   slugOf?: (name: string, groupName: string) => string;
 }
@@ -312,10 +307,8 @@ export interface SeedCitation<Field extends string> {
 }
 
 /**
- * The four answers a citation gives about the formal name: the source prints
- * it (`stated`), heads a common name an authority maps to it (`resolved`),
- * leaves doubt (`unresolved`, which blocks `approved`), or was copied from the
- * TypeScript before the rule existed (`unaudited`, the shrinking legacy list).
+ * The four answers a citation gives about the formal name: the source prints it (`stated`), heads a common name an authority maps to it
+ * (`resolved`), leaves doubt (`unresolved`, which blocks `approved`), or predates the rule (`unaudited`, the shrinking legacy list).
  */
 export type NameBasis = 'stated' | 'resolved' | 'unresolved' | 'unaudited';
 

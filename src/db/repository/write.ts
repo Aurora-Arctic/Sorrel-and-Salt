@@ -74,12 +74,9 @@ function writerFor(tx: Transaction, session: AuditSession): AuditWriter {
     id: string,
   ) => and(scopedTo(membership, table), eq(table.id, id));
 
-  // The revision check rides in the UPDATE's own WHERE, so two saves racing
-  // for one revision cannot both land: the second's statement waits on the
-  // first's row lock, then re-reads the row and no longer matches. Only a
-  // refused write reads again, under FOR UPDATE, to tell a stale revision
-  // from a row that is not there; the read takes the same `where`, so a row
-  // the update could never have reached answers `[]` as an update does.
+  // The revision check rides in the UPDATE's own WHERE, so two saves racing for one revision cannot both land: the second
+  // waits on the first's row lock and no longer matches. Only a refused write reads again, under FOR UPDATE, with the same
+  // `where`, to tell a stale revision from a row that is not there.
   const updateAtRevision = async (
     table: PgTable & Identified & Revisioned,
     where: SQL | undefined,
@@ -226,10 +223,8 @@ function writerFor(tx: Transaction, session: AuditSession): AuditWriter {
 }
 
 /**
- * `delete`'s predicate: each column of `match` equal to its value, null where
- * it is `null`, or in its list; `undefined` when a list is empty,
- * since the delete then matches nothing. A match naming no column, or a key that is not one of the table's
- * columns, throws: either would otherwise delete more than was asked.
+ * `delete`'s predicate: each column of `match` equal to its value (null where `null`, or in its list), `undefined` for an empty
+ * list, which matches nothing. A match naming no column, or a key not in the table, throws rather than delete more than asked.
  */
 function matching<TTable extends PgTable>(
   table: TTable,
@@ -254,11 +249,8 @@ function matching<TTable extends PgTable>(
 }
 
 /**
- * The only write path: one transaction, the acting user published as
- * `app.current_user_id`, every stamp from `session` — never a request body —
- * and a rollback if `fn` throws. A write that changes a privilege column on
- * `users` declares how in `privilege`, or the trigger recording it refuses
- * the change.
+ * The only write path: one transaction, the acting user published as `app.current_user_id`, every stamp from `session` never a
+ * request body, and a rollback if `fn` throws. A write changing a privilege column on `users` declares how in `privilege`.
  */
 export async function withAudit<T>(
   session: AuditSession,
@@ -270,13 +262,9 @@ export async function withAudit<T>(
   }
 
   return db.transaction(async (tx) => {
-    // The privilege trigger on `users` reads `app.current_user_id` as the
-    // ledger row's actor and refuses a privilege change whose
-    // `app.privilege_route` is empty, and the GUC is what makes the v2
-    // history trigger and deferred RLS one migration. **Do not remove it.**
-    // `app.impersonated_by` names the admin acting as `userId` and has no reader.
-    // Why each, and why `set_config(…, true)`:
-    // claude-docs/db/write-path.md, "app.current_user_id, published per transaction".
+    // The privilege trigger on `users` reads `app.current_user_id` as the ledger row's actor and refuses a privilege change
+    // whose `app.privilege_route` is empty; the GUC is also what lets a history trigger and RLS arrive as one migration. **Do not
+    // remove it.** `app.impersonated_by` names the admin acting as `userId` (claude-docs/db/write-path.md, "app.current_user_id, published per transaction").
     await publishActor(tx, {
       userId: session.userId,
       impersonatedBy: session.impersonatedBy,

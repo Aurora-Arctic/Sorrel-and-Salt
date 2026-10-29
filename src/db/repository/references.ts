@@ -89,14 +89,9 @@ export function findManyReferences(
 }
 
 /**
- * One page of the live references an ingredient may cite — the compendium's
- * and those of a coven one of `memberships` proves — whose authors,
- * title or container is word-similar to `query`, each side accent-folded as
- * the compendium search folds names, best match first and keyed `[-score,
- * title]`. No proofs reads the compendium's alone, which is what a compendium
- * entry may cite. A blank `query` lists the tiers read by title. The
- * rendered citation exists only in TypeScript, so this matches the fields it
- * is rendered from (claude-docs/db/references.md).
+ * One page of the live references an ingredient may cite (the compendium's and those of a coven a proof in `memberships` names) whose
+ * authors, title or container is word-similar to `query`, accent-folded, best match first. No proofs reads the compendium's alone. A blank
+ * `query` lists by title. Matches the fields, as the rendered citation exists only in TypeScript (claude-docs/db/references.md).
  */
 export function findReferenceSuggestions(
   memberships: readonly Membership[],
@@ -114,11 +109,8 @@ export function findReferenceSuggestions(
 
   const { matches, similarity, contains } = foldedWordMatch(trimmed);
   const fields = [references.authors, references.title, references.container];
-  // A field's word similarity, or 1 where it matched and holds the query
-  // verbatim, as the compendium search scores a field before its weight: word
-  // similarity scores a fragment inside a longer word by the trigrams it
-  // shares. `greatest` skips nulls, so a source without authors or a
-  // container scores on what it has.
+  // A field's word similarity, or 1 where it holds the query verbatim, as the compendium search scores a field before its weight;
+  // `greatest` skips nulls, so a source scores on the fields it has.
   const scored = (field: AnyPgColumn) =>
     sql`greatest(${similarity(field)}, case when ${and(matches(field), contains(field))} then 1::real end)`;
   const score = sql<number>`greatest(${sql.join(fields.map(scored), sql`, `)})`;
@@ -148,10 +140,8 @@ export function cites(key: SourcedKey): SQL {
 }
 
 /**
- * A row of the sourced table `key` names with no reference it shows: no
- * live link to a live compendium reference, the bibliography a compendium
- * entry reads as empty — the admin's to-do list. Correlated on the
- * outer row of that table.
+ * A row of the sourced table `key` names with no live link to a live compendium reference, which a compendium entry reads as an
+ * empty bibliography: the admin's to-do list. Correlated on that table's outer row.
  */
 export function citesNothing(key: SourcedKey): SQL {
   return not(cites(key));

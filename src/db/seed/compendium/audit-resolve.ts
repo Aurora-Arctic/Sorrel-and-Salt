@@ -15,16 +15,9 @@ import {
 import type { LoadedCompendium } from './load';
 import { WORKS } from './works';
 
-// Resolving by Wikipedia (`--resolve`): a citation headed "X" in a
-// book or page that prints no formal name is `resolved` when Wikipedia's page
-// "X" is, or redirects to, the article the entry already cites as `stated`
-// for its own formal name — Wikipedia, not the audit, says the heading and
-// the formal name are one subject. A disambiguation page, a genus page,
-// another species' page or no page leaves the citation as it is, and so does
-// a heading another entry uses as a name. Pure: the redirect lookups come
-// in (`wiki-lookup.ts` fetches and caches them), the resolutions go out, and
-// `applyResolutions` edits one file's text
-// (claude-docs/db/compendium-seed/README.md, "The attribution audit").
+// Resolving by Wikipedia (`--resolve`): a citation headed "X" in a source printing no formal name is `resolved` when Wikipedia's page "X"
+// is, or redirects to, the article the entry cites as `stated` for its formal name. A disambiguation, genus or other species' page, no
+// page, or a heading another entry uses as a name leaves it. Pure: lookups in, resolutions out (claude-docs/db/compendium-seed/README.md, "The attribution audit").
 
 /** What Wikipedia says of a title: the page it lands on, or that it has none. */
 export type PageInfo = { title: string; disambiguation?: boolean } | { missing: true };
@@ -76,10 +69,8 @@ const sourcesOf = (loaded: Pick<LoadedCompendium, 'sources'>): Sources => ({
 });
 
 /**
- * The Wikipedia sources a file holds for its own formal name: those cited
- * as `stated`, and those whose fetched page's taxobox (or, for a mineral or chemical, its
- * infobox and title: `pageNamesEntry`) names the file's formal
- * name, which is what the audit reports as stated before a lane writes it.
+ * The Wikipedia sources a file holds for its own formal name: those cited as `stated`, and those whose fetched page's taxobox (or,
+ * for a mineral or chemical, infobox and title: `pageNamesEntry`) names it, as the audit reports before a lane writes it.
  */
 function ownArticles(file: SeedCompendiumFile, sources: Sources, wiki: WikiPages) {
   const found = new Map<string, string>();
@@ -218,11 +209,8 @@ export type ResolveApplyResult = { text: string; written: number } | { issue: st
 const FRONTMATTER = /^---\r?\n([\s\S]*?)\r?\n---\r?\n/;
 
 /**
- * `text` with each resolution written: on the citation item with the same
- * source and locator and a basis not yet settled, its `nameBasis` becomes
- * `resolved` and `headedAs` and `resolvedBy` follow it. A text edit, so the
- * file's order, comments and prose survive; neither key is hashed, so a
- * `seedUpdate` mark stays good.
+ * `text` with each resolution written: on the citation item with the same source and locator and a basis not yet settled, `nameBasis`
+ * becomes `resolved`, with `headedAs` and `resolvedBy`. A text edit, so order, comments and prose survive; neither key is hashed.
  */
 export function applyResolutions(
   path: string,

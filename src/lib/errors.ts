@@ -1,14 +1,7 @@
 import type { ValidationIssue } from './types';
-// The three ways a service ends a call it cannot perform — two refusals and a
-// bad value — thrown rather than answered with an empty list, a null, or a
-// success that did nothing. Separate types because the route decides what the
-// browser sees; types rather than messages so a test survives a rewording.
-// Neither type carries a status code or a GraphQL error code: a seed or a
-// script has no use for one. The code is attached on the way out, by
-// src/graphql/errors.ts in the /api/graphql route. See claude-docs/auth/service-session.md,
-// "The service-level session, and the three errors". `InvalidCursor`, below
-// them, is bad input the pagination helper reports on its own, and
-// `StaleWrite`, last, is a revisioned write's lost race.
+// The ways a service ends a call it cannot perform: two refusals and a bad value, thrown rather than answered with an empty list or
+// a null. Separate types, not messages, so a test survives a rewording; none carries a status code, as the route attaches that
+// (claude-docs/auth/service-session.md, "The service-level session, and the three errors").
 
 /**
  * The actor is known and the answer is no. Thrown by services (rule 1), and
@@ -48,10 +41,8 @@ export class ValidationError extends Error {
 }
 
 /**
- * A pagination cursor that names no position in the list: malformed,
- * forged, or from a list sorted on another column. The client's input is
- * wrong rather than the actor refused, so it is neither refusal above; never
- * read as "from the start", which would hand back a page nobody asked for.
+ * A pagination cursor that names no position in the list: malformed, forged, or from a list sorted on another column. The input is
+ * wrong, not the actor refused, and never read as "from the start", which would hand back a page nobody asked for.
  */
 export class InvalidCursor extends Error {
   constructor(message = 'Invalid cursor') {
@@ -61,11 +52,8 @@ export class InvalidCursor extends Error {
 }
 
 /**
- * A save that named the revision it read, after another save had moved the
- * row on. Neither refusal: the actor may write the row, and the input
- * is sound, but it was built on a copy that is no longer the row's. Carries
- * the row's revision now, so the client can offer to keep its own version
- * over it (claude-docs/components/autosave.md, "The server's half").
+ * A save that named the revision it read, after another save moved the row on: neither refusal, as the actor may write and the input is
+ * sound, but it was built on a stale copy. Carries the row's revision now (claude-docs/components/autosave.md, "The server's half").
  */
 export class StaleWrite extends Error {
   readonly currentRevision: number;

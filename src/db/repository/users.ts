@@ -19,12 +19,8 @@ import type {
 } from './types';
 
 /**
- * The live row holding this address, or `undefined`. Compared lower-cased,
- * which `users_email_lower_case` holds every row to. The third read that takes
- * no proof, for the reason the first two do: an address is claimed site-wide,
- * so there is no workspace to hold a proof for. The service calling it decides
- * what a hit means; the index's export list is pinned, so the fourth,
- * `findCoMemberNamesIncludingSoftDeleted`, was a decision.
+ * The live row holding this address, or `undefined`, compared lower-cased as `users_email_lower_case` holds. The third read
+ * that takes no proof, as an address is claimed site-wide; the index's export list is pinned, so a fourth is a decision.
  */
 export async function findUserByEmail(
   email: string,
@@ -42,12 +38,9 @@ function listedUsers(filter: UserFilter): SQL | undefined {
 }
 
 /**
- * One page of the live users under `filter`, by name and then id: the admin
- * user list. It takes the `SiteAdmin` proof, so no caller that has not
- * asserted the site role can read the list. The seed's bootstrap user is left
- * out: it stamps the seeded rows, nobody signs in as it, and nothing an admin
- * does to a person applies to it (claude-docs/auth/admin-users.md, "The user
- * list").
+ * One page of the live users under `filter`, by name then id, for the admin user list, under the `SiteAdmin` proof. The seed's
+ * bootstrap user is left out: nobody signs in as it and nothing an admin does to a person applies to it
+ * (claude-docs/auth/admin-users.md, "The user list").
  */
 export function findUserPage(
   _admin: SiteAdmin,
@@ -71,10 +64,8 @@ export function findUserCount(
 }
 
 /**
- * The provider of every account linked to these users, and nothing else of
- * the row: its tokens never leave the repository. Under the `SiteAdmin`
- * proof, for the user list; a user's own come from Better Auth, on the
- * account page.
+ * The provider of every account linked to these users and nothing else of the row: tokens never leave the repository. Under
+ * the `SiteAdmin` proof, for the user list; a user's own come from Better Auth.
  */
 export async function findProvidersOfUsers(
   _admin: SiteAdmin,
@@ -123,10 +114,8 @@ export async function findCoMemberNamesIncludingSoftDeleted(
 }
 
 /**
- * The ledger's order, newest first: a page's key is ascending, so a
- * descending part is written negated (`types.ts`, `SortPart`), and as
- * `numeric`, which keeps the microseconds a `Date` would drop from a cursor.
- * Rows of one instant, a role grant and the flag it sets, follow by id.
+ * The ledger's order, newest first: the key is ascending, so the descending part is negated (`types.ts`, `SortPart`), as
+ * `numeric` to keep a `Date`'s dropped microseconds. Rows of one instant (a role grant and its flag) follow by id.
  */
 const LEDGER_ORDER: readonly SortPart[] = [
   { expression: sql`-extract(epoch from ${userPrivilegeChanges.createdAt})`, type: 'numeric' },

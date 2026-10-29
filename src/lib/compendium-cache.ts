@@ -2,12 +2,8 @@ import 'server-only';
 import { revalidateTag, unstable_cache } from 'next/cache';
 import superjson from 'superjson';
 
-// The compendium's data cache (CLAUDE.md rule 6; DESIGN.md §7): the curated
-// reads every viewer sees alike, held across requests under one tag, which an
-// admin write expires through `expireCompendium`. Every use of `next/cache` is in this file, so the tag
-// has one spelling (a `no-restricted-imports` path in .oxlintrc.json). `unstable_cache`
-// rather than `use cache`, deliberately: DESIGN.md §7, "Caching — three
-// layers in v1" (claude-docs/db/compendium-cache.md).
+// The compendium's data cache (CLAUDE.md rule 6): the curated reads every viewer sees alike, held across requests under one tag that an admin write
+// expires through `expireCompendium`. The only file using `next/cache`, so the tag has one spelling. `unstable_cache`, not `use cache` (claude-docs/db/compendium-cache.md).
 
 /**
  * The one tag every compendium cache entry carries — the curated reads' and,
@@ -19,12 +15,8 @@ export const COMPENDIUM_TAG = 'compendium';
 export const COMPENDIUM_REVALIDATE_SECONDS = 3600;
 
 /**
- * The deployment's own key part, so a new deployment reads under fresh keys.
- * The seed runs outside Next and cannot expire the tag, and Vercel keeps the
- * data cache from one deployment to the next, so without it a seeded change
- * stays hidden for up to an hour. Vercel sets both variables at build and at
- * runtime; with neither (local, tests) there is no part, so the keys are
- * stable (claude-docs/db/compendium-cache.md, "The deployment key part").
+ * The deployment's own key part, so a new deployment reads fresh keys: the seed cannot expire the tag and Vercel keeps the data
+ * cache across deployments. None where neither variable is set (local, tests) (claude-docs/db/compendium-cache.md, "The deployment key part").
  */
 function deploymentKeyPart(): string[] {
   const id = process.env.VERCEL_DEPLOYMENT_ID || process.env.VERCEL_GIT_COMMIT_SHA;
@@ -49,12 +41,8 @@ export function cachedCompendiumRead<A extends unknown[], R>(
 }
 
 /**
- * Expires every entry under `COMPENDIUM_TAG`, called by an admin's write to
- * anything the cache holds once the write has committed. `{ expire: 0 }`
- * rather than the recommended `'max'`, so the admin's next read is a miss
- * and not the stale answer `'max'` serves while it revalidates; `updateTag`,
- * which would do the same, throws outside a Server Action, and every write
- * here arrives through `/api/graphql` (DESIGN.md §7).
+ * Expires every entry under `COMPENDIUM_TAG`, called after an admin's write commits. `{ expire: 0 }`, not `'max'`, so the next read is a
+ * miss and not a stale answer; `updateTag` throws outside a Server Action, and every write arrives through `/api/graphql`.
  */
 export function expireCompendium(): void {
   revalidateTag(COMPENDIUM_TAG, { expire: 0 });

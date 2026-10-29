@@ -13,15 +13,9 @@ import type {
   SeedTransaction,
 } from './types';
 
-// The deity vocabulary: 88 traditions and the deities filed
-// under them, a starting set an admin may edit. Reference data, not a
-// scenario — migrate.yml seeds it alone, so it inserts the bootstrap user
-// itself. Transcribed from the seed doc's two tables, which review holds in
-// step with it by hand; the doc,
-// not this file, is where a row is argued and sourced. Names are copied as
-// written, never title-cased (`Manannan mac Lir`), and no slug is written
-// down — a deity's is its name and its tradition's, derived here and
-// re-derived on every seed (claude-docs/db/deity-vocabulary-seed.md, "The deity vocabulary seed").
+// The deity vocabulary: 88 traditions and the deities under them, a starting set an admin may edit. Reference data, so it inserts
+// the bootstrap user itself. Transcribed by hand from the seed doc, where a row is argued; names are copied as written, and a slug is derived
+// here and re-derived on every seed (claude-docs/db/deity-vocabulary-seed.md, "The deity vocabulary seed").
 
 /** The doc's traditions, in its order, which nothing reads — traditions list alphabetically. */
 export const DEITY_TRADITIONS: SeedDeityTradition[] = [
@@ -2354,12 +2348,9 @@ for (const deity of DEITIES) {
 }
 
 /**
- * The deities a compendium entry file means by `name`, by this
- * literal's names: the deity named so when one is, else every deity giving it
- * as an other name, so an entry can keep its source's spelling (Kynes's
- * Woden is Odin). A deity's own name wins, which is why Legba is the Fon &
- * Ewe vodun though it is Papa Legba's other name too. One answer is a link;
- * none, or more than one, is for the guard to refuse.
+ * The deities a compendium entry file means by `name`: the deity named so when one is, else every deity giving it as another
+ * name, so an entry keeps its source's spelling. A deity's own name wins (Legba is the Fon & Ewe vodun). One answer is a link;
+ * none or several is for the guard to refuse.
  */
 export function deitiesNamed(name: string): string[] {
   const key = slugify(name);
@@ -2393,12 +2384,8 @@ export async function seedDeityVocabulary(tx: SeedTransaction): Promise<void> {
 }
 
 /**
- * Each deity's `otherNames`, on the live deity its seed key finds,
- * so a renamed deity still takes them and a retired one takes none. A name
- * is passed over when the deity has ever held it, live or removed, so an
- * admin's removal stands as a vocabulary row's does, and when a live
- * deity of the tradition holds it, the refusal the service makes. Nothing
- * present is updated. Case folded as the unique index folds it.
+ * Each deity's `otherNames`, on the live deity its seed key finds, so a renamed deity still takes them and a retired one takes none.
+ * A name the deity has ever held, or a live deity of the tradition holds, is passed over. Nothing present is updated; case folded as the index folds it.
  */
 async function seedDeityOtherNames(tx: SeedTransaction): Promise<void> {
   const live = await tx

@@ -5,42 +5,32 @@ import baseSlugify from 'slugify';
 baseSlugify.extend({ _: '-' });
 
 /**
- * The only slug rule in the project (CLAUDE.md, Conventions). `&` becomes
- * "and", which is why §6's group slugs read `-and-`; `strict` drops what it
- * cannot transliterate (`Cat's Claw` → `cats-claw`). Returns `''` for a name
- * with nothing slugifiable — `'&&&'` is `and`, `'...'` is empty.
+ * The only slug rule in the project (CLAUDE.md, Conventions). `&` becomes "and"; `strict` drops what it cannot
+ * transliterate (`Cat's Claw` → `cats-claw`). Returns `''` for a name with nothing slugifiable (`'...'`).
  */
 export function slugify(name: string): string {
   return baseSlugify(name, { lower: true, strict: true, trim: true });
 }
 
 /**
- * An ingredient's slug: the label, then the formal name where one is
- * declared, so two entries sharing a label are told apart by the name that is
- * their identity rather than by which was added first (`Cat's Claw` /
- * `Uncaria tomentosa` → `cats-claw-uncaria-tomentosa`; no formal name,
- * `graveyard-dirt`). A form is no part of an entry's address: an
- * entry's forms are its variants.
+ * An ingredient's slug: the label, then the formal name where declared, so entries sharing a label are told apart by their
+ * identity (`cats-claw-uncaria-tomentosa`; no formal name, `graveyard-dirt`). A form is no part of the address.
  */
 export function ingredientSlug(name: string, canonicalName: string | null | undefined): string {
   return slugify([name, canonicalName].filter(Boolean).join(' '));
 }
 
 /**
- * A curated form's slug: its name, then its group's, so two live
- * forms sharing a name under two groups hold two addresses — Wax under
- * Substance is `wax-substance`, under Animal `wax-animal`. It follows a change
- * to either.
+ * A curated form's slug: its name, then its group's, so two forms of one name under two groups hold two addresses
+ * (`wax-substance`, `wax-animal`). It follows a change to either.
  */
 export function formSlug(name: string, groupName: string): string {
   return slugify(`${name} ${groupName}`);
 }
 
 /**
- * A curated deity's slug: its name, then its tradition's, as a form's
- * is its name and its group's, so two live deities sharing a name under two
- * traditions hold two addresses — Hecate under Greek is `hecate-greek`, under
- * Roman `hecate-roman`. It follows a change to either.
+ * A curated deity's slug: its name, then its tradition's, as a form's is (`hecate-greek`, `hecate-roman`). It follows a
+ * change to either.
  */
 export function deitySlug(name: string, traditionName: string): string {
   return slugify(`${name} ${traditionName}`);

@@ -1,13 +1,9 @@
 import { marked, merge, UNDER_ENTRY } from './citation';
 import type { CitationKind, CitationPart, ShortCitationFields } from './types';
 
-// A source's Chicago short form, as the notes-bibliography style shortens
-// a note: its authors' surnames and a short title, "Fixture, _Testwort
-// Herbal_", which a surface listing sources shows where the whole
-// bibliography entry would not fit. Pure and client-safe beside the full
-// renderer, `citation.ts`, whose `_…_` marks it reads the same way. The
-// rules, and where a field cannot say what Chicago would, are
-// claude-docs/db/references.md, "The short form".
+// A source's Chicago short form ("Fixture, _Testwort Herbal_"): authors' surnames and a short title, for surfaces where the
+// whole entry would not fit. Pure and client-safe beside `citation.ts`, reading its `_…_` marks the same way
+// (claude-docs/db/references.md, "The short form").
 
 /** The kinds that are part of a larger work, whose title is set in quotation marks. */
 const PART_KINDS: ReadonlySet<CitationKind> = new Set(['chapter', 'article', 'entry', 'web_page']);
@@ -74,13 +70,9 @@ const DANGLING = new Set([
 const SHORT_TITLE_WORDS = 4;
 
 /**
- * `fields`' short form as parts in italic or roman: the authors' surnames —
- * one, two joined by "and", three in a series, four or more as the first and
- * "et al." — then the short title, italic for a book and in quotation marks
- * for a part of a larger work. With no authors the title leads, but for a
- * reference-work entry, which Chicago cites by its work, "under", and its
- * headword. `continued`, the form takes the comma a locator follows, inside
- * the quotation marks, and none after a title ending in "?" or "!".
+ * `fields`' short form as italic or roman parts: surnames (two joined by "and", three in a series, four or more as the first and
+ * "et al."), then the short title, italic for a book and quoted for a part. With no authors the title leads, except a
+ * reference-work entry, cited "under" its headword. `continued` takes the comma a locator follows, inside the quotation marks.
  */
 export function renderShortCitation(
   fields: ShortCitationFields,
@@ -110,11 +102,8 @@ export function shortCitationText(fields: ShortCitationFields, continued = false
 }
 
 /**
- * The surnames `authors` names, as a short form lists them, or undefined
- * when it names no one. The field is written as a bibliography prints it,
- * the first name inverted and the rest not, "Fixture, Ada, and Bram
- * Testwort", so the first comma ends the first surname; a field with no
- * comma is one name as written, an organisation's or a single name.
+ * The surnames `authors` names, or undefined when it names no one. The field is written as a bibliography prints it ("Fixture,
+ * Ada, and Bram Testwort"), so the first comma ends the first surname; with no comma it is one name as written.
  */
 function surnames(authors: string): string | undefined {
   let text = authors.trim().replace(ROLE, '');
@@ -150,10 +139,8 @@ function surnameOf(name: string): string {
 }
 
 /**
- * The title's short form: its main title, less a subtitle after a colon or
- * after a question it asks, less an initial _A_, _An_ or _The_, cut to four
- * words, a cut title ending on no "and" or "of" and on no comma. `italic` is
- * the title's style, each `_…_` span in the other.
+ * The title's short form: the main title less a subtitle after a colon or a question, less an initial _A_, _An_ or _The_,
+ * cut to four words, not ending on "and", "of" or a comma. `italic` is the title's style, each `_…_` span the other.
  */
 function shortTitle(title: string, italic: boolean): CitationPart[] {
   const runs = marked(title.trim(), italic);
