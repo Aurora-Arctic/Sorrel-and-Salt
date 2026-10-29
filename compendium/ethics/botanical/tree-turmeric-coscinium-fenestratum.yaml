@@ -1,0 +1,11 @@
+# Gathered for M14.29; the seed never reads this folder.
+entry: botanical/tree-turmeric-coscinium-fenestratum
+status: approved
+listings:
+  - list: iucn
+    name: IUCN Red List of Threatened Species, as printed in the Wikipedia taxobox
+    value: Data Deficient
+    listedAs: Coscinium fenestratum
+    nameBasis: stated
+    source: wikipedia-coscinium-fenestratum
+    locator: 'taxobox "Conservation status": Data Deficient (IUCN 3.1); The page also says IUCN categorised it locally as India: Critically endangered (1997, 2010, 2016) and Vietnam: Vulnerable (since 1997), and that there is not enough data for a global assessment.'

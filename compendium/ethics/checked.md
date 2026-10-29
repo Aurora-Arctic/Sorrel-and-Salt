@@ -494,6 +494,16 @@ One line per entry: `<nomenclature>/<entry-file-slug>`. An entry with an ethics 
 - botanical/punarnava-boerhavia-diffusa
 - unknown/kala-namak
 - unknown/kumkuma
+- botanical/saptarangi-salacia-reticulata
+- botanical/shankhpushpi-evolvulus-alsinoides
+- botanical/shatavari-asparagus-racemosus
+- botanical/stonebreaker-phyllanthus-amarus
+- botanical/veldt-grape-cissus-quadrangularis
+- botanical/velvet-bean-mucuna-pruriens
+- botanical/vidanga-embelia-ribes
+- botanical/yellow-nailwort-barleria-prionitis
+- unknown/sindoor
+- unknown/tabasheer
 
 ## M14.19
 
