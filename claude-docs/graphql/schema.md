@@ -1157,6 +1157,40 @@ sees which spell is `services/spell-reads.test.ts`'s. The saves' transport half 
 `tests/modules/grimoire/graphql/spell-saves.test.ts`: the answer and its
 revision, the loaders cleared, the nulls, and one refusal per code.
 
+### Workings: `Spell.workings`, `workingCount`, the four writes and the preview
+
+A working is one time a spell was made (M13.4, M13.5), registered by
+`graphql/working.ts` over `services/workings.ts`. No resolver authorizes or
+queries: every service asks for `working: read | create | update | delete`, and
+a private working is its recorder's in SQL, so by id it is `NOT_FOUND`.
+
+- **`Spell.workings(first, after)`** is a cursor page of the workings of the
+  spell the caller may read, newest `workedOn` first. It is declared with
+  `t.pagedConnection` and reads through `findWorkingsPage`. The service reads
+  the participants and the deductions of the whole page in one query each,
+  so a page costs the same reads however many workings it holds.
+- **`Spell.workingCount: Int!`** counts the complete workings the caller may
+  read, through the `workingCountBySpell` loader: one query per coven for a
+  whole page of spells, and `0` for a spell with none. A completion clears it.
+- **`SpellWorking`** has `status`, `workedOn` (a `LocalDate`), `completedAt`,
+  `note`, `visibility`, `participants`, `deductions`, `warnings` and `audit`.
+  A participant is a `userId` or a typed `name`; a member's name is the one
+  their row last held. A deduction is in the jar's own unit.
+  `warnings` is filled only on the answer to a completion.
+- **`recordWorking(workspaceId, spellId, input)`**, **`updateWorking(workspaceId, id, input)`**,
+  **`completeWorking(workspaceId, id)`** and **`deleteWorking(workspaceId, id)`**.
+  `WorkingInput` mirrors `validation/working.ts`; a bad participant lands on
+  `participants.<index>` as `VALIDATION`. `completeWorking` answers
+  `CompleteWorkingResult { working, warnings }`, one warning per step it took
+  nothing for, with a `NotDeductedReason`. `deleteWorking` answers the id.
+  Making a complete working private again is `FORBIDDEN` with its explaining
+  message.
+- **`workingDeductionPreview(workspaceId, spellId)`** answers what completing
+  a working would take from each jar and what it would take nothing for, using
+  the same `planDeductions` as completion and writing nothing.
+
+`tests/modules/grimoire/graphql/working.test.ts` holds the transport's half.
+
 ### The compendium mutations
 
 Story 18's writes (M5.5), registered by `ingredients` in

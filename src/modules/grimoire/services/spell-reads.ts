@@ -171,7 +171,7 @@ export function derivedCategoriesOf(
 }
 
 /** Answers a batch one coven at a time, as `stockOf` does; a coven the caller may not read gets a `Forbidden` in its slot. */
-async function perCoven<T>(
+export async function perCoven<T>(
   session: Session,
   refs: readonly SpellKey[],
   read: (membership: Membership, spellIds: string[]) => Promise<(spellId: string) => T>,
