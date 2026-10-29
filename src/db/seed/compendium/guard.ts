@@ -406,8 +406,8 @@ function checkCitations<Field extends string>(
 
 // The files' rules: what a folder of entry files must satisfy over and
 // above what the entries themselves must, which `checkCompendium` keeps
-// checking (claude-docs/db/compendium-seed/README.md, "The file format" and
-// "The status gate"). Each is a rule a shard literal had no room to break.
+// checking (claude-docs/db/compendium-seed/README.md, "An entry, field by field" and
+// "Write-once, and how a correction lands"). Each is a rule a shard literal had no room to break.
 
 /** The branches the seed deploys from (DESIGN.md §12): a `draft` file is refused on each. */
 export const RELEASE_BRANCHES: readonly string[] = ['staging', 'main'];

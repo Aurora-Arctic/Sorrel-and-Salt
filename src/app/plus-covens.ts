@@ -8,7 +8,7 @@ import { covensHoldingEntry, type HoldingCoven } from '@/modules/ingredients';
 
 // The plus beside an entry page's pencil, public page and coven's alike: the viewer's covens and which
 // hold the entry. Per viewer, so read per request and never cached (rule 6); see
-// claude-docs/components/ingredient-entry.md, "The plus".
+// claude-docs/components/ingredient-entry.md, "Cupboard buttons".
 
 /**
  * The viewer's covens that hold the entry, viewers' included; none signed out. A refusal reads as

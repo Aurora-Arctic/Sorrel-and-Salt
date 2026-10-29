@@ -5,7 +5,7 @@ import { seedCoven, withSql } from './stories/coven-ingredients';
 import { destinationMenu } from './stories/ingredient-dialogs';
 
 // A MenuButton's menu hangs from its button's end edge and stays on screen (claude-docs/components/menu-button.md,
-// "Where it opens"), measured on the bar's Add Ingredient chevron at a desktop width and the narrowest phone.
+// "Contracts"), measured on the bar's Add Ingredient chevron at a desktop width and the narrowest phone.
 
 test.beforeAll(async () => {
   await recreateE2eDatabase();
