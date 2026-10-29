@@ -201,9 +201,15 @@ $spell-columns-switch: $spell-main-min + $spell-columns-gap + $spell-side;
   white-space: nowrap;
 }
 
+// The picker row's chips are the compact size Category Match uses (the owner's call, 2026-10-29),
+// still in their group colours.
+.combobox__list .combobox__note--meta .chip {
+  @include chip($size: compact);
+}
+
 // The Add to Jar picker's folded categories: a neutral "+N" in place of an ellipsis. It sits in
 // the combobox, which owns the row, so the rule is scoped to the list.
-.combobox__list .chip--more {
+.combobox__list .combobox__note--meta .chip--more {
   @include chip($dark: $text-primary, $light: $text-primary, $state: quiet, $size: compact);
   border-color: $hairline;
 }
