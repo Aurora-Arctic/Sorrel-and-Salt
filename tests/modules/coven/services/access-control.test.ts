@@ -15,6 +15,7 @@ const PERMITTED: Record<WorkspaceRole, Partial<Record<string, readonly string[]>
     ingredient: ['read'],
     inventory: ['read'],
     spell: ['read'],
+    working: ['read'],
     workspace: ['read'],
   },
   // The coven's own work, and the right to read who else is in it.
@@ -24,6 +25,7 @@ const PERMITTED: Record<WorkspaceRole, Partial<Record<string, readonly string[]>
     ingredient: ['read', 'create', 'update', 'delete'],
     inventory: ['read', 'update'],
     spell: ['read', 'create', 'update', 'delete'],
+    working: ['read', 'create', 'update', 'delete'],
     workspace: ['read'],
   },
   // The roll, plus each member's address, and the writes to it.
@@ -31,6 +33,7 @@ const PERMITTED: Record<WorkspaceRole, Partial<Record<string, readonly string[]>
     ingredient: ['read', 'create', 'update', 'delete'],
     inventory: ['read', 'update'],
     spell: ['read', 'create', 'update', 'delete'],
+    working: ['read', 'create', 'update', 'delete'],
     member: ['read', 'readEmail', 'invite', 'update', 'remove'],
     workspace: ['read', 'update', 'delete'],
   },
@@ -107,5 +110,17 @@ describe('the vocabulary', () => {
 
     expect(unknownResource).toBeInstanceOf(Function);
     expect(unknownAction).toBeInstanceOf(Function);
+  });
+});
+
+describe('the working statement', () => {
+  it('lets owners and members record, change and delete, and a viewer only read', () => {
+    // Why this could have passed either way: a viewer holds `spell: read`, so a check that
+    // borrowed the spell statement would let them through on the read and refuse the rest.
+    for (const action of ['read', 'create', 'update', 'delete'] as const) {
+      expect(rolePermits('owner', { working: [action] })).toBe(true);
+      expect(rolePermits('member', { working: [action] })).toBe(true);
+      expect(rolePermits('viewer', { working: [action] })).toBe(action === 'read');
+    }
   });
 });
