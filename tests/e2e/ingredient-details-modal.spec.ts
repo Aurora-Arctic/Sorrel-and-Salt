@@ -16,10 +16,9 @@ import {
 } from './stories/coven-ingredients';
 import { editIngredientDialog } from './stories/ingredient-dialogs';
 
-// An entry's details in a modal over its list, opened by the Quick Look eye (claude-docs/components/
-// ingredient-entry.md, "The details modal"), for what no story walks: every close returns focus, the details
-// show the entry's sections on every list, Edit opens over the details and closes back, a coven's save shows
-// in both, and the open details pass axe at a phone's width.
+// An entry's details in a modal over its list, opened by the Quick Look eye (claude-docs/components/ingredient-entry.md,
+// "The details modal"), for what no story walks: every close returns focus, Edit opens over the details and
+// closes back, a coven's save shows in both, and the open details pass axe at a phone's width.
 
 test.beforeAll(async () => {
   await recreateE2eDatabase();

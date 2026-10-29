@@ -19,11 +19,9 @@ import {
   withSql,
 } from './stories/coven-ingredients';
 
-// The coven's Ingredients page against the built server, for what no story walks: a non-member reads no
-// such page, the pager holds its place and filter, the Compact switch is set before the page is drawn, the
-// type-ahead offers this coven's cupboard alone, Annotate opens over the list and closes back to its search,
-// and the page passes axe at both densities and at a phone's width. Jar icons, badges and a retired entry
-// are component and service tests' (JarLines, StockBadge, FormIcon, IngredientCard).
+// The coven's Ingredients page against the built server, for what no story walks: a non-member's 404, the pager,
+// the Compact switch before paint, the type-ahead scoped to this cupboard, Annotate over the list, and axe at
+// both densities and a phone's width.
 
 // The cards page by 24 (`CARD_PAGE_SIZE`), so 26 entries make two pages.
 const PAGE_SIZE = 24;
@@ -432,10 +430,8 @@ test("a held compendium entry's card opens Annotate over the list, and closes ba
   expect(held).toHaveLength(0);
 });
 
-// A menu placed by Floating UI: a card's
-// More near the window's foot opens above the button, since there is more room
-// there, and stays inside the window, at a desktop's width and a phone's, where
-// the fixed bottom bar takes the foot.
+// A card's More near the window's foot opens above the button, where there is more room, and stays inside the
+// window at a desktop's width and a phone's, where the fixed bottom bar takes the foot.
 test("a card's More opened near the window's foot opens above it, inside the window", async ({
   page,
 }) => {

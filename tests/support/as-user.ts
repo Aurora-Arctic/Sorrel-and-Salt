@@ -14,13 +14,8 @@ import type { SessionUser } from './types';
 export const { A, B, C, D, E, F } = FIXTURE_USERS;
 
 /**
- * The session a service would have received had this user signed in.
- *
- * ```ts
- * await expect(spells.create(asUser(C), { workspaceId: W.id, title: 'x' })).rejects.toThrow(
- *   Forbidden,
- * );
- * ```
+ * The session a service would have received had this user signed in, as in
+ * `spells.create(asUser(C), { workspaceId: W.id, title: 'x' })`.
  */
 export function asUser(user: SessionUser): Session {
   // A fresh object per call, so a mutating service cannot leak into the next assertion.

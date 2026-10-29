@@ -7,12 +7,9 @@ import type { SpellFixture } from '../fixtures/types';
 // stamps and the GUC (claude-docs/testing/fixture-factories.md, "Fixture factories").
 
 /**
- * Writes `fixture`'s spell, its steps and its assigned categories, stamped by `author`, and returns
- * the spell's id. `author` is `created_by`, whom a private spell is readable by. A layer names its
- * ingredient by id and nothing checks the id's tier, which is how a test writes the cross-coven link
- * a finder has to withhold. A linked layer lays its ingredient's first live variant, which the shared
- * inserter wrote from the fixture's variants; an ingredient with none leaves it null, for the CHECK
- * to refuse. Categories are named as §6 does; a name with no live row throws, naming it.
+ * Writes `fixture`'s spell, its steps and assigned categories, stamped by `author` (`created_by`), and returns
+ * the spell's id. A layer's ingredient id is not tier-checked, so a test can write a cross-coven link; an
+ * ingredient with no variant leaves the layer's variant null, for the CHECK to refuse.
  */
 export async function insertSpell(
   sql: postgres.Sql,

@@ -28,11 +28,9 @@ export function useCompendiumEntryInput(sql: () => postgres.Sql) {
   });
 
   /**
-   * The fixture as an admin's input: everything but the tier and the category
-   * names, its substitutes and deities typed, and each form picked by its text
-   * unless the variant states its `formId` (`null` for a typed one). One
-   * curated form, Herb, unless the test states `variants`: the fixture's own
-   * default is invented, so no curated row holds it.
+   * The fixture as an admin's input: everything but the tier and category names, its substitutes and deities
+   * typed, each form picked by its text unless the variant states `formId`. One curated form, Herb, unless
+   * the test states `variants`.
    */
   return function entry(overrides: Overrides<IngredientFixture> = {}): CompendiumEntryInput {
     const fixture = makeIngredient({ variants: [makeVariant({ form: 'Herb' })], ...overrides });

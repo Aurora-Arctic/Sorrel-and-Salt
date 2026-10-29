@@ -383,11 +383,9 @@ export function chipChoice(group: Locator, name: string | RegExp): Locator {
 const fieldName = (label: string, form: string): RegExp => new RegExp(`^${label}\\s*, ${form}$`);
 
 /**
- * The Edit Stock dialog, opened from the stock button in a coven card's foot or its Quick Look, named "Edit
- * Stock, <name>" (with the formal name when the label is shared). It lists the jars held, one button per form,
- * with the chosen jar's fields in a group named for its form: `choose(form)` presses its button before
- * `jar(form)` can reach them. Add Form picks a form not held and Add lists it; Remove stages a removal until
- * Undo or Save; Save closes the dialog once the batch is answered. A unit is a combobox, picked with `pickUnit`.
+ * The Edit Stock dialog, from the stock button in a coven card's foot or its Quick Look, named "Edit Stock, <name>".
+ * It lists the jars held, one button per form, with the chosen jar's fields in a group named for its form:
+ * `choose(form)` presses its button before `jar(form)` can reach them. Add Form, Remove and Save act on the batch.
  */
 export function stockEditor(row: Locator, name: string, coven?: string) {
   const page = row.page();

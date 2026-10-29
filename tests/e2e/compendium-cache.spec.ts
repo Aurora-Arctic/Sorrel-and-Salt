@@ -4,10 +4,9 @@ import { test, expect } from './fixtures';
 import { COMPENDIUM_CACHE_DATABASE, e2eDatabaseUrl } from './database';
 import { signInAs } from './session';
 
-// The compendium read answered from Next's data cache rather than Postgres, until an admin's write expires
-// it. Runs only in the `chromium-compendium-cache` project, against the one e2e server that keeps its data
-// cache, over a database no spec reseeds (claude-docs/db/compendium-cache.md, "In tests"). Nothing assumes
-// the cache starts empty. Serial, because the second test reads what the first warmed and renamed.
+// The compendium read answered from Next's data cache, not Postgres, until an admin's write expires it. Runs
+// only in the `chromium-compendium-cache` project, against the one server that keeps its cache over a database
+// no spec reseeds (claude-docs/db/compendium-cache.md, "In tests"); serial, since the second test reads what the first warmed.
 test.describe.configure({ mode: 'serial' });
 
 async function inDatabase<T>(work: (sql: postgres.Sql) => Promise<T>): Promise<T> {

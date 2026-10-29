@@ -42,11 +42,9 @@ import type {
 } from '../../components/IngredientForm/types';
 import { mockGraphQLError, mockGraphQLMutation, mockGraphQLQuery } from './graphql';
 
-// The ingredient form's lookups answered as /api/graphql answers them, each recording the variables it
-// was asked with: shared by the form's test and the tests of the fields that ask them, with the
-// reference panel's `CreateReference` beside them, the edit's `Reference` and `UpdateReference`, and
-// the saves the form sends. A later answer wins, so a test answers a lookup after whatever answered it
-// empty: `offerNothing` answers every one.
+// The ingredient form's lookups answered as /api/graphql answers them, each recording the variables it was
+// asked with, with the reference panel's and the form's saves beside them. A later answer wins, so a test
+// answers a lookup after whatever answered it empty: `offerNothing` answers every one.
 
 /** The coven the form's tests act in. */
 export const WORKSPACE_ID = '7b0c1c3e-5f4a-4d8e-9a51-3c2f0e6d9b17';

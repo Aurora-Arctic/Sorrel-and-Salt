@@ -13,10 +13,8 @@ import type {
 // test.
 
 /**
- * §5's seven values, in its order. Written out rather than read off
- * `nomenclatureKind.enumValues`, a runtime import of drizzle-orm; `Nomenclature`
- * is the table's, so a value added to the enum and forgotten here is a type
- * error.
+ * §5's seven values, in its order, written out because `nomenclatureKind.enumValues` is a runtime drizzle-orm
+ * import; `Nomenclature` is the table's, so a value missing here is a type error.
  */
 export const NOMENCLATURE_KINDS = [
   'botanical',
@@ -44,26 +42,16 @@ const CANONICAL_NAME_BY_NOMENCLATURE: Record<Nomenclature, string | null> = {
 };
 
 /**
- * One form of an ingredient. The default form is invented, as every default name here is: a real
- * one, `Herb` or `Oil`, is safe only until a curated row or a seeded variant spells it.
- *
- * ```ts
- * makeVariant()                                   // Testform, adding nothing
- * makeVariant({ form: 'Fixture Oil', formId })    // a pick of a curated form
- * ```
+ * One form of an ingredient. The default form is invented: a real one, `Herb` or `Oil`, is safe only until
+ * a curated row spells it.
  */
 export function makeVariant(overrides: Partial<VariantFixture> = {}): VariantFixture {
   return { form: 'Testform', ...overrides };
 }
 
 /**
- * A fixture's form as a write's input sends it: every field, `""` or `[]` for what the fixture
- * leaves out, its typed substitutes as names, and `overrides` over the rest. The fixture's
- * categories are names, which an input cannot send, so a test states `categoryIds` itself.
- *
- * ```ts
- * variantInput(makeVariant({ form: 'Herb' }), { formId: herb })  // a pick
- * ```
+ * A fixture's form as a write's input sends it: every field, `""` or `[]` for what the fixture leaves out.
+ * Categories are names an input cannot send, so a test states `categoryIds` itself.
  */
 export function variantInput(
   variant: VariantFixture,
@@ -107,17 +95,8 @@ const DEFAULTS: IngredientFixture = {
 };
 
 /**
- * One ingredient, with `nomenclature` and `canonicalName` guaranteed to agree.
- *
- * ```ts
- * makeIngredient()                              // Testwort, botanical, Fixtura testalis
- * makeIngredient({ categories: ['Protection'] }) // filed under protection and nothing else
- * makeIngredient({ nomenclature: 'none' })      // graveyard-dirt shaped: no formal name
- * makeIngredient({ variants: [] })              // no form at all
- * ```
- *
- * A stated `canonicalName` is left as given, even beside a contradicting
- * nomenclature — that is how a test writes the row the CHECK rejects.
+ * One ingredient, with `nomenclature` and `canonicalName` guaranteed to agree; `variants: []` gives no form.
+ * A stated `canonicalName` is left as given, so a test can write the row the CHECK rejects.
  */
 export function makeIngredient(overrides: Overrides<IngredientFixture> = {}): IngredientFixture {
   const ingredient = mergeFixture(DEFAULTS, overrides);
@@ -130,11 +109,8 @@ export function makeIngredient(overrides: Overrides<IngredientFixture> = {}): In
 }
 
 /**
- * The fixture as an insert into `ingredients`, by column name. The child
- * collections are destructured off by name rather than filtered by shape:
- * `celestialBodies` and the other lists are `text[]` columns too. The slug is derived
- * from the label and the formal name, as the seed derives it, never stated.
- * No audit stamps (rule 3).
+ * The fixture as an insert into `ingredients`, by column name. The child collections are destructured off by
+ * name, since `celestialBodies` and the other lists are `text[]` columns too. No audit stamps (rule 3).
  */
 export function ingredientColumns(fixture: IngredientFixture): Record<string, unknown> {
   const {

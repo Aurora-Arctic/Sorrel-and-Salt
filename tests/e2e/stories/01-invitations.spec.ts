@@ -8,17 +8,9 @@ import { latestMessageTo } from '../mailpit';
 import { signInAgainAs, signInAs } from '../session';
 import { slugify } from '@/lib/slugify';
 
-// Inviting by mail, accepting, revoking and the dead-link refusals, walked in a browser: only the verified
-// holder of the address gets in, and a dead link is refused with a reason of its own, naming no coven and
-// making no seat. The link is read from the mail, the only place its token is. Users, the coven and its seats
-// are set up by SQL and `signInAs`.
-//
-// A refusal is proved twice: the control is absent, and the request it would have sent, made by hand from the
-// same browser to `/api/graphql` (CLAUDE.md rule 1), is refused too, with the pending list, roll or 404
-// showing nothing changed.
-//
-// Serial, because tests chain: later ones read the mailed link (invitedPath) and refusals, and the roll counts
-// assume each earlier acceptance has happened.
+// Inviting by mail, accepting, revoking and the dead-link refusals: only the verified holder of the address gets
+// in. The link is read from the mail, the only place its token is. A refusal is proved twice: the control is
+// absent, and the same request made by hand to `/api/graphql` is refused too. Serial, as later tests read the mailed link.
 test.describe.configure({ mode: 'serial' });
 
 const COVEN_NAME = 'Fixture Invitation Coven';

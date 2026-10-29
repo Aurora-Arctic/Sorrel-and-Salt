@@ -8,10 +8,9 @@ import { signInAgainAs, signInAs } from './session';
 import { slotUrl } from './slots';
 import type { Page } from '@playwright/test';
 
-// The parts of a coven invitation no story walks, against the built server: the /coven notice and the account
-// menu's count of waiting invitations, the shell's redraw after an accept, declining, and a link to a coven
-// since deleted. The send, accepting and the refusals are stories/01-invitations.spec.ts's. Each worker builds
-// the owner and coven first and every walk invites a new address, so walks are independent.
+// The parts of a coven invitation no story walks: the /coven notice and the account menu's count of waiting
+// invitations, the shell's redraw after an accept, declining, and a link to a coven since deleted. Each worker
+// builds the owner and coven first, and every walk invites a new address.
 
 const COVEN_NAME = 'Fixture Invite Coven';
 const DOMAIN = '@workspace-invitation.test';

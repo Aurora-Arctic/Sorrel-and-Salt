@@ -6,10 +6,8 @@ import { socialSignInTarget } from '@/lib/sign-in';
 import type { ProviderId } from '@/lib/types';
 import type { Profile } from './types';
 
-// Drives Better Auth's real `/api/auth/*` endpoints with MSW standing in for
-// each provider, so what is under test is Better Auth's own flow with our
-// hooks attached, not a hand-built context. MSW intercepts only what the
-// server fetches; the requests into Better Auth are `auth.handler` calls.
+// Drives Better Auth's real `/api/auth/*` endpoints with MSW standing in for each provider, so what is under
+// test is Better Auth's own flow with our hooks attached. The requests into Better Auth are `auth.handler` calls.
 
 export const ORIGIN = 'http://localhost:8000';
 
@@ -175,10 +173,8 @@ export async function signIn(
 export const LINK_LANDING = '/account';
 
 /**
- * One full link round trip from a signed-in browser: `/link-social` under
- * `cookie`, then the callback. `callbackCookie` stands in for whichever
- * session the browser carries when it lands, which is the starter's own
- * unless a test says otherwise. Returns the callback's redirect.
+ * One full link round trip from a signed-in browser: `/link-social` under `cookie`, then the callback.
+ * `callbackCookie` is the session the browser carries when it lands. Returns the callback's redirect.
  */
 export async function link(
   auth: typeof Auth,

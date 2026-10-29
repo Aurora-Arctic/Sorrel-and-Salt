@@ -1,10 +1,9 @@
 import AxeBuilder from '@axe-core/playwright';
 import { expect, type Page } from '@playwright/test';
 
-// Settles first: a spec that switches the theme and scans straight after would read a colour part-way
-// along its ease. The title is waited for too: a soft navigation (a filter, a router refresh) leaves the
-// document with no <title> for a few milliseconds, hundreds under load, so axe's document-title rule fails.
-// `skipRules` is for the component workshop, whose story page is one component with no level-one heading.
+// Settles first: a theme switch scanned straight after would read a colour part-way along its ease. The title
+// is waited for too: a soft navigation leaves the document with no <title> for milliseconds, so axe's
+// document-title rule fails. `skipRules` is for the workshop, whose story page has no level-one heading.
 export async function assertNoAccessibilityViolations(
   page: Page,
   { skipRules = [] }: { skipRules?: string[] } = {},
@@ -56,12 +55,9 @@ export async function assertNoSidewaysScroll(page: Page, { restore = false } = {
   if (size) await page.setViewportSize(size);
 }
 
-// Every colour eases over the theme's 400ms; a scan straight after a theme
-// change would read a colour part-way along, so each running transition is
-// let finish first. A transition that is cancelled has stopped easing, which
-// is as settled as one that finished, but its `finished` promise rejects with
-// an AbortError (WebKit cancels one a later style change replaces), so the
-// rejection is read as done. Replaced transitions are waited for in turn.
+// Every colour eases over 400ms, so each running transition finishes first. A cancelled one has stopped easing
+// but its `finished` promise rejects with an AbortError (WebKit cancels one a later style change replaces), so
+// the rejection is read as done; replaced transitions are waited for in turn.
 export async function settleTransitions(page: Page) {
   await page.evaluate(async () => {
     // Transitions only: a scroll-driven animation (the sorrel's) never finishes.

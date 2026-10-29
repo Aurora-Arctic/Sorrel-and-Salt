@@ -4,10 +4,8 @@ import { signInAgainAs } from './session';
 import { seedCoven, withSql } from './stories/coven-ingredients';
 import { destinationMenu } from './stories/ingredient-dialogs';
 
-// A MenuButton's menu hangs from its button's end edge and stays on the screen (claude-docs/components/
-// menu-button.md, "Where it opens"). A layout fact no story walks, measured in a real browser on the bar's
-// Add Ingredient chevron at a desktop width and the narrowest phone. The More menu's fit inside a dialog
-// is coven-ingredients.spec.ts's.
+// A MenuButton's menu hangs from its button's end edge and stays on screen (claude-docs/components/menu-button.md,
+// "Where it opens"), measured on the bar's Add Ingredient chevron at a desktop width and the narrowest phone.
 
 test.beforeAll(async () => {
   await recreateE2eDatabase();

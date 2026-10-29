@@ -7,10 +7,9 @@ import { e2eDatabaseUrl, recreateE2eDatabase } from '../database';
 import { latestMessageTo } from '../mailpit';
 import { PRIMARY_ADMIN_EMAIL, signInAgainAs, signInAs } from '../session';
 
-// Proving an address, changing it, granting and revoking admin, reading the privilege ledger and inviting an
-// admin by email, walked in the browser (claude-docs/auth/admin-bootstrap.md, "The email page";
-// claude-docs/design-decisions/mb.61-email-verification-and-delivery.md). Accounts come from `signInAs`, rows
-// by raw SQL, and a mailed link is read from Mailpit and followed.
+// Proving an address, changing it, granting and revoking admin, the privilege ledger and inviting an admin by
+// email (claude-docs/auth/admin-bootstrap.md, "The email page"; claude-docs/design-decisions/mb.61-email-verification-and-delivery.md).
+// A mailed link is read from Mailpit and followed.
 test.beforeAll(async () => {
   await recreateE2eDatabase();
 });

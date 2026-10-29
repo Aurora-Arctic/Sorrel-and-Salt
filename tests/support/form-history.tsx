@@ -16,11 +16,8 @@ import {
 } from '@/components/Field';
 import type { FormHistory, UseFormHistoryOptions } from '@/components/Field/types';
 
-// A small react-hook-form form for the undo and redo tests: a text
-// field, a select, a list of rows in a fieldset with a legend, and a field
-// inside a folded `<details>` that `onRestored` opens. It is wired as the
-// admin forms are: the hook, its `ref` on the `<form>`, the provider and
-// `FormHistoryButtons` inside it, and a Save that follows `isDirty`.
+// A small react-hook-form form for the undo and redo tests: a text field, a select, a fieldset of rows, and
+// a field in a folded `<details>` that `onRestored` opens. Wired as the admin forms are, with a Save that follows `isDirty`.
 
 export interface ProbeValues {
   title: string;

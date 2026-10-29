@@ -11,11 +11,8 @@ import type {
   RoleRow,
 } from '../../modules/identity/services/types';
 
-// The setup the three entry points share, accepting by token, accepting by id
-// and declining (invitation-acceptance-by-token, -by-id and invitation-decline):
-// the cast of invented accounts, the invitation inserter, and the reads of what
-// a call left. Each file keeps its own `sql`, handed back through `onClient`,
-// for its own queries.
+// The setup the three entry points share (accepting by token, by id, and declining): the cast of invented
+// accounts, the invitation inserter, and the reads of what a call left. Each file keeps its own `sql`.
 
 export const DOMAIN = '@invitation-acceptance.test';
 export const PRIMARY = '00000000-0000-0000-0000-0000000000c1';

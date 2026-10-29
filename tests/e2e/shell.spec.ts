@@ -403,10 +403,9 @@ test('before the script runs, a desktop admin row shows every tab and no More', 
   release();
 });
 
-// A tab goes behind More only when the row has no room for it. More was once reserved as wide as the widest
-// tab it hid, so at 680px the coven row showed Overview alone where Overview, Ingredients and More fit. Each
-// width puts the first hidden tab back in the row: that row must overflow, or the tab was hidden with room
-// for it. Swept across the tablet band, since the fonts move the edge by a few pixels.
+// A tab goes behind More only when the row has no room for it. More was once reserved as wide as the widest tab
+// it hid, so at 680px the coven row showed Overview alone. Each width puts the first hidden tab back in the row:
+// that row must overflow, or the tab was hidden with room. Swept across the tablet band, as fonts move the edge.
 async function tuckedWithRoom(nav: Locator): Promise<boolean> {
   return nav
     .getByRole('list')

@@ -8,22 +8,17 @@ import type { Session } from '@/lib/session';
 import { noInvitationSender, noSender } from '../email-verification';
 import type { Answer, ContextOverrides } from './types';
 
-// A resolver test's one way in: the route's schema behind Yoga with the route's own `maskedErrors`,
-// so a refusal is read as the browser reads it, `extensions.code`, and never as the thrown type,
-// which the wire does not carry. Bare `graphql()` would hand a test `originalError`, the service's own
-// observation and a second copy of its test (claude-docs/testing/layer-ownership.md, "The owning
-// layer"). The context is built by hand rather than by the route's `createContext`, which reads the
-// session off a cookie.
+// A resolver test's one way in: the route's schema behind Yoga with the route's own `maskedErrors`, so a
+// refusal is read as the browser reads it, by `extensions.code` (claude-docs/testing/layer-ownership.md,
+// "The owning layer"). The context is built by hand, as the route's `createContext` reads a cookie.
 
 /** A runner over `target` behind the route's `maskedErrors`; `run` below is the one built. */
 function runnerOn(target: GraphQLSchema) {
   const yoga = createYoga<Context>({ schema: target, maskedErrors, logging: false });
 
   /**
-   * Runs one operation as `session`, with a fresh set of loaders and a sender
-   * that sends nothing, as one request would. A test hands in `context` for
-   * loaders it watches or shares between operations — a loader's cache read
-   * either side of a write — or a sender that records what it was asked to mail.
+   * Runs one operation as `session`, with fresh loaders and a sender that sends nothing. A test hands in
+   * `context` for loaders it watches or a sender that records what it was asked to mail.
    */
   return async function run<T = Record<string, unknown>>(
     session: Session | null,

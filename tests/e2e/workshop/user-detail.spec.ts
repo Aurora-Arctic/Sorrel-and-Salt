@@ -1,10 +1,8 @@
 import { expect, test, type Locator, type Page } from '@playwright/test';
 
-// The user modal's Change Role and Approve, refused, say so in the click feedback's callout under
-// the control rather than a notice in the dialog (claude-docs/components/user-detail.md). Measured
-// in the story, where every press is refused, since the workshop serves no GraphQL: the callout must
-// stand over the dialog's content, clipped by none of its boxes, and Escape must close it and leave
-// the dialog open. What it says and where the focus goes are in tests/components/UserDetail.
+// The user modal's Change Role and Approve, refused, say so in the click feedback's callout under the control
+// (claude-docs/components/user-detail.md). Measured in the story, where every press is refused: the callout
+// stands over the dialog's content and Escape closes it, leaving the dialog open.
 
 const WIDTHS = [1280, 375] as const;
 
@@ -110,10 +108,8 @@ for (const width of WIDTHS) {
   }
 }
 
-// The story in Storybook's own page rather than its bare preview, where the story is drawn into an
-// iframe by the page around it. The callout must find its dialog across that boundary, at the widths
-// a review is held at. Not at a phone's: there the page shows the story in a strip too short to
-// press in, and the bare preview above stands for the phone.
+// The story in Storybook's own page, where an iframe draws it, at the widths a review is held at: the callout
+// must find its dialog across that boundary. Not at a phone's, where the strip is too short to press in.
 const SIZES = [
   [1512, 982],
   [1440, 900],

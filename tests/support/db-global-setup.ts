@@ -12,10 +12,8 @@ declare module 'vitest' {
   }
 }
 
-// `db` and `db-mocking` both name this file and Vitest evaluates it afresh for each project, so the
-// second would rebuild the template and every clone the first made. The build is kept on `globalThis`
-// because module scope is not shared between the projects, and keyed by the run's Vitest instance so
-// a watch session that restarts on a config change builds afresh.
+// Vitest evaluates this file afresh for each project that names it, so the build is kept on `globalThis`,
+// keyed by the run's Vitest instance, so `db` and `db-mocking` share one and a restarted watch session builds afresh.
 const registry = globalThis as typeof globalThis & TemplateBuildRegistry;
 const builds = (registry.__sorrelTemplateBuilds ??= new WeakMap());
 

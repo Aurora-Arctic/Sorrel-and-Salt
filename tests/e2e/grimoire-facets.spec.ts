@@ -4,10 +4,9 @@ import { assertNoAccessibilityViolations } from './axe';
 import { signInAgainAs } from './session';
 import { insertSpell, openFilters, seedCoven, withSql } from './stories/coven-ingredients';
 
-// The grimoire's Moon Phase, Day of Week, Visibility and Coven Member facets and its Compact switch. The
-// stories pick Moon Phase, Visibility and Coven Member in the panel; this walks the GET form's address
-// filtering before hydration, the maker read as created_by, a hidden spell's phase never suggested, axe
-// and 375px. Spells are raw SQL, since the builder is not under test.
+// The grimoire's Moon Phase, Day of Week, Visibility and Coven Member facets and its Compact switch: the GET
+// form filters by address before hydration, the maker is read as created_by, and a hidden spell's phase is
+// never suggested. Spells are raw SQL, since the builder is not under test.
 
 test.beforeAll(async () => {
   await recreateE2eDatabase();

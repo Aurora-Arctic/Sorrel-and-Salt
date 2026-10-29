@@ -1,12 +1,8 @@
 import { expect, test, type Locator, type Page } from '@playwright/test';
 
-// The Combobox's layout facts, measured in its Storybook stories against the real
-// component, since happy-dom draws no layout: the list opens above the box
-// when there is no room beneath it (Floating UI's flip), it follows the box
-// as the page scrolls (autoUpdate), and an entry's tooltip opens only when
-// its text is cut off (claude-docs/components/combobox.md, "Where the list
-// opens" and "An entry"). What the list offers and what a pick does are in
-// tests/components/Combobox.
+// The Combobox's layout facts, measured in its Storybook stories since happy-dom draws no layout: the list
+// opens above the box when there is no room beneath, follows it as the page scrolls, and an entry's tooltip
+// opens only when its text is cut off (claude-docs/components/combobox.md). Offers and picks are tests/components/Combobox's.
 
 const LONG = 'Fixturawortiamtestalisfixturawortiamtestalisfixturawortiamtestalisfixturawortiam';
 
@@ -48,10 +44,8 @@ const frames = (page: Page) =>
 test('the list opens above the box when there is no room beneath it, inside the window', async ({
   page,
 }) => {
-  // The field pushed near the window's foot, the room above it ample. Pushed
-  // inside the workshop's story frame rather than by the body: the frame clips its
-  // overflow, so moving the frame itself down would leave the room beneath
-  // the field inside the frame unchanged, and nothing to flip from.
+  // The field is pushed near the window's foot inside the story frame, not by the body: the frame clips its
+  // overflow, so moving the frame itself would leave the room beneath the field unchanged and nothing to flip from.
   await openStory(
     page,
     'two-buckets',

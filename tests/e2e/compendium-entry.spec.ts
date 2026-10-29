@@ -8,10 +8,8 @@ import { insertReference, insertReferenceLink } from '../support/db/insert-refer
 import { makeIngredient, makeVariant } from '../support/fixtures/ingredient';
 import { slugify } from '@/lib/slugify';
 
-// The public compendium entry page as a signed-out visitor sees it (the `page`; rows are written by a user
-// made on a page of its own). Each test proves what no story walks: the 308 for a moved slug and the page
-// at a phone's width. The stories read the page signed out, answer a coven's own slug with a 404 and show a
-// non-admin its content with no Edit.
+// The public compendium entry page as a signed-out visitor sees it, for what no story walks: the 308 for a moved
+// slug and the page at a phone's width.
 
 test.beforeAll(async () => {
   await recreateE2eDatabase();

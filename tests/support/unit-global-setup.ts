@@ -9,10 +9,8 @@ import type { Diagnostic } from './types';
 declare module 'vitest' {
   interface ProvidedContext {
     /**
-     * Every file the repo holds, on disk: the index plus the untracked files
-     * git would not ignore, so a guard catches a file in the diff that adds
-     * it, before it is staged. The lint probes below are gitignored by name
-     * and never in it. Sorted, repo-relative, deleted-but-indexed left out.
+     * Every file the repo holds, on disk: the index plus untracked files git would not ignore, so a guard
+     * catches a file before it is staged. Sorted, repo-relative; the lint probes are gitignored by name.
      */
     repoFiles: string[];
     /** oxlint's report over `lintedFiles`, under `.oxlintrc.json`, in one run. */
@@ -22,11 +20,8 @@ declare module 'vitest' {
   }
 }
 
-// One scan for every guard (claude-docs/testing/layer-ownership.md, "The owning layer"): ten guards
-// each spawned `git ls-files` and four each spawned oxlint, a fixed cost paid per file rather than per
-// run. The listing is taken before the probes are written, and the probes are removed as soon as oxlint
-// has read them, so no test in any project sees them on disk and a watch session does not leave them
-// in src/ while it runs.
+// One scan for every guard (claude-docs/testing/layer-ownership.md, "The owning layer"): a fixed cost paid
+// per run, not per file. The probes are removed as soon as oxlint has read them, so no test sees them on disk.
 
 /** The spelling scripts/doc-citations.mjs uses, so the two sweeps see one tree. */
 function listRepoFiles(): string[] {

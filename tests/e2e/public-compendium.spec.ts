@@ -8,10 +8,9 @@ import { ADD, HELD } from '../support/cupboard-wording';
 import { insertIngredient } from '../support/db/insert-ingredient';
 import { compendiumList, seedCoven, withSql } from './stories/coven-ingredients';
 
-// The public compendium page against the built server, for what no story walks: the page is whole in the
-// HTML as served, the pager reaches the last page, one coven's add shows as held to its other members, the
-// search row sticks, the category chips cover every category, a curator's Edit opens over the search, and
-// the page holds at a phone's width. Curator filters and the noindex mark are page.test.tsx's and seo.spec.ts's.
+// The public compendium page against the built server, for what no story walks: the page is whole in the HTML
+// as served, the pager reaches the last page, one coven's add shows as held to its other members, the search
+// row sticks, the category chips cover every category, a curator's Edit opens over the search, and it holds at 375px.
 
 // The cards page by 24 (`CARD_PAGE_SIZE`), so the grid ends on a full row.
 const PAGE_SIZE = 24;

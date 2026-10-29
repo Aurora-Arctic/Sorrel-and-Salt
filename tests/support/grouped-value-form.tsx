@@ -9,12 +9,9 @@ import { server } from './msw/server';
 import { choose, press, type } from './interact';
 import type { GroupedValueFormCase, GroupedValueFormSubject } from './types';
 
-// GroupedValueForm is one form for every grouped vocabulary: a name, a description and a group, saved
-// through the kind's create, update and delete mutations. The behaviour every kind shares is written
-// once, here, as rows tests/components/GroupedValueForm runs with `it.each` on one subject: a kind
-// shares this code path, so another kind's run would prove nothing more, and gets only what it changes
-// in its own describe. The group field is found by the subject's own label, since a kind may call it
-// something else.
+// GroupedValueForm is one form for every grouped vocabulary. What every kind shares is written once as rows
+// tests/components/GroupedValueForm runs with `it.each`; a kind gets its own describe only for what it changes.
+// The group field is found by the subject's own label.
 
 const name = () => screen.getByRole('textbox', { name: 'Name' });
 const description = () => screen.getByRole('textbox', { name: 'Description' });

@@ -7,12 +7,8 @@ import { ADD, HELD as EVERY, HELD_MARK, SHELF } from '../support/cupboard-wordin
 import { insertIngredient } from '../support/db/insert-ingredient';
 import { makeIngredient } from '../support/fixtures/ingredient';
 
-// The coven's cupboard choices on the public entry page: a member adds the entry with the card's plus, and
-// the three dots then offer what the coven's own copy offers beyond its icons (Add never, Remove among them).
-// The In Your Cupboard shelf shows whichever coven holds the entry, a viewer's included, and no visitor
-// or member whose covens do not. A member of two covens chooses from the plus's menu; once every coven holds
-// it, the check stands in the plus's place. Which coven the other choices ask for is in
-// tests/components/IngredientEntry/public-cupboard-actions.test.tsx, and the cards' plus in compendium-add.spec.ts.
+// The coven's cupboard choices on the public entry page: the card's plus adds the entry, and the three dots then
+// offer what the coven's own copy offers. In Your Cupboard shows the holding coven to its members only.
 
 test.beforeAll(async () => {
   await recreateE2eDatabase();

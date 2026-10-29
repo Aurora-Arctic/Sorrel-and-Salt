@@ -3,10 +3,9 @@ import { test, expect } from './fixtures';
 import { recreateE2eDatabase } from './database';
 import { signInAs } from './session';
 
-// Where the keyboard goes after a click, and where the skip link sends it, in both page frames (the signed-in
-// AppShell and the signed-out PublicFrame, each on /compendium). The skip target is an empty `span#main`,
-// focusable by script only: a `tabindex="-1"` wrapper once took the focus on a click on plain text, so the
-// next Tab went back to the page's first control.
+// Where the keyboard goes after a click, and where the skip link sends it, in both page frames. The skip target
+// is an empty `span#main`, focusable by script only: a `tabindex="-1"` wrapper once took the focus on a click on
+// plain text, so the next Tab went back to the page's first control.
 
 test.beforeAll(async () => {
   await recreateE2eDatabase();

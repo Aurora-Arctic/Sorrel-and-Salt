@@ -68,16 +68,9 @@ test('two linked and a failed link have no accessibility violations', async ({ p
   await assertNoAccessibilityViolations(page);
 });
 
-// A link followed into the shell is a client-side navigation, which
-// once refetched the email page about every 80 ms without end. Settled means
-// two quiet seconds with no further fetch of it.
-//
-// An unverified account is shown no link into a protected page (the front
-// page's Continue goes straight to the email page), and a full load
-// (`page.goto`) is answered by a 307 and never loops. So the account is
-// verified when the page draws, which gives Continue the landing's own href,
-// and is made unverified afterwards: the click is then a real router
-// navigation into a protected page that throws the email redirect.
+// A link followed into the shell is a client-side navigation, which once refetched the email page every 80 ms;
+// settled means two quiet seconds with no further fetch. A full load never loops, so the account is verified
+// while the page draws, then made unverified: the click is then a real router navigation.
 async function markUnverified(userId: string): Promise<void> {
   const sql = postgres(e2eDatabaseUrl(), { onnotice: () => {} });
   try {
