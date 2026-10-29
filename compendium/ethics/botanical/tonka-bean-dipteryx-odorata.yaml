@@ -1,6 +1,6 @@
 # Gathered for M14.29; the seed never reads this folder.
 entry: botanical/tonka-bean-dipteryx-odorata
-status: approved
+status: needs-review
 listings:
   - list: iucn
     name: IUCN Red List of Threatened Species, as printed in Wikipedia's taxobox
@@ -9,3 +9,5 @@ listings:
     nameBasis: stated
     source: wikipedia-iucn-dipteryx-odorata
     locator: 'Taxobox: status = DD, status_system = IUCN3.1; its status_ref reads: "Dipteryx odorata", Requena Suarez, D.K., 2017, 10.2305/IUCN.UK.2017-3.RLTS.T62024955A62024965.en'
+questions:
+  - 'The CITES Appendices (valid from 5 March 2026) list the whole genus: p. 70, Appendix II column, "Dipteryx spp.", annotation #17: "Logs, sawn wood, veneer sheets, plywood and transformed wood." They do not print Dipteryx odorata by name. Owner: say whether a genus-wide listing may be recorded. Recommendation: yes, as list: cites with nameBasis: resolved, with the wood-only annotation shown in the locator (the entry is the bean, which the annotation does not name).'

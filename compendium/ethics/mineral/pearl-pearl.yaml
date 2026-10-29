@@ -1,0 +1,10 @@
+# Gathered for M14.29; the seed never reads this folder.
+entry: mineral/pearl-pearl
+status: needs-review
+animalPart:
+  - quote: Pearling was banned in the U.K. in 1998 due to the endangered status of river mussels.
+    source: wikipedia-pearl
+    locator: Pearl article (oldid 1377278922), sentence in the text on wild pearls
+  - quote: Many hundreds of pearl oysters or mussels must be gathered and opened, and thus killed, to find even one wild pearl
+    source: wikipedia-pearl
+    locator: Pearl article (oldid 1377278922), sentence in the text on natural pearls

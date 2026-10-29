@@ -4,7 +4,7 @@ One line per entry: `<nomenclature>/<entry-file-slug>`. An entry with an ethics 
 
 ## M14.29
 
-Checked against: United Plant Savers Species At-Risk List (current page, 2026-10-29); the IUCN category and any other conservation statement printed in the entry's English Wikipedia page (revisions in `compendium/ethics/sources/`), by keyword scan for animal-part and closed-practice statements. CITES is NOT yet checked: it waits for the official Appendices PDF, and this list is regenerated after that sweep. An entry whose canonical name is blank (the unnamed mineral and chemical rows) or has no Wikipedia page is listed with no IUCN check.
+Checked against: United Plant Savers Species At-Risk List (current page, 2026-10-29); the IUCN category and any other conservation statement printed in the entry's English Wikipedia page (revisions in `compendium/ethics/sources/`); the CITES Appendices valid from 5 March 2026, matched locally by formal name (`cites-appendices`); a keyword scan for animal-part and closed-practice statements; and a targeted reread of the animal-product entries and the entries linked to Indigenous or initiatory traditions. An entry whose canonical name is blank (18 entries: the unnamed mineral and chemical rows) was not matched against CITES, and an entry with no Wikipedia page has no IUCN check. Absence from a list is not a statement that an entry is safe.
 
 - botanical/adam-and-eve-root-aplectrum-hyemale
 - botanical/adders-tongue-erythronium-americanum
@@ -19,7 +19,6 @@ Checked against: United Plant Savers Species At-Risk List (current page, 2026-10
 - botanical/anise-pimpinella-anisum
 - botanical/apple-malus-domestica
 - botanical/asafoetida-ferula-assa-foetida
-- botanical/asian-ginseng-panax-ginseng
 - botanical/aster-callistephus-chinensis
 - botanical/avens-geum-urbanum
 - botanical/balm-of-gilead-commiphora-gileadensis
@@ -56,7 +55,6 @@ Checked against: United Plant Savers Species At-Risk List (current page, 2026-10
 - botanical/burdock-arctium-lappa
 - botanical/burnet-saxifrage-pimpinella-saxifraga
 - botanical/buttercup-ranunculus-acris
-- botanical/cactus-cactaceae
 - botanical/campion-silene
 - botanical/caraway-carum-carvi
 - botanical/cardamom-elettaria-cardamomum
@@ -90,7 +88,6 @@ Checked against: United Plant Savers Species At-Risk List (current page, 2026-10
 - botanical/cubeb-piper-cubeba
 - botanical/cucumber-cucumis-sativus
 - botanical/cumin-cuminum-cyminum
-- botanical/cyclamen-cyclamen
 - botanical/daffodil-narcissus
 - botanical/daisy-bellis-perennis
 - botanical/damiana-turnera-diffusa
@@ -113,7 +110,6 @@ Checked against: United Plant Savers Species At-Risk List (current page, 2026-10
 - botanical/fenugreek-trigonella-foenum-graecum
 - botanical/fern-polypodiopsida
 - botanical/figwort-scrophularia-nodosa
-- botanical/fir-abies
 - botanical/flax-linum-usitatissimum
 - botanical/forget-me-not-myosotis
 - botanical/frankincense-boswellia-sacra
@@ -122,7 +118,6 @@ Checked against: United Plant Savers Species At-Risk List (current page, 2026-10
 - botanical/galbanum-ferula-gummosa
 - botanical/gardenia-gardenia-jasminoides
 - botanical/garlic-allium-sativum
-- botanical/geranium-pelargonium
 - botanical/german-chamomile-matricaria-chamomilla
 - botanical/ginger-zingiber-officinale
 - botanical/globeflower-trollius-europaeus
@@ -241,7 +236,6 @@ Checked against: United Plant Savers Species At-Risk List (current page, 2026-10
 - botanical/scarlet-pimpernel-lysimachia-arvensis
 - botanical/sea-holly-eryngium
 - botanical/seneca-snakeroot-senega-officinalis
-- botanical/senna-senna
 - botanical/sesame-sesamum-indicum
 - botanical/skullcap-scutellaria
 - botanical/snapdragon-antirrhinum-majus
@@ -249,7 +243,6 @@ Checked against: United Plant Savers Species At-Risk List (current page, 2026-10
 - botanical/southernwood-artemisia-abrotanum
 - botanical/speedwell-veronica-officinalis
 - botanical/spruce-picea
-- botanical/spurge-euphorbia
 - botanical/st-johns-wort-hypericum-perforatum
 - botanical/star-anise-illicium-verum
 - botanical/strawberry-fragaria-vesca
@@ -289,7 +282,6 @@ Checked against: United Plant Savers Species At-Risk List (current page, 2026-10
 - botanical/wood-betony-betonica-officinalis
 - botanical/wood-sorrel-oxalis-acetosella
 - botanical/wormwood-artemisia-absinthium
-- botanical/yucca-yucca
 - chemical/alum-potassium-alum
 - chemical/aluminium-aluminium
 - chemical/antimony-antimony
@@ -379,7 +371,6 @@ Checked against: United Plant Savers Species At-Risk List (current page, 2026-10
 - mineral/okenite-okenite
 - mineral/onyx-quartz-var-onyx
 - mineral/opal-opal
-- mineral/pearl-pearl
 - mineral/peridot-forsterite-var-peridot
 - mineral/petalite-petalite
 - mineral/phenacite-phenakite
@@ -440,17 +431,13 @@ Checked against: United Plant Savers Species At-Risk List (current page, 2026-10
 - none/wood-ash
 - unknown/devils-shoestring
 - unknown/electrum
-- unknown/lava-stone
 - unknown/meteorite
 - unknown/mother-of-pearl
 - unknown/petrified-wood
 - unknown/tourmalinated-quartz
 - zoological/ammonite-ammonoidea
 - zoological/cat-felis-catus
-- zoological/cowrie-shell-cypraeidae
 - zoological/egg-gallus-gallus-domesticus
-- zoological/red-coral-corallium
-- zoological/snakeskin-serpentes
 
 ## M14.17
 

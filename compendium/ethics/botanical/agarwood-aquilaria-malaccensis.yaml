@@ -1,6 +1,6 @@
 # Gathered for M14.29; the seed never reads this folder.
 entry: botanical/agarwood-aquilaria-malaccensis
-status: approved
+status: needs-review
 listings:
   - list: iucn
     name: IUCN Red List of Threatened Species, as printed in Wikipedia's taxobox
@@ -9,3 +9,5 @@ listings:
     nameBasis: stated
     source: wikipedia-iucn-aquilaria-malaccensis
     locator: 'Taxobox: status = CR, status_system = IUCN3.1; its status_ref reads: "Aquilaria malaccensis", Harvey-Brown, Y., 2018, 10.2305/IUCN.UK.2018-1.RLTS.T32056A2810130.en'
+questions:
+  - 'The CITES Appendices (valid from 5 March 2026) list the whole genus: p. 79, Appendix II column, "Aquilaria spp.", annotation #14 (exempting, among other things, "a) seeds and pollen;" and "c) fruits;"). They do not print the formal name Aquilaria malaccensis, so the formal-name rule keeps this out of the listings. Owner: say whether a genus-wide listing may be recorded for this species. Recommendation: yes, as list: cites with nameBasis: resolved, since the genus is named in full.'

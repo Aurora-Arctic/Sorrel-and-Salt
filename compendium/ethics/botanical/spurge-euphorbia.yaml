@@ -1,0 +1,5 @@
+# Gathered for M14.29; the seed never reads this folder.
+entry: botanical/spurge-euphorbia
+status: needs-review
+questions:
+  - 'The CITES Appendices (valid from 5 March 2026) list part of the genus: p. 68, Appendix II column, "Euphorbia spp. (Succulent species only, except the species included in Appendix I and Euphorbia misera ...)". The entry is the genus Euphorbia, but the listing covers succulent species only and the entry does not say which species it means. Owner: say whether to record it. Recommendation: no listing row; keep this question.'
