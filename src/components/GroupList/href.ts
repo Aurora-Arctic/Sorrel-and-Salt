@@ -5,12 +5,9 @@ import type { GroupKind } from '../GroupForm/types';
 import { KINDS } from './kinds';
 import type { GroupsPlace } from './types';
 
-// The address of a group page under a name search, at a page, with a modal
-// open over it or not: the list's links, the pager, the filter's submit and
-// the modal's way back all build it. The page's own search and cursor stay,
-// so closing the modal lands where it was opened. A blank search is written
-// as none. `new` is a bare flag, read by its presence, as the categories
-// page's is.
+// Builds the address of a group page for a name search, page and open modal; the page's own search
+// and cursor stay, so closing the modal lands where it opened. A blank search is none, and `new` is
+// a bare flag.
 
 /** The page itself, unfiltered: where the filter submits, and what Clear opens. */
 export function groupsPath(kind: GroupKind): Route {

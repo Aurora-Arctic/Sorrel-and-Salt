@@ -11,10 +11,8 @@ import Notice from '../Notice';
 import type { InvitationAcceptanceProps } from './types';
 import './index.scss';
 
-// `/invite/[token]`'s one panel, a `.panel` as sign-in's and the email page's are: the page
-// reads where the visitor stands, through the accept service's own checks, and this shows
-// it. Accept sends the mutation, which checks again and decides; a refusal is said in the
-// service's words, in a ClickFeedback callout from Accept
+// `/invite/[token]`'s one panel: the page reads where the visitor stands and this shows it. Accept
+// sends the mutation, which decides, and a refusal is shown in the service's words
 // (claude-docs/components/invitation-acceptance.md).
 
 const AcceptInvitationDocument = graphql(`

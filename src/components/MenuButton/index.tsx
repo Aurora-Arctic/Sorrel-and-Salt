@@ -16,11 +16,9 @@ import Spinner from '../Spinner';
 import type { MenuButtonItem, MenuButtonProps, MenuSection } from './types';
 import './index.scss';
 
-// A labelled button with a chevron opening a menu of choices, the APG menu-button pattern
-// (claude-docs/components/menu-button.md). Focus moves to the first item and the arrows, Home and
-// End rove; Escape, Tab and a press outside close; a disabled action is shown with a note saying
-// why. Placed on Floating UI, fixed so a scrolling dialog cannot clip it; a closing menu stays
-// drawn, inert, until its fade ends.
+// A labelled button with a chevron opening a menu, the APG menu-button pattern
+// (claude-docs/components/menu-button.md). Placed on Floating UI, fixed so a scrolling dialog
+// cannot clip it; a closing menu stays drawn, inert, until its fade ends.
 
 // Exported for a caller that draws the chevron alone as its `icon`: the bar's Add Ingredient split
 // button.

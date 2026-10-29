@@ -6,10 +6,8 @@ import { graphqlRequest } from '../../lib/graphql-client';
 import ConfirmedAction from '../UserList/confirmed-action';
 import type { RemoveControlProps } from './types';
 
-// The members page's Remove at the end of a row. It asks first, naming the member, then sends
-// `removeMember`; the page is read again and the row is gone. The page shows it to owners
-// only; the service is the guard, and refuses removing the last owner, which a callout under
-// the control says. A removal is said in the page's status region
+// The members page's Remove: it asks first, naming the member, then sends `removeMember`. Owners
+// only; the service refuses removing the last owner, said in a callout
 // (claude-docs/components/member-list.md).
 
 const RemoveMemberDocument = graphql(`

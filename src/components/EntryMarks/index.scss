@@ -26,11 +26,9 @@
   @include tip-above;
 }
 
-// --------------------------------------------------------------------------- The New / Updated
-// marker: an icon and the word in the accent ink with nothing around them, a step larger than badge
-// text, so it reads apart from the badges. The inks are the `new` and `updated` badge palettes',
-// held to the text floor in both themes (`tests/scss/tokens.test.ts`).
-// ---------------------------------------------------------------------------
+// The New / Updated marker: icon and word in the accent ink, a step larger than badge text. The
+// inks are the `new` and `updated` badge palettes', held to the text floor in both themes
+// (`tests/scss/tokens.test.ts`).
 .recency-mark {
   display: inline-flex;
   align-items: center;

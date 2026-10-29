@@ -3,12 +3,10 @@ import { HALVES, LIT_PARTS, MARIA } from './icons';
 import type { MoonLayer, MoonPhaseIconProps } from './types';
 import './index.scss';
 
-// The small drawing of the moon beside a moon phase's name in the spell builder, on
-// FormIcon's 24-unit square. Its fills are three theme tokens rather than `currentColor`: the
-// shadowed disc, the lit part, and the maria clipped to the lit part. The outline is the
-// text's ink. Waxing Moon and Waning Moon stack their half's three lit parts at rising
-// strength (icons.tsx, HALVES). Hidden from assistive technology, since the phase's name
-// always stands beside it. claude-docs/components/spell-builder.md, "The fields".
+// The moon beside a phase's name, on FormIcon's 24-unit square. Fills are theme tokens, not
+// `currentColor`; the outline is the text's ink. Waxing and Waning stack their half's lit parts at
+// rising strength (icons.tsx, HALVES). Hidden from assistive technology
+// (claude-docs/components/spell-builder.md, "The fields").
 
 const MoonPhaseIcon = ({ phase, className }: MoonPhaseIconProps): ReactElement | null => {
   // An id per icon, so two on one page clip each to its own lit part; a
