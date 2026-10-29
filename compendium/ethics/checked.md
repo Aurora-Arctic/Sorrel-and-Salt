@@ -540,7 +540,6 @@ One line per entry: `<nomenclature>/<entry-file-slug>`. An entry with an ethics 
 ## M14.18
 
 - Checked for everything, CITES included: matched against the CITES Appendices valid from 5 March 2026 (`cites-appendices`) by formal name; the entries that needed an owner decision have an ethics file.
-- botanical/astragalus-astragalus-mongholicus
 - botanical/aconitum-carmichaelii-aconitum-carmichaelii
 - botanical/amur-cork-tree-phellodendron-amurense
 - botanical/atractylodes-atractylodes-macrocephala
