@@ -847,7 +847,7 @@ describe('the spell builder’s In Coven Inventory', () => {
     expect(
       within(line('Fixture Mockroot')).getByRole('button', { name: 'Out' }),
     ).toBeInTheDocument();
-    expect(line('Fixture Mockroot')).toHaveTextContent('hold none');
+    expect(line('Fixture Mockroot')).toHaveTextContent('have none');
   });
 
   it('flags an empty jar as Out', async () => {
@@ -863,7 +863,7 @@ describe('the spell builder’s In Coven Inventory', () => {
     expect(
       within(line('Fixture Rosewort')).getByRole('button', { name: 'Out' }),
     ).toBeInTheDocument();
-    expect(line('Fixture Rosewort')).toHaveTextContent('hold none');
+    expect(line('Fixture Rosewort')).toHaveTextContent('have none');
   });
 
   it('gives Not Enough as an icon button, and not Out, once the amount typed passes the jar, and clears when it fits', async () => {
@@ -881,14 +881,14 @@ describe('the spell builder’s In Coven Inventory', () => {
     chooseUnit(row, 'g');
 
     await waitFor(() => expect(notEnough()).toBeInTheDocument());
-    expect(line('Fixture Rosewort')).toHaveTextContent('need 9 g · hold 5 g');
+    expect(line('Fixture Rosewort')).toHaveTextContent('need 9 g · have 5 g');
     expect(within(line('Fixture Rosewort')).queryByRole('button', { name: 'Out' })).toBeNull();
 
     fireEvent.change(within(row).getByRole('spinbutton', { name: /^Quantity/ }), {
       target: { value: '4' },
     });
     await waitFor(() => expect(notEnough()).not.toBeInTheDocument());
-    expect(line('Fixture Rosewort')).toHaveTextContent('need 4 g · hold 5 g');
+    expect(line('Fixture Rosewort')).toHaveTextContent('need 4 g · have 5 g');
   });
 
   it('judges a form laid in two steps on the sum, and shows one line for each step', async () => {
@@ -946,17 +946,17 @@ describe('the spell builder’s In Coven Inventory', () => {
     fireEvent.change(within(stepRows()[0] as HTMLElement).getByRole('textbox', { name: /^Name/ }), {
       target: { value: 'Mockwort' },
     });
-    expect(line('Mockwort')).toHaveTextContent('one-off · nothing to hold');
+    expect(line('Mockwort')).toHaveTextContent('one-off · not kept');
   });
 
-  it('says a one-off has nothing to hold, badges it One-Off in its row, and gives an instruction no line', async () => {
+  it('says a one-off is not kept, badges it One-Off in its row, and gives an instruction no line', async () => {
     suggest();
     renderBuilder();
     await addOneOff('Testwort');
     fireEvent.click(screen.getByRole('button', { name: 'Add an Instruction' }));
 
     expect(within(hold()).getAllByRole('listitem')).toHaveLength(1);
-    expect(line('Testwort')).toHaveTextContent('one-off · nothing to hold');
+    expect(line('Testwort')).toHaveTextContent('one-off · not kept');
     const [oneOff, instruction] = stepRows();
     expect(within(oneOff as HTMLElement).getByText('One-Off')).toBeInTheDocument();
     expect(within(instruction as HTMLElement).queryByText(/One-Off|Out/)).toBeNull();

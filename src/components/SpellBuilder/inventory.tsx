@@ -68,22 +68,22 @@ const VERDICTS: Partial<Record<StepSupply['kind'], Verdict>> = {
   low: { words: 'Low', tone: 'low', mark: { Icon: LowIcon, tip: LOW_TIP } },
 };
 
-/** The line's words after the name, as the parts to join: need, hold, the verdict. */
+/** The line's words after the name, as the parts to join: need, have, the verdict ("have", not "hold": the owner, 2026-10-29). */
 export function holdWords(
   step: SpellStepValue,
   steps: readonly SpellStepValue[] = [step],
 ): { parts: string[]; verdict: Verdict | null } {
   const supply = supplyOf(step, steps);
-  if (step.ingredientId === null) return { parts: ['one-off', 'nothing to hold'], verdict: null };
+  if (step.ingredientId === null) return { parts: ['one-off', 'not kept'], verdict: null };
   const typed = step.quantity.trim();
   const need = typed === '' ? null : `need ${[typed, step.unit].filter(Boolean).join(' ')}`;
   const jar = step.jar;
   const hold =
     jar === null || jar.quantity === 0
-      ? 'hold none'
+      ? 'have none'
       : jar.quantity === null
-        ? 'hold unmeasured'
-        : `hold ${amountText(jar.quantity, jar.unit)}`;
+        ? 'have unmeasured'
+        : `have ${amountText(jar.quantity, jar.unit)}`;
   return {
     parts: [need, hold].filter((part): part is string => part !== null),
     verdict: (supply && VERDICTS[supply.kind]) ?? null,

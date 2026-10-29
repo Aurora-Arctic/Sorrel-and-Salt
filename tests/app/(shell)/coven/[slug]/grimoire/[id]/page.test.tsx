@@ -178,7 +178,7 @@ describe('the spell recipe page', () => {
     const aside = screen.getByRole('complementary');
     const inventory = within(aside).getByRole('region', { name: 'In Coven Inventory' });
     expect(within(inventory).getByText('Testwort (Dried Leaf)')).toBeInTheDocument();
-    expect(within(inventory).getByText('need 2 tsp · hold 1 tsp')).toBeInTheDocument();
+    expect(within(inventory).getByText('need 2 tsp · have 1 tsp')).toBeInTheDocument();
     expect(within(inventory).getByRole('button', { name: 'Not Enough' })).toBeInTheDocument();
     const match = within(aside).getByRole('region', { name: 'Category Match' });
     expect(within(match).getByText('Carried')).toBeInTheDocument();
