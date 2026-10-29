@@ -14,18 +14,22 @@ const CategoryChips = ({
   categories,
   label,
   compact = false,
+  absent = false,
   showAll = false,
+  limit: chipLimit = CATEGORY_CHIP_LIMIT,
   tipOf,
 }: CategoryChipsProps): ReactElement | null => {
   if (categories.length === 0) return null;
-  const limit = showAll ? categories.length : CATEGORY_CHIP_LIMIT;
+  const limit = showAll ? categories.length : chipLimit;
   return (
     <ul
-      className={
-        compact
-          ? 'specimen__chips category-chips category-chips--compact'
-          : 'specimen__chips category-chips'
-      }
+      className={[
+        'specimen__chips category-chips',
+        compact ? 'category-chips--compact' : '',
+        absent ? 'category-chips--absent' : '',
+      ]
+        .filter(Boolean)
+        .join(' ')}
       aria-label="Categories"
     >
       {categories.slice(0, limit).map(({ category, group }) => (

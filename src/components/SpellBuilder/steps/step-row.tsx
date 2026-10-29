@@ -12,12 +12,13 @@ import SafetyNote, { SafetyMark } from '../../SafetyNote';
 import StepRow from '../../StepRow';
 import { UNIT_OPTIONS } from '../../StockFields';
 import type { SpellStepValue, SpellStepsValues } from './types';
+import { type QuickLookCoven, StepQuickLook } from '../step-quick-look';
 import { isInstruction, safetyOf, stepNameOf } from './values';
 
 // One step of the jar (M10.15, M13.3): the handle it is moved by (M10.16), then
 // StepRow's drawing of it with the controls around it. An ingredient's step is a
 // line, open or closed like the ingredient form's variant card: closed it reads
-// "· 2 tsp · Crush first"; open it shows its amount, unit and instruction (and,
+// its amount and its instruction on one muted line beneath the name; open it shows its amount, unit and instruction (and,
 // for a one-off, its form). An instruction-only step has the instruction alone. See claude-docs/components/spell-builder.md, "Steps".
 
 const ONE_OFF_TIP = 'Used in this spell only; not kept in your cupboard.';
@@ -31,6 +32,8 @@ export interface BuilderStepRowProps {
   open: boolean;
   onToggle: () => void;
   onRemove: () => void;
+  /** The coven for the Quick Look eye of an ingredient step; left out, the row has none. */
+  look?: QuickLookCoven;
 }
 
 /**
@@ -67,6 +70,7 @@ export function BuilderStepRow({
   open: openWanted,
   onToggle,
   onRemove,
+  look,
 }: BuilderStepRowProps): ReactElement {
   const {
     setValue,
@@ -93,17 +97,19 @@ export function BuilderStepRow({
     (isInstruction(step) && errors.steps?.[index]?.body !== undefined) ||
     errors.steps?.[index]?.name !== undefined;
   const oneOff = !instruction && step.ingredientId === null;
-  const summary = [
-    [quantity, unitChosen].filter(Boolean).join(' '),
-    (bodyTyped ?? '').trim(),
-  ].filter(Boolean);
+  // One muted line under a closed ingredient row, as a closed section's summary: the amount
+  // then the instruction, joined by " · " (the instruction left out when blank).
+  const amountLine = [quantity, unitChosen].filter(Boolean).join(' ');
+  const bodyLine = (bodyTyped ?? '').trim();
   // Opening by the pencil takes the focus to the first field, as a variant card's Edit does.
   const row = useRef<HTMLLIElement | null>(null);
   useEffect(() => {
     if (!open || !focusOnOpen.current) return;
     focusOnOpen.current = false;
     row.current
-      ?.querySelector<HTMLElement>('.step-row__open input, .step-row__open textarea')
+      ?.querySelector<HTMLElement>(
+        '.step-row__open input, .step-row__open textarea, .step-row__field textarea',
+      )
       ?.focus();
   }, [open]);
   const handle = <StepHandle name={name} sortable={sortable} />;
@@ -119,14 +125,10 @@ export function BuilderStepRow({
   );
   return (
     <StepRow
-      onToggle={
-        instruction
-          ? undefined
-          : () => {
-              focusOnOpen.current = !open;
-              onToggle();
-            }
-      }
+      onToggle={() => {
+        focusOnOpen.current = !open;
+        onToggle();
+      }}
       rowRef={(node) => {
         row.current = node;
         sortable.setNodeRef(node);
@@ -153,6 +155,15 @@ export function BuilderStepRow({
       // The care the ingredient needs, kept in view beside the step and never in the way of
       // saving it (M10.18). A one-off has none to show: it draws nothing, not "safe".
       marks={safety && <SafetyMark {...safety} />}
+      // The eye comes after every badge, with Edit and Remove in one tight group.
+      look={
+        look && !instruction && step.ingredientId !== null ? (
+          // A click inside the modal bubbles through React to the row, which would toggle it.
+          <span onClick={(event) => event.stopPropagation()}>
+            <StepQuickLook ingredientId={step.ingredientId} name={name} look={look} />
+          </span>
+        ) : null
+      }
       note={safety && <SafetyNote level={5} compact {...safety} />}
       badge={
         oneOff ? (
@@ -161,7 +172,7 @@ export function BuilderStepRow({
           <IconTip tip={ONE_OFF_TIP} placement="above" opensOnPress>
             <button
               type="button"
-              className="badge badge--local step-row__one-off"
+              className="badge badge--retired step-row__one-off"
               aria-describedby={`${fieldsId}-one-off`}
             >
               One-Off
@@ -173,25 +184,27 @@ export function BuilderStepRow({
         ) : null
       }
       summary={
-        instruction
-          ? (bodyTyped ?? '').trim() || (
-              <span className="step-row__placeholder">Write the step</span>
-            )
-          : summary.length > 0
-            ? `· ${summary.join(' · ')}`
-            : null
+        instruction ? (
+          (bodyTyped ?? '').trim() || <span className="step-row__placeholder">Write the step</span>
+        ) : amountLine || bodyLine ? (
+          // The amount never shrinks; only the instruction's tail is cut by the ellipsis.
+          <span className="step-row__line">
+            {amountLine && (
+              <span className="step-row__line-amount">
+                {bodyLine ? `${amountLine} · ` : amountLine}
+              </span>
+            )}
+            {bodyLine && <span className="step-row__line-body">{bodyLine}</span>}
+          </span>
+        ) : null
       }
       edit={
         <button
           type="button"
           // One disclosure button in one place (second design review): the pencil while the row is
           // closed, the up chevron, light, once it is open. It keeps the focus when it flips.
-          className={['step-row__edit', !instruction && open && 'step-row__edit--close']
-            .filter(Boolean)
-            .join(' ')}
-          aria-label={
-            instruction ? `Edit step ${index + 1}` : `${open ? 'Close' : 'Edit'} ${step.name}`
-          }
+          className={['step-row__edit', open && 'step-row__edit--close'].filter(Boolean).join(' ')}
+          aria-label={`${open ? 'Close' : 'Edit'} ${instruction ? `step ${index + 1}` : step.name}`}
           aria-expanded={open}
           aria-controls={fieldsId}
           onClick={() => {
@@ -199,7 +212,7 @@ export function BuilderStepRow({
             onToggle();
           }}
         >
-          {!instruction && open ? <ChevronIcon /> : <EditIcon />}
+          {open ? <ChevronIcon /> : <EditIcon />}
         </button>
       }
       nameField={
@@ -253,7 +266,7 @@ export function BuilderStepRow({
       }
       actions={
         // Remove is for a closed row, so a row being edited is never deleted by a stray press.
-        !instruction && open ? null : (
+        open ? null : (
           <button
             type="button"
             className="step-row__remove"

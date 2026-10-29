@@ -4,12 +4,13 @@ import { LiveRegion, useAnnouncement } from '@dnd-kit/accessibility';
 import { type ReactElement, useEffect, useId, useMemo, useRef, useState } from 'react';
 import { useFieldArray, useFormContext, useWatch } from 'react-hook-form';
 import { StepPicker, oneOffKey } from './picker';
+import type { QuickLookCoven } from '../step-quick-look';
 import { SortableSteps } from './sortable';
 import { BuilderStepRow } from './step-row';
 import type { SpellStepValue, SpellStepsValues } from './types';
 import { isInstruction, newInstruction, stepNameOf, warningOf } from './values';
 
-// The jar's steps (M10.15): the box that adds to them, the Add an Instruction button
+// The jar's steps (M10.15): the box that adds to them, the Add Instruction button
 // and the list, under the heading What Goes In. The steps are moved by a handle
 // each (M10.16), and an Add or a Remove is said in a live region of its own,
 // as a move is said in dnd-kit's. One step is open at a time, the newest at
@@ -17,17 +18,27 @@ import { isInstruction, newInstruction, stepNameOf, warningOf } from './values';
 // against it are the aside's (inventory.tsx, comparison-panel.tsx).
 // See claude-docs/components/spell-builder.md, "Steps".
 
-export function SpellSteps({ workspaceId }: { workspaceId: string }): ReactElement {
+export function SpellSteps({
+  workspaceId,
+  look,
+}: {
+  workspaceId: string;
+  /** The coven for each ingredient step's Quick Look; left out, the rows have none. */
+  look?: QuickLookCoven;
+}): ReactElement {
   const { control } = useFormContext<SpellStepsValues>();
   const { fields, append, remove, move } = useFieldArray({ control, name: 'steps' });
   const steps = useWatch({ control, name: 'steps' });
+  // Each row's key follows its step, not its place: written back whole by an Undo, the array
+  // keeps its steps' keys, where react-hook-form's own ids are all made afresh.
+  const keys = fields.map((field) => field.rowKey ?? field.id);
   const names = fields.map((field, index) => stepNameOf(steps[index] ?? field));
   const { announce, announcement } = useAnnouncement();
   const regionId = useId();
 
   // Where focus goes once the row it names has been drawn: a new instruction's
   // field, or what is left after a Remove (the row now in that place, else the
-  // Add an Instruction button).
+  // Add Instruction button).
   const root = useRef<HTMLElement>(null);
   const focusAfter = useRef<{ index: number; target: 'handle' } | null>(null);
   useEffect(() => {
@@ -49,7 +60,7 @@ export function SpellSteps({ workspaceId }: { workspaceId: string }): ReactEleme
   useEffect(() => {
     if (!openNew.current) return;
     openNew.current = false;
-    const id = fields[fields.length - 1]?.id ?? null;
+    const id = keys[keys.length - 1] ?? null;
     addedId.current = id;
     setOpenId(id);
   }, [fields]);
@@ -77,7 +88,7 @@ export function SpellSteps({ workspaceId }: { workspaceId: string }): ReactEleme
       if (event.type === 'focusin' && pressed) return;
       const target = event.target;
       if (!(target instanceof Node) || !target.isConnected) return;
-      const index = fields.findIndex((field) => field.id === openId);
+      const index = keys.indexOf(openId as string);
       const row = root.current?.querySelectorAll('.spell-steps__list > li')[index];
       if (row?.contains(target)) return;
       // A click on a part of the row that cannot take the focus (a label, a gap, the padding) drops
@@ -112,7 +123,7 @@ export function SpellSteps({ workspaceId }: { workspaceId: string }): ReactEleme
   useEffect(() => {
     if (!focusField.current || openId === null) return;
     focusField.current = false;
-    const index = fields.findIndex((field) => field.id === openId);
+    const index = keys.indexOf(openId as string);
     root.current
       ?.querySelectorAll<HTMLElement>('.spell-steps__list > li')
       [index]?.querySelector<HTMLElement>('textarea')
@@ -168,32 +179,31 @@ export function SpellSteps({ workspaceId }: { workspaceId: string }): ReactEleme
         </h4>
         {steps.length > 0 && <p className="spell-steps__summary">{counts}</p>}
       </div>
-      {/* One grid holds the box, Add an Instruction and the list: the button follows the box on a
-          wide column and is the list's last line on a narrow one, by `order` alone, so it
-          is one button, in the one place in the markup. */}
+      {/* One grid holds the list, then the add row: the box and Add Instruction, beneath the
+          list where a new step lands (second design review, 2026-10-28). The button follows the
+          box on a wide column and is a dashed line beneath it on a narrow one, by grid
+          placement alone, so it is one button, in the one place in the markup. */}
       <div className="spell-steps__body">
+        <SortableSteps ids={keys} names={names} onMove={move}>
+          {fields.map((field, index) => (
+            <BuilderStepRow
+              key={keys[index]}
+              id={keys[index]!}
+              index={index}
+              step={steps[index] ?? field}
+              open={openId === keys[index]}
+              onToggle={() => setOpenId((was) => (was === keys[index] ? null : keys[index]!))}
+              onRemove={() => removeAt(index)}
+              look={look}
+            />
+          ))}
+        </SortableSteps>
         <div className="spell-steps__box">
           <StepPicker workspaceId={workspaceId} oneOffs={oneOffs} onAdd={add} />
         </div>
         <button type="button" className="btn spell-steps__add-step" onClick={addStep}>
-          <span className="spell-steps__next" aria-hidden="true">
-            {fields.length + 1}.
-          </span>
-          Add an Instruction
+          Add Instruction
         </button>
-        <SortableSteps ids={fields.map((field) => field.id)} names={names} onMove={move}>
-          {fields.map((field, index) => (
-            <BuilderStepRow
-              key={field.id}
-              id={field.id}
-              index={index}
-              step={steps[index] ?? field}
-              open={openId === field.id}
-              onToggle={() => setOpenId((was) => (was === field.id ? null : field.id))}
-              onRemove={() => removeAt(index)}
-            />
-          ))}
-        </SortableSteps>
       </div>
       <LiveRegion id={regionId} announcement={announcement} />
     </section>

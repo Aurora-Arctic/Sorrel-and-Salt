@@ -138,7 +138,7 @@ describe('the spell builder’s saves', () => {
     renderBuilder();
 
     type('Title', 'Fixture Working');
-    fireEvent.click(screen.getByRole('button', { name: 'Add an Instruction' }));
+    fireEvent.click(screen.getByRole('button', { name: 'Add Instruction' }));
     fireEvent.click(save());
 
     expect(await screen.findByText('Write the instruction, or remove it')).toBeInTheDocument();
@@ -151,7 +151,7 @@ describe('the spell builder’s saves', () => {
     vi.useFakeTimers({ shouldAdvanceTime: true });
 
     type('Title', 'Fixture Working');
-    fireEvent.click(screen.getByRole('button', { name: 'Add an Instruction' }));
+    fireEvent.click(screen.getByRole('button', { name: 'Add Instruction' }));
     await act(async () => {
       await vi.advanceTimersByTimeAsync(3100);
     });
@@ -162,6 +162,8 @@ describe('the spell builder’s saves', () => {
     expect(screen.queryByRole('alert')).toBeNull();
     expect(screen.queryByText(/Failed|could not be saved/i)).toBeNull();
 
+    // The new instruction is open, and an open row has no Remove: close it first.
+    fireEvent.click(screen.getByRole('button', { name: 'Close step 1' }));
     fireEvent.click(screen.getByRole('button', { name: /^Remove/ }));
     await act(async () => {
       await vi.advanceTimersByTimeAsync(3100);

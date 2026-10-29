@@ -1207,7 +1207,20 @@ type Query {
   The curated forms by name, each under a live group: those whose name holds `query`, case-insensitively, and those filed under `groupId`, when given.
   """
   ingredientFormValues(after: String, before: String, first: Int, groupId: ID, last: Int, query: String): QueryIngredientFormValuesConnection!
-  ingredientSuggestions(after: String, before: String, first: Int, form: String, last: Int, query: String, workspaceId: ID!): QueryIngredientSuggestionsConnection!
+  ingredientSuggestions(
+    after: String
+    before: String
+
+    """
+    Keep only entries carrying any of these categories. Empty or null is no filter.
+    """
+    categoryIds: [ID!]
+    first: Int
+    form: String
+    last: Int
+    query: String
+    workspaceId: ID!
+  ): QueryIngredientSuggestionsConnection!
   me: User!
   ok: Boolean!
   possibleDuplicates(after: String, before: String, first: Int, last: Int, name: String!, workspaceId: ID): QueryPossibleDuplicatesConnection!

@@ -118,7 +118,7 @@ const announced = () =>
     .getAllByRole('status')
     .map((region) => region.textContent)
     .join(' | ');
-const addStep = () => fireEvent.click(screen.getByRole('button', { name: 'Add an Instruction' }));
+const addStep = () => fireEvent.click(screen.getByRole('button', { name: 'Add Instruction' }));
 /** Types a name into the Add to Jar box and picks its first row: a one-off ingredient. */
 const addOneOff = async (name: string) => {
   mockGraphQLQuery<SpellIngredientSuggestionsQuery>('SpellIngredientSuggestions', () => ({
@@ -192,7 +192,7 @@ describe('the spell builder’s step text', () => {
     expect(within(rows()[1] as HTMLElement).getByRole('spinbutton')).toBeInTheDocument();
     openStep(1);
     expect(instructions().map((field) => field.value)).toEqual(['Light the candle']);
-    expect(save()).toBeDisabled();
+    expect(save().matches(':disabled, [aria-disabled="true"]')).toBe(true);
   });
 
   it('saves an edited text on a saved step by its id, and leaves the other alone', async () => {
@@ -201,7 +201,7 @@ describe('the spell builder’s step text', () => {
 
     openStep(1);
     fireEvent.change(instructions()[0] as HTMLElement, { target: { value: 'Snuff the candle' } });
-    expect(save()).toBeEnabled();
+    expect(save().matches(':disabled, [aria-disabled="true"]')).toBe(false);
     submit();
 
     await waitFor(() => expect(calls).toHaveLength(1));
@@ -236,6 +236,27 @@ describe('the spell builder’s step text', () => {
     fireEvent.click(screen.getByRole('button', { name: /^(Edit|Close) Testwort$/ }));
     expect(first).toHaveAttribute('aria-expanded', 'false');
     expect(instructions().map((field) => field.value)).toEqual(['Crush it first']);
+  });
+
+  it('opens a closed instruction from a click on its text, as an ingredient row opens, and shows Close, not Remove, while open', () => {
+    renderSaved();
+    expect(screen.getByRole('button', { name: 'Remove step 1' })).toBeInTheDocument();
+
+    fireEvent.click(screen.getByText('Light the candle', { selector: 'p' }));
+
+    expect(screen.getByRole('button', { name: 'Close step 1' })).toHaveAttribute(
+      'aria-expanded',
+      'true',
+    );
+    expect(instructions().map((field) => field.value)).toEqual(['Light the candle']);
+    expect(screen.queryByRole('button', { name: 'Remove step 1' })).toBeNull();
+
+    fireEvent.click(screen.getByRole('button', { name: 'Close step 1' }));
+    expect(screen.getByRole('button', { name: 'Edit step 1' })).toHaveAttribute(
+      'aria-expanded',
+      'false',
+    );
+    expect(screen.getByRole('button', { name: 'Remove step 1' })).toBeInTheDocument();
   });
 
   it('removes an instruction-only step, says so, and leaves it out of what is sent', async () => {

@@ -32,7 +32,7 @@ test('an open step stays open for a click on anything inside its fields', async 
     .first()
     .click();
   const row = page.getByRole('list', { name: 'Steps' }).getByRole('listitem').first();
-  const pencil = row.getByRole('button', { name: /^Edit / });
+  const pencil = row.getByRole('button', { name: /^(Edit|Close) / });
   await expect(pencil).toHaveAttribute('aria-expanded', 'true');
 
   const closed: string[] = [];

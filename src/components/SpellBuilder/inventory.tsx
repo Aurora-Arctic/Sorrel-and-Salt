@@ -2,10 +2,12 @@
 
 import type { ReactElement } from 'react';
 import { useFormContext, useWatch } from 'react-hook-form';
+import IconTip from '../IconTip';
 import { JarDrawing, pickJarShape } from '../JarShelf';
 import { StockIcon } from '../StockBadge';
 import { stockState } from '../StockBadge/stock-state';
 import { amountText } from '../StockBadge/stock-words';
+import { type QuickLookCoven, StepQuickLook } from './step-quick-look';
 import { UnitsDifferIcon, NotEnoughIcon } from './supply-icon';
 import { type StepSupply, supplyOf } from './steps/supply';
 import type { SpellStepValue, SpellStepsValues } from './steps/types';
@@ -14,10 +16,20 @@ import { isInstruction, stepNameOf } from './steps/values';
 // In Coven Inventory (the Jar's aside): one line for each ingredient step, in step order, saying
 // what the step needs against what the coven's jar holds, as `supplyOf` judges it. All four
 // verdicts stand at the right end of the name's line, so the name is cut short before they are.
-// Every verdict is its words in its tone beside a symbol that only decorates (StockBadge's for Out
-// and Low, supply-icon.tsx's for Not Enough and Units Differ), so nothing is read by hovering
-// and the verdict adds no tab stop (the second design review, 2026-10-28). A step with an
-// instruction only has no line. See claude-docs/components/spell-builder.md, "The aside".
+// Every verdict is a symbol alone (StockBadge's for Out and Low, supply-icon.tsx's for Not Enough
+// and Units Differ): the words are the button's name and the reason is its IconTip (the owner's
+// call, 2026-10-28), the verdict's `mark`. A step with an instruction only has
+// no line. See claude-docs/components/spell-builder.md, "The aside".
+
+const UNITS_DIFFER_TIP = 'The units don’t match, so it can’t tell if you have enough.';
+const NOT_ENOUGH_TIP = 'The jar holds less than this step needs.';
+
+const OUT_TIP = 'The jar is empty, so there is nothing to put in.';
+const LOW_TIP = 'The jar is at or below the coven’s Low mark.';
+
+// A one-off holds no stock, but its jar is drawn with something in it, as a stocked jar is: an
+// unmeasured jar stands at the middling level, in muted ink (index.scss). The One-Off badge says why.
+const ONE_OFF_HELD = { quantity: null, threshold: null };
 
 const OutIcon = ({ className }: { className: string }): ReactElement => (
   <StockIcon out className={className} />
@@ -26,22 +38,22 @@ const LowIcon = ({ className }: { className: string }): ReactElement => (
   <StockIcon out={false} className={className} />
 );
 
-/** The verdict: its words, its tone, and the symbol drawn beside them. */
+/** The verdict is its `mark` alone: the symbol in a button named `words`, whose IconTip says why. */
 type Verdict = {
   words: string;
   tone: string;
-  Icon: (props: { className: string }) => ReactElement;
+  mark: { Icon: (props: { className: string }) => ReactElement; tip: string };
 };
 
 const VERDICTS: Partial<Record<StepSupply['kind'], Verdict>> = {
-  out: { words: 'Out', tone: 'out', Icon: OutIcon },
-  short: { words: 'Not Enough', tone: 'low', Icon: NotEnoughIcon },
+  out: { words: 'Out', tone: 'out', mark: { Icon: OutIcon, tip: OUT_TIP } },
+  short: { words: 'Not Enough', tone: 'low', mark: { Icon: NotEnoughIcon, tip: NOT_ENOUGH_TIP } },
   'units-differ': {
     words: 'Units Differ',
     tone: 'muted',
-    Icon: UnitsDifferIcon,
+    mark: { Icon: UnitsDifferIcon, tip: UNITS_DIFFER_TIP },
   },
-  low: { words: 'Low', tone: 'low', Icon: LowIcon },
+  low: { words: 'Low', tone: 'low', mark: { Icon: LowIcon, tip: LOW_TIP } },
 };
 
 /** The line's words after the name, as the parts to join: need, hold, the verdict. */
@@ -70,7 +82,10 @@ function HoldLine({
   step,
   steps,
   seed,
+  look,
 }: {
+  /** Where Quick Look opens: the coven's ids; left out, no line has the eye. */
+  look?: QuickLookCoven;
   step: SpellStepValue;
   steps: readonly SpellStepValue[];
   seed: string;
@@ -85,14 +100,20 @@ function HoldLine({
   return (
     <li className={`spell-inventory__line${oneOff ? ' is-one-off' : ''}`}>
       <span className={`spell-inventory__jar ${modifier}`}>
-        <JarDrawing shape={pickJarShape(seed, formKey ?? '')} held={oneOff ? null : jar} />
+        <JarDrawing shape={pickJarShape(seed, formKey ?? '')} held={oneOff ? ONE_OFF_HELD : jar} />
       </span>
       <span className="spell-inventory__title">
         <span className="spell-inventory__name">{stepNameOf(step)}</span>
+        {look && step.ingredientId !== null && (
+          <StepQuickLook ingredientId={step.ingredientId} name={step.name ?? ''} look={look} />
+        )}
         {verdict && (
           <span className={`spell-inventory__verdict is-${verdict.tone}`}>
-            <verdict.Icon className="spell-inventory__icon" />
-            {verdict.words}
+            <IconTip tip={verdict.mark.tip}>
+              <button type="button" className="spell-inventory__mark" aria-label={verdict.words}>
+                <verdict.mark.Icon className="spell-inventory__icon" />
+              </button>
+            </IconTip>
           </span>
         )}
       </span>
@@ -101,7 +122,13 @@ function HoldLine({
   );
 }
 
-export function InCovenInventory({ steps }: { steps: readonly SpellStepValue[] }): ReactElement {
+export function InCovenInventory({
+  steps,
+  look,
+}: {
+  steps: readonly SpellStepValue[];
+  look?: QuickLookCoven;
+}): ReactElement {
   const lines = steps.filter((step) => !isInstruction(step));
   return (
     <section className="spell-inventory" aria-labelledby="spell-inventory-heading">
@@ -116,6 +143,7 @@ export function InCovenInventory({ steps }: { steps: readonly SpellStepValue[] }
               step={step}
               steps={lines}
               seed={step.ingredientId ?? step.name ?? ''}
+              look={look}
             />
           ))}
         </ul>
@@ -125,8 +153,12 @@ export function InCovenInventory({ steps }: { steps: readonly SpellStepValue[] }
 }
 
 /** In Coven Inventory on the builder's own values, as the amounts stand as they are typed. */
-export function SpellInventory(): ReactElement {
+export function SpellInventory({
+  look,
+}: {
+  look?: QuickLookCoven;
+}): ReactElement {
   const { control } = useFormContext<SpellStepsValues>();
   const steps = useWatch({ control, name: 'steps' }) ?? [];
-  return <InCovenInventory steps={steps} />;
+  return <InCovenInventory steps={steps} look={look} />;
 }

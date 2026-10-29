@@ -144,17 +144,20 @@ $step-line: type-size('body') * 1.65;
 $step-ink-drop: 0.05rem;
 
 // A closed ingredient row opens on a click anywhere on its face (the pencil still does too).
-.step-row.step-row--card.step-row--closed:not(.step-row--instruction) {
+.step-row.step-row--card.step-row--closed:not(.step-row--instruction),
+.step-row.step-row--instruction.step-row--folded {
   cursor: pointer;
 }
 
 .step-row.step-row--card {
   &.step-row--closed,
   &.step-row--open {
-    grid-template-areas: 'handle position name summary marks edit remove';
-    // The summary keeps 8rem however long the name is: the name's column takes all it asks for
-    // before the 1fr column gets anything, so a long name squeezed the amount to nothing.
-    grid-template-columns: auto auto minmax(0, auto) minmax(8rem, 1fr) auto auto auto;
+    // The name's line, then the amount and the instruction on one muted line beneath it, in the name's column (the look of a closed section's summary).
+    grid-template-areas:
+      'handle position name marks controls'
+      '. . summary summary summary';
+    // The name keeps a sane minimum, so the marks beside it can never squeeze it to a letter a line.
+    grid-template-columns: auto auto minmax(6rem, 1fr) auto auto;
 
     // Everything on the first line sits on that line's centre, and not on the
     // centre of the whole row: a name that wraps, or the summary that stands
@@ -202,26 +205,66 @@ $step-ink-drop: 0.05rem;
   .step-row__summary {
     grid-area: summary;
     min-width: 0;
-    margin: 0;
-    overflow: hidden;
+    // Clear of the name above it (space(3); it was space(2) as the name's own padding).
+    margin: space(3) 0 0;
     color: $text-muted;
-    text-overflow: ellipsis;
-    white-space: nowrap;
+    font-size: type-size('caption');
+    font-weight: 300;
+
+    @include truncate;
+  }
+
+  // A closed ingredient row's one line: the amount whole, then the instruction cut by an ellipsis.
+  .step-row__line {
+    display: flex;
+    min-width: 0;
+  }
+
+  .step-row__line-amount {
+    flex: none;
+    white-space: pre;
+  }
+
+  .step-row__line-body {
+    min-width: 0;
+
+    @include truncate;
+  }
+
+  // The Quick Look eye, Edit (or Close) and Remove: one tight group at the right of the first
+  // line, `space(1)` apart and not a grid column gap (`space(3)`) apart (owner, 2026-10-29).
+  .step-row__controls {
+    grid-area: controls;
+    display: flex;
+    align-items: flex-start;
+    justify-content: flex-end;
+    gap: space(1);
+
+    // Always three slots wide (eye, Edit or Close, Remove), whichever are drawn, so the badges
+    // before it end at the same x on every row; a missing control leaves its slot empty and the
+    // rest keep their places at the right edge (owner, 2026-10-29).
+    inline-size: calc(#{$icon-size} * 3 + #{space(1)} * 2);
+    flex: none;
+  }
+
+  // The eye stands on the first line's centre like the marks and the buttons.
+  .step-row__look {
+    position: relative;
+    inset-block-start: $step-ink-drop;
+    display: flex;
+    align-items: center;
+    min-height: $step-line;
   }
 
   .step-row__edit {
     @include icon-button;
     @include icon-button-edit;
 
-    grid-area: edit;
-
     // Open, the pencil is an up chevron that closes the row. The owner's call: it is light, not the
     // pencil's green. It sits on the card's ground, so it takes the body ink (near-white in dark,
     // ink in light: literal white would fail on the light card), kept pointed at or focused.
-    // Open, Remove is hidden, so it takes Remove's place at the row's right edge (the owner's call).
+    // Open, Remove is hidden, so it ends the group at the row's right edge (the owner's call).
     &--close {
-      grid-area: remove;
-
       &,
       &:hover,
       &:focus-visible {
@@ -238,7 +281,7 @@ $step-ink-drop: 0.05rem;
   .step-row__open {
     grid-column: name-start / -1;
     grid-row: 2;
-    margin-block-start: space(2);
+    margin-block-start: space(3);
   }
 
   .step-row__inputs {
@@ -246,7 +289,10 @@ $step-ink-drop: 0.05rem;
     flex-wrap: wrap;
     // From the top, so an error under one field never drops its neighbours to its foot.
     align-items: flex-start;
-    gap: space(2);
+    // A line of fields from the next: `space(4)`, the gap between fields in the ingredient form's
+    // variant sections (`.collapsible-section__fields`); it was `space(2)`, so the Instruction
+    // stood too close under Quantity and Unit. Beside each other they keep `space(2)`.
+    gap: space(4) space(2);
   }
 
   // A field's error, across the whole row of inputs and not wrapped in its narrow column.
@@ -317,29 +363,28 @@ $step-ink-drop: 0.05rem;
 // border and ground (the owner's call, 2026-10-28: it was a dashed hairline on the
 // page's ground). Its field fills the row between the number and Remove.
 .step-row.step-row--instruction {
-  grid-template-areas: 'handle position field edit remove';
-  grid-template-columns: auto auto minmax(0, 1fr) auto auto;
+  grid-template-areas: 'handle position field controls';
+  grid-template-columns: auto auto minmax(0, 1fr) auto;
   align-items: start;
 
   // The handle, number and buttons line up with the text's first line: the number shares
   // its baseline (the text's own line is taller than the number's), and the handle and the
-  // buttons are centred in a line the height of the text's, which stands space(2) down.
+  // buttons are centred in a line the height of the text's, at the top of the row, open or closed.
   .step-row__handle {
     display: flex;
     align-items: center;
     align-self: start;
     height: $step-line;
-    margin-block-start: space(2);
   }
 
   // The number stands where the text's first line does, closed or open, so it does not move
-  // when the textarea takes the text's place: the same box in both, not a shared baseline.
+  // when the textarea takes the text's place: the same box and margin in both (the open rule once
+  // added space(2) that the folded one removed, so it dropped on opening).
   .step-row__position {
     align-self: start;
     display: flex;
     align-items: center;
     min-height: $step-line;
-    margin-block-start: space(2);
     padding-block: 0;
     line-height: $step-line;
   }
@@ -350,15 +395,14 @@ $step-ink-drop: 0.05rem;
   }
 
   .step-row__remove {
-    margin-block-start: space(2) + ($step-line - $icon-size) / 2;
+    margin-block-start: calc(($step-line - $icon-size) / 2);
   }
 
   .step-row__edit {
     @include icon-button;
     @include icon-button-edit;
 
-    grid-area: edit;
-    margin-block-start: space(2) + ($step-line - $icon-size) / 2;
+    margin-block-start: calc(($step-line - $icon-size) / 2);
   }
 
   // Closed, the instruction is its own words, wrapping; open, its textarea stands in
@@ -377,6 +421,32 @@ $step-ink-drop: 0.05rem;
     color: $text-muted;
   }
 
+  // Open, the pencil is the Close chevron at the right edge, as on an ingredient row.
+  .step-row__edit--close {
+    &,
+    &:hover,
+    &:focus-visible {
+      color: $text-primary;
+    }
+
+    .chevron-icon {
+      transform: rotate(180deg);
+    }
+  }
+
+  // Closed, the instruction is one line of the height of a closed ingredient row's: its text
+  // runs on under an ellipsis, and the handle, number and buttons centre on that line, with no
+  // textarea's padding to stand clear of. Open, the textarea shows all of it.
+  &.step-row--folded {
+    .step-row__text {
+      padding-block: 0;
+      line-height: $step-line;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+    }
+  }
+
   .field__label-row {
     @include visually-hidden;
   }
@@ -393,7 +463,10 @@ $step-ink-drop: 0.05rem;
 // beneath the name, in line with it, and Remove stays level with the name at
 // the end of the first line. An instruction has no amount and keeps its row.
 @container spell-steps (max-width: #{$narrow-column}) {
-  .step-row.step-row--card:not(.step-row--instruction) {
+  // Only the card with no open state: a closed or open card has its own areas (above), and this
+  // rule's four-column template, the more specific, used to replace them at 390px, leaving the
+  // marks and pencil with no area (they overlapped) and the name squeezed to a letter a line.
+  .step-row.step-row--card:not(.step-row--instruction, .step-row--closed, .step-row--open) {
     grid-template-areas:
       'handle position name remove'
       '. . amount amount';
@@ -414,16 +487,9 @@ $step-ink-drop: 0.05rem;
     }
   }
 
-  // An open or closed card keeps its one line and moves its summary beneath the name;
-  // the opened fields stack: Form whole, Quantity and Unit half each, Instruction whole.
+  // An open or closed card keeps its areas; the opened fields stack: Form whole, Quantity and Unit half each, Instruction whole.
   .step-row.step-row--card.step-row--closed,
   .step-row.step-row--card.step-row--open {
-    grid-template-areas:
-      'handle position name marks edit remove'
-      '. . summary summary summary summary';
-    grid-template-columns: auto auto minmax(0, 1fr) auto auto auto;
-    align-items: start;
-
     // Two badges stack and keep the right edge, so the name keeps the width they would take.
     .step-row__marks {
       flex-direction: column;
@@ -431,7 +497,7 @@ $step-ink-drop: 0.05rem;
     }
 
     .step-row__open {
-      grid-row: 3;
+      grid-row: 2;
       grid-column: name-start / -1;
     }
 

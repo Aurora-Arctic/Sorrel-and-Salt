@@ -86,8 +86,6 @@ export default function SpellDialog({
   return (
     <RouteModal
       closeHref={closeHref}
-      // Wide, so the jar's steps sit beside its supply and intent (55rem, modal.md).
-      size="wide"
       content={
         opened && {
           heading,
@@ -95,6 +93,7 @@ export default function SpellDialog({
             <SpellBuilder
               key={spell && spell.id !== created ? spell.id : 'new'}
               workspaceId={workspaceId}
+              covenSlug={covenSlug}
               userId={userId}
               spell={spell && { ...spell, steps: steps ?? [] }}
               stepsRead={

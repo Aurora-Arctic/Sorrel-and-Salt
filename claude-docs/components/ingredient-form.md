@@ -1702,7 +1702,7 @@ The last two rows are `readGraphqlFailure`'s answer. The first is why the
 form uses `readGraphqlIssues` rather than that reader, which answers only
 the first field it finds: this form places every issue at once, a draft's
 nested path included, through the shared `placeServerIssues` beside it,
-which sets aside the redirect question's issue for the form to ask.
+which sets aside the redirect question's issue for the form to ask. The messages it cannot place are joined into the root one, each distinct message once (the owner's call, 2026-10-29: a rule the schema and the service both state used to print twice).
 
 Each placeable issue goes in through `setError`, bar
 `['endRedirect']`, which is a question rather than an error

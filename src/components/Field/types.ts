@@ -214,6 +214,11 @@ export interface FormActionsProps {
   saveValue?: string;
   /** Save's description, a note above the row about what saving will do. */
   saveDescribedBy?: string;
+  /**
+   * Why Save is off, said in a tip on the button (hover, focus and a tap) and as its description.
+   * The button is then `aria-disabled` so it keeps focus. Left out, an off Save is plain `disabled`.
+   */
+  saveReason?: string;
   /** Save as a plain button calling this, for a panel inside another form, rather than the form's submit. */
   onSave?: () => void;
   /** Cancel, drawn when given: the form's way out, through its discard guard. */
@@ -346,6 +351,12 @@ export interface UseFormHistoryOptions {
     diffs: readonly HistoryDiff[],
     direction: 'undo' | 'redo',
   ) => string | void;
+  /**
+   * Adjusts a value just before it is written back by an undo or a redo, for a form whose values
+   * name things that can stop existing (a saved row a save has since deleted). Left out, the
+   * value is written as recorded.
+   */
+  prepare?: (name: string, value: unknown) => unknown;
   /** True for a name the history leaves out: interface state kept among the values. */
   skip?: (name: string) => boolean;
   /** How long a pause in typing ends its step. */

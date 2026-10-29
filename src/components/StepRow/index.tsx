@@ -44,6 +44,7 @@ export default function StepRow({
   summary,
   badge,
   edit,
+  look,
   onToggle,
   aside,
   handle,
@@ -65,6 +66,7 @@ export default function StepRow({
   const className_ = [
     'step-row',
     collapsible && (open ? 'step-row--open' : 'step-row--closed'),
+    textCard && !open && 'step-row--folded',
     className,
   ]
     .filter(Boolean)
@@ -86,7 +88,12 @@ export default function StepRow({
   );
   if (textCard) {
     return (
-      <li ref={rowRef} className={className_} style={style}>
+      <li
+        ref={rowRef}
+        className={className_}
+        style={style}
+        onClick={onToggle && ((event) => toggleFromFace(event, open, onToggle))}
+      >
         {identity}
         {open ? (
           <div className="step-row__field" id={fieldsId}>
@@ -95,8 +102,10 @@ export default function StepRow({
         ) : (
           <p className="step-row__text">{summary}</p>
         )}
-        {edit}
-        {actions}
+        <div className="step-row__controls">
+          {edit}
+          {actions}
+        </div>
       </li>
     );
   }
@@ -114,8 +123,11 @@ export default function StepRow({
           {badge}
           {marks}
         </div>
-        {edit}
-        {actions}
+        <div className="step-row__controls">
+          {look && <span className="step-row__look">{look}</span>}
+          {edit}
+          {actions}
+        </div>
         {/* Fields exist only while open; their values are the form's, so they persist. */}
         {open && (
           <div className="step-row__open" id={fieldsId}>

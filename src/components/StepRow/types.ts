@@ -26,7 +26,10 @@ export interface StepRowProps {
   open?: boolean;
   /** The id of the opened fields, which `edit` names in its `aria-controls`. */
   fieldsId?: string;
-  /** A muted phrase after the name while closed, such as the amount and the instruction. */
+  /**
+   * A muted line beneath the name while closed, such as the amount. An instruction-only step's
+   * summary is its text.
+   */
   summary?: ReactNode;
   /** A small badge straight after the name, such as One-Off. */
   badge?: ReactNode;
@@ -34,6 +37,8 @@ export interface StepRowProps {
   onToggle?: () => void;
   /** The pencil that opens the row. */
   edit?: ReactNode;
+  /** The Quick Look eye: after the badges, before `edit`, in the same tight group of buttons. */
+  look?: ReactNode;
   /** A line in the open fields beneath the note, such as what a one-off means. */
   aside?: ReactNode;
   /** The node the fields' errors are drawn in, the full width beneath the inputs. */

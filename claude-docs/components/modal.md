@@ -26,20 +26,20 @@ is the wrapper every admin page opens it through (below).
 
 `ModalProps` (`types.ts`):
 
-| Prop                                             | What it is                                                                                                                              |
-| ------------------------------------------------ | --------------------------------------------------------------------------------------------------------------------------------------- |
-| `title`                                          | The heading: what the dialog is for, or the entry an edit dialog edits                                                                  |
-| `eyebrow`                                        | An edit dialog's small line over the title, "Edit Ingredient"; absent on an add                                                         |
-| `destination`                                    | Where an add lands, "Whitethorn Coven", in the eyebrow's place over the title and spoken after it: "Add Ingredient to Whitethorn Coven" |
-| `qualifier`                                      | After the title, quieter: an ingredient's formal name, a deity's tradition                                                              |
-| `formalName`, `topEnd`, `formalActions`, `under` | The quick-look head's extras ("A title with its own end"); absent on every other dialog                                                 |
-| `onClose`                                        | Asked for by the Close button, Escape and a click outside                                                                               |
-| `size`                                           | `'wide'` for a long form or two columns, `'listed'` for the default column with a list beside it; absent, the default width             |
-| `readingBody`                                    | A body only to read, with nothing to fill in (M12.5's details): Tab stops on the body itself, so a keyboard can scroll it               |
-| `loading`                                        | The contents are on the way: the body is marked `aria-busy` (M9.18)                                                                     |
-| `children`                                       | The body: a form, a confirmation, whatever the owner puts here                                                                          |
-| `foot`                                           | A bar under the body, outside what scrolls ("The foot"); absent on every dialog but the details                                         |
-| `returnTo`                                       | Where the focus goes as it closes when what opened it is gone: a function of that gone element, returning the place                     |
+| Prop                                             | What it is                                                                                                                               |
+| ------------------------------------------------ | ---------------------------------------------------------------------------------------------------------------------------------------- |
+| `title`                                          | The heading: what the dialog is for, or the entry an edit dialog edits                                                                   |
+| `eyebrow`                                        | An edit dialog's small line over the title, "Edit Ingredient"; absent on an add                                                          |
+| `destination`                                    | Where an add lands, "Whitethorn Coven", in the eyebrow's place over the title and spoken after it: "Add Ingredient to Whitethorn Coven"  |
+| `qualifier`                                      | After the title, quieter: an ingredient's formal name, a deity's tradition                                                               |
+| `formalName`, `topEnd`, `formalActions`, `under` | The quick-look head's extras ("A title with its own end"); absent on every other dialog                                                  |
+| `onClose`                                        | Asked for by the Close button, Escape and a click outside                                                                                |
+| `size`                                           | `'wide'` for a long form or two columns (unused now), `'listed'` for the default column with a list beside it; absent, the default width |
+| `readingBody`                                    | A body only to read, with nothing to fill in (M12.5's details): Tab stops on the body itself, so a keyboard can scroll it                |
+| `loading`                                        | The contents are on the way: the body is marked `aria-busy` (M9.18)                                                                      |
+| `children`                                       | The body: a form, a confirmation, whatever the owner puts here                                                                           |
+| `foot`                                           | A bar under the body, outside what scrolls ("The foot"); absent on every dialog but the details                                          |
+| `returnTo`                                       | Where the focus goes as it closes when what opened it is gone: a function of that gone element, returning the place                      |
 
 ## Contracts
 
@@ -863,7 +863,7 @@ reach.
 **On a phone it stays inset**, the same gap on every side, rather than
 becoming a full-height sheet: the owner's M5.5 call, kept at MB.115's review.
 
-`size="wide"` adds `.modal-dialog--wide`, a 55rem column (928px with the padding) (`$dialog-column-wide`), for a form that sets two columns side by side. The spell builder takes it (the owner's call, 2026-10-28): its Jar section holds the step list at 30rem or more beside an 18rem aside, and stacks them in a dialog narrower than that, a phone's included. It was 48rem and unused since MB.115, when the compendium form went back to the default column because the form caps itself at that width; M8.16's IngredientForm modal takes the default too. It changes only the width; the body scrolls
+`size="wide"` adds `.modal-dialog--wide`, a 55rem column (928px with the padding) (`$dialog-column-wide`), for a form that sets two columns side by side. The spell builder took it from 2026-10-28 and no longer does (the owner's call, 2026-10-29: with In Coven Inventory gone, one column in the default-width dialog), so nothing uses it now. It was 48rem and unused before that, since MB.115, when the compendium form went back to the default column because the form caps itself at that width; M8.16's IngredientForm modal takes the default too. It changes only the width; the body scrolls
 within the viewport's height either way.
 
 `size="listed"` adds `.modal-dialog--listed`, for the default column with a list down its side, a

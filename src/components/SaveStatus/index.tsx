@@ -84,8 +84,8 @@ const SaveStatus = ({
           </span>
         </Notice>
       ) : next.failing ? (
-        <p role="alert" className="save-status__failed">
-          Couldn&rsquo;t save.{' '}
+        <Notice kind="warn" block className="save-status__failed">
+          <span>Couldn&rsquo;t save.</span>
           <button
             type="button"
             className="btn btn--small"
@@ -96,7 +96,7 @@ const SaveStatus = ({
             {retrying ? <Spinner /> : null}
             Retry
           </button>
-        </p>
+        </Notice>
       ) : (
         // Hidden from assistive technology: the live region below says it, once per burst.
         <span className="save-status__text" aria-hidden="true">

@@ -493,7 +493,8 @@ const SUGGESTION_GROUP_LIMIT = 8;
  * ordered as the compendium search is, best match first, and cut at
  * `SUGGESTION_GROUP_LIMIT`; the result lists `yours` first and pages by
  * cursor over those rows, each carrying its `group`. A blank `query` lists
- * both by name (claude-docs/db/compendium-read.md, "The ingredient picker's
+ * both by name. `categoryIds` keeps entries carrying any of them, on the
+ * entry or one of its variants, as the compendium filter does (claude-docs/db/compendium-read.md, "The ingredient picker's
  * search").
  */
 export async function findIngredientSuggestions(
@@ -501,8 +502,9 @@ export async function findIngredientSuggestions(
   query: string,
   page: PageRequest,
   form?: string,
+  categoryIds?: readonly string[],
 ): Promise<PageEntry<IngredientRow, CompendiumScore & SuggestionGroupTag>[]> {
-  const list = compendiumList({ query }, membership);
+  const list = compendiumList({ query, categoryIds, categoryMode: 'any' }, membership);
   const ranked = formRank(form);
   const sort = ranked ? [ranked, ...list.order.sort] : list.order.sort;
   const order = { ...list.order, sort };

@@ -43,6 +43,7 @@ export function stepValueOf(step: SpellBuilderStep): SpellStepValue {
   const variantId = step.variant?.id ?? null;
   return {
     stepId: step.id,
+    rowKey: step.id,
     ingredientId: step.ingredient?.id ?? null,
     variantId,
     name: step.name,
@@ -73,6 +74,28 @@ export function stepValueOf(step: SpellBuilderStep): SpellStepValue {
   };
 }
 
+let rowKeys = 0;
+/** A key for a step added in the browser; only ever made in an event, never while rendering. */
+const newRowKey = (): string =>
+  `new-${typeof crypto !== 'undefined' && 'randomUUID' in crypto ? crypto.randomUUID() : `${Date.now()}-${rowKeys++}`}`;
+
+/**
+ * Steps written back from stored values (an Undo or Redo, a recovered draft) made safe to
+ * save: a saved id the server no longer holds becomes none, so the save adds the step as a
+ * new one instead of being refused for naming a row the spell has not got; and a step with no
+ * row key (a draft kept before keys existed) is given one. `live` is the ids of the spell's
+ * steps as last saved.
+ */
+export const restoredSteps = (
+  steps: readonly SpellStepValue[],
+  live: ReadonlySet<string>,
+): SpellStepValue[] =>
+  steps.map((step) => {
+    const stepId = step.stepId !== null && !live.has(step.stepId) ? null : step.stepId;
+    const rowKey = step.rowKey ?? stepId ?? newRowKey();
+    return stepId === step.stepId && rowKey === step.rowKey ? step : { ...step, stepId, rowKey };
+  });
+
 /** A new step, as the picker or the one-off adds it: no quantity yet, and the unit its jar is kept in. */
 export const newStep = (
   step: Pick<
@@ -90,6 +113,7 @@ export const newStep = (
 ): SpellStepValue => ({
   ...step,
   stepId: null,
+  rowKey: newRowKey(),
   quantity: '',
   // The unit its form is stocked in, where the coven holds some: a start the member can change.
   unit: step.jarUnit ?? '',

@@ -124,29 +124,42 @@ describe('SpellBuilder', () => {
 
   it('has nothing to save until a field holds something', () => {
     renderBuilder();
-    expect(save()).toBeDisabled();
+    expect(save().matches(':disabled, [aria-disabled="true"]')).toBe(true);
 
     // Blank is none, as the service reads it: still nothing to save.
     type('Intent', '   ');
-    expect(save()).toBeDisabled();
+    expect(save().matches(':disabled, [aria-disabled="true"]')).toBe(true);
 
     type('Intent', 'To see clearly');
     expect(save()).toBeEnabled();
 
     type('Intent', '');
-    expect(save()).toBeDisabled();
+    expect(save().matches(':disabled, [aria-disabled="true"]')).toBe(true);
   });
 
-  it('says beside a disabled Save why nothing can be saved, and stops once it can', () => {
+  it('gives a held Save its reason as its description, and stops once it can save', () => {
     renderBuilder();
-    expect(save()).toBeDisabled();
-    const reason = screen.getByText('Nothing to save yet');
+    expect(save()).toHaveAttribute('aria-disabled', 'true');
     expect(save()).toHaveAccessibleDescription('Nothing to save yet');
-    expect(reason).toBeVisible();
 
     type('Intent', 'To see clearly');
     expect(save()).toBeEnabled();
-    expect(screen.queryByText('Nothing to save yet')).not.toBeInTheDocument();
+    expect(save()).not.toHaveAttribute('aria-disabled');
+    expect(save()).not.toHaveAccessibleDescription();
+  });
+
+  // The owner's report, 2026-10-29: after an edit that the autosave had saved, the reason
+  // "Nothing to save yet" came back and stayed, as the save left the form matching the row.
+  it('does not say there is nothing to save after an edit has been saved', async () => {
+    acceptCreate();
+    renderBuilder();
+
+    type('Title', 'Fixture Working');
+    submit();
+
+    await waitFor(() => expect(save()).not.toHaveAccessibleDescription('Nothing to save yet'));
+    await waitFor(() => expect(save().matches(':disabled')).toBe(true));
+    expect(save()).not.toHaveAccessibleDescription('Nothing to save yet');
   });
 
   it('saves a draft with only its intent: no field is required', async () => {
@@ -211,9 +224,9 @@ describe('SpellBuilder', () => {
     submit();
 
     await waitFor(() => expect(button).toHaveAttribute('aria-busy', 'true'));
-    expect(button).toBeDisabled();
+    expect(button.matches(':disabled, [aria-disabled="true"]')).toBe(true);
     await waitFor(() => expect(button).not.toHaveAttribute('aria-busy', 'true'));
-    expect(button).toBeDisabled();
+    expect(button.matches(':disabled, [aria-disabled="true"]')).toBe(true);
     expect(field('Title')).toHaveValue('Fixture Working');
   });
 
@@ -227,7 +240,7 @@ describe('SpellBuilder', () => {
     type('Title', 'Fixture Working');
     submit();
     await waitFor(() => expect(created).toHaveLength(1));
-    await waitFor(() => expect(save()).toBeDisabled());
+    await waitFor(() => expect(save().matches(':disabled, [aria-disabled="true"]')).toBe(true));
 
     type('Intent', 'To see clearly');
     submit();
@@ -264,7 +277,7 @@ describe('SpellBuilder', () => {
     expect(field('Title')).toHaveValue('Fixture Working');
     expect(field('Jar Description')).toHaveValue('4 oz');
     expect(field('Moon Phase')).toHaveValue('');
-    expect(save()).toBeDisabled();
+    expect(save().matches(':disabled, [aria-disabled="true"]')).toBe(true);
 
     // A field emptied is a field cleared: null, not left out.
     type('Seal Wax', '');
@@ -421,7 +434,7 @@ describe('SpellBuilder', () => {
 
       expect(field('Moon Phase')).toHaveValue('Full');
       expect(field('Day')).toHaveValue('saturday');
-      expect(save()).toBeDisabled();
+      expect(save().matches(':disabled, [aria-disabled="true"]')).toBe(true);
     });
   });
 
@@ -572,7 +585,7 @@ describe('SpellBuilder', () => {
       expect(tabCloseAsks()).toBe(true);
 
       submit();
-      await waitFor(() => expect(save()).toBeDisabled());
+      await waitFor(() => expect(save().matches(':disabled, [aria-disabled="true"]')).toBe(true));
       await waitFor(() => expect(save()).not.toHaveAttribute('aria-busy', 'true'));
       expect(tabCloseAsks()).toBe(false);
     });
