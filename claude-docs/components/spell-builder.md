@@ -321,7 +321,7 @@ Add an Instruction. The add row sits below the list because a new step lands at 
 side once the section is 50rem wide (list at least 28rem, a 1rem gap, the aside 21rem, 20rem of it
 content beside its 1rem of padding and its hairline; the `spell-jar` container query in `index.scss`)
 and stack below it, the list first. A hairline in `$hairline` is the aside's own border: beside
-the list when side by side, above the aside when stacked. The two headings share a line, and
+the list when side by side, above the aside when stacked. The row stretches its columns (`align-items: stretch`), so the line runs the height of whichever column is taller (the owner's call, 2026-10-29). The two headings share a line, and
 the jar drawing is centred on the Seal Wax input box (its box is `$control-height`). The
 `wide` dialog is 55rem of content, so two columns fit at desktop width and stack at phone
 width (gate spec `tests/e2e/spell-dialog-size.spec.ts`). While a saved spell's steps are still

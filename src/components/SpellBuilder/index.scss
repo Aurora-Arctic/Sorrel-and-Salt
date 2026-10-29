@@ -436,7 +436,8 @@ $spell-columns-switch: $spell-main-min + $spell-columns-gap + $spell-side;
 .spell-jar-layout {
   display: flex;
   flex-wrap: wrap;
-  align-items: flex-start;
+  // Stretched, so the aside's line runs the height of whichever column is taller (the owner's call, 2026-10-29).
+  align-items: stretch;
   gap: $spell-columns-gap;
   container: spell-jar / inline-size;
 }
