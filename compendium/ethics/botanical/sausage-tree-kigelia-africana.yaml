@@ -1,0 +1,11 @@
+# Gathered for M14.29; the seed never reads this folder.
+entry: botanical/sausage-tree-kigelia-africana
+status: approved
+listings:
+  - list: iucn
+    name: 'IUCN Red List of Threatened Species'
+    value: 'Least Concern (IUCN 3.1)'
+    listedAs: 'Kigelia africana'
+    nameBasis: stated
+    source: wikipedia-kigelia
+    locator: 'taxobox, "Conservation status": "Least Concern (IUCN 3.1)"'
