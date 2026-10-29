@@ -1,8 +1,7 @@
 import type postgres from 'postgres';
 
-// What a variant write left behind, read raw (MB.219): the two ingredient
-// services' tests assert the rows a save wrote, tombstones included, rather
-// than what a reader shows, which MB.218's own tests prove.
+// What a variant write left behind, read raw: the two ingredient services' tests assert the rows a
+// save wrote, tombstones included, rather than what a reader shows.
 
 /** Every form of the ingredient, live and soft-deleted, by form and then age. */
 export function variantRowsOf(sql: postgres.Sql, ingredientId: string) {

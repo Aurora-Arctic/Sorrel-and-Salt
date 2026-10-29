@@ -16,7 +16,7 @@ import {
 } from '@/components/Field';
 import type { FormHistory, UseFormHistoryOptions } from '@/components/Field/types';
 
-// A small react-hook-form form for the undo and redo tests (M12.9): a text
+// A small react-hook-form form for the undo and redo tests: a text
 // field, a select, a list of rows in a fieldset with a legend, and a field
 // inside a folded `<details>` that `onRestored` opens. It is wired as the
 // admin forms are: the hook, its `ref` on the `<form>`, the provider and

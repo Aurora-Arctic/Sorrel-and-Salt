@@ -12,7 +12,7 @@ export const STAMP_COLUMNS: readonly string[] = [
   'updated_by',
 ];
 
-/** What a hard-deleted join table must not carry (MB.34). */
+/** What a hard-deleted join table must not carry. */
 export const DELETE_COLUMNS: readonly string[] = ['deleted_at', 'deleted_by'];
 
 export const AUDIT_COLUMNS: readonly string[] = [
@@ -58,14 +58,13 @@ export const AUDITED_TABLES = [
   'zodiac_signs',
 ].sort();
 
-// Better Auth's adapter tables that carry an `updated_at` and no audit id;
-// Better Auth's own `$onUpdate` stamps them. `sessions.impersonated_by` is the
-// `admin` plugin's column (MB.53), not an audit id. A real counter-example
-// for "only the audited tables". `rate_limits` has no `updated_at` to mistake.
+// Better Auth's adapter tables that carry an `updated_at` and no audit id; Better Auth's own
+// `$onUpdate` stamps them. `sessions.impersonated_by` is the `admin` plugin's column, not an audit
+// id. A real counter-example for "only the audited tables". `rate_limits` has no `updated_at` to mistake.
 export const UNAUDITED_TABLES = ['accounts', 'sessions', 'verifications'].sort();
 
-// Every column of the key, not the first: a composite key (MB.217) read by
-// its first column alone would pass for a single-column one.
+// Every column of the key, not the first: a composite key read by its first column alone would pass
+// for a single-column one.
 function foreignKeyFacts(fk: ForeignKey): ForeignKeyFacts {
   const { columns, foreignColumns, foreignTable } = fk.reference();
   const names = columns.map((column) => column.name);

@@ -11,11 +11,10 @@ import type { ReactElement } from 'react';
 import { makeQueryClient } from '@/lib/graphql-client';
 import { byLabel } from './interact';
 
-// The ingredient form's test harness, where each of its test files had its
-// own copy (MB.115): the render, the wait, the controls found by label, and
-// the new reference panel's fields. What a person does to any form —
-// `press`, `choose`, `type` — is tests/support/interact.tsx's, and the
-// lookups and saves answered are tests/support/msw/ingredient-lookups.ts's.
+// The ingredient form's test harness: the render, the wait, the controls found by label, and the new
+// reference panel's fields. What a person does to any form (`press`, `choose`, `type`) is
+// tests/support/interact.tsx's, and the lookups and saves answered are
+// tests/support/msw/ingredient-lookups.ts's.
 
 /** Where a near match links in these tests: the form requires one, and none of them follows it. */
 export const duplicateHref = ({ id }: { id: string }): string => `/fixture/ingredients/${id}`;
@@ -28,7 +27,7 @@ export function renderWithClient(ui: ReactElement) {
 /**
  * RTL's waitFor, polled every 5 ms rather than its 50: most waits here are
  * for a mock to have been called — a save sent, a lookup asked — which no DOM
- * mutation announces, so each would otherwise cost a whole tick (MB.181).
+ * mutation announces, so each would otherwise cost a whole tick.
  *
  * It first lets what the test's last step set going settle inside `act`: an
  * open list's position is worked out a microtask later, and an update landing

@@ -13,7 +13,7 @@ import type { TestConfig } from './types.ts';
 /**
  * The most db workers a run opens, whatever the machine: the connection
  * budget (claude-docs/testing/db-harness.md, "Connections per run") is
- * arithmetic over this number, not over the cores a developer happens to have (MB.179).
+ * arithmetic over this number, not over the cores a developer happens to have.
  * Twelve clears every machine the suite runs on today, so nothing slows.
  */
 export const DB_WORKER_CAP = 12;
@@ -48,7 +48,7 @@ const BOUNDED_POSTGRES = fileURLToPath(new URL('./db/bounded-postgres.ts', impor
 /**
  * `postgres` resolved to tests/support/db/bounded-postgres.ts for every file
  * the project transforms — the app's connection.ts and each test file's own
- * client alike — so one constant caps every pool a run opens (MB.179). The
+ * client alike — so one constant caps every pool a run opens. The
  * wrapper's own import is the one left to the real package. A `resolveId`
  * plugin rather than `resolve.alias`'s `customResolver`, which Vite deprecates
  * in favour of exactly this.

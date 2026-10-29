@@ -29,10 +29,9 @@ export const NOMENCLATURE_KINDS = [
 ] as const satisfies readonly Nomenclature[];
 
 /**
- * The formal name each nomenclature comes with: `null` for `none`, which must
- * not have one under `ingredients_nomenclature_declares_canonical_name`, and
- * for `unknown`, which may go either way (MB.161). Every name is invented (CLAUDE.md, Testing); ingredient.test.ts
- * checks them against the seed as a backstop.
+ * The formal name each nomenclature comes with: `null` for `none`, which must not have one under
+ * `ingredients_nomenclature_declares_canonical_name`, and for `unknown`, which may go either way.
+ * Every name is invented (CLAUDE.md, Testing); ingredient.test.ts checks them against the seed as a backstop.
  */
 const CANONICAL_NAME_BY_NOMENCLATURE: Record<Nomenclature, string | null> = {
   botanical: 'Fixtura testalis',
@@ -45,9 +44,8 @@ const CANONICAL_NAME_BY_NOMENCLATURE: Record<Nomenclature, string | null> = {
 };
 
 /**
- * One form of an ingredient. The default form is invented, as every default
- * name here is (M1.25): a real one, `Herb` or `Oil`, is safe only until a
- * curated row or a seeded variant spells it.
+ * One form of an ingredient. The default form is invented, as every default name here is: a real
+ * one, `Herb` or `Oil`, is safe only until a curated row or a seeded variant spells it.
  *
  * ```ts
  * makeVariant()                                   // Testform, adding nothing
@@ -59,10 +57,9 @@ export function makeVariant(overrides: Partial<VariantFixture> = {}): VariantFix
 }
 
 /**
- * A fixture's form as a write's input sends it (MB.219): every field, `""` or
- * `[]` for what the fixture leaves out, its typed substitutes as names, and
- * `overrides` over the rest. The fixture's categories are names, which an
- * input cannot send, so a test states `categoryIds` itself.
+ * A fixture's form as a write's input sends it: every field, `""` or `[]` for what the fixture
+ * leaves out, its typed substitutes as names, and `overrides` over the rest. The fixture's
+ * categories are names, which an input cannot send, so a test states `categoryIds` itself.
  *
  * ```ts
  * variantInput(makeVariant({ form: 'Herb' }), { formId: herb })  // a pick

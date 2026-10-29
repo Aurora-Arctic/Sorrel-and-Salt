@@ -24,10 +24,9 @@ afterEach(() => {
   window.localStorage.clear();
 });
 
-// happy-dom's `<dialog>` has a bare `showModal` and `close`, and every Modal in
-// a test calls them. Pinned here, as a browser behaves for what a test can see
-// — the element gains and loses `open` — so a change to the library's version
-// of them cannot reach a test, rather than repeated in each test that renders one. A test asserting the calls themselves
+// happy-dom's `<dialog>` has a bare `showModal` and `close`, and every Modal in a test calls them.
+// Pinned here as a browser behaves for what a test can see (the element gains and loses `open`), so a
+// library version change cannot reach a test. A test asserting the calls themselves
 // (tests/components/Modal) puts its own spies over these.
 HTMLDialogElement.prototype.showModal = function (this: HTMLDialogElement) {
   this.setAttribute('open', '');
@@ -36,12 +35,10 @@ HTMLDialogElement.prototype.close = function (this: HTMLDialogElement) {
   this.removeAttribute('open');
 };
 
-// A browser answers `matchMedia`; happy-dom answers "no preference" to
-// everything (and jsdom, which this suite used to run on, has none). Neither
-// is the person this suite stands in for: a test environment draws no CSS
-// transitions, so it reports the one preference that says not to wait for one. Modal then closes at once rather than holding
-// for a `transitionend` that nothing here can fire. A test of the fade, or of a
-// system theme, stubs `matchMedia` itself over this.
+// A browser answers `matchMedia`; happy-dom answers "no preference" to everything. A test environment
+// draws no CSS transitions, so it reports the one preference that says not to wait for one: Modal then
+// closes at once rather than holding for a `transitionend` nothing here can fire. A test of the fade,
+// or of a system theme, stubs `matchMedia` itself over this.
 const environmentMedia = (query: string): MediaQueryList =>
   ({
     matches: query.includes('prefers-reduced-motion: reduce'),

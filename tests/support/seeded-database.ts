@@ -11,7 +11,7 @@ import postgres from 'postgres';
 // and seed, and it keeps this file out of both import boundaries (nothing in
 // tests/support/ may build a Drizzle handle).
 
-/** M0.18's baked-in base: extensions only, no schema. Never written to. */
+/** The baked-in base: extensions only, no schema. Never written to. */
 export const BASE_TEMPLATE = 'sorrel_template';
 
 /**

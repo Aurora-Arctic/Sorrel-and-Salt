@@ -13,13 +13,9 @@ import {
 type CompendiumEntryInput = Parameters<typeof createCompendiumEntry>[1];
 
 /**
- * The compendium entry fixture for the files that write compendium entries,
- * split by concern from one file.
- *
- * Reads the live curated forms by folded name once per file: a compendium
- * entry's every form is a pick (MB.167), so `entry` picks the row each form's
- * text names unless the test states its `formId`, as the admin's autofill
- * would.
+ * The compendium entry fixture for the files that write compendium entries. Reads the live curated
+ * forms by folded name once per file: every form is a pick, so `entry` picks the row each form's
+ * text names unless the test states its `formId`, as the admin's autofill would.
  */
 export function useCompendiumEntryInput(sql: () => postgres.Sql) {
   let formIds: Map<string, string>;

@@ -22,12 +22,11 @@ declare module 'vitest' {
   }
 }
 
-// One scan for every guard (MB.184; claude-docs/testing/layer-ownership.md,
-// "The owning layer"): ten guards each spawned `git ls-files` and four each
-// spawned oxlint, a fixed cost paid per file rather than per run. The
-// listing is taken before the probes are written, and the probes are removed
-// as soon as oxlint has read them, so no test in any project sees them on
-// disk, and a watch session does not leave them in src/ while it runs.
+// One scan for every guard (claude-docs/testing/layer-ownership.md, "The owning layer"): ten guards
+// each spawned `git ls-files` and four each spawned oxlint, a fixed cost paid per file rather than per
+// run. The listing is taken before the probes are written, and the probes are removed as soon as oxlint
+// has read them, so no test in any project sees them on disk and a watch session does not leave them
+// in src/ while it runs.
 
 /** The spelling scripts/doc-citations.mjs uses, so the two sweeps see one tree. */
 function listRepoFiles(): string[] {

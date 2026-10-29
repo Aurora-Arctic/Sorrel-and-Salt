@@ -11,9 +11,8 @@ const url = workerDatabaseUrl(process.env);
 await cloneDatabase(workerDatabaseName(process.env.VITEST_POOL_ID as string), TEST_TEMPLATE);
 process.env.DATABASE_URL = url;
 
-// The `db` project keeps a worker's modules from one file to the next
-// (MB.238), so the record of `revalidateTag` calls would carry the previous
-// file's writes into this one's assertions. Imported by path rather than as
-// `next/cache`, which the alias resolves to the same module, because the lint
-// keeps `next/cache` to the files that cache.
+// The `db` project keeps a worker's modules from one file to the next, so the record of
+// `revalidateTag` calls would carry the previous file's writes into this one's assertions. Imported
+// by path, not as `next/cache` (the alias resolves to the same module), because the lint keeps
+// `next/cache` to the files that cache.
 revalidateTag.mockClear();

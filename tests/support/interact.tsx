@@ -1,14 +1,12 @@
 import { act, fireEvent, screen, within } from '@testing-library/react';
 
-// What a person does to a form in a component test — press a button, pick a
-// choice from a list, type into a field — written once for every form's
-// tests, where each test file had its own copy (MB.115).
+// What a person does to a form in a component test (press a button, pick a choice from a list, type
+// into a field), written once for every form's tests.
 //
-// The fields are found by their labels rather than by role and name: a role
-// query names every element of the role, which in the ingredient form's 25
-// fields is most of a test's time (MB.181). A required field's label ends in
-// a marker hidden from its accessible name, dropped here so the label is
-// written as the name is.
+// Fields are found by their labels rather than by role and name: a role query names every element of
+// the role, which in the ingredient form's 25 fields is most of a test's time. A required field's
+// label ends in a marker hidden from its accessible name, dropped here so the label is written as
+// the name is.
 
 /**
  * The element labelled `label` and matching `selector`, the selector keeping

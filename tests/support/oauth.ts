@@ -13,7 +13,7 @@ import type { Profile } from './types';
 
 export const ORIGIN = 'http://localhost:8000';
 
-/** Where an unverified sign-in lands (MB.54) when it asked for no return path, as `signIn` does by default. */
+/** Where an unverified sign-in lands when it asked for no return path, as `signIn` does by default. */
 export const EMAIL_PAGE = '/account/email';
 
 /** Test credentials for all four providers, as the env `@/lib/auth` reads at import. */

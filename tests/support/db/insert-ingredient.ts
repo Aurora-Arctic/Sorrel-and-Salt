@@ -11,12 +11,10 @@ import type { IngredientFixture, VariantFixture } from '../fixtures/types';
 // the seed does — the author's stamps and the GUC, inside one transaction.
 
 /**
- * Writes `fixture`'s row, a variant row for each of its forms with what
- * that form owns (MB.222: the row itself carries no form), its folk names, its typed substitutes, its typed
- * deities at their positions and its category links, stamped by
- * `author`, and returns the ingredient's id. Categories are named as §6 does
- * and resolved through the seeded `categories`; a name with no live row is a
- * thrown error naming it, so a misspelt category is never a silent skip.
+ * Writes `fixture`'s row, a variant row for each of its forms with what that form owns (the row
+ * itself carries no form), its folk names, typed substitutes, typed deities at their positions and
+ * category links, stamped by `author`, and returns the ingredient's id. Categories are named as §6
+ * does and resolved through the seeded `categories`; a name with no live row throws, naming it.
  */
 export async function insertIngredient(
   sql: postgres.Sql,
@@ -83,11 +81,10 @@ export async function insertIngredient(
 }
 
 /**
- * Writes one more variant of `ingredientId` — a form and what it adds
- * (MB.215), with the category pairs and typed substitutes it owns (MB.217) —
- * stamped by `author`, and returns its id. Raw, as `insertIngredient` is; the
- * fixture's own forms are already variants, so this is another form beside
- * them. Categories are resolved by name as `insertIngredient` resolves them.
+ * Writes one more variant of `ingredientId`: a form and what it adds, with the category pairs and
+ * typed substitutes it owns, stamped by `author`, and returns its id. Raw, as `insertIngredient` is;
+ * the fixture's own forms are already variants, so this is another beside them. Categories are
+ * resolved by name as `insertIngredient` resolves them.
  */
 export async function insertVariant(
   sql: postgres.Sql,
@@ -141,11 +138,10 @@ async function writeVariant(
 }
 
 /**
- * Links `substituteId` as a substitute of `ingredientId`, stamped by `author`,
- * and returns the row's id. Raw, as `insertIngredient` is, so the tier rule the
- * service holds is not: a test can write the row the service would refuse.
- * `forms` names the form of `ingredientId` the row stands in for, and the
- * form of `substituteId` it names (MB.217); each absent is none.
+ * Links `substituteId` as a substitute of `ingredientId`, stamped by `author`, and returns the row's
+ * id. Raw, as `insertIngredient` is, so the tier rule the service holds is not: a test can write the
+ * row the service would refuse. `forms` names the form of `ingredientId` the row stands in for and
+ * the form of `substituteId` it names; each absent is none.
  */
 export async function insertSubstituteLink(
   sql: postgres.Sql,

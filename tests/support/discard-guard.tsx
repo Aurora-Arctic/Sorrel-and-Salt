@@ -5,11 +5,9 @@ import { expect, type Mock, vi } from 'vitest';
 import Modal from '@/components/Modal';
 import { makeQueryClient } from '@/lib/graphql-client';
 
-// The guard over an admin form's unsaved changes (MB.115): its shape is
-// tests/components/Modal's, on a form of that test's own; each admin form's
-// test asserts its wiring through this, the form in a modal as its page puts
-// it, its close the modal's own (claude-docs/components/modal.md, "Unsaved
-// changes").
+// The guard over an admin form's unsaved changes: its shape is tests/components/Modal's, on a form of
+// that test's own; each admin form's test asserts its wiring through this, the form in a modal as its
+// page puts it, its close the modal's own (claude-docs/components/modal.md, "Unsaved changes").
 
 /**
  * Renders the form in a modal, handed the modal's own close as its page's
@@ -67,7 +65,7 @@ export function expectGuardedWaysOut(
 }
 
 /**
- * A question over a form (MB.115): the form behind it inert, the question —
+ * A question over a form: the form behind it inert, the question —
  * a named group holding the safe answer — and the modal's Close live, and
  * the focus on the safe answer. `field` is one of the form's own fields.
  * Returns the question, for what else it holds.

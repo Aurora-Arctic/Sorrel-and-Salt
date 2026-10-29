@@ -5,15 +5,13 @@ import { renderToString } from 'react-dom/server';
 import { expect, onTestFinished } from 'vitest';
 import type { FilterFormCase, FilterFormSubject } from './types';
 
-// Six admin lists filter through the shared FilterForm, each with its own
-// fields and addresses. What every one of them must do with its own wiring,
-// the page it submits to, the names its fields send, the search's address,
-// which of its values draw Clear and the key that draws the row afresh, is
-// written once, here, as rows each list's test runs with `it.each` on its
-// own subject (MB.115). What only one list has, a select's options, a
-// type-ahead's pick, a switch's flag, stays in that list's test, and
-// FilterForm's own behaviour, the row off while a list is on its way and the
-// focus coming back, is CompendiumList's (claude-docs/components/filter-form.md).
+// Six admin lists filter through the shared FilterForm, each with its own fields and addresses. What
+// every one must do with its own wiring (the page it submits to, the names its fields send, the
+// search's address, which values draw Clear and the key that draws the row afresh) is written once,
+// here, as rows each list's test runs with `it.each` on its own subject. What only one list has (a
+// select's options, a type-ahead's pick, a switch's flag) stays in that list's test, and FilterForm's
+// own behaviour, the row off while a list is on its way and the focus coming back, is CompendiumList's
+// (claude-docs/components/filter-form.md).
 
 /**
  * A filter row's form by its name. The name is on the `<search>` around it, the

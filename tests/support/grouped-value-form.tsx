@@ -9,15 +9,12 @@ import { server } from './msw/server';
 import { choose, press, type } from './interact';
 import type { GroupedValueFormCase, GroupedValueFormSubject } from './types';
 
-// GroupedValueForm is one form for every grouped vocabulary: a name, a
-// description and a group, saved through the kind's create, update and
-// delete mutations. The behaviour every kind shares is written once, here, as
-// rows tests/components/GroupedValueForm runs with `it.each` on one subject
-// (MB.189, MB.132): a kind shares this code path, so another kind's run would
-// prove nothing more, and gets only what it changes in its own describe — its
-// mutations, the rename note, the redirect question, its own refusals. The
-// group field is found by the subject's own label, since a kind may call its
-// group something else.
+// GroupedValueForm is one form for every grouped vocabulary: a name, a description and a group, saved
+// through the kind's create, update and delete mutations. The behaviour every kind shares is written
+// once, here, as rows tests/components/GroupedValueForm runs with `it.each` on one subject: a kind
+// shares this code path, so another kind's run would prove nothing more, and gets only what it changes
+// in its own describe. The group field is found by the subject's own label, since a kind may call it
+// something else.
 
 const name = () => screen.getByRole('textbox', { name: 'Name' });
 const description = () => screen.getByRole('textbox', { name: 'Description' });
@@ -97,8 +94,7 @@ export const ADDING: GroupedValueFormCase[] = [
       await waitFor(() => expect(onDone).toHaveBeenCalledTimes(1));
     },
   ],
-  // The owner's call (MB.115): the group is typed into, the list narrowing
-  // as it is, and only a listed group is ever the value.
+  // The group is typed into, the list narrowing as it is, and only a listed group is ever the value.
   [
     'takes its group by typing, the list narrowing to the groups holding the text',
     async (subject) => {
