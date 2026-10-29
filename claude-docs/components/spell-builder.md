@@ -66,7 +66,7 @@ for it, as for a refused unit, and Save or Close shows the error beside it.
 - **Typing in flight is kept.** A save's answer becomes the form's new start
   with `reset(..., { keepValues: true })`, so what was typed meanwhile reads
   as the next change.
-- **Mark Complete and Reopen as Draft** flush first; a missing title refuses
+- **Mark Complete** flushes first; a missing title refuses
   inline on the title field and the status goes back.
 
 - **No field is required.** A draft saves with any one field, or all of them.
@@ -171,19 +171,20 @@ refusal's words, which explain the rule and name Delete, show in the
 
 Whether the spell is finished (M10.20, story 55): `SpellStatusField`, in
 `status-field.tsx`, drawn in the form's action row (`FormActions`) beside Save Spell, outside every section.
-A spell is a `draft` until it is marked `complete`. The control is one
-button that says what it will do: Mark Complete on a draft, Reopen as Draft on
-a complete spell, with a line saying what the state means, visually hidden and read as the button's description. Like Share
-With the Coven, a click saves the whole form with the other status at once, so
-the status is never a pick left pending.
+A spell is a `draft` until it is marked `complete`. A draft shows one button,
+Mark Complete, with a line saying what the state means, visually hidden and read as the button's description. Like Share
+With the Coven, a click saves the whole form with the status `complete` at once, so
+the status is never a pick left pending. A complete spell shows its statement
+("Complete." and a sentence that it cannot be reopened) and no button: once
+complete, its workings are recorded against it and its visibility lock has
+started, so reopening would undo both. M13.20's copy (Duplicate a Spell) will
+add a Copy as Draft button here; it is the way to vary a complete spell. The
+service still accepts complete to draft for now; only this control dropped it.
 
 - **A new spell** is a draft (`valuesOf` reads a missing status as one).
 - **A blank title** is refused before anything is sent: the form holds the asked-for status while it validates, so the schema's rule shows it on the title field,
   with `COMPLETE_NEEDS_TITLE` (validation/spell.ts), the words for the
   database's `spells_complete_has_title` check (M13.15). Focus goes to the title.
-- **Reopening** keeps the spell's workings. Refusing a new working on a draft
-  belongs to the workings service, which does not exist yet; this control only
-  sets the status.
 - **Autosave:** Mark Complete will flush a pending autosave first once M13.17
   exists. Until then the save it sends already carries every unsaved change.
 - **The list** shows status already: the Drafts tab, and a Draft badge on each
