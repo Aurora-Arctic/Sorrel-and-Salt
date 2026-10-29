@@ -1,0 +1,14 @@
+# Gathered for M14.29; the seed never reads this folder.
+entry: botanical/astragalus-astragalus-mongholicus
+status: needs-review
+listings:
+  - list: other
+    name: Conservation statement in Wikipedia prose, no named assessor
+    value: not listed as being threatened
+    listedAs: Astragalus mongholicus
+    scope: not stated
+    nameBasis: stated
+    source: wikipedia-astragalus-mongholicus
+    locator: 'Lead: "It is a perennial plant and it is not listed as being threatened."'
+questions:
+  - 'Wikipedia says Astragalus mongholicus "is not listed as being threatened" and names no assessor or list. It is not on the United Plant Savers list and not in the CITES Appendices. Keep the row as a prose statement, or drop it? Recommendation: keep the row, since it records no hit and the page does not rank the plant.'
