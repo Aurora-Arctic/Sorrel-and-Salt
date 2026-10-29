@@ -67,8 +67,15 @@ export const BANDS_FULL = 8;
 /** Half a period of the wave, in drawing units: four full periods across the 48-unit jar. */
 const HALF = 6;
 
-/** The most a wave rises above its boundary, in drawing units (amplitudes run 0.65 to 0.8). */
-const MAX_RISE = 1.6;
+/** The most a wave rises above its boundary, in drawing units (amplitudes run 0.65 to 0.8),
+ * plus the 0.6 the top band's level line sits above its fill so none of the line is over the layer. */
+const MAX_RISE = 2.2;
+
+/**
+ * The top band's level line is 1.2 wide and centred on its path, so the path is lifted by half of
+ * that: the line then lies wholly above the top layer's fill and nothing is drawn across it.
+ */
+const TOP_LINE_LIFT = 0.6;
 
 /**
  * One boundary between two layers, as a wave. Boundary `k` (k = 0 is the base, which is flat and
@@ -188,7 +195,7 @@ export function JarDrawing({
                 <path
                   className={`jar-shelf__band-edge${ink ? ' jar-shelf__band-edge--group' : ''}${i === bands.length - 1 ? ' jar-shelf__band-edge--top' : ''}`}
                   style={ink ? bandInk(ink) : undefined}
-                  d={waveForward(waveOf(i + 1), 0)}
+                  d={waveForward(waveOf(i + 1), i === bands.length - 1 ? -TOP_LINE_LIFT : 0)}
                 />
               </g>
             );
