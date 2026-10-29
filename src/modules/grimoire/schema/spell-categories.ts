@@ -3,7 +3,7 @@ import { auditStampColumns } from '../../identity/schema/users';
 import { categories } from '../../vocabulary/schema/categories';
 import { spells } from './spells';
 
-// What a spell is *meant to do* (story 48) — the assigned categories, never the
+// What a spell is *meant to do* — the assigned categories, never the
 // derived ones, which are the union of its ingredients' and stored nowhere.
 // Hard-deleted, no `workspace_id`, so the service scopes through the
 // parent spell (claude-docs/db/spell-categories.md, "spell_categories").

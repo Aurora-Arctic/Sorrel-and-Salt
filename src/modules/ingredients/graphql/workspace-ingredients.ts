@@ -14,7 +14,7 @@ import { ingredientInputFields } from './ingredient-input';
 // for, and the stamps are the session's (claude-docs/graphql/schema.md, "The workspace
 // ingredient mutations").
 
-/** DESIGN.md §7's `IngredientInput`: only `name` is required, so story 29's stub saves. */
+/** DESIGN.md §7's `IngredientInput`: only `name` is required. */
 const IngredientInput = builder.inputType('IngredientInput', {
   fields: (t) => ingredientInputFields(t, { tier: 'coven', whole: false }),
 });

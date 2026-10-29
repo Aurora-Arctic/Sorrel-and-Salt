@@ -17,7 +17,7 @@ import { QUANTITY_PRECISION, QUANTITY_SCALE } from '../../ingredients/schema/qua
 import { spells } from './spells';
 import { idColumn, liveUnique } from '../../../db/schema-parts';
 
-// A spell's recipe, one ordered list (stories 50, 57, 80): a step is an
+// A spell's recipe, one ordered list: a step is an
 // instruction, an ingredient laid in the jar, or both. A step that lays an
 // ingredient is a layer: either an ingredient the workspace knows or a name
 // written for this one jar. One table rather than a steps table beside an

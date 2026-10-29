@@ -10,15 +10,9 @@ import { idColumn, liveUnique } from '../../../db/schema-parts';
 // (claude-docs/db/invitations.md, "Invitations").
 const DEFAULT_LIFETIME = sql`now() + interval '7 days'`;
 
-// Every invitation, in two tiers as `ingredients` is: a row naming a
-// workspace and a role invites into that coven, and a row with neither is a
-// site-tier invitation, which grants the site role it names, curator or admin,
-// as a null workspace is a compendium entry. In `coven` with the workspace it mostly names; the admin
-// tier reaches it as admin curation reaches `ingredients`
-// (claude-docs/design-decisions/mb.201-two-tier-invitations.md). Only the
-// token's hash is stored, and there must never be a plaintext column. Marked
-// `namedWrites`: the row is what authorises a membership or a grant,
-// so it is written only through its named insert, accept, decline and revoke.
+// Every invitation, in two tiers as `ingredients` is: a row naming a workspace and a role invites into that coven, and a row with
+// neither is a site-tier invitation granting the site role it names. Only the token's hash is stored, never plaintext, and the row is
+// written only through its named insert, accept, decline and revoke (claude-docs/design-decisions/mb.201-two-tier-invitations.md).
 export const invitations = namedWrites(
   pgTable(
     'invitations',

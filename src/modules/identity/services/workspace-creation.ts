@@ -7,12 +7,9 @@ import { adminDeclaration, liveUser } from './admin-changes';
 import { assertAdminChangesOpen } from './admin-role-pause';
 import type { UserRow } from '../types';
 
-// The approval route and its undoing: an admin lets someone with no
-// invitation create a workspace, or stops them. The invitation route is
-// accepting an invitation, and being made admin sets the flag in its own write. Each
-// change is declared `via: 'admin'`, and the trigger on `users` records it
-// in the privilege ledger, since the user's own stamps go with their next
-// update: claude-docs/auth/admin-users.md, "Approving workspace creation".
+// The approval route and its undoing: an admin lets someone with no invitation create a workspace, or stops them. Each change is
+// declared `via: 'admin'` and the trigger on `users` records it in the privilege ledger
+// (claude-docs/auth/admin-users.md, "Approving workspace creation").
 
 const REFUSAL = 'Only a site admin may change who can create a coven';
 

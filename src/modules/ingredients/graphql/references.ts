@@ -16,12 +16,8 @@ import type { CitedReference, ReferenceRow } from '../types';
 import { REFERENCE_TEXT_FIELDS } from '../validation/reference-format';
 import type { ReferenceTextField } from '../validation/types';
 
-// A reference as DESIGN.md §7 sketches it its
-// fields, the tier as `isGlobal`, and the citation rendered on the server by
-// the one renderer, plain. Its two writes and the picker's search are here;
-// `Ingredient.references` reads through the request's loader in
-// `ingredient.ts`, and `reference` reads one whole, for the form that edits
-// it. `workspaceId` stays off the wire, as it does on `Ingredient`.
+// A reference as DESIGN.md §7 sketches it: its fields, the tier as `isGlobal`, and the citation rendered on the server by the one
+// renderer. `Ingredient.references` reads through the request's loader; `workspaceId` stays off the wire, as it does on `Ingredient`.
 
 /** Every text field but the title, which every kind of reference requires. */
 const OPTIONAL_FIELDS = REFERENCE_TEXT_FIELDS.filter(
