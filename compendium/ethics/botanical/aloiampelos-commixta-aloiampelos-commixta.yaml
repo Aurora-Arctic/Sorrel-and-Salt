@@ -1,0 +1,11 @@
+# Gathered for M14.29; the seed never reads this folder.
+entry: botanical/aloiampelos-commixta-aloiampelos-commixta
+status: approved
+listings:
+  - list: iucn
+    name: 'IUCN Red List (global Red Data List, as worded by Wikipedia)'
+    value: 'Vulnerable (VU)'
+    listedAs: 'Aloiampelos commixta'
+    nameBasis: stated
+    source: wikipedia-aloiampelos-commixta
+    locator: 'text: "This plant is listed as Vulnerable (VU) on IUCN''s global Red Data List, which reports that there are currently only a few hundred plants in existence."'

@@ -1,0 +1,11 @@
+# Gathered for M14.29; the seed never reads this folder.
+entry: botanical/bitter-kola-garcinia-kola
+status: approved
+listings:
+  - list: iucn
+    name: 'IUCN Red List of Threatened Species'
+    value: 'Vulnerable (IUCN 3.1)'
+    listedAs: 'Garcinia kola'
+    nameBasis: stated
+    source: wikipedia-garcinia-kola
+    locator: 'taxobox, "Conservation status": "Vulnerable (IUCN 3.1)"; reference: Cheek, M. (2004), "Garcinia kola", IUCN Red List 2004 e.T34715A9884648'

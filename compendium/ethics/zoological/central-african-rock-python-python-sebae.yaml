@@ -1,0 +1,15 @@
+# Gathered for M14.29; the seed never reads this folder.
+entry: zoological/central-african-rock-python-python-sebae
+status: approved
+listings:
+  - list: other
+    name: 'Cameroon national wildlife law (as stated in the Wikipedia article)'
+    value: 'Hunting, killing and selling pythons is illegal in Cameroon; little to no enforcement'
+    listedAs: 'pythons'
+    nameBasis: stated
+    source: wikipedia-pythonidae
+    locator: 'bushmeat section: "Hunting, killing and selling pythons is illegal in Cameroon under national wildlife law"'
+animalPart:
+  - quote: 'Python bodies and blood are used for African traditional medicines and other belief uses as well'
+    source: wikipedia-pythonidae
+    locator: 'African health and belief use section'
