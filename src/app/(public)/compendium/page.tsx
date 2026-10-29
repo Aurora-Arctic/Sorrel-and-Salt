@@ -14,7 +14,7 @@ import DetailsDialog from '../../../components/IngredientEntry/details-dialog';
 import { EDIT_ENTRY_EYEBROW } from '../../../components/IngredientEntry/edit-heading';
 import IngredientSummary from '../../../components/IngredientEntry/summary';
 import { RouteModalProvider } from '../../../components/Modal/route-modal-provider';
-import { Forbidden } from '../../../lib/errors';
+import { Forbidden, NotFound } from '../../../lib/errors';
 import { listJsonLd } from '../../../lib/json-ld';
 import { publicPageMetadata } from '../../../lib/page-metadata';
 import { entryRecency } from '../../../lib/entry-recency';
@@ -22,9 +22,10 @@ import { pagerHrefs } from '../../../lib/list-href';
 import { readPageCursors } from '../../../lib/numbered-page';
 import { CARD_PAGE_SIZE } from '../../../lib/pagination';
 import { single } from '../../../lib/search-params';
+import ReviewMark from '../../../components/IngredientEntry/review-mark';
 import { getSession } from '../../../lib/request-session';
 import { viewerIfSignedIn } from '../../../lib/viewer';
-import { heldCompendiumEntryIdsIn } from '../../../modules/ingredients';
+import { heldCompendiumEntryIdsIn, readCompendiumReview } from '../../../modules/ingredients';
 import { covensHolding, plusCovensOf } from '../../plus-covens';
 import CompendiumDialog from '../../(shell)/admin/compendium/compendium-dialog';
 import { readEntryStock, stockKey } from '../../entry-stock';
@@ -167,6 +168,26 @@ export default async function CompendiumPage({ searchParams }: PublicCompendiumP
   // An old address opens the entry at its new one, keeping the search (MB.82).
   if (edited?.kind === 'moved') redirect(hereWith(edited.slug));
   const editing = edited?.kind === 'entry' ? edited : undefined;
+  // The review switch (M14.8), for a curator or admin only: a per-viewer read with their session,
+  // never inside the cached reads, and not made at all for a visitor or anyone else, so no review
+  // date reaches them from here. The entry's own badge is in the cached read, for everyone.
+  const reviewOf = async (id: string | undefined) => {
+    if (!canEdit || !id) return undefined;
+    const curator = await getSession();
+    if (!curator) return undefined;
+    try {
+      const review = await readCompendiumReview(curator, id);
+      return { reviewedAt: review?.reviewedAt.toISOString() ?? null };
+    } catch (error) {
+      if (error instanceof Forbidden || error instanceof NotFound) return undefined;
+      throw error;
+    }
+  };
+  // Nothing is awaited for anyone who cannot curate.
+  const [detailsReview, editReview] =
+    canEdit && (detailed || editing)
+      ? await Promise.all([reviewOf(detailed?.id), reviewOf(editing?.id)])
+      : [undefined, undefined];
   const chips = await readCardCategories(page.edges.map(({ node }) => node.id));
   const facets = compendiumFacetCounts(counts, {
     formIcons,
@@ -312,6 +333,11 @@ export default async function CompendiumPage({ searchParams }: PublicCompendiumP
             marks: detailsMarks(shown),
             pageHref: `/compendium/ingredients/${detailed.slug}` as Route,
             ...(detailsPlus && { plus: detailsPlus, ingredientId: detailed.id }),
+            ...(detailsReview && {
+              reviewLine: (
+                <ReviewMark ingredientId={detailed.id} reviewedAt={detailsReview.reviewedAt} />
+              ),
+            }),
             ...(canEdit && {
               editAction: {
                 href: hereWith(detailed.slug),
@@ -345,6 +371,12 @@ export default async function CompendiumPage({ searchParams }: PublicCompendiumP
             editing && {
               heading: editHeading(editing.values, EDIT_ENTRY_EYEBROW),
               entry: { id: editing.id, values: editing.values },
+              ...(editReview && {
+                review: {
+                  reviewed: editReview.reviewedAt !== null,
+                  reviewedAt: editReview.reviewedAt,
+                },
+              }),
             }
           }
         />

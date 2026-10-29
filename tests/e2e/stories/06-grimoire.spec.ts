@@ -7,6 +7,7 @@ import {
   applyFilters,
   chooseChip,
   compendiumVariant,
+  graphqlFromPage,
   insertSpell,
   insertStep,
   insertStock,
@@ -441,6 +442,173 @@ test(
       await expect(grimoireList(page).getByText('Shared Working', { exact: true })).toBeVisible();
       await expect(grimoireList(page).getByText('Private Working')).toHaveCount(0);
     }
+  },
+);
+
+test(
+  'a member deletes a shared spell from its page after being asked, naming it; the grimoire says so, and a viewer is offered no Delete',
+  { tag: '@story-56' },
+  async ({ page }) => {
+    // Story 56's rule governs widening, not existence (M13.11): a complete, shared spell can be
+    // deleted, which the confirmation says the coven loses.
+    const coven = await seedCoven(page, 'Fixture Coven Fifty-Six Deletes', 'story-56-delete.test', {
+      A: 'owner',
+      B: 'member',
+      C: 'viewer',
+    });
+    const { A, B, C } = coven.users;
+    const { gone, kept, step } = await withSql(async (sql) => {
+      const gone = await insertSpell(sql, coven.id, 'Doomed Working', 'workspace', A, 'complete');
+      const kept = await insertSpell(sql, coven.id, 'Kept Working', 'workspace', A, 'complete');
+      const held = await localIngredient(sql, coven.id, A);
+      const step = await insertStep(sql, gone, held, { quantity: 1, unit: 'g', position: 1 }, A);
+      return { gone, kept, step };
+    });
+    const deletedAt = async (table: 'spells' | 'spell_steps', id: string) => {
+      const [row] = await withSql(
+        (sql) => sql<{ deleted_at: Date | null }[]>`
+          select deleted_at from ${sql(table)} where id = ${id}`,
+      );
+      return row.deleted_at;
+    };
+    const listPath = `/coven/${coven.slug}/grimoire`;
+    const recipePath = `${listPath}/${gone}`;
+    const bin = page.getByRole('button', { name: 'Delete Spell Doomed Working', exact: true });
+    const question = page.getByRole('dialog', { name: 'Delete Spell', exact: true });
+
+    // Why the delete could be refused: B is not the author, and the spell is complete and
+    // shared. B is a member of the coven, which is what the delete asks.
+    await signInAgainAs(page, B);
+    await page.goto(recipePath);
+    await expect(page.getByRole('heading', { level: 1, name: 'Doomed Working' })).toBeVisible();
+
+    await test.step('the Delete asks first, naming the spell, and Cancel changes nothing', async () => {
+      await bin.click();
+      await expect(question).toContainText('Doomed Working');
+      await assertNoAccessibilityViolations(page);
+      await question.getByRole('button', { name: 'Cancel', exact: true }).click();
+
+      await expect(question).toHaveCount(0);
+      await expect(bin).toBeFocused();
+      expect(await deletedAt('spells', gone)).toBeNull();
+    });
+
+    await test.step('confirmed, the page leaves for the grimoire, which says so, with the focus on its heading', async () => {
+      await bin.click();
+      await question.getByRole('button', { name: 'Delete', exact: true }).click();
+
+      await expect(page).toHaveURL(/\/grimoire\?deleted=/);
+      await expect(page.getByRole('status').filter({ hasText: 'Doomed Working' })).toHaveCount(1);
+      await expect(page.getByRole('heading', { level: 1, name: 'Grimoire' })).toBeFocused();
+      await expect(grimoireList(page).getByRole('listitem')).toHaveCount(1);
+      await expect(grimoireList(page).getByText('Kept Working', { exact: true })).toBeVisible();
+      await assertNoAccessibilityViolations(page);
+      // Soft, and together: the spell and its step are marked deleted, the other spell untouched.
+      expect(await deletedAt('spells', gone)).not.toBeNull();
+      expect(await deletedAt('spell_steps', step)).not.toBeNull();
+      expect(await deletedAt('spells', kept)).toBeNull();
+    });
+
+    await test.step('the deleted spell has no page and opens no Edit dialog', async () => {
+      const response = await page.goto(recipePath);
+      expect(response?.status()).toBe(404);
+      await page.goto(`${listPath}?edit=${gone}`);
+      await expect(page.getByRole('heading', { level: 1, name: 'Grimoire' })).toBeVisible();
+      await expect(page.getByRole('dialog')).toHaveCount(0);
+    });
+
+    await test.step('a viewer is offered no Delete, and one sent by direct id is refused', async () => {
+      await signInAgainAs(page, C);
+      await page.goto(`${listPath}/${kept}`);
+      // Why it could be offered: the viewer reads the page the member could delete from.
+      await expect(page.getByRole('heading', { level: 1, name: 'Kept Working' })).toBeVisible();
+      await expect(page.getByRole('main').getByRole('button', { name: /^Delete/ })).toHaveCount(0);
+
+      const answer = await graphqlFromPage(
+        page,
+        'mutation ($w: ID!, $id: ID!) { deleteSpell(workspaceId: $w, id: $id) }',
+        { w: coven.id, id: kept },
+      );
+      expect(answer.errors?.[0]?.extensions?.code).toBe('FORBIDDEN');
+      expect(await deletedAt('spells', kept)).toBeNull();
+    });
+  },
+);
+
+test(
+  'a member deletes a spell from its card in the grimoire list and lands back on the list, filter kept, with the spell gone',
+  { tag: '@story-56' },
+  async ({ page }) => {
+    const coven = await seedCoven(page, 'Fixture Coven Fifty-Six Card', 'story-56-card.test', {
+      A: 'owner',
+      B: 'member',
+    });
+    const { A, B } = coven.users;
+    await withSql(async (sql) => {
+      await insertSpell(sql, coven.id, 'Card Doomed Working', 'workspace', A, 'complete');
+      await insertSpell(sql, coven.id, 'Card Kept Working', 'workspace', A, 'complete');
+    });
+    const listPath = `/coven/${coven.slug}/grimoire`;
+    // Why the delete could be refused: B is not the author and the spell is shared and complete.
+    await signInAgainAs(page, B);
+    await page.goto(`${listPath}?query=Card`);
+    await expect(grimoireList(page).getByRole('listitem')).toHaveCount(2);
+
+    await grimoireList(page)
+      .getByRole('button', { name: 'Delete Spell Card Doomed Working', exact: true })
+      .click();
+    const question = page.getByRole('dialog', { name: 'Delete Spell', exact: true });
+    await expect(question).toContainText('Card Doomed Working');
+    await assertNoAccessibilityViolations(page);
+    await question.getByRole('button', { name: 'Delete', exact: true }).click();
+
+    await expect(page).toHaveURL(/\/grimoire\?query=Card&deleted=/);
+    await expect(page.getByRole('status').filter({ hasText: 'Card Doomed Working' })).toHaveCount(
+      1,
+    );
+    await expect(grimoireList(page).getByRole('listitem')).toHaveCount(1);
+    await expect(grimoireList(page).getByText('Card Kept Working', { exact: true })).toBeVisible();
+    await assertNoAccessibilityViolations(page);
+  },
+);
+
+test(
+  'a member deletes a spell from its Edit dialog after being asked, and lands back on the list with the spell gone',
+  { tag: '@story-56' },
+  async ({ page }) => {
+    const coven = await seedCoven(
+      page,
+      'Fixture Coven Fifty-Six Builder',
+      'story-56-builder.test',
+      {
+        A: 'owner',
+        B: 'member',
+      },
+    );
+    const { A, B } = coven.users;
+    const gone = await withSql(async (sql) => {
+      await insertSpell(sql, coven.id, 'Builder Kept Working', 'workspace', A, 'complete');
+      return insertSpell(sql, coven.id, 'Builder Doomed Working', 'workspace', A, 'complete');
+    });
+    const listPath = `/coven/${coven.slug}/grimoire`;
+    // Why the delete could be refused: B is not the author and the spell is shared and complete.
+    await signInAgainAs(page, B);
+    await page.goto(`${listPath}?edit=${gone}`);
+    const edit = page.getByRole('dialog', { name: 'Edit Spell, Builder Doomed Working' });
+    await edit.getByRole('button', { name: 'Delete Spell', exact: true }).click();
+    await expect(page.getByText('Delete Builder Doomed Working?')).toBeVisible();
+    await assertNoAccessibilityViolations(page);
+    await page.getByRole('button', { name: 'Delete', exact: true }).click();
+
+    await expect(page).toHaveURL(/\/grimoire\?deleted=/);
+    await expect(
+      page.getByRole('status').filter({ hasText: 'Builder Doomed Working' }),
+    ).toHaveCount(1);
+    await expect(grimoireList(page).getByText('Builder Doomed Working')).toHaveCount(0);
+    await expect(
+      grimoireList(page).getByText('Builder Kept Working', { exact: true }),
+    ).toBeVisible();
+    await assertNoAccessibilityViolations(page);
   },
 );
 

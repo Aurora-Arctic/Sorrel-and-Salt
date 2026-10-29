@@ -105,10 +105,22 @@ vi.mock('@/app/entry-values', () => ({ entryValues }));
 // hands it, and that its Cancel and its delete close the dialog where the page says.
 const formProps = vi.fn();
 vi.mock('@/components/IngredientForm', () => ({
-  default: (props: { onCancel: () => void; onDeleted: () => void }) => {
+  default: (props: {
+    onCancel: () => void;
+    onDeleted: () => void;
+    review?: { reviewed: boolean };
+  }) => {
     formProps(props);
     return (
       <form aria-label="Fixture Form">
+        {props.review && (
+          <input
+            type="checkbox"
+            role="switch"
+            aria-label="Reviewed"
+            defaultChecked={props.review.reviewed}
+          />
+        )}
         <button type="button" onClick={props.onCancel}>
           Cancel
         </button>
@@ -568,15 +580,29 @@ describe('the /admin/compendium details modal', () => {
     await renderPage({ ...FILTERED, entry: TESTWORT.slug });
 
     expect(readCompendiumReview).toHaveBeenCalledExactlyOnceWith(ADMIN, TESTWORT.id);
-    expect(within(details()).getByRole('switch', { name: 'Reviewed By Curator' })).toBeChecked();
+    expect(within(details()).getByRole('switch', { name: 'Reviewed' })).toBeChecked();
+  });
+
+  it("shows the switch above the edit form's buttons, for the entry it edits", async () => {
+    readCompendiumReview.mockResolvedValue({ reviewedAt: new Date('2026-10-01T09:30:00.000Z') });
+    await renderPage({ ...FILTERED, edit: TESTWORT.slug });
+
+    expect(readCompendiumReview).toHaveBeenCalledExactlyOnceWith(ADMIN, TESTWORT.id);
+    const dialog = screen.getByRole('dialog', { name: EDITING_TESTWORT });
+    expect(within(dialog).getByRole('switch', { name: 'Reviewed' })).toBeChecked();
+  });
+
+  it('offers the switch on an add form, unreviewed, with no review read', async () => {
+    await renderPage({ ...FILTERED, new: 'ingredient-compendium' });
+
+    expect(screen.getByRole('switch', { name: 'Reviewed' })).not.toBeChecked();
+    expect(readCompendiumReview).not.toHaveBeenCalled();
   });
 
   it('shows an entry with no mark as needing review', async () => {
     await renderPage({ ...FILTERED, entry: TESTWORT.slug });
 
-    expect(
-      within(details()).getByRole('switch', { name: 'Reviewed By Curator' }),
-    ).not.toBeChecked();
+    expect(within(details()).getByRole('switch', { name: 'Reviewed' })).not.toBeChecked();
   });
 
   it("reads no entry's sections when no details are open", async () => {

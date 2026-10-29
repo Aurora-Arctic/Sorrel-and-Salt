@@ -191,7 +191,11 @@ export async function findFormsInSpellsIncludingSoftDeleted(
 export function spellStepWrites({
   tx,
   update,
-}: WriterContext): Pick<AuditWriter, 'lockStepsOfVariants' | 'moveSteps'> {
+  softDelete,
+}: WriterContext): Pick<
+  AuditWriter,
+  'lockStepsOfVariants' | 'moveSteps' | 'softDeleteSpell' | 'softDeleteStepsOfSpell'
+> {
   const inCovenSpell = (membership: Membership) =>
     existsIn(spells, and(eq(spells.id, spellSteps.spellId), scopedTo(membership, spells)));
   return {
@@ -215,5 +219,12 @@ export function spellStepWrites({
         and(inArray(spellSteps.id, [...stepIds]), inCovenSpell(membership)),
       );
     },
+    // Deleting a spell (M13.11): the spell under the reader's rule, so a
+    // private spell goes only for its author, and its steps under the coven's
+    // scope, as the steps of a spell this writer has already matched.
+    softDeleteSpell: (membership, spellId) =>
+      softDelete(spells, and(readableSpells(membership), eq(spells.id, spellId))),
+    softDeleteStepsOfSpell: (membership, spellId) =>
+      softDelete(spellSteps, and(eq(spellSteps.spellId, spellId), inCovenSpell(membership))),
   };
 }

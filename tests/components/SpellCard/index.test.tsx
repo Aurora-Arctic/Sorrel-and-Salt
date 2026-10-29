@@ -1,6 +1,9 @@
+import { QueryClientProvider } from '@tanstack/react-query';
 import type { Route } from 'next';
 import { render, screen, within } from '@testing-library/react';
 import { describe, expect, it, vi } from 'vitest';
+import { makeQueryClient } from '@/lib/graphql-client';
+import { press } from '../../support/interact';
 import SpellCard, { SpellCardFilters, spellTitleId } from '@/components/SpellCard';
 
 // The title link navigates through the shared hook (M12.33), so the App Router is mocked.
@@ -23,6 +26,26 @@ const BASE = {
 };
 
 describe('SpellCard', () => {
+  it('draws a Delete Spell bin named for the spell only when given what deleting needs, and it asks in a dialog naming the spell', async () => {
+    const deleteSpell = {
+      workspaceId: 'workspace-1',
+      deletedHref: '/here?deleted=Fixture+Working' as Route,
+    };
+    const { rerender } = render(<SpellCard {...BASE} />);
+    expect(screen.queryByRole('button', { name: /^Delete Spell/ })).not.toBeInTheDocument();
+    rerender(
+      <QueryClientProvider client={makeQueryClient()}>
+        <SpellCard {...BASE} editHref={'/here?edit=spell-1' as Route} deleteSpell={deleteSpell} />
+      </QueryClientProvider>,
+    );
+    press(screen.getByRole('button', { name: 'Delete Spell Fixture Working' }));
+    expect(
+      within(await screen.findByRole('dialog', { name: 'Delete Spell' })).getByText(
+        'Fixture Working',
+      ),
+    ).toBeInTheDocument();
+  });
+
   it('draws an Edit link named for the spell only when given the address', () => {
     const { rerender } = render(<SpellCard {...BASE} />);
     expect(screen.queryByRole('link', { name: /^Edit / })).not.toBeInTheDocument();

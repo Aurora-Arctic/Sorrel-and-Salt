@@ -46,6 +46,12 @@ Eight finders read through it, six of them in `spells.ts`:
 | `findManyOfSpellIngredientsIncludingSoftDeleted(membership, table, ingredientIds)` | those ingredients' folk names or category links, through the one above         |
 | `findFormsInSpellsIncludingSoftDeleted(membership, ingredientIds)`                 | those ingredients' forms, deleted or not (M10.9)                               |
 
+One writer reads through the same rule (M13.11): `write.softDeleteSpell(membership, spellId)`
+marks a spell deleted only where `readableSpells` admits it, so a member deleting another's
+private spell by id writes nothing and is answered `[]`, as `findOneSpell` answers `undefined`.
+Its steps go first, through `write.softDeleteStepsOfSpell`, scoped to the coven through their
+live spell: once the spell is marked, the steps' `EXISTS` no longer reaches them.
+
 **Proved as one matrix, held by one guard (M10.6).**
 `tests/db/repository/readable-spells.test.ts` runs every relationship against
 both visibilities — the author, the owner, another member, a viewer, the author

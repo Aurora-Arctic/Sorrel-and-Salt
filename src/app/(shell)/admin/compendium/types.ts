@@ -1,5 +1,8 @@
 import type { Route } from 'next';
-import type { IngredientFormValues } from '../../../../components/IngredientForm/types';
+import type {
+  IngredientFormValues,
+  ReviewOffer,
+} from '../../../../components/IngredientForm/types';
 import type { CompendiumPlace } from '../../../../components/CompendiumList/types';
 import type { ModalHeading } from '../../../../components/Modal/types';
 import type { ListDialog } from '../../../../lib/types';
@@ -48,6 +51,11 @@ export interface OpenedEntry {
   heading: ModalHeading;
   /** The entry edited; none for an add. */
   entry?: EditedEntry;
+  /**
+   * The Reviewed switch (M14.8) as a field of the form, on an add and an edit: the page
+   * gives it, from the uncached review read, to a curator or admin, and leaves it out for anyone else.
+   */
+  review?: ReviewOffer;
 }
 
 export interface CompendiumDialogProps {

@@ -1,5 +1,6 @@
 import { Fragment, type ReactElement, type ReactNode } from 'react';
 import { SafetyMark } from '../SafetyNote';
+import { reviewDay } from '../IngredientEntry/review-date';
 import type { EntryMarksProps } from './types';
 import RecencyMark from './recency-mark';
 import TipMark from './tip-mark';
@@ -13,15 +14,6 @@ interface Mark {
   tone: Tone;
   node: ReactNode;
 }
-
-/** The day, as LastEdit prints one, in UTC so the server's zone cannot move it. */
-const reviewDay = (at: string) =>
-  new Date(at).toLocaleDateString('en-GB', {
-    day: 'numeric',
-    month: 'short',
-    year: 'numeric',
-    timeZone: 'UTC',
-  });
 
 const TONES: readonly Tone[] = ['green', 'neutral', 'red'];
 
@@ -52,6 +44,7 @@ const EntryMarks = ({
 }: EntryMarksProps): ReactElement => {
   const held = kind === 'cupboard';
   const marks: Mark[] = [];
+  let reviewed: ReactNode = null;
   if (kind === 'own') {
     marks.push({
       key: 'local',
@@ -103,23 +96,23 @@ const EntryMarks = ({
   // The curators' review mark (M14.8): green with its day once reviewed, in the attention
   // colour while not. A coven's own entry is never reviewed, so it has neither.
   if (kind !== 'own' && reviewedAt !== undefined) {
-    marks.push(
-      reviewedAt === null
-        ? {
-            key: 'review',
-            tone: 'red',
-            node: <output className="badge badge--attention">Needs Review</output>,
-          }
-        : {
-            key: 'review',
-            tone: 'green',
-            node: (
-              <output className="badge badge--local">
-                Reviewed By Curator <time dateTime={reviewedAt}>{reviewDay(reviewedAt)}</time>
-              </output>
-            ),
-          },
-    );
+    if (reviewedAt === null) {
+      marks.push({
+        key: 'review',
+        tone: 'red',
+        node: <output className="badge badge--attention">Needs Review</output>,
+      });
+    } else {
+      // Reviewed By Curator stands last in the row, after every other badge, with its day in
+      // the badge's tip rather than beside it (the owner's call, 2026-10-29).
+      reviewed = (
+        <TipMark
+          label="Reviewed By Curator"
+          palette="local"
+          tip={`Reviewed ${reviewDay(reviewedAt)}`}
+        />
+      );
+    }
   }
   // One safety badge, Toxic over Caution, drawing nothing when neither holds. The
   // card draws its own beside the name (`safety={false}`).
@@ -138,6 +131,7 @@ const EntryMarks = ({
       {byTone(marks).map((mark) => (
         <Fragment key={mark.key}>{mark.node}</Fragment>
       ))}
+      {reviewed}
     </>
   );
 };

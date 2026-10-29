@@ -95,6 +95,10 @@ The three take the compendium entry's id, not the row's, because that is what a 
 
 `tests/modules/ingredients/services/cupboard-entry-writes.test.ts` holds the rules and `tests/modules/ingredients/graphql/cupboard-entry-writes.test.ts` the transport's half.
 
+### The last edit
+
+The row's `updated_by` and `updated_at` count towards the "last edited by" line on the ingredient card, Quick Look and entry page (M6.18; `lastEditsOf`), beside the coven's jars. They count whatever the row holds, since adding the entry to the cupboard is a coven edit too. The compendium entry's own stamp never counts, and neither does another coven's row: the read is `findCupboardEntriesOf` under the coven's proof.
+
 ### Converting an own entry
 
 There is no such conversion in v1. M12.21 built `convertLocalToCompendiumEntry`, which turned one of the coven's own ingredients into the compendium entry it duplicates, and M12.42 removed it with the **This Is It** action on the Similar block: linking goes one way in v1, a coven annotating a compendium entry and making it its own (below), and the other direction waits for v2. DESIGN.md §13 ("Link to the Compendium") says why, and [`m12.42-linking-goes-one-way.md`](../design-decisions/m12.42-linking-goes-one-way.md) records the call.

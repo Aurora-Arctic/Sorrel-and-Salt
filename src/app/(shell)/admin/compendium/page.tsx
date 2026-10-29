@@ -120,11 +120,16 @@ export default async function AdminCompendiumPage({ searchParams }: AdminCompend
   const review = summary
     ? await readOrMissing(() => readCompendiumReview(session, detailed.id))
     : undefined;
+  // The entry the modal edits; none on an add, which wins over an `?edit=`.
+  const editing = !adding && edited?.kind === 'entry' ? edited : undefined;
+  // The same read for the entry the edit modal opens (M14.8), its switch standing above the form's
+  // buttons; the same entry as the open details reads it once more, which is one row by id.
+  const editReview = editing
+    ? await readOrMissing(() => readCompendiumReview(session, editing.id))
+    : undefined;
   // The plus beside the pencil (M9.12), for the covens the admin or curator is a member of and
   // may add in: none for one in no coven, so neither the plus nor its check shows.
   const detailsPlus = summary ? await plusCovensOf(covens) : undefined;
-  // The entry the modal edits; none on an add, which wins over an `?edit=`.
-  const editing = !adding && edited?.kind === 'entry' ? edited : undefined;
   // The form open, if one is: a near match's Quick Look opens over it, and the details close back
   // to it (the owner's call).
   const form: ListDialog | undefined = adding
@@ -188,7 +193,7 @@ export default async function AdminCompendiumPage({ searchParams }: AdminCompend
             ...(detailsPlus && { plus: detailsPlus, ingredientId: detailed.id }),
             children: summary && <IngredientSummary detail={summary} covens={covens} />,
             ...(review !== undefined && {
-              footControl: (
+              reviewLine: (
                 <ReviewMark
                   ingredientId={detailed.id}
                   reviewedAt={review?.reviewedAt.toISOString() ?? null}
@@ -221,9 +226,15 @@ export default async function AdminCompendiumPage({ searchParams }: AdminCompend
             ? {
                 heading: editHeading(editing.values),
                 entry: { id: editing.id, values: editing.values },
+                ...(editReview !== undefined && {
+                  review: {
+                    reviewed: editReview !== null,
+                    reviewedAt: editReview?.reviewedAt.toISOString() ?? null,
+                  },
+                }),
               }
             : adding
-              ? { heading: ADD_HEADING }
+              ? { heading: ADD_HEADING, review: { reviewed: false } }
               : undefined
         }
       />

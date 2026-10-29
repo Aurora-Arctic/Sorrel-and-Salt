@@ -21,6 +21,8 @@ import {
 import type {
   DeleteCompendiumIngredientMutation,
   DeleteCompendiumIngredientMutationVariables,
+  SetCompendiumEntryReviewedMutation,
+  SetCompendiumEntryReviewedMutationVariables,
 } from '@/gql/graphql';
 import { DEBOUNCE_MS } from '@/lib/debounce';
 import { mockGraphQLError, mockGraphQLMutation } from '../../support/msw/graphql';
@@ -433,6 +435,133 @@ describe('IngredientForm on the compendium', () => {
 
       renderEntry();
       expect(screen.getByText(COMPENDIUM_EDIT_NOTICE)).toBeInTheDocument();
+    });
+
+    // M14.8: the Reviewed switch is a field of the form, offered by the page to a
+    // curator or admin: Save carries it, Cancel drops it, and it never saves on its own.
+    describe('the Reviewed switch', () => {
+      const reviewSwitch = () => screen.getByRole('switch', { name: 'Reviewed' });
+      const noSwitch = () => expect(screen.queryByRole('switch', { name: 'Reviewed' })).toBeNull();
+      const REVIEW_ID = ENTRY_ID;
+
+      function acceptReview() {
+        const calls: SetCompendiumEntryReviewedMutationVariables[] = [];
+        mockGraphQLMutation<
+          SetCompendiumEntryReviewedMutation,
+          SetCompendiumEntryReviewedMutationVariables
+        >('SetCompendiumEntryReviewed', (variables) => {
+          calls.push(variables);
+          return { setCompendiumEntryReviewed: { id: String(variables.id) } };
+        });
+        return calls;
+      }
+
+      it('is offered on an add and on an edit when the page gives it, and on neither when it does not', () => {
+        renderForm();
+        noSwitch();
+        cleanup();
+
+        renderEntry();
+        noSwitch();
+        cleanup();
+
+        renderForm({ review: { reviewed: false } });
+        expect(reviewSwitch()).not.toBeChecked();
+        cleanup();
+
+        renderForm({
+          entry: { id: ENTRY_ID, values: TESTWORT },
+          review: { reviewed: true },
+        });
+        expect(reviewSwitch()).toBeChecked();
+      });
+
+      it('makes the form changed when flipped, without saving anything', async () => {
+        const review = acceptReview();
+        const saves = acceptUpdate();
+        renderForm({ entry: { id: ENTRY_ID, values: TESTWORT }, review: { reviewed: false } });
+        expect(button('Save Ingredient')).toBeDisabled();
+
+        fireEvent.click(reviewSwitch());
+
+        expect(reviewSwitch()).toBeChecked();
+        expect(button('Save Ingredient')).toBeEnabled();
+        await act(async () => {});
+        expect(review).toHaveLength(0);
+        expect(saves).toHaveLength(0);
+      });
+
+      it('is sent with Save after the edit, for the entry it edited', async () => {
+        const review = acceptReview();
+        const saves = acceptUpdate();
+        renderForm({ entry: { id: ENTRY_ID, values: TESTWORT }, review: { reviewed: false } });
+
+        fireEvent.click(reviewSwitch());
+        press('Save Ingredient');
+
+        await waitFor(() => expect(review).toHaveLength(1));
+        expect(saves).toHaveLength(1);
+        expect(review[0]).toEqual({ id: REVIEW_ID, reviewed: true });
+        // Saved, so nothing is left to save until it changes again.
+        await waitFor(() => expect(button('Save Ingredient')).toBeDisabled());
+      });
+
+      it('is sent with the create of a new entry, for the id the create answered with', async () => {
+        const review = acceptReview();
+        const creates = acceptCompendiumCreate();
+        renderForm({ review: { reviewed: false } });
+
+        type('Name', 'Testwort');
+        choose('Classification', 'None');
+        fireEvent.click(reviewSwitch());
+        press('Save Ingredient');
+
+        await waitFor(() => expect(review).toHaveLength(1));
+        expect(creates).toHaveLength(1);
+        expect(review[0]).toEqual({ id: REVIEW_ID, reviewed: true });
+      });
+
+      it('is not sent when it was left as the page had it', async () => {
+        const review = acceptReview();
+        const saves = acceptUpdate();
+        const { onSaved } = renderForm({
+          entry: { id: ENTRY_ID, values: TESTWORT },
+          review: { reviewed: true },
+        });
+
+        type('Name', 'Mockwort');
+        press('Save Ingredient');
+
+        await waitFor(() => expect(onSaved).toHaveBeenCalled());
+        expect(saves).toHaveLength(1);
+        expect(review).toHaveLength(0);
+      });
+
+      it('is dropped by Cancel, which asks first because the switch changed the form', async () => {
+        const review = acceptReview();
+        offerNothing();
+        const onClose = renderInModal((done) => (
+          <IngredientForm
+            duplicateHref={duplicateHref}
+            workspaceId={null}
+            entry={{ id: ENTRY_ID, values: TESTWORT }}
+            review={{ reviewed: false }}
+            onSaved={vi.fn()}
+            onDeleted={done}
+            onCancel={done}
+          />
+        ));
+
+        fireEvent.click(reviewSwitch());
+        fireEvent.click(screen.getByRole('button', { name: 'Cancel' }));
+        expect(screen.getByRole('button', { name: 'Discard Changes' })).toBeInTheDocument();
+        expect(onClose).not.toHaveBeenCalled();
+
+        fireEvent.click(screen.getByRole('button', { name: 'Discard Changes' }));
+        expect(onClose).toHaveBeenCalledOnce();
+        await act(async () => {});
+        expect(review).toHaveLength(0);
+      });
     });
 
     it('shows its values, offers one save, off until something changes, and saves over it, carrying its categories through untouched', async () => {

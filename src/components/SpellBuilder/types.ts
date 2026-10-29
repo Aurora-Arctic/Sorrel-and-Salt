@@ -80,6 +80,11 @@ export interface SpellBuilderProps {
    * whole recipe, so one sent now would remove the steps not yet shown.
    */
   stepsRead?: 'loading' | 'failed';
+  /**
+   * Where the dialog leaves for once the spell is deleted, given its title; left out, the
+   * member may not delete and the form has no Delete. Shown only once the spell exists.
+   */
+  deletedHrefOf?: (title: string | null) => Route;
 }
 
 /** A saved spell as the grimoire page reads it for `?edit=<id>`: the dialog reads its steps after. */
@@ -110,6 +115,8 @@ export interface SpellDialogProps {
    * browser's address alone when true, before the server has read it.
    */
   canCreate: boolean;
+  /** Whether this member may delete a spell (`spell: delete`); the builder then has a Delete. */
+  canDelete?: boolean;
   /** The signed-in member; the builder keeps its browser copy of a draft under this id. */
   userId?: string;
 }

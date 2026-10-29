@@ -1546,9 +1546,37 @@
     // it, and no wider than the toggle, so only the toggle and its label are
     // pressed.
     .switch__control {
+      position: relative;
       display: flex;
       align-items: center;
       min-height: $control-height;
+    }
+
+    // Busy (loading.md, "Control"): the thumb gives way to the spinner's ring, at the thumb's
+    // size and end of the track and in its colour for the state. The track keeps its fill.
+    input[aria-busy='true']::before {
+      visibility: hidden;
+    }
+
+    .switch__spinner {
+      position: absolute;
+      inset-block-start: 50%;
+      inset-inline-start: calc(#{$inset} + 1px);
+      translate: 0 -50%;
+      // The ring's outer edge is the thumb's: border-box, so Spinner's 2px border sits inside the
+      // size instead of adding 4px to its `1em`.
+      box-sizing: border-box;
+      inline-size: $glyph-size;
+      block-size: $glyph-size;
+      margin: 0;
+      padding: 0;
+      color: $text-muted;
+      pointer-events: none;
+    }
+
+    input:checked ~ .switch__spinner {
+      color: $text-on-color;
+      translate: calc(#{$switch-width} - #{$icon-size}) -50%;
     }
 
     // The track: off, the field's ground and its muted 1px edge, so it reads

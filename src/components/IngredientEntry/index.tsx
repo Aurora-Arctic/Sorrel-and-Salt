@@ -249,6 +249,7 @@ const IngredientEntry = ({
   covens,
   heldInCovens = false,
   stock,
+  reviewControl,
 }: IngredientEntryProps): ReactElement => {
   const { cupboardEntry, folkNames, categories, deities, substitutes, variants, retired } = detail;
   // `entry` is the row as the compendium has it, which edit and identity use;
@@ -261,6 +262,8 @@ const IngredientEntry = ({
   const held = !local && cupboardEntry != null;
   // The curators' review mark, shown to everyone on a compendium entry (M14.8).
   const reviewedAt = reviewedAtOf(detail);
+  // Where the review row stands (reviewControl), it draws the badge, so the marks leave it out.
+  const markedReviewAt = reviewControl ? undefined : reviewedAt;
   // Either page's cupboard choices, which take the curator's Edit into their menu.
   const choices = cupboard ?? covens;
   // New or Updated reads off the compendium entry's own stamps; a coven's own entry has none.
@@ -359,14 +362,14 @@ const IngredientEntry = ({
             }
           />
         </div>
-        {(local || held || cupboard || retired || reviewedAt !== undefined) && (
+        {(local || held || cupboard || retired || markedReviewAt !== undefined) && (
           <div className="badges">
             <EntryMarks
               kind={local ? 'own' : held ? 'cupboard' : 'compendium'}
               inCoven={cupboard !== undefined}
               annotated={held && isAnnotated(cupboardEntry)}
               retired={retired}
-              reviewedAt={reviewedAt}
+              reviewedAt={markedReviewAt}
               safety={false}
             />
           </div>
@@ -383,6 +386,8 @@ const IngredientEntry = ({
             </PendingLink>
           </Notice>
         )}
+        {/* A curator's review line, the head's last row: the Reviewed switch and the review day. */}
+        {reviewControl}
       </header>
 
       {variants.length > 0 && (

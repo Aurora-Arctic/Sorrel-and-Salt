@@ -41,6 +41,7 @@ export function headingOf({
   more,
   plus,
   ingredientId,
+  reviewLine,
 }: IngredientDetailsOpened): ModalHeading {
   // The top line's, beside Close, as the entry page's own top bar has them: New or Updated, then
   // the one safety badge. The line is there for every entry, empty or not, so Close has it to
@@ -76,7 +77,23 @@ export function headingOf({
     topEnd: top,
     ...(lastEdit && { aboveName: <LastEdit by={lastEdit.by} at={lastEdit.at} /> }),
     ...(buttons && { formalActions: buttons }),
-    ...(marks && { under: <EntryMarks {...marks} safety={false} recency={null} /> }),
+    ...((marks || reviewLine) && {
+      // The badges, then the review line as the head's last row (it fills a row of its own).
+      under: (
+        <>
+          {marks && (
+            // The row draws the review badge itself, so the marks leave it out beside the row.
+            <EntryMarks
+              {...marks}
+              reviewedAt={reviewLine ? undefined : marks.reviewedAt}
+              safety={false}
+              recency={null}
+            />
+          )}
+          {reviewLine}
+        </>
+      ),
+    }),
   };
 }
 
@@ -93,20 +110,13 @@ const EditAction = ({
  * site's plain `.btn` at its normal size, centred and two thirds of the bar. Still a link, to the entry's page,
  * with the loading standard's target.
  */
-function PageLinkBar({ pageHref, footControl }: IngredientDetailsOpened): ReactElement {
+function PageLinkBar({ pageHref }: IngredientDetailsOpened): ReactElement {
   // Named by where it goes, not by who is looking (the owner's call, 2026-10-20): the
   // public compendium's page, or a coven's own page for an entry the coven holds, whether
   // it made the entry or annotated the compendium's.
   const label = pageHref.startsWith('/compendium/') ? 'See in Compendium' : 'See in Your Cupboard';
   return (
-    <div
-      className={
-        footControl
-          ? 'ingredient-details-foot ingredient-details-foot--control'
-          : 'ingredient-details-foot'
-      }
-    >
-      {footControl}
+    <div className="ingredient-details-foot">
       <PendingLink
         className="btn"
         href={pageHref}

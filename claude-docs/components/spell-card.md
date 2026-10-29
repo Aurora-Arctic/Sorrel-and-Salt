@@ -17,18 +17,19 @@ The card is presentational: it takes props and works nothing out from the data, 
 
 ## Props
 
-| Prop         | What it is                                                                                            |
-| ------------ | ----------------------------------------------------------------------------------------------------- |
-| `id`         | The spell's id. It names the title heading, `spellTitleId(id)`                                        |
-| `title`      | The title, or null. Null or blank lists as "Untitled Spell"                                           |
-| `intent`     | The intent, or null. Without one the card draws no paragraph                                          |
-| `status`     | `draft` or `complete`                                                                                 |
-| `visibility` | `private` or `workspace`: who can see it                                                              |
-| `categories` | The assigned categories, each with its group's colours. Never the derived ones (DESIGN.md §5)         |
-| `lastEdit`   | Who last edited it and when, `{ by, at }`, worked out by the caller. None draws no line               |
-| `editHref`   | Where the Edit pencil opens the spell, the tab's own address plus `?edit=<id>`. None draws no pencil  |
-| `lookHref`   | Where the Quick Look eye opens the spell, the tab's own address plus `?spell=<id>`. None draws no eye |
-| `level`      | The title's heading level, 2 by default                                                               |
+| Prop          | What it is                                                                                            |
+| ------------- | ----------------------------------------------------------------------------------------------------- |
+| `id`          | The spell's id. It names the title heading, `spellTitleId(id)`                                        |
+| `title`       | The title, or null. Null or blank lists as "Untitled Spell"                                           |
+| `intent`      | The intent, or null. Without one the card draws no paragraph                                          |
+| `status`      | `draft` or `complete`                                                                                 |
+| `visibility`  | `private` or `workspace`: who can see it                                                              |
+| `categories`  | The assigned categories, each with its group's colours. Never the derived ones (DESIGN.md §5)         |
+| `lastEdit`    | Who last edited it and when, `{ by, at }`, worked out by the caller. None draws no line               |
+| `editHref`    | Where the Edit pencil opens the spell, the tab's own address plus `?edit=<id>`. None draws no pencil  |
+| `deleteSpell` | What the Delete Spell bin needs: `{ workspaceId, deletedHref }`. None draws no bin (M13.11)           |
+| `lookHref`    | Where the Quick Look eye opens the spell, the tab's own address plus `?spell=<id>`. None draws no eye |
+| `level`       | The title's heading level, 2 by default                                                               |
 
 ## Its name
 
@@ -72,6 +73,10 @@ card's foot, at the right of the `specimen__actions` row, as IngredientCard draw
 out and passes it only for a role that may update a spell (`rolePermits(role, { spell:
 ['update'] })`), so a viewer's cards have none. It keeps the tab's filter, page and tab in
 the address, so closing the dialog returns to the list as it was.
+
+## The Delete Spell bin
+
+Given `deleteSpell`, the card draws `DeleteSpellAction` (`SpellRecipe/delete-spell.tsx`, the recipe page's own component, so there is one delete and one confirmation dialog) after the Edit pencil in the `specimen__actions` row: a bin named "Delete Spell <title>" that asks in a dialog naming the spell before deleting (M13.11; the owner, 2026-10-29). The card passes its own `id` and name; the props carry the coven and `deletedHref`. Data rather than a React node is passed, as `editHref` is. The grimoire tab passes it only for a role that may delete a spell (`rolePermits(role, { spell: ['delete'] })`: owner and member, never viewer). `deletedHref` is the tab's address with its filter and page kept and `deleted=<name>` added, so a confirmed delete lands back on the same list with the success Notice. The card has no story with the bin: it needs a query client, which the workshop does not provide.
 
 ## The Quick Look eye
 

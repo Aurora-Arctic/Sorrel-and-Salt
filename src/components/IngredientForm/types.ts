@@ -62,6 +62,19 @@ interface IngredientFormCallbacks {
    * entry and a name that has a saved row.
    */
   mayPromote?: boolean;
+  /**
+   * Offers the compendium's Reviewed switch (M14.8) as a field of the form, on an add
+   * and on an edit: the page gives it, with the mark as it stands, to a curator or admin only.
+   * Flipping it changes the form, Save sends it after the entry is saved, and Cancel drops it.
+   */
+  review?: ReviewOffer;
+}
+
+/** The Reviewed switch as the page found it: `reviewed` is whether a curator has marked the entry. */
+export interface ReviewOffer {
+  reviewed: boolean;
+  /** When, as an ISO moment, if the page has it; an add has none. */
+  reviewedAt?: string | null;
 }
 
 /** Where a linked ingredient's page is, by its address and its tier, or undefined for none. */

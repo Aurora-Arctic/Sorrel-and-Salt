@@ -36,7 +36,7 @@ export default function EntryDialog({
   edit: IngredientEntryEdit;
 }): ReactElement | null {
   const { navigate, refresh } = usePendingNavigation();
-  const { opened, closeHref, deletedHref, savedHref, coven } = edit;
+  const { opened, closeHref, deletedHref, savedHref, coven, review } = edit;
   // Annotate's press shares this page's skeleton; that belongs to it.
   const loading = useRouteModalOpener()?.loading?.title;
   if (loading === ANNOTATE_HEADING.title && !opened) {
@@ -81,6 +81,7 @@ export default function EntryDialog({
                 key={opened.id}
                 workspaceId={null}
                 mayPromote
+                review={review}
                 entry={opened}
                 // An edit has Save Ingredient alone, so a save is always 'open':
                 // the modal stays, the form keeping what it saved. A rename moves

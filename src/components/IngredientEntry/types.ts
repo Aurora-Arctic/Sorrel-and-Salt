@@ -8,7 +8,7 @@ import type { ReactNode } from 'react';
 import type { AddIconProps } from '../AddIcon/types';
 import type { ModalHeading, RouteModalLink } from '../Modal/types';
 import type { IngredientDetail, IngredientRow } from '@/modules/ingredients';
-import type { EditedIngredient } from '../IngredientForm/types';
+import type { EditedIngredient, ReviewOffer } from '../IngredientForm/types';
 import type { LastEditProps } from '../LastEdit/types';
 import type { EntryMarksProps } from '../EntryMarks/types';
 import type { StockData } from '../StockDialog/types';
@@ -40,6 +40,11 @@ export interface IngredientEntryEdit {
    */
   opened?: EditedIngredient;
   /**
+   * The Reviewed switch as a field of the compendium's edit form (M14.8), as the page
+   * found the mark: Save carries it. Left out for a coven's entry and for anyone who cannot curate.
+   */
+  review?: ReviewOffer;
+  /**
    * A coven's own entry (M8.17): the form writes to this coven, and its
    * near matches open in it. `mayPromote` is the role's answer, which the
    * page works out, to making a folk name the display name. Left out, the
@@ -63,6 +68,12 @@ export interface IngredientEntryEdit {
 export type LinkedIngredient = Pick<IngredientRow, 'id' | 'slug' | 'workspaceId'>;
 
 export interface IngredientEntryProps {
+  /**
+   * The Reviewed switch (M14.8), drawn as the last row of the page's head, under the title: the page builds it for a
+   * curator or admin from the uncached review read, and leaves it out for anyone else. It saves
+   * the moment it is flipped, as in the Quick Look.
+   */
+  reviewControl?: ReactNode;
   /** Who last edited the entry in this coven and when (M6.18), from `lastEditsOf`; none draws no line. */
   lastEdit?: LastEditProps | null;
   /** The entry and everything its page shows, as `ingredientDetailOf` assembles it. */
@@ -301,10 +312,10 @@ export interface IngredientDetailsOpened {
   /** Who last edited the entry in this coven and when (M6.18); drawn above the head's buttons. */
   lastEdit?: LastEditProps | null;
   /**
-   * A control drawn in the foot beside the link to the entry's page: the admin's Reviewed By
-   * Curator switch (M14.8). The details dialog has no Save, so the foot is where its controls stand.
+   * The review line (M14.8), for a curator or admin: the last row of the head, under the title,
+   * the Reviewed switch at its start and the review day at its end. The switch saves on flip.
    */
-  footControl?: ReactNode;
+  reviewLine?: ReactNode;
   /** The entry's own page, which the foot's link (See in Compendium or See in Your Cupboard) reaches. */
   pageHref: Route;
   /**
@@ -464,7 +475,7 @@ export interface SummaryJar {
 }
 
 /**
- * The admin's Reviewed By Curator switch on a compendium entry (M14.8, `review-mark.tsx`): the
+ * The curator's Reviewed switch on a compendium entry (M14.8, `review-mark.tsx`), which saves on flip: the
  * entry, and when a curator last marked it reviewed, as an ISO moment, or `null` while it needs
  * review. The badge saying so is the entry's own mark (`EntryMarks`), drawn for everyone.
  */
