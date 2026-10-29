@@ -3,6 +3,7 @@
 @use '../scss/typography' as *;
 @use '../scss/layout' as *;
 @use '../scss/primitives' as *;
+@use '../scss/print';
 
 // The single global stylesheet: the theme tokens and `*-base` mixins must be emitted once, as every
 // component's index.scss compiles alone. The :not([data-theme='dark']) guard lets an explicit dark beat

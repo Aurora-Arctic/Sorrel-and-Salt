@@ -21,7 +21,7 @@ const plainQuantity = (quantity: string): string =>
  * quantity reads "— tsp", an en dash where the number would be: a missing amount, not an
  * amount of nothing, which "0 tsp" would claim.
  */
-const amountOf = (quantity?: string | null, unit?: string | null): ReactNode => {
+export const amountOf = (quantity?: string | null, unit?: string | null): ReactNode => {
   if (!quantity && !unit) return null;
   const number = quantity ? plainQuantity(quantity) : <span className="step-row__dash">—</span>;
   return unit ? (

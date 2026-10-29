@@ -27,7 +27,7 @@ is a `dl` under a hairline with up to four cells, Jar (`jarDescription`), Seal W
 style; a blank or null value draws no cell and none set draws no strip. The moon phase carries the
 builder's `MoonPhaseIcon` before its text, which draws nothing for a phase outside the builder's
 list. The drawing is a third larger here than its 1.25em line size (the owner, 2026-10-29). Four columns, two per row in a column narrower than `$narrow-column` (a container query on
-the strip's box). There is no Ingredients section: the steps carry the amounts, the amount leading
+the strip's box). There is no Ingredients section on screen: the steps carry the amounts (the print layout adds one, "Print" below), the amount leading
 the name in weight 500 with the name in 400, and an instruction-only step's text is muted and fills
 the number's line. The steps are an `ol` named Steps with no visible heading, in `position`
 order, the position column 1.5rem and right-aligned (room for a two-digit number; wider read as an indent, the owner, 2026-10-29); an ingredient step draws its note, or its `body` where
@@ -66,8 +66,12 @@ with no steps says so.
   Notice ([grimoire-list.md](grimoire-list.md)); the Modal, gone with the page, gives the focus to
   the list's heading. A refusal is the callout under the bin (M12.31). A viewer gets neither
   icon, and the service refuses them by id.
-- No `PageNav`: the sections fit one screen. No print rules: M10.22 styles this page.
+- No `PageNav`: the sections fit one screen. Print Spell and the print layout are M10.22's ("Print" below).
 - Steps are drawn by `StepRow` (M13.3) with no editing controls, so the page and the Quick Look modal read them the same way as the builder draws them. The body keeps no step renderer of its own. The ingredient's name is passed to `StepRow` as markup (the name, the formal name, the Deleted mark and the Quick Look eye), and its marks as `marks`.
+
+## Print
+
+M10.22. `SpellRecipe` draws a Print Spell button (`print-button.tsx`, a client component calling `window.print()`) in the head before the `action` slot, for every role that can read the page, so the slot's roles do not decide it. `summary.tsx` draws an Ingredients list, the ingredient steps in order with amount, label and, where two steps share a label, the formal name, above the columns. It is `display: none` on screen, so the screen has no second list, and shows in print only. `src/scss/_print.scss`, the one print stylesheet, sits behind `:has(.spell-recipe)`, the page's own article, so no other page changes (a browser without `:has()` prints the screen layout). In print it uses the light tokens whatever the theme, and hides the shell's bar, the back link, the actions, the side column, the Quick Look eyes, the badges and any dialog. The body is one column. `tests/e2e/spell-print.spec.ts` checks one printed page, the summary first and the controls gone. At phone width the summary is not on screen; where it goes is MB.123's (moved from M10.22, 2026-10-29).
 
 ## The side column
 

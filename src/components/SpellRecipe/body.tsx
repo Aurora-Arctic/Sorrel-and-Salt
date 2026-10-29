@@ -18,7 +18,7 @@ import './index.scss';
 // (or the modal's) lays its sections out. claude-docs/components/spell-recipe.md.
 
 /** The ingredient's label as a step says it: "Testwort (Dried Leaf)". */
-const labelOf = ({ name, form }: IngredientRecipeStep): string =>
+export const labelOf = ({ name, form }: IngredientRecipeStep): string =>
   form ? `${name} (${formLabel(form)})` : name;
 
 /**
