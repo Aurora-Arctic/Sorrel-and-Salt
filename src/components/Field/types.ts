@@ -346,6 +346,12 @@ export interface UseFormHistoryOptions {
     diffs: readonly HistoryDiff[],
     direction: 'undo' | 'redo',
   ) => string | void;
+  /**
+   * Adjusts a value just before it is written back by an undo or a redo, for a form whose values
+   * name things that can stop existing (a saved row a save has since deleted). Left out, the
+   * value is written as recorded.
+   */
+  prepare?: (name: string, value: unknown) => unknown;
   /** True for a name the history leaves out: interface state kept among the values. */
   skip?: (name: string) => boolean;
   /** How long a pause in typing ends its step. */

@@ -43,6 +43,7 @@ export function stepValueOf(step: SpellBuilderStep): SpellStepValue {
   const variantId = step.variant?.id ?? null;
   return {
     stepId: step.id,
+    rowKey: step.id,
     ingredientId: step.ingredient?.id ?? null,
     variantId,
     name: step.name,
@@ -73,6 +74,11 @@ export function stepValueOf(step: SpellBuilderStep): SpellStepValue {
   };
 }
 
+let rowKeys = 0;
+/** A key for a step added in the browser; only ever made in an event, never while rendering. */
+const newRowKey = (): string =>
+  `new-${typeof crypto !== 'undefined' && 'randomUUID' in crypto ? crypto.randomUUID() : `${Date.now()}-${rowKeys++}`}`;
+
 /** A new step, as the picker or the one-off adds it: no quantity yet, and the unit its jar is kept in. */
 export const newStep = (
   step: Pick<
@@ -90,6 +96,7 @@ export const newStep = (
 ): SpellStepValue => ({
   ...step,
   stepId: null,
+  rowKey: newRowKey(),
   quantity: '',
   // The unit its form is stocked in, where the coven holds some: a start the member can change.
   unit: step.jarUnit ?? '',

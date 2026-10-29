@@ -1,7 +1,15 @@
 'use client';
 
 import { zodResolver } from '@hookform/resolvers/zod';
-import { type ReactElement, type ReactNode, useEffect, useId, useRef, useState } from 'react';
+import {
+  type ReactElement,
+  type ReactNode,
+  useCallback,
+  useEffect,
+  useId,
+  useRef,
+  useState,
+} from 'react';
 import { FormProvider, type Resolver, useForm, useWatch } from 'react-hook-form';
 import { CollapsibleSection, FoldAll } from '../CollapsibleSection';
 import {
@@ -33,7 +41,7 @@ import { DAYS_OF_THE_WEEK, MOON_PHASES } from './constants';
 import { saveSpell } from './autosave';
 import { useSaveOnClose } from './save-on-close';
 import { SpellSteps } from './steps';
-import type { SpellStepSend } from './steps/types';
+import type { SpellStepSend, SpellStepValue } from './steps/types';
 import {
   isBlankNewInstruction,
   isBlankSavedInstruction,
@@ -68,6 +76,9 @@ import './index.scss';
 // its id and revision and `onCreated` moves the dialog's address to it. There
 // is no Cancel: Close saves what is unsaved, then closes (./save-on-close.ts).
 // See claude-docs/components/spell-builder.md.
+
+/** A step's saved id, set by a save's answer: bookkeeping, never a step of the history. */
+const isStepIdName = (name: string): boolean => /^steps\.\d+\.stepId$/.test(name);
 
 const FIELDS: readonly SpellBuilderField[] = [
   'title',
@@ -324,7 +335,28 @@ const SpellBuilder = ({
   );
 
   const root = useRef<HTMLFormElement>(null);
-  const history = useFormHistory(methods, { root });
+  // An Undo or Redo writes saved steps back as they were; one a save has since removed is
+  // gone from the server, so it comes back as a new step (no id) and the next save adds it.
+  const liveStepId = useCallback(
+    (id: unknown): boolean =>
+      typeof id === 'string' &&
+      ((methods.control._defaultValues.steps ?? []) as (SpellStepValue | undefined)[]).some(
+        (step) => step?.stepId === id,
+      ),
+    [methods.control],
+  );
+  const prepareRestored = useCallback(
+    (name: string, value: unknown): unknown => {
+      const dropDead = (step: SpellStepValue): SpellStepValue =>
+        step.stepId !== null && !liveStepId(step.stepId) ? { ...step, stepId: null } : step;
+      if (name === 'steps' && Array.isArray(value)) return value.map(dropDead);
+      if (/^steps\.\d+$/.test(name) && value) return dropDead(value as SpellStepValue);
+      if (/^steps\.\d+\.stepId$/.test(name)) return liveStepId(value) ? value : null;
+      return value;
+    },
+    [liveStepId],
+  );
+  const history = useFormHistory(methods, { root, prepare: prepareRestored, skip: isStepIdName });
 
   // The steps of a saved spell are on their way, or could not be read: until
   // they are in the form nothing is saved, since an update's steps are the
