@@ -1,0 +1,11 @@
+# Gathered for M14.29; the seed never reads this folder.
+entry: botanical/kurchi-holarrhena-pubescens
+status: approved
+listings:
+  - list: iucn
+    name: IUCN Red List of Threatened Species, as printed in the Wikipedia taxobox
+    value: Least Concern
+    listedAs: Holarrhena pubescens
+    nameBasis: stated
+    source: wikipedia-holarrhena-pubescens
+    locator: 'taxobox "Conservation status": Least Concern (IUCN 3.1)'
