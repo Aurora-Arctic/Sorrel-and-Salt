@@ -78,8 +78,8 @@ export function JarAside({
       </div>
       {ready && (
         <>
-          <SpellInventory />
           <SpellComparison />
+          <SpellInventory />
         </>
       )}
     </aside>
