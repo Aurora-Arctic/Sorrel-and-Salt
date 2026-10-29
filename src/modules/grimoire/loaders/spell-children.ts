@@ -1,6 +1,7 @@
 import { defineSignedInLoader } from '../../../graphql/loaders/define-loader';
 import type { Built } from '../../../graphql/loaders/types';
 import { assignedCategoriesOf, derivedCategoriesOf, stepsOfSpells } from '../services/spell-reads';
+import { workingCountsOf } from '../services/workings';
 import type { CategoryRow } from '@/modules/vocabulary';
 import type { SpellKey, SpellStepView } from '../types';
 
@@ -44,4 +45,18 @@ export function clearSpell(
   loaders.stepsBySpell.clear(key);
   loaders.assignedCategoriesBySpell.clear(key);
   loaders.derivedCategoriesBySpell.clear(key);
+}
+
+/** How many complete workings each spell has, for `Spell.workingCount`: a spell with none counts 0. */
+export const workingCountBySpell = defineSignedInLoader<SpellKey, number, string>(
+  workingCountsOf,
+  byId,
+);
+
+/** Drops the request's cached working count of a spell, so a later read in the same request sees a completion or delete. */
+export function clearWorkingCount(
+  loaders: Built<{ workingCountBySpell: typeof workingCountBySpell }>,
+  spell: SpellKey,
+): void {
+  loaders.workingCountBySpell.clear({ id: spell.id, workspaceId: spell.workspaceId });
 }

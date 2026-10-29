@@ -185,6 +185,12 @@ input CompendiumIngredientUpdateInput {
   zodiacSigns: [String!]!
 }
 
+"""A completed working, and the steps it took nothing for."""
+type CompleteWorkingResult {
+  warnings: [WorkingWarning!]!
+  working: SpellWorking!
+}
+
 """
 A compendium entry made the coven's own: the own entry written, and what it could not carry.
 """
@@ -763,6 +769,11 @@ type Mutation {
   annotateCupboardEntry(ingredientId: ID!, input: CupboardEntryInput!, workspaceId: ID!): CupboardEntry!
 
   """
+  Completes a draft working, taking what the recipe used from the coven’s jars. Answers the steps it took nothing for.
+  """
+  completeWorking(id: ID!, workspaceId: ID!): CompleteWorkingResult!
+
+  """
   Makes a compendium entry the coven holds its own: a new own entry from the coven's reading of it, with copies of its forms, folk names, substitutes, categories, references and deities; its jars and spell layers move to the copy's forms of the same name, and the cupboard entry is removed. Works on an entry the compendium has retired. The compendium entry is not changed.
   """
   convertCompendiumEntryToLocal(ingredientId: ID!, workspaceId: ID!): ConvertedCompendium!
@@ -856,6 +867,9 @@ type Mutation {
   """A soft delete of the jar; the entry stays."""
   deleteStock(id: ID!, workspaceId: ID!): ID!
 
+  """Soft-deletes a working its recorder made."""
+  deleteWorking(id: ID!, workspaceId: ID!): ID!
+
   """
   Deletes a coven, which no member can reach afterwards. Owners only; nothing is destroyed, so it can be restored by hand.
   """
@@ -888,6 +902,9 @@ type Mutation {
   Makes a common name the ingredient's display name, and the old display name a common name. A null workspaceId names a compendium entry, under the admin proof.
   """
   promoteFolkName(folkNameId: ID!, id: ID!, workspaceId: ID): Ingredient!
+
+  """Records a working of a complete spell, as a draft."""
+  recordWorking(input: WorkingInput!, spellId: ID!, workspaceId: ID!): SpellWorking!
 
   """
   Takes the entry out of the coven's cupboard; refused while the coven holds a jar of any of its forms.
@@ -996,6 +1013,9 @@ type Mutation {
   """Changes a jar: a field left out keeps its value, and null clears it."""
   updateStock(id: ID!, input: StockInput!, workspaceId: ID!): InventoryItem!
 
+  """Changes a working its recorder made."""
+  updateWorking(id: ID!, input: WorkingInput!, workspaceId: ID!): SpellWorking!
+
   """
   Replaces the sign; the slug follows the name. A rename is carried onto every live compendium entry listing it.
   """
@@ -1025,11 +1045,31 @@ enum Nomenclature {
   zoological
 }
 
+"""
+Why a step takes nothing from the jars: CUSTOM, a typed-name step; UNSTOCKED, a form the coven holds no jar of; NO_QUANTITY, a step with no amount; UNITS_DIFFER, a unit the jar cannot be measured in; JAR_NOT_MEASURED, a jar kept without an amount.
+"""
+enum NotDeductedReason {
+  CUSTOM
+  JAR_NOT_MEASURED
+  NO_QUANTITY
+  UNITS_DIFFER
+  UNSTOCKED
+}
+
 type PageInfo {
   endCursor: String
   hasNextPage: Boolean!
   hasPreviousPage: Boolean!
   startCursor: String
+}
+
+"""What completing a working would take from one jar for one step."""
+type PlannedDeduction {
+  inventoryItemId: ID!
+  quantity: Float!
+  shortfall: Float!
+  stepId: ID!
+  unit: InventoryUnit!
 }
 
 type PrivilegeChange {
@@ -1257,6 +1297,11 @@ type Query {
   referenceSuggestions(after: String, before: String, first: Int, last: Int, query: String, workspaceId: ID): QueryReferenceSuggestionsConnection!
   spell(id: ID!, workspaceId: ID!): Spell!
   users(after: String, awaitingApproval: Boolean, before: String, first: Int, last: Int, query: String, role: UserRole): QueryUsersConnection!
+
+  """
+  What completing a working of this spell would take from the coven’s jars now: the plan completion follows, read and not applied.
+  """
+  workingDeductionPreview(spellId: ID!, workspaceId: ID!): WorkingDeductionPreview!
 
   """
   How many of a coven's ingredients each search filter value would list under the rest of the filter.
@@ -1787,6 +1832,14 @@ type Spell {
   """
   title: String
   visibility: SpellVisibility!
+
+  """How many complete workings of this spell the caller may read."""
+  workingCount: Int!
+
+  """
+  The workings of this spell the caller may read, newest day first: every shared one and the caller’s own private ones.
+  """
+  workings(after: String, before: String, first: Int, last: Int): SpellWorkingsConnection!
 }
 
 """A new spell: a draft needs nothing but its status."""
@@ -1866,6 +1919,43 @@ input SpellStepInput {
 enum SpellVisibility {
   private
   workspace
+}
+
+"""
+One time a spell was made: when, by whom, how it went, and what it took from the jars.
+"""
+type SpellWorking {
+  audit: AuditInfo!
+
+  """Null while a draft."""
+  completedAt: DateTime
+
+  """What completion took from the jars; empty on a draft."""
+  deductions: [WorkingDeduction!]!
+  id: ID!
+  note: String
+  participants: [WorkingParticipant!]!
+  spellId: ID!
+  status: WorkingStatus!
+  visibility: WorkingVisibility!
+
+  """
+  Steps completion took nothing for; empty unless this answers a completion.
+  """
+  warnings: [WorkingWarning!]!
+
+  """The day it was made, which is not the day it was recorded."""
+  workedOn: LocalDate!
+}
+
+type SpellWorkingsConnection {
+  edges: [SpellWorkingsConnectionEdge!]!
+  pageInfo: PageInfo!
+}
+
+type SpellWorkingsConnectionEdge {
+  cursor: String!
+  node: SpellWorking!
 }
 
 input StockInput {
@@ -2016,6 +2106,90 @@ enum UserRole {
   admin
   curator
   user
+}
+
+"""
+What a completed working took from one jar for one step, in the jar’s own unit.
+"""
+type WorkingDeduction {
+  id: ID!
+  inventoryItemId: ID!
+  quantity: Float!
+
+  """What the jar could not cover; 0 when fully met."""
+  shortfall: Float!
+  stepId: ID!
+  unit: InventoryUnit!
+}
+
+"""
+What completing a working would do to the jars now, and what it would take nothing for.
+"""
+type WorkingDeductionPreview {
+  deductions: [PlannedDeduction!]!
+  warnings: [WorkingWarning!]!
+}
+
+"""
+A working as recorded or changed. On a change, a field left out keeps its value; `note` null clears it.
+"""
+input WorkingInput {
+  note: String
+
+  """
+  In order. Left out: on record, the recorder alone; on change, unchanged.
+  """
+  participants: [WorkingParticipantInput!]
+
+  """
+  Left out: on record, the coven, capped at the spell’s; on change, unchanged. A complete working only widens.
+  """
+  visibility: WorkingVisibility
+  workedOn: LocalDate!
+}
+
+"""
+Someone who took part in a working: a coven member, or a name typed for anyone else.
+"""
+type WorkingParticipant {
+  id: ID!
+
+  """
+  The typed name as typed; for a member, the name their row last held, or null if none is readable.
+  """
+  name: String
+
+  """Null for a typed name."""
+  userId: ID
+}
+
+"""
+A coven member by `userId`, or a name typed for anyone else: exactly one.
+"""
+input WorkingParticipantInput {
+  name: String
+  userId: ID
+}
+
+enum WorkingStatus {
+  complete
+  draft
+}
+
+"""
+Who reads a working: its recorder alone, or every member of the coven. Never wider than its spell.
+"""
+enum WorkingVisibility {
+  private
+  workspace
+}
+
+"""A step a working took nothing for, and why."""
+type WorkingWarning {
+  position: Int!
+  reason: NotDeductedReason!
+  stepId: ID!
+  stepName: String
 }
 
 type Workspace {

@@ -3,13 +3,16 @@ import { spellWorkingDeductions } from '../../modules/grimoire/schema/spell-work
 import { spellWorkingParticipants } from '../../modules/grimoire/schema/spell-working-participants';
 import { spellWorkings } from '../../modules/grimoire/schema/spell-workings';
 import { spells } from '../../modules/grimoire/schema/spells';
+import type { PageEntry, PageRequest } from '../../lib/types';
 import type { Membership } from '@/modules/coven';
 import { applyAudit } from '../audit';
+import { findPageInScope } from './finders';
 import { scopedTo } from './predicates';
 import { existsIn, selectFrom } from './select';
 import { readableWorkings } from './spells';
 import type {
   AuditWriter,
+  SortPart,
   WorkingCount,
   WorkingDeductionRow,
   WorkingParticipantRow,
@@ -43,6 +46,27 @@ export async function findWorkingsInSpell(
   );
   return rows.sort(
     (a, b) => b.workedOn.localeCompare(a.workedOn) || b.createdAt.getTime() - a.createdAt.getTime(),
+  );
+}
+
+// Newest day first, then newest recorded, then by id. The key is ascending, so each instant is negated, as numeric to keep the
+// microseconds a Date drops.
+const WORKING_ORDER: readonly SortPart[] = [
+  { expression: sql`-extract(epoch from ${spellWorkings.workedOn})`, type: 'numeric' },
+  { expression: sql`-extract(epoch from ${spellWorkings.createdAt})`, type: 'numeric' },
+];
+
+/** One page of a spell's workings the reader may read, in the order `findWorkingsInSpell` lists them. */
+export function findWorkingsPage(
+  membership: Membership,
+  spellId: string,
+  page: PageRequest,
+): Promise<PageEntry<WorkingRow>[]> {
+  return findPageInScope(
+    spellWorkings,
+    and(readableWorkings(membership), eq(spellWorkings.spellId, spellId)) ?? sql`true`,
+    WORKING_ORDER,
+    page,
   );
 }
 

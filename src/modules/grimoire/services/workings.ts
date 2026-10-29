@@ -6,10 +6,13 @@ import {
   findOneWorking,
   findParticipantsOfWorkings,
   findStockOfVariants,
+  findCompleteWorkingCounts,
   findWorkingsInSpell,
+  findWorkingsPage,
   withAudit,
 } from '../../../db/repository';
 import { Forbidden, NotFound, ValidationError } from '../../../lib/errors';
+import type { PageEntry, PageRequest } from '../../../lib/types';
 import type { Session } from '../../../lib/session';
 import { parseInput, RowId } from '../../../lib/validation';
 import { assertMembership, type Membership } from '@/modules/coven';
@@ -18,12 +21,16 @@ import { planDeductions, type PlanStep, type StepPlan } from '../plan-deductions
 import { spellWorkingDeductions } from '../schema/spell-working-deductions';
 import { spellWorkings } from '../schema/spell-workings';
 import { WorkingInput } from '../validation/working';
+import { perCoven } from './spell-reads';
 import { stepsInSpells } from './step-views';
 import { assertWidens } from './visibility-rule';
 import type {
+  PlannedDeduction,
+  SpellKey,
   SpellRow,
   SpellStepView,
   WorkingParticipantView,
+  WorkingDeductionPreview,
   WorkingReport,
   WorkingRow,
   WorkingWarning,
@@ -260,6 +267,85 @@ export async function listWorkings(
     deductions: deductions.filter((row) => row.workingId === working.id),
     warnings: [],
   }));
+}
+
+/**
+ * One page of a spell's workings the caller may read, newest day first, each with its participants and deductions: the
+ * participants of the whole page are read in one query, and so are the deductions.
+ *
+ * @throws {Forbidden} the caller may not read workings here.
+ */
+export async function listWorkingsPage(
+  session: Session,
+  workspaceId: string,
+  spellId: string,
+  page: PageRequest,
+): Promise<PageEntry<WorkingReport>[]> {
+  const membership = await assertMembership(session, workspaceId, { working: ['read'] });
+  if (!RowId.safeParse(spellId).success) return [];
+  const entries = await findWorkingsPage(membership, spellId, page);
+  const ids = entries.map((entry) => entry.node.id);
+  const [participants, deductions] = await Promise.all([
+    viewParticipants(session, membership, ids),
+    findDeductionsOfWorkings(membership, ids),
+  ]);
+  return entries.map((entry) => ({
+    ...entry,
+    node: {
+      working: entry.node,
+      participants: participants.get(entry.node.id) ?? [],
+      deductions: deductions.filter((row) => row.workingId === entry.node.id),
+      warnings: [],
+    },
+  }));
+}
+
+/** How many complete workings each spell has that the caller may read, for `Spell.workingCount`: one query per coven. */
+export function workingCountsOf(
+  session: Session,
+  refs: readonly SpellKey[],
+): Promise<(number | Forbidden)[]> {
+  return perCoven(session, refs, async (membership, spellIds) => {
+    const counts = new Map(
+      (await findCompleteWorkingCounts(membership, spellIds)).map((row) => [
+        row.spellId,
+        row.count,
+      ]),
+    );
+    return (spellId) => counts.get(spellId) ?? 0;
+  });
+}
+
+/**
+ * What completing a working of this spell would take from the coven's jars right now, and what it would take nothing for: the
+ * plan completion follows, read and not applied.
+ *
+ * @throws {Forbidden} the caller may not read workings here.
+ * @throws {NotFound} no such spell here, or none this caller may read.
+ */
+export async function previewWorkingDeductions(
+  session: Session,
+  workspaceId: string,
+  spellId: string,
+): Promise<WorkingDeductionPreview> {
+  const membership = await assertMembership(session, workspaceId, { working: ['read'] });
+  if (!RowId.safeParse(spellId).success) throw new NotFound('No such spell in this coven');
+  if (!(await findOneSpell(membership, spellId))) throw new NotFound('No such spell in this coven');
+  const { steps, plan } = await planFor(membership, spellId);
+  const deductions: PlannedDeduction[] = plan.flatMap((entry) =>
+    entry.kind === 'take'
+      ? [
+          {
+            stepId: entry.stepId,
+            inventoryItemId: entry.inventoryItemId,
+            quantity: entry.amount,
+            unit: entry.unit,
+            shortfall: entry.shortfall,
+          },
+        ]
+      : [],
+  );
+  return { deductions, warnings: warningsOf(steps, plan) };
 }
 
 /**

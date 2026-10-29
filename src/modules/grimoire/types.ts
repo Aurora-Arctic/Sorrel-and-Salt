@@ -1,3 +1,4 @@
+import type { Unit } from '../ingredients/schema/units';
 import type {
   IngredientRow,
   WorkingDeductionRow,
@@ -87,4 +88,19 @@ export interface WorkingReport {
   participants: WorkingParticipantView[];
   deductions: WorkingDeductionRow[];
   warnings: WorkingWarning[];
+}
+
+/** What completing a spell's working would take now, without taking it: the same plan completion follows. */
+export interface WorkingDeductionPreview {
+  deductions: PlannedDeduction[];
+  warnings: WorkingWarning[];
+}
+
+/** One jar a step would be taken from, in the jar's own unit, and how much of the step the jar could not cover. */
+export interface PlannedDeduction {
+  stepId: string;
+  inventoryItemId: string;
+  quantity: number;
+  unit: Unit;
+  shortfall: number;
 }
