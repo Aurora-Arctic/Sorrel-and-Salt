@@ -61,7 +61,9 @@ for it, as for a refused unit, and Save or Close shows the error beside it.
   `autosave:spell:<id|new>:<userId>`, until the server confirms. If a copy
   newer than the spell's `updatedAt` exists when the builder opens, a banner
   reads "Restored unsaved changes from 2:02 pm" with Keep (load the copy into
-  the form, unsaved) and Discard (forget it). An older copy is removed without
+  the form, unsaved) and Discard (forget it). The notice is a wrapping flex row with a
+  `space(2)` gap between the sentence and the buttons (the same gap as the save status's notices), so
+  at a narrow width the buttons drop to their own line. An older copy is removed without
   a word.
 - **Typing in flight is kept.** A save's answer becomes the form's new start
   with `reset(..., { keepValues: true })`, so what was typed meanwhile reads
