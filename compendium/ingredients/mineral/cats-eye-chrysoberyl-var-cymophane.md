@@ -18,6 +18,7 @@ categories:
   - Intuition
   - Confidence
   - Love
+  - Beauty
 substitutes:
   - identity: quartz var. tiger's eye
 references:

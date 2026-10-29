@@ -1,0 +1,12 @@
+# Gathered for M14.29; the seed never reads this folder.
+entry: zoological/red-coral-corallium
+status: needs-review
+animalPart:
+  - quote: It grows at depths from 10 to 300 meters below sea level, although the shallower of these habitats have been largely depleted by harvesting.
+    source: wikipedia-precious-coral
+    locator: Precious coral article (oldid 1370924955), passage on habitat
+  - quote: Fishing and climate change threaten their persistence.
+    source: wikipedia-precious-coral
+    locator: Precious coral article (oldid 1370924955)
+questions:
+  - 'The CITES Appendices (valid from 5 March 2026) list one species of this genus: p. 60, Appendix III column, "Corallium japonicum (China)". The entry is the genus Corallium. Recommendation: no listing row for the genus; keep this question.'

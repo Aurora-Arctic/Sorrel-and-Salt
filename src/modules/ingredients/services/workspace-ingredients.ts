@@ -18,7 +18,7 @@ import {
   swapFolkName,
   writeChildren,
 } from './ingredient-rows';
-import { type Membership, assertMembership } from '@/modules/coven';
+import { assertMembership } from '@/modules/coven';
 import type { IngredientRow, IngredientValues } from '../types';
 
 // Story 15: a coven's own ingredients. Every read and write is under the

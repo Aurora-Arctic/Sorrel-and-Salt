@@ -21,9 +21,11 @@ folkNames:
 deities:
   - Circe
   - Hecate
+  - Macha
 categories:
   - Creativity
   - Divination
+  - Secrets
 references:
   - source: kynes-plants
     locator: under "Nightshade"
@@ -112,7 +114,7 @@ variants:
         supports:
           - form
           - colours
-seedUpdate: 4cec74c4c27c8af859607fa9af035c70978e742c20432320be35ebc523857164
+seedUpdate: 4d4ed5705e4af0c1136f365a063cc33b043a5be050207caca3252d2818fd76b5
 ---
 
 # Black Nightshade

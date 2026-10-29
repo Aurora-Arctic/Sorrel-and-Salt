@@ -1,0 +1,9 @@
+# Gathered for M14.29; the seed never reads this folder.
+entry: unknown/onycha
+status: needs-review
+animalPart:
+  - quote: Some writers believe that onycha was Unguis odoratus, the fingernail-like operculum, or trap door, of certain sea snails, such as Strombus lentiginosus, Murex anguliferus, and Onyx marinus.
+    source: wikipedia-onycha
+    locator: Contenders for the identity of onycha, Operculum
+questions:
+  - The Onycha page says the ketoret formula "was not to be duplicated for non-sacred use". That restricts the formula, not onycha as one ingredient, and the page does not name a tradition's rule for onycha alone. I did not record a closedPractice row. Should the Jewish ketoret restriction be recorded for each ingredient named in Exodus 30:34-36? I recommend no, unless a source restricts the ingredient itself.

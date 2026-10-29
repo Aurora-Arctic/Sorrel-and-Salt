@@ -24,6 +24,12 @@ categories:
   - Inspiration
   - Peace
   - Success
+  - Luck
+  - Focus
+  - Joy
+  - Sex
+  - Sexuality
+  - Clarity
 references:
   - source: cunningham-herbs
     locator: under "Vanilla"

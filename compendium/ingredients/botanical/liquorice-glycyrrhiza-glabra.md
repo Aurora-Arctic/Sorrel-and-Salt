@@ -23,6 +23,7 @@ folkNames:
   - True Licorice
 deities:
   - Osiris
+  - Brahma
 categories:
   - Lust
   - Love
@@ -30,6 +31,8 @@ categories:
   - Binding
   - Healing
   - Peace
+  - Sex
+  - Sexuality
 references:
   - source: cunningham-herbs
     locator: under "Licorice"; p. 266
@@ -109,6 +112,7 @@ variants:
         nameBasis: stated
         supports:
           - colours
+seedUpdate: 51ecbf32df4d133b109c327996bef53969156e4cfe10c72c345e82e609b250da
 ---
 
 # Liquorice

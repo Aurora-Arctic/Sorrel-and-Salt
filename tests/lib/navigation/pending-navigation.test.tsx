@@ -221,7 +221,7 @@ describe('useNavigationState', () => {
 /** A region that takes its children away while a navigation is on its way, as `MainBody` does. */
 function Region({ children }: { children: ReactNode }) {
   const { busy } = useNavigationState();
-  return busy ? <p role="status">Loading</p> : children;
+  return busy ? <output>Loading</output> : children;
 }
 
 function Hang({ until }: { until: Promise<void> }): ReactNode {

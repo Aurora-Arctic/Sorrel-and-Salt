@@ -41,6 +41,17 @@ categories:
   - Legal Matters
   - Prosperity
   - Success
+  - Wealth
+  - Healing
+  - Luck
+  - Consecration
+  - Blessing
+  - Awareness
+  - Negativity
+  - Sex
+  - Sexuality
+  - Challenges
+  - Secrets
 substitutes:
   - identity: zingiber officinale
 references:
@@ -112,9 +123,13 @@ variants:
         nameBasis: unaudited
         supports:
           - form
-seedUpdate: c145144832c2a07f147916f4e8d8d13962cb70ef72f4456077d01a32b074d290
+seedUpdate: ed04681117a0f60378e4c82e6b4d352466e6cc390e0c5484404fcbc55b93fd63
 ---
 
 # Galangal
 
 Lesser galangal is a plant of the ginger family, known as a mild cousin of ginger, and its rhizome, which resembles ginger root, is the part used. It grows in clumps to about five feet, with long, narrow, lance-shaped leaves and loose spikes of orchid-like white flowers streaked deep red at the centre, and it is smaller than its Javanese relative, greater galangal. Grieve gives its home as southern China, on Hainan Island, and Java; the dried pieces of rhizome are dark reddish-brown, aromatic and pungent. The name is thought to come through Arabic from a Chinese phrase for mild ginger. India valued the lesser plant above the greater for its medicine, recorded in Sanskrit writings from about 600 CE, and Europe used the root as a spice for more than a thousand years, long before its source plant was identified in 1870; medieval Europe cooked with it widely and thought it an aphrodisiac. In hoodoo it is the root usually meant by low John, after John the Conqueror, a legendary figure whose spirit was said to dwell in certain roots, and it is carried to overcome hardship and for luck. Cunningham wears or carries it for protection and good fortune, sews it with silver into a leather sachet to draw money, and wears it to develop psychic ability and guard health. Kynes uses it to give spells more force, especially banishing spells and those that send ill will back to its source.
+
+#### Edit Notes for Claude
+
+- Deity gap: Kupala (Kynes, under "Galangal"), not in the vocabulary after M14.15: Modern scholars deny that Kupala was an ancient Slavic deity, so it is left out.

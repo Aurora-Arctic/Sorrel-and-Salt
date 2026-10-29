@@ -26,6 +26,10 @@ categories:
   - Success
   - Psychic Work
   - Peace
+  - Wealth
+  - Banishing
+  - Luck
+  - Hex-Breaking
 references:
   - source: cunningham-herbs
     locator: under "Clover"; p. 266
@@ -110,4 +114,4 @@ Does kynes-plants under "Clover", cited on the entry, describe Trifolium pratens
 
 #### Edit Notes for Claude
 
-Deity gap: Rowen (Cunningham, under "Clover"), not in the vocabulary; link once M14.15 adds it.
+Deity gap: Rowen (Cunningham, under "Clover"), not in the vocabulary after M14.15: Rowen is a village, which is what its Wikipedia page says; it is not a deity.

@@ -32,6 +32,14 @@ categories:
   - Fertility
   - Healing
   - Peace
+  - Spirituality
+  - Determination
+  - Hex-Breaking
+  - Sex
+  - Sexuality
+  - Challenges
+  - Spirit Work
+  - Nightmare Protection
 references:
   - source: cunningham-herbs
     locator: under "Mallow"; p. 266
@@ -142,9 +150,13 @@ variants:
           - form
           - description
           - colours
-seedUpdate: 6d0ca83a5f18af3dcf34b2a078a8a814542fc6fba19d514f16453748be287fb4
+seedUpdate: ca78e778ec3e54e0f31f3a354510260b1bab59c38b63059ac21caaa9dafbf3a5
 ---
 
 # Mallow
 
 Common mallow is a herbaceous plant of the mallow family, Malvaceae, and the type species of its genus. Native to Western Europe, North Africa and Asia, it grows in meadows, hedgerows and fallow fields and on waste and rough ground, and it has naturalised as an invasive plant in eastern Australia and North America. It stands up to about a metre and a half, with softly hairy stems and palmately lobed leaves, and through the summer bears showy mauve to reddish-purple flowers streaked with dark veins. Its round fruit, likened to a little wheel of cheese, gave it names such as cheeses and fairy cheese. The young leaves and shoots are eaten from the Mediterranean to the Caucasus, the plant has long served as a yellow dye, and gardeners grow many named cultivars. The Greeks planted it on graves. Irish legend held mallow so strong that nothing natural or supernatural could harm it; in Germany it was used to cure someone bewitched, and on the Isle of Man to lift afflictions caused by faeries. In magic it is a herb of love and protection: Cunningham sets a bouquet of mallow outside the door to turn an absent lover’s thoughts homeward and carries it to attract love, and makes an ointment of its leaves and stems that protects the wearer against black magic.
+
+#### Edit Notes for Claude
+
+- Deity gap: Althea (Kynes's Plants, under "Mallow"), not in the vocabulary after M14.15: The source does not say which Althea it means.

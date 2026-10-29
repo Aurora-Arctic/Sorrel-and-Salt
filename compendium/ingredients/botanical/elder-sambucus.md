@@ -37,6 +37,7 @@ deities:
   - Gaia
   - Rhea
   - Vulcan
+  - Cailleach
 categories:
   - Protection
   - Healing
@@ -50,6 +51,14 @@ categories:
   - Fidelity
   - Purification
   - Wisdom
+  - Wealth
+  - Spirituality
+  - Funeral Rites
+  - Consecration
+  - Blessing
+  - Hex-Breaking
+  - Faerie Sight
+  - Spirit Work
 references:
   - source: cunningham-herbs
     locator: under "Elder, American"; p. 266
@@ -163,7 +172,7 @@ variants:
         supports:
           - form
           - description
-seedUpdate: 8f74bd5211624d3a87d657e06fbbfcbbfefd461e245910530a342c1004839b59
+seedUpdate: 6c6539fcbd4359eed1af6f68a3b83069ead907d604ed2bba7d9d222d999f30f6
 ---
 
 # Elder

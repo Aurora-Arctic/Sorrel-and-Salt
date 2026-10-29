@@ -67,6 +67,18 @@ categories:
   - Inspiration
   - Prophecy
   - Prosperity
+  - Wealth
+  - Chastity
+  - Youth
+  - Luck
+  - Consecration
+  - Blessing
+  - Negativity
+  - Hex-Breaking
+  - Sex
+  - Sexuality
+  - Faerie Sight
+  - Spirit Work
 references:
   - source: cunningham-herbs
     locator: under "Vervain"

@@ -29,6 +29,7 @@ categories:
   - Protection
   - Psychic Work
   - Truth
+  - Transformation
 references:
   - source: kynes-plants
     locator: under "Pimpernel"
@@ -94,7 +95,7 @@ variants:
         nameBasis: stated
         supports:
           - colours
-seedUpdate: 138ea8bcbe6d2351705375642221f170a0efb525c31a12fc2754d463068540d8
+seedUpdate: 1c2091522285e44ac4641142b0095643a5385a8bf00ce21569bac63980056743
 ---
 
 # Scarlet Pimpernel

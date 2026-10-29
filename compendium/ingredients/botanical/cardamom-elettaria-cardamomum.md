@@ -23,6 +23,8 @@ deities:
   - Circe
   - Hecate
   - Krishna
+  - Medea
+  - Rama
 categories:
   - Lust
   - Love
@@ -35,6 +37,10 @@ categories:
   - Divination
   - Healing
   - Strength
+  - Focus
+  - Relationships
+  - Sex
+  - Sexuality
 references:
   - source: cunningham-herbs
     locator: under "Cardamon"
@@ -94,14 +100,9 @@ variants:
         supports:
           - form
           - description
+seedUpdate: cc62142e5da6433ce51d594c6002f0af9383c582601e42a5140275d2b0269276
 ---
 
 # Cardamom
 
 Green cardamom is a reed-like plant up to fifteen feet tall, grown for the aromatic seeds in its pods, which Kynes calls the queen of spices. Cunningham, who spells it cardamon, calls it feminine, with Venus and water, and gives lust and love. He has the ground seeds added to warmed wine as a quick lust potion, baked into apple pies, and put in love sachets and incenses. Kynes adds earth and fire, Aries, Cancer, Pisces and Taurus, and lists balance, changes, clarity, confidence, courage, creativity, divination, healing, love, sex and strength. She names the deities Aphrodite, Circe, Hecate, Krishna, Medea and Rama. Seeds burn to strengthen love spells, the essential oil is diffused in the bedroom, and pods on the altar help clarity in divination and study. Lore includes the medieval fire of Venus in love potions.
-
-#### Edit Notes for Claude
-
-Deity gap: Medea (Kynes, under "Cardamom"), not in the vocabulary; link once M14.15 adds it.
-
-Deity gap: Rama (Kynes, under "Cardamom"), not in the vocabulary; link once M14.15 adds it.

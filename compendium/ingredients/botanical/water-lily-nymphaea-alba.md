@@ -7,6 +7,10 @@ folkNames:
   - European White Water Lily
   - White Nenuphar
   - White Lotus
+categories:
+  - Luck
+  - Joy
+  - Growth
 references:
   - source: kynes-plants
     locator: under "Water Lily"
@@ -16,6 +20,7 @@ references:
       - nomenclature
       - folkNames
       - description
+      - categories
   - source: wikipedia-nymphaea-alba
     nameBasis: stated
     supports:

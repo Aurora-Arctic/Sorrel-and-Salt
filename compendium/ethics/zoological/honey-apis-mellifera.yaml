@@ -1,0 +1,18 @@
+# Gathered for M14.29; the seed never reads this folder.
+entry: zoological/honey-apis-mellifera
+status: needs-review
+listings:
+  - list: iucn
+    name: IUCN Red List of Threatened Species, as printed in Wikipedia's taxobox
+    value: DD
+    listedAs: Apis mellifera
+    scope: Europe
+    nameBasis: stated
+    source: wikipedia-iucn-apis-mellifera
+    locator: 'Taxobox: status = DD, status_system = IUCN3.1; its status_ref reads: "Apis mellifera (Europe assessment)", Moro, A., 2025'
+animalPart:
+  - quote: In Jainism, the consumption of honey is strictly prohibited. Traditional Jain theology classifies honey as one of the four absolute prohibitions (maha-vigai) because its commercial extraction and harvesting inevitably involve the violent disruption of hives and the death of bees.
+    source: wikipedia-honey
+    locator: Honey article (oldid 1378877316), passage on Jainism
+questions:
+  - 'The only statement found about harm in taking honey is the Jain prohibition above, from Wikipedia. It is a religious prohibition on eating honey, not a conservation listing. Owner: say whether it belongs on the entry as an animal-part concern. Recommendation: yes, as recorded, with the Wikipedia source replaced by a Jain authority if one is found in M14.13.'

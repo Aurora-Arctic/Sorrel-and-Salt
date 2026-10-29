@@ -4,7 +4,7 @@ import { useTestDatabase } from '../../../support/db/database';
 import { AUDIT_COLUMNS, tableFacts } from '../../../support/db/table-metadata';
 import { ingredientColumns, makeIngredient } from '../../../support/fixtures';
 import { retiredIngredientSlugs } from '@/modules/ingredients/schema/retired-ingredient-slugs';
-import { FIXTURE_USERS, WORKSPACE_W_ID } from '@/db/seed/standard';
+import { FIXTURE_USERS } from '@/db/seed/standard';
 import type { Retired } from './types';
 
 // MB.80's ledger: a slug an ingredient moved off, answering a 308 and reserved

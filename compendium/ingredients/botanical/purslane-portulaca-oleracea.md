@@ -24,6 +24,8 @@ categories:
   - Protection
   - Nightmare Protection
   - Purification
+  - Luck
+  - Joy
 references:
   - source: cunningham-herbs
     locator: under "Purslane"

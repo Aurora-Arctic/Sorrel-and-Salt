@@ -50,6 +50,12 @@ categories:
   - Prosperity
   - Psychic Work
   - Release
+  - Wealth
+  - Consecration
+  - Blessing
+  - Negativity
+  - Hex-Breaking
+  - Emotions
 references:
   - source: cunningham-herbs
     locator: under "Chamomile, Roman"; p. 266
@@ -162,7 +168,7 @@ variants:
         nameBasis: unaudited
         supports:
           - safetyNotes
-seedUpdate: 27bcf14af020c9679e007b74487e9779562ad471a713a2ab4a2efe70381624b2
+seedUpdate: 2bd847ae6d2de45d7690ecd33a95202f26a8a5f0025ecc7aae8a436669c2053a
 ---
 
 # Roman Chamomile

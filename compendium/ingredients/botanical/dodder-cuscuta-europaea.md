@@ -27,6 +27,9 @@ categories:
   - Love
   - Divination
   - Binding
+  - Protection
+  - Sex
+  - Sexuality
 references:
   - source: cunningham-herbs
     locator: under "Dodder"; p. 266
@@ -90,6 +93,7 @@ variants:
         supports:
           - form
           - description
+seedUpdate: fef0214ba18692707bf6e88c564f6a7bb9cd84435a056bfbd110806bab6172aa
 ---
 
 # Dodder

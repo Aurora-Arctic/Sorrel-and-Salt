@@ -25,11 +25,19 @@ deities:
   - Hecate
   - Shiva
   - Thor
+  - Medea
 categories:
   - Protection
   - Peace
   - Prophecy
   - Strength
+  - Funeral Rites
+  - Consecration
+  - Blessing
+  - Relationships
+  - Negativity
+  - Skill
+  - Invisibility
 references:
   - source: cunningham-herbs
     locator: under "Wolf's Bane"; Part II, "How to Read the Entries"

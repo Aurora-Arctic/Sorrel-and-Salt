@@ -44,6 +44,13 @@ categories:
   - Purification
   - Strength
   - Truth
+  - Luck
+  - Renewal
+  - Negativity
+  - Hex-Breaking
+  - Sex
+  - Sexuality
+  - Challenges
 references:
   - source: cunningham-herbs
     locator: under "Southernwood"; p. 266
@@ -125,7 +132,7 @@ variants:
         supports:
           - form
           - description
-seedUpdate: 0d5285d37dadfd5331a7283261c322cf3f4bbf4f3ded1fba66e1450ee8ebfbe4
+seedUpdate: 377395563e9c495c5cbaa579a84e336a689be7ed1304ab28fee1a33fc5822057
 ---
 
 # Southernwood

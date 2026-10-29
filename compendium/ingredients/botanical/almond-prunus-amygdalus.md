@@ -29,6 +29,7 @@ deities:
   - Shiva
   - Venus
   - Zeus
+  - Shakti
 categories:
   - Prosperity
   - Wisdom
@@ -40,6 +41,16 @@ categories:
   - Knowledge
   - Love
   - Protection
+  - Wealth
+  - Luck
+  - Spirituality
+  - Hope
+  - Joy
+  - Awareness
+  - Renewal
+  - Sex
+  - Sexuality
+  - Spirit Work
 references:
   - source: cunningham-herbs
     locator: under "Almond"
@@ -144,7 +155,7 @@ variants:
         supports:
           - form
           - description
-seedUpdate: 2661111ac133ce6bdb07fcf8341eb876dc0aab5ca8ed1379ff5cb07d3ea9d399
+seedUpdate: 8da2ae2e339ce725a385ead372bdb3c141280d04dd3f42458558732fb4480e30
 ---
 
 # Almond

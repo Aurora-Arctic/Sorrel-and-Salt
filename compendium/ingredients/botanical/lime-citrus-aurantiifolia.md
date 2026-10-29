@@ -25,6 +25,8 @@ categories:
   - Love
   - Protection
   - Purification
+  - Consecration
+  - Blessing
 references:
   - source: cunningham-herbs
     locator: under "Lime"

@@ -15,6 +15,7 @@ folkNames:
 categories:
   - Prosperity
   - Protection
+  - Wealth
 references:
   - source: cunningham-herbs
     locator: under "Buckwheat"

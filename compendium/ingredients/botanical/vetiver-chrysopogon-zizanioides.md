@@ -32,6 +32,13 @@ categories:
   - Peace
   - Prosperity
   - Protection
+  - Wealth
+  - Luck
+  - Spirituality
+  - Family
+  - Home Blessing
+  - Emotions
+  - Secrets
 references:
   - source: cunningham-herbs
     locator: under "Vetivert"
@@ -100,7 +107,7 @@ variants:
         supports:
           - form
           - description
-seedUpdate: 77afdc1a7c769a6819bba2fa999fe5f14b04e481421a07ae249369e378ccc866
+seedUpdate: ce824ef5ffc2d6812288d99c61235f07d2440869565fe2f0eee54a91b3c00f4f
 ---
 
 # Vetiver

@@ -35,6 +35,14 @@ categories:
   - Peace
   - Protection
   - Strength
+  - Wealth
+  - Luck
+  - Consecration
+  - Blessing
+  - Manifestation
+  - Hex-Breaking
+  - Family
+  - Home Blessing
 references:
   - source: cunningham-herbs
     locator: under "Horse Chestnut"

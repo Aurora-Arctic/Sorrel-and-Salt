@@ -23,6 +23,8 @@ folkNames:
   - Gumball Tree
 categories:
   - Protection
+  - Wealth
+  - Hex-Breaking
 references:
   - source: kynes-plants
     locator: under "Storax"
@@ -31,6 +33,7 @@ references:
       - canonicalName
       - description
       - folkNames
+      - categories
   - source: cunningham-herbs
     locator: under "Liquidamber"
     nameBasis: unaudited

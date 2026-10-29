@@ -26,10 +26,17 @@ deities:
   - Persephone
   - Hera
   - Mercury
+  - Belili
 categories:
   - Love
   - Protection
   - Healing
+  - Funeral Rites
+  - Sex
+  - Sexuality
+  - Adaptability
+  - Spirit Work
+  - Divination
 references:
   - source: cunningham-herbs
     locator: under "Willow"
@@ -58,6 +65,7 @@ references:
       - nomenclature
       - folkNames
       - description
+      - categories
   - source: ahpa-safety
     locator: p. 765
     nameBasis: unresolved
@@ -115,6 +123,4 @@ Does AHPA under "Salix spp.", cited on Willow, describe Salix alba alone? The mo
 
 #### Edit Notes for Claude
 
-Deity gap: Belili (Cunningham, under "Willow"), not in the vocabulary; link once M14.15 adds it.
-
-Deity gap: Belinus (Cunningham, under "Willow"), not in the vocabulary; link once M14.15 adds it.
+Deity gap: Belinus (Cunningham, under "Willow"), not in the vocabulary after M14.15: Belinus is a legendary king of Britain in Geoffrey of Monmouth, not a deity.

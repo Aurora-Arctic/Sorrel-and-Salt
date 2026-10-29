@@ -17,11 +17,15 @@ deities:
   - Diana
   - Isis
   - Selene
+  - Luna
 categories:
   - Love
   - Peace
   - Harmony
   - Healing
+  - Spirituality
+  - Emotions
+  - Spirit Work
 references:
   - source: cunningham-herbs
     locator: under "Gardenia"; p. 266
@@ -105,7 +109,7 @@ variants:
         nameBasis: unaudited
         supports:
           - form
-seedUpdate: 9e1d410327953359f46f0219051303a8e1feef52507910f61b147e0ef4df4894
+seedUpdate: fbd411f58638f2e07fbea67383c2f6dbeed1e61133156ef8cb92a87643904171
 ---
 
 # Gardenia

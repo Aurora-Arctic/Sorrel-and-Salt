@@ -36,6 +36,11 @@ categories:
   - Psychic Work
   - Success
   - Wisdom
+  - Luck
+  - Consecration
+  - Blessing
+  - Challenges
+  - Secrets
 references:
   - source: cunningham-herbs
     locator: under "Mulberry"; p. 266
@@ -114,4 +119,4 @@ Does kynes-plants under "Mulberry", cited on the entry, the Fruit and the Wood, 
 
 #### Edit Notes for Claude
 
-Deity gap: San Ku Fu Jen (Cunningham, under "Mulberry"), not in the vocabulary; link once M14.15 adds it.
+Deity gap: San Ku Fu Jen (Cunningham, under "Mulberry"), not in the vocabulary after M14.15: No Wikipedia page or other open source for San Ku Fu Jen was found.

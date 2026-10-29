@@ -1,0 +1,12 @@
+# Gathered for M14.29; the seed never reads this folder.
+entry: botanical/zedoary-curcuma-zedoaria
+status: approved
+listings:
+  - list: iucn
+    name: IUCN Red List of Threatened Species, as printed in Wikipedia's taxobox
+    value: DD
+    listedAs: Curcuma zedoaria
+    scope: global
+    nameBasis: stated
+    source: wikipedia-iucn-curcuma-zedoaria
+    locator: 'Taxobox: status = DD, status_system = IUCN3.1; its status_ref reads: "Curcuma zedoaria", Olander, 2019, 10.2305/IUCN.UK.2019-3.RLTS.T117311046A124281780.en'

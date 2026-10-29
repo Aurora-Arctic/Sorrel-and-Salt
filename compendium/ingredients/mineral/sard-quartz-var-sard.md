@@ -16,6 +16,7 @@ categories:
   - Courage
   - Confidence
   - Hex-Breaking
+  - Healing
 substitutes:
   - identity: quartz var. carnelian
 references:

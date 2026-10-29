@@ -25,12 +25,14 @@ folkNames:
   - Honey Pod
 deities:
   - Quetzalcoatl
+  - Ixtlilton
 categories:
   - Healing
   - Abundance
   - Protection
   - Purification
   - Success
+  - Determination
 references:
   - source: cunningham-herbs
     locator: under "Mesquite"; p. 266
@@ -98,7 +100,7 @@ variants:
           - description
           - safetyNotes
           - toxic
-seedUpdate: 045fbd23eed3d9456d1e19b0b2593cdb29694605e928984f025cc486097aefef
+seedUpdate: 5402a2c484b764b809c6738f0ce04270179a01164f1dea172770df150dcacfd3
 ---
 
 # Mesquite

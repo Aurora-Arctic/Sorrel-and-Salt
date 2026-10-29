@@ -7,6 +7,12 @@ folkNames:
   - Myrrh
   - Garden Myrrh
   - Sweet Chervil
+categories:
+  - Joy
+  - Grief Work
+  - Nightmare Protection
+  - Renewal
+  - Spirit Work
 references:
   - source: wikipedia-myrrhis-odorata
     nameBasis: stated
@@ -15,6 +21,11 @@ references:
       - nomenclature
       - folkNames
       - description
+  - source: kynes-plants
+    locator: under "Chervil"
+    nameBasis: stated
+    supports:
+      - categories
 variants:
   - form: Leaf
     description: Wikipedia says the leaves are used raw or cooked, with a sweet taste like anise.
@@ -32,6 +43,7 @@ variants:
         supports:
           - form
           - description
+seedUpdate: 67fe81cce792e31499613583e2d30ecd15e2848d9acdbeb574e475f4b079f4bd
 ---
 
 # Sweet Cicely

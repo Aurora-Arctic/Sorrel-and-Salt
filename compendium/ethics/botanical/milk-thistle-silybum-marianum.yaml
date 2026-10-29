@@ -1,0 +1,12 @@
+# Gathered for M14.29; the seed never reads this folder.
+entry: botanical/milk-thistle-silybum-marianum
+status: approved
+listings:
+  - list: iucn
+    name: IUCN Red List of Threatened Species, as printed in Wikipedia's taxobox
+    value: LC
+    listedAs: Silybum marianum
+    scope: global
+    nameBasis: stated
+    source: wikipedia-iucn-silybum-marianum
+    locator: 'Taxobox: status = LC, status_system = IUCN3.1; its status_ref reads: "Silybum marianum", Khela, 2020, 10.2305/IUCN.UK.2020-3.RLTS.T202991A88329022.en'

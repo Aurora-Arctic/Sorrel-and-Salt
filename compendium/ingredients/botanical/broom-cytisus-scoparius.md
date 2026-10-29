@@ -41,6 +41,11 @@ categories:
   - Intuition
   - Release
   - Strength
+  - Funeral Rites
+  - Focus
+  - Determination
+  - Negativity
+  - Challenges
 references:
   - source: cunningham-herbs
     locator: under "Broom"
@@ -110,6 +115,7 @@ variants:
           - toxic
           - safetyNotes
           - description
+seedUpdate: 182e65a2040b4b8c7d02a7415ebc2f6fd112c9e299b2f9fdcbda9861f819e757
 ---
 
 # Broom

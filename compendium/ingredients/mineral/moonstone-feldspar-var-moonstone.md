@@ -33,6 +33,8 @@ categories:
   - Safe Travel
   - Intuition
   - Healing
+  - Youth
+  - Garden Magic
 substitutes:
   - name: Mother-of-Pearl
   - identity: pearl

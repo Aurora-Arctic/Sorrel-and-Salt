@@ -20,6 +20,7 @@ categories:
   - Prophecy
   - Dream Work
   - Divination
+  - Prophetic Dreams
 references:
   - source: cunningham-herbs
     locator: under "Buchu"

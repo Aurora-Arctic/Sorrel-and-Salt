@@ -25,6 +25,9 @@ folkNames:
   - Purple Joe Pye Weed
 categories:
   - Love
+  - Luck
+  - Negativity
+  - Spirit Work
 references:
   - source: cunningham-herbs
     locator: under "Joe-Pye Weed"

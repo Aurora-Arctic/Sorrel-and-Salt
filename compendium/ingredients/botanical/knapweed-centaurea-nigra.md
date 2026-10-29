@@ -23,6 +23,7 @@ categories:
   - Healing
   - Love
   - Strength
+  - Determination
 references:
   - source: kynes-plants
     locator: under "Knapweed"

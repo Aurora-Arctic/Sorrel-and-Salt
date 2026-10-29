@@ -31,6 +31,8 @@ deities:
   - Hermes
   - Inanna
   - Mercury
+  - Leto
+  - Nike
 categories:
   - Fertility
   - Abundance
@@ -42,6 +44,12 @@ categories:
   - Protection
   - Success
   - Transformation
+  - Luck
+  - Spirituality
+  - Negativity
+  - Sex
+  - Sexuality
+  - Challenges
 references:
   - source: cunningham-herbs
     locator: under "Palm, Date"; p. 266
@@ -135,7 +143,7 @@ variants:
         supports:
           - form
           - description
-seedUpdate: 228517fee2e58d49f91ffdadfcb8ba7d15c20861963001afa24fcba4128d9e89
+seedUpdate: 7b1e883358125d66ca2f740ebd3f5c061eee89fed409a876fa16d23b7109764f
 ---
 
 # Date Palm

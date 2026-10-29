@@ -1,0 +1,14 @@
+# Gathered for M14.29; the seed never reads this folder.
+entry: botanical/horseradish-armoracia-rusticana
+status: needs-review
+listings:
+  - list: iucn
+    name: IUCN Red List of Threatened Species, as printed in Wikipedia's taxobox
+    value: LC
+    listedAs: Armoracia rusticana
+    scope: global
+    nameBasis: stated
+    source: wikipedia-iucn-armoracia-rusticana
+    locator: 'Taxobox: status = LC, status_system = IUCN3.1; its status_ref reads: "Horseradish", 2011'
+questions:
+  - 'Wikipedia''s status_ref names an assessment titled "Horseradish", which is not Armoracia rusticana. Recommendation: do not list until an authority the owner accepts maps one name to the other. GBIF returned (not an accepted authority): GBIF https://api.gbif.org/v1/species/match?name=Armoracia%20rusticana -> Armoracia rusticana P.Gaertn., B.Mey. & Scherb. | status ACCEPTED | matchType EXACT | accepted (is accepted or none)'

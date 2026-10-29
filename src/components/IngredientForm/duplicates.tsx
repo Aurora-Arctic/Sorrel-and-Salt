@@ -931,6 +931,7 @@ export function NameField({
           // it is announced once (claude-docs/components/notice.md).
           <div
             ref={region}
+            // oxlint-disable-next-line jsx-a11y/prefer-tag-over-role -- this live region holds block content, which an output element would restyle
             role="status"
             className={`ingredient-form__duplicates${open ? ' ingredient-form__duplicates--open' : ''}`}
             aria-label="Possible duplicates"

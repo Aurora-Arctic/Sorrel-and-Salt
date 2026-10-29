@@ -36,6 +36,15 @@ categories:
   - Fidelity
   - Manifestation
   - Psychic Work
+  - Luck
+  - Spirituality
+  - Awareness
+  - Relationships
+  - Negativity
+  - Faerie Sight
+  - Spirit Work
+  - Chastity
+  - Joy
 references:
   - source: cunningham-herbs
     locator: under "Lavender"; p. 266
@@ -153,7 +162,7 @@ variants:
         nameBasis: unaudited
         supports:
           - safetyNotes
-seedUpdate: 459df5a6259fc5ba90b9c04bdb41383c12538505cb6b74ba2b2c6a03e569639e
+seedUpdate: a9dbcdda08ac9de3b99dec3e79527056c1bc387097dd34e7103bdf99d5350bc0
 ---
 
 # Lavender

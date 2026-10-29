@@ -48,6 +48,7 @@ deities:
   - Circe
   - Diana
   - Saturn
+  - Moirai
 categories:
   - Protection
   - Fertility
@@ -59,6 +60,17 @@ categories:
   - Dream Work
   - Prosperity
   - Psychic Work
+  - Wealth
+  - Healing
+  - Luck
+  - Hex-Breaking
+  - Sex
+  - Sexuality
+  - Challenges
+  - Growth
+  - Leadership
+  - Spirit Work
+  - Nightmare Protection
 substitutes:
   - name: Ash
   - name: Apple

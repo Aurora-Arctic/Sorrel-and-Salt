@@ -13,6 +13,8 @@ folkNames:
   - Red Elm
   - Gray Elm
   - Soft Elm
+categories:
+  - Protection
 references:
   - source: cunningham-herbs
     locator: under "Slippery Elm"; p. 266
@@ -24,6 +26,7 @@ references:
       - elements
       - celestialBodies
       - folkNames
+      - categories
   - source: ahpa-safety
     locator: pp. 891–892; p. xxii
     nameBasis: unaudited
@@ -79,7 +82,7 @@ variants:
         supports:
           - form
           - description
-seedUpdate: fad201068ec65ecb6ff9209e25f5d5c0765cc12171aee6d54d27de260bac8b22
+seedUpdate: 9dda39b6b892e47e9738c636137dd5cdae6508b76d368d4b4848ad17cf72563f
 ---
 
 # Slippery Elm

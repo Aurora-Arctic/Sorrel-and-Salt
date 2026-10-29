@@ -21,6 +21,13 @@ categories:
   - Dream Work
   - Strength
   - Success
+  - Joy
+  - Security
+  - Awareness
+  - Grief Work
+  - Family
+  - Home Blessing
+  - Transformation
 references:
   - source: cunningham-herbs
     locator: under "Morning Glory"; Part II, "How to Read the Entries"
@@ -83,7 +90,7 @@ variants:
         supports:
           - form
           - description
-seedUpdate: e83196708fcfe8939b3df9b517b17a2230b318c63f60ab15ebdd8dac7082f573
+seedUpdate: 90b8e5942174931ce9b20c2679f91ed29fc4fa5d9763e02b0da9117e166e8e0e
 ---
 
 # Morning Glory

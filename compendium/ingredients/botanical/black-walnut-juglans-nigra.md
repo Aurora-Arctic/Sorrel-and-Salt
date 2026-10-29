@@ -7,6 +7,14 @@ folkNames:
   - Eastern Black Walnut
   - American Black Walnut
   - Eastern American Black Walnut
+categories:
+  - Wealth
+  - Luck
+  - Manifestation
+  - Sex
+  - Sexuality
+  - Transformation
+  - Spirit Work
 references:
   - source: kynes-plants
     locator: under "Walnut"
@@ -15,6 +23,7 @@ references:
       - canonicalName
       - folkNames
       - description
+      - categories
   - source: ahpa-safety
     locator: pp. 485–486; p. xxii
     nameBasis: unaudited
@@ -56,6 +65,7 @@ variants:
         nameBasis: stated
         supports:
           - form
+seedUpdate: a72f40319e5a0079f4446eecba79f9d29925867e538b4fcf22ac720e3c3c7d9c
 ---
 
 # Black Walnut

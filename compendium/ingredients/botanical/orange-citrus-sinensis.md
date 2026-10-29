@@ -36,6 +36,10 @@ categories:
   - Psychic Work
   - Purification
   - Spirit Work
+  - Wealth
+  - Luck
+  - Focus
+  - Joy
 references:
   - source: cunningham-herbs
     locator: under "Orange"

@@ -1,0 +1,12 @@
+# Gathered for M14.29; the seed never reads this folder.
+entry: botanical/japanese-apricot-prunus-mume
+status: approved
+listings:
+  - list: iucn
+    name: IUCN Red List of Threatened Species
+    value: Least Concern (IUCN 3.1)
+    listedAs: Prunus mume
+    scope: global
+    nameBasis: stated
+    source: wikipedia-prunus-mume
+    locator: Infobox, Conservation status

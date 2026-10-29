@@ -1,0 +1,12 @@
+# Gathered for M14.29; the seed never reads this folder.
+entry: botanical/cacao-theobroma-cacao
+status: approved
+listings:
+  - list: iucn
+    name: IUCN Red List
+    value: Data Deficient (IUCN 3.1)
+    listedAs: Theobroma cacao
+    scope: global
+    nameBasis: stated
+    source: wikipedia-theobroma-cacao
+    locator: taxobox, conservation status (status = DD, IUCN3.1)

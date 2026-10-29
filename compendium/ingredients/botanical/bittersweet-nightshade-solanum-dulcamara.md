@@ -34,6 +34,12 @@ categories:
   - Peace
   - Release
   - Truth
+  - Funeral Rites
+  - Renewal
+  - Hex-Breaking
+  - Family
+  - Home Blessing
+  - Emotions
 references:
   - source: cunningham-herbs
     locator: under "Bittersweet"
@@ -122,7 +128,7 @@ variants:
           - form
           - safetyNotes
           - toxic
-seedUpdate: 86b34f232485895ee410c90d70cbb675f255e4961479db56974a2e1643158ff2
+seedUpdate: 1f17770a3f7192bac32b6c97b60111071b0885a71e9d494ea0f4735305074ccd
 ---
 
 # Bittersweet Nightshade

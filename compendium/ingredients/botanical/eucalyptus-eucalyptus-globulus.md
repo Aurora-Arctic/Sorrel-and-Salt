@@ -28,6 +28,7 @@ deities:
   - Mercury
   - Selene
   - Venus
+  - Luna
 categories:
   - Healing
   - Protection
@@ -37,6 +38,15 @@ categories:
   - Psychic Work
   - Purification
   - Wisdom
+  - Spirituality
+  - Focus
+  - Security
+  - Determination
+  - Past-Life Work
+  - Grief Work
+  - Negativity
+  - Emotions
+  - Spirit Work
 references:
   - source: cunningham-herbs
     locator: under "Eucalyptus"; p. 266
@@ -141,7 +151,7 @@ variants:
         supports:
           - form
           - description
-seedUpdate: ef07ad397ee3877157350b878b24e7e4b0e5c8a147c7a83d42139bdf788c9e1a
+seedUpdate: 135ee68d5634c8006d9d0db8ab22f7812ac6cabd435409c1730c21b0224d4df9
 ---
 
 # Eucalyptus

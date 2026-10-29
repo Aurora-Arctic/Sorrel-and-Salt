@@ -1,0 +1,14 @@
+# Gathered for M14.29; the seed never reads this folder.
+entry: botanical/camellia-camellia-japonica
+status: needs-review
+listings:
+  - list: iucn
+    name: IUCN Red List of Threatened Species, as printed in Wikipedia's taxobox
+    value: LC
+    listedAs: Camellia japonica
+    scope: global
+    nameBasis: stated
+    source: wikipedia-iucn-camellia-japonica
+    locator: 'Taxobox: status = LC, status_system = IUCN3.1; its status_ref reads: 2023-11-09'
+questions:
+  - 'The assessment Wikipedia names for Camellia japonica is not identified by title (the cited assessment is titled "null"). Raw status_ref: Wheeler, L., Su, M. & Rivers, M.C. (2015). ''''Camellia japonica''''. The IUCN Red List of Threatened Species 2015: e.T62054114A62054131. https://doi.org/10.2305/IUCN.UK.2015-4.RLTS.T62054114A62054131.en {{Webarchive|url=https://web.archive.org/web/20231109235708/https://www.iucnredlist.org/species/6205. Recommendation: do not list until the assessment is read for Camellia japonica.'

@@ -22,6 +22,9 @@ categories:
   - Creativity
   - Prosperity
   - Protection
+  - Wealth
+  - Luck
+  - Clarity
 substitutes:
   - name: Amazonite
 references:

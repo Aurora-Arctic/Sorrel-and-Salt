@@ -35,6 +35,15 @@ categories:
   - Lust
   - Healing
   - Creativity
+  - Wealth
+  - Spirituality
+  - Joy
+  - Relationships
+  - Negativity
+  - Hex-Breaking
+  - Sex
+  - Sexuality
+  - Emotions
 references:
   - source: cunningham-herbs
     locator: under "Clove"

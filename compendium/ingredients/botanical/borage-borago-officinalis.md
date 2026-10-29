@@ -30,6 +30,11 @@ categories:
   - Peace
   - Strength
   - Transformation
+  - Joy
+  - Security
+  - Awareness
+  - Grief Work
+  - Emotions
 references:
   - source: cunningham-herbs
     locator: under "Borage"; p. 266
@@ -132,6 +137,7 @@ variants:
         supports:
           - form
           - safetyNotes
+seedUpdate: 4190cabf3dd4237435b313f2cf1b43635c1a0059e850a703528751977eb8cbe0
 ---
 
 # Borage

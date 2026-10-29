@@ -26,6 +26,12 @@ categories:
   - Prosperity
   - Release
   - Spirit Work
+  - Wealth
+  - Luck
+  - Joy
+  - Grief Work
+  - Negativity
+  - Hex-Breaking
 references:
   - source: cunningham-herbs
     locator: under "Peony"

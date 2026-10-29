@@ -50,6 +50,11 @@ categories:
   - Psychic Work
   - Purification
   - Spirit Work
+  - Wealth
+  - Focus
+  - Joy
+  - Negativity
+  - Hex-Breaking
 references:
   - source: cunningham-herbs
     locator: under "Pine"

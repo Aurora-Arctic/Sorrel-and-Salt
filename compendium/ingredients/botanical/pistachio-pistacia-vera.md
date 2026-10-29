@@ -18,6 +18,7 @@ categories:
   - Healing
   - Love
   - Purification
+  - Hex-Breaking
 references:
   - source: cunningham-herbs
     locator: under "Pistachio"

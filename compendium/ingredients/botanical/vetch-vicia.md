@@ -5,6 +5,7 @@ canonicalName: Vicia
 safetyNotes: Cunningham marks Vetch, Giant X, which in his key means not recommended for internal use.
 categories:
   - Fidelity
+  - Negativity
 references:
   - source: cunningham-herbs
     locator: under "Vetch, Giant"; p. 266
@@ -22,6 +23,7 @@ references:
       - canonicalName
       - nomenclature
       - description
+      - categories
   - source: wikipedia-vicia
     nameBasis: stated
     supports:

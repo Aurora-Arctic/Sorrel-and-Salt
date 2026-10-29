@@ -28,6 +28,8 @@ categories:
   - Manifestation
   - Healing
   - Creativity
+  - Luck
+  - Energy
 substitutes:
   - identity: chrysoberyl var. cymophane
 references:
@@ -84,7 +86,6 @@ variants:
         supports:
           - form
           - description
-seedUpdate: e64bc94c6c1c2a3beaea81e12efb669093b0fe884e75af3f4c9ad2dca5b4ec64
 ---
 
 # Tiger's Eye

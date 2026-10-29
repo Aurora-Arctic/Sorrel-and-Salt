@@ -30,6 +30,7 @@ folkNames:
 categories:
   - Binding
   - Strength
+  - Transformation
 references:
   - source: kynes-plants
     locator: under "Bindweed"

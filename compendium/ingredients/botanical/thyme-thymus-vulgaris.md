@@ -28,6 +28,15 @@ categories:
   - Dream Work
   - Peace
   - Protection
+  - Luck
+  - Consecration
+  - Blessing
+  - Awareness
+  - Renewal
+  - Faerie Sight
+  - Adaptability
+  - Leadership
+  - Nightmare Protection
 references:
   - source: cunningham-herbs
     locator: under "Thyme"

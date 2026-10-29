@@ -1,0 +1,22 @@
+# Gathered for M14.29; the seed never reads this folder.
+entry: botanical/ladys-slipper-cypripedium-parviflorum
+status: needs-review
+listings:
+  - list: other
+    name: United Plant Savers Species At-Risk List
+    value: Critical
+    listedAs: Cypripedium spp.
+    scope: global
+    nameBasis: stated
+    source: ups-species-at-risk
+    locator: under the heading "Critical", entry for Lady’s Slipper Orchid
+  - list: iucn
+    name: IUCN Red List of Threatened Species, as printed in Wikipedia's taxobox
+    value: LC
+    listedAs: Cypripedium parviflorum
+    scope: global
+    nameBasis: stated
+    source: wikipedia-iucn-cypripedium-parviflorum
+    locator: 'Taxobox: status = LC, status_system = IUCN3.1; its status_ref reads: "Cypripedium parviflorum", Rankou, 2014, 10.2305/IUCN.UK.2014-1.RLTS.T43316816A43327704.en'
+questions:
+  - 'The CITES Appendices (valid from 5 March 2026) list the whole family Orchidaceae in Appendix II: p. 74, "ORCHIDACEAE spp. (Except the species included in Appendix I)", annotation #4. Cypripedium parviflorum is not printed by name, and the word Cypripedium does not appear in the Appendices. Owner: say whether a family-wide listing may be recorded. Recommendation: no listing row for the species; keep this question.'

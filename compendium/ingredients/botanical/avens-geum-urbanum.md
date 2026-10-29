@@ -35,6 +35,8 @@ categories:
   - Love
   - Abundance
   - Protection
+  - Banishing
+  - Hex-Breaking
 references:
   - source: cunningham-herbs
     locator: under "Avens"; p. 266
@@ -123,6 +125,7 @@ variants:
         nameBasis: stated
         supports:
           - description
+seedUpdate: 2bb957b9cacc776d86380cdec3bc474bea297954b86979d113e4ddf2afc376f4
 ---
 
 # Avens

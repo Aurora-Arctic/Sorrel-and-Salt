@@ -14,6 +14,7 @@ folkNames:
   - Tangle
 categories:
   - Protection
+  - Safe Travel
 references:
   - source: cunningham-herbs
     locator: under "Kelp"

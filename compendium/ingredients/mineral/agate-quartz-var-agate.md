@@ -32,6 +32,7 @@ categories:
   - Confidence
   - Memory
   - Cleansing
+  - Garden Magic
 references:
   - source: cunningham-crystals
     locator: under "Agate"; pp. 66–67
@@ -79,7 +80,7 @@ variants:
         supports:
           - form
           - description
-seedUpdate: 513670e8e6d00aa29a2600fe0c0e30c2887ccd3939c037d4799446fa6dc1de53
+seedUpdate: c21a1681d6ccc19eff82dcd086c0216e78fb5776e1b5ba768bacdace449dc7f1
 ---
 
 # Agate

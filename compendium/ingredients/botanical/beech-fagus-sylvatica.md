@@ -54,6 +54,9 @@ categories:
   - Psychic Work
   - Transformation
   - Wisdom
+  - Wealth
+  - Luck
+  - Renewal
 references:
   - source: cunningham-herbs
     locator: under "Beech"
@@ -63,6 +66,7 @@ references:
       - celestialBodies
       - folkNames
       - description
+      - categories
   - source: kynes-plants
     locator: under "Beech"
     nameBasis: unaudited
@@ -189,7 +193,7 @@ variants:
         supports:
           - form
           - description
-seedUpdate: 63006189b8c69b6decdb30f391993b1cca90c57e8124fa17102a3bfd6f01d324
+seedUpdate: 722813225705a13baf03501698cce4235f9e9569866b97a90fe0c3d2481bd2ad
 ---
 
 # Beech

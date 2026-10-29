@@ -24,6 +24,8 @@ categories:
   - Intuition
   - Confidence
   - Meditation
+  - Energy
+  - Sex
 substitutes:
   - identity: quartz var. carnelian
 references:

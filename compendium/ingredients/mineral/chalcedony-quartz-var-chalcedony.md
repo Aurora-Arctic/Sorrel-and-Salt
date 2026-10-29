@@ -26,6 +26,7 @@ categories:
   - Joy
   - Cleansing
   - Healing
+  - Luck
 references:
   - source: cunningham-crystals
     locator: p. 82
@@ -102,7 +103,7 @@ variants:
           - form
           - description
           - colours
-seedUpdate: f80fae8e591ef6a94bd4b2896ad05d9bdb24651c892de031f2be6a4b6ecdf434
+seedUpdate: e3fddb2a9b8973b887c878ea6e129ade9e098559087f3d680f5ecc00b3811adc
 ---
 
 # Chalcedony

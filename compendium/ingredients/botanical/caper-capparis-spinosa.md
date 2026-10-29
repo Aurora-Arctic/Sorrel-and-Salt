@@ -14,6 +14,7 @@ folkNames:
 categories:
   - Lust
   - Love
+  - Sex
 references:
   - source: cunningham-herbs
     locator: under "Caper"
@@ -41,6 +42,7 @@ variants:
         supports:
           - form
           - description
+seedUpdate: f1f30b3eb22c51ff5d9fe0f6f74a4fec2b35d5392c0fe545caade80dfca47874
 ---
 
 # Caper

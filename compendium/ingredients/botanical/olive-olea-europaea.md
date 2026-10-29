@@ -37,6 +37,9 @@ deities:
   - Saturn
   - Zeus
   - Astarte
+  - Brahma
+  - Fides
+  - Indra
 categories:
   - Healing
   - Peace
@@ -49,6 +52,16 @@ categories:
   - Fidelity
   - Prosperity
   - Purification
+  - Wealth
+  - Luck
+  - Spirituality
+  - Funeral Rites
+  - Consecration
+  - Blessing
+  - Hope
+  - Sex
+  - Sexuality
+  - Family
 references:
   - source: cunningham-herbs
     locator: under "Olive"
@@ -112,6 +125,7 @@ variants:
         supports:
           - form
           - description
+seedUpdate: 6ff250c47d140feb9f7eebf0eca1144e4d2f2bc195824dd8dd9d962347414fc5
 ---
 
 # Olive
@@ -120,10 +134,4 @@ The olive is the tree that gives the fruit and the oil, an evergreen of the Medi
 
 #### Edit Notes for Claude
 
-Deity gap: Irene (Cunningham, under "Olive"), not in the vocabulary; link once M14.15 adds it.
-
-Deity gap: Brahma (Kynes, under "Olive"), not in the vocabulary; link once M14.15 adds it.
-
-Deity gap: Fides (Kynes, under "Olive"), not in the vocabulary; link once M14.15 adds it.
-
-Deity gap: Indra (Kynes, under "Olive"), not in the vocabulary; link once M14.15 adds it.
+Deity gap: Irene (Cunningham, under "Olive"), not in the vocabulary after M14.15: Irene is only a given name in the source read; the goddess is Eirene.

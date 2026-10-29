@@ -8,6 +8,7 @@ folkNames:
   - Aerolite
 categories:
   - Protection
+  - Astral Projection
 references:
   - source: cunningham-crystals
     locator: pp. 167–168
@@ -33,6 +34,7 @@ variants:
         nameBasis: unaudited
         supports:
           - form
+seedUpdate: 0d24ba3950169faf625860e6802952fbf216d79918b1f48f24eb30861253b133
 ---
 
 # Meteorite

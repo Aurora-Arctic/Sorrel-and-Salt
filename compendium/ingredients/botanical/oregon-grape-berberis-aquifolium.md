@@ -25,6 +25,9 @@ categories:
   - Clarity
   - Healing
   - Protection
+  - Wealth
+  - Attraction
+  - Negativity
 references:
   - source: cunningham-herbs
     locator: under "Oregon Grape"

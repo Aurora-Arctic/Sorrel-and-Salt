@@ -25,6 +25,10 @@ categories:
   - Divination
   - Creativity
   - Psychic Work
+  - Focus
+  - Joy
+  - Sex
+  - Sexuality
 references:
   - source: cunningham-herbs
     locator: under "Hibiscus"
@@ -68,6 +72,7 @@ variants:
         supports:
           - form
           - description
+seedUpdate: d9455ebe2c73152f75803045afb53aee2431d42999917ea27443f3dd117a82ff
 ---
 
 # Hibiscus

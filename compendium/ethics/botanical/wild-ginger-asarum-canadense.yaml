@@ -1,0 +1,20 @@
+# Gathered for M14.29; the seed never reads this folder.
+entry: botanical/wild-ginger-asarum-canadense
+status: approved
+listings:
+  - list: natureserve
+    name: NatureServe
+    value: Global rank G5
+    listedAs: Asarum canadense
+    scope: global
+    nameBasis: stated
+    source: wikipedia-asarum-canadense
+    locator: taxobox, status = G5 (TNC)
+  - list: other
+    name: Threatened species
+    value: Threatened (habitat loss)
+    listedAs: Asarum canadense
+    scope: Maine
+    nameBasis: stated
+    source: wikipedia-asarum-canadense
+    locator: Lead

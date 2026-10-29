@@ -19,6 +19,7 @@ categories:
   - Strength
   - Protection
   - Prosperity
+  - Wealth
 references:
   - source: kynes-plants
     locator: under "Woad"

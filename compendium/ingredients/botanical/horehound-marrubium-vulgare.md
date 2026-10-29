@@ -36,6 +36,8 @@ categories:
   - Banishing
   - Clarity
   - Strength
+  - Manifestation
+  - Hex-Breaking
 references:
   - source: cunningham-herbs
     locator: under "Horehound"
@@ -86,6 +88,7 @@ variants:
         supports:
           - form
           - description
+seedUpdate: bf59a1415d6fd9dd8a7bc2c3f0f7c60f0826baf5cd9a29f0cba0a8a7b39c4024
 ---
 
 # Horehound

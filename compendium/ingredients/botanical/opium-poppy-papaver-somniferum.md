@@ -29,6 +29,8 @@ deities:
   - Minerva
   - Persephone
   - Venus
+  - Modron
+  - Morpheus
 categories:
   - Fertility
   - Love
@@ -37,6 +39,13 @@ categories:
   - Dream Work
   - Protection
   - Wisdom
+  - Wealth
+  - Luck
+  - Invisibility
+  - Funeral Rites
+  - Renewal
+  - Relationships
+  - Challenges
 references:
   - source: cunningham-herbs
     locator: under "Poppy"; p. 266
@@ -112,9 +121,3 @@ Does cunningham-herbs under "Poppy", cited on the entry, the Seed and the Pod, d
 <!-- audit:kynes-plants:Poppy -->
 
 Does kynes-plants under "Poppy", cited on the entry, the Seed and the Pod, describe Papaver somniferum alone? Kynes gives the common poppy (Papaver rhoeas) and the opium poppy as two sub-headings, so her element, signs, deities and powers may belong to either. Settle it as `stated` or `resolved` from the source, or replace the citation.
-
-#### Edit Notes for Claude
-
-Deity gap: Modron (Kynes, under "Poppy"), not in the vocabulary; link once M14.15 adds it.
-
-Deity gap: Morpheus (Kynes, under "Poppy"), not in the vocabulary; link once M14.15 adds it.

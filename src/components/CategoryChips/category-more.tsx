@@ -154,6 +154,7 @@ const CategoryMore = ({ categories, label, tipOf }: CategoryMoreProps): ReactEle
       </button>
       <span
         id={panelId}
+        // oxlint-disable-next-line react/refs -- the callback ref and handlers come from a hook and are only handed to the DOM, never read while rendering
         ref={refs.setFloating}
         style={floatingStyles}
         // oxlint-disable-next-line jsx-a11y/prefer-tag-over-role -- a fieldset or details would add a legend or a disclosure; this is a plain labelled group

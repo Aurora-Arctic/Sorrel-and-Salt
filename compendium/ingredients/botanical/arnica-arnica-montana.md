@@ -27,6 +27,10 @@ categories:
   - Protection
   - Psychic Work
   - Purification
+  - Security
+  - Sex
+  - Sexuality
+  - Spirit Work
 references:
   - source: kynes-plants
     locator: under "Arnica"
@@ -122,7 +126,7 @@ variants:
         supports:
           - form
           - description
-seedUpdate: 651b5dd0fc43a7efd2f44d332de8df0224e21a59c4d51821d499c030747d5a6d
+seedUpdate: 81a3298f56531438ccfe4bb2ecc43a6b56d50b160e6deeafcd9a68cf18223c40
 ---
 
 # Arnica

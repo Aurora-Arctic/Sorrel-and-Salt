@@ -1,0 +1,12 @@
+# Gathered for M14.29; the seed never reads this folder.
+entry: botanical/rudraksha-elaeocarpus-angustifolius
+status: needs-review
+listings:
+  - list: iucn
+    name: IUCN Red List of Threatened Species, as printed in the Wikipedia taxobox
+    value: Least Concern
+    listedAs: Elaeocarpus angustifolius
+    scope: global
+    nameBasis: stated
+    source: wikipedia-elaeocarpus-angustifolius
+    locator: 'taxobox "Conservation status": Least Concern (IUCN 3.1)'

@@ -1,0 +1,12 @@
+# Gathered for M14.29; the seed never reads this folder.
+entry: botanical/bog-myrtle-myrica-gale
+status: approved
+listings:
+  - list: iucn
+    name: IUCN Red List of Threatened Species, as printed in Wikipedia's taxobox
+    value: LC
+    listedAs: Myrica gale
+    scope: global
+    nameBasis: stated
+    source: wikipedia-iucn-myrica-gale
+    locator: 'Taxobox: status = LC, status_system = IUCN3.1; its status_ref reads: "Myrica gale", Maiz-Tome, L., 2016, 10.2305/IUCN.UK.2016-1.RLTS.T64318305A67730167.en'

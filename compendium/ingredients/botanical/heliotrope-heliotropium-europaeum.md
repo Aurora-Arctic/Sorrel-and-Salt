@@ -32,6 +32,12 @@ categories:
   - Protection
   - Psychic Work
   - Release
+  - Awareness
+  - Hex-Breaking
+  - Leadership
+  - Prophetic Dreams
+  - Banishing
+  - Invisibility
 references:
   - source: cunningham-herbs
     locator: under "Heliotrope"
@@ -102,4 +108,4 @@ Does kynes-plants under "Heliotrope", cited on the entry and the Flower, describ
 
 #### Edit Notes for Claude
 
-Deity gap: Phoebe (Kynes, under "Heliotrope"), not in the vocabulary; link once M14.15 adds it.
+Deity gap: Phoebe (Kynes, under "Heliotrope"), not in the vocabulary after M14.15: The source does not say which Phoebe it means.

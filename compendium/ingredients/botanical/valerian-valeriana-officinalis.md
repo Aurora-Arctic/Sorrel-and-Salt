@@ -37,6 +37,14 @@ categories:
   - Peace
   - Prosperity
   - Truth
+  - Wealth
+  - Consecration
+  - Blessing
+  - Challenges
+  - Family
+  - Home Blessing
+  - Secrets
+  - Spirit Work
 references:
   - source: cunningham-herbs
     locator: under "Valerian"
@@ -126,4 +134,4 @@ Does ahpa-safety under "Valeriana spp.", cited on the safety notes, describe Val
 
 #### Edit Notes for Claude
 
-Deity gap: Kupala (Kynes, under "Valerian"), not in the vocabulary; link once M14.15 adds it.
+Deity gap: Kupala (Kynes, under "Valerian"), not in the vocabulary after M14.15: Modern scholars deny that Kupala was an ancient Slavic deity, so it is left out.

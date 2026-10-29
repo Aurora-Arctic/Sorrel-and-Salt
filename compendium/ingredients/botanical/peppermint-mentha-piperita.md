@@ -32,6 +32,10 @@ categories:
   - Prosperity
   - Protection
   - Strength
+  - Wealth
+  - Luck
+  - Focus
+  - Trust
 references:
   - source: cunningham-herbs
     locator: under "Peppermint"

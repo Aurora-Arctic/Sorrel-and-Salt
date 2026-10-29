@@ -20,6 +20,10 @@ deities:
 categories:
   - Love
   - Protection
+  - Determination
+  - Negativity
+  - Challenges
+  - Secrets
 references:
   - source: kynes-plants
     locator: under "Locust"

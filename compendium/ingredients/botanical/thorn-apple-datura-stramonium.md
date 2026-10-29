@@ -34,6 +34,7 @@ categories:
   - Divination
   - Dream Work
   - Protection
+  - Hex-Breaking
 references:
   - source: kynes-plants
     locator: under "Thorn Apple, Jimson Weed, Datura"
@@ -98,6 +99,7 @@ variants:
         supports:
           - form
           - description
+seedUpdate: 3204cf3756ceb6e2302b3a9654555c443eabd963ea32b6e28ebb380dc03d0e49
 ---
 
 # Thorn Apple

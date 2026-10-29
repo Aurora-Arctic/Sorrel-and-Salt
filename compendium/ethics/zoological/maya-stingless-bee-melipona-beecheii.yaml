@@ -1,0 +1,10 @@
+# Gathered for M14.29; the seed never reads this folder.
+entry: zoological/maya-stingless-bee-melipona-beecheii
+status: approved
+animalPart:
+  - quote: 'Due to the concern that stingless bee keeping is going extinct, the possibility of negative effects resulting from the impact of competition from feral African Apis mellifera, over-harvesting, failure to transfer colonies to hives or divide them, deforestation, hurricane damage'
+    source: wikipedia-melipona-beecheii
+    locator: Agriculture
+  - quote: Beekeepers who work with M. beecheii in the Mayan zone in Quintana Roo state, Mexico, have reported a 93% decrease in hives over the past 25 years.
+    source: wikipedia-melipona-beecheii
+    locator: Conservation status

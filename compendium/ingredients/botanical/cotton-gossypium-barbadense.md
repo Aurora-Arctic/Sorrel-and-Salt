@@ -10,6 +10,8 @@ celestialBodies:
 categories:
   - Healing
   - Protection
+  - Luck
+  - Rain Magic
 references:
   - source: cunningham-herbs
     locator: under "Cotton"
@@ -62,7 +64,7 @@ variants:
           - form
           - description
           - safetyNotes
-seedUpdate: d847b76db90f0e92b89bd2391123930056da834f5991b4ca2e78e8162b7a404c
+seedUpdate: a33d4664e51046768b7bbbe1f4b61a589b5d93b93c8a4722604ff1e0741e5010
 ---
 
 # Cotton

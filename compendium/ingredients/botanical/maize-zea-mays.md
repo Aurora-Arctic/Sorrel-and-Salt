@@ -26,6 +26,7 @@ deities:
   - Lugh
   - Osiris
   - Persephone
+  - Centeotl
 categories:
   - Protection
   - Divination
@@ -35,6 +36,15 @@ categories:
   - Prophecy
   - Prosperity
   - Truth
+  - Wealth
+  - Luck
+  - Funeral Rites
+  - Consecration
+  - Blessing
+  - Hope
+  - Trust
+  - Renewal
+  - Hex-Breaking
 references:
   - source: cunningham-herbs
     locator: under "Corn"; p. 266
@@ -117,7 +127,7 @@ variants:
         nameBasis: stated
         supports:
           - description
-seedUpdate: c66017fcaaaa97ae7e599849d9c16b7de0d002f4ad0d4087c9daff2967048d7b
+seedUpdate: d5de063cb5497eda6de1cb3af7da60e6ef1a6e68c8a419a2956480e0608bb534
 ---
 
 # Maize

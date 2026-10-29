@@ -96,7 +96,7 @@ function pageOf(
   return resolvePage(args, (request) => suggestDeities(session, workspaceId, query, request));
 }
 
-/** Every suggestion, walked a page at a time: a blank query lists all 216. */
+/** Every suggestion, walked a page at a time: a blank query lists every curated deity. */
 async function all(
   session: Session,
   query: string,
@@ -127,7 +127,7 @@ function find(suggestions: DeitySuggestion[], value: string): DeitySuggestion {
 
 describe('suggestDeities', () => {
   describe('the two buckets', () => {
-    // "Hecate (Greek)": the tradition is what a reader chooses among 216 by.
+    // "Hecate (Greek)": the tradition is what a reader chooses among all the curated deities by.
     it('carries each curated row’s tradition, and no tradition on a value only in use', async () => {
       await addIngredient({ workspaceId: WORKSPACE_W_ID, deities: ['Hermes Trismegistus'] });
 
@@ -161,7 +161,11 @@ describe('suggestDeities', () => {
       expect(await descriptionOf('Jupiter')).toMatch(/Zeus/);
       expect(await similarity('zeus', 'Jupiter')).toBe(0);
 
-      expect(valuesOf(await all(asUser(B), 'zeus'))).toEqual(['Zeus', 'Jupiter']);
+      // Other deities' descriptions name him too, so the vocabulary's growth must not
+      // break this: only the name match leads, and Jupiter still follows.
+      const values = valuesOf(await all(asUser(B), 'zeus'));
+      expect(values[0]).toBe('Zeus');
+      expect(values).toContain('Jupiter');
     });
 
     // The description carries the other spellings and the words a reader

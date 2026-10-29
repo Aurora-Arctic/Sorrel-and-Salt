@@ -29,6 +29,8 @@ deities:
   - Isis
   - Odin
   - Venus
+  - Aurora
+  - Harpocrates
 categories:
   - Love
   - Psychic Work
@@ -39,6 +41,16 @@ categories:
   - Communication
   - Dream Work
   - Intuition
+  - Luck
+  - Funeral Rites
+  - Consecration
+  - Blessing
+  - Trust
+  - Sex
+  - Sexuality
+  - Emotions
+  - Secrets
+  - Spirit Work
 references:
   - source: cunningham-herbs
     locator: under "Rose"; p. 266
@@ -266,7 +278,7 @@ variants:
           - form
           - description
           - colours
-seedUpdate: 8acfd60625f812a0e86f55d927c8232a041e86a297b269ecb891c17091dafebb
+seedUpdate: 79592549ba56f262bdd6b3488e40ea1004e2d4cb5757275e804a85e5cd03a74a
 ---
 
 # Rose

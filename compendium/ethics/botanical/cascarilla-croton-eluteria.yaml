@@ -1,0 +1,12 @@
+# Gathered for M14.29; the seed never reads this folder.
+entry: botanical/cascarilla-croton-eluteria
+status: approved
+listings:
+  - list: iucn
+    name: IUCN Red List of Threatened Species, as printed in Wikipedia's taxobox
+    value: LC
+    listedAs: Croton eluteria
+    scope: global
+    nameBasis: stated
+    source: wikipedia-iucn-croton-eluteria
+    locator: 'Taxobox: status = LC, status_system = IUCN3.1; its status_ref reads: "Croton eluteria", Freid, E.H., 2022, e.T202825110A202880938'

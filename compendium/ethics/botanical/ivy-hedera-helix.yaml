@@ -1,0 +1,12 @@
+# Gathered for M14.29; the seed never reads this folder.
+entry: botanical/ivy-hedera-helix
+status: needs-review
+listings:
+  - list: iucn
+    name: IUCN Red List of Threatened Species, as printed in Wikipedia's taxobox
+    value: LC
+    listedAs: Hedera helix
+    scope: Europe
+    nameBasis: stated
+    source: wikipedia-iucn-hedera-helix
+    locator: 'Taxobox: status = LC, status_system = IUCN3.1; its status_ref reads: "Hedera helix (Europe assessment; Least concern)", Khela, S, 2026, 10.2305/IUCN.UK.2026-1.RLTS.T202964A209180534.en'

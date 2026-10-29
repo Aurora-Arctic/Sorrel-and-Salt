@@ -19,6 +19,9 @@ categories:
   - Love
   - Fidelity
   - Protection
+  - Luck
+  - Determination
+  - Invisibility
 references:
   - source: cunningham-herbs
     locator: under "Edelweiss"
@@ -27,6 +30,7 @@ references:
     resolvedBy: wikipedia-edelweiss
     supports:
       - description
+      - categories
   - source: kynes-plants
     locator: under "Edelweiss"
     nameBasis: resolved
@@ -94,6 +98,7 @@ variants:
         supports:
           - form
           - description
+seedUpdate: ffd987f521a78891b975fcab186277e1652d23d84b8995cd937aace75c46eab4
 ---
 
 # Edelweiss

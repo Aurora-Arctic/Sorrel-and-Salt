@@ -34,6 +34,11 @@ categories:
   - Divination
   - Banishing
   - Purification
+  - Chastity
+  - Healing
+  - Focus
+  - Past-Life Work
+  - Negativity
 references:
   - source: cunningham-herbs
     locator: under "Camphor"; p. 266
@@ -133,7 +138,7 @@ variants:
         supports:
           - form
           - description
-seedUpdate: 576446f1d6e789505a36e70f54e0762db13e01dfea4e263b2d080da3eca263d1
+seedUpdate: 6fd1f16f7e3267ea9c0a4089fcb34c4c03756d0721102edd04b47ad2512293cb
 ---
 
 # Camphor

@@ -16,6 +16,7 @@ folkNames:
 categories:
   - Courage
   - Strength
+  - Wealth
 references:
   - source: cunningham-herbs
     locator: under "Tea"; p. 266

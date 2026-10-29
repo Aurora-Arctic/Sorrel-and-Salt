@@ -1,0 +1,14 @@
+# Gathered for M14.29; the seed never reads this folder.
+entry: botanical/kava-piper-methysticum
+status: needs-review
+listings:
+  - list: other
+    name: United Plant Savers Species At-Risk List
+    value: At-Risk
+    listedAs: Piper methysticum (Hawaii only)
+    scope: Hawaii
+    nameBasis: stated
+    source: ups-species-at-risk
+    locator: under the heading "At-Risk", entry for Kava
+questions:
+  - 'The list prints "Piper methysticum (Hawaii only)". The listing is scoped to Hawaii. Recommendation: show it as scoped to Hawaii; owner to confirm.'

@@ -46,6 +46,7 @@ deities:
   - Mercury
   - Ra
   - Vesta
+  - Daphne
 categories:
   - Protection
   - Psychic Work
@@ -67,6 +68,11 @@ categories:
   - Release
   - Success
   - Wisdom
+  - Wealth
+  - Security
+  - Manifestation
+  - Negativity
+  - Hex-Breaking
 references:
   - source: cunningham-herbs
     locator: under "Bay"; p. 266
@@ -168,7 +174,7 @@ variants:
         nameBasis: unaudited
         supports:
           - safetyNotes
-seedUpdate: 5fc41c5897b384ee544213429ae31cf742fd5a427151198cd80672f9fb84d00f
+seedUpdate: a16359b32b5eabadb7cdaf9967f9924573226fe231cd44eaf8171fc7a2ef78c5
 ---
 
 # Bay Laurel

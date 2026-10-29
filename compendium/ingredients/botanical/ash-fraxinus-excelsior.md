@@ -40,6 +40,9 @@ deities:
   - Manannan mac Lir
   - Minerva
   - Odin
+  - Uranus
+  - Macha
+  - Nemesis
 categories:
   - Protection
   - Prosperity
@@ -55,6 +58,14 @@ categories:
   - Prophecy
   - Strength
   - Wisdom
+  - Wealth
+  - Luck
+  - Focus
+  - Awareness
+  - Negativity
+  - Hex-Breaking
+  - Transformation
+  - Faerie Sight
 references:
   - source: cunningham-herbs
     locator: under "Ash"
@@ -173,7 +184,7 @@ variants:
         supports:
           - form
           - description
-seedUpdate: 1a551d79e80c250cbd348ba43cee82dd0f2aba5d36e7a3b0980ab57eeb19b258
+seedUpdate: 73d961fe0019ea965e31dba21974b3eadb84cd31340f7c9da3602b3318d9cc55
 ---
 
 # Ash

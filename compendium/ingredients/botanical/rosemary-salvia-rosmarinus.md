@@ -30,6 +30,7 @@ folkNames:
 deities:
   - Aphrodite
   - Venus
+  - Lares
 categories:
   - Protection
   - Love
@@ -46,6 +47,14 @@ categories:
   - Dream Work
   - Inspiration
   - Fidelity
+  - Youth
+  - Banishing
+  - Funeral Rites
+  - Consecration
+  - Blessing
+  - Focus
+  - Negativity
+  - Nightmare Protection
 references:
   - source: cunningham-herbs
     locator: under "Rosemary"; p. 266
@@ -214,7 +223,7 @@ variants:
         supports:
           - form
           - description
-seedUpdate: 63dd506ae675fb5456f96a4dc974a94cce2598627dbd8fb7fb4498e81eed9d47
+seedUpdate: e408793f8a4ab8c274931016e74e350825fcf54b6fb0c342d4091fe5df375672
 ---
 
 # Rosemary

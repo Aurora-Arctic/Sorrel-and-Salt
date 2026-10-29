@@ -16,6 +16,7 @@ deities:
   - Hera
   - Isis
   - Venus
+  - Harpocrates
 categories:
   - Love
   - Banishing
@@ -25,6 +26,12 @@ categories:
   - Fidelity
   - Wisdom
   - Manifestation
+  - Luck
+  - Funeral Rites
+  - Joy
+  - Renewal
+  - Negativity
+  - Hex-Breaking
 references:
   - source: cunningham-herbs
     locator: under "Peach"; p. 266
@@ -153,7 +160,3 @@ The peach is a deciduous tree with edible, juicy fruit, first domesticated in Ch
 <!-- audit:kynes-plants:Peach and Nectarine -->
 
 Does kynes-plants under "Peach and Nectarine", cited on the entry and every variant, describe Prunus persica alone? Kynes heads the common peach with the nectarine (P. persica var. nucipersica), so her element, planets, deities and powers may belong to either. Settle it as `stated` or `resolved` from the source, or replace the citation.
-
-#### Edit Notes for Claude
-
-Deity gap: Harpocrates (Kynes, under "Peach and Nectarine"), not in the vocabulary; link once M14.15 adds it.

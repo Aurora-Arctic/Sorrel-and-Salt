@@ -279,6 +279,7 @@ export function useFormHistory<V extends FieldValues>(
     restore(step, 'undo');
     commit({ type: 'undone' });
     announce(`Undid change to ${label}`);
+    // oxlint-disable-next-line react/preserve-manual-memoization -- the React Compiler is off, so the hand-written dependency list stands as written
   }, [enabled, root, restore, commit, announce]);
 
   const redo = useCallback(() => {
@@ -293,6 +294,7 @@ export function useFormHistory<V extends FieldValues>(
     restore(step, 'redo');
     commit({ type: 'redone' });
     announce(`Redid change to ${label}`);
+    // oxlint-disable-next-line react/preserve-manual-memoization -- the React Compiler is off, so the hand-written dependency list stands as written
   }, [enabled, root, restore, commit, announce]);
 
   const clear = useCallback(() => {
@@ -377,6 +379,7 @@ export function useFormHistory<V extends FieldValues>(
   useEffect(() => {
     const element = root.current;
     if (!element) return;
+    // oxlint-disable-next-line react/immutability -- the ref is written inside a drag handler, after render, not during it
     element.dataset.formHistory = '';
     return () => {
       delete element.dataset.formHistory;

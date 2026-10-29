@@ -33,6 +33,13 @@ categories:
   - Abundance
   - Dream Work
   - Healing
+  - Wealth
+  - Prophetic Dreams
+  - Spirituality
+  - Protection
+  - Sex
+  - Sexuality
+  - Spirit Work
 references:
   - source: cunningham-herbs
     locator: under "Jasmine"

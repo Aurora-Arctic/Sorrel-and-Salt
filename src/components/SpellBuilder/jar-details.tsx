@@ -30,6 +30,9 @@ function groupOf(
   return null;
 }
 
+/** One array for every render that has no steps yet, so the memo below can depend on it. */
+const NO_STEPS: SpellStepsValues['steps'] = [];
+
 /**
  * A plain jar, muted: it stands for the spell's jar and is no stock, so it has no level.
  * Reuses the shelf's vessel; the seal wax colour is not drawn on it. It fills with one band
@@ -37,7 +40,7 @@ function groupOf(
  */
 function SpellJar(): ReactElement {
   const { control } = useFormContext<SpellStepsValues>();
-  const steps = useWatch({ control, name: 'steps' }) ?? [];
+  const steps = useWatch({ control, name: 'steps' }) ?? NO_STEPS;
   const colors = useCategoryColors();
   const bands = useMemo(
     () =>
@@ -61,6 +64,7 @@ export function JarDetails({
   descriptionField: ReactNode;
 }): ReactElement {
   return (
+    // oxlint-disable-next-line jsx-a11y/prefer-tag-over-role -- a fieldset or details would add a legend or a disclosure; this is a plain labelled group
     <div className="jar-details" role="group" aria-label="Jar Details">
       <div className="jar-details__wax">
         <SpellJar />

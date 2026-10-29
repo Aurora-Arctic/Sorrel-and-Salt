@@ -25,6 +25,7 @@ categories:
   - Friendship
   - Intuition
   - Sleep
+  - Strength
 references:
   - source: cunningham-crystals
     locator: under "Malachite"; p. 112
@@ -64,6 +65,7 @@ variants:
           - description
           - safetyNotes
           - toxic
+seedUpdate: 3a18d771657175ce57f9175ae77d3c0ec25387ccdef7ce1d3a83365825b84c23
 ---
 
 # Malachite

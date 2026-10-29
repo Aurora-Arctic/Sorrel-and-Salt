@@ -12,6 +12,7 @@ deities:
   - Hera
   - Thoth
   - Zeus
+  - Eos
 categories:
   - Love
   - Banishing
@@ -24,6 +25,14 @@ categories:
   - Peace
   - Protection
   - Psychic Work
+  - Joy
+  - Relationships
+  - Sex
+  - Sexuality
+  - Family
+  - Home Blessing
+  - Emotions
+  - Prophecy
 references:
   - source: cunningham-herbs
     locator: under "Crocus"; p. 266
@@ -79,6 +88,7 @@ variants:
         supports:
           - form
           - description
+seedUpdate: 6c51197fe5f950ae3fefa8e4b73bbb626c3ea0852b24f25b7caf999eee9b5a96
 ---
 
 # Crocus

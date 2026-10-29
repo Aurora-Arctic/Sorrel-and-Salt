@@ -1,0 +1,14 @@
+# Gathered for M14.29; the seed never reads this folder.
+entry: botanical/tea-camellia-sinensis
+status: needs-review
+listings:
+  - list: iucn
+    name: IUCN Red List of Threatened Species, as printed in Wikipedia's taxobox
+    value: DD
+    listedAs: Camellia sinensis
+    scope: global
+    nameBasis: stated
+    source: wikipedia-iucn-camellia-sinensis
+    locator: 'Taxobox: status = DD, status_system = IUCN3.1; its status_ref reads: (no assessment named)'
+questions:
+  - 'The assessment Wikipedia names for Camellia sinensis is not identified by title (status_ref does not name the IUCN). Raw status_ref: {{sfn|Rivers|Wheeler|2018}}. Recommendation: do not list until the assessment is read for Camellia sinensis.'

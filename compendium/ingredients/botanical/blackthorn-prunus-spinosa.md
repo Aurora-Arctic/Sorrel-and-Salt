@@ -27,6 +27,9 @@ deities:
   - Brigid
   - Dagda
   - Loki
+  - Banba
+  - Macha
+  - Ran
 categories:
   - Protection
   - Banishing
@@ -35,6 +38,10 @@ categories:
   - Purification
   - Strength
   - Truth
+  - Negativity
+  - Hex-Breaking
+  - Challenges
+  - Leadership
 references:
   - source: cunningham-herbs
     locator: under "Sloe"; p. 266
@@ -176,7 +183,7 @@ variants:
         supports:
           - form
           - description
-seedUpdate: 89e95793aa50569be0a231d6d3e21cce5cc9c9650c2e5bd9132c9a7b12ccc2e2
+seedUpdate: cd02ef03de57b8ce6ca1e592e795a6e7c90ca65d98416905d6b98191a9ebe3be
 ---
 
 # Blackthorn

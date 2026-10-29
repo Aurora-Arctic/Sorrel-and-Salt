@@ -1,0 +1,12 @@
+# Gathered for M14.29; the seed never reads this folder.
+entry: botanical/spanish-moss-tillandsia-usneoides
+status: approved
+listings:
+  - list: iucn
+    name: IUCN Red List of Threatened Species, as printed in Wikipedia's taxobox
+    value: LC
+    listedAs: Tillandsia usneoides
+    scope: global
+    nameBasis: stated
+    source: wikipedia-iucn-tillandsia-usneoides
+    locator: 'Taxobox: status = LC, status_system = IUCN3.1; its status_ref reads: "Tillandsia usneoides", Treviño Zevallos, I., 2019, 10.2305/IUCN.UK.2019-3.RLTS.T131368905A131369229.en'

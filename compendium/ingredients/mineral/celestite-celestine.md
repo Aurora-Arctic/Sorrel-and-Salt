@@ -24,6 +24,7 @@ categories:
   - Creativity
   - Communication
   - Clarity
+  - Compassion
 references:
   - source: cunningham-crystals
     locator: under "Celestite"; pp. 81–82
@@ -61,6 +62,7 @@ variants:
         resolvedBy: wikipedia-celestine-mineral
         supports:
           - form
+seedUpdate: 33de6e43c624b42b0e3324d84480ea2880336fa660b07b0fc5b1af8b04c4ec08
 ---
 
 # Celestite

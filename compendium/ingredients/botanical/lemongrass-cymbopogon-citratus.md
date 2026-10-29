@@ -32,6 +32,16 @@ categories:
   - Intuition
   - Fidelity
   - Purification
+  - Luck
+  - Spirituality
+  - Protection
+  - Focus
+  - Trust
+  - Negativity
+  - Sex
+  - Sexuality
+  - Spirit Work
+  - Snake Repelling
 references:
   - source: cunningham-herbs
     locator: under "Lemongrass"; p. 266
@@ -117,7 +127,7 @@ variants:
         supports:
           - form
           - description
-seedUpdate: f37df13919fd1c531bdd7f11fb50d9532764ce2ba6bdac4fafd8991cc9ae2ca9
+seedUpdate: 4f841d93d77d4fcef2eec7c274324b065a8674a0ecbd288f70433a571ce87942
 ---
 
 # Lemongrass

@@ -22,6 +22,7 @@ categories:
   - Meditation
   - Protection
   - Healing
+  - Energy
 references:
   - source: cunningham-crystals
     locator: under "Selenite"; p. 134

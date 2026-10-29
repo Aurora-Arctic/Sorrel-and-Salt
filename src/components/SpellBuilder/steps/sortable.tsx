@@ -1,3 +1,4 @@
+/* oxlint-disable react/immutability -- dnd-kit calls these handlers after render, and they write the ref then, never while rendering */
 'use client';
 
 import {

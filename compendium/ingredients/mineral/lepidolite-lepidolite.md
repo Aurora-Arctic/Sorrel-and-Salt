@@ -21,6 +21,9 @@ categories:
   - Sleep
   - Reconciliation
   - Healing
+  - Luck
+  - Spirituality
+  - Nightmare Protection
 references:
   - source: cunningham-crystals
     locator: under "Lepidolite"; pp. 110–112

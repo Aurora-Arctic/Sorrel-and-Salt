@@ -15,6 +15,10 @@ folkNames:
   - Indian Banyan
   - Audrey Fig
   - Nuga
+deities:
+  - Maui
+categories:
+  - Luck
 references:
   - source: cunningham-herbs
     locator: under "Banyan"; p. 266
@@ -25,6 +29,8 @@ references:
       - celestialBodies
       - folkNames
       - description
+      - deities
+      - categories
   - source: wikipedia-ficus-benghalensis
     nameBasis: stated
     supports:
@@ -43,7 +49,7 @@ variants:
         nameBasis: stated
         supports:
           - form
-seedUpdate: 54ac247ce0566049ba92cd01c196c04156dd82cf41f1aaffce5eee6136dd6e9a
+seedUpdate: d943f7789c884ea549962a62ea89c46d0da3f4c226de4c8fd774dbfb9b2950bf
 ---
 
 # Banyan

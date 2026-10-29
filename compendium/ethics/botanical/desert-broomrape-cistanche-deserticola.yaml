@@ -1,0 +1,14 @@
+# Gathered for M14.29; the seed never reads this folder.
+entry: botanical/desert-broomrape-cistanche-deserticola
+status: needs-review
+listings:
+  - list: cites
+    name: CITES Appendices I, II and III, valid from 5 March 2026
+    value: Appendix II
+    listedAs: Cistanche deserticola
+    scope: global
+    nameBasis: stated
+    source: cites-appendices
+    locator: 'p. 75, Appendix II column, family OROBANCHACEAE: "Cistanche deserticola", annotation #4: "All parts and derivatives, except: a) seeds (including seedpods of Orchidaceae), spores and pollen (including pollinia)..." (the annotation continues with further exemptions)'
+questions:
+  - The Wikipedia page (oldid 1372517684) says the wild population of Cistanche deserticola has decreased and its range has shrunk through over-collection and loss of the saxaul host. It also prints a CITES listing in its infobox and text, which the M14.18 lane does not record by the owner's rule. Please make sure the CITES sweep covers this entry. No other listing is recorded here.

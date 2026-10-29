@@ -25,10 +25,15 @@ folkNames:
 deities:
   - Helios
   - Saturn
+  - Cronus
 categories:
   - Banishing
   - Courage
   - Protection
+  - Funeral Rites
+  - Hex-Breaking
+  - Challenges
+  - Spirit Work
 references:
   - source: cunningham-herbs
     locator: under "Hellebore, Black"
@@ -116,7 +121,7 @@ variants:
         supports:
           - form
           - description
-seedUpdate: e59aa0dba710c540a59f06c0131e6dc4569753ce1a8ae71b8f8adef6fe9621fd
+seedUpdate: ba7838ed38021d7a4f5e48a3784820f9cc6f3f1af0c36a923df7395e26c5cad8
 ---
 
 # Black Hellebore

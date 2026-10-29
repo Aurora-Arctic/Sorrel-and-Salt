@@ -13,6 +13,7 @@ folkNames:
 categories:
   - Love
   - Protection
+  - Banishing
 references:
   - source: cunningham-herbs
     locator: under "Leek"; p. 266
@@ -36,7 +37,7 @@ variants:
         nameBasis: unaudited
         supports:
           - form
-seedUpdate: 58fc789ab514db1e2fe6e719a3979f0641264d8e3ca7b6a14b7b1304fba16ba5
+seedUpdate: ef0d708d9b4f3461c1c1e172e56e30ca0c00c44456f4f16a9735abb6abb983da
 ---
 
 # Leek

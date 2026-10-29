@@ -651,7 +651,7 @@ Every result carries its formal name: "Did you mean Cat's Claw?" is useless when
 
 ## 6. Category seed
 
-63 categories in eight groups, and both are a **starting set rather than a closed one** — rows in `categories` and `category_groups`, seeded by M4.3 and editable by an admin afterwards. The grouping heads the category picker's list, so 63 categories read as eight sections rather than one flat list, which would be unusable on a phone (MB.126); that a ninth group is addable without a migration is why the group is a table rather than an enum (§5).
+101 categories in eight groups, and both are a **starting set rather than a closed one** — rows in `categories` and `category_groups`, seeded by M4.3 and editable by an admin afterwards. The grouping heads the category picker's list, so 101 categories read as eight sections rather than one flat list, which would be unusable on a phone (MB.126); that a ninth group is addable without a migration is why the group is a table rather than an enum (§5).
 
 | Group                | Slug                     | Categories                                                                                                       |
 | -------------------- | ------------------------ | ---------------------------------------------------------------------------------------------------------------- |

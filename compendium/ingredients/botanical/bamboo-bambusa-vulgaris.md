@@ -17,6 +17,7 @@ deities:
   - Hina
   - Kuan Yin
   - Thoth
+  - Izanami
 categories:
   - Protection
   - Hex-Breaking
@@ -28,6 +29,11 @@ categories:
   - Peace
   - Strength
   - Wisdom
+  - Luck
+  - Joy
+  - Manifestation
+  - Negativity
+  - Adaptability
 references:
   - source: cunningham-herbs
     locator: under "Bamboo"; p. 266
@@ -69,7 +75,7 @@ variants:
         nameBasis: unaudited
         supports:
           - form
-seedUpdate: c31459cc204baa0425b8667d50d994194c39b51a5511e95f4f556ab8e43798f5
+seedUpdate: 1cb738338ea02bb74023566ce203126764f3f93903fcbe0f79966ce21372bdcc
 ---
 
 # Bamboo

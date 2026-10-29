@@ -9,6 +9,8 @@ folkNames:
   - Sevenbark
   - Wild Hydrangea
   - Smooth Hydrangea
+categories:
+  - Hex-Breaking
 references:
   - source: cunningham-herbs
     locator: under "Hydrangea"
@@ -18,6 +20,7 @@ references:
       - nomenclature
       - folkNames
       - description
+      - categories
   - source: ahpa-safety
     locator: p. 450
     nameBasis: stated
@@ -54,6 +57,7 @@ variants:
         supports:
           - form
           - description
+seedUpdate: 951d0db92dfe863b705d8df1fdbdf88474b51960e62fdda11cabaee3cfac5266
 ---
 
 # Hydrangea

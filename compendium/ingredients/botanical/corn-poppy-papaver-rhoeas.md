@@ -31,6 +31,8 @@ deities:
   - Minerva
   - Persephone
   - Venus
+  - Modron
+  - Morpheus
 categories:
   - Dream Work
   - Fertility
@@ -38,6 +40,12 @@ categories:
   - Prosperity
   - Protection
   - Wisdom
+  - Wealth
+  - Luck
+  - Funeral Rites
+  - Renewal
+  - Relationships
+  - Challenges
 references:
   - source: kynes-plants
     locator: under "Poppy"
@@ -96,6 +104,7 @@ variants:
         supports:
           - form
           - description
+seedUpdate: aa8620580814b057e82c5782be20500f6133ce2e809fcb28ab8de996bcf51d7d
 ---
 
 # Corn Poppy

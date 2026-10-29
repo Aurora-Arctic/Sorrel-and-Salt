@@ -14,6 +14,8 @@ folkNames:
   - Hilba
 deities:
   - Apollo
+categories:
+  - Wealth
 references:
   - source: cunningham-herbs
     locator: under "Fenugreek"; p. 266
@@ -29,6 +31,7 @@ references:
       - folkNames
       - safetyNotes
       - description
+      - categories
   - source: ahpa-safety
     locator: pp. 880–881; p. xxii
     nameBasis: unaudited
@@ -80,6 +83,7 @@ variants:
         supports:
           - form
           - description
+seedUpdate: 1eef463842d188672022c4c5a3feeeb3b0abe71972611b4086f47faa078983a1
 ---
 
 # Fenugreek

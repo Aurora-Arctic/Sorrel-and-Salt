@@ -30,6 +30,8 @@ categories:
   - Inspiration
   - Protection
   - Release
+  - Focus
+  - Negativity
 references:
   - source: cunningham-herbs
     locator: under "Groundsel"; p. 266
@@ -104,6 +106,7 @@ variants:
         supports:
           - form
           - description
+seedUpdate: 9b986e060f2eb6dca6bd284f439f0bcbcef2b4eff48e97de99e384c71afb05ad
 ---
 
 # Groundsel

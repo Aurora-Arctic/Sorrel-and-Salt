@@ -6,6 +6,16 @@ folkNames:
   - Black Witches' Butter
   - Black Jelly Roll
   - Warty Jelly Fungus
+categories:
+  - Harmony
+  - Banishing
+  - Healing
+  - Hex-Breaking
+  - Luck
+  - Negativity
+  - Peace
+  - Spirit Work
+  - Relationships
 references:
   - source: wikipedia-exidia-glandulosa
     nameBasis: stated
@@ -14,6 +24,11 @@ references:
       - nomenclature
       - folkNames
       - description
+  - source: kynes-plants
+    locator: under "Jelly Fungus"
+    nameBasis: stated
+    supports:
+      - categories
 variants:
   - form: Mushroom
     description: Wikipedia describes the fruit body as a firm, shiny, black jelly that goes lax and distorted with age or in wet weather. Its upper surface is dotted with small pegs and its underside is covered in small gelatinous spines.
@@ -23,6 +38,7 @@ variants:
         supports:
           - form
           - description
+seedUpdate: 22f9f9933feb174f94655079f7943c689b80a92becf2af55de587cbaf6d0c20e
 ---
 
 # Witch's Butter

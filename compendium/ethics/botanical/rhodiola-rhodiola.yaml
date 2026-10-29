@@ -1,0 +1,5 @@
+# Gathered for M14.29; the seed never reads this folder.
+entry: botanical/rhodiola-rhodiola
+status: needs-review
+questions:
+  - 'The CITES Appendices (valid from 5 March 2026) list the whole genus: p. 66, Appendix II column, "Rhodiola spp.", annotation #2. The entry is the genus, so the listing names it directly, but covers every species. Owner: say whether to record it. Recommendation: yes, as list: cites with nameBasis: stated, with annotation #2 quoted in the locator.'

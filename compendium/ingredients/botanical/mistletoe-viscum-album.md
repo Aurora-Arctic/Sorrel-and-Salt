@@ -49,6 +49,16 @@ categories:
   - Divination
   - Dream Work
   - Purification
+  - Luck
+  - Funeral Rites
+  - Renewal
+  - Negativity
+  - Sex
+  - Sexuality
+  - Challenges
+  - Transformation
+  - Spirit Work
+  - Healing
 references:
   - source: cunningham-herbs
     locator: under "Mistletoe"; p. 266
@@ -139,7 +149,7 @@ variants:
         supports:
           - form
           - description
-seedUpdate: a79b1a1fe782f8aef65672136c365943fec92743c1be9f256ae9de2f483afdb6
+seedUpdate: 4a2237a68cfc61c0201845d83e32fc1b9796456588fc3761c9eb72cdc83138f9
 ---
 
 # Mistletoe

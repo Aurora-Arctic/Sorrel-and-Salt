@@ -36,7 +36,7 @@ import {
   writeChildren,
 } from './ingredient-rows';
 import { readersOf } from '@/modules/coven';
-import { type Curator, assertCurator } from '@/modules/identity';
+import { assertCurator } from '@/modules/identity';
 import {
   type CuratedField,
   curatedSpellings,

@@ -32,6 +32,7 @@ deities:
   - Blodeuwedd
   - Danu
   - Gwydion
+  - Cu Chulainn
 categories:
   - Love
   - Divination
@@ -43,6 +44,12 @@ categories:
   - Inspiration
   - Strength
   - Truth
+  - Luck
+  - Joy
+  - Security
+  - Relationships
+  - Family
+  - Home Blessing
 references:
   - source: cunningham-herbs
     locator: under "Meadowsweet"; p. 266
@@ -122,7 +129,7 @@ variants:
         nameBasis: unaudited
         supports:
           - safetyNotes
-seedUpdate: d6b4ce8ca326b4da7d4250d18772c2dcb18ae35a3d89ade3eca982c7097e197b
+seedUpdate: e91ad833e6a943cdae2956ea14c5fba31f65bc896d44fd7abf10133058dd2913
 ---
 
 # Meadowsweet

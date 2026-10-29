@@ -1,7 +1,6 @@
 import type { Metadata, Route } from 'next';
 import type { ModalHeading } from '../../../../components/Modal/types';
 import { redirect } from 'next/navigation';
-import { cache } from 'react';
 import CompendiumList from '../../../../components/CompendiumList';
 import { COMPENDIUM_PARAMS } from '../../../../components/CompendiumList/params';
 import { compendiumHref } from '../../../../components/CompendiumList/href';
@@ -16,13 +15,11 @@ import { single } from '../../../../lib/search-params';
 import { NEW_COMPENDIUM_ENTRY } from '../../../../lib/coven-path';
 import { compendiumFacetCounts } from '../../../../components/CompendiumList/facets';
 import type {
-  CompendiumCategoryChoice,
-  CompendiumListForm,
   CompendiumListEntry,
   CompendiumListFilter,
 } from '../../../../components/CompendiumList/types';
 import PageHeader from '../../../../components/PageHeader';
-import { DEFAULT_PAGE_SIZE, allPages, resolveNumberedPage } from '../../../../lib/pagination';
+import { DEFAULT_PAGE_SIZE } from '../../../../lib/pagination';
 import { editorStamps } from '../editors';
 import { covensHolding, plusCovensOf } from '@/app/plus-covens';
 import {

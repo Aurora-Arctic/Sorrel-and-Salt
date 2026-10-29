@@ -27,6 +27,13 @@ categories:
   - Purification
   - Release
   - Home Blessing
+  - Wealth
+  - Funeral Rites
+  - Focus
+  - Joy
+  - Security
+  - Hex-Breaking
+  - Family
 references:
   - source: kynes-plants
     locator: under "Oregano and Marjoram"
@@ -92,4 +99,4 @@ Does ahpa-safety under "Origanum vulgare ssp. hirtum", cited on the entry and th
 
 #### Edit Notes for Claude
 
-Deity gap: Kupala (Kynes, under "Oregano and Marjoram"), not in the vocabulary; link once M14.15 adds it.
+Deity gap: Kupala (Kynes, under "Oregano and Marjoram"), not in the vocabulary after M14.15: Modern scholars deny that Kupala was an ancient Slavic deity, so it is left out.

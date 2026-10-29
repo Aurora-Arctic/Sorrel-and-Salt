@@ -33,6 +33,10 @@ categories:
   - Courage
   - Divination
   - Prosperity
+  - Wealth
+  - Luck
+  - Negativity
+  - Hex-Breaking
 references:
   - source: cunningham-herbs
     locator: under "Ragwort"; p. 266
@@ -145,7 +149,7 @@ variants:
         resolvedBy: wikipedia-jacobaea-vulgaris
         supports:
           - description
-seedUpdate: 58f7b4fd267ac8edc9bc5753d0aa84687f741294abbb59b2eb73d4d8412bda03
+seedUpdate: 48b53201a00d73b8a7c6616f100b7071bb108ca7ce64aa123e61901c9c5727f5
 ---
 
 # Ragwort

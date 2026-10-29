@@ -10,8 +10,15 @@ celestialBodies:
   - Mercury
 deities:
   - Laka
+  - Puck
 categories:
   - Protection
+  - Luck
+  - Youth
+  - Rain Magic
+  - Banishing
+  - Healing
+  - Wealth
 references:
   - source: cunningham-herbs
     locator: under "Fern"
@@ -81,7 +88,7 @@ variants:
         supports:
           - form
           - description
-seedUpdate: e5d6ea3624b2a1dfa0535f73c92dfca1a9b30e35119ee158aa96691e8f7cee96
+seedUpdate: 0360c7d00b04b8b1147c9fa7489f0c2c599a9907b250f299f8582ed47435ebf4
 ---
 
 # Fern

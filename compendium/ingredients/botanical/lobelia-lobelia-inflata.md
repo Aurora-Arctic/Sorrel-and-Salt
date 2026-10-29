@@ -21,6 +21,8 @@ categories:
   - Love
   - Dream Work
   - Purification
+  - Hex-Breaking
+  - Protection
 references:
   - source: cunningham-herbs
     locator: under "Lobelia"; p. 266
@@ -104,7 +106,7 @@ variants:
         supports:
           - form
           - description
-seedUpdate: c324fbfea2ed90e14b993bbfd3d03b28162ea91e1eca23777217f3d2163a89e6
+seedUpdate: a8484da5e11e7759d8ce8c072c4bfcbfc9ad8772bbb61fe4880d7db13c206ab2
 ---
 
 # Lobelia

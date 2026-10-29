@@ -20,6 +20,7 @@ folkNames:
   - Horseman's Talisman
 deities:
   - Hathor
+  - Buddha
 categories:
   - Protection
   - Courage
@@ -31,6 +32,8 @@ categories:
   - Meditation
   - Communication
   - Creativity
+  - Wealth
+  - Luck
 substitutes:
   - identity: chrysocolla
 references:
@@ -73,6 +76,7 @@ variants:
         nameBasis: stated
         supports:
           - form
+seedUpdate: 3d38096e337107f976c03023ff81fb67426c46afdc7b6406480f6b958377b949
 ---
 
 # Turquoise
@@ -81,5 +85,4 @@ Turquoise is an opaque, blue-to-green mineral, a hydrous phosphate of copper and
 
 #### Edit Notes for Claude
 
-- Deity gap: Buddha (Cunningham, p. 143), not in the vocabulary; link once M14.15 adds it.
-- Deity gap: The Great Spirit (Cunningham, p. 143), not in the vocabulary; link once M14.15 adds it.
+- Deity gap: The Great Spirit (Cunningham, p. 143), not in the vocabulary after M14.15: The Great Spirit is a term used across many peoples, so it belongs to no one tradition.

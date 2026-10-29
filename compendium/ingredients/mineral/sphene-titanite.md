@@ -17,6 +17,8 @@ colours:
   - colourless
 categories:
   - Meditation
+  - Spirituality
+  - Clarity
 references:
   - source: cunningham-crystals
     locator: under "Sphene"; pp. 135-136
@@ -55,6 +57,7 @@ variants:
         nameBasis: stated
         supports:
           - form
+seedUpdate: c91d5279c7c985803dbcc662080e73ea8d701e23ec5b20abd79d260be369a5c2
 ---
 
 # Sphene

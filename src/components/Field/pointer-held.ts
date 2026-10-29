@@ -64,6 +64,8 @@ export function usePointerHeld(): boolean {
 export function useSettledWhilePressed<T>(value: T): T {
   const held = usePointerHeld();
   const settled = useRef(value);
+  // oxlint-disable-next-line react/refs -- the ref is read once, in a state initialiser or after a held pointer, never to draw something else
   if (!held) settled.current = value;
+  // oxlint-disable-next-line react/refs -- the ref is read once, in a state initialiser or after a held pointer, never to draw something else
   return settled.current;
 }

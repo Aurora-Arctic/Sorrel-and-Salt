@@ -1,5 +1,5 @@
 import { z } from 'zod';
-import { CalendarDay, RowId, optionalText } from '../../../lib/validation';
+import { CalendarDay, optionalText } from '../../../lib/validation';
 import { MAX_QUANTITY } from '../schema/quantities';
 import { UNITS } from '../schema/units';
 

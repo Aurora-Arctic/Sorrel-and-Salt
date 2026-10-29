@@ -17,6 +17,8 @@ categories:
   - Love
   - Protection
   - Attraction
+  - Wealth
+  - Luck
 references:
   - source: cunningham-crystals
     locator: pp. 154–155
@@ -56,7 +58,7 @@ variants:
         supports:
           - form
           - description
-seedUpdate: 4059edb8ff883981e41a1dae08b4fcfe2e0a266c48e43963b1d2fe7505c3f6a8
+seedUpdate: 9c28982b1bd011d996063a2070865c3cdac12067e2a144d0bc5ea0e3314eb086
 ---
 
 # Copper

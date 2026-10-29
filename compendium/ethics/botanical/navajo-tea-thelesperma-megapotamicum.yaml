@@ -1,0 +1,28 @@
+# Gathered for M14.29; the seed never reads this folder.
+entry: botanical/navajo-tea-thelesperma-megapotamicum
+status: approved
+listings:
+  - list: other
+    name: NatureServe
+    value: Secure (G5), global rank, last reviewed 31 May 2023
+    listedAs: Thelesperma megapotamicum
+    scope: global
+    nameBasis: stated
+    source: wikipedia-thelesperma-megapotamicum
+    locator: Conservation
+  - list: other
+    name: NatureServe, Utah
+    value: Critically Imperiled (S1)
+    listedAs: Thelesperma megapotamicum
+    scope: Utah
+    nameBasis: stated
+    source: wikipedia-thelesperma-megapotamicum
+    locator: Conservation
+  - list: other
+    name: NatureServe, South Dakota
+    value: Vulnerable (S3)
+    listedAs: Thelesperma megapotamicum
+    scope: South Dakota
+    nameBasis: stated
+    source: wikipedia-thelesperma-megapotamicum
+    locator: Conservation

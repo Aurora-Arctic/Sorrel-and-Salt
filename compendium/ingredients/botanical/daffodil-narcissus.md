@@ -31,6 +31,7 @@ deities:
   - Dionysus
   - Hades
   - Persephone
+  - Moirai
 categories:
   - Love
   - Fertility
@@ -38,6 +39,17 @@ categories:
   - Peace
   - Protection
   - Nightmare Protection
+  - Luck
+  - Funeral Rites
+  - Consecration
+  - Blessing
+  - Security
+  - Renewal
+  - Relationships
+  - Negativity
+  - Family
+  - Home Blessing
+  - Spirit Work
 references:
   - source: cunningham-herbs
     locator: under "Daffodil"
@@ -127,7 +139,7 @@ variants:
           - form
           - safetyNotes
           - toxic
-seedUpdate: 716362fedfec5f73b481e528c9805fc03fd2a54a0b30bc4b02ad225edce546d9
+seedUpdate: 0d228a925299467d3696a43481c5bf52475855d3a6b5d2e22482aef57d752e26
 ---
 
 # Daffodil

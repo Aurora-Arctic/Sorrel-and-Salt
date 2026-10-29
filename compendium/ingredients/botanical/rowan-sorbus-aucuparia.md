@@ -52,6 +52,9 @@ deities:
   - Pan
   - Selene
   - Vulcan
+  - Brigantia
+  - Ran
+  - Luna
 categories:
   - Psychic Work
   - Healing
@@ -63,6 +66,14 @@ categories:
   - Inspiration
   - Strength
   - Wisdom
+  - Luck
+  - Consecration
+  - Blessing
+  - Hex-Breaking
+  - Faerie Sight
+  - Skill
+  - Leadership
+  - Spirit Work
 references:
   - source: cunningham-herbs
     locator: under "Rowan"; p. 266
@@ -190,7 +201,7 @@ variants:
           - form
           - description
           - categories
-seedUpdate: b9320d30bc08fe915091cbe27c3999a28a84d2d6d0d734e7daf8088c9389b700
+seedUpdate: 8f50158a24c56a8c0cb0aa502291332216d155eb987f96a32db6e9c1726e7a9e
 ---
 
 # Rowan

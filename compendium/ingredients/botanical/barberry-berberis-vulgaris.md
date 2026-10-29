@@ -28,6 +28,8 @@ categories:
   - Healing
   - Prosperity
   - Protection
+  - Wealth
+  - Negativity
 references:
   - source: kynes-plants
     locator: under "Barberry and Oregon Grape"
@@ -120,7 +122,7 @@ variants:
         supports:
           - form
           - description
-seedUpdate: 7454a8193aef535901297f8ff1de09eada06fa63d8ba6c83427adcfc1fcea9f8
+seedUpdate: f5eba9f8b58bb22a8d4243fc08e11ba8a60d227f6896a0c03e672acd43c1a41d
 ---
 
 # Barberry

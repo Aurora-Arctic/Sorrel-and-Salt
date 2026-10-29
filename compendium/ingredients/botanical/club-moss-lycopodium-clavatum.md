@@ -18,6 +18,9 @@ folkNames:
 categories:
   - Protection
   - Prosperity
+  - Wealth
+  - Luck
+  - Strength
 references:
   - source: cunningham-herbs
     locator: under "Club Moss"; p. 266

@@ -24,6 +24,9 @@ categories:
   - Prosperity
   - Protection
   - Truth
+  - Wealth
+  - Luck
+  - Joy
 references:
   - source: cunningham-herbs
     locator: under "Honesty"

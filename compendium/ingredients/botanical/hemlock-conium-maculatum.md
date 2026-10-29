@@ -48,6 +48,8 @@ categories:
   - Protection
   - Purification
   - Release
+  - Negativity
+  - Hex-Breaking
 references:
   - source: cunningham-herbs
     locator: under "Hemlock"
@@ -143,6 +145,7 @@ variants:
         supports:
           - form
           - description
+seedUpdate: 6827adde0ac9abe259cd2067ff77c11e07200d2dbe11d5b79abacfa8008d3fa9
 ---
 
 # Hemlock

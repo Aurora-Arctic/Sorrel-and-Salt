@@ -19,6 +19,7 @@ deities:
   - Freya
 categories:
   - Love
+  - Luck
 references:
   - source: cunningham-herbs
     locator: under "Strawberry"
@@ -63,6 +64,7 @@ variants:
         supports:
           - form
           - description
+seedUpdate: 276377066b8087714f5fc3724a0db7da048da7caf81be6ef9cfe403e36f47e87
 ---
 
 # Strawberry

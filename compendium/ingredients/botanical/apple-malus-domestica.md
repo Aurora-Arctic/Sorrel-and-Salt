@@ -41,6 +41,9 @@ deities:
   - Rhiannon
   - Idun
   - Baldur
+  - Olwen
+  - Badb
+  - Macha
 categories:
   - Love
   - Healing
@@ -55,6 +58,20 @@ categories:
   - Strength
   - Success
   - Wisdom
+  - Wealth
+  - Luck
+  - Funeral Rites
+  - Consecration
+  - Blessing
+  - Joy
+  - Security
+  - Renewal
+  - Relationships
+  - Sex
+  - Sexuality
+  - Spirit Work
+  - Garden Magic
+  - Longevity
 references:
   - source: cunningham-herbs
     locator: under "Apple"
@@ -171,17 +188,9 @@ variants:
         supports:
           - form
           - description
-seedUpdate: b080428b893fa4b3a78630b3845e7e8eb14de67f2b2e9aeaa1637c1253f121c6
+seedUpdate: e43d00eca81873095f0145d58ab265fc5ffb06adc9d8ad25aa75990735b12507
 ---
 
 # Apple
 
 The orchard apple is a deciduous tree whose round fruit is now grown all over the world. It comes from Central Asia, where the wild species it descends from, Malus sieversii, can still be found, and was cultivated across Eurasia for thousands of years before European colonists carried it to the Americas. In spring it bears five-petalled blossoms, rose-pink as they open and paling to white, and the fruit ripens in late summer or autumn around a core of seed chambers. Grieve records charred apples in the Swiss lake dwellings and the English custom of wassailing orchards with cider at Christmas, and in Norse myth the goddess Iðunn kept the apples that gave the gods their youth. Celtic lore made it a fruit of knowledge, prophecy and the otherworld: Avalon takes its name from the Welsh for apple tree, and a branch bearing bud, blossom and ripe fruit together was a charm for entering the land of the gods. Wiccan altars are heaped with apples at Samhain, when the fruit is counted among the foods of the dead. In magic the apple belongs above all to love: it is halved and shared with a lover, given to the one desired, and its seeds are counted to foretell a marriage. It also serves healing, rubbed on an ailing part and buried while the Moon wanes, and stands for immortality.
-
-#### Edit Notes for Claude
-
-Deity gap: Olwen (Cunningham, under "Apple"), not in the vocabulary; link once M14.15 adds it.
-
-Deity gap: Badb (Kynes, under "Apple"), not in the vocabulary; link once M14.15 adds it.
-
-Deity gap: Macha (Kynes, under "Apple"), not in the vocabulary; link once M14.15 adds it.

@@ -32,6 +32,14 @@ deities:
   - Poseidon
   - Njord
   - Manannan mac Lir
+  - Aegir
+  - Amphitrite
+  - Lir
+  - Llyr
+  - Ran
+  - Sedna
+  - Seonaidh
+  - Varuna
 categories:
   - Protection
   - Psychic Work
@@ -42,6 +50,11 @@ categories:
   - Prophecy
   - Prosperity
   - Truth
+  - Wealth
+  - Awareness
+  - Negativity
+  - Skill
+  - Spirit Work
 references:
   - source: cunningham-herbs
     locator: under "Bladderwrack"; p. 266
@@ -95,6 +108,7 @@ variants:
         nameBasis: unaudited
         supports:
           - form
+seedUpdate: 10e1cfd68ce077d0544c56da5e3e8cfab058dcb0dedfd39f2f0e186455fbe227
 ---
 
 # Bladderwrack

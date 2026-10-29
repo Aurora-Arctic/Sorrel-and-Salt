@@ -38,6 +38,16 @@ categories:
   - Fidelity
   - Protection
   - Purification
+  - Wealth
+  - Youth
+  - Luck
+  - Funeral Rites
+  - Sex
+  - Sexuality
+  - Family
+  - Home Blessing
+  - Emotions
+  - Leadership
 references:
   - source: cunningham-herbs
     locator: under "Myrtle"; p. 266
@@ -102,6 +112,7 @@ variants:
         supports:
           - form
           - description
+seedUpdate: 69ca4813d840f604a8a1d1d5df13d72c126c2703c8087d3b31d67cae01b0168a
 ---
 
 # Myrtle
@@ -110,4 +121,4 @@ Common myrtle, also called true myrtle, is an evergreen shrub of the myrtle fami
 
 #### Edit Notes for Claude
 
-Deity gap: Marian (Cunningham, under "Myrtle"), not in the vocabulary; link once M14.15 adds it.
+Deity gap: Marian (Cunningham, under "Myrtle"), not in the vocabulary after M14.15: The source may mean the Virgin Mary, whom the vocabulary leaves out as a figure her tradition does not call a deity.

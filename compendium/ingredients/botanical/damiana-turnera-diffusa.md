@@ -18,6 +18,9 @@ categories:
   - Lust
   - Love
   - Psychic Work
+  - Sex
+  - Sexuality
+  - Prophecy
 references:
   - source: cunningham-herbs
     locator: under "Damiana"; p. 266
@@ -91,7 +94,7 @@ variants:
         supports:
           - form
           - description
-seedUpdate: 2c63b3462c9a4e910a9f76575c456bec0aae104ac6787829f10a78849442bfad
+seedUpdate: 718fe2c51b2e91142feee01cc75ee7fe7efdfca2ff877caff6d55828af260f61
 ---
 
 # Damiana

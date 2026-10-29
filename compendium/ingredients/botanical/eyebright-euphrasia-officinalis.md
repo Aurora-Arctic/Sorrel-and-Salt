@@ -21,6 +21,8 @@ folkNames:
   - Euphrasy
   - Casse-lunette
   - Augentröst
+deities:
+  - Charites
 categories:
   - Psychic Work
   - Clarity
@@ -28,6 +30,8 @@ categories:
   - Dream Work
   - Intuition
   - Truth
+  - Joy
+  - Skill
 references:
   - source: cunningham-herbs
     locator: under "Eyebright"; p. 266
@@ -52,6 +56,7 @@ references:
       - categories
       - folkNames
       - description
+      - deities
   - source: ahpa-safety
     locator: pp. 356–357; p. xxii
     nameBasis: unaudited

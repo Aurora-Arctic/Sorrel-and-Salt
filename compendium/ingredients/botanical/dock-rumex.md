@@ -14,6 +14,8 @@ categories:
   - Love
   - Prosperity
   - Protection
+  - Wealth
+  - Hex-Breaking
 references:
   - source: wikipedia-rumex
     nameBasis: stated
@@ -104,7 +106,7 @@ variants:
         supports:
           - form
           - description
-seedUpdate: 04183023a5312990066b67f20df135cf2df361fdc1cd48d33ebc562640190111
+seedUpdate: 637e0fd610fd5f978188e79fb7fc4860e1c7b7b80748248fe80e2c58cdb4fc21
 ---
 
 # Dock

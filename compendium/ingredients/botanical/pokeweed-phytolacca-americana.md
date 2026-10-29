@@ -28,6 +28,7 @@ categories:
   - Courage
   - Hex-Breaking
   - Spirit Work
+  - Negativity
 references:
   - source: cunningham-herbs
     locator: under "Poke"
@@ -142,6 +143,7 @@ variants:
           - toxic
           - safetyNotes
           - description
+seedUpdate: dba2f5ab56618cedb8f0f28d90706a610e1b308c4b15b35ffdca4f80f3f1a21b
 ---
 
 # Pokeweed

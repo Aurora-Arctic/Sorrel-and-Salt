@@ -19,6 +19,12 @@ categories:
   - Manifestation
   - Purification
   - Success
+  - Negativity
+  - Family
+  - Home Blessing
+  - Skill
+  - Leadership
+  - Spirit Work
 references:
   - source: cunningham-herbs
     locator: under "Masterwort"

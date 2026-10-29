@@ -37,6 +37,9 @@ categories:
   - Love
   - Prosperity
   - Protection
+  - Wealth
+  - Luck
+  - Adaptability
 references:
   - source: cunningham-herbs
     locator: under "Honeysuckle"

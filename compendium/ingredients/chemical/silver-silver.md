@@ -12,6 +12,8 @@ deities:
   - Isis
   - Diana
   - Selene
+  - Lucina
+  - Luna
 categories:
   - Love
   - Peace
@@ -20,6 +22,8 @@ categories:
   - Psychic Work
   - Safe Travel
   - Attraction
+  - Wealth
+  - Dream Work
 references:
   - source: cunningham-crystals
     locator: pp. 169–171
@@ -76,7 +80,7 @@ variants:
         supports:
           - form
           - description
-seedUpdate: 2ea7760d82d224e5e8229434fbce5cb413d2055723ce0c0594906d33dd8f41bc
+seedUpdate: 5bcf50c443b5814b79608af9942a9967c59c1b02bf82f09469d13eed8c71f140
 ---
 
 # Silver

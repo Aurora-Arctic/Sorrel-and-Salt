@@ -13,10 +13,12 @@ folkNames:
   - Fairy Stone
 deities:
   - Odin
+  - Buddha
 categories:
   - Protection
   - Nightmare Protection
   - Healing
+  - Psychic Work
 references:
   - source: cunningham-crystals
     locator: pp. 101–102
@@ -44,6 +46,7 @@ variants:
         nameBasis: unaudited
         supports:
           - form
+seedUpdate: 1e1205c5bb74a01e165db95e044b5c37562162df870d858f58a018d03f95011c
 ---
 
 # Holey Stone

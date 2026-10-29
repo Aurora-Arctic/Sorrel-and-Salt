@@ -27,6 +27,10 @@ categories:
   - Prosperity
   - Strength
   - Success
+  - Wealth
+  - Sex
+  - Sexuality
+  - Beauty
 references:
   - source: cunningham-herbs
     locator: under "Avocado"; p. 266
@@ -131,7 +135,7 @@ variants:
         supports:
           - form
           - description
-seedUpdate: ea3de10698c2c92e6f6e6954beec862861b13add4311f90c595d71f2a9615ac8
+seedUpdate: 862abe01088b1b7a4ad4cbf978ba8e8626adf7017b1237c1ccd5059e62bb581a
 ---
 
 # Avocado

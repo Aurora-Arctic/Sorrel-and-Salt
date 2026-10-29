@@ -25,6 +25,9 @@ categories:
   - Love
   - Courage
   - Prosperity
+  - Wealth
+  - Manifestation
+  - Luck
 references:
   - source: cunningham-herbs
     locator: under "Tonka"; p. 266
@@ -91,6 +94,7 @@ variants:
           - toxic
           - safetyNotes
           - description
+seedUpdate: 6d2bcc100b5cd0d7bf53cb735fd93065f3934df0da3b1416aca3893a86d6757c
 ---
 
 # Tonka Bean

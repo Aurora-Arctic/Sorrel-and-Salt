@@ -35,6 +35,7 @@ folkNames:
   - Hurtsickle
 deities:
   - Flora
+  - Puck
 categories:
   - Love
   - Divination
@@ -43,6 +44,9 @@ categories:
   - Protection
   - Psychic Work
   - Truth
+  - Hope
+  - Joy
+  - Negativity
 references:
   - source: cunningham-herbs
     locator: under "Bachelor's Buttons"; p. 266
@@ -55,6 +59,7 @@ references:
       - folkNames
       - categories
       - description
+      - deities
   - source: kynes-plants
     locator: under "Cornflower"
     nameBasis: resolved

@@ -4,6 +4,11 @@ nomenclature: botanical
 canonicalName: Mentha aquatica
 elements:
   - water
+categories:
+  - Wealth
+  - Luck
+  - Focus
+  - Trust
 references:
   - source: kynes-plants
     locator: under "Mint"
@@ -13,6 +18,7 @@ references:
       - nomenclature
       - elements
       - description
+      - categories
   - source: wikipedia-mentha-aquatica
     nameBasis: stated
     supports:

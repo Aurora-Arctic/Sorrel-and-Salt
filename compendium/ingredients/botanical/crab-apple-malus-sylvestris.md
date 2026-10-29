@@ -34,6 +34,9 @@ deities:
   - Rhiannon
   - Venus
   - Zeus
+  - Badb
+  - Cailleach
+  - Macha
 categories:
   - Abundance
   - Ancestor Work
@@ -45,6 +48,8 @@ categories:
   - Prosperity
   - Protection
   - Wisdom
+  - Wealth
+  - Funeral Rites
 references:
   - source: kynes-plants
     locator: under "Crabapple"
@@ -89,6 +94,7 @@ variants:
         supports:
           - form
           - description
+seedUpdate: 9c498756c0fadf98593e03eeef0210d09715af763955f4e673b709baaadebd05
 ---
 
 # Crab Apple

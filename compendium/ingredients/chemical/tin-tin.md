@@ -10,6 +10,8 @@ colours:
   - grey
 categories:
   - Divination
+  - Wealth
+  - Luck
 references:
   - source: cunningham-crystals
     locator: pp. 171–172
@@ -47,7 +49,7 @@ variants:
         supports:
           - form
           - description
-seedUpdate: b9c2c31dea174eaee52aa68c884baafdc30c0a61d9b16788384021a26bb16f3c
+seedUpdate: 7f68e9753621f95c8759b8b0a615368768295a691372e4c50b1181ca4390b235
 ---
 
 # Tin

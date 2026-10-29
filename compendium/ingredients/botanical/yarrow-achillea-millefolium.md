@@ -54,6 +54,7 @@ folkNames:
   - Woundwort
 deities:
   - Cernunnos
+  - Achilles
 categories:
   - Courage
   - Love
@@ -67,6 +68,14 @@ categories:
   - Fidelity
   - Prophecy
   - Purification
+  - Consecration
+  - Blessing
+  - Awareness
+  - Relationships
+  - Negativity
+  - Hex-Breaking
+  - Faerie Sight
+  - Spirit Work
 references:
   - source: cunningham-herbs
     locator: under "Yarrow"; p. 266
@@ -138,7 +147,7 @@ variants:
         nameBasis: unaudited
         supports:
           - safetyNotes
-seedUpdate: 781addf03f74a0a273eb963762e6f7eabb6d11702fd8f2df8af8b843a0d2d565
+seedUpdate: 9e78910df9f2509e30a49de9372377794591c488dcafb9e933568619b34e6375
 ---
 
 # Yarrow

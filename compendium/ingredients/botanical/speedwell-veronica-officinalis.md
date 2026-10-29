@@ -18,6 +18,8 @@ categories:
   - Intuition
   - Fidelity
   - Protection
+  - Luck
+  - Negativity
 references:
   - source: kynes-plants
     locator: under "Speedwell"

@@ -16,6 +16,9 @@ folkNames:
   - Shepherd's Knapperty
   - Shepherd's Knot
   - English Sarsaparilla
+categories:
+  - Protection
+  - Love
 references:
   - source: ahpa-safety
     locator: pp. 698-699
@@ -41,6 +44,11 @@ references:
       - nomenclature
       - folkNames
       - description
+  - source: cunningham-herbs
+    locator: under "Tormentil"
+    nameBasis: stated
+    supports:
+      - categories
 variants:
   - form: Root
     description: The American Herbal Products Association lists the rhizome as the part it covers. Wikipedia says the thick root is bitter, gives the liqueur Blutwurz its flavour and is used as an astringent. Grieve lists the root and herb as the parts used.
@@ -64,6 +72,7 @@ variants:
         supports:
           - form
           - description
+seedUpdate: 2c7a7e563b53d260b98ea04740f3193df4836fcd5a40ed15c79f0437ef5ce08c
 ---
 
 # Tormentil

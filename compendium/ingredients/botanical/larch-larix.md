@@ -23,6 +23,8 @@ categories:
   - Legal Matters
   - Knowledge
   - Success
+  - Luck
+  - Spirituality
 references:
   - source: cunningham-herbs
     locator: under "Larch"; p. 266
@@ -112,6 +114,7 @@ variants:
         nameBasis: stated
         supports:
           - description
+seedUpdate: 95a845d85de0630f3608548fbd56872f29fa8c838b3255ae89bbb063507193d7
 ---
 
 # Larch

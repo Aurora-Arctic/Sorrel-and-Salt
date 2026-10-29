@@ -31,6 +31,8 @@ categories:
   - Prosperity
   - Purification
   - Success
+  - Wealth
+  - Focus
 references:
   - source: kynes-plants
     locator: under "Bee Balm"

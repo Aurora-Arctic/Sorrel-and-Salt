@@ -42,6 +42,13 @@ categories:
   - Prosperity
   - Purification
   - Strength
+  - Wealth
+  - Luck
+  - Hope
+  - Determination
+  - Renewal
+  - Negativity
+  - Hex-Breaking
 references:
   - source: cunningham-herbs
     locator: under "Gorse"
@@ -99,6 +106,7 @@ variants:
         supports:
           - form
           - description
+seedUpdate: c3a61eb8f57e91d4680d965a9f0ed166dac26949c0eb1ce396713bebccdb4128
 ---
 
 # Gorse

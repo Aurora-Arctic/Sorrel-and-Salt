@@ -24,6 +24,7 @@ categories:
   - Warding
   - Cleansing
   - Business
+  - Luck
 substitutes:
   - identity: obsidian
 references:
@@ -105,6 +106,7 @@ variants:
           - form
           - description
           - categories
+seedUpdate: 829f7ddff57349e0c9e11188c9a98418f1fb2163a201b2e237ac1c08611c4312
 ---
 
 # Jet

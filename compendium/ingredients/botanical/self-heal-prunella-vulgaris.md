@@ -21,11 +21,16 @@ folkNames:
   - Slough-Heal
   - Heart of the Earth
   - Brownwort
+deities:
+  - Cailleach
 categories:
   - Clarity
   - Healing
   - Peace
   - Release
+  - Spirituality
+  - Hope
+  - Growth
 references:
   - source: kynes-plants
     locator: under "Self Heal"
@@ -37,6 +42,7 @@ references:
       - celestialBodies
       - folkNames
       - categories
+      - deities
   - source: ahpa-safety
     locator: pp. 701–702; p. xxii
     nameBasis: unaudited
@@ -76,7 +82,7 @@ variants:
         nameBasis: stated
         supports:
           - form
-seedUpdate: 98f653a2ca492d3ce4a49adfd6181700f17ad17ab97e10aa7f1f54fccb16b994
+seedUpdate: 02dd8e4c5dafdfcd638d7165d9443f753f2e280e565efaee2dd30443e403a247
 ---
 
 # Self-Heal

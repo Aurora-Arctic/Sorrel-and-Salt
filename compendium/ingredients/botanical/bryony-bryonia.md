@@ -26,6 +26,8 @@ categories:
   - Fertility
   - Prosperity
   - Protection
+  - Wealth
+  - Luck
 references:
   - source: kynes-plants
     locator: under "Bryony"

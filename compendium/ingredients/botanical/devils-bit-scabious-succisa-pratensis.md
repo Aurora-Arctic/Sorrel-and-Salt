@@ -21,6 +21,10 @@ folkNames:
 categories:
   - Love
   - Protection
+  - Luck
+  - Negativity
+  - Challenges
+  - Banishing
 references:
   - source: cunningham-herbs
     locator: under "Devil's Bit"

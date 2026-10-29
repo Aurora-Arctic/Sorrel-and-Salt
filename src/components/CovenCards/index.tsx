@@ -8,7 +8,7 @@ import IngredientSearch from '../IngredientSearch';
 import JarLines from '../JarLines';
 import { covenCardActions, covenCardName } from './actions';
 import EmptyCupboard from './empty';
-import type { CovenCardEntry, CovenCardsProps } from './types';
+import type { CovenCardsProps } from './types';
 import '../CompendiumList/index.scss';
 
 // A coven's Ingredients list (M9.6), the twin of CompendiumCards: the filter row in its coven

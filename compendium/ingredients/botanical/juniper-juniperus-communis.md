@@ -35,6 +35,7 @@ deities:
   - Morrigan
   - Baldur
   - Holda
+  - Ran
 categories:
   - Protection
   - Love
@@ -44,6 +45,17 @@ categories:
   - Healing
   - Prosperity
   - Purification
+  - Wealth
+  - Consecration
+  - Blessing
+  - Joy
+  - Manifestation
+  - Negativity
+  - Hex-Breaking
+  - Emotions
+  - Secrets
+  - Spirit Work
+  - Banishing
 references:
   - source: cunningham-herbs
     locator: under "Juniper"
@@ -129,6 +141,4 @@ Does ahpa-safety at p. 487, cited on the entry, describe Juniperus communis alon
 
 #### Edit Notes for Claude
 
-Deity gap: the Furies (Kynes, under "Juniper"), not in the vocabulary; link once M14.15 adds it.
-
-Deity gap: Ran (Kynes, under "Juniper"), not in the vocabulary; link once M14.15 adds it.
+Deity gap: the Furies (Kynes, under "Juniper"), not in the vocabulary after M14.15: Furies is the Roman name for the Erinyes; the Erinyes row names the Eumenides only, so the Furies are not linked.

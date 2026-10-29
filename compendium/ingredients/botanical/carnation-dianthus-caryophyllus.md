@@ -36,6 +36,15 @@ categories:
   - Peace
   - Lust
   - Truth
+  - Luck
+  - Funeral Rites
+  - Consecration
+  - Blessing
+  - Awareness
+  - Renewal
+  - Relationships
+  - Sex
+  - Sexuality
 references:
   - source: cunningham-herbs
     locator: under "Carnation"; p. 266

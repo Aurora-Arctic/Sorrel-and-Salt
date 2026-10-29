@@ -16,6 +16,10 @@ folkNames:
   - Temu Putih
 categories:
   - Healing
+  - Renewal
+  - Relationships
+  - Hex-Breaking
+  - Nightmare Protection
 references:
   - source: kynes-plants
     locator: under "Zedoary"
@@ -99,6 +103,7 @@ variants:
         resolvedBy: wikipedia-curcuma-zedoaria
         supports:
           - form
+seedUpdate: 53d2f1680d89b01d0140a96d7a660a8cfb3dbee35dc71ad9b606c406e0f4d77e
 ---
 
 # Zedoary

@@ -19,6 +19,8 @@ deities:
   - Freya
   - Frigg
   - Minerva
+  - Moirai
+  - Norns
 categories:
   - Protection
   - Psychic Work
@@ -29,6 +31,16 @@ categories:
   - Prosperity
   - Strength
   - Transformation
+  - Wealth
+  - Beauty
+  - Awareness
+  - Renewal
+  - Sex
+  - Sexuality
+  - Family
+  - Home Blessing
+  - Secrets
+  - Skill
 references:
   - source: cunningham-herbs
     locator: under "Flax"
@@ -140,7 +152,7 @@ variants:
         supports:
           - form
           - description
-seedUpdate: f5846bd91ee32fb0f139acdc8469b27af51629630a2fd79a9bdb8fe1ede185bc
+seedUpdate: 1677e801ab50ea89eb2d398a7075ffee84b5fba6b1ca0eda5b509bae2986d54e
 ---
 
 # Flax

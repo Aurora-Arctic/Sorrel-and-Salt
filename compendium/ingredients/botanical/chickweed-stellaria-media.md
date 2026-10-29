@@ -35,6 +35,10 @@ categories:
   - Fertility
   - Purification
   - Home Blessing
+  - Relationships
+  - Negativity
+  - Family
+  - Emotions
 references:
   - source: cunningham-herbs
     locator: under "Chickweed"; p. 266
@@ -97,6 +101,7 @@ variants:
         supports:
           - form
           - description
+seedUpdate: 6070fcdaa295eebd1ff91ebf1c91cd68be7b4e095262fae566b2c7425a7e67b2
 ---
 
 # Chickweed

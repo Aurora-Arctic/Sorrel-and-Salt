@@ -1,0 +1,12 @@
+# Gathered for M14.29; the seed never reads this folder.
+entry: botanical/dapdap-erythrina-variegata
+status: approved
+listings:
+  - list: iucn
+    name: IUCN Red List
+    value: Least Concern (IUCN 3.1)
+    listedAs: Erythrina variegata
+    scope: global
+    nameBasis: stated
+    source: wikipedia-erythrina-variegata
+    locator: taxobox, conservation status (status = LC, IUCN3.1)

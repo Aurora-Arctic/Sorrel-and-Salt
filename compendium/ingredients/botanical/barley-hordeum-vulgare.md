@@ -24,6 +24,7 @@ deities:
   - Lugh
   - Osiris
   - Persephone
+  - Centeotl
 categories:
   - Love
   - Healing
@@ -34,6 +35,15 @@ categories:
   - Prophecy
   - Prosperity
   - Truth
+  - Wealth
+  - Luck
+  - Funeral Rites
+  - Consecration
+  - Blessing
+  - Hope
+  - Trust
+  - Renewal
+  - Hex-Breaking
 references:
   - source: cunningham-herbs
     locator: under "Barley"; p. 266
@@ -144,7 +154,7 @@ variants:
         supports:
           - form
           - description
-seedUpdate: d65c50040675bc41c3566f43ed6a65e5268c0b72fb83086cf17b38633284a1f5
+seedUpdate: 08a3322f2cfdc5a4540a22ea96f197ebe16edce95fd2dd13f4ffe8eb5f211816
 ---
 
 # Barley

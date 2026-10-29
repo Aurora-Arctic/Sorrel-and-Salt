@@ -35,6 +35,12 @@ categories:
   - Knowledge
   - Prosperity
   - Transformation
+  - Wealth
+  - Funeral Rites
+  - Focus
+  - Joy
+  - Renewal
+  - Emotions
 references:
   - source: cunningham-herbs
     locator: under "Parsley"; p. 266
@@ -134,6 +140,7 @@ variants:
         supports:
           - form
           - description
+seedUpdate: e5b3f281f9c004244d55fbb1b88ebecc7e40fd097b36d8f83ee9f50f58e1bf0d
 ---
 
 # Parsley

@@ -25,6 +25,7 @@ deities:
   - Demeter
   - Hecate
   - Persephone
+  - Yama
 categories:
   - Lust
   - Banishing
@@ -32,6 +33,16 @@ categories:
   - Healing
   - Prosperity
   - Truth
+  - Wealth
+  - Consecration
+  - Blessing
+  - Protection
+  - Negativity
+  - Sex
+  - Sexuality
+  - Transformation
+  - Secrets
+  - Spirit Work
 references:
   - source: cunningham-herbs
     locator: under "Sesame"; p. 266
@@ -174,7 +185,7 @@ variants:
         supports:
           - form
           - description
-seedUpdate: 4705c93a66730082caa04873b443ffdbd1ab6bf41e0c6a0f8b7db513f2536855
+seedUpdate: ed2b36e8f6b8c19537c48a368f324165a457646ad74559a24c865caffdf847a0
 ---
 
 # Sesame

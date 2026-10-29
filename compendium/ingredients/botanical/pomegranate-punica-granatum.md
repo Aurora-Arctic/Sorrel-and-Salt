@@ -54,6 +54,14 @@ categories:
   - Psychic Work
   - Wisdom
   - Lust
+  - Luck
+  - Funeral Rites
+  - Hope
+  - Manifestation
+  - Grief Work
+  - Renewal
+  - Sex
+  - Sexuality
 references:
   - source: cunningham-herbs
     locator: under "Pomegranate"; p. 266
@@ -179,6 +187,7 @@ variants:
         supports:
           - form
           - description
+seedUpdate: 904cd7df00684aba58a11eb5f2fae48af3fc0198749a52e90c6cbecdf2f8e0e1
 ---
 
 # Pomegranate

@@ -42,6 +42,7 @@ deities:
   - Saturn
   - Thor
   - Holda
+  - Cailleach
 categories:
   - Protection
   - Banishing
@@ -50,6 +51,16 @@ categories:
   - Dream Work
   - Intuition
   - Manifestation
+  - Luck
+  - Spirituality
+  - Funeral Rites
+  - Consecration
+  - Blessing
+  - Renewal
+  - Hex-Breaking
+  - Family
+  - Home Blessing
+  - Spirit Work
 references:
   - source: cunningham-herbs
     locator: under "Holly"
@@ -125,7 +136,3 @@ Does cunningham-herbs under "Holly", cited on the entry and the Leaf, describe I
 <!-- audit:kynes-plants:Holly -->
 
 Does kynes-plants under "Holly", cited on the entry and the Leaf, describe Ilex aquifolium alone? Kynes heads American holly (Ilex opaca) and English holly (I. aquifolium) together, so its elements, signs, deities and powers may belong to either. Settle it as `stated` or `resolved` from the source, or replace the citation.
-
-#### Edit Notes for Claude
-
-Deity gap: Cailleach Bheur (Kynes, under "Holly"), not in the vocabulary; link once M14.15 adds it.

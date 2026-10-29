@@ -62,8 +62,13 @@ variants:
           - toxic
           - safetyNotes
           - description
+seedUpdate: d97a43b9e53a470f72db17647235407108a205962f1931ebfffd18effd849b48
 ---
 
 # Potato
 
 The potato is a starchy tuberous vegetable, the underground stem tuber of a perennial in the nightshade family, native to the Americas. Wikipedia says it was domesticated in southern Peru and north-western Bolivia 7,000 to 10,000 years ago and reached Europe from the Americas in the second half of the sixteenth century. Cunningham calls it feminine, with the Moon and earth, and gives the powers of image magic and healing. He says potatoes are often used as poppets, with the eyes used as eyes in other poppets, and that a potato carried in the pocket cures toothache and guards against rheumatism, warts and gout. The same potato carried all winter protects against a cold. His folk names include Murphies, Taters and Tatties. Kynes gives the potato no entry. Both Cunningham and Wikipedia record hazards, set out in the safety notes.
+
+#### Edit Notes for Claude
+
+- Category gap, left off on the owner's decision of 2026-10-29: cunningham-herbs prints "Image Magic" in its Powers line. It has no category and is not filed.

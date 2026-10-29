@@ -34,6 +34,9 @@ categories:
   - Knowledge
   - Peace
   - Protection
+  - Security
+  - Secrets
+  - Growth
 references:
   - source: kynes-plants
     locator: under "French Tarragon"
@@ -103,6 +106,7 @@ variants:
         supports:
           - form
           - description
+seedUpdate: 24c6987617343312de92f7bc569d8e8442fa88c6f56f70e25e7088b96ef835f7
 ---
 
 # Tarragon
