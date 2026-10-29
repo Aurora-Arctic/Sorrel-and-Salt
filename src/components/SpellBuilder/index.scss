@@ -558,18 +558,24 @@ body .spell-builder .collapsible-section__fields {
 }
 
 // Edit Stock behind the jar and the name on the recipe page (M13.21; the owner, 2026-10-29):
-// the button is the name, stretched over the whole line by its `::after`, as the entry page's
-// shelf stretches a jar's button (`.jar-shelf__press`). The name grows on hover and focus;
-// the ring is drawn inset on the stretch, and the name grows a little on hover and focus as
-// the shelf's does.
+// the button holds the name, stretched over the whole line by its `::after`, as the entry page's
+// shelf stretches a jar's button (`.jar-shelf__press`), and on hover and focus the name grows and
+// the jar shakes as they do there. The name's ellipsis is the inner span's, never the button's:
+// `overflow: hidden` on the button would clip the stretch to the name. The growth is on the
+// span too, since a transform on the button would make it the stretch's containing block.
 .spell-inventory__press {
   @include button-reset;
 
-  display: inline-block;
+  display: inline-flex;
+  min-width: 0;
   text-align: start;
   color: inherit;
   font: inherit;
-  transition: transform $motion-short ease-out;
+
+  .spell-inventory__name {
+    transition: transform $motion-short ease-out;
+    transform-origin: left center;
+  }
 
   &::after {
     content: '';
@@ -586,22 +592,39 @@ body .spell-builder .collapsible-section__fields {
   }
 }
 
-@media (hover: hover) {
-  .spell-inventory__press:hover {
-    transform: scale(1.04);
+.spell-inventory__line:has(.spell-inventory__press:focus-visible) {
+  .spell-inventory__jar > svg {
+    animation: jar-shelf-shake $jar-shake-duration ease-out;
+  }
+
+  .spell-inventory__name {
+    transform: scale($jar-name-grow);
   }
 }
 
-.spell-inventory__press:focus-visible {
-  transform: scale(1.04);
+@media (hover: hover) {
+  .spell-inventory__line:has(.spell-inventory__press:hover) {
+    .spell-inventory__jar > svg {
+      animation: jar-shelf-shake $jar-shake-duration ease-out;
+    }
+
+    .spell-inventory__name {
+      transform: scale($jar-name-grow);
+    }
+  }
 }
 
 @include reduced-motion {
-  .spell-inventory__press,
-  .spell-inventory__press:hover,
-  .spell-inventory__press:focus-visible {
-    transition: none;
-    transform: none;
+  .spell-inventory__line:has(.spell-inventory__press:hover),
+  .spell-inventory__line:has(.spell-inventory__press:focus-visible) {
+    .spell-inventory__jar > svg {
+      animation: none;
+    }
+
+    .spell-inventory__name {
+      transition: none;
+      transform: none;
+    }
   }
 }
 

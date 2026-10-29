@@ -126,9 +126,9 @@ function HoldLine({
             ariaLabel={['Edit Stock', doors.edit.ingredientName, step.form && formLabel(step.form)]
               .filter(Boolean)
               .join(', ')}
-            className="spell-inventory__name spell-inventory__press"
+            className="spell-inventory__press"
           >
-            {name}
+            <span className="spell-inventory__name">{name}</span>
           </StockJarButton>
         ) : (
           <span className="spell-inventory__name">{name}</span>
