@@ -1,0 +1,57 @@
+@use '../../scss/variables' as *;
+@use '../../scss/mixins' as *;
+
+// The "Back to …" link's look (the owner's calls, 2026-10-19), with the link in back-link.tsx:
+// the ingredient entry page's and the spell recipe page's one and the same (the owner,
+// 2026-10-29). Where it sits on the page is each page's own (`.ingredient-entry__bar`,
+// `.spell-recipe__back`).
+.back-link {
+  // The chevron's drawing starts inside its box, which reads as an indent;
+  // this pulls the stroke to the column's edge, a little past it to the eye
+  // (the owner's call, 2026-10-19).
+  margin-inline-start: -$back-chevron-pull;
+  display: inline-flex;
+  align-items: center;
+  gap: space(1);
+  color: $text-muted;
+  font-size: type-size('small');
+  text-decoration: none;
+  @include theme-transition(color);
+
+  @include reduced-motion {
+    transition: none;
+  }
+
+  // The chevron steps back and grows a little on hover and focus, pointing
+  // the way the link goes, in place of an underline (the owner's call,
+  // 2026-10-19). Twice the short motion, which read as a twitch here: this is
+  // a flourish, not a control answering a press. Motion only: under reduced
+  // motion it holds still.
+  > svg {
+    flex: none;
+    transition: transform calc(#{$motion-short} * 2) ease-out;
+  }
+
+  &:hover,
+  &:focus-visible {
+    color: $text-primary;
+
+    > svg {
+      // A fifth of its own 1em box, so the step follows the link's size.
+      transform: translateX(-20%) scale(1.25);
+    }
+  }
+
+  &:focus-visible {
+    @include focus-ring;
+  }
+
+  @include reduced-motion {
+    > svg,
+    &:hover > svg,
+    &:focus-visible > svg {
+      transition: none;
+      transform: none;
+    }
+  }
+}

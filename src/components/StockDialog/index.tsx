@@ -222,7 +222,23 @@ const StockDialogForm = ({
 }: StockDialogFormProps): ReactElement => {
   const { refresh } = usePendingNavigation();
   const addId = useId();
-  const methods = useForm<StockDialogValues>({ defaultValues: { rows: openingRows(jars, forms) } });
+  // Opened on a form the coven holds no jar of: it starts as a new row, as Add Form would add
+  // it, but among the opening values, so the dialog opens unedited and Save waits for its
+  // amounts (the owner, 2026-10-29). Not appended after mounting, which would mark it changed.
+  const [opened] = useState(() => {
+    const held = openingRows(jars, forms);
+    const seed =
+      openOn !== undefined &&
+      forms.some((form) => form.variantId === openOn) &&
+      !held.some((row) => row.variantId === openOn);
+    return {
+      rows: seed
+        ? [...held, { jarId: null, variantId: openOn, removed: false, ...EMPTY_STOCK }]
+        : held,
+      seeded: seed ? openOn : null,
+    };
+  });
+  const methods = useForm<StockDialogValues>({ defaultValues: { rows: opened.rows } });
   const {
     control,
     handleSubmit,
@@ -243,7 +259,7 @@ const StockDialogForm = ({
   );
   const [adding, setAdding] = useState('');
   // A form just added, whose Quantity takes the focus once its fields are drawn.
-  const [focusAdded, setFocusAdded] = useState<string | null>(null);
+  const [focusAdded, setFocusAdded] = useState<string | null>(opened.seeded);
   const opening = useMemo(() => new Map(jars.map((jar) => [jar.id, stockFormValues(jar)])), [jars]);
   const labelOf = (variantId: string) =>
     forms.find((form) => form.variantId === variantId)?.label ?? '';
@@ -252,22 +268,6 @@ const StockDialogForm = ({
   // removed before Save).
   const found = rows.findIndex((row) => row.variantId === chosenVariant);
   const chosen = found >= 0 ? found : rows.length > 0 ? 0 : -1;
-
-  // Opened on a form the coven holds no jar of: add it as Add Form would (the row is new,
-  // so the dialog is dirty from the start, as after pressing Add), and focus its Quantity.
-  // Once: the guard on the rows keeps a repeat run (strict mode's) from adding it twice.
-  const seeded = useRef(false);
-  useEffect(() => {
-    if (seeded.current || openOn === undefined) return;
-    seeded.current = true;
-    if (!forms.some((form) => form.variantId === openOn)) return;
-    if (getValues('rows').some((row) => row.variantId === openOn)) return;
-    append(
-      { jarId: null, variantId: openOn, removed: false, ...EMPTY_STOCK },
-      { shouldFocus: false },
-    );
-    setFocusAdded(openOn);
-  }, [openOn, forms, getValues, append]);
 
   useEffect(() => {
     if (focusAdded === null) return;

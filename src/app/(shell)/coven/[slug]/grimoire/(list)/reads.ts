@@ -1,4 +1,5 @@
 import 'server-only';
+import type { Route } from 'next';
 import { cache } from 'react';
 import { readCategories } from '@/app/compendium-reads';
 import type { GrimoireSpell } from '@/components/GrimoireList/types';
@@ -17,6 +18,8 @@ import {
 } from '@/modules/grimoire';
 import type { SpellStatus } from '@/modules/grimoire';
 import { displayNamesOf } from '@/modules/identity';
+import { readRecipeOf } from '../recipe-read';
+import { readStepSuppliesOf } from '../[id]/recipe-supply';
 import type { SpellDialogSpell } from '@/components/SpellBuilder/types';
 
 // The read a grimoire tab makes (M10.11), twin of the Ingredients page's `reads.ts`. The
@@ -176,3 +179,28 @@ export const readGrimoireFacetCounts = cache(
     };
   },
 );
+
+/**
+ * The spell `?spell=<id>` opens Quick Look on (M13.21), read as the signed-in member through
+ * `readSpell`, with what the recipe body shows. `undefined` for a spell the service will not
+ * give this member (another member's private spell, another coven's, one that is gone), so the
+ * tab opens nothing and tells a stranger nothing. Any other failure is `failed`, which the
+ * modal says in a Notice rather than drawing an empty spell.
+ */
+/** The spell `?spell=<id>` opens at `lookHref`, the tab's address with it, and its recipe drawn there. */
+export async function readLookedSpell(workspaceId: string, lookHref: Route, id: string) {
+  const session = await requireSession();
+  try {
+    const spell = await readSpell(session, workspaceId, id);
+    const recipe = await readRecipeOf(session, spell, lookHref);
+    // The modal has no side column, so each ingredient step carries its stock verdict itself.
+    const supplies = await readStepSuppliesOf(session, workspaceId, recipe.views);
+    const steps = recipe.steps.map((step) =>
+      step.kind === 'ingredient' ? { ...step, supply: supplies.get(step.id) ?? null } : step,
+    );
+    return { spell, recipe: { ...recipe, steps } };
+  } catch (error) {
+    if (error instanceof NotFound || error instanceof Forbidden) return undefined;
+    return { failed: true as const };
+  }
+}

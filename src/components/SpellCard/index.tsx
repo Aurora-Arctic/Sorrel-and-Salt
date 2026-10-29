@@ -3,7 +3,7 @@ import { PendingLink } from '../../lib/navigation';
 import { ingredientLinkTarget } from '../AppShell/site-target';
 import CategoryChips from '../CategoryChips';
 import LastEdit from '../LastEdit';
-import { EditLink } from '../IconTip';
+import { EditLink, QuickLookLink } from '../IconTip';
 import LinkHint from '../LinkHint';
 import type { SpellCardProps } from './types';
 import './index.scss';
@@ -16,6 +16,9 @@ import './index.scss';
 /** What a spell with no title is called, here and wherever it is listed. */
 export const UNTITLED_SPELL = 'Untitled Spell';
 
+/** The modal place the Quick Look shows in, apart from the spell builder's (M13.21). */
+export const SPELL_LOOK_PLACE = 'look';
+
 /** The id of a spell's title heading, which the list item names itself by. */
 export const spellTitleId = (id: string): string => `spell-${id}-title`;
 
@@ -23,6 +26,7 @@ const SpellCard = ({
   id,
   href,
   editHref,
+  lookHref,
   title,
   intent,
   status,
@@ -79,23 +83,36 @@ const SpellCard = ({
             </div>
           )}
         </div>
-        {/* The card's top-right corner, as an ingredient card's badges are. */}
-        {editHref && (
-          <div className="spell-card__corner">
-            <EditLink
-              href={editHref}
-              name={name}
-              heading={{ eyebrow: 'Edit Spell', title: name }}
-            />
-          </div>
-        )}
       </div>
       {purpose !== '' && <p className="spell-card__intent">{purpose}</p>}
       <CategoryChips categories={categories} label={name} />
       {/* In the foot, as IngredientCard's, so cards in one grid row end on the same line. */}
-      {lastEdit != null && (
+      {(lastEdit != null || lookHref || editHref) && (
+        // The foot, as IngredientCard's: who last edited, then the actions on one row, the
+        // Quick Look eye at the bottom left (the start group) and the Edit pencil at the right.
         <div className="specimen__foot">
-          <LastEdit by={lastEdit.by} at={lastEdit.at} />
+          {lastEdit != null && <LastEdit by={lastEdit.by} at={lastEdit.at} />}
+          {(lookHref || editHref) && (
+            <div className="specimen__actions">
+              {lookHref && (
+                <span className="specimen__actions-start">
+                  <QuickLookLink
+                    href={lookHref}
+                    name={name}
+                    heading={{ title: name }}
+                    place={SPELL_LOOK_PLACE}
+                  />
+                </span>
+              )}
+              {editHref && (
+                <EditLink
+                  href={editHref}
+                  name={name}
+                  heading={{ eyebrow: 'Edit Spell', title: name }}
+                />
+              )}
+            </div>
+          )}
         </div>
       )}
       {/* The smoulder's ember line and char rim, over the content (_smoulder.scss). */}

@@ -1393,7 +1393,7 @@ describe('IngredientEntry stock (M12.29)', () => {
     expect(open.getByRole('button', { name: /^Testroot\b/ })).not.toHaveAttribute('aria-current');
   });
 
-  it('adds the form and chooses it when an empty jar is pressed', () => {
+  it('adds the form and chooses it, with nothing to save yet, when an empty jar is pressed', () => {
     renderStock([jar(root, 250)]);
 
     fireEvent.click(jarButton('Testoil')!);
@@ -1404,8 +1404,8 @@ describe('IngredientEntry stock (M12.29)', () => {
       'true',
     );
     expect(open.getByRole('spinbutton', { name: 'Quantity, Testoil' })).toHaveValue(null);
-    // A new row is a change, so Save is on.
-    expect(open.getByRole('button', { name: 'Save' })).toBeEnabled();
+    // The new row is a place to fill, not a change, so Save is off (the owner, 2026-10-29).
+    expect(open.getByRole('button', { name: 'Save' })).toBeDisabled();
   });
 
   it('gives a role that may not edit plain jars with no button', () => {

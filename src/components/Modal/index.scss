@@ -129,6 +129,16 @@ $eyebrow-line: calc(#{type-size('overline')} * 1.65);
     }
   }
 
+  // One modal in place of another (`data-handover`, which the component sets):
+  // the backdrop starts dimmed, so the page never shows between the two, and
+  // only the box fades in. It still fades out at its own close.
+  &[data-handover]::backdrop {
+    // stylelint-disable-next-line plugin/use-baseline -- enhancement: the element appears without fading in, widely available 2027-02-06
+    @starting-style {
+      opacity: 1;
+    }
+  }
+
   &.is-closing,
   &.is-closing::backdrop {
     opacity: 0;

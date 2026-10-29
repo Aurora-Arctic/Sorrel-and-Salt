@@ -430,11 +430,14 @@ body .spell-builder .collapsible-section__fields > section {
 }
 
 .spell-inventory__line {
+  // The Edit Stock press's stretch (`__press::after`) is placed against the line.
+  position: relative;
   display: grid;
+  // The Quick Look eye has the right-hand column, level with the name (the owner, 2026-10-29).
   grid-template-areas:
-    'jar name'
-    'jar words';
-  grid-template-columns: 2rem minmax(0, 1fr);
+    'jar name look'
+    'jar words .';
+  grid-template-columns: 2rem minmax(0, 1fr) auto;
   column-gap: space(2);
 
   // A one-off holds no stock, but its jar looks as if it holds something: the glass, the level
@@ -466,8 +469,7 @@ body .spell-builder .collapsible-section__fields > section {
   }
 }
 
-// The name line: the name, which is cut short with an ellipsis, then the Low or Out state,
-// which is not.
+// The name line: the name alone, cut short with an ellipsis.
 .spell-inventory__title {
   display: flex;
   grid-area: name;
@@ -484,16 +486,107 @@ body .spell-builder .collapsible-section__fields > section {
   white-space: nowrap;
 }
 
+// The words line: the verdict's mark, then the need and the have.
 .spell-inventory__words {
+  display: flex;
   grid-area: words;
+  gap: space(1);
+  align-items: center;
   color: $text-muted;
+}
+
+// Edit Stock behind the jar and the name on the recipe page (M13.21; the owner, 2026-10-29):
+// the button holds the name, stretched over the whole line by its `::after`, as the entry page's
+// shelf stretches a jar's button (`.jar-shelf__press`), and on hover and focus the name grows and
+// the jar shakes as they do there. The name's ellipsis is the inner span's, never the button's:
+// `overflow: hidden` on the button would clip the stretch to the name. The growth is on the
+// span too, since a transform on the button would make it the stretch's containing block.
+.spell-inventory__press {
+  @include button-reset;
+
+  display: inline-flex;
+  min-width: 0;
+  text-align: start;
+  color: inherit;
+  font: inherit;
+
+  .spell-inventory__name {
+    transition: transform $motion-short ease-out;
+    transform-origin: left center;
+  }
+
+  &::after {
+    content: '';
+    position: absolute;
+    inset: 0;
+  }
+
+  &:focus-visible {
+    outline: 0;
+
+    &::after {
+      @include focus-ring($text-primary, $focus-ring-strength, inset);
+    }
+  }
+}
+
+.spell-inventory__line:has(.spell-inventory__press:focus-visible) {
+  .spell-inventory__jar > svg {
+    animation: jar-shelf-shake $jar-shake-duration ease-out;
+  }
+
+  .spell-inventory__name {
+    transform: scale($jar-name-grow);
+  }
+}
+
+@media (hover: hover) {
+  .spell-inventory__line:has(.spell-inventory__press:hover) {
+    .spell-inventory__jar > svg {
+      animation: jar-shelf-shake $jar-shake-duration ease-out;
+    }
+
+    .spell-inventory__name {
+      transform: scale($jar-name-grow);
+    }
+  }
+}
+
+@include reduced-motion {
+  .spell-inventory__line:has(.spell-inventory__press:hover),
+  .spell-inventory__line:has(.spell-inventory__press:focus-visible) {
+    .spell-inventory__jar > svg {
+      animation: none;
+    }
+
+    .spell-inventory__name {
+      transition: none;
+      transform: none;
+    }
+  }
+}
+
+// The eye (the owner, 2026-10-29) at seven eighths of its size, as the recipe's steps draw it,
+// and raised above the press's stretch with the verdict, so each keeps its own press.
+.spell-inventory__look {
+  display: inline-flex;
+  grid-area: look;
+  align-self: center;
+
+  .icon-tip__look {
+    @include icon-button($icon-size * 0.875, $glyph-size * 0.875);
+  }
+}
+
+.spell-inventory__look,
+.spell-inventory__verdict {
+  position: relative;
+  z-index: 1;
 }
 
 .spell-inventory__verdict {
   display: inline-flex;
   flex: none;
-  // Pushed to the line's right end; the name keeps the rest and is the one cut short.
-  margin-inline-start: auto;
   align-items: center;
   gap: space(1);
   color: $text-muted;

@@ -35,7 +35,7 @@ import type {
 
 // The `demo` scenario: `standard` plus spells with ingredients and layer order,
 // written as a member would write them since screenshots are taken against it.
-// It adds W's cupboard (seven compendium entries held, six of them annotated),
+// It adds W's cupboard (nine compendium entries held, six of them annotated),
 // W's own ingredients, so the jars mix both kinds, one custom one-off layer
 // with no `ingredient_id`, and W's stock: seven jars of what it holds
 // (claude-docs/db/demo-scenario.md, "The demo scenario").
@@ -68,8 +68,11 @@ const CATS_CLAW: SeedWorkspaceIngredient = {
 };
 
 /**
- * W's cupboard in `demo`: the `standard` rows, and the curated German Chamomile
- * (which only `demo` seeds) relabelled, with a colour the compendium does not list.
+ * W's cupboard in `demo`: the `standard` rows, the curated German Chamomile
+ * (which only `demo` seeds) relabelled, with a colour the compendium does not list,
+ * and the two entries the spells below lay that `standard` does not hold. A spell
+ * step names only what the coven holds (the recipe service's readable variants), and
+ * the seed writes raw, so it holds them here (the owner, 2026-10-29).
  */
 export const WORKSPACE_W_CUPBOARD: SeedCupboardEntry[] = [
   ...STANDARD_CUPBOARD,
@@ -79,6 +82,9 @@ export const WORKSPACE_W_CUPBOARD: SeedCupboardEntry[] = [
     label: 'House Chamomile',
     colors: ['white', 'yellow'],
   },
+  // Held and not annotated, for the Hearth Warding Jar's and the Dreaming Sachet's layers.
+  { entry: { name: 'Black Salt' } },
+  { entry: { name: 'Amethyst', canonicalName: 'Quartz var. amethyst' } },
 ];
 
 /** Everything W has of its own. Seeded into W, and invisible from X. */

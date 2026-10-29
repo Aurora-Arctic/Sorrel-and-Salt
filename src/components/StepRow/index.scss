@@ -11,6 +11,13 @@
   gap: 0.5rem;
 }
 
+// The dash standing for a missing quantity, faded so the unit reads first (the owner, 2026-10-28).
+.step-row__dash {
+  color: $text-muted;
+  // At the text's own weight: the amount's heavier face made the dash read dark (the owner, 2026-10-29).
+  font-weight: 400;
+}
+
 .step-row__body {
   flex: 1 1 100%;
   white-space: pre-wrap;

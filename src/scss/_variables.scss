@@ -840,6 +840,11 @@ $switch-width: 2.75rem;
 // switch's thumb sliding (MB.115). Short, so the new state shows before the
 // finger lifts; the combobox's group bar widens on a highlight in the same 150ms.
 $motion-short: 150ms;
+
+// A jar's press on the entry page's shelf and on a recipe's inventory line: how far the name
+// grows on hover and focus, and how long the jar's wobble lasts (JarShelf/index.scss).
+$jar-name-grow: 1.15;
+$jar-shake-duration: 500ms;
 // A larger thing moving into place: an ingredient card's face sliding out (M12.44).
 $motion-medium: 300ms;
 // How far a card's face slides down out of its slot, and so how tall the drawer body

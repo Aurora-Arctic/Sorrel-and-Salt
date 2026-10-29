@@ -82,8 +82,9 @@ a CLI `--reporter` replaces the config's list and with it the html report's
 
 The story suite (`suite: stories`, M14.28) reports its coverage the same way: it
 uploads its own report as `playwright-coverage-stories`, and
-`summarize-stories.mjs` adds the figure and the per-file table to the Stories
-comment through `buildCoverageSection`. Each suite's report also holds
+`summarize-stories.mjs` adds the figure to the Stories comment's summary line
+through `buildCoverageSection`. Neither suite's comment carries the per-file
+table: it is the merged comment's alone. Each suite's report also holds
 monocart's `raw` data (`coverage-e2e/raw/`, the unprocessed V8 data the `raw`
 report keeps), so it travels inside the same artifact. That is what lets the
 two suites be merged without running either again.
@@ -95,6 +96,8 @@ artifacts exist, runs `.github/scripts/merge-playwright-coverage.mjs` (monocart'
 filter as `coverage.config.ts`), uploads the result as `playwright-coverage-merged`
 and posts it as a "Playwright Coverage" comment. The summary line names the suites
 merged ("Gate and story suites", "Story suite only", "Gate suite only"), so a
-figure is never read as covering a suite that did not run. A line counts as covered
+figure is never read as covering a suite that did not run. The comment reads as
+a failure when either suite failed, so a green merge never stands under a red
+suite. A line counts as covered
 when either suite ran it. It is never combined with Vitest's coverage, which
 is istanbul data on a different measure, and the job is never a required check.

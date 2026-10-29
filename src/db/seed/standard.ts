@@ -138,7 +138,8 @@ const MEMBERSHIPS: SeedMembership[] = [
  * annotated.
  */
 export interface SeedCupboardEntry {
-  entry: { name: string; canonicalName: string };
+  /** The held entry, by its formal name, or by its name alone where it has none (`identityOf`). */
+  entry: { name: string; canonicalName?: string | null };
   label?: string;
   description?: string;
   safetyNotes?: string;

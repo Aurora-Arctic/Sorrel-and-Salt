@@ -225,8 +225,10 @@
   // The spinner a save in flight shows is `Spinner`'s (src/components/Spinner).
 
   // The side padding is sized for a word, and reads as a gap before a small
-  // round mark, so the left side comes in a step while the spinner shows.
-  .btn[aria-busy='true'] {
+  // round mark, so the left side comes in a step while the spinner shows. Only while one
+  // does: a `PendingLink` button is busy on its way with no spinner in it (Quick Look's Edit
+  // Spell), and would lose its left side for nothing.
+  .btn[aria-busy='true']:has(.spinner) {
     padding-left: space(3);
   }
 
@@ -2208,5 +2210,61 @@
     justify-content: flex-end;
     gap: space(2);
     margin-top: space(3);
+  }
+
+  // The card actions' own addition to the primitive, for both cards (IngredientCard and SpellCard),
+  // here and not in a card's own file because that file loads only where the card is imported: above the stretched link, so each
+  // button is its own target. The row and the start group are boxes as wide as the card, so
+  // they pass the pointer through and only their children take it back (MB.272): a press in
+  // the gaps between the controls opens the entry, as the rest of the card does. Each child
+  // is a control or the wrapper its tip or menu opens in, so a menu or tip keeps the pointer.
+  .ingredient-card .specimen__actions,
+  .spell-card .specimen__actions {
+    position: relative;
+    z-index: 1;
+    pointer-events: none;
+  }
+
+  .ingredient-card .specimen__actions > :not(.specimen__actions-start),
+  .ingredient-card .specimen__actions-start > *,
+  .spell-card .specimen__actions > :not(.specimen__actions-start),
+  .spell-card .specimen__actions-start > * {
+    pointer-events: auto;
+  }
+
+  // The foot's start (M12.5): the coven's Quick Look eye at the bottom left, the
+  // other actions kept at the right by the auto margin. A flex row, not inline: as
+  // a line box its text's line height and `vertical-align: middle` set the eye
+  // on the baseline rather than the row's centre, and could grow the row past the
+  // 2rem controls, which then sat above the eye.
+  .ingredient-card .specimen__actions-start,
+  .spell-card .specimen__actions-start {
+    display: flex;
+    align-items: center;
+    gap: space(2);
+    margin-inline-end: auto;
+  }
+
+  // The foot bar of a Quick Look modal, the ingredient's and the spell's. The ingredient's foot (the owner's call, 2026-10-20): the bar holding the
+  // link to the entry's page, in the Modal's `foot` slot under the body rather than inside it, so the
+  // body is the only thing that scrolls and its scrollbar ends above the bar
+  // (the owner's report, 2026-10-20: the track ran down past it). It runs to the
+  // dialog's edges, on the modal's surface, with a hairline along its top. The
+  // link is the site's plain `.btn`, a green outline on a clear ground with the normal size and its own hover and focus, centred in the bar and
+  // two thirds of its width, a fraction of the bar rather than a length so it
+  // holds at every window width; the bar takes no side padding, so the third is
+  // of the bar itself, and the label stands centred in the button.
+  .ingredient-details-foot {
+    display: flex;
+    justify-content: center;
+    padding: space(3) 0;
+    border-top: 1px solid $hairline;
+    background: $surface-card;
+    @include theme-transition(background-color, border-color);
+
+    > .btn {
+      width: 66.6%;
+      text-align: center;
+    }
   }
 }
