@@ -6,13 +6,11 @@ import type { GroupColors } from '../../lib/types';
 import { JarDrawing, pickJarShape } from '../JarShelf';
 import { useCategoryColors } from './category-colors';
 import { SpellComparison } from './comparison-panel';
-import { SpellInventory } from './inventory';
-import type { QuickLookCoven } from './step-quick-look';
 import type { SpellStepsValues } from './steps/types';
 import { isInstruction } from './steps/values';
 
 // The Jar section's right-hand column (the owner's Option C2, 2026-10-28): the jar drawn
-// with the Seal Wax field to its right and the Jar Description beneath both, then what the coven holds against the steps, then the
+// with the Seal Wax field to its right and the Jar Description beneath both, then the
 // spell's intent against what the ingredients carry. It sits beside the step list where the
 // dialog is wide enough and drops beneath it where it is not (index.scss).
 // claude-docs/components/spell-builder.md, "The aside".
@@ -58,15 +56,12 @@ export function JarAside({
   waxField,
   descriptionField,
   ready,
-  look,
 }: {
-  /** The coven's ids for each ingredient line's Quick Look; left out, the lines have none. */
-  look?: QuickLookCoven;
   /** The Seal Wax field, drawn to the right of the jar. */
   waxField: ReactNode;
   /** The Jar Description field, beneath the jar and the wax field, the aside's full width. */
   descriptionField: ReactNode;
-  /** Whether the steps have been read; until they have, the two readings are left out. */
+  /** Whether the steps have been read; until they have, the reading is left out. */
   ready: boolean;
 }): ReactElement {
   const headingId = useId();
@@ -81,10 +76,7 @@ export function JarAside({
         {descriptionField}
       </div>
       {ready && (
-        <>
-          <SpellComparison />
-          <SpellInventory look={look} />
-        </>
+        <SpellComparison />
       )}
     </aside>
   );
