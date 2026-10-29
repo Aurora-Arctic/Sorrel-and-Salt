@@ -8,6 +8,9 @@ import * as invitations from '@/modules/coven/schema/invitations';
 import * as workspaces from '@/modules/coven/schema/workspaces';
 import * as spellCategories from '@/modules/grimoire/schema/spell-categories';
 import * as spellSteps from '@/modules/grimoire/schema/spell-steps';
+import * as spellWorkingDeductions from '@/modules/grimoire/schema/spell-working-deductions';
+import * as spellWorkingParticipants from '@/modules/grimoire/schema/spell-working-participants';
+import * as spellWorkings from '@/modules/grimoire/schema/spell-workings';
 import * as spells from '@/modules/grimoire/schema/spells';
 import * as adminRoleChangePauses from '@/modules/identity/schema/admin-role-change-pauses';
 import * as auth from '@/modules/identity/schema/auth';
@@ -55,6 +58,9 @@ const MODULES = [
   workspaces,
   spellCategories,
   spellSteps,
+  spellWorkingDeductions,
+  spellWorkingParticipants,
+  spellWorkings,
   spells,
   adminRoleChangePauses,
   auth,

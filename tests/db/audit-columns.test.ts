@@ -13,7 +13,12 @@ import {
 // Each module schema test pins its table's exact column set on the code side (claude-docs/testing/db-harness.md, "The db test harness").
 
 /** Hard-deleted, so four stamps and no tombstone. */
-const STAMPED = ['ingredient_categories', 'spell_categories'];
+const STAMPED = [
+  'ingredient_categories',
+  'spell_categories',
+  'spell_working_deductions',
+  'spell_working_participants',
+];
 
 const AUDIT_IDS = ['created_by', 'updated_by', 'deleted_by'];
 const USERS_ID = 'users.id';
@@ -79,7 +84,7 @@ describe('the audit columns', () => {
           .map((row) => row.table_name),
       ),
     ].filter((table) => STAMP_COLUMNS.every((column) => audit(table).columns[column]));
-    expect(AUDITED_TABLES).toHaveLength(29);
+    expect(AUDITED_TABLES).toHaveLength(32);
     expect(stamped.sort()).toEqual(AUDITED_TABLES);
 
     expect(Object.fromEntries(AUDITED_TABLES.map((table) => [table, audit(table)]))).toEqual(
