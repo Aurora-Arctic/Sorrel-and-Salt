@@ -1,0 +1,22 @@
+# Gathered for M14.29; the seed never reads this folder.
+entry: botanical/water-dropwort-oenanthe-aquatica
+status: needs-review
+listings:
+  - list: iucn
+    name: "IUCN Red List of Threatened Species, as printed in Wikipedia's taxobox"
+    value: 'LC'
+    listedAs: Oenanthe aquatica
+    scope: 'global'
+    nameBasis: stated
+    source: iucn-oenanthe-aquatica
+    locator: 'Taxobox: status = LC, status_system = IUCN3.1; its reference prints only "IUCN Red List", with no assessor or assessment id'
+  - list: other
+    name: 'French regional status printed in Wikipedia prose, no assessor named'
+    value: 'VU in Corsica; EN in Midi-Pyrénées and Provence-Alpes-Côte d’Azur'
+    listedAs: Oenanthe aquatica
+    scope: 'France (Corsica, Midi-Pyrénées, Provence-Alpes-Côte d’Azur)'
+    nameBasis: stated
+    source: iucn-oenanthe-aquatica
+    locator: 'prose: "in Corsica it is considered to be VU (Vulnerable) and in two départements (Midi-Pyrénées and Provence-Alpes-Côte d’Azur) it is classified as EN (Endangered)"'
+questions:
+  - 'The taxobox prints Least Concern (IUCN 3.1) but its reference names no assessor or id, and the French regional statuses are prose with no named assessor. I could not find the assessments. Find the assessments, or drop the listings? Recommendation: keep the global LC as the taxobox states, and drop the French prose unless the owner wants regional notes.'

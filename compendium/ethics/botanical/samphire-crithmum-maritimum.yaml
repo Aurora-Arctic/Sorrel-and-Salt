@@ -1,0 +1,14 @@
+# Gathered for M14.29; the seed never reads this folder.
+entry: botanical/samphire-crithmum-maritimum
+status: needs-review
+listings:
+  - list: iucn
+    name: "IUCN Red List of Threatened Species, as printed in Wikipedia's taxobox"
+    value: 'LC'
+    listedAs: Crithmum maritimum
+    scope: 'Europe'
+    nameBasis: stated
+    source: iucn-crithmum-maritimum
+    locator: 'Taxobox: status = LC, status_system = IUCN3.1; its status_ref reads: "Crithmum maritimum (Europe assessment)", Meredith, C.R.; Chappuis, E., 2026, 10.2305/IUCN.UK.2026-1.RLTS.T203487A209256633.en'
+questions:
+  - 'The cited Wikipedia page is titled "Crithmum" (the genus page) and the assessment is a Europe regional one. Does the genus page count as this species'' source? Recommendation: yes, since the status_ref names Crithmum maritimum, and keep the scope as Europe.'

@@ -1,0 +1,14 @@
+# Gathered for M14.29; the seed never reads this folder.
+entry: botanical/stinking-arrach-chenopodium-vulvaria
+status: needs-review
+listings:
+  - list: other
+    name: 'French regional status printed in Wikipedia prose, no assessor named'
+    value: 'CR in Picardy; VU in Brittany; EN in Alsace and Lower Normandy; generally LC in the Mediterranean départements'
+    listedAs: Chenopodium vulvaria
+    scope: 'France (regions named in the quote)'
+    nameBasis: stated
+    source: iucn-chenopodium-vulvaria
+    locator: 'prose: "Stinking goosefoot has not yet been assessed for its global status, but in France Chénopode fétide is common in the south and generally has the status LC (least concern) in the Mediterranean départements, while in the north it is much rarer: in Picardy it is classified as CR (critically endangered), while it is VU (vulnerable) in Brittany, EN (endangered) in Alsace and Lower Normandy" (sentence continues; my copy of the page is cut off there)'
+questions:
+  - 'Wikipedia says the species "has not yet been assessed for its global status" and gives French regional statuses without naming an assessor or list. Find the assessment, or drop the row? Recommendation: keep the entry (regional listings never remove a row) and drop the listing unless the French list is found.'
