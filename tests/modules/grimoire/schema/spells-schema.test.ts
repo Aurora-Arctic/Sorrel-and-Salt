@@ -7,7 +7,7 @@ import { spellStatus, spellVisibility, spells } from '@/modules/grimoire/schema/
 import { FIXTURE_USERS, WORKSPACE_W_ID, WORKSPACE_X_ID } from '@/db/seed/standard';
 
 // §5's columns, `visibility` included as of M10.3 — claude-docs/db/grimoire.md,
-// "The grimoire". `note` replaces `instructions`, both held until M13.9.
+// "The grimoire".
 // `revision` is the counter a save names to detect a clash (M13.15).
 const OWN_COLUMNS = [
   'id',
@@ -19,7 +19,6 @@ const OWN_COLUMNS = [
   'moon_phase',
   'day_of_week',
   'note',
-  'instructions',
   'status',
   'visibility',
   'revision',
@@ -96,7 +95,6 @@ describe('spells table', () => {
       'moon_phase',
       'day_of_week',
       'note',
-      'instructions',
     ]) {
       expect(row[column]).toBeNull();
     }
@@ -104,7 +102,7 @@ describe('spells table', () => {
 
   // The single free-text note on a spell (story 80), beside its steps.
   it('holds a note', async () => {
-    const id = await record({ note: 'Keep by the hearth.', instructions: 'Keep by the hearth.' });
+    const id = await record({ note: 'Keep by the hearth.' });
 
     const [row] = await sql`select note from spells where id = ${id}`;
 

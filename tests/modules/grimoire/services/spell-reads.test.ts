@@ -238,7 +238,7 @@ describe('stepsOfSpells', () => {
     // The fixture places each step at its index; reverse the first three, and
     // retire the last, so the order read is the column's and not the insert's.
     await sql`
-      update spell_steps set position = 10 - position, layer_order = 10 - layer_order
+      update spell_steps set position = 10 - position
       where spell_id = ${spell}`;
     await sql`update spell_steps set deleted_at = now() where body = 'Gone.'`;
 

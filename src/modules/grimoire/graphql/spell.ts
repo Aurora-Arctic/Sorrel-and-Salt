@@ -58,9 +58,7 @@ const SpellStepRef = builder.objectRef<SpellStepView>('SpellStep').implement({
   description: 'One step of a recipe: an ingredient laid, an instruction, or both.',
   fields: (t) => ({
     id: t.exposeID('id'),
-    // `position` is null on a row written before M13.1 filled it; `layerOrder`
-    // is the same order under its old name, so the wire never shows a gap.
-    position: t.int({ resolve: (step) => step.position ?? step.layerOrder }),
+    position: t.int({ resolve: (step) => step.position }),
     body: t.exposeString('body', {
       nullable: true,
       description: 'The instruction; null on an ingredient-only step.',

@@ -14,7 +14,6 @@ const base = {
   quantity: null,
   unit: null,
   body: null,
-  note: null,
   ingredient: null,
   variant: null,
 };

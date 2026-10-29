@@ -234,7 +234,7 @@ describe('a custom, one-off ingredient row', () => {
       name: 'Fixture Salt',
       form: 'coarse',
     });
-    expect(added).toMatchObject({ position: 2, layerOrder: 2, spellId: hidden });
+    expect(added).toMatchObject({ position: 2, spellId: hidden });
 
     const hiddenStep = await stepOf(hidden);
     await expect(
@@ -348,8 +348,8 @@ async function ingredientWithForm(
 /** Every step row of the spell, live and tombstoned, by the place each was given. */
 function stepRowsOf(spellId: string) {
   return sql`
-    select id, position, layer_order, body, ingredient_id, variant_id, name, form, quantity,
-      unit, note, deleted_at, deleted_by
+    select id, position, body, ingredient_id, variant_id, name, form, quantity,
+      unit, deleted_at, deleted_by
     from spell_steps where spell_id = ${spellId} order by position, id`;
 }
 
@@ -381,7 +381,7 @@ describe('createSpell, with its recipe', () => {
     expect(await countSpells()).toBe(before);
   });
 
-  it('writes the spell’s fields, its note alone and never the old instructions column', async () => {
+  it('writes the spell’s fields, and its note', async () => {
     const spell = await createSpell(asUser(B), WORKSPACE_W_ID, {
       title: 'Hearth Ward',
       intent: 'Keep the hearth safe',
@@ -400,11 +400,10 @@ describe('createSpell, with its recipe', () => {
       moon_phase: 'Waxing',
       day_of_week: 'Sunday',
       note: 'Do it at dusk.',
-      instructions: null,
     });
   });
 
-  it('writes the steps in the order given, each place in position and layer_order alike', async () => {
+  it('writes the steps in the order given, each at its place', async () => {
     const coven = await ingredientWithForm('Fixture Leaf');
     const compendium = await ingredientWithForm('Fixture Compendium Root', null);
 
@@ -419,12 +418,7 @@ describe('createSpell, with its recipe', () => {
     });
 
     const rows = await stepRowsOf(spell.id);
-    expect(rows.map((row) => [row.position, row.layer_order])).toEqual([
-      [1, 1],
-      [2, 2],
-      [3, 3],
-      [4, 4],
-    ]);
+    expect(rows.map((row) => row.position)).toEqual([1, 2, 3, 4]);
     expect(rows[1]).toMatchObject({
       ingredient_id: coven.ingredientId,
       variant_id: coven.variantId,
@@ -527,7 +521,7 @@ describe('updateSpell, with its recipe', () => {
     ]);
   });
 
-  it('reorders the steps, position and layer_order following the new order', async () => {
+  it('reorders the steps, position following the new order', async () => {
     const { id, ids } = await saved([{ body: 'One' }, { body: 'Two' }, { body: 'Three' }]);
 
     await updateSpell(asUser(B), WORKSPACE_W_ID, id, {
@@ -542,9 +536,9 @@ describe('updateSpell, with its recipe', () => {
     const live = (await stepRowsOf(id)).filter((row) => row.deleted_at === null);
     const byId = new Map(live.map((row) => [row.id, row]));
     expect([ids[2], ids[0], ids[1]].map((step) => byId.get(step))).toEqual([
-      expect.objectContaining({ position: 1, layer_order: 1, body: 'Three' }),
-      expect.objectContaining({ position: 2, layer_order: 2, body: 'One' }),
-      expect.objectContaining({ position: 3, layer_order: 3, body: 'Two, reworded' }),
+      expect.objectContaining({ position: 1, body: 'Three' }),
+      expect.objectContaining({ position: 2, body: 'One' }),
+      expect.objectContaining({ position: 3, body: 'Two, reworded' }),
     ]);
   });
 
@@ -568,9 +562,9 @@ describe('updateSpell, with its recipe', () => {
     expect(rows.every((row) => row.deleted_at === null)).toBe(true);
     const byId = new Map(rows.map((row) => [row.id, row]));
     expect([ids[2], ids[0], ids[1]].map((step) => byId.get(step))).toEqual([
-      expect.objectContaining({ position: 1, layer_order: 1, body: 'Stir.' }),
-      expect.objectContaining({ position: 2, layer_order: 2, variant_id: leaf.variantId }),
-      expect.objectContaining({ position: 3, layer_order: 3, name: 'Fixture Pebble' }),
+      expect.objectContaining({ position: 1, body: 'Stir.' }),
+      expect.objectContaining({ position: 2, variant_id: leaf.variantId }),
+      expect.objectContaining({ position: 3, name: 'Fixture Pebble' }),
     ]);
   });
 
@@ -666,15 +660,6 @@ describe('updateSpell, with its recipe', () => {
     const { id, ids } = await saved([{ body: 'One' }]);
     await updateSpell(asUser(B), WORKSPACE_W_ID, id, { expectedRevision: null, note: 'Only this' });
     expect((await liveRecipe(id)).map((step) => step.id)).toEqual(ids);
-  });
-
-  it('writes the note alone, leaving the old instructions column as it was', async () => {
-    const { id } = await saved([]);
-    // A row the deploy before M13.1 wrote, whose old column holds text.
-    await sql`update spells set instructions = 'Old words' where id = ${id}`;
-    await updateSpell(asUser(B), WORKSPACE_W_ID, id, { expectedRevision: null, note: 'At dusk' });
-    const [row] = await sql`select note, instructions from spells where id = ${id}`;
-    expect(row).toEqual({ note: 'At dusk', instructions: 'Old words' });
   });
 
   it('lets a draft drop its title and refuses completing without one', async () => {

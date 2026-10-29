@@ -25,8 +25,7 @@ const { default: SpellBuilder } = await import('@/components/SpellBuilder');
 
 // The spell builder's step order (M10.16, story 51): each step moved by its
 // handle, by keyboard or by pointer, each move said, and the order sent on
-// save. That the save moves the rows in place, position and layer_order
-// together, is tests/modules/grimoire/services/spells.test.ts's.
+// save. That the save moves the rows in place is tests/modules/grimoire/services/spells.test.ts's.
 
 const ID = {
   rosewort: '00000000-0000-4000-8000-000000000001',

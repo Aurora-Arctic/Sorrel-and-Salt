@@ -56,31 +56,19 @@ export const spellSteps = pgTable(
     // The same enum a jar is measured in, so the converter can go between them.
     // No `unitDimension` here: nothing groups a spell's layers by dimension.
     unit: inventoryUnit('unit'),
-    // The old name of `position`, kept until M13.9 drops it: the deploy before
-    // this one writes only this column, through the `spell_ingredients` view,
-    // so the code writes the same value to both (expand/contract, CLAUDE.md
-    // rule 10).
-    layerOrder: integer('layer_order').notNull(),
     // The step's place in the recipe. Stored, never inferred from insertion
-    // order. Nullable until M13.9 sets `NOT NULL`, because the deploy before
-    // writes `layer_order` alone and would have its inserts refused.
-    position: integer('position'),
+    // order.
+    position: integer('position').notNull(),
     // The instruction: what to do at this step, in the member's words.
     body: text('body'),
-    // Retired 2026-10-28: `body` is the one text on a step, and migration 0088
-    // copied each note into it. Nothing reads or writes this column; M13.9
-    // drops it (claude-docs/design-decisions/pr1308-step-note-retired.md).
-    note: text('note'),
     ...auditColumns,
   },
   (table) => [
     // One live step per place; leading on `spell_id` makes it the index that
     // reads a recipe in order. Checked per row, not at end of statement, so a
     // reorder moves the live rows through a scratch offset rather than
-    // sweeping `position + 1`. The `layer_order` index goes with its column
-    // in M13.9.
+    // sweeping `position + 1`.
     liveUnique('spell_steps_spell_id_position_unique', table, table.spellId, table.position),
-    liveUnique('spell_steps_spell_id_layer_order_unique', table, table.spellId, table.layerOrder),
 
     // No unique index on a jar's forms: a spell may lay one form in several
     // steps, at different depths or for different purposes (the owner, 2026-10-28;
