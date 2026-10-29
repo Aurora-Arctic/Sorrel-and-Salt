@@ -1,0 +1,11 @@
+# Gathered for M14.29; the seed never reads this folder.
+entry: botanical/horse-chestnut-aesculus-hippocastanum
+status: approved
+listings:
+  - list: iucn
+    name: IUCN Red List of Threatened Species, as printed in Wikipedia's taxobox
+    value: VU
+    listedAs: Aesculus hippocastanum
+    nameBasis: stated
+    source: wikipedia-iucn-aesculus-hippocastanum
+    locator: 'Taxobox: status = VU, status_system = IUCN3.1; its status_ref reads: "Aesculus hippocastanum", Allen, D.J., 2026, 10.2305/IUCN.UK.2026-1.RLTS.T202914A209240052.en'

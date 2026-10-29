@@ -1,0 +1,11 @@
+# Gathered for M14.29; the seed never reads this folder.
+entry: fungal/puffball-lycoperdon-perlatum
+status: approved
+listings:
+  - list: iucn
+    name: IUCN Red List of Threatened Species, as printed in Wikipedia's taxobox
+    value: LC
+    listedAs: Lycoperdon perlatum
+    nameBasis: stated
+    source: wikipedia-iucn-lycoperdon-perlatum
+    locator: 'Taxobox: status = LC, status_system = IUCN3.1; its status_ref reads: "Lycoperdon perlatum", Dahlberg, 2019, 10.2305/IUCN.UK.2019-3.RLTS.T122090665A222967683.en'

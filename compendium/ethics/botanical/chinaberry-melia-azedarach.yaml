@@ -1,0 +1,11 @@
+# Gathered for M14.29; the seed never reads this folder.
+entry: botanical/chinaberry-melia-azedarach
+status: approved
+listings:
+  - list: iucn
+    name: IUCN Red List of Threatened Species, as printed in Wikipedia's taxobox
+    value: LC
+    listedAs: Melia azedarach
+    nameBasis: stated
+    source: wikipedia-iucn-melia-azedarach
+    locator: 'Taxobox: status = LC, status_system = IUCN3.1; its status_ref reads: "Melia azedarach", Barstow, M., 2018, 10.2305/IUCN.UK.2018-1.RLTS.T61801956A61801958.en'

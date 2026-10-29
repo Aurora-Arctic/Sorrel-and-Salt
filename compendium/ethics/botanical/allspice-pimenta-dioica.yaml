@@ -1,0 +1,11 @@
+# Gathered for M14.29; the seed never reads this folder.
+entry: botanical/allspice-pimenta-dioica
+status: approved
+listings:
+  - list: iucn
+    name: IUCN Red List of Threatened Species, as printed in Wikipedia's taxobox
+    value: LC
+    listedAs: Pimenta dioica
+    nameBasis: stated
+    source: wikipedia-iucn-pimenta-dioica
+    locator: 'Taxobox: status = LC, status_system = IUCN3.1; its status_ref reads: "Pimenta dioica", Botanic Gardens Conservation International (BGCI)., 2019, 10.2305/IUCN.UK.2019-3.RLTS.T103121329A150119410.en'

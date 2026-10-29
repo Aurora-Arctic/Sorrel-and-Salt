@@ -1,0 +1,11 @@
+# Gathered for M14.29; the seed never reads this folder.
+entry: botanical/frangipani-plumeria-rubra
+status: approved
+listings:
+  - list: iucn
+    name: IUCN Red List of Threatened Species, as printed in Wikipedia's taxobox
+    value: LC
+    listedAs: Plumeria rubra
+    nameBasis: stated
+    source: wikipedia-iucn-plumeria-rubra
+    locator: 'Taxobox: status = LC, status_system = IUCN3.1; its status_ref reads: "Plumeria rubra", 2019'

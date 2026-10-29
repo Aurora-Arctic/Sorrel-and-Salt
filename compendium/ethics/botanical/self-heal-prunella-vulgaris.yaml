@@ -1,0 +1,11 @@
+# Gathered for M14.29; the seed never reads this folder.
+entry: botanical/self-heal-prunella-vulgaris
+status: approved
+listings:
+  - list: iucn
+    name: IUCN Red List of Threatened Species, as printed in Wikipedia's taxobox
+    value: LC
+    listedAs: Prunella vulgaris
+    nameBasis: stated
+    source: wikipedia-iucn-prunella-vulgaris
+    locator: 'Taxobox: status = LC, status_system = IUCN3.1; its status_ref reads: "Self-heal Prunella vulgaris", 2016, 10.2305/IUCN.UK.2016-1.RLTS.T203256A78457152.en'

@@ -1,0 +1,11 @@
+# Gathered for M14.29; the seed never reads this folder.
+entry: botanical/pecan-carya-illinoinensis
+status: approved
+listings:
+  - list: iucn
+    name: IUCN Red List of Threatened Species, as printed in Wikipedia's taxobox
+    value: LC
+    listedAs: Carya illinoinensis
+    nameBasis: stated
+    source: wikipedia-iucn-carya-illinoinensis
+    locator: 'Taxobox: status = LC, status_system = IUCN3.1; its status_ref reads: "Carya illinoinensis: Barstow, M.: The IUCN Red List of Threatened Species 2018: e.T62019622A62019624", 2018-06-21, 10.2305/iucn.uk.2018-2.rlts.t62019622a62019624.en'

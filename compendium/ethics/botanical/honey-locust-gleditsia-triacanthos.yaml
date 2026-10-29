@@ -1,0 +1,11 @@
+# Gathered for M14.29; the seed never reads this folder.
+entry: botanical/honey-locust-gleditsia-triacanthos
+status: approved
+listings:
+  - list: iucn
+    name: IUCN Red List of Threatened Species, as printed in Wikipedia's taxobox
+    value: LC
+    listedAs: Gleditsia triacanthos
+    nameBasis: stated
+    source: wikipedia-iucn-gleditsia-triacanthos
+    locator: 'Taxobox: status = LC, status_system = IUCN3.1; its status_ref reads: "Gleditsia triacanthos", Stritch, L., 2018, 10.2305/IUCN.UK.2018-2.RLTS.T62026061A62026063.en'

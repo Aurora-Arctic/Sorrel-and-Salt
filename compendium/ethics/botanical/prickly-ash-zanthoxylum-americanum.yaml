@@ -1,0 +1,11 @@
+# Gathered for M14.29; the seed never reads this folder.
+entry: botanical/prickly-ash-zanthoxylum-americanum
+status: approved
+listings:
+  - list: iucn
+    name: IUCN Red List of Threatened Species, as printed in Wikipedia's taxobox
+    value: LC
+    listedAs: Zanthoxylum americanum
+    nameBasis: stated
+    source: wikipedia-iucn-zanthoxylum-americanum
+    locator: 'Taxobox: status = LC, status_system = IUCN3.1; its status_ref reads: "Zanthoxylum americanum", Botanic Gardens Conservation International (BGCI)., 2018, 10.2305/IUCN.UK.2018-2.RLTS.T135956405A135956407.en'

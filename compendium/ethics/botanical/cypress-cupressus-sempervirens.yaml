@@ -1,0 +1,13 @@
+# Gathered for M14.29; the seed never reads this folder.
+entry: botanical/cypress-cupressus-sempervirens
+status: needs-review
+listings:
+  - list: iucn
+    name: IUCN Red List of Threatened Species, as printed in Wikipedia's taxobox
+    value: LC
+    listedAs: Cupressus sempervirens
+    nameBasis: stated
+    source: wikipedia-iucn-cupressus-sempervirens
+    locator: 'Taxobox: status = LC, status_system = IUCN3.1; its status_ref reads: "The IUCN Red List of Threatened Species", 2011-07-15'
+questions:
+  - 'Wikipedia''s status_ref names an assessment titled "The IUCN Red List of Threatened Species", which is not Cupressus sempervirens. Recommendation: do not list until an authority the owner accepts maps one name to the other. '

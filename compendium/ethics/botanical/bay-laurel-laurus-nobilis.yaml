@@ -1,0 +1,13 @@
+# Gathered for M14.29; the seed never reads this folder.
+entry: botanical/bay-laurel-laurus-nobilis
+status: needs-review
+listings:
+  - list: iucn
+    name: IUCN Red List of Threatened Species, as printed in Wikipedia's taxobox
+    value: LC
+    listedAs: Laurus nobilis
+    nameBasis: stated
+    source: wikipedia-iucn-laurus-nobilis
+    locator: 'Taxobox: status = LC, status_system = IUCN3.1; its status_ref reads: (no assessment named)'
+questions:
+  - 'The assessment Wikipedia names for Laurus nobilis is not identified by title (Wikipedia prints a status but names no assessment). Raw status_ref: . Recommendation: do not list until the assessment is read for Laurus nobilis.'

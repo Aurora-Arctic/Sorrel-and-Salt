@@ -1,0 +1,11 @@
+# Gathered for M14.29; the seed never reads this folder.
+entry: botanical/rowan-sorbus-aucuparia
+status: approved
+listings:
+  - list: iucn
+    name: IUCN Red List of Threatened Species, as printed in Wikipedia's taxobox
+    value: LC
+    listedAs: Sorbus aucuparia
+    nameBasis: stated
+    source: wikipedia-iucn-sorbus-aucuparia
+    locator: 'Taxobox: status = LC, status_system = IUCN3.1; its status_ref reads: "Sorbus aucuparia", Rivers, M.C., 2017, 10.2305/IUCN.UK.2017-3.RLTS.T61957558A112304840.en'

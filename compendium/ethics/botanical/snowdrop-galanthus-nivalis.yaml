@@ -1,0 +1,11 @@
+# Gathered for M14.29; the seed never reads this folder.
+entry: botanical/snowdrop-galanthus-nivalis
+status: approved
+listings:
+  - list: iucn
+    name: IUCN Red List of Threatened Species, as printed in Wikipedia's taxobox
+    value: NT
+    listedAs: Galanthus nivalis
+    nameBasis: stated
+    source: wikipedia-iucn-galanthus-nivalis
+    locator: 'Taxobox: status = NT, status_system = IUCN3.1; its status_ref reads: "Galanthus nivalis", Crook, V., 2011, 10.2305/IUCN.UK.2011-1.RLTS.T162168A5551773.en'

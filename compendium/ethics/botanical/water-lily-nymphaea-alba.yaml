@@ -1,0 +1,11 @@
+# Gathered for M14.29; the seed never reads this folder.
+entry: botanical/water-lily-nymphaea-alba
+status: approved
+listings:
+  - list: iucn
+    name: IUCN Red List of Threatened Species, as printed in Wikipedia's taxobox
+    value: LC
+    listedAs: Nymphaea alba
+    nameBasis: stated
+    source: wikipedia-iucn-nymphaea-alba
+    locator: 'Taxobox: status = LC, status_system = IUCN3.1; its status_ref reads: "Nymphaea alba", Akhani, H., 2014, 10.2305/IUCN.UK.2014-2.RLTS.T164237A63306122.en'

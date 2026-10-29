@@ -1,0 +1,11 @@
+# Gathered for M14.29; the seed never reads this folder.
+entry: botanical/mulberry-morus-nigra
+status: approved
+listings:
+  - list: iucn
+    name: IUCN Red List of Threatened Species, as printed in Wikipedia's taxobox
+    value: DD
+    listedAs: Morus nigra
+    nameBasis: stated
+    source: wikipedia-iucn-morus-nigra
+    locator: 'Taxobox: status = DD, status_system = IUCN3.1; its status_ref reads: "Morus nigra", Svensson, M.S., 2024, 10.2305/IUCN.UK.2024-2.RLTS.T61890076A61890080.en'

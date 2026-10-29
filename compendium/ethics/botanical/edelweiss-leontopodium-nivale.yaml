@@ -1,0 +1,13 @@
+# Gathered for M14.29; the seed never reads this folder.
+entry: botanical/edelweiss-leontopodium-nivale
+status: needs-review
+listings:
+  - list: iucn
+    name: IUCN Red List of Threatened Species, as printed in Wikipedia's taxobox
+    value: LC
+    listedAs: Leontopodium nivale
+    nameBasis: stated
+    source: wikipedia-iucn-leontopodium-nivale
+    locator: 'Taxobox: status = LC, status_system = IUCN3.1; its status_ref reads: "Leontopodium alpinum", Khela, S., 2013, 10.2305/IUCN.UK.2013-2.RLTS.T202984A2758405.en'
+questions:
+  - 'Wikipedia''s status_ref names an assessment titled "Leontopodium alpinum", which is not Leontopodium nivale. Recommendation: do not list until an authority the owner accepts maps one name to the other. GBIF returned (not an accepted authority): GBIF https://api.gbif.org/v1/species/match?name=Leontopodium%20nivale -> Leontopodium nivale (Ten.) A.Huet ex Hand.-Mazz. | status ACCEPTED | matchType EXACT | accepted (is accepted or none); GBIF https://api.gbif.org/v1/species/match?name=Leontopodium%20alpinum -> Asteraceae | status ACCEPTED | matchType HIGHERRANK | accepted (is accepted or none)'

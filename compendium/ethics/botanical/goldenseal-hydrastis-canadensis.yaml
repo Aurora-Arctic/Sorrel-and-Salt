@@ -5,7 +5,14 @@ listings:
   - list: other
     name: United Plant Savers Species At-Risk List
     value: At-Risk
-    listedAs: 'Hydrastis canadensis'
+    listedAs: Hydrastis canadensis
     nameBasis: stated
     source: ups-species-at-risk
     locator: under the heading "At-Risk", entry for Goldenseal
+  - list: iucn
+    name: IUCN Red List of Threatened Species, as printed in Wikipedia's taxobox
+    value: VU
+    listedAs: Hydrastis canadensis
+    nameBasis: stated
+    source: wikipedia-iucn-hydrastis-canadensis
+    locator: 'Taxobox: status = VU, status_system = IUCN3.1; its status_ref reads: "Hydrastis canadensis", Oliver, L., 2016, e.T44340011A44340071'

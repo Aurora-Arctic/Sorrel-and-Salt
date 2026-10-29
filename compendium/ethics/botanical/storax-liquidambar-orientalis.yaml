@@ -1,0 +1,11 @@
+# Gathered for M14.29; the seed never reads this folder.
+entry: botanical/storax-liquidambar-orientalis
+status: approved
+listings:
+  - list: iucn
+    name: IUCN Red List of Threatened Species, as printed in Wikipedia's taxobox
+    value: EN
+    listedAs: Liquidambar orientalis
+    nameBasis: stated
+    source: wikipedia-iucn-liquidambar-orientalis
+    locator: 'Taxobox: status = EN, status_system = IUCN3.1; its status_ref reads: "Liquidambar orientalis", Kavak, 2018, 10.2305/IUCN.UK.2018-1.RLTS.T62556A42326468.en'

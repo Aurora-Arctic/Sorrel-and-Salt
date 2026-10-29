@@ -1,0 +1,13 @@
+# Gathered for M14.29; the seed never reads this folder.
+entry: botanical/feverfew-tanacetum-parthenium
+status: needs-review
+listings:
+  - list: iucn
+    name: IUCN Red List of Threatened Species, as printed in Wikipedia's taxobox
+    value: LC
+    listedAs: Tanacetum parthenium
+    nameBasis: stated
+    source: wikipedia-iucn-tanacetum-parthenium
+    locator: 'Taxobox: status = LC, status_system = IUCN3.1; its status_ref reads: "Tanacetum parthenium (Europe assessment)", Khela, 2013'
+questions:
+  - 'Wikipedia''s status_ref names a regional assessment ("Tanacetum parthenium (Europe assessment)"), not a global one. Recommendation: record it only as a regional listing, or leave it out; owner to decide.'

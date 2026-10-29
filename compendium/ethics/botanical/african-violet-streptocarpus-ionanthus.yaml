@@ -1,0 +1,13 @@
+# Gathered for M14.29; the seed never reads this folder.
+entry: botanical/african-violet-streptocarpus-ionanthus
+status: needs-review
+listings:
+  - list: iucn
+    name: IUCN Red List of Threatened Species, as printed in Wikipedia's taxobox
+    value: NT
+    listedAs: Streptocarpus ionanthus
+    nameBasis: stated
+    source: wikipedia-iucn-streptocarpus-ionanthus
+    locator: 'Taxobox: status = NT, status_system = IUCN3.1; its status_ref reads: "Saintpaulia ionantha", IUCN SSC East African Plants Red List Authority., 2014, 10.2305/IUCN.UK.2014-1.RLTS.T158153A763135.en'
+questions:
+  - 'Wikipedia''s status_ref names an assessment titled "Saintpaulia ionantha", which is not Streptocarpus ionanthus. Recommendation: do not list until an authority the owner accepts maps one name to the other. GBIF returned (not an accepted authority): GBIF https://api.gbif.org/v1/species/match?name=Streptocarpus%20ionanthus -> Streptocarpus ionanthus (H.Wendl.) Christenh. | status ACCEPTED | matchType EXACT | accepted (is accepted or none); GBIF https://api.gbif.org/v1/species/match?name=Saintpaulia%20ionantha -> Saintpaulia ionantha H.Wendl. | status SYNONYM | matchType EXACT | accepted (see usage)'

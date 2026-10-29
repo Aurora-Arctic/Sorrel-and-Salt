@@ -1,0 +1,13 @@
+# Gathered for M14.29; the seed never reads this folder.
+entry: botanical/oregano-origanum-vulgare
+status: needs-review
+listings:
+  - list: iucn
+    name: IUCN Red List of Threatened Species, as printed in Wikipedia's taxobox
+    value: LC
+    listedAs: Origanum vulgare
+    nameBasis: stated
+    source: wikipedia-iucn-origanum-vulgare
+    locator: 'Taxobox: status = LC, status_system = IUCN3.1; its status_ref reads: "Origanum vulgare (Europe assessment)", 2012'
+questions:
+  - 'Wikipedia''s status_ref names a regional assessment ("Origanum vulgare (Europe assessment)"), not a global one. Recommendation: record it only as a regional listing, or leave it out; owner to decide.'

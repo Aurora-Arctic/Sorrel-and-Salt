@@ -1,0 +1,11 @@
+# Gathered for M14.29; the seed never reads this folder.
+entry: botanical/agarwood-aquilaria-malaccensis
+status: approved
+listings:
+  - list: iucn
+    name: IUCN Red List of Threatened Species, as printed in Wikipedia's taxobox
+    value: CR
+    listedAs: Aquilaria malaccensis
+    nameBasis: stated
+    source: wikipedia-iucn-aquilaria-malaccensis
+    locator: 'Taxobox: status = CR, status_system = IUCN3.1; its status_ref reads: "Aquilaria malaccensis", Harvey-Brown, Y., 2018, 10.2305/IUCN.UK.2018-1.RLTS.T32056A2810130.en'
