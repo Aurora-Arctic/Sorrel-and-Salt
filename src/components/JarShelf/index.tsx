@@ -67,12 +67,12 @@ export const BANDS_FULL = 8;
 /** Half a period of the wave, in drawing units: four full periods across the 48-unit jar. */
 const HALF = 6;
 
-/** The most a wave rises above its boundary, in drawing units (amplitudes run 0.9 to 1.1). */
-const MAX_RISE = 2.2;
+/** The most a wave rises above its boundary, in drawing units (amplitudes run 0.65 to 0.8). */
+const MAX_RISE = 1.6;
 
 /**
  * One boundary between two layers, as a wave. Boundary `k` (k = 0 is the base, which is flat and
- * never drawn) has a phase of `k` units and an amplitude that alternates 1.1, 0.9, so
+ * never drawn) has a phase of `k` units and an amplitude that alternates 0.8, 0.65, so
  * neighbouring edges run nearly parallel with a slight drift, and it is the same every render (no randomness). The wave
  * lies wholly above its baseline, between 0 and 2 x amplitude, so it adds to the layer above
  * rather than cutting into the top layer's own height. Each half period is one quadratic curve
@@ -84,7 +84,7 @@ type Wave = { start: number; end: number; amp: number; segments: readonly Segmen
 type Segment = { from: number; to: number; cx: number; cy: number };
 
 function waveOf(k: number): Wave {
-  const amp = k % 2 === 0 ? 1.1 : 0.9;
+  const amp = k % 2 === 0 ? 0.8 : 0.65;
   const start = -2 - (k % (HALF * 2));
   const segments: Segment[] = [];
   for (let x = start, m = 0; x < 50; x += HALF, m += 1) {
