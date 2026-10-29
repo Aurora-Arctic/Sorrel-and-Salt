@@ -13,7 +13,7 @@ checklist of the v1 user stories, one line each:
 [-] Story 12: View my stock … — skipped
 [ ] Story 28: … — no test yet
 
-1 of 55 stories passing · 2 failing · 1 skipped · 51 without a test
+1 of 57 stories passing · 2 failing · 1 skipped · 53 without a test
 ```
 
 That is DESIGN.md §11's "live progress report against §10 rather than a
@@ -26,7 +26,7 @@ decisions make it hold:
   meaning to the checklist. `tests/e2e/stories/README.md` has the file table.
 - **The story list is read out of DESIGN.md §10, not copied.**
   `tests/support/stories.ts` parses the numbered list between
-  "## 10. User stories" and the next section (55 today, 1–34, 47–64, 77, 80 and 81), so a
+  "## 10. User stories" and the next section (57 today, 1–34, 47–64, 77, 80, 81, 83 and 84), so a
   story added to §10 joins the checklist without a harness edit. The harness
   has no tests of its own (MB.224): a broken checklist is seen by whoever runs
   it.
@@ -91,7 +91,8 @@ after them. It calls `playwright.yml` with
 `suite: stories`, which switches the run command, the summariser
 (`.github/scripts/summarize-stories.mjs`), the check name and the comment
 thread (marker `stories`). Its comment carries the story suite's own coverage
-figure and per-file table (M14.28), and the coverage artifact is named
+figure in its summary line (M14.28); the per-file table is the merged
+comment's alone, and the coverage artifact is named
 `playwright-coverage-stories`. The `playwright-coverage` job then merges
 this suite's coverage with the gate suite's and posts the merged figure in a
 "Playwright Coverage" comment of its own (`testing/coverage.md`, "The merged

@@ -1481,7 +1481,7 @@ Modern module system throughout — `@use '../../scss/variables' as *;`, never t
 
 ### Notes — deferred to v2
 
-Stories 35–46 covered the three-tier experience-notes system. They move to v2 with the rest of the notes subsystem (§13). Story numbers are **not** reused: the grimoire stories keep their original 47–56, story 57 (MB.40) took the next free number rather than one of the twelve, and 58–62 (M2.9: email verification, changing an email, granting admin, the ledger, inviting an admin) followed the same way, as their own list because Prettier renumbers a list from its first item, and 63 (MB.80: the public compendium) the same way after them, and 64 (MB.151: references) after it, and 77 (step units), 80 (a spell's steps) and 81 (autosave) after them, so a v1 count is 55 stories (1–34, 47–64, 77, 80, 81).
+Stories 35–46 covered the three-tier experience-notes system. They move to v2 with the rest of the notes subsystem (§13). Story numbers are **not** reused: the grimoire stories keep their original 47–56, story 57 (MB.40) took the next free number rather than one of the twelve, and 58–62 (M2.9: email verification, changing an email, granting admin, the ledger, inviting an admin) followed the same way, as their own list because Prettier renumbers a list from its first item, and 63 (MB.80: the public compendium) the same way after them, and 64 (MB.151: references) after it, and 77 (step units), 80 (a spell's steps) and 81 (autosave) after them, and 83 (a spell's Quick Look) and 84 (the grimoire's filters) after those, so a v1 count is 57 stories (1–34, 47–64, 77, 80, 81, 83, 84).
 
 ### Grimoire
 
@@ -1524,6 +1524,14 @@ Stories 35–46 covered the three-tier experience-notes system. They move to v2 
 ### Autosave (M13.14–M13.19)
 
 81. As a coven member, I want nothing I type into a spell to be lost, so that I can build it over several sittings and devices. A spell saves to its own row as it is typed, 3 seconds after the last change and at most 30 seconds apart, on a draft and on a complete spell alike, and the person is warned before closing the tab or following a link with a change not yet saved (M13.14 extends story 32 to every long form). A save names the revision it read; if someone else saved first, the builder offers Reload Latest or Keep My Version. While the builder is open it checks the spell every 10 seconds: fields the person has not touched update by themselves, and another member whose save is under 2 minutes old is shown as editing.
+
+### Spell Quick Look (M13.21)
+
+83. Open a spell's details over the grimoire list, from its card or from a pick in the grimoire search, with an Edit link where I may change it, so that I can check a spell without leaving the list.
+
+### Grimoire filters (M13.22)
+
+84. Narrow the grimoire list by the moon phase and the day a spell is worked on, by whether it is private or shared, and by who made it, so that I can find the spell I need tonight without reading every card.
 
 Keeping a spell `private` while building it, and the one-way widen of a complete spell to `workspace`, are governed by §5's visibility rule rather than a numbered story.
 

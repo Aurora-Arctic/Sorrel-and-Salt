@@ -33,6 +33,24 @@ describe('SpellCard', () => {
     );
   });
 
+  it('draws a Quick Look eye named for the spell only when given the address, apart from the title link', () => {
+    const href = '/coven/x/grimoire/spell-1' as Route;
+    const { rerender } = render(<SpellCard {...BASE} href={href} />);
+    expect(screen.queryByRole('link', { name: /^Quick Look / })).not.toBeInTheDocument();
+    rerender(
+      <SpellCard
+        {...BASE}
+        href={href}
+        lookHref={'/here?spell=spell-1' as Route}
+        editHref={'/here?edit=spell-1' as Route}
+      />,
+    );
+    const eye = screen.getByRole('link', { name: 'Quick Look Fixture Working' });
+    expect(eye).toHaveAttribute('href', '/here?spell=spell-1');
+    expect(screen.getByRole('link', { name: /^Fixture Working/ }).contains(eye)).toBe(false);
+    expect(screen.getByRole('link', { name: 'Edit Fixture Working' })).toBeInTheDocument();
+  });
+
   it('keeps the Edit link out of the title link, so the stretched title link never swallows it', () => {
     render(
       <SpellCard

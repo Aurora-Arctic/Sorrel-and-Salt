@@ -70,6 +70,18 @@ is the wrapper every admin page opens it through (below).
   is asked at once, in the event. Contents that close it themselves — a
   form's save or delete — take the modal's own close as a render prop,
   `children(close)`, so that fades too.
+- **One modal in place of another keeps the page dimmed** (the owner,
+  2026-10-29). A link in one modal's foot that opens another, as Quick
+  Look's Edit Spell opens the builder, unmounts the first while it is still
+  open, with no fade, and mounts the second. Faded in from nothing, the
+  second's backdrop let the page show undimmed between the two, a flash. So
+  a modal that goes while still open notes the time, a module-level
+  `handedAt`, and one that opens within `HANDOVER_MS` (100ms) of it is
+  marked `data-handover`: its backdrop starts fully dimmed, and only its box
+  fades in. A modal that closed itself first (Close, Escape, a save) notes
+  nothing, so the next one fades in whole. The flag is set in `close` and not
+  copied from the phase in an effect: under reduced motion the owner unmounts
+  the modal in the same render.
 - **The focus trap, Escape and the inert page are the platform's.**
   `showModal()` puts the dialog in the top layer and makes the rest of the
   document inert. Nothing in the component traps focus by hand.

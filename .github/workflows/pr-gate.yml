@@ -359,6 +359,8 @@ jobs:
       image: ${{ needs.build-image.outputs.image }}
       pr-number: ${{ github.event.pull_request.number }}
       should-run: ${{ needs.changes.outputs.playwright == 'true' || needs.changes.outputs.stories == 'true' }}
+      # The stories job passes whatever its stories did, so its run step's outcome is read too.
+      suites-failed: ${{ needs.playwright.result == 'failure' || needs.stories.result == 'failure' || needs.stories.outputs.outcome == 'failure' }}
 
   # The workshop specs (tests/e2e/workshop/, M12.31): a component measured in
   # its workshop story, `npm run e2e:workshop`. In the e2e image, as playwright.yml

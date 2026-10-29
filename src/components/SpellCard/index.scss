@@ -125,16 +125,6 @@
   @include badge-size('medium');
 }
 
-// The Edit pencil, above the stretched link so it is its own target; its row passes the
-// pointer through to the link.
-.spell-card__corner {
-  position: relative;
-  z-index: 1;
-  display: flex;
-  flex: 0 0 auto;
-  align-items: center;
-}
-
 // The intent and the category chips pass a click through to the title link's overlay: each
 // is positioned by the content rule above, which paints it over the overlay. Only the chips'
 // `li`s, so the +N button keeps its press, hover and focus.
