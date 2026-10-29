@@ -16,7 +16,8 @@ holds the presentational body; `src/app/(shell)/coven/[slug]/grimoire/[id]/` hol
 
 ## The body
 
-Back link, title (Draft and Private badges), `LastEdit`, then the shared body, the "Recipe Card"
+Back link, `LastEdit` (above the title, where the ingredient entry page puts it: the owner,
+2026-10-29), title (Draft and Private badges), then the shared body, the "Recipe Card"
 layout (M13.21), top to bottom: the intent (muted), `CategoryChips` with `showAll` (every
 chip, no +N fold: the owner, 2026-10-28), a facts strip, the steps and the note. The facts strip
 is a `dl` under a hairline with up to four cells, Jar (`jarDescription`), Seal Wax
@@ -27,7 +28,7 @@ list. Four columns, two per row in a column narrower than `$narrow-column` (a co
 the strip's box). There is no Ingredients section: the steps carry the amounts, the amount leading
 the name in weight 500 with the name in 400, and an instruction-only step's text is muted and fills
 the number's line. The steps are an `ol` named Steps with no visible heading, in `position`
-order, the position column 2rem and right-aligned; an ingredient step draws its note, or its `body` where
+order, the position column 1.5rem and right-aligned (room for a two-digit number; wider read as an indent, the owner, 2026-10-29); an ingredient step draws its note, or its `body` where
 it has no note (the note column is retired into `body` by PR #1308's migration 0088, and `note`
 is read only until M13.9 drops it), indented to the name, and an instruction step is its text, at the ingredients' size and
 colour (the owner, 2026-10-28). A unit with no quantity reads "— tsp", the dash muted (`StepRow`);
@@ -55,6 +56,26 @@ with no steps says so.
   renders the spell builder's dialog, closing back to this page.
 - No `PageNav`: the sections fit one screen. No print rules: M10.22 styles this page.
 - Steps are drawn by `StepRow` (M13.3) with no editing controls, so the page and the Quick Look modal read them the same way as the builder draws them. The body keeps no step renderer of its own. The ingredient's name is passed to `StepRow` as markup (the name, the formal name, the Deleted mark and the Quick Look eye), and its marks as `marks`.
+
+## The side column
+
+The page alone draws a side column (M13.21; the owner, 2026-10-29), the builder's two Jar aside
+panels on the saved spell: In Coven Inventory (`SpellBuilder/inventory.tsx`) then Category
+Match (`SpellBuilder/comparison-panel.tsx`), as the builder orders them, each with an `h2`
+(a prop; the builder keeps `h5` under its Jar heading) in the entry page's ruled heading style.
+The Quick Look modal draws neither. `SpellRecipe` takes the column as its `aside` slot and
+wraps it in an `aside` named The Jar (a landmark needs the name inside an `article`), beside the
+body in the ingredient entry page's columns (`entry-section` and `entry-side`: the same side
+width and gutter, the column beneath the body on a phone), the article widened by the column so
+the body keeps its width and the head capped to the body's, so the Edit pencil ends where the
+text does. `aside.tsx` (`SpellRecipeAside`, client) hands the panels their props and loads the
+builder's styles itself. The page reads them with `readRecipeAsideOf` (`[id]/recipe-aside.ts`):
+each linked step's categories (`categoriesOf`, then `categoriesOfVariants`, the union rule) and
+the coven's jars (`stockOf`), one batch each, made into the builder's `SpellStepValue` through
+its own `jarOf`, with the assigned categories as the intended set and the group colours from
+`readCategories` as entries (a Map does not cross to a client component). A step the service
+withholds has no categories and no jar; no form icon or safety is read, since the column draws
+neither.
 
 ## Quick Look
 

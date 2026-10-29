@@ -1,0 +1,31 @@
+'use client';
+
+import { type ReactElement, useMemo } from 'react';
+import { ComparisonPanel } from '../SpellBuilder/comparison-panel';
+import { InCovenInventory } from '../SpellBuilder/inventory';
+import type { SpellRecipeAsideProps } from './types';
+// The two panels' own styles live with the builder, whose index.tsx loads them; the page
+// mounts the builder's dialog too, but the column loads them itself rather than by that chance.
+import '../SpellBuilder/index.scss';
+
+// The recipe page's side column (M13.21; the owner, 2026-10-29): In Coven Inventory and
+// Category Match, the builder's Jar aside panels, read for the saved spell and laid out as the
+// ingredient entry page lays its side column, beside the text past a tablet's width and beneath
+// it on a phone. The page alone draws it; the Quick Look modal keeps to the recipe body. Both
+// panels are read-only here, as they are in the builder: the page hands them the saved steps.
+// A client part because the panels are; the landmark around them is SpellRecipe's own.
+// claude-docs/components/spell-recipe.md, "The side column".
+
+export default function SpellRecipeAside({
+  steps,
+  intended,
+  groups,
+}: SpellRecipeAsideProps): ReactElement {
+  const colours = useMemo(() => new Map(groups), [groups]);
+  return (
+    <>
+      <InCovenInventory steps={steps} heading="h2" />
+      <ComparisonPanel intended={intended} steps={steps} groups={colours} heading="h2" />
+    </>
+  );
+}

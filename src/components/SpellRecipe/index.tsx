@@ -28,13 +28,19 @@ const SpellRecipe = ({
   dayOfWeek,
   back,
   action,
+  aside,
 }: SpellRecipeProps): ReactElement => {
   const name = (title ?? '').trim() || UNTITLED_SPELL;
   return (
-    <article className="spell-recipe" aria-labelledby="spell-recipe-title">
+    <article
+      className={`spell-recipe${aside ? ' spell-recipe--with-aside' : ''}`}
+      aria-labelledby="spell-recipe-title"
+    >
       <PendingLink className="spell-recipe__back" href={back.href}>
         Back to {back.label} <LinkHint />
       </PendingLink>
+      {/* Above the title, as the ingredient entry page places it (the owner, 2026-10-29). */}
+      {lastEdit && <LastEdit by={lastEdit.by} at={lastEdit.at} />}
       <header className="spell-recipe__head">
         <h1 id="spell-recipe-title">{name}</h1>
         {(status === 'draft' || visibility === 'private') && (
@@ -45,18 +51,27 @@ const SpellRecipe = ({
         )}
         {action}
       </header>
-      {lastEdit && <LastEdit by={lastEdit.by} at={lastEdit.at} />}
-      <SpellRecipeBody
-        title={title}
-        intent={intent}
-        categories={categories}
-        note={note}
-        steps={steps}
-        jarDescription={jarDescription}
-        sealWaxColor={sealWaxColor}
-        moonPhase={moonPhase}
-        dayOfWeek={dayOfWeek}
-      />
+      <div className="spell-recipe__columns">
+        <div className="spell-recipe__main">
+          <SpellRecipeBody
+            title={title}
+            intent={intent}
+            categories={categories}
+            note={note}
+            steps={steps}
+            jarDescription={jarDescription}
+            sealWaxColor={sealWaxColor}
+            moonPhase={moonPhase}
+            dayOfWeek={dayOfWeek}
+          />
+        </div>
+        {/* Named: an aside inside an article is a landmark only with a name. */}
+        {aside && (
+          <aside className="spell-recipe__aside" aria-label="The Jar">
+            {aside}
+          </aside>
+        )}
+      </div>
     </article>
   );
 };

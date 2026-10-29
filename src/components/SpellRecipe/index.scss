@@ -1,15 +1,62 @@
 @use '../../scss/variables' as *;
 @use '../../scss/mixins' as *;
 
+// The reading column: the body's width on its own, on the page and in the Quick Look modal.
+$recipe-column: 48rem;
+
 // A saved spell's page (MB.6). Tokens only; the layout is a single readable column. Print
 // styles are M10.22's.
 .spell-recipe {
   display: flex;
   flex-direction: column;
   gap: space(4);
-  max-width: 48rem;
+  max-width: $recipe-column;
   margin-inline: auto;
   padding: space(4);
+}
+
+// The body and, on the page, the side column (M13.21): a stack on a phone, the column beside
+// the body past a tablet's width, in the ingredient entry page's columns (`entry-section`, the
+// same side width and gutter). The body keeps its own stack, so its sections space as before.
+.spell-recipe__columns {
+  @include entry-section;
+}
+
+.spell-recipe__main {
+  display: flex;
+  flex-direction: column;
+  gap: space(4);
+  min-width: 0;
+}
+
+// With the side column the article widens by the column and its gutter, so the body keeps its
+// width; the head stays over the body, so the Edit pencil ends where the text does, as the
+// entry page's does.
+.spell-recipe--with-aside {
+  max-width: calc(#{$recipe-column} + #{space(8)} + #{$side-column});
+
+  @media (min-width: calc(#{$shell-tablet-width} + 0.01rem)) {
+    > .spell-recipe__head {
+      max-width: calc(100% - #{space(8)} - #{$side-column});
+    }
+  }
+}
+
+// The column's two panels, In Coven Inventory then Category Match, as the builder's Jar aside
+// orders them, with the entry page's ruled section headings.
+.spell-recipe__aside {
+  @include entry-side;
+
+  > section {
+    margin-block: 0;
+  }
+
+  h2 {
+    @include entry-heading-rule;
+
+    margin: 0;
+    font-size: heading-size(3);
+  }
 }
 
 .spell-recipe__head {
@@ -49,7 +96,7 @@
   margin: 0;
 }
 
-// The steps (M13.21), as the Recipe Card mock-up draws them: a 2rem position column that
+// The steps (M13.21), as the Recipe Card mock-up draws them: a 1.5rem position column that
 // the numbers line up in, beside it the amount leading the name on the first line, and the
 // step's text and note on lines of their own, indented to the name rather than the number.
 // The position stays a flex item (an absolute one would not share the first line's
@@ -61,7 +108,9 @@
 
 .spell-recipe__steps .step-row__position {
   order: -2;
-  flex: 0 0 2rem;
+  // Room for a two-digit number and its stop, and no more: wider read as an indent (the
+  // owner, 2026-10-29).
+  flex: 0 0 1.5rem;
   text-align: end;
   color: $text-muted;
   font-variant-numeric: tabular-nums;
@@ -96,7 +145,7 @@
 
 .spell-recipe__steps .step-row__body,
 .spell-recipe__steps .step-row__note {
-  margin-inline-start: calc(2rem + #{space(2)});
+  margin-inline-start: calc(1.5rem + #{space(2)});
 }
 
 // A step's text reads as its note does, `.meta` (the owner, 2026-10-28): caption size, muted,

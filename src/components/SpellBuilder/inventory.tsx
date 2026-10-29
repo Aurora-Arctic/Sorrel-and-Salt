@@ -111,11 +111,18 @@ function HoldLine({
   );
 }
 
-export function InCovenInventory({ steps }: { steps: readonly SpellStepValue[] }): ReactElement {
+export function InCovenInventory({
+  steps,
+  heading: Heading = 'h5',
+}: {
+  steps: readonly SpellStepValue[];
+  /** The heading's level: h5 under the builder's Jar heading, h2 on the recipe page (M13.21). */
+  heading?: 'h2' | 'h5';
+}): ReactElement {
   const lines = steps.filter((step) => !isInstruction(step));
   return (
     <section className="spell-inventory" aria-labelledby="spell-inventory-heading">
-      <h5 id="spell-inventory-heading">In Coven Inventory</h5>
+      <Heading id="spell-inventory-heading">In Coven Inventory</Heading>
       {lines.length === 0 ? (
         <p className="spell-aside__empty">Nothing in the jar yet.</p>
       ) : (

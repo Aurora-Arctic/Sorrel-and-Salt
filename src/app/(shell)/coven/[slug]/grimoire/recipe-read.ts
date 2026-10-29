@@ -5,7 +5,7 @@ import type { CardCategory } from '@/components/IngredientCard/types';
 import type { RecipeStep } from '@/components/SpellRecipe/types';
 import type { Session } from '@/lib/session';
 import { assignedCategoriesOf, stepsOfSpells } from '@/modules/grimoire';
-import type { readSpell } from '@/modules/grimoire';
+import type { readSpell, SpellStepView } from '@/modules/grimoire';
 import { displayNamesOf } from '@/modules/identity';
 import { recipeStepsOf } from './[id]/recipe-steps';
 
@@ -16,6 +16,8 @@ import { recipeStepsOf } from './[id]/recipe-steps';
 
 export interface RecipeRead {
   steps: RecipeStep[];
+  /** The service's step views the steps were made from, which the page's side column reads further. */
+  views: SpellStepView[];
   categories: CardCategory[];
   lastEdit: { by: string | null; at: string };
 }
@@ -38,6 +40,7 @@ export async function readRecipeOf(
   const byId = new Map(known.map((category) => [category.id, category]));
   return {
     steps: recipeStepsOf(steps ?? [], hereHref),
+    views: steps ?? [],
     categories: (assigned ?? []).flatMap(({ id }): CardCategory[] => {
       const category = byId.get(id);
       return category ? [{ category: { id, name: category.name }, group: category.group }] : [];

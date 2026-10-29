@@ -235,4 +235,32 @@ describe('SpellRecipe', () => {
     expect(screen.getByText('Draft')).toBeInTheDocument();
     expect(screen.getByText('Private')).toBeInTheDocument();
   });
+
+  it('says who last edited the spell above the title (the owner, 2026-10-29)', () => {
+    render(
+      <SpellRecipe
+        {...props({ lastEdit: { by: 'Fixture Author', at: '2026-10-01T12:00:00.000Z' } })}
+      />,
+    );
+    const edited = screen.getByText(/Fixture Author/);
+    const title = screen.getByRole('heading', { level: 1, name: 'Fixture Working' });
+    expect(edited.compareDocumentPosition(title) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy();
+  });
+
+  it('draws the aside it is given after the body, and none otherwise', () => {
+    const { rerender } = render(<SpellRecipe {...props({ note: 'Best at dusk.' })} />);
+    expect(screen.queryByRole('complementary')).toBeNull();
+    rerender(
+      <SpellRecipe
+        {...props({
+          note: 'Best at dusk.',
+          aside: <section aria-label="Fixture Aside">Beside</section>,
+        })}
+      />,
+    );
+    const aside = screen.getByRole('complementary');
+    expect(within(aside).getByRole('region', { name: 'Fixture Aside' })).toBeInTheDocument();
+    const note = screen.getByText('Best at dusk.');
+    expect(note.compareDocumentPosition(aside) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy();
+  });
 });

@@ -572,6 +572,8 @@ describe('Quick Look over a Grimoire tab', () => {
       'href',
       `/coven/fixture-coven/grimoire?query=fixture&spell=${SPELL_ID}&entry=ing-1`,
     );
+    // The page's side column (In Coven Inventory, Category Match) is the page's alone (the owner, 2026-10-29).
+    expect(within(dialog).queryByRole('region', { name: /Inventory|Category Match/ })).toBeNull();
   });
 
   it.each(['owner', 'member', 'viewer'] as const)(

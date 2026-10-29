@@ -6,6 +6,7 @@ import { EditLink } from '@/components/IconTip';
 import DetailsDialog from '@/components/IngredientEntry/details-dialog';
 import SpellDialog from '@/components/SpellBuilder/spell-dialog';
 import SpellRecipe from '@/components/SpellRecipe';
+import SpellRecipeAside from '@/components/SpellRecipe/aside';
 import { UNTITLED_SPELL } from '@/components/SpellCard';
 import { Forbidden, NotFound } from '@/lib/errors';
 import { RowId } from '@/lib/validation';
@@ -16,6 +17,7 @@ import { readEditedSpell } from '../(list)/reads';
 import { readViewedEntry } from '../../ingredients/reads';
 import { viewedDetailsOf } from '../../ingredients/viewed-details';
 import { readRecipeOf } from '../recipe-read';
+import { readRecipeAsideOf } from './recipe-aside';
 import type { SpellRecipeParams } from './types';
 
 // One saved spell as a page (MB.6): the read surface for a spell, at /coven/[slug]/grimoire/[id].
@@ -52,6 +54,9 @@ export default async function SpellRecipePage({ params, searchParams }: SpellRec
   const { workspace, membership, session, spell } = await spellOf(slug, id);
   const recipePath = `/coven/${workspace.slug}/grimoire/${spell.id}` as Route;
   const recipe = await readRecipeOf(session, spell, recipePath);
+  // The side column (the owner, 2026-10-29): the builder's In Coven Inventory and Category
+  // Match on the saved spell, for the page and not the Quick Look modal.
+  const aside = await readRecipeAsideOf(session, workspace.id, recipe.views, recipe.categories);
   const canUpdate = rolePermits(membership.role, { spell: ['update'] });
   const query = await searchParams;
   const edit = query.edit;
@@ -81,6 +86,7 @@ export default async function SpellRecipePage({ params, searchParams }: SpellRec
           moonPhase={spell.moonPhase}
           dayOfWeek={spell.dayOfWeek}
           steps={recipe.steps}
+          aside={<SpellRecipeAside {...aside} />}
           action={
             canUpdate && (
               <EditLink

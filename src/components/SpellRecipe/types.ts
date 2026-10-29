@@ -2,6 +2,8 @@ import type { Route } from 'next';
 import type { ReactNode } from 'react';
 import type { CardCategory } from '../CategoryChips/types';
 import type { LastEditProps } from '../LastEdit/types';
+import type { SpellStepValue, StepCategory } from '../SpellBuilder/steps/types';
+import type { GroupColors } from '../../lib/types';
 import type { SafetyMarkProps } from '../SafetyNote/types';
 import type { SpellStatus, SpellVisibility } from '@/modules/grimoire';
 import type { IngredientRow } from '@/modules/ingredients';
@@ -78,6 +80,19 @@ export interface SpellRecipeProps {
   back: { href: Route; label: string };
   /** The Edit control, for a role that may update the spell (M13.10). */
   action?: ReactNode;
+  /** The page's side column (`SpellRecipeAside`), beside the body; the Quick Look modal gives none. */
+  aside?: ReactNode;
+}
+
+/**
+ * What the recipe page's side column draws (M13.21): the spell's steps as the builder's Jar
+ * aside holds them, the categories the spell is assigned, and each category's group colours
+ * as entries, since a Map cannot cross from the server page to the client component.
+ */
+export interface SpellRecipeAsideProps {
+  steps: SpellStepValue[];
+  intended: StepCategory[];
+  groups: [string, GroupColors][];
 }
 
 /** What the body below a spell's head draws, shared by the recipe page and the Quick Look modal. */
