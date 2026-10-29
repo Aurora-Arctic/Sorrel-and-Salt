@@ -56,7 +56,7 @@ with no steps says so.
 - The `action` slot takes the page's controls, in a `.spell-recipe__actions` row at the heading's
   end: the Edit pencil for a role that may update the spell (M13.10), an `EditLink` to
   `?edit=<id>`, over which the page renders the spell builder's dialog, closing back to this
-  page; and Delete Spell's bin for a role that may delete one (M13.11), `delete-spell.tsx`.
+  page; the Preview button ([`spell-preview.md`](spell-preview.md), M13.12) for every role; and Delete Spell's bin for a role that may delete one (M13.11), `delete-spell.tsx`.
   The bin is named for the spell ("Delete Spell Hearth Warding") and asks in a `Modal` titled
   Delete Spell, as a coven's own ingredient's page asks (M8.17, M9.10): the question names the
   spell and says the coven loses it, Delete is `.btn--destructive` and busy "Deleting", Cancel

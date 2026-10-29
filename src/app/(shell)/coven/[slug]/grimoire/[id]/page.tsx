@@ -6,6 +6,8 @@ import { EditLink } from '@/components/IconTip';
 import DetailsDialog from '@/components/IngredientEntry/details-dialog';
 import SpellDialog from '@/components/SpellBuilder/spell-dialog';
 import DeleteSpellAction from '@/components/SpellRecipe/delete-spell';
+import SpellPreview from '@/components/SpellPreview';
+import { previewStepsOf } from '@/components/SpellPreview/preview-steps';
 import SpellRecipe from '@/components/SpellRecipe';
 import SpellRecipeAside from '@/components/SpellRecipe/aside';
 import { UNTITLED_SPELL } from '@/components/SpellCard';
@@ -96,25 +98,24 @@ export default async function SpellRecipePage({ params, searchParams }: SpellRec
           steps={recipe.steps}
           aside={<SpellRecipeAside {...aside} />}
           action={
-            (canUpdate || canDelete) && (
-              <div className="spell-recipe__actions">
-                {canUpdate && (
-                  <EditLink
-                    href={`${recipePath}?edit=${spell.id}` as Route}
-                    name={name}
-                    heading={{ eyebrow: 'Edit Spell', title: name }}
-                  />
-                )}
-                {canDelete && (
-                  <DeleteSpellAction
-                    workspaceId={workspace.id}
-                    spellId={spell.id}
-                    name={name}
-                    deletedHref={deletedHref}
-                  />
-                )}
-              </div>
-            )
+            <div className="spell-recipe__actions">
+              <SpellPreview title={name} steps={previewStepsOf(recipe.steps)} />
+              {canUpdate && (
+                <EditLink
+                  href={`${recipePath}?edit=${spell.id}` as Route}
+                  name={name}
+                  heading={{ eyebrow: 'Edit Spell', title: name }}
+                />
+              )}
+              {canDelete && (
+                <DeleteSpellAction
+                  workspaceId={workspace.id}
+                  spellId={spell.id}
+                  name={name}
+                  deletedHref={deletedHref}
+                />
+              )}
+            </div>
           }
           back={{ href: `/coven/${workspace.slug}/grimoire` as Route, label: 'Grimoire' }}
         />

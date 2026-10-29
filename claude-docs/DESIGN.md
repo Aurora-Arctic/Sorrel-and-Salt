@@ -1482,7 +1482,7 @@ Modern module system throughout — `@use '../../scss/variables' as *;`, never t
 
 ### Notes — deferred to v2
 
-Stories 35–46 covered the three-tier experience-notes system. They move to v2 with the rest of the notes subsystem (§13). Story numbers are **not** reused: the grimoire stories keep their original 47–56, story 57 (MB.40) took the next free number rather than one of the twelve, and 58–62 (M2.9: email verification, changing an email, granting admin, the ledger, inviting an admin) followed the same way, as their own list because Prettier renumbers a list from its first item, and 63 (MB.80: the public compendium) the same way after them, and 64 (MB.151: references) after it, and 77 (step units), 80 (a spell's steps) and 81 (autosave) after them, and 83 (a spell's Quick Look) and 84 (the grimoire's filters) after those, so a v1 count is 57 stories (1–34, 47–64, 77, 80, 81, 83, 84).
+Stories 35–46 covered the three-tier experience-notes system. They move to v2 with the rest of the notes subsystem (§13). Story numbers are **not** reused: the grimoire stories keep their original 47–56, story 57 (MB.40) took the next free number rather than one of the twelve, and 58–62 (M2.9: email verification, changing an email, granting admin, the ledger, inviting an admin) followed the same way, as their own list because Prettier renumbers a list from its first item, and 63 (MB.80: the public compendium) the same way after them, and 64 (MB.151: references) after it, and 77 (step units), 80 (a spell's steps) and 81 (autosave) after them, and 83 (a spell’s Quick Look) and 84 (the grimoire’s filters) after those, and 85 (Spell Preview) after them, so a v1 count is 58 stories (1–34, 47–64, 77, 80, 81, 83, 84, 85).
 
 ### Grimoire
 
@@ -1533,6 +1533,10 @@ Stories 35–46 covered the three-tier experience-notes system. They move to v2 
 ### Grimoire filters (M13.22)
 
 84. Narrow the grimoire list by the moon phase and the day a spell is worked on, by whether it is private or shared, and by who made it, so that I can find the spell I need tonight without reading every card.
+
+### Spell Preview (M13.12)
+
+85. Open a spell in a full-screen pane with nothing else on screen, so that I can follow it without distraction.
 
 Keeping a spell `private` while building it, and the one-way widen of a complete spell to `workspace`, are governed by §5's visibility rule rather than a numbered story.
 
