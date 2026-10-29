@@ -174,8 +174,8 @@ Whether the spell is finished (M10.20, story 55): `SpellStatusField`, in
 A spell is a `draft` until it is marked `complete`. A draft shows one button,
 Mark Complete, with a line saying what the state means, visually hidden and read as the button's description. Like Share
 With the Coven, a click saves the whole form with the status `complete` at once, so
-the status is never a pick left pending. A complete spell shows its statement
-("Complete." and a sentence that it cannot be reopened) and no button: once
+the status is never a pick left pending. A complete spell shows no button and
+no sentence (the owner, 2026-10-29); the missing button and the locked Visibility switch carry the state. Once
 complete, its workings are recorded against it and its visibility lock has
 started, so reopening would undo both. M13.20's copy (Duplicate a Spell) will
 add a Copy as Draft button here; it is the way to vary a complete spell. The

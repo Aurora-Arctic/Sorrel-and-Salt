@@ -57,13 +57,9 @@ export function SpellStatusField({ flush }: SpellStatusFieldProps): ReactElement
     }
   };
 
-  if (complete) {
-    return (
-      <span id="spell-status-says">
-        Complete. It cannot be reopened; to change it, make a private copy (coming soon).
-      </span>
-    );
-  }
+  // A complete spell shows nothing here (the owner, 2026-10-29): no button, no sentence. Its
+  // state is carried by the missing button and the locked Visibility switch.
+  if (complete) return null;
 
   // The state line is read, not drawn: a button row has no room for a sentence.
   return (
