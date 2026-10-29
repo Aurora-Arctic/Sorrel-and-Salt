@@ -216,7 +216,7 @@ the save. A refused save keeps the dialog open with the refusal in the
 `Notice`, so nothing typed is lost. With nothing unsaved, Close closes at once.
 Closing the tab or reloading still asks the browser's own question, which no
 page can answer by saving. Undo and redo are the shared `FormHistoryButtons`
-(M12.9). Undo writes the `steps` array back whole with `setValue`, which makes react-hook-form give every row a new id; so the list keys its rows, drag ids and open row by each step's `rowKey` (a value carried in the step, stable across an Undo), not by the field array's `id`. A step whose saved id a later save has deleted comes back with no id (`prepare`), so the next save adds it as a new step and the service never sees a dead id. A save's answer setting a new step's `stepId` is bookkeeping and not a history step (`skip`).
+(M12.9). Undo writes the `steps` array back whole with `setValue`, which makes react-hook-form give every row a new id; so the list keys its rows, drag ids and open row by each step's `rowKey` (a value carried in the step, stable across an Undo), not by the field array's `id`. Every path that writes stored steps back goes through `restoredSteps` (`steps/values.ts`): Undo and Redo (`prepare`) and a recovered draft (`keepRecovered`). It sets a saved id the server's current steps do not hold to none, so the next save adds the step as a new one and the service never sees a dead id (a draft kept before a save removed a step would otherwise be refused on every save), and it gives a step with no `rowKey` one. A save's answer setting a new step's `stepId` is bookkeeping and not a history step (`skip`).
 
 ## Sections
 
