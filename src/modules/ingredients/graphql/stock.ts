@@ -12,7 +12,7 @@ import { IngredientRef, IngredientVariantRef } from './ingredient';
 
 // The jars over the wire: what a coven holds of each form, the three single-jar writes, `saveStock` for an ingredient's jars together,
 // and `Ingredient.stock`, paged. The resolvers refuse only a missing session; the stock service checks the coven
-// (claude-docs/graphql/schema.md, "Stock: InventoryItem, Ingredient.stock and the three stock writes").
+// (claude-docs/graphql/schema.md, "Stock: InventoryItem, Ingredient.stock and the stock writes").
 
 export const InventoryUnitEnum = builder.enumType('InventoryUnit', { values: UNITS });
 

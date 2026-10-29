@@ -6,7 +6,7 @@ import { expect } from '../fixtures';
 // where one gives them, and are chosen here otherwise.
 
 /**
- * The shell's Add Ingredient, in the bar (claude-docs/components/app-shell.md; design-decisions/mb.7-navigation.md),
+ * The shell's Add Ingredient, in the bar (claude-docs/components/app-shell.md),
  * found inside the banner so the empty list's own Add Ingredient is never taken for it. A link is matched too,
  * for the compendium's `?new=ingredient-compendium`, so "none" means neither.
  */
@@ -139,7 +139,7 @@ export async function expectFieldError(field: Locator, valid: readonly string[])
 
 /**
  * Every Edit the shell offers: in its bar, the banner, and each `nav` landmark (claude-docs/design-decisions/mb.7-navigation.md,
- * "Landmarks"). Editing lives where an ingredient is shown, never here.
+ * "DESIGN §9 Is Corrected, And Editing Lives Where An Ingredient Is Shown"). Editing lives where an ingredient is shown, never here.
  */
 export function shellEditControls(page: Page): Locator {
   const shell = page.getByRole('banner').or(page.getByRole('navigation'));

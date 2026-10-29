@@ -118,19 +118,22 @@ worker starts for itself, and one server picking a database per request.
 - **A further slot costs about half a second and 180 MB**, MB.112's
   measurement of one more `next start` over the built `.next-e2e`; the
   servers start in turn, so the half seconds add to startup.
-- **Keeping the servers warm (M11.18).** `npm run e2e:servers` builds
-  `.next-e2e` and starts every server a run needs, from the same definitions
-  as the configs (`tests/e2e/servers.ts`), then prints one line per server and
-  waits. Stop it with Ctrl-C. While it is up, `npm run e2e` and
-  `npm run test:stories` attach to the servers instead of starting them
-  (Playwright's `reuseExistingServer`, on whenever `CI` is unset), which
-  skips the build and the boots: the output shows no build step. It is a
-  process the developer runs beside `npm run dev`, and staleness is the
-  developer's: nothing watches the code, so after a change stop it and start it
-  again, which rebuilds. A run against servers left over from older code tests
-  that older code. The servers are also shared by every checkout on the
-  machine, because the ports are fixed: a run from another worktree attaches
-  to them and tests this checkout's build, so stop them before switching.
+
+#### Keeping the servers warm
+
+(M11.18) `npm run e2e:servers` builds
+`.next-e2e` and starts every server a run needs, from the same definitions
+as the configs (`tests/e2e/servers.ts`), then prints one line per server and
+waits. Stop it with Ctrl-C. While it is up, `npm run e2e` and
+`npm run test:stories` attach to the servers instead of starting them
+(Playwright's `reuseExistingServer`, on whenever `CI` is unset), which
+skips the build and the boots: the output shows no build step. It is a
+process the developer runs beside `npm run dev`, and staleness is the
+developer's: nothing watches the code, so after a change stop it and start it
+again, which rebuilds. A run against servers left over from older code tests
+that older code. The servers are also shared by every checkout on the
+machine, because the ports are fixed: a run from another worktree attaches
+to them and tests this checkout's build, so stop them before switching.
 
 **The configured-providers server is one more**, because the sign-in page
 reads OAuth credentials per request and its two provider states cannot share
@@ -189,43 +192,47 @@ ignores that spec too
   "Setup runs after the servers").
   `global-teardown.ts` drops the template after the last spec; the slot and
   providers databases are left for inspection.
-- **Reseeding between spec files** is each spec file's own `test.beforeAll`,
-  not a Playwright hook that runs implicitly — see `tests/e2e/smoke.spec.ts`. It
-  calls `recreateE2eDatabase()`, never `src/db/seed` directly: a clone of the
-  seeded template _is_ the reseed, and it costs a clone rather than a seed.
-  Until M1.27 the template it cloned was the empty `sorrel_template`, so the
-  baseline every file started from was an empty database —
-  [`design-decisions/m1.11-e2e-reseed-without-seed.md`](../design-decisions/m1.11-e2e-reseed-without-seed.md)
-  records why that was enough at the time.
-  **A file's tests spread across the workers, and `beforeAll` runs on each
-  worker that comes to the file** (M11.18): `playwright.config.ts` sets
-  `fullyParallel: true`, so a worker picking up its share of a file's tests
-  first reclones its own slot database and builds the file's setup rows
-  there, tens of milliseconds each, and runs that share in file order
-  (twelve tests over six workers ran `beforeAll` six times, measured). That
-  is why a file's setup belongs in `beforeAll`, never in its first test,
-  which only one worker would run; a test is independent when it signs in its
-  own user and reads only seed rows, rows its file's `beforeAll` wrote, or
-  rows it writes itself. **Serial mode,
-  `test.describe.configure({ mode: 'serial' })`, is the choice for a file
-  whose tests chain**, each reading what the one before it wrote — a mailed
-  link one test sends and the next follows, a cache one test warms and the
-  next reads — and the line says which chain in a comment beside it. It can
-  sit inside one `test.describe` block, pinning that block alone:
-  `tests/e2e/compendium-cache.spec.ts` and
-  `tests/e2e/stories/01-invitations.spec.ts` are serial whole, and
-  `01-accounts.spec.ts`'s coven-creation block and
-  `08-email-and-admin.spec.ts`'s primary-admin block are. The lint rule
-  `sorrel/e2e-chained-tests-serial` (`lint/source-sweeps.js`, on for
-  `tests/e2e/**/*.spec.ts`) holds the rule: it fails a test outside a serial scope that assigns a variable
-  declared outside it, the one shape every chained file here had, while an
-  assignment in a hook stays legal. Until M11.18 every
-  db-touching file was serial (M1.14), a rule written when the workers shared
-  one `sorrel_e2e` database and two of them reseeding it at once threw
-  `duplicate key value violates unique constraint "pg_database_datname_index"`.
-  MB.112's database per slot ended that race, and the rule outlived it by a
-  fortnight of runs whose wall time was their longest file's ("Where a run's time
-  goes", below).
+
+#### Reseeding between spec files
+
+Reseeding between spec files is each spec file's own `test.beforeAll`,
+not a Playwright hook that runs implicitly — see `tests/e2e/smoke.spec.ts`. It
+calls `recreateE2eDatabase()`, never `src/db/seed` directly: a clone of the
+seeded template _is_ the reseed, and it costs a clone rather than a seed.
+Until M1.27 the template it cloned was the empty `sorrel_template`, so the
+baseline every file started from was an empty database —
+[`design-decisions/m1.11-e2e-reseed-without-seed.md`](../design-decisions/m1.11-e2e-reseed-without-seed.md)
+records why that was enough at the time.
+**A file's tests spread across the workers, and `beforeAll` runs on each
+worker that comes to the file** (M11.18): `playwright.config.ts` sets
+`fullyParallel: true`, so a worker picking up its share of a file's tests
+first reclones its own slot database and builds the file's setup rows
+there, tens of milliseconds each, and runs that share in file order
+(twelve tests over six workers ran `beforeAll` six times, measured). That
+is why a file's setup belongs in `beforeAll`, never in its first test,
+which only one worker would run; a test is independent when it signs in its
+own user and reads only seed rows, rows its file's `beforeAll` wrote, or
+rows it writes itself. **Serial mode,
+`test.describe.configure({ mode: 'serial' })`, is the choice for a file
+whose tests chain**, each reading what the one before it wrote — a mailed
+link one test sends and the next follows, a cache one test warms and the
+next reads — and the line says which chain in a comment beside it. It can
+sit inside one `test.describe` block, pinning that block alone:
+`tests/e2e/compendium-cache.spec.ts` and
+`tests/e2e/stories/01-invitations.spec.ts` are serial whole, and
+`01-accounts.spec.ts`'s coven-creation block and
+`08-email-and-admin.spec.ts`'s primary-admin block are. The lint rule
+`sorrel/e2e-chained-tests-serial` (`lint/source-sweeps.js`, on for
+`tests/e2e/**/*.spec.ts`) holds the rule: it fails a test outside a serial scope that assigns a variable
+declared outside it, the one shape every chained file here had, while an
+assignment in a hook stays legal. Until M11.18 every
+db-touching file was serial (M1.14), a rule written when the workers shared
+one `sorrel_e2e` database and two of them reseeding it at once threw
+`duplicate key value violates unique constraint "pg_database_datname_index"`.
+MB.112's database per slot ended that race, and the rule outlived it by a
+fortnight of runs whose wall time was their longest file's ("Where a run's time
+goes", below).
+
 - **Mail is read back from Mailpit** (MB.65). `tests/e2e/mailpit.ts`'s
   `latestMessageTo(address)` searches Mailpit's REST API at `MAILPIT_URL` for
   the newest message to that address and returns its sender, recipients,
@@ -239,40 +246,44 @@ ignores that spec too
   what the reader follows. Compose and `playwright.yml` both run Mailpit;
   outside them the helper throws on the unset URL rather than reporting that
   no mail arrived.
-- **A signed-in browser without a provider** (MB.71). No spec can finish a
-  real OAuth round trip, so `tests/e2e/session.ts`'s `signInAs(page, email,
+
+#### A signed-in browser without a provider
+
+(MB.71) No spec can finish a
+real OAuth round trip, so `tests/e2e/session.ts`'s `signInAs(page, email,
 providers, role, { emailVerified })` writes what a Discord sign-in would leave into the calling
-  worker's slot database, the one its server reads: a user stamped as
-  its own creator, holding the site role given
-  (`user` unless the spec asks for `curator` or `admin`; any role but `user` also holds `canCreateWorkspace`, which the CHECK demands (M11.20)), verified unless the spec passes
-  `emailVerified: false` (MB.205, for an admin approving an unverified
-  account), one `accounts` row per provider named, and a session. It then hands the browser the session cookie Better
-  Auth would have set. The value is the token, a dot, and its base64
-  HMAC-SHA256 under `BETTER_AUTH_SECRET`, percent-encoded as better-call's
-  `signCookieValue` does it. The runner and the served build share that
-  secret: `playwright.yml` and compose set it at job level, and a local run
-  sets it on the command line, or the helper throws. The name is
-  `__Secure-better-auth.session_token` because a production build's base URL
-  forces https. It rides as an extra request header, not in the cookie jar,
-  since a browser never sends a `Secure` cookie to the plain-http
-  `devcontainer:<port>` a remote browser uses. WebKit sends that header
-  no better (MB.255, found by the first audit; Chromium and Firefox send it),
-  nor a `__Secure-` cookie from the jar, so under the audit
-  (`E2E_AUDIT=1`) the servers are started with
-  `E2E_PLAIN_SESSION_COOKIE=true` (`playwright.config.ts`'s `serverEnv`),
-  which `src/lib/auth.ts` reads through `plainSessionCookie()`
-  (`src/lib/e2e-session-cookie.ts`) as `advanced.useSecureCookies: false`,
-  and the helper puts a plain-named, non-`Secure` cookie in the context's jar
-  with the host alone (a cookie ignores the port, so any slot's server gets
-  it). The flag is off for `npm run e2e` and CI, which keep the production
-  names, and does nothing wherever `VERCEL_ENV` is set, so no deploy can lose
-  the prefix. A `next start` left running from an ordinary run keeps its
-  names, so stop it before an audit. The other shape, https in front of each
-  slot server, was left: a certificate and a proxy per
-  port, to test one cookie name. Give each call a fresh address:
-  the email index is unique. To switch back to a user already made,
-  `signInAgainAs(page, userId)` gives the browser a new session for it
-  (MB.63).
+worker's slot database, the one its server reads: a user stamped as
+its own creator, holding the site role given
+(`user` unless the spec asks for `curator` or `admin`; any role but `user` also holds `canCreateWorkspace`, which the CHECK demands (M11.20)), verified unless the spec passes
+`emailVerified: false` (MB.205, for an admin approving an unverified
+account), one `accounts` row per provider named, and a session. It then hands the browser the session cookie Better
+Auth would have set. The value is the token, a dot, and its base64
+HMAC-SHA256 under `BETTER_AUTH_SECRET`, percent-encoded as better-call's
+`signCookieValue` does it. The runner and the served build share that
+secret: `playwright.yml` and compose set it at job level, and a local run
+sets it on the command line, or the helper throws. The name is
+`__Secure-better-auth.session_token` because a production build's base URL
+forces https. It rides as an extra request header, not in the cookie jar,
+since a browser never sends a `Secure` cookie to the plain-http
+`devcontainer:<port>` a remote browser uses. WebKit sends that header
+no better (MB.255, found by the first audit; Chromium and Firefox send it),
+nor a `__Secure-` cookie from the jar, so under the audit
+(`E2E_AUDIT=1`) the servers are started with
+`E2E_PLAIN_SESSION_COOKIE=true` (`playwright.config.ts`'s `serverEnv`),
+which `src/lib/auth.ts` reads through `plainSessionCookie()`
+(`src/lib/e2e-session-cookie.ts`) as `advanced.useSecureCookies: false`,
+and the helper puts a plain-named, non-`Secure` cookie in the context's jar
+with the host alone (a cookie ignores the port, so any slot's server gets
+it). The flag is off for `npm run e2e` and CI, which keep the production
+names, and does nothing wherever `VERCEL_ENV` is set, so no deploy can lose
+the prefix. A `next start` left running from an ordinary run keeps its
+names, so stop it before an audit. The other shape, https in front of each
+slot server, was left: a certificate and a proxy per
+port, to test one cookie name. Give each call a fresh address:
+the email index is unique. To switch back to a user already made,
+`signInAgainAs(page, userId)` gives the browser a new session for it
+(MB.63).
+
 - **`next.config.ts`'s `distDir`** reads `NEXT_DIST_DIR`, defaulting to
   `.next`. `webServer.env` sets it to `.next-e2e` so a concurrent `next dev`
   on 8000 (CLAUDE.md's Commands table promises both can run at once) never
@@ -378,7 +389,8 @@ cost of every e2e job. The browsers sit in `/ms-playwright`
 (`PLAYWRIGHT_BROWSERS_PATH`) rather than under `$HOME`, because a GitHub
 container job sets `HOME` to a directory the image never saw.
 
-**The audit runs the suite in WebKit, Firefox and as a phone, on demand**
+#### The audit runs the suite in WebKit, Firefox and as a phone, on demand
+
 (M10.25). CI and `npm run e2e` stay Chromium alone, and the "phone" checks
 there are a 375px window; the owner chose on 2026-10-12 that the other two
 engines and a real phone profile are an occasional local audit and never a

@@ -82,23 +82,27 @@ answer.
   provisional account can do nothing else (["The email
   page"](admin-bootstrap.md#the-email-page-mb54)). `/account/email` is the first
   page to call it; every later protected route adopts it in its own PR.
-- **Where the email redirect is thrown** (MB.256). In the page, never in the
-  shell layout, `src/app/(shell)/layout.tsx`. The shell is drawn round the
-  email page too, so the layout reads its viewer through `viewerOf()`, which
-  calls `requireSignedIn()`: `requireSession()`'s sign-in redirect without the
-  email check. When the shell layout did throw the email redirect, following
-  a link into the shell from outside it (`/`'s Continue to `/coven`, say) left
-  the browser refetching the email page about every 80 ms, without end. A
-  full page load settled, because the server answers it with a 307 before
-  anything is drawn. Thrown by the page instead, the redirect settles both
-  ways. A layout further down may still throw it: `/admin`'s does, through
-  `requireCuratorSession()`, and the same link into `/admin` settles. The
-  difference we can see is that the email page sits beneath the shell layout
-  and not beneath `/admin`'s. `tests/e2e/account.spec.ts` follows both
-  links. What it costs: the shell layout no longer stops an unverified account
-  on a full load, so a page directly in the shell calls `requireSession()`
-  itself — it must anyway, since a layout does not re-run on client-side
-  navigation.
+
+#### Where the email redirect is thrown
+
+(MB.256) In the page, never in the
+shell layout, `src/app/(shell)/layout.tsx`. The shell is drawn round the
+email page too, so the layout reads its viewer through `viewerOf()`, which
+calls `requireSignedIn()`: `requireSession()`'s sign-in redirect without the
+email check. When the shell layout did throw the email redirect, following
+a link into the shell from outside it (`/`'s Continue to `/coven`, say) left
+the browser refetching the email page about every 80 ms, without end. A
+full page load settled, because the server answers it with a 307 before
+anything is drawn. Thrown by the page instead, the redirect settles both
+ways. A layout further down may still throw it: `/admin`'s does, through
+`requireCuratorSession()`, and the same link into `/admin` settles. The
+difference we can see is that the email page sits beneath the shell layout
+and not beneath `/admin`'s. `tests/e2e/account.spec.ts` follows both
+links. What it costs: the shell layout no longer stops an unverified account
+on a full load, so a page directly in the shell calls `requireSession()`
+itself — it must anyway, since a layout does not re-run on client-side
+navigation.
+
 - **The return path round trip.** The proxy builds `next` from the request's
   pathname and query, through `signInPath()` (`src/lib/sign-in.ts`), which
   runs `safeReturnPath` first — a request can really carry a pathname of

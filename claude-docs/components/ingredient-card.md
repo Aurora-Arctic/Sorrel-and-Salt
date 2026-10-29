@@ -87,7 +87,9 @@ Every gap is a `space()` token. Before and after (px), changed 2026-10-18:
 | Rule to the first jar line              | 8      | 12    |
 | Last jar line to the card's bottom edge | 24     | 32    |
 
-**The whole card is the link.** The name's one `<a>` stretches an empty `::after`
+#### The whole card is the link
+
+The name's one `<a>` stretches an empty `::after`
 over the `article` (`position: relative`), the stretched-link pattern. The card
 is not wrapped in an `<a>`: a screen reader would read the whole card as the
 link's name, and a link cannot hold the Low badge's button. So the accessible name

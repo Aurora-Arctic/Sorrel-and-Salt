@@ -83,8 +83,7 @@ test('every tip in the Add Ingredient dialog opens inside a 320px viewport', asy
 });
 
 // The formal name's ⓘ heads a coven's entry page and the public one, and opens below on a phone, where the
-// shell's sticky bar would cover a tip above (claude-docs/components/ingredient-entry.md, "The formal name is
-// never blank").
+// shell's sticky bar would cover a tip above (claude-docs/components/ingredient-entry.md, "Contracts").
 test('the formal name\u2019s tip opens inside a 390px viewport on a coven\u2019s page and the public page', async ({
   page,
   browser,

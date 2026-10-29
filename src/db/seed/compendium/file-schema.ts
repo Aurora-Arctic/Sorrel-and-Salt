@@ -13,7 +13,7 @@ import type {
 } from '../types';
 
 // The frontmatter of a compendium entry file as strict zod schemas: an unnamed key is an issue, so a misspelt `celestialBodies` cannot silently drop
-// a list (claude-docs/db/compendium-seed/README.md, "The file format"). The file spells `colours`, the row `colors`; `toEntry` is where they meet.
+// a list (claude-docs/db/compendium-seed/README.md, "An entry, field by field"). The file spells `colours`, the row `colors`; `toEntry` is where they meet.
 
 export const FILE_STATUSES = ['draft', 'needs-review', 'approved'] as const;
 export const NAME_BASES = ['stated', 'resolved', 'unresolved', 'unaudited'] as const;
