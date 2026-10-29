@@ -1,0 +1,27 @@
+# Gathered for M14.29; the seed never reads this folder.
+entry: botanical/fox-nut-euryale-ferox
+status: needs-review
+listings:
+  - list: iucn
+    name: IUCN Red List of Threatened Species
+    value: Least Concern (IUCN 3.1)
+    listedAs: Euryale ferox
+    nameBasis: stated
+    source: wikipedia-euryale-ferox
+    locator: Infobox, Conservation status
+  - list: other
+    name: Red List of endangered plants in Japan, as described by Wikipedia
+    value: vulnerable
+    listedAs: Euryale ferox
+    nameBasis: stated
+    source: wikipedia-euryale-ferox
+    locator: Distribution and conservation section
+  - list: other
+    name: South Korea rating, assessor not named
+    value: vulnerable (VU)
+    listedAs: Euryale ferox
+    nameBasis: stated
+    source: wikipedia-euryale-ferox
+    locator: Distribution and conservation section
+questions:
+  - Wikipedia says the species "is similarly rated as vulnerable (VU) in South Korea" but names no assessor or list in that sentence. Find the assessment, or drop the row?
