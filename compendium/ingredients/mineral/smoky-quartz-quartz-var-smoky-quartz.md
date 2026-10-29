@@ -53,7 +53,7 @@ variants:
         nameBasis: stated
         supports:
           - form
-seedUpdate: 0b4996e74e796993aaf72a2bf345517f0588838f2e87425bb3b4e44bff889bf1
+seedUpdate: 77b01c327a8151ad25ba831f07fe3aad335116b766ca441bfd0c3b77e7111e88
 ---
 
 # Smoky Quartz

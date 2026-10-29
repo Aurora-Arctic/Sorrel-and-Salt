@@ -151,7 +151,7 @@ variants:
         supports:
           - form
           - description
-seedUpdate: 36b67fcafe34411df42998ecb1c012d5142f45baf598cb4438ea295d4de078b5
+seedUpdate: 135ee68d5634c8006d9d0db8ab22f7812ac6cabd435409c1730c21b0224d4df9
 ---
 
 # Eucalyptus

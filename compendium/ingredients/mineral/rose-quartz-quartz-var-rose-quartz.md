@@ -60,7 +60,7 @@ variants:
         supports:
           - form
           - description
-seedUpdate: 2fcd5ee7b68ad97dca31beece7bcc2579050f0e4d4969272c75bdcc64681ae39
+seedUpdate: 9a1e8ef72c78f85efcb45f48acad18c149a8a928e37d3d36a3a8d9d33c807298
 ---
 
 # Rose Quartz

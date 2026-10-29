@@ -69,7 +69,7 @@ variants:
         supports:
           - form
           - description
-seedUpdate: 252d933682188931b2b0e67ed23c997b0866667c0ad8a953ec0d631c8177f8b3
+seedUpdate: ad917615fafca3989ae19fa05d2a68ed4d0360c9b3c564b4bdd502d339d4eaaa
 ---
 
 # Sea Holly

@@ -61,7 +61,7 @@ variants:
         nameBasis: unaudited
         supports:
           - form
-seedUpdate: 7e4f9ec4789e1128aa1d5f55758b1f93168bd6089f708b87cf573f94ebaf710f
+seedUpdate: 0f5c08f9d413fd4f4e9c5cfed5634b61d126051418242a2fc7665c43bd614598
 ---
 
 # Rutilated Quartz

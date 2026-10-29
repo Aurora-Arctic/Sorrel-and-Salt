@@ -52,6 +52,7 @@ variants:
         nameBasis: unaudited
         supports:
           - form
+seedUpdate: 7fe3334aae5396bffb3f139ac4c53d056877843fdb2b5ddc2d8fabc9713ea247
 ---
 
 # Tourmalinated Quartz
