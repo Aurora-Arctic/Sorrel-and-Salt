@@ -1,6 +1,6 @@
 # Gathered for M14.29; the seed never reads this folder.
 entry: botanical/african-ginger-siphonochilus-aethiopicus
-status: approved
+status: needs-review
 listings:
   - list: other
     name: 'Conservation status as stated in the Wikipedia article text (no assessor named)'
@@ -9,3 +9,5 @@ listings:
     nameBasis: stated
     source: wikipedia-siphonochilus-aethiopicus
     locator: 'lead: "is critically endangered due to over-harvesting"'
+questions:
+  - "Wikipedia says 'is critically endangered due to over-harvesting' but names no assessor. Find the assessment, or drop the row? I recommend finding the assessment."
