@@ -19,7 +19,13 @@ references:
       - description
       - folkNames
       - colours
-variants: []
+variants:
+  - form: Clay
+    references:
+      - source: wikipedia-palygorskite
+        nameBasis: stated
+        supports:
+          - form
 ---
 
 # Palygorskite
