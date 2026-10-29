@@ -65,22 +65,43 @@ function Part({ part }: { part: JarPart }): ReactElement {
 export const BANDS_FULL = 8;
 
 /**
- * Height of the crest on each band edge, in drawing units. The aside's jar is 4rem wide for a
- * 48-unit drawing, so 3 units is about 4px there: below that the wave is not plainly seen.
+ * How far the wave on each band edge rises from its lowest point to its highest, in drawing
+ * units. The aside's jar is 4rem wide for a 48-unit drawing, so 3 units is about 4px there:
+ * below that the wave is not plainly seen.
  */
 const CREST = 3;
 
-/** A band's top edge: one low crest across the jar. */
-const crest = `M-2 ${CREST}Q24 ${-CREST} 50 ${CREST}`;
+/** The wave's turning points across the jar: each half period is 13 units, so two full periods in all. */
+const XS = [-2, 11, 24, 37, 50] as const;
 
 /**
- * One band, `height` tall: its top is the crest and its bottom is the same crest, so stacked
+ * A band's top edge: a smooth wave of two peaks and two troughs across the jar. Each half
+ * period is one quadratic curve whose control point lies on the far side of the middle line, and
+ * each joins the next on the same slope, so the line has no corner. It stays between 0 and CREST.
+ */
+const crest = `M${XS[0]} ${CREST / 2}${XS.slice(1)
+  .map(
+    (x, i) => `Q${(XS[i] + x) / 2} ${CREST / 2 + (i % 2 === 0 ? -CREST : CREST)} ${x} ${CREST / 2}`,
+  )
+  .join('')}`;
+
+/** The same wave run backwards, `dy` lower: a band's bottom, so stacked bands tile with no gap. */
+const backCrest = (dy: number): string =>
+  XS.slice(0, -1)
+    .map((x, i) => [x, XS[i + 1], i] as const)
+    .reverse()
+    .map(
+      ([x, next, i]) =>
+        `Q${(x + next) / 2} ${dy + CREST / 2 + (i % 2 === 0 ? -CREST : CREST)} ${x} ${dy + CREST / 2}`,
+    )
+    .join('');
+
+/**
+ * One band, `height` tall: its top is the wave and its bottom is the same wave, so stacked
  * bands tile with no gap. The lowest band is flat along the base.
  */
 function bandPath(height: number, lowest: boolean): string {
-  const bottom = lowest
-    ? `V${height + 4}H-2z`
-    : `V${height + CREST}Q24 ${height - CREST} -2 ${height + CREST}z`;
+  const bottom = lowest ? `V${height + 4}H-2z` : `V${height + CREST / 2}${backCrest(height)}z`;
   return crest + bottom;
 }
 
