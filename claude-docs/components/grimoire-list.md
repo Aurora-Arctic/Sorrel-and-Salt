@@ -128,7 +128,7 @@ tab reads it with `readLookedSpell` (`reads.ts`): `readSpell` for the signed-in 
 keeps another member's private spell and another coven's spell as a NotFound, so the tab opens
 nothing and says nothing of the spell. Any other failure draws the modal's own Notice. The steps,
 assigned categories and editor come from `readRecipeOf` (`grimoire/recipe-read.ts`), the same
-function the recipe page calls, with the editor named in one `displayNamesOf` call. A malformed
+function the recipe page calls, with the editor named in one `displayNamesOf` call. Each ingredient step then carries its stock mark (`supply`), from one `readStepSuppliesOf` call (`grimoire/[id]/recipe-supply.ts`), since the modal has no In Coven Inventory column to show it (story 54; [spell-recipe.md](spell-recipe.md), "Quick Look"). A malformed
 id reads nothing, and `?new` or `?edit` hold the modal back so one dialog shows at a time. The
 modal's Edit shows for the same `rolePermits(role, { spell: ['update'] })` check as the card's
 pencil and links to `?edit=<id>` in place of `?spell=<id>`. An ingredient step's Quick Look eye
