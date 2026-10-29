@@ -411,7 +411,7 @@ reads that nothing is held yet.
 `comparison-panel.tsx` (M10.17, story 52) sets what the spell intends beside what its jar
 carries, so a mismatch shows while the spell is built. It is a region named Category Match
 in the Jar aside, drawn as rows of a `dl` (Carried, Missing, Stray) whose values are
-the site's own `CategoryChips` ([`category-chips.md`](category-chips.md)), drawn neutral in this panel, in `$fill-quiet`-style quiet chips with `$text-primary` and no group hue (the second design review, 2026-10-28). The group is still read by id from the `categories` query the picker already makes; a category whose group has not landed is left out until it does. The chips are the compact size, the one the admin Compendium table's Categories column uses. The row's label alone says Carried, Missing or Stray: there is no chip variant of the panel's own. Every chip carries a tip, through `CategoryChips`'s `tipOf` prop: "From <the ingredients carrying it, in the jar's order>" on a Carried or Stray chip, and "Assigned to this spell, and nothing in the jar carries it" on a Missing one. It opens by hover, focus and tap (the M12.43 rule) and rides on the chip as its accessible description. Every chip is drawn (`showAll`): the panel has no +N button (the owner's call, 2026-10-28). The Stray row has no line of its own beneath the chip: the tip is where the ingredients are named. It reads the form's values as they stand, saved or not, so a pick or an ingredient added or
+the site's own `CategoryChips` ([`category-chips.md`](category-chips.md)), each in its category's group colours (read by id from the `categories` query the picker already makes; a category whose colours have not landed is left out until they do). The chips are the compact size, the one the admin Compendium table's Categories column uses. The row's label alone says Carried, Missing or Stray: there is no chip variant of the panel's own. Every chip carries a tip, through `CategoryChips`'s `tipOf` prop: "From <the ingredients carrying it, in the jar's order>" on a Carried or Stray chip, and "Assigned to this spell, and nothing in the jar carries it" on a Missing one. It opens by hover, focus and tap (the M12.43 rule) and rides on the chip as its accessible description. Every chip is drawn (`showAll`): the panel has no +N button (the owner's call, 2026-10-28). The Stray row has no line of its own beneath the chip: the tip is where the ingredients are named. It reads the form's values as they stand, saved or not, so a pick or an ingredient added or
 removed moves it at once. The comparison is M10.8's `compareSpellCategories` over M10.7's
 `summarizeSpellCategories`, run in the browser on the steps' categories; a one-off or an
 instruction brings none. It also lists Derived Categories, the union of the steps' categories,
@@ -421,7 +421,7 @@ once each and sorted by name.
   in the jar carries; **Stray** each category the jar carries that was not assigned. The row is its chips and nothing
   else: no line, tip or other place names the ingredients that bring a stray category (the owner's
   call, 2026-10-28).
-  The words carry the difference; the chips are neutral here and the row labels are one quiet caption.
+  The words carry the difference; the chips are coloured by group, as they are everywhere.
 - With none of the three, it reads "Intent and ingredients match." With no category assigned the
   panel does not list every ingredient as a stray: it asks for categories first. With nothing
   assigned and nothing in the jar it reads "Nothing to compare yet."
