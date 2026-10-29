@@ -555,3 +555,7 @@ These are also unwritten, for the reasons given:
 ### Traditions left out because they are not a people or a religion
 
 A tradition is a people or a religion. These are medical systems, practices, regions or nationalities: Ayurveda, Siddha, Unani, Sinhala folk medicine, Traditional Chinese medicine, Tibetan medicine, Traditional Mongolian medicine, Kampo, Traditional Korean medicine, Japanese incense, Chinese incense, African traditional medicine, Zimbabwean traditional medicine, West African and Central African traditional medicine, South African traditional medicine, Central African ordeal practice, East African animist practice, the Middle Eastern, Arabian, Arabic, Iranian, Iraqi, Jordanian, Lebanese, Moroccan, Saudi, Turkish, Yemeni, Omani and Emirati medicine and culinary entries, and the nationalities and regions Filipino, Vietnamese, Cambodian, Thai, Malaysian, Indonesian, Southeast Asian and Pacific Islander.
+
+## M14.19 — West Asia and North Africa
+
+No row of the 60 (861 to 920) was left out; every one has an entry file. Thirty-two are `needs-review`, each with its questions in the file. Rows whose Wikipedia page is only a genus page, a common-name page or a short stub were written as `needs-review` with a "too thin" or identity question rather than cited for a formal name the page does not print.
