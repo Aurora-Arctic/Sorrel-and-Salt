@@ -579,7 +579,10 @@ describe('the spell builder’s Add to Jar', () => {
 
     expect(rosewort).toHaveTextContent('Calm');
     expect(rosewort).not.toHaveTextContent('Love');
-    expect(mockroot).toHaveTextContent('Love · Protection');
+    // Two categories at the row's cap of one: the first shows, the other folds into the +1.
+    expect(mockroot).toHaveTextContent('Love+1');
+    fireEvent.click(within(mockroot).getByRole('button', { name: /1 more category/ }));
+    expect(mockroot).toHaveTextContent('Protection');
   });
 
   it('starts a stocked form in the unit it is stocked in, and an unstocked one blank', async () => {
@@ -1018,10 +1021,9 @@ describe('the spell builder’s jar fill colours', () => {
     expect(chip).toHaveClass('chip');
     expect(chip.style.getPropertyValue('--chip-dark')).toBe('#50a58e');
     expect(chip.style.getPropertyValue('--chip-light')).toBe('#1d755d');
-    // Protection has no known group: plain text, not a chip. The words and separator stand.
+    // Protection folds into the +1 beside Love; its panel carries the words.
     expect(within(mockroot).getByText('Love')).toHaveClass('chip');
-    expect(within(mockroot).queryByText('Protection')).toBeNull();
-    expect(mockroot).toHaveTextContent('Love · Protection');
+    expect(mockroot).toHaveTextContent('Love+1');
   });
 
   it('draws a layer in the one group colour of its first category, and a layer with no known group in the muted ink', async () => {
@@ -1229,15 +1231,17 @@ describe('the spell builder’s Add to Jar categories', () => {
     const many = await lookUp('Fixture', /Fixture Manywort/);
     const one = screen.getByRole('option', { name: /Fixture Onewort/ });
 
-    expect(many).toHaveTextContent('Aid · +4');
-    expect(within(many).getByText(/^\+4/)).toHaveTextContent('+4 more: Bind, Calm, Dawn, Ember');
-    // Hovering the chip shows the folded names in the app's tip, not a native title.
-    const chip = within(many).getByText(/^\+4/);
-    expect(chip).not.toHaveAttribute('title');
-    fireEvent.mouseEnter(chip.parentElement as HTMLElement);
-    expect(await within(many).findByRole('tooltip', { hidden: true })).toHaveTextContent(
-      'Bind, Calm, Dawn, Ember',
-    );
+    // The same CategoryMore button the cards have, not a hand-rolled chip.
+    const more = within(many).getByRole('button', { name: /4 more categories/ });
+    expect(more).toHaveTextContent('+4');
+    expect(more).not.toHaveAttribute('title');
+    expect(more).toHaveAttribute('aria-expanded', 'false');
+    // A click pins its panel open with the folded names, and does not pick the row.
+    fireEvent.click(more);
+    expect(more).toHaveAttribute('aria-expanded', 'true');
+    const panel = within(many).getByRole('group', { name: /More categories/ });
+    expect(panel).toHaveTextContent('BindCalmDawnEmber');
+    expect(screen.queryByRole('listbox')).not.toBeNull();
     // Why this could have folded: Onewort has one, at the cap, and is whole.
     expect(within(one).queryByText(/^\+/)).toBeNull();
     expect(one).toHaveTextContent('Love');
@@ -1255,8 +1259,11 @@ describe('the spell builder’s Add to Jar categories', () => {
 
     // Nothing in the jar carries Ember or Bind yet, so both are Missing and lead, in the row's
     // order; Aid and Calm are not the spell's, and Dawn folds into the +N.
-    expect(many).toHaveTextContent('Bind · +4');
-    expect(many).toHaveTextContent('more: Ember, Aid, Calm, Dawn');
+    expect(many).toHaveTextContent('Bind+4');
+    fireEvent.click(within(many).getByRole('button', { name: /4 more categories/ }));
+    expect(within(many).getByRole('group', { name: /More categories/ })).toHaveTextContent(
+      'EmberAidCalmDawn',
+    );
   });
 
   it('puts a Missing category before a Carried one once a step carries the other', async () => {
@@ -1297,8 +1304,11 @@ describe('the spell builder’s Add to Jar categories', () => {
     const many = await lookUp('Fixture', /Fixture Manywort/);
 
     // The jar carries Ember, so Bind is the one still Missing: Bind, then Carried Ember, then the rest.
-    expect(many).toHaveTextContent('Bind · +4');
-    expect(many).toHaveTextContent('more: Ember, Aid, Calm, Dawn');
+    expect(many).toHaveTextContent('Bind+4');
+    fireEvent.click(within(many).getByRole('button', { name: /4 more categories/ }));
+    expect(within(many).getByRole('group', { name: /More categories/ })).toHaveTextContent(
+      'EmberAidCalmDawn',
+    );
   });
 
   it('marks a form already in the jar on its row, and leaves the row pickable', async () => {
@@ -1376,6 +1386,50 @@ describe('the spell builder’s Add to Jar categories', () => {
     expect(calm).toHaveAttribute('aria-pressed', 'false');
     expect(await screen.findByRole('option', { name: /Fixture Mockroot/ })).toBeInTheDocument();
     await waitFor(() => expect(asked[asked.length - 1]).toEqual([]));
+  });
+
+  it('offers Clear only while a category is pressed, and Clear unpresses them all', async () => {
+    suggest(ROSEWORT, MOCKROOT);
+    renderBuilder({ spell: assigned('Calm', 'Protection') }, offered('Calm', 'Love', 'Protection'));
+    openAll();
+
+    const filter = screen.getByRole('group', { name: 'Filter By Category' });
+    const calm = await within(filter).findByRole('button', { name: 'Calm' });
+    const protection = within(filter).getByRole('button', { name: 'Protection' });
+    expect(screen.queryByRole('button', { name: 'Clear' })).toBeNull();
+
+    fireEvent.click(calm);
+    fireEvent.click(protection);
+    expect(calm).toHaveAttribute('aria-pressed', 'true');
+    expect(protection).toHaveAttribute('aria-pressed', 'true');
+
+    fireEvent.click(screen.getByRole('button', { name: 'Clear' }));
+    expect(calm).toHaveAttribute('aria-pressed', 'false');
+    expect(protection).toHaveAttribute('aria-pressed', 'false');
+    expect(screen.queryByRole('button', { name: 'Clear' })).toBeNull();
+  });
+
+  it('names the pressed categories in the list heading', async () => {
+    suggest(ROSEWORT, MOCKROOT);
+    renderBuilder({ spell: assigned('Calm', 'Protection') }, offered('Calm', 'Love', 'Protection'));
+    openAll();
+
+    const filter = screen.getByRole('group', { name: 'Filter By Category' });
+    const calm = await within(filter).findByRole('button', { name: 'Calm' });
+    await lookUp('Fixture', /Fixture Rosewort/);
+    // Why it could name them: with none pressed the heading carries no category.
+    expect(screen.queryByText(/ · In /)).toBeNull();
+
+    fireEvent.click(calm);
+    expect(await screen.findByText('Your Ingredients · In Calm')).toBeInTheDocument();
+    fireEvent.click(within(filter).getByRole('button', { name: 'Protection' }));
+    expect(await screen.findByText('Your Ingredients · In Calm, Protection')).toBeInTheDocument();
+  });
+
+  it('labels the picker with a visible Add to Jar', () => {
+    suggest(ROSEWORT);
+    renderBuilder({});
+    expect(screen.getByText('Add to Jar', { selector: 'label' })).toBeVisible();
   });
 
   it('shows no filter while the spell has no categories of its own', async () => {

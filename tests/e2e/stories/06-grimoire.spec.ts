@@ -283,12 +283,12 @@ test(
       .getByRole('combobox')
       .fill('Prosperity');
     await page.getByRole('option', { name: 'Prosperity' }).click();
-    // The rows: Missing (intended, not in the jar) and Stray (in the jar, not intended).
+    // The rows: Missing (intended, not in the jar) and Extra (in the jar, not intended).
     const row = (label: string) => panel.locator('dt', { hasText: label });
     await expect(row('Missing')).toBeVisible();
     await expect(panel.getByText('Prosperity')).toBeVisible();
     await addIngredientStep(page, 'Mugwort');
-    await expect(row('Stray')).toBeVisible();
+    await expect(row('Extra')).toBeVisible();
     // Prosperity is still intended and nothing carries it: its chip says so in its tip.
     await expect(panel.getByRole('button', { name: 'Prosperity' })).toHaveAccessibleDescription(
       'Assigned to this spell, and nothing in the jar carries it',
@@ -296,7 +296,7 @@ test(
     // The step just added is open: its pencil reads Close, and Remove is hidden until it is shut.
     await page.getByRole('button', { name: /Close Mugwort/ }).click();
     await page.getByRole('button', { name: /Remove Mugwort/ }).click();
-    await expect(row('Stray')).toHaveCount(0);
+    await expect(row('Extra')).toHaveCount(0);
   },
 );
 
@@ -362,13 +362,12 @@ test('a member saves a spell as a draft', { tag: '@story-55' }, async ({ page })
   await page.goto(`/coven/${coven.slug}/grimoire/drafts`);
   const card = grimoireList(page).getByRole('listitem', { name: /Fixture Working/ });
   await expect(card.getByText('Draft')).toBeVisible();
-  // Marking it complete is explicit, and reversible.
+  // Marking it complete is explicit, and final: the statement replaces the button.
   await page.goto(draft);
   const edit = page.getByRole('dialog', { name: 'Edit Spell, Fixture Working' });
   await edit.getByRole('button', { name: 'Mark Complete' }).click();
-  await expect(edit.getByRole('button', { name: 'Reopen as Draft' })).toBeVisible();
-  await edit.getByRole('button', { name: 'Reopen as Draft' }).click();
-  await expect(edit.getByRole('button', { name: 'Mark Complete' })).toBeVisible();
+  await expect(edit.getByText(/^Complete\./)).toBeVisible();
+  await expect(edit.getByRole('button', { name: 'Mark Complete' })).toHaveCount(0);
   // A saved spell is edited from its card's link, and the change reads back on the card.
   await page.goto(`/coven/${coven.slug}/grimoire/drafts`);
   await grimoireList(page).getByRole('link', { name: 'Edit Fixture Working' }).click();

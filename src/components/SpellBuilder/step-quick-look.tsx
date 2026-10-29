@@ -11,7 +11,8 @@ export type QuickLookCoven = { workspaceId: string; covenSlug: string };
 // alike so the two match (the owner's call, 2026-10-29). It opens the entry's details in a modal
 // over the builder (`DuplicateQuickLook`, which needs no route), so nothing typed is lost to a
 // navigation; the focus goes back to the eye when it closes. The modal's head reads only the name
-// until the entry arrives, since a step carries no formal name.
+// until the entry arrives, with a line skeleton where the formal name goes: a step carries no formal
+// name, and saying "Not yet looked up" would be false.
 // claude-docs/components/spell-builder.md.
 export function StepQuickLook({
   ingredientId,
@@ -30,7 +31,7 @@ export function StepQuickLook({
       {looking && (
         <DuplicateQuickLook
           id={ingredientId}
-          entry={{ name, canonicalName: '', nomenclature: 'unknown' }}
+          entry={{ name }}
           workspaceId={look.workspaceId}
           pageHref={`/coven/${look.covenSlug}/ingredients/${ingredientId}`}
           onClose={() => setLooking(false)}

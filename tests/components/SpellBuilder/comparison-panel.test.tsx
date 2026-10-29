@@ -44,8 +44,8 @@ const groups = new Map(
 );
 
 const panel = () => screen.getByRole('region', { name: 'Category Match' });
-/** The chips on one of the three rows (Carried, Missing, Stray), or null if the row is left out. */
-const row = (label: 'Carried' | 'Missing' | 'Stray') => {
+/** The chips on one of the three rows (Carried, Missing, Extra), or null if the row is left out. */
+const row = (label: 'Carried' | 'Missing' | 'Extra') => {
   const term = within(panel()).queryByText(label, { selector: 'dt' });
   return term ? (term.nextElementSibling as HTMLElement) : null;
 };
@@ -63,7 +63,7 @@ describe('ComparisonPanel', () => {
     expect(row('Carried')).toBeNull();
   });
 
-  it('puts a category carried but not intended on the Stray row, as one chip', () => {
+  it('puts a category carried but not intended on the Extra row, as one chip', () => {
     render(
       <ComparisonPanel
         groups={groups}
@@ -71,11 +71,11 @@ describe('ComparisonPanel', () => {
         steps={[step('Fixture Mugwort', ['Psychic Work'])]}
       />,
     );
-    expect(row('Stray')).toHaveTextContent('Psychic Work');
-    expect(within(row('Stray') as HTMLElement).getAllByRole('button')).toHaveLength(1);
+    expect(row('Extra')).toHaveTextContent('Psychic Work');
+    expect(within(row('Extra') as HTMLElement).getAllByRole('button')).toHaveLength(1);
   });
 
-  it('shows a stray category once, however many ingredients carry it', () => {
+  it('shows an extra category once, however many ingredients carry it', () => {
     render(
       <ComparisonPanel
         groups={groups}
@@ -86,10 +86,10 @@ describe('ComparisonPanel', () => {
         ]}
       />,
     );
-    const stray = row('Stray') as HTMLElement;
-    expect(within(stray).getAllByRole('listitem')).toHaveLength(1);
-    expect(within(stray).getByText('Cleansing')).toBeVisible();
-    expect(within(stray).getAllByRole('button')).toHaveLength(1);
+    const extra = row('Extra') as HTMLElement;
+    expect(within(extra).getAllByRole('listitem')).toHaveLength(1);
+    expect(within(extra).getByText('Cleansing')).toBeVisible();
+    expect(within(extra).getAllByRole('button')).toHaveLength(1);
     expect(row('Carried')).toHaveTextContent('Prosperity');
   });
 
@@ -128,9 +128,9 @@ describe('ComparisonPanel', () => {
         steps={[step('Fixture Basil', ['Cleansing', 'Love', 'Psychic Work'])]}
       />,
     );
-    const stray = row('Stray') as HTMLElement;
-    expect(within(stray).getAllByRole('button')).toHaveLength(3);
-    expect(within(stray).queryByRole('button', { name: /more categories/ })).toBeNull();
+    const extra = row('Extra') as HTMLElement;
+    expect(within(extra).getAllByRole('button')).toHaveLength(3);
+    expect(within(extra).queryByRole('button', { name: /more categories/ })).toBeNull();
   });
 
   it('draws each row as category chips in the category group colours', () => {
@@ -157,7 +157,7 @@ describe('ComparisonPanel', () => {
     );
     expect(row('Carried')).toHaveTextContent('Prosperity');
     expect(row('Missing')).toBeNull();
-    expect(row('Stray')).toBeNull();
+    expect(row('Extra')).toBeNull();
   });
 
   it('asks for something to compare while there are no categories and no ingredients', () => {
@@ -165,7 +165,7 @@ describe('ComparisonPanel', () => {
     expect(within(panel()).getByText('Nothing to compare yet.')).toBeVisible();
   });
 
-  it('does not call every ingredient stray while no category is intended', () => {
+  it('does not call every ingredient extra while no category is intended', () => {
     render(
       <ComparisonPanel
         groups={groups}
@@ -174,7 +174,7 @@ describe('ComparisonPanel', () => {
       />,
     );
     expect(within(panel()).getByText('Assign categories to compare.')).toBeVisible();
-    expect(row('Stray')).toBeNull();
+    expect(row('Extra')).toBeNull();
   });
 
   it('ignores an instruction and a one-off', () => {
@@ -188,7 +188,7 @@ describe('ComparisonPanel', () => {
         ]}
       />,
     );
-    expect(row('Stray')).toBeNull();
+    expect(row('Extra')).toBeNull();
     expect(row('Missing')).toHaveTextContent('Prosperity');
   });
 });
@@ -250,13 +250,13 @@ describe('the panel in the builder', () => {
     fireEvent.click(screen.getByRole('button', { name: 'Open All' }));
     await waitFor(() =>
       expect(
-        within(row('Stray') as HTMLElement).getByRole('button', { name: 'Calm' }),
+        within(row('Extra') as HTMLElement).getByRole('button', { name: 'Calm' }),
       ).toBeVisible(),
     );
     expect(row('Missing')).toHaveTextContent('Testward');
 
     fireEvent.click(screen.getByRole('button', { name: 'Remove Fixture Rosewort' }));
-    await waitFor(() => expect(row('Stray')).toBeNull());
+    await waitFor(() => expect(row('Extra')).toBeNull());
     expect(row('Missing')).toHaveTextContent('Testward');
   });
 });

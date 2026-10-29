@@ -19,7 +19,7 @@ const { default: SpellBuilder } = await import('@/components/SpellBuilder');
 beforeEach(() => offerCategories([]));
 
 // The spell builder's status control (M10.20, story 55): a spell is a draft until
-// it is marked complete, and a complete spell can be reopened. That the service
+// it is marked complete, and a complete spell shows its statement and no button (it cannot be reopened). That the service
 // keeps a complete spell titled is tests/modules/grimoire's; here the builder
 // refuses a blank title on the title field and sends the chosen status.
 
@@ -99,7 +99,7 @@ describe('SpellBuilder status', () => {
     renderBuilder();
 
     expect(screen.getByRole('button', { name: 'Mark Complete' })).toBeEnabled();
-    expect(screen.queryByRole('button', { name: 'Reopen as Draft' })).toBeNull();
+    expect(screen.queryByText(/^Complete\./)).toBeNull();
   });
 
   it('sends the unsaved form as complete when Mark Complete is pressed', async () => {
@@ -124,15 +124,12 @@ describe('SpellBuilder status', () => {
     expect(calls).toHaveLength(0);
   });
 
-  it('reopens a complete spell as a draft', async () => {
-    const calls = acceptUpdate();
+  it('shows a complete spell\u2019s statement and no button to change its status', () => {
     renderBuilder({ spell: { ...SPELL, status: 'complete' } });
 
+    expect(screen.getByText(/^Complete\./)).toBeVisible();
     expect(screen.queryByRole('button', { name: 'Mark Complete' })).toBeNull();
-    fireEvent.click(screen.getByRole('button', { name: 'Reopen as Draft' }));
-
-    await waitFor(() => expect(calls).toHaveLength(1));
-    expect(calls[0]?.input).toMatchObject({ status: 'draft', expectedRevision: 4 });
+    expect(screen.queryByRole('button', { name: /reopen/i })).toBeNull();
   });
 
   it('reads a saved spell with no status as a draft', () => {

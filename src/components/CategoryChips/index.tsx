@@ -16,10 +16,11 @@ const CategoryChips = ({
   compact = false,
   absent = false,
   showAll = false,
+  limit: chipLimit = CATEGORY_CHIP_LIMIT,
   tipOf,
 }: CategoryChipsProps): ReactElement | null => {
   if (categories.length === 0) return null;
-  const limit = showAll ? categories.length : CATEGORY_CHIP_LIMIT;
+  const limit = showAll ? categories.length : chipLimit;
   return (
     <ul
       className={[

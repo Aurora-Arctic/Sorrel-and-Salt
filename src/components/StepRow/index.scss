@@ -163,7 +163,8 @@ $step-ink-drop: 0.05rem;
     grid-template-areas:
       'handle position name marks edit remove'
       '. . summary summary summary summary';
-    grid-template-columns: auto auto minmax(0, 1fr) auto auto auto;
+    // The name keeps a sane minimum, so the marks beside it can never squeeze it to a letter a line.
+    grid-template-columns: auto auto minmax(6rem, 1fr) auto auto auto;
 
     // Everything on the first line sits on that line's centre, and not on the
     // centre of the whole row: a name that wraps, or the summary that stands
@@ -211,7 +212,8 @@ $step-ink-drop: 0.05rem;
   .step-row__summary {
     grid-area: summary;
     min-width: 0;
-    margin: 0;
+    // Clear of the name above it (space(3); it was space(2) as the name's own padding).
+    margin: space(3) 0 0;
     color: $text-muted;
     font-size: type-size('caption');
     font-weight: 300;
@@ -265,7 +267,7 @@ $step-ink-drop: 0.05rem;
   .step-row__open {
     grid-column: name-start / -1;
     grid-row: 2;
-    margin-block-start: space(2);
+    margin-block-start: space(3);
   }
 
   .step-row__inputs {
@@ -458,7 +460,10 @@ $step-ink-drop: 0.05rem;
 // beneath the name, in line with it, and Remove stays level with the name at
 // the end of the first line. An instruction has no amount and keeps its row.
 @container spell-steps (max-width: #{$narrow-column}) {
-  .step-row.step-row--card:not(.step-row--instruction) {
+  // Only the card with no open state: a closed or open card has its own areas (above), and this
+  // rule's four-column template, the more specific, used to replace them at 390px, leaving the
+  // marks and pencil with no area (they overlapped) and the name squeezed to a letter a line.
+  .step-row.step-row--card:not(.step-row--instruction, .step-row--closed, .step-row--open) {
     grid-template-areas:
       'handle position name remove'
       '. . amount amount';
