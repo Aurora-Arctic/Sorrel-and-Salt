@@ -1,0 +1,11 @@
+# Gathered for M14.29; the seed never reads this folder.
+entry: botanical/fairy-wand-chamaelirium-luteum
+status: approved
+listings:
+  - list: other
+    name: United Plant Savers Species At-Risk List
+    value: Critical
+    listedAs: 'Chamaelirium luteum'
+    nameBasis: stated
+    source: ups-species-at-risk
+    locator: under the heading "Critical", entry for False Unicorn

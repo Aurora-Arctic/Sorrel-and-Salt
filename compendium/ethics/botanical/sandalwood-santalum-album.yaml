@@ -1,0 +1,13 @@
+# Gathered for M14.29; the seed never reads this folder.
+entry: botanical/sandalwood-santalum-album
+status: needs-review
+listings:
+  - list: other
+    name: United Plant Savers Species At-Risk List
+    value: Critical
+    listedAs: 'Santalum spp. (Hawaii only)'
+    nameBasis: stated
+    source: ups-species-at-risk
+    locator: under the heading "Critical", entry for Sandalwood
+questions:
+  - 'The list prints "Santalum spp. (Hawaii only)". Does a listing scoped to Hawaii cover Santalum album, which this entry names? Recommendation: keep the listing but show it as scoped to Hawaii, or drop it; owner to decide.'

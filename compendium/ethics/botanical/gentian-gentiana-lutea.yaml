@@ -1,0 +1,13 @@
+# Gathered for M14.29; the seed never reads this folder.
+entry: botanical/gentian-gentiana-lutea
+status: needs-review
+listings:
+  - list: other
+    name: United Plant Savers Species At-Risk List
+    value: At-Risk
+    listedAs: 'Gentiana spp.'
+    nameBasis: stated
+    source: ups-species-at-risk
+    locator: under the heading "At-Risk", entry for Gentian
+questions:
+  - "The list prints a genus-level entry (spp.) and states its purpose as a list of wild medicinals of North America. I did not check where this species grows. Does the genus listing cover it? Recommendation: keep the listing but show it as the list's genus-level statement, or drop it; owner to decide."
