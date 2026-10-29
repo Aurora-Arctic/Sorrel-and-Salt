@@ -1,0 +1,11 @@
+# Gathered for M14.29; the seed never reads this folder.
+entry: botanical/cannonball-tree-couroupita-guianensis
+status: approved
+listings:
+  - list: iucn
+    name: IUCN Red List of Threatened Species, as printed in the Wikipedia taxobox
+    value: Least Concern
+    listedAs: Couroupita guianensis
+    nameBasis: stated
+    source: wikipedia-couroupita-guianensis
+    locator: 'taxobox "Conservation status": Least Concern (IUCN 2.3); taxobox cites version 2.3, an older assessment than 3.1'

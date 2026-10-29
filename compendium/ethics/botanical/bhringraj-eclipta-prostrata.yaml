@@ -1,0 +1,11 @@
+# Gathered for M14.29; the seed never reads this folder.
+entry: botanical/bhringraj-eclipta-prostrata
+status: approved
+listings:
+  - list: iucn
+    name: IUCN Red List of Threatened Species, as printed in the Wikipedia taxobox
+    value: Least Concern
+    listedAs: Eclipta prostrata
+    nameBasis: stated
+    source: wikipedia-eclipta-prostrata
+    locator: 'taxobox "Conservation status": Least Concern (IUCN 3.1)'
