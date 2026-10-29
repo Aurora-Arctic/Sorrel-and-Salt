@@ -19,10 +19,8 @@ import {
   setUpInvitationAcceptance,
 } from '../../../support/db/invitation-acceptance';
 
-// The account page's Decline. The same checks as the accept by id,
-// over the session's own read, so each refusal sits beside the call that
-// succeeds once its refusing fact is gone. A decline seats no one and grants
-// nothing; it kills the invitation, which its link and both accepts then refuse.
+// The account page's Decline. The same checks as the accept by id, over the session's own read, so each refusal sits beside the call that succeeds once its refusing fact is gone.
+// A decline seats no one and grants nothing; it kills the invitation, which its link and both accepts then refuse.
 
 let sql: postgres.Sql;
 const { invite, roleOf, ledger } = setUpInvitationAcceptance((client) => {

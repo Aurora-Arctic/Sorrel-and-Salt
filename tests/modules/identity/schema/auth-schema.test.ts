@@ -57,10 +57,8 @@ describe('rate_limits in the migrated database', () => {
   });
 });
 
-// The table is only Better Auth's if its adapter can find it: the schema passed
-// to `drizzleAdapter` in src/lib/auth.ts must name it under the pluralised
-// model key. `storage: 'database'` is what makes Better Auth ask for the model
-// at all, so it is set here rather than in the config it is not yet on in.
+// The table is only Better Auth's if its adapter can find it: the schema passed to `drizzleAdapter` in src/lib/auth.ts must name it under the pluralised model key.
+// `storage: 'database'` is what makes Better Auth ask for the model at all, so it is set here rather than in the config.
 describe("rate_limits through Better Auth's adapter", () => {
   let sql: postgres.Sql;
   useTestDatabase((client) => {

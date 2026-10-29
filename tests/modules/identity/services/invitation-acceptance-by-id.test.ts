@@ -14,10 +14,8 @@ import {
   setUpInvitationAcceptance,
 } from '../../../support/db/invitation-acceptance';
 
-// The landing's accept, by the id `/coven` lists. The same checks and
-// the same acceptance as the token's, over a read that is the session's own:
-// each refusal sits beside the call that succeeds once its refusing fact is
-// gone, so the fact is what refused.
+// The landing's accept, by the id `/coven` lists. The same checks and acceptance as the token's, over a read that is the session's own.
+// Each refusal sits beside the call that succeeds once its refusing fact is gone, so the fact is what refused.
 
 let sql: postgres.Sql;
 const { invite, roleOf, ledger } = setUpInvitationAcceptance((client) => {

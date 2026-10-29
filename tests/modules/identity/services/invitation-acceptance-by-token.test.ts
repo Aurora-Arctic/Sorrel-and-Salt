@@ -25,14 +25,9 @@ import {
   setUpInvitationAcceptance,
 } from '../../../support/db/invitation-acceptance';
 
-// The one accept service, `acceptInvitation(session, token)`, with the
-// site tier's branch and the workspace's. Holding the token names the
-// invitation, and the session's verified address is what admits: a matching
-// unverified account is sent to the email page, a different address refused.
+// The one accept service, `acceptInvitation(session, token)`, with the site tier's branch and the workspace's. Holding the token names the invitation, and the session's verified address is what admits: a matching unverified account is sent to the email page, a different address refused.
 // The three dead-link checks run first, for both tiers, one reason per link.
-// Accepting a site-tier invitation is an admin grant declared
-// `via: 'invitation'` with the invitation's note, so the trigger on `users`
-// records it (claude-docs/auth/admin-users.md, "Inviting an admin").
+// Accepting a site-tier invitation is an admin grant declared `via: 'invitation'` with the invitation's note, so the trigger on `users` records it (claude-docs/auth/admin-users.md, "Inviting an admin").
 
 let sql: postgres.Sql;
 const { invite, invitation, roleOf, ledger } = setUpInvitationAcceptance((client) => {

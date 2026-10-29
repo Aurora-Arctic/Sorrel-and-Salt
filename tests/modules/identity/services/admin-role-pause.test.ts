@@ -13,11 +13,8 @@ import { useTestDatabase } from '../../../support/db/database';
 import { asManualFix } from '../../../support/db/privileges';
 import type { PauseRow } from './types';
 
-// The primary admin switches admin grants and revokes off for every
-// other admin while a rogue one is dealt with, and back on. Only the primary
-// admin may flip it, and only the primary admin is exempt from it
-// (claude-docs/design-decisions/m2.9-granting-admin.md, "Granting";
-// claude-docs/auth/admin-users.md, "Pausing admin changes").
+// The primary admin switches admin grants and revokes off for every other admin while a rogue one is dealt with, and back on. Only the primary admin may flip it, and only the primary admin is exempt from it
+// (claude-docs/design-decisions/m2.9-granting-admin.md, "Granting"; claude-docs/auth/admin-users.md, "Pausing admin changes").
 
 let sql: postgres.Sql;
 useTestDatabase((client) => {

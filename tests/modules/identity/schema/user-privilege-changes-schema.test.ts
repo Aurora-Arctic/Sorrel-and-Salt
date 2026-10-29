@@ -11,10 +11,8 @@ import {
 } from '@/modules/identity/schema/user-privilege-changes';
 import type { PrivilegeChangeRow } from './types';
 
-// The one privilege ledger, one row per change to a privilege column
-// on `users`, which the two earlier one-privilege ledgers
-// fold into. Append-only by
-// `forbid_rewrite()`; the trigger on `users` writes it (claude-docs/design-decisions/mb.194-privilege-ledger-by-trigger.md).
+// The one privilege ledger, one row per change to a privilege column on `users`, folding in the two earlier one-privilege ledgers. Append-only by `forbid_rewrite()`.
+// The trigger on `users` writes it (claude-docs/design-decisions/mb.194-privilege-ledger-by-trigger.md).
 
 describe('user_privilege_changes schema', () => {
   const { byName } = tableFacts(userPrivilegeChanges);

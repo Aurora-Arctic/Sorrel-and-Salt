@@ -12,11 +12,8 @@ import { A, B, asUser } from '../../../support/as-user';
 import { asTouch } from '../../../support/db/touch-row';
 import type { EmailUserRow } from './types';
 
-// The service half: asking for an address writes nothing to
-// `users.email` — the address becomes the row's at verification — so an
-// established account never re-enters the provisional sweep
-// (claude-docs/auth/admin-bootstrap.md, "The email page"). What goes out is the sender's
-// business, which is why it is a fake here.
+// The service half: asking for an address writes nothing to `users.email`, since the address becomes the row's at verification, so an established account never re-enters the provisional sweep (claude-docs/auth/admin-bootstrap.md, "The email page").
+// What goes out is the sender's business, which is why it is a fake here.
 
 const DOMAIN = '@email-service.test';
 const NEW = `new${DOMAIN}`;
@@ -49,14 +46,7 @@ async function setSentAt(id: string, at: string | null): Promise<void> {
   await sql`update users set verification_sent_at = ${at === null ? null : sql`now() - ${at}::interval`} where id = ${id}`;
 }
 
-/**
- * Moves the row's last touch back by `by`. The `set_updated_at` trigger
- * overwrites any `updated_at` an UPDATE supplies, so it is switched off for
- * this one statement (as tests/modules/identity/services/provisional-accounts.test.ts
- * does; the worker's database is its own clone). Without it, the row's last
- * touch is the beforeEach write a moment ago, and a JS `Date` holds whole
- * milliseconds, so "later than before" could compare equal.
- */
+/** Moves the row's last touch back by `by`. The `set_updated_at` trigger overwrites any `updated_at` an UPDATE supplies, so it is switched off for this one statement, as provisional-accounts.test.ts does. Without that, a JS `Date` holds whole milliseconds and "later than before" could compare equal. */
 async function backdateTouch(id: string, by: string): Promise<void> {
   await sql.begin(async (tx) => {
     await tx`alter table users disable trigger set_updated_at`;
@@ -73,10 +63,8 @@ async function setVerified(id: string, verified: boolean): Promise<void> {
 beforeEach(async () => {
   vi.mocked(sender.resend).mockClear();
   vi.mocked(sender.requestChange).mockClear();
-  // Both start unverified and stamped by someone else, so a stamp of their own
-  // id is visible as this call's write.
-  // A save that changes no column keeps updated_by (migration 0079), so the
-  // stamp is written under the touch setting, as writeChildren does.
+  // Both start unverified and stamped by someone else, so a stamp of their own id shows as this call's write.
+  // A save that changes no column keeps updated_by (migration 0079), so the stamp is written under the touch setting, as writeChildren does.
   await asTouch(
     sql,
     (tx) => tx`update users set email_verified = false, updated_by = ${A.id} where id = ${B.id}`,

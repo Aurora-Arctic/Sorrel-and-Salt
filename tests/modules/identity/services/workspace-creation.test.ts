@@ -13,11 +13,8 @@ import { useTestDatabase } from '../../../support/db/database';
 import { asManualFix } from '../../../support/db/privileges';
 import type { CreationChangeRow, CreationFlagRow } from './types';
 
-// An admin approves someone who has no invitation, or revokes the
-// approval, by writing `canCreateWorkspace` on their row, declared `via:
-// 'admin'` so the trigger on `users` records it in the privilege ledger
-// (claude-docs/auth/admin-users.md, "Approving workspace creation"). A non-admin's
-// refusal is curator-boundary.test.ts's, once for every people-page service.
+// An admin approves someone who has no invitation, or revokes the approval, by writing `canCreateWorkspace` on their row, declared `via: 'admin'` so the trigger on `users` records it (claude-docs/auth/admin-users.md, "Approving workspace creation").
+// A non-admin's refusal is curator-boundary.test.ts's, once for every people-page service.
 
 let sql: postgres.Sql;
 useTestDatabase((client) => {

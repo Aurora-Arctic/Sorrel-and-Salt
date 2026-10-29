@@ -14,10 +14,8 @@ import { insertReference, insertReferenceLink } from '../../../support/db/insert
 import { type IngredientFixture, makeIngredient, makeVariant } from '../../../support/fixtures';
 import type { PageRequest } from '@/lib/types';
 
-// The compendium's two reads (claude-docs/db/compendium-read.md, "The compendium read"): the
-// public list, which takes no session at all, and one entry by id, which a
-// coven's member may also point at the coven's own row. The table is emptied
-// per test, so every row a result could come from is one this file wrote.
+// The compendium's two reads (claude-docs/db/compendium-read.md, "The compendium read"): the public list, which takes no session, and one entry by id, which a coven's member may also point at the coven's own row.
+// The table is emptied per test, so every row a result could come from is one this file wrote.
 
 // The list's two reads, the page and its count, wrapped so a test sees what
 // each was asked for without changing what it answers.
@@ -207,10 +205,8 @@ describe('listCompendium', () => {
   });
 });
 
-// The facets (claude-docs/design-decisions/m11.22-search-facets.md): four
-// lists, any value matching within one, and a toxic setting, the kinds ANDed.
-// What each arm matches is the repository's test
-// (tests/db/repository/ingredients.test.ts); this holds what the service parses.
+// The facets (claude-docs/design-decisions/m11.22-search-facets.md): four lists, any value matching within one, and a toxic setting, the kinds ANDed.
+// What each arm matches is tests/db/repository/ingredients.test.ts's; this holds what the service parses.
 describe('listCompendium, under the facets', () => {
   let hecate: string;
   let hermes: string;

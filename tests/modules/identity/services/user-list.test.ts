@@ -9,10 +9,8 @@ import { useTestDatabase } from '../../../support/db/database';
 import { asManualFix } from '../../../support/db/privileges';
 import type { ListedUserRow } from './types';
 
-// The two reads behind `/admin/users`: the list itself and the providers
-// linked to each listed account. Both are a site admin's alone, refused at
-// the service by direct call rather than by the page being out of reach
-// (claude-docs/auth/admin-users.md, "The user list").
+// The two reads behind `/admin/users`: the list and the providers linked to each listed account.
+// Both are a site admin's alone, refused at the service by direct call rather than by the page being out of reach (claude-docs/auth/admin-users.md, "The user list").
 
 let sql: postgres.Sql;
 useTestDatabase((client) => {

@@ -5,11 +5,8 @@ import { asManualFix } from '../../../support/db/privileges';
 import { run } from '../../../support/graphql/run';
 import type { GrantedUserResult, RevokedUserResult } from './types';
 
-// `grantWorkspaceCreation` and `revokeWorkspaceCreation`, the transport's half
-// (claude-docs/testing/layer-ownership.md): an admin's answer, and one refusal
-// per error code, read as the browser reads them. Which roles the service
-// refuses is services/workspace-creation.test.ts's; a signed-out caller and the
-// scope are tests/db/graphql-query-scopes.test.ts's.
+// `grantWorkspaceCreation` and `revokeWorkspaceCreation`, the transport's half (claude-docs/testing/layer-ownership.md): an admin's answer, and one refusal per error code, read as the browser reads them.
+// Which roles the service refuses is services/workspace-creation.test.ts's; a signed-out caller and the scope are tests/db/graphql-query-scopes.test.ts's.
 
 let sql: ReturnType<typeof postgres>;
 
