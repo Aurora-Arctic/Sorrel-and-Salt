@@ -151,7 +151,7 @@ export const rules = {
       return {
         Program(program) {
           const code = codeOf(context);
-          // `readableSpells`, and beside it the two helpers of the grimoire's
+          // `readableSpells`, `readableWorkings` (a working carries a visibility of its own), and beside them the two helpers of the grimoire's
           // Visibility facet, which only narrow what it lets through.
           const predicates = [];
           if (file === PREDICATE_FILE) {
@@ -160,7 +160,7 @@ export const rules = {
               if (
                 statement.type === 'ExportNamedDeclaration' &&
                 declaration?.type === 'FunctionDeclaration' &&
-                declaration.id.name === 'readableSpells'
+                ['readableSpells', 'readableWorkings'].includes(declaration.id.name)
               ) {
                 predicates.push(declaration.range);
               }

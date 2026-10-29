@@ -13,16 +13,21 @@ import type { SpellStatus, SpellVisibility } from '../types';
  * before the write, so the save that completes a shared draft is the one that
  * starts the lock, and that save itself may still name any visibility.
  *
+ * `subject` names what is being narrowed in the refusal: a working's own column follows the same rule.
+ *
  * @throws {Forbidden} `next` narrows a complete spell the coven can already read.
  */
 export function assertWidens(
   { visibility: current, status }: { visibility: SpellVisibility; status: SpellStatus },
   next: SpellVisibility,
+  subject: 'spell' | 'working' = 'spell',
 ): void {
   if (status === 'complete' && current === 'workspace' && next === 'private') {
     throw new Forbidden(
-      'This spell has been shared with the coven and cannot be made private again. ' +
-        'Duplicate it to get a private copy you can change, or delete it if it should not be there.',
+      `This ${subject} has been shared with the coven and cannot be made private again. ` +
+        (subject === 'spell'
+          ? 'Duplicate it to get a private copy you can change, or delete it if it should not be there.'
+          : 'Delete it instead if it should not be there.'),
     );
   }
 }

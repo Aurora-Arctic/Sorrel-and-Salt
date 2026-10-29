@@ -52,7 +52,17 @@ A spell is the recipe; a working is the record of one time it was made ([`m13.4-
 - **`spell_workings`** spreads `...auditColumns` and is soft-deleted. `visibility` reuses `spell_visibility`. Index `spell_workings_spell_id_worked_on_idx` on `(spell_id, worked_on DESC) WHERE deleted_at IS NULL`. CHECKs `spell_workings_note_not_blank` and `spell_workings_completed_at_with_status` (`(status = 'complete') = (completed_at IS NOT NULL)`).
 - **`spell_working_participants`** spreads `...auditStampColumns`. CHECK `spell_working_participants_one_identity` (`num_nonnulls(user_id, name) = 1`) and `..._name_not_blank`. Two plain unique indexes, on `(working_id, user_id)` and `(working_id, lower(name))`.
 - **`spell_working_deductions`** spreads `...auditStampColumns`. Its foreign key to `inventory_items` is named by hand (`spell_working_deductions_inventory_item_fk`), because the generated name is past Postgres's 63-character limit.
-- A working of a deleted spell is read through the spell's own filter, so `findManyInSpell` cannot reach it.
+- A working of a deleted spell is read through the spell's own filter (`findWorkingsInSpell` and the other working finders in `src/db/repository/workings.ts`). `findManyInSpell` and the readable-spell pagers refuse `spell_workings` at the type level (`NotVisibilityScoped`), because a working has a `visibility` of its own that the spell's rule would ignore.
+
+### Working service (M13.5)
+
+`src/modules/grimoire/services/workings.ts` records, completes, changes and deletes a working.
+
+- **Who.** Recording needs `working:['create']`, so a viewer cannot. The spell must be readable by the caller and complete: a draft or reopened spell refuses with an error that says so. Complete, update and delete are the recorder's alone (`created_by`); another member who can read the working is refused. A private working is read by its recorder and the members named on it.
+- **Visibility.** A working defaults to its spell's visibility and is never wider than it. A draft working moves either way; a complete one only widens (`assertWidens(current, next, 'working')`). Widening a spell leaves its workings as they were.
+- **Completing.** One `withAudit`: take `lockCovenStock`, plan with `planDeductions` (the same function the preview uses), mark the working complete, then call `decrementStock` per stocked step and write one `spell_working_deductions` row each (`quantity` taken, `shortfall` the rest). A jar floors at zero. A custom step, an unstocked step, a step with no quantity and a refused conversion write no deduction and come back as warnings with a reason. A failure in any deduction rolls back the completion.
+- **Participants.** A member is named by id, anyone else by name. Reads take names from `displayNamesOf`, so a removed member keeps the name their row last held.
+- **`deleteSpell`** soft-deletes the spell's workings in the same `withAudit`; participant and deduction rows have no `deleted_at`.
 
 ### The join names the ingredient, never the stock row
 

@@ -1,4 +1,10 @@
-import type { IngredientRow } from '@/db/repository';
+import type {
+  IngredientRow,
+  WorkingDeductionRow,
+  WorkingParticipantRow,
+  WorkingRow,
+} from '@/db/repository';
+import type { NotDeductedReason } from './plan-deductions';
 import type { IngredientVariantRow } from '@/modules/ingredients';
 import type { spellSteps } from './schema/spell-steps';
 import type { GRIMOIRE_ORDERS, spells } from './schema/spells';
@@ -61,3 +67,24 @@ export type SpellStepView = SpellStepRow & {
 
 /** What a spell's batched fields are keyed by: the spell, and the coven it is asked about in. */
 export type SpellKey = Pick<SpellRow, 'id' | 'workspaceId'>;
+
+export type { WorkingDeductionRow, WorkingParticipantRow, WorkingRow };
+
+/** A step a working took nothing for, with the step's name (null for an instruction) and why. */
+export interface WorkingWarning {
+  stepId: string;
+  position: number;
+  stepName: string | null;
+  reason: NotDeductedReason;
+}
+
+/** A participant with the name to show: a typed name as typed, a member under the name their row last held (null if none is readable). */
+export type WorkingParticipantView = WorkingParticipantRow & { displayName: string | null };
+
+/** A working with its participants, what it took from the jars, and the steps it took nothing for. */
+export interface WorkingReport {
+  working: WorkingRow;
+  participants: WorkingParticipantView[];
+  deductions: WorkingDeductionRow[];
+  warnings: WorkingWarning[];
+}

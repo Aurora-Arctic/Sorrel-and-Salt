@@ -15,6 +15,7 @@ import { invitationWrites } from './invitations';
 import { membershipWrites, workspaceWrites } from './memberships';
 import { spellStepWrites } from './spells';
 import { stockWrites } from './stock';
+import { workingWrites } from './workings';
 import { existsIn, selectFrom } from './select';
 import { StaleWrite } from '@/lib/errors';
 import type { Membership } from '@/modules/coven';
@@ -214,6 +215,7 @@ function writerFor(tx: Transaction, session: AuditSession): AuditWriter {
     ...membershipWrites(context),
     ...spellStepWrites(context),
     ...stockWrites(context),
+    ...workingWrites(context),
     ...workspaceWrites(context),
     delete: (table, match) => {
       const where = matching(table, match);

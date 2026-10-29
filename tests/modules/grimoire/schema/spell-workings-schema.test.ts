@@ -1,7 +1,7 @@
 import { beforeEach, describe, expect, it } from 'vitest';
 import type postgres from 'postgres';
 import { getTableConfig } from 'drizzle-orm/pg-core';
-import { findManyInSpell } from '@/db/repository';
+import { findWorkingsInSpell } from '@/db/repository';
 import { FIXTURE_USERS, WORKSPACE_W_ID } from '@/db/seed/standard';
 import { assertMembership } from '@/modules/coven';
 import { spellWorkingDeductions } from '@/modules/grimoire/schema/spell-working-deductions';
@@ -132,16 +132,14 @@ describe('spell_workings', () => {
 
   // The spell's own filter hides a working, not a cascade: the working row
   // is still there, live, when the spell is deleted.
-  it('is unreachable through findManyInSpell once its spell is deleted', async () => {
+  it('is unreachable through findWorkingsInSpell once its spell is deleted', async () => {
     const id = await working();
     const membership = await assertMembership(asUser(A), WORKSPACE_W_ID, { spell: ['read'] });
-    expect(
-      (await findManyInSpell(membership, spellWorkings, spellId)).map((row) => row.id),
-    ).toEqual([id]);
+    expect((await findWorkingsInSpell(membership, spellId)).map((row) => row.id)).toEqual([id]);
 
     await sql`update spells set deleted_at = now(), deleted_by = ${AUTHOR} where id = ${spellId}`;
 
-    expect(await findManyInSpell(membership, spellWorkings, spellId)).toEqual([]);
+    expect(await findWorkingsInSpell(membership, spellId)).toEqual([]);
     const [still] = await sql`select deleted_at from spell_workings where id = ${id}`;
     expect(still.deleted_at).toBeNull();
   });
