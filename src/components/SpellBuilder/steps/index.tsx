@@ -4,6 +4,7 @@ import { LiveRegion, useAnnouncement } from '@dnd-kit/accessibility';
 import { type ReactElement, useEffect, useId, useMemo, useRef, useState } from 'react';
 import { useFieldArray, useFormContext, useWatch } from 'react-hook-form';
 import { StepPicker, oneOffKey } from './picker';
+import type { QuickLookCoven } from '../step-quick-look';
 import { SortableSteps } from './sortable';
 import { BuilderStepRow } from './step-row';
 import type { SpellStepValue, SpellStepsValues } from './types';
@@ -17,7 +18,14 @@ import { isInstruction, newInstruction, stepNameOf, warningOf } from './values';
 // against it are the aside's (inventory.tsx, comparison-panel.tsx).
 // See claude-docs/components/spell-builder.md, "Steps".
 
-export function SpellSteps({ workspaceId }: { workspaceId: string }): ReactElement {
+export function SpellSteps({
+  workspaceId,
+  look,
+}: {
+  workspaceId: string;
+  /** The coven for each ingredient step's Quick Look; left out, the rows have none. */
+  look?: QuickLookCoven;
+}): ReactElement {
   const { control } = useFormContext<SpellStepsValues>();
   const { fields, append, remove, move } = useFieldArray({ control, name: 'steps' });
   const steps = useWatch({ control, name: 'steps' });
@@ -183,6 +191,7 @@ export function SpellSteps({ workspaceId }: { workspaceId: string }): ReactEleme
               open={openId === field.id}
               onToggle={() => setOpenId((was) => (was === field.id ? null : field.id))}
               onRemove={() => removeAt(index)}
+              look={look}
             />
           ))}
         </SortableSteps>

@@ -12,6 +12,7 @@ import SafetyNote, { SafetyMark } from '../../SafetyNote';
 import StepRow from '../../StepRow';
 import { UNIT_OPTIONS } from '../../StockFields';
 import type { SpellStepValue, SpellStepsValues } from './types';
+import { type QuickLookCoven, StepQuickLook } from '../step-quick-look';
 import { isInstruction, safetyOf, stepNameOf } from './values';
 
 // One step of the jar (M10.15, M13.3): the handle it is moved by (M10.16), then
@@ -31,6 +32,8 @@ export interface BuilderStepRowProps {
   open: boolean;
   onToggle: () => void;
   onRemove: () => void;
+  /** The coven for the Quick Look eye of an ingredient step; left out, the row has none. */
+  look?: QuickLookCoven;
 }
 
 /**
@@ -67,6 +70,7 @@ export function BuilderStepRow({
   open: openWanted,
   onToggle,
   onRemove,
+  look,
 }: BuilderStepRowProps): ReactElement {
   const {
     setValue,
@@ -150,7 +154,17 @@ export function BuilderStepRow({
       icon={step.icon}
       // The care the ingredient needs, kept in view beside the step and never in the way of
       // saving it (M10.18). A one-off has none to show: it draws nothing, not "safe".
-      marks={safety && <SafetyMark {...safety} />}
+      marks={
+        <>
+          {look && !instruction && step.ingredientId !== null && (
+            // A click inside the modal bubbles through React to the row, which would toggle it.
+            <span onClick={(event) => event.stopPropagation()}>
+              <StepQuickLook ingredientId={step.ingredientId} name={name} look={look} />
+            </span>
+          )}
+          {safety && <SafetyMark {...safety} />}
+        </>
+      }
       note={safety && <SafetyNote level={5} compact {...safety} />}
       badge={
         oneOff ? (

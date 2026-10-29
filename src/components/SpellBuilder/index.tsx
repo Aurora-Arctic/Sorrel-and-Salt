@@ -227,6 +227,7 @@ const SpellBuilder = ({
   // The spell this builder opened on. The dialog hands the builder a different
   // `spell` once the builder's own first save has moved the address to it; the
   // builder keeps what it opened with and carries the id its save returned.
+  const look = covenSlug === undefined ? undefined : { workspaceId, covenSlug };
   const [opened] = useState(spell);
   const [createdId, setCreatedId] = useState<string | null>(null);
   // True while a save the person asked for runs: the resolver then checks a blank new instruction too.
@@ -638,7 +639,7 @@ const SpellBuilder = ({
                 <div className="spell-jar-layout">
                   <div className="spell-jar-layout__list">
                     {jarReady ? (
-                      <SpellSteps workspaceId={workspaceId} />
+                      <SpellSteps workspaceId={workspaceId} look={look} />
                     ) : stepsRead === 'failed' ? (
                       <Notice kind="error">{STEPS_FAILED}</Notice>
                     ) : (
@@ -649,7 +650,7 @@ const SpellBuilder = ({
                   </div>
                   <JarAside
                     ready={jarReady}
-                    look={covenSlug === undefined ? undefined : { workspaceId, covenSlug }}
+                    look={look}
                     descriptionField={
                       <TextField<SpellBuilderValues>
                         name="jarDescription"

@@ -1,13 +1,13 @@
 'use client';
 
-import { type ReactElement, useRef, useState } from 'react';
+import type { ReactElement } from 'react';
 import { useFormContext, useWatch } from 'react-hook-form';
-import IconTip, { QuickLookButton } from '../IconTip';
-import { DuplicateQuickLook } from '../IngredientForm/quick-look';
+import IconTip from '../IconTip';
 import { JarDrawing, pickJarShape } from '../JarShelf';
 import { StockIcon } from '../StockBadge';
 import { stockState } from '../StockBadge/stock-state';
 import { amountText } from '../StockBadge/stock-words';
+import { type QuickLookCoven, StepQuickLook } from './step-quick-look';
 import { UnitsDifferIcon, NotEnoughIcon } from './supply-icon';
 import { type StepSupply, supplyOf } from './steps/supply';
 import type { SpellStepValue, SpellStepsValues } from './steps/types';
@@ -85,14 +85,12 @@ function HoldLine({
   look,
 }: {
   /** Where Quick Look opens: the coven's ids; left out, no line has the eye. */
-  look?: { workspaceId: string; covenSlug: string };
+  look?: QuickLookCoven;
   step: SpellStepValue;
   steps: readonly SpellStepValue[];
   seed: string;
 }): ReactElement {
   const { parts, verdict } = holdWords(step, steps);
-  const [looking, setLooking] = useState(false);
-  const eye = useRef<HTMLButtonElement | null>(null);
   const oneOff = step.ingredientId === null;
   const jar = step.jar;
   // The form only picks the vessel's shape here; it is not shown.
@@ -107,7 +105,7 @@ function HoldLine({
       <span className="spell-inventory__title">
         <span className="spell-inventory__name">{stepNameOf(step)}</span>
         {look && step.ingredientId !== null && (
-          <QuickLookButton ref={eye} name={step.name ?? ''} onClick={() => setLooking(true)} />
+          <StepQuickLook ingredientId={step.ingredientId} name={step.name ?? ''} look={look} />
         )}
         {verdict && (
           <span className={`spell-inventory__verdict is-${verdict.tone}`}>
@@ -120,18 +118,6 @@ function HoldLine({
         )}
       </span>
       <span className="spell-inventory__words">{parts.join(' · ')}</span>
-      {looking && look && step.ingredientId !== null && (
-        // Over the builder, so nothing typed is lost; the head reads only the name until the
-        // entry arrives, as the Add Ingredient form's duplicate Quick Look does.
-        <DuplicateQuickLook
-          id={step.ingredientId}
-          entry={{ name: step.name ?? '', canonicalName: '', nomenclature: 'unknown' }}
-          workspaceId={look.workspaceId}
-          pageHref={`/coven/${look.covenSlug}/ingredients/${step.ingredientId}`}
-          onClose={() => setLooking(false)}
-          returnTo={() => eye.current}
-        />
-      )}
     </li>
   );
 }
@@ -141,7 +127,7 @@ export function InCovenInventory({
   look,
 }: {
   steps: readonly SpellStepValue[];
-  look?: { workspaceId: string; covenSlug: string };
+  look?: QuickLookCoven;
 }): ReactElement {
   const lines = steps.filter((step) => !isInstruction(step));
   return (
@@ -170,7 +156,7 @@ export function InCovenInventory({
 export function SpellInventory({
   look,
 }: {
-  look?: { workspaceId: string; covenSlug: string };
+  look?: QuickLookCoven;
 }): ReactElement {
   const { control } = useFormContext<SpellStepsValues>();
   const steps = useWatch({ control, name: 'steps' }) ?? [];
