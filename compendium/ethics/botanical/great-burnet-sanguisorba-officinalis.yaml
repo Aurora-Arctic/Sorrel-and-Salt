@@ -1,0 +1,12 @@
+# Gathered for M14.29; the seed never reads this folder.
+entry: botanical/great-burnet-sanguisorba-officinalis
+status: approved
+listings:
+  - list: iucn
+    name: IUCN Red List of Threatened Species, as printed in Wikipedia's taxobox
+    value: LC
+    listedAs: Sanguisorba officinalis
+    scope: global
+    nameBasis: stated
+    source: wikipedia-iucn-sanguisorba-officinalis
+    locator: 'Taxobox: status = LC, status_system = IUCN3.1; its status_ref reads: "Sanguisorba officinalis", Maiz-Tome, L., 2016, e.T203458A78457167'

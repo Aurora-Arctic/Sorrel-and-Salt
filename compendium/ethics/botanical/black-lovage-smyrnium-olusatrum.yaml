@@ -1,0 +1,14 @@
+# Gathered for M14.29; the seed never reads this folder.
+entry: botanical/black-lovage-smyrnium-olusatrum
+status: needs-review
+listings:
+  - list: other
+    name: IUCN Red List category, as printed in Wikipedia without a named assessment
+    value: LC
+    listedAs: Smyrnium olusatrum
+    scope: not stated
+    nameBasis: stated
+    source: wikipedia-iucn-smyrnium-olusatrum
+    locator: 'Taxobox: status = LC, status_system = IUCN3.1; its status_ref is empty, so no assessment is named'
+questions:
+  - 'Wikipedia prints "LC" (IUCN 3.1) for Smyrnium olusatrum but names no assessment. Find the assessment, or drop the row? Recommendation: drop the row unless the assessment is found.'

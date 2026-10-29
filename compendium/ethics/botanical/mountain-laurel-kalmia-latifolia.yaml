@@ -1,0 +1,12 @@
+# Gathered for M14.29; the seed never reads this folder.
+entry: botanical/mountain-laurel-kalmia-latifolia
+status: approved
+listings:
+  - list: iucn
+    name: IUCN Red List of Threatened Species, as printed in Wikipedia's taxobox
+    value: LC
+    listedAs: Kalmia latifolia
+    scope: global
+    nameBasis: stated
+    source: wikipedia-iucn-kalmia-latifolia
+    locator: 'Taxobox: status = LC, status_system = IUCN3.1; its status_ref reads: "Kalmia latifolia", Stritch, L., 2018, e.T62002834A62002836'

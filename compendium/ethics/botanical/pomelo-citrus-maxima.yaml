@@ -1,0 +1,12 @@
+# Gathered for M14.29; the seed never reads this folder.
+entry: botanical/pomelo-citrus-maxima
+status: approved
+listings:
+  - list: iucn
+    name: IUCN Red List of Threatened Species, as printed in Wikipedia's taxobox
+    value: LC
+    listedAs: Citrus maxima
+    scope: global
+    nameBasis: stated
+    source: wikipedia-iucn-citrus-maxima
+    locator: 'Taxobox: status = LC, status_system = IUCN3.1; its status_ref reads: "Citrus maxima", Botanic Gardens Conservation International (BGCI).; IUCN SSC Global Tree Specialist Group, 2019, e.T62042732A147027490'
