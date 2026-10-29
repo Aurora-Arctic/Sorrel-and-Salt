@@ -96,13 +96,15 @@ const categoryNames = (
       {hidden.length > 0 && (
         <>
           {' · '}
-          <span className="chip chip--more" title={hidden.map(({ name }) => name).join(', ')}>
-            +{hidden.length}
-            <span className="visually-hidden">
-              {' '}
-              more: {hidden.map(({ name }) => name).join(', ')}
+          <IconTip tip={hidden.map(({ name }) => name).join(', ')} placement="above">
+            <span className="chip chip--more">
+              +{hidden.length}
+              <span className="visually-hidden">
+                {' '}
+                more: {hidden.map(({ name }) => name).join(', ')}
+              </span>
             </span>
-          </span>
+          </IconTip>
         </>
       )}
     </>
