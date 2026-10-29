@@ -1233,10 +1233,10 @@ describe('the spell builder’s Add to Jar categories', () => {
 
     expect(many).toHaveTextContent('Aid · +4');
     expect(within(many).getByText(/^\+4/)).toHaveTextContent('+4 more: Bind, Calm, Dawn, Ember');
-    // Hover shows the folded names: a title, as a tooltip button would steal the option's role.
-    expect(within(many).getByText(/^\+4/)).toHaveAttribute('title', 'Bind, Calm, Dawn, Ember');
     // Hovering the chip shows the folded names in the app's tip, not a native title.
-    fireEvent.mouseEnter(within(many).getByText(/^\+4/));
+    const chip = within(many).getByText(/^\+4/);
+    expect(chip).not.toHaveAttribute('title');
+    fireEvent.mouseEnter(chip.parentElement as HTMLElement);
     expect(await within(many).findByRole('tooltip', { hidden: true })).toHaveTextContent(
       'Bind, Calm, Dawn, Ember',
     );
