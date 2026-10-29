@@ -57,13 +57,21 @@ $recipe-column: 48rem;
 .spell-recipe__aside {
   @include entry-side;
 
-  > section {
+  // Heading to content as the entry page's side blocks space it (`.ingredient-entry__block`,
+  // a `stack(2)`): the panels ask for the same gap, but the page's own `section` rule
+  // (_layout.scss) outweighs their class alone and widened it to space(4), and gave them a
+  // margin (the owner, 2026-10-29).
+  > .comparison-panel,
+  > .spell-inventory {
+    gap: space(2);
     margin-block: 0;
   }
 
   h2 {
     margin: 0;
     font-size: heading-size(3);
+    // The h3's line, which the entry page's side headings are set in.
+    line-height: 1.2;
   }
 }
 
