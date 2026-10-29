@@ -8,7 +8,7 @@
     }
   },
   "rules": {
-    "no-console": "warn",
+    "no-console": "error",
     "no-restricted-imports": [
       "error",
       {
@@ -92,7 +92,24 @@
     "sorrel/spell-visibility-read-in-one-place": "error",
     "sorrel/compendium-review-mark-switch-only": "error",
     "sorrel/modal-focus-return-through-modal": "error",
-    "sorrel/long-form-guards-leaving": "error"
+    "sorrel/long-form-guards-leaving": "error",
+    "no-unused-vars": "error",
+    "no-unsafe-optional-chaining": "error",
+    "react-hooks/exhaustive-deps": "error",
+    "react/set-state-in-effect": "error",
+    "jsx-a11y/click-events-have-key-events": "error",
+    "jsx-a11y/no-static-element-interactions": "error",
+    "jsx-a11y/no-noninteractive-element-interactions": "error",
+    "jsx-a11y/interactive-supports-focus": "error",
+    "jsx-a11y/no-noninteractive-tabindex": "error",
+    "jsx-a11y/control-has-associated-label": "error",
+    "jsx-a11y/anchor-is-valid": "error",
+    "jsx-a11y/aria-role": [
+      "warn",
+      {
+        "ignoreNonDOM": true
+      }
+    ]
   },
   "ignorePatterns": ["public", ".next", "out"],
   "overrides": [
@@ -133,6 +150,12 @@
       "env": {
         "browser": true,
         "node": true
+      },
+      "rules": {
+        "react/globals": "off",
+        "react/immutability": "off",
+        "react/refs": "off",
+        "react/incompatible-library": "off"
       }
     },
     {

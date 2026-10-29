@@ -64,6 +64,7 @@ export function JarDetails({
   descriptionField: ReactNode;
 }): ReactElement {
   return (
+    // oxlint-disable-next-line jsx-a11y/prefer-tag-over-role -- a fieldset or details would add a legend or a disclosure; this is a plain labelled group
     <div className="jar-details" role="group" aria-label="Jar Details">
       <div className="jar-details__wax">
         <SpellJar />

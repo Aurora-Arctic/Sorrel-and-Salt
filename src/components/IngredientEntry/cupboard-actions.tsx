@@ -296,10 +296,12 @@ export default function CupboardActions(
           onSelect: () => ask('remove', removers, writes.remove),
         }
       : undefined;
+  // oxlint-disable-next-line react/refs -- the callback ref and handlers come from a hook and are only handed to the DOM, never read while rendering
   const covenItems = [stockItem, annotateItem, ownItem, removeItem].filter(
     (item): item is MenuButtonItem => item !== undefined,
   );
   // Remove is the one choice left in More: a lone choice is its own icon, so it is the bin.
+  // oxlint-disable-next-line react/refs -- the callback ref and handlers come from a hook and are only handed to the DOM, never read while rendering
   const bin = removeItem !== undefined && covenItems.length === 1 && editItem === undefined;
   useLayoutEffect(() => {
     binOnly.current = bin;

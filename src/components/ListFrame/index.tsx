@@ -52,6 +52,7 @@ const ListFrame = ({ className, children }: ListFrameProps): ReactElement => {
   // first entries rather than the top of the page.
   useEffect(() => {
     if (moving) return;
+    // oxlint-disable-next-line react/set-state-in-effect -- the state follows an outside value (a timer, a measurement or a focus request), so it can only be set from an effect
     setHeldHeight(undefined);
     if (!keepPlace.current) return;
     keepPlace.current = false;

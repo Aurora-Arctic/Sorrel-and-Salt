@@ -134,6 +134,7 @@ export function NoteMarks({
   if (numbers.length === 0) return null;
   const labelId = `${section}-marks`;
   return (
+    // oxlint-disable-next-line jsx-a11y/prefer-tag-over-role -- a fieldset or details would add a legend or a disclosure; this is a plain labelled group
     <div className="ingredient-entry__marks" role="group" aria-labelledby={labelId}>
       <p id={labelId} className="eyebrow">
         References

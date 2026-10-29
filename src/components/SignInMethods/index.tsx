@@ -154,6 +154,7 @@ const SignInMethods = ({
           >
             Sign In Again
           </BusyButton>
+          {/* oxlint-disable-next-line react/refs -- the callback ref and handlers come from a hook and are only handed to the DOM, never read while rendering */}
           {signInAgain.feedback}
         </div>
       )}

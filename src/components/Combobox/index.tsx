@@ -525,6 +525,7 @@ function Combobox<O extends ComboboxOption = ComboboxOption>({
             <span
               ref={tip.anchor}
               className="combobox__qualifier"
+              // oxlint-disable-next-line react/refs -- the callback ref and handlers come from a hook and are only handed to the DOM, never read while rendering
               onMouseEnter={tip.showSoon}
               onMouseLeave={tip.hideSoon}
             >
@@ -539,6 +540,7 @@ function Combobox<O extends ComboboxOption = ComboboxOption>({
                   className={
                     tip.open ? 'combobox__qualifier-tip is-open' : 'combobox__qualifier-tip'
                   }
+                  // oxlint-disable-next-line react/refs -- the callback ref and handlers come from a hook and are only handed to the DOM, never read while rendering
                   aria-hidden={!tip.open}
                   style={tip.bubbleStyle}
                 >

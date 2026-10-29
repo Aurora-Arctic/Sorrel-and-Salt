@@ -87,6 +87,7 @@ function Pick({ row, label, chosen, edited, flagged, onChoose }: PickProps): Rea
           {flagged && (
             <>
               <span className="spoken-separator">, </span>
+              {/* oxlint-disable-next-line jsx-a11y/prefer-tag-over-role -- a span with a name stands for a picture; an img would need a source */}
               <span className="stock-dialog__flag" role="img" aria-label="Needs a Fix">
                 !
               </span>
@@ -274,6 +275,7 @@ const StockDialogForm = ({
   useEffect(() => {
     if (focusIndex < 0) return;
     setFocus(`rows.${focusIndex}.quantityOnHand`);
+    // oxlint-disable-next-line react/set-state-in-effect -- the state follows an outside value (a timer, a measurement or a focus request), so it can only be set from an effect
     setFocusAdded(null);
   }, [focusIndex, setFocus]);
 
@@ -325,6 +327,7 @@ const StockDialogForm = ({
 
   return (
     <FormProvider {...methods}>
+      {/* oxlint-disable-next-line react/refs -- the callback ref and handlers come from a hook and are only handed to the DOM, never read while rendering */}
       <form className="form" noValidate onSubmit={handleSubmit(send)}>
         <div className="stock-dialog">
           <div className="stock-dialog__columns">
