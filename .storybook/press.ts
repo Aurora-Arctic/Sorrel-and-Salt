@@ -3,7 +3,6 @@ import { useEffect } from 'react';
 // A story that opens on a state a press reaches — a Delete question over its
 // form, say — presses the button once the story is drawn, as a person would,
 // rather than reaching into the component for a state it keeps to itself.
-// Three stories wrote this effect by hand before MB.115.
 
 /**
  * Presses the button named `name` now: the first whose text is `name`, or

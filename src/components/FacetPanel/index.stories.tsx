@@ -5,7 +5,7 @@ import type { CompendiumFacetCounts } from '../CompendiumList/types';
 import FacetPanel, { WIDE } from '.';
 import type { FacetPanelFilter } from './types';
 
-// Render-only; behaviour is asserted in tests/components/FacetPanel. Invented values (M12.4).
+// Render-only; behaviour is asserted in tests/components/FacetPanel. Invented values.
 // A change is held, not applied (the list's page holds it until Apply Filters or a close),
 // and marks the chips "loading" for a moment, as the live counts on their way do. The
 // counts themselves do not follow the choices; they are fixed here. A value counting

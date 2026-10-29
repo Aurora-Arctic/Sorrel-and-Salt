@@ -8,7 +8,7 @@ import Spinner from '../Spinner';
 // Render-only; the names, the menu and the busy plus are asserted in tests/components/AddIcon and
 // tests/components/CompendiumCards/add-icon.test.tsx. The workshop serves no /api/graphql, so a
 // press shows its refusal; Busy and Added are the plus's markup in those states, since only a
-// press reaches them. The names are invented (M1.25).
+// press reaches them. The names are invented.
 const meta = {
   title: 'Surfaces / Add Icon',
 } satisfies Meta;

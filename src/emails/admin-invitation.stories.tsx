@@ -36,7 +36,7 @@ const curatorMessage = () =>
 // Follows the toolbar's theme control, as the mail follows a reader's setting.
 const defaultNode = <EmailPreview message={message} />;
 
-// The same mail inviting to the curator role (M11.20).
+// The same mail inviting to the curator role.
 const curatorNode = <EmailPreview message={curatorMessage} />;
 
 const STATES_STATES: Record<string, ReactNode> = {

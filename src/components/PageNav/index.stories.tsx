@@ -10,8 +10,7 @@ const meta = {
 export default meta;
 type Story = StoryObj<typeof meta>;
 
-// Grouped: a run of entries under a group's label, as the ingredient page puts its forms under Forms
-// (M8.19). Grouped Apart: a group set apart by its first entry, as References is when the page has
+// Grouped: a run of entries under a group's label, as the ingredient page puts its forms under Forms. Grouped Apart: a group set apart by its first entry, as References is when the page has
 // notes: the break and the short rule halfway through it.
 export const States: Story = {
   render: () => (

@@ -83,7 +83,7 @@ const loadingNode = <Stateful categories={[]} pending />;
 
 const failedNode = <Stateful categories={[]} status="The categories could not be loaded." />;
 
-// The filter's reading (M12.4): each row and chip carries how many entries it
+// The filter's reading: each row and chip carries how many entries it
 // would leave, a zero row is left out, and a chip whose count is
 // still on its way holds a placeholder.
 const counted = CATEGORIES.map((category, index) => ({

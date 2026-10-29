@@ -64,7 +64,7 @@ const failedNode = (
   />
 );
 
-// The account page's Email section (MB.88): the section heads it, so the
+// The account page's Email section: the section heads it, so the
 // form has no heading of its own, and it never shows the confirmed view.
 export const Embedded: Story = {
   render: () => (

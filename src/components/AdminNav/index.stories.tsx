@@ -5,7 +5,7 @@ import { AdminContents } from '.';
 
 // Render-only; behaviour is asserted in tests/components/AdminNav. It takes
 // one prop, `managesPeople`: an admin sees every page, a curator all but
-// People (M11.20). The workshop's `usePathname`
+// People. The workshop's `usePathname`
 // stub answers `/admin/users` (.storybook/navigation.ts), the People page's
 // Users tab, so People is the current page unless a story opens another address. Each sits in the
 // admin layout as it is (`AdminFrame`): the nav in the context row led by

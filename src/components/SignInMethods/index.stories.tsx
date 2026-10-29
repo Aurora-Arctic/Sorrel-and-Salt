@@ -83,7 +83,7 @@ const someUnavailableNode = <Page linked={[DISCORD]} configured={['discord']} />
 // (PageNav), then the four sections, each on its own panel, Invitations with
 // none waiting. The `page-with-nav` class on the main is what lays the
 // sections out in two columns on a wide screen. Fixture props stand in for the session and the
-// row. Sign Out is not here: since MB.7 it sits only in the account menu.
+// row. Sign Out is not here: it sits only in the account menu.
 const WholeAccountPage = ({
   methods = { linked: [DISCORD], configured: ALL_PROVIDERS },
 }: {
@@ -155,7 +155,7 @@ const EveryRow = () => (
 const everyRowStateNode = <EveryRow />;
 // Add pressed on Google, as a person would, with the link request left
 // unanswered: the row's button reads "Adding" and waits, as it does while the
-// browser is on its way to the provider (M12.33).
+// browser is on its way to the provider.
 export const PendingAdd: Story = {
   beforeEach: ({ msw }) => msw.use(hangAuth()),
   render: () => {

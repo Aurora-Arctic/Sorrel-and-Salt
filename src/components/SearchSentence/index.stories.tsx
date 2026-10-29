@@ -5,7 +5,7 @@ import { buildSearchSentence } from '../IngredientSearch/sentence';
 import SearchSentence from '.';
 
 // Render-only; behaviour is asserted in tests/components/SearchSentence. Invented
-// values (M12.4). The search buttons stand in for a list's navigation: `pending` is
+// values. The search buttons stand in for a list's navigation: `pending` is
 // true until the "results" come back.
 const meta = {
   title: 'Ingredients / Search Sentence',

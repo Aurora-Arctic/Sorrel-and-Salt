@@ -6,7 +6,7 @@ import FormIcon from '../FormIcon';
 import FacetCombobox from '.';
 
 // Render-only; behaviour is asserted in tests/components/FacetCombobox. Invented
-// values and counts, as a filter reads them from a search (M12.4).
+// values and counts, as a filter reads them from a search.
 const meta = {
   title: 'Ingredients / Facet Combobox',
 } satisfies Meta;

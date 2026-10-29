@@ -59,7 +59,7 @@ const defaultNode = <DefaultView />;
 
 // In its own iframe: `showModal()` puts the dialog in the top layer, which in
 // the workshop's own document would cover Storybook's sidebar too.
-// The wide size, for a long form (M5.5): the compendium entry's is the first.
+// The wide size, for a long form: the compendium entry's is the first.
 const WideView = () => {
   const [open, setOpen] = useState(true);
   return (
@@ -99,7 +99,7 @@ const WideView = () => {
 const wideNode = <WideView />;
 
 /**
- * An edit dialog's head (MB.115): the eyebrow says what it does to what
+ * An edit dialog's head: the eyebrow says what it does to what
  * kind, the title which entry, by the name it was saved under, and a
  * qualifier after it, here a binomial in its italics. The name wraps rather
  * than pushing the × out, as the phone stories show.
@@ -138,7 +138,7 @@ const EditingView = () => {
 
 const editingNode = <EditingView />;
 
-// A modal a button opens (MB.119): however it closes, Close, Escape, a click
+// A modal a button opens: however it closes, Close, Escape, a click
 // outside or Done, the focus ring is back on the button.
 const ButtonModal = () => (
   <ModalButton label="Open" className="btn btn--solid" title="Add Category">
@@ -186,7 +186,7 @@ const openedByItsAddressNode = (
   </Reopenable>
 );
 
-// A route modal pressed open while its page is on its way (M9.18): the
+// A route modal pressed open while its page is on its way: the
 // pressed row's head over the form's skeleton, through a provider whose
 // navigation never arrives, since the workshop's router goes nowhere. Close
 // still leaves it, as the press being forgotten would in the app.
@@ -210,7 +210,7 @@ const loadingNode = <LoadingView />;
 
 /**
  * A form with a change, asked on opening whether to discard it, as Cancel,
- * Close, Escape or a click outside would ask (MB.115): over the form, which
+ * Close, Escape or a click outside would ask: over the form, which
  * is dimmed and held until it is answered. Escape, Close or a click outside
  * now flashes it, as each try while asking does. Keep Editing goes back to
  * the form, whose Cancel asks again; Discard Changes closes.
@@ -398,7 +398,7 @@ const askingToConfirmNode = (
 );
 
 // A picker and a multi-picker in a modal: Escape on an open list closes the
-// list alone, and a second Escape, the list shut, closes the modal (MB.115).
+// list alone, and a second Escape, the list shut, closes the modal.
 const WithPickersView = () => {
   const [open, setOpen] = useState(true);
   const [group, setGroup] = useState('');

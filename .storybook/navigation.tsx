@@ -14,7 +14,7 @@ import { PathnameContext } from 'next/dist/shared/lib/hooks-client-context.share
 
 /**
  * Sets the page the workshop pretends to be on, as a tabbed page's story does to
- * open another tab (MB.115). Next's `usePathname` reads it; without a wrapper the
+ * open another tab. Next's `usePathname` reads it; without a wrapper the
  * page in preview.tsx stands.
  */
 export const WorkshopPathname = {

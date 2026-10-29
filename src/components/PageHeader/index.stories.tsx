@@ -16,7 +16,7 @@ export default meta;
 type Story = StoryObj<{ state?: import('react').ReactNode }>;
 
 // The compendium's, the one admin page with a heading of its own since the
-// others went into tabs (MB.115).
+// others went into tabs.
 const AddIngredient = () => (
   <AddAction
     href={'/admin/compendium?new=ingredient-compendium' as Route}

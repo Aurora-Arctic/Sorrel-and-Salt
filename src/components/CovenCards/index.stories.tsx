@@ -127,7 +127,7 @@ export const WithLoneBin: Story = {
   ),
 };
 
-// A member's full foot (M8.17, M9.9): Edit or Annotate, the Edit Stock pencil, then More,
+// A member's full foot: Edit or Annotate, the Edit Stock pencil, then More,
 // with Delete on the coven's own entry and Make It Ours and Remove on a compendium entry.
 // The jar lines stay, a badge per jar; the forms line is gone from every coven card.
 const STOCK: Record<string, CovenCardEntry['stock']> = {

@@ -101,7 +101,7 @@ const expiredNode = <Page status="refused" message={EXPIRED} />;
 
 const declinedNode = <Page status="refused" message={DECLINED} />;
 
-// A link into a deleted coven (MB.119 decision f): its own reason, `closed`.
+// A link into a deleted coven: its own reason, `closed`.
 const DeletedCovenView = () => <Page status="refused" message={CLOSED} />;
 
 const deletedCovenNode = <DeletedCovenView />;

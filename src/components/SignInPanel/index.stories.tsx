@@ -64,7 +64,7 @@ const someUnavailableNode = <SomeUnavailableView />;
 
 // Continue with Google pressed, as a person would, with the sign-in request
 // left unanswered: that button reads "Signing In" and the others are disabled,
-// as while the browser is on its way to the provider (M12.33).
+// as while the browser is on its way to the provider.
 export const Pending: Story = {
   beforeEach: ({ msw }) => msw.use(hangAuth()),
   render: () => {

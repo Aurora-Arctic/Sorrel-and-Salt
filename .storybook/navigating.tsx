@@ -3,7 +3,7 @@ import { NavigationBar, NavigationProvider } from '../src/lib/navigation';
 import { WorkshopNavigation } from './navigation';
 
 // A navigation that never arrives, for the stories of the site's loading
-// standard (M12.33). The workshop's router goes nowhere, so a press would end
+// standard. The workshop's router goes nowhere, so a press would end
 // its wait at once. Here the router call suspends inside the same transition,
 // under an already-shown boundary, which keeps the transition pending as the
 // App Router does until a page renders: the page bar's state, the link's

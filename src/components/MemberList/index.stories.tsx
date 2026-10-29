@@ -6,7 +6,7 @@ import Notice from '../Notice';
 import type { MemberListEntry } from './types';
 
 // Render-only; behaviour is asserted in tests/components/MemberList. A
-// member's view leaves the addresses out; an owner's draws them (M11.19). The
+// member's view leaves the addresses out; an owner's draws them. The
 // controls are plain buttons standing in for the page's own, styled as the
 // admin user table styles its own: Change Role quiet, Remove destructive.
 const meta = {
@@ -71,7 +71,7 @@ const withActionsNode = (
 );
 
 // The page's composition: the sole-owner note inside the list frame, ahead of
-// the list, so the frame's gap spaces it (MB.119; src/app/(shell)/coven/[slug]/
+// the list, so the frame's gap spaces it (src/app/(shell)/coven/[slug]/
 // (people)/members/page.tsx). The note is the page's, not MemberList's.
 const SoleOwnerPage = () => (
   <ListFrame>

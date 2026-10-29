@@ -3,10 +3,9 @@ import type { AdminInvitationEntry } from '../src/components/AdminInvitations/ty
 import type { GroupKind } from '../src/components/GroupForm/types';
 
 // Invented rows the admin stories share, so a form's story and its list's
-// story offer the same groups and the same invitations: each story file kept
-// its own copy before MB.115. Every name is invented — Fixture, Mock, Stub —
-// never a real plant, tradition or person (M1.25), so no seed can ever hold
-// one of them.
+// story offer the same groups and the same invitations. Every name is
+// invented — Fixture, Mock, Stub — never a real plant, tradition or person, so no seed
+// can ever hold one of them.
 
 /** Four group names per kind of group, enough for a type-ahead to narrow as it is typed into. */
 export const GROUP_NAMES: Record<GroupKind, readonly string[]> = {

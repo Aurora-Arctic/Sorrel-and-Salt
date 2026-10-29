@@ -72,7 +72,7 @@ export const States: Story = {
   ),
 };
 
-// The New / Updated marker (MB.106): New and Updated on an ingredient card and in the entry
+// The New / Updated marker: New and Updated on an ingredient card and in the entry
 // page's heading area.
 const CARD = {
   href: route('/compendium/ingredients/testwort-testalis'),

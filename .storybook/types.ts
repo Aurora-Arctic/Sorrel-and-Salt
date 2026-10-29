@@ -6,7 +6,7 @@ import type { ADMIN_PAGES } from '../src/components/AdminNav/sections';
 export interface AdminFrameProps {
   /** The address the workshop pretends to be on, which decides the nav's current page. */
   open?: string;
-  /** False for a curator's nav, without People (M11.20); true by default. */
+  /** False for a curator's nav, without People; true by default. */
   managesPeople?: boolean;
   /**
    * Draw the app shell's bar above the admin row, as the site does, with the phone's bottom

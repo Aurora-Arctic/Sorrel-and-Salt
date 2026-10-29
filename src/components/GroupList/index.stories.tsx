@@ -97,7 +97,7 @@ const traditions = (names: readonly string[], query = '') =>
     };
   });
 
-// The traditions take a name search (MB.115), empty until one is asked.
+// The traditions take a name search, empty until one is asked.
 const traditionsNode = (
   <GroupList
     kind="tradition"

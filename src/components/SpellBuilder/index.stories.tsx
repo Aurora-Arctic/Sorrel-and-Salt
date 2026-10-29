@@ -10,7 +10,7 @@ import type { SpellBuilderSpell } from './types';
 // Render-only; behaviour is asserted in tests/components/SpellBuilder. The
 // builder talks to the network only when it saves (the autosave, three seconds
 // after a change, or Save), so nothing is mocked: a save in the workshop fails,
-// and the status beside Save reads "Couldn't save" with Retry (M13.17). The TanStack Query client comes from the
+// and the status beside Save reads "Couldn't save" with Retry. The TanStack Query client comes from the
 // workshop's global provider (.storybook/components.tsx).
 const meta = {
   title: 'Grimoire / Spell Builder',
@@ -78,7 +78,7 @@ const BUILDER_STATES: Record<string, ReactNode> = {
   // A saved spell, as its Edit opens it: its values, nothing to
   // save yet. Its moon phase is one of the eight, so the box draws its icon.
   'Saved Spell': <Page spell={SAVED} />,
-  // Its author alone sees it, so the visibility control is still open (M10.13);
+  // Its author alone sees it, so the visibility control is still open;
   // the saved spell above is the coven's, its control shut with the reason.
   'Private Spell': <Page spell={{ ...SAVED, visibility: 'private' }} />,
   'Share Question': <Page spell={{ ...SAVED, visibility: 'private' }} steps={[pickCoven]} />,

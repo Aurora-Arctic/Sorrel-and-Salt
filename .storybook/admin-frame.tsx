@@ -12,7 +12,7 @@ import { ShellFrame } from './shell-frame';
 import type { AdminFrameProps, AdminTabbedFrameProps } from './types';
 
 // The admin layout's frame for a story, so the workshop shows a component as
-// an admin page holds it: nine stories drew it by hand before MB.115. Not the
+// an admin page holds it. Not the
 // app's own `src/app/(shell)/admin/layout.tsx`, which is a server component that
 // reads the session; this is its markup alone, with the route-modal provider and the
 // section body it draws. The layout puts the context row, "Admin" and the nav,
@@ -33,7 +33,7 @@ const Opened = ({ at, children }: { at?: string; children: ReactNode }): ReactEl
  * `.page-column` column around `children`. `open` is the address the
  * workshop pretends to be on (./navigation.ts), which decides the nav's
  * current page; the People page's Users tab by default. `managesPeople`
- * false draws a curator's nav, without People (M11.20).
+ * false draws a curator's nav, without People.
  */
 export const AdminFrame = ({
   open,

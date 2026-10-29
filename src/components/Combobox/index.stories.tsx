@@ -127,7 +127,7 @@ export const TwoBuckets: Story = {
 /**
  * A pick's qualifier: "Wax" picked under Substance, reading "Wax (Substance)"
  * with the group muted, its description in a tooltip on hover or focus. An edit away from
- * the picked value drops it, as the form's field does (MB.169).
+ * the picked value drops it, as the form's field does.
  */
 export const Qualifier: Story = {
   render: () => {
@@ -216,7 +216,7 @@ const ListView = () => {
 export const FolkNameList: Story = { render: ListView };
 
 /**
- * A list whose order means something (MB.170): each chip moved by its handle,
+ * A list whose order means something: each chip moved by its handle,
  * the grip and text, dragged by pointer, or lifted with Space, moved with the
  * arrows and put down with Space. Enough chips to wrap onto a second row.
  */
@@ -278,7 +278,7 @@ export const Sortable: Story = {
 };
 
 /**
- * A list whose entries can only be picked, the references' (MB.154): its last
+ * A list whose entries can only be picked, the references': its last
  * row makes something new, "New Reference", whatever is typed, in place of
  * the typed row. Picking it says so beneath the box.
  */
@@ -439,7 +439,7 @@ export const MultiSelect: Story = {
 // before it, "Wax" picked under Substance, with a detail long enough to wrap.
 // Focus in the box or a hover on "(Substance)" opens the tooltip above the
 // box from its right edge, so the Form label stays clear; the first printable
-// key and the list opening close it (MB.115).
+// key and the list opening close it.
 const LONG_DETAIL =
   'A long description, as a curated form can carry: what the form is, how it is prepared, and what sets it apart from another form of the same name.';
 
@@ -506,7 +506,7 @@ export const Leading: Story = {
   },
 };
 
-/** A lookup under way (M12.33): the box is `aria-busy` and the ring turns in the indicator strip, beside the chevron. */
+/** A lookup under way: the box is `aria-busy` and the ring turns in the indicator strip, beside the chevron. */
 export const LoadingSearch: Story = {
   render: () => {
     const [value, setValue] = useState('moon');
@@ -528,7 +528,7 @@ export const LoadingSearch: Story = {
   },
 };
 
-/** The select-only box while its change is on its way (M12.33): the choice made stays shown, the box is `aria-busy` and carries the ring. */
+/** The select-only box while its change is on its way: the choice made stays shown, the box is `aria-busy` and carries the ring. */
 export const LoadingSelect: Story = {
   render: () => {
     const [value, setValue] = useState('fungal');

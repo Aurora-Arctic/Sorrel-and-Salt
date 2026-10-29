@@ -44,7 +44,7 @@ const twoProvidersNode = <EmailPreview message={twoProviders} />;
 // No linked account on record: the sentence stops at the address.
 const noProviderNode = <EmailPreview message={noProvider} />;
 
-// An existing account asking for this address (MB.54): the first sentence changes.
+// An existing account asking for this address: the first sentence changes.
 const changeNode = <EmailPreview message={change} />;
 
 const STATES_STATES: Record<string, ReactNode> = {

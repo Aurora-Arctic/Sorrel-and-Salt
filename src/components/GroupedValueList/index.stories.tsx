@@ -22,7 +22,7 @@ type Story = StoryObj<{ state?: import('react').ReactNode }>;
 const NO_FILTER: GroupedValueListFilter = { query: '', group: '' };
 
 // Each kind's groups enough to narrow: the group filter is typed into once
-// hydrated (MB.115), so typing in it shows its list narrowing.
+// hydrated, so typing in it shows its list narrowing.
 const CATEGORY_GROUPS = asSlugs(GROUP_NAMES.category);
 
 // Two of the seed's colour pairs, copied from src/db/seed/category-groups.ts,
@@ -145,7 +145,7 @@ const middlePageNode = (
   />
 );
 
-// Narrowed by part of a name and by a group (MB.178): the form shows both.
+// Narrowed by part of a name and by a group: the form shows both.
 const FilteredView = () => (
   <GroupedValueList
     kind="category"
@@ -204,7 +204,7 @@ const deitiesNode = (
   />
 );
 
-// The flat kinds (MB.95), here the celestial bodies: no group column and no
+// The flat kinds, here the celestial bodies: no group column and no
 // group filter. The zodiac signs draw the same.
 const flat = (kind: 'celestialBody' | 'zodiacSign', name: string, description: string) => {
   const slug = slugify(name);
@@ -250,8 +250,7 @@ const CategoriesPage = () => (
   </AdminTabbedFrame>
 );
 
-// The same page with a filter applied and the filtered list on its way (MB.115,
-// the owner's call): the filter row greyed and off, and the tabs' skeleton,
+// The same page with a filter applied and the filtered list on its way: the filter row greyed and off, and the tabs' skeleton,
 // rows and pager, in place of the list. The workshop's router goes nowhere,
 // so a list navigation provided above the page holds one on its way, as the
 // tabbed page's own Loading stories do.

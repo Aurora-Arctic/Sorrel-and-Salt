@@ -8,7 +8,7 @@ import UserList, { PauseControl } from '.';
 import type { UserListEntry } from './types';
 
 /**
- * A row as the page builds it: its name opens the user's modal (M9.19), an
+ * A row as the page builds it: its name opens the user's modal, an
  * address the workshop does not serve, under the head the page gives it.
  */
 const listed = (user: Omit<UserListEntry, 'openHref' | 'heading'>): UserListEntry => ({
@@ -23,7 +23,7 @@ const listed = (user: Omit<UserListEntry, 'openHref' | 'heading'>): UserListEntr
 
 // Render-only; behaviour is asserted in tests/components/UserList. The filter
 // and the pager reach `/admin/users`, and each name's privilege changes icon
-// `/admin/privilege-changes` (MB.200), neither of which the workshop serves;
+// `/admin/privilege-changes`, neither of which the workshop serves;
 // hover or focus an icon to see its tip.
 const meta = {
   title: 'Admin / User List',
@@ -54,7 +54,7 @@ const USERS: readonly UserListEntry[] = [
     emailVerified: false,
     primaryAdmin: false,
   }),
-  // Approved, so the row offers Revoke rather than Approve (M5.8).
+  // Approved, so the row offers Revoke rather than Approve.
   listed({
     id: 'u-cy',
     name: 'Cy Fixturewort',
@@ -62,7 +62,7 @@ const USERS: readonly UserListEntry[] = [
     role: 'user',
     canCreateWorkspace: true,
     createdAt: new Date('2026-06-07T08:09:10Z'),
-    // Facebook among them, so its mark shows (MB.63).
+    // Facebook among them, so its mark shows.
     providers: ['facebook', 'google'],
     emailVerified: true,
     primaryAdmin: false,
@@ -74,8 +74,7 @@ const USERS: readonly UserListEntry[] = [
 // admin changes, where a story gives it, beside the heading as the tab's
 // action.
 
-// The page as /admin/users draws it where impersonation is registered
-// (MB.53): the seven columns as signed off at MB.115, the facts no control
+// The page as /admin/users draws it where impersonation is registered: the seven columns, the facts no control
 // changes muted, Impersonate ruled in red at the right. Impersonate and Pause
 // Admin Changes each ask first; in the workshop the call reaches no server,
 // so confirming shows the refusal.
@@ -171,7 +170,7 @@ const withoutImpersonationNode = (
   </AdminTabbedFrame>
 );
 
-// MB.205: two users awaiting approval, one unverified and one verified. Approve
+// Two users awaiting approval, one unverified and one verified. Approve
 // on the first opens a confirmation warning that nobody has proved who holds
 // the address; on the second, none.
 const unverifiedApprovalNode = (
@@ -197,7 +196,7 @@ const unverifiedApprovalNode = (
   </AdminTabbedFrame>
 );
 
-// MB.59, M11.20: the primary admin, labelled, its Change Role in view but
+// The primary admin, labelled, its Change Role in view but
 // unusable with the reason beside it; every other row's Change Role opens its
 // choice of the roles the user does not hold, a promotion warning on Bo's
 // unverified address. Dee is a curator, in bold as an admin is, with no
@@ -237,7 +236,7 @@ const adminRolesNode = (
   </AdminTabbedFrame>
 );
 
-// MB.63: the switch as the Users tab's action beside the heading, as /admin/users draws it. Paused, to the primary admin: the warning and a
+// The switch as the Users tab's action beside the heading, as /admin/users draws it. Paused, to the primary admin: the warning and a
 // usable Resume, and every row's control usable, since the pause exempts it.
 const adminChangesPausedNode = (
   <AdminTabbedFrame page="people" action={<PauseControl paused canToggle />}>

@@ -35,7 +35,7 @@ const notOnTheCompendiumNode = <Page open="/" />;
 
 // Mid-wait: the nav's Compendium link already pressed, on an entry's page, so
 // the page has gone and the Compendium's cards stand in the frame's body
-// under the bar (M12.47). The wait never ends here; "Start Over" ends it.
+// under the bar. The wait never ends here; "Start Over" ends it.
 export const LoadingTheCompendium: Story = {
   render: () => (
     <Navigating press="Compendium">

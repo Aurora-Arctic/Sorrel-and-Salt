@@ -24,7 +24,7 @@ import type { EmailLayoutProps, InkProps, Part } from './types';
 // Zoho Mail reads no <style> at all and, in its Night mode, inverts every
 // inline colour it can see — so the dark is written in the two forms it leaves
 // alone: a gradient for a background, and an anchor around every run of text
-// (MB.262; the measurements are in email.md).
+// (the measurements are in email.md).
 
 const { dark, light } = EMAIL_THEMES;
 
@@ -85,7 +85,7 @@ function stylesheet(origin: string): string {
 }
 
 // How far the sorrel runs under the heading, in CSS pixels. Only the 32px bold
-// heading meets it, at 4.78:1 (measured in MB.118).
+// heading meets it, at 4.78:1.
 const OVERLAP = 56;
 
 // Word treats a unitless or fractional line height unreliably; this makes it keep the pixel one.
@@ -93,8 +93,7 @@ const OVERLAP = 56;
 const EXACT_LINES = { msoLineHeightRule: 'exactly' } as CSSProperties;
 
 // The margin every Paragraph ends on. The salt's padding is built from it, so
-// the photograph meets the text block's edge and never an icon: measured in
-// MB.118, the light salt's darkest pixel holds the muted ink at 2.14:1 and the
+// the photograph meets the text block's edge and never an icon: the light salt's darkest pixel holds the muted ink at 2.14:1 and the
 // link at 1.66:1, and no opacity fixes the link.
 const PARAGRAPH_GAP = 16;
 

@@ -86,8 +86,7 @@ const editingATraditionNode = (
 );
 
 // Delete Group pressed once drawn, as a person would: the first step, where
-// its categories go, asked over the form, which is dimmed and held beneath it
-// (MB.115).
+// its categories go, asked over the form, which is dimmed and held beneath it.
 export const AskingWhereToMove: Story = {
   render: () => {
     usePressOnMount('Delete Group');

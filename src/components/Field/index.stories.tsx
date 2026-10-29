@@ -370,7 +370,7 @@ export const RadioStrip: Story = {
   },
 };
 
-// The segmented layout (M12.4): a text bar, each segment's name with how many
+// The segmented layout: a text bar, each segment's name with how many
 // entries it would leave. The compendium filter's Toxic, and its Match without counts.
 export const RadioSegmented: Story = {
   render: () => {

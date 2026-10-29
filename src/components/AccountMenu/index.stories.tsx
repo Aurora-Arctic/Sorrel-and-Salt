@@ -69,7 +69,7 @@ const Opened = ({
 };
 
 // Each state is one menu, so one control chooses it. Closed has no links;
-// Closed With Invitations has two coven invitations waiting (M10.32): the dot
+// Closed With Invitations has two coven invitations waiting: the dot
 // on the disc. Open With One Invitation reads "1 Coven Invitation", singular.
 // Open On The Admin Page marks Admin as the current page. Open Unverified is
 // Sign Out alone, the account page not yet being reachable.

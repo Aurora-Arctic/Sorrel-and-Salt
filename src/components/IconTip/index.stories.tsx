@@ -42,7 +42,7 @@ const ROWS = ['Fixture Salt', 'Testwort', 'Fixture Ash'].map((name) => ({
   description: 'An invented entry, for the workshop.',
 }));
 
-// The columns an admin list has: the name with its Quick Look eye (M12.5), the labels, then the pencil in its own,
+// The columns an admin list has: the name with its Quick Look eye, the labels, then the pencil in its own,
 // unlabelled, at the row's end (a card's top right at a phone's width).
 const COLUMNS: StackColumn<(typeof ROWS)[number]>[] = [
   {

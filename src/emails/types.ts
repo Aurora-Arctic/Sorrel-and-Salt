@@ -34,7 +34,7 @@ export interface VerifyEmailProps extends BaseEmailProps {
 }
 
 export interface AdminInvitationProps extends BaseEmailProps {
-  /** The site role the invitation grants (M11.20). */
+  /** The site role the invitation grants. */
   siteRole: 'curator' | 'admin';
   /** The admin who sent the invitation. */
   inviterName: string;

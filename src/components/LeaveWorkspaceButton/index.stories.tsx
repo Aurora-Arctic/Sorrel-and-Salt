@@ -21,7 +21,7 @@ type ChosenStory = StoryObj<{ state?: ReactNode }>;
 
 const ID = '00000000-0000-0000-0000-000000000001';
 
-// Leave: a member just leaves. Only Owner (M6.16): Leave asks what happens to the coven, a hand-over
+// Leave: a member just leaves. Only Owner: Leave asks what happens to the coven, a hand-over
 // to a member searched by name, or the deletion. One other member: offered by name, with nothing to
 // search. Only Member: nobody else in the coven, so deletion is the whole answer.
 export const States: Story = {

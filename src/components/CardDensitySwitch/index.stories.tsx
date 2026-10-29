@@ -17,10 +17,9 @@ const meta = {
 export default meta;
 type Story = StoryObj<{ state?: import('react').ReactNode }>;
 
-// The switch as the coven ingredients page draws it, in the search row when narrow
-// (MB.120, review item 6; the owner's call, 2026-10-20): the word beside its switch on the
+// The switch as the coven ingredients page draws it, in the search row when narrow: the word beside its switch on the
 // Filters line, level with the button, and with Clear All showing it wraps beneath, at the
-// line's start. The real row (`CompendiumListFilter`, coven audience). Names are invented (M1.25).
+// line's start. The real row (`CompendiumListFilter`, coven audience). Names are invented.
 const NAMES = ['Testwort', 'Fixture Salt', 'Sample Root'];
 
 const CovenSearchRow = ({ filter }: { filter: Filter }): ReactElement => (

@@ -8,9 +8,8 @@ import {
 } from './parts/layout';
 import type { CovenInvitationProps } from './types';
 
-// M7.3's mail: the one place a coven invitation's link exists outside the
-// reader's inbox, since only its token's hash is stored and no response
-// carries it (claude-docs/db/invitations.md, "Inviting into a coven").
+// The one place a coven invitation's link exists outside the reader's inbox:
+// only its token's hash is stored (claude-docs/db/invitations.md, "Inviting into a coven").
 
 // The column's default, `now() + interval '7 days'`; nothing sets another.
 const LIFETIME = 'seven days';

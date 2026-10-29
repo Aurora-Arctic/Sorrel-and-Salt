@@ -7,8 +7,8 @@ import { route } from '../../../.storybook/route';
 
 // Render-only; the wrapping and the density are asserted in tests/components/IngredientCardList.
 // The same nine entries in every grid, for the two pages that use the list: the public
-// compendium (M8.18: no marks of whose, no jars, no actions) and the coven's Ingredients
-// page (M9.6: marks, jar lines, Edit and Delete). The preview ignores `meta.width`, so set
+// compendium (no marks of whose, no jars, no actions) and the coven's Ingredients
+// page (marks, jar lines, Edit and Delete). The preview ignores `meta.width`, so set
 // the viewport to see the columns change.
 const meta = {
   title: 'Ingredients / Ingredient Card List',
