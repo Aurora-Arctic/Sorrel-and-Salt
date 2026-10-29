@@ -86,10 +86,8 @@ export async function findOneInWorkspace<
 }
 
 /**
- * The live row with this id in the proof's workspace, or `undefined` —
- * including when the id is another workspace's. The scoped twin of
- * `findOneById`, for the same reason: a service cannot build the `where`
- * `findOneInWorkspace` wants.
+ * The live row with this id in the proof's workspace, or `undefined` (including another workspace's id): the scoped
+ * twin of `findOneById`, for a service that cannot build `findOneInWorkspace`'s `where`.
  */
 export function findOneByIdInWorkspace<
   TTable extends PgTable & WorkspaceScoped & NotVisibilityScoped & Identified,
@@ -98,12 +96,9 @@ export function findOneByIdInWorkspace<
 }
 
 /**
- * One page of non-soft-deleted rows in `(...sort, id)` order, each part
- * ascending, each row with the cursor it was found at: CLAUDE.md rule 8's
- * keyset half. `order` is the sort, or a `ListOrder` with the join, the
- * threshold and the carried values reading it takes; the id is always the
- * table's. `page` comes from `resolvePage` in `src/lib/pagination.ts`,
- * already clamped to the maximum.
+ * One page of live rows in `(...sort, id)` order, each with the cursor it was found at (CLAUDE.md rule 8). `order` is the
+ * sort or a `ListOrder` with a join, threshold and carried values; the id is always the table's. `page` comes from
+ * `resolvePage` in `src/lib/pagination.ts`, already clamped.
  */
 export function findPage<
   TTable extends PgTable & Unscoped & NotSpellScoped & NotIngredientScoped & Identified,
@@ -118,10 +113,8 @@ export function findPage<
 }
 
 /**
- * How many live rows `findPage` pages under the same `order` and `where`, and
- * how many come before `start` — a page's first row, none on an empty page —
- * in its order: "Page X of Y" for a list read through it. One statement, over
- * the page's own key, join and threshold.
+ * How many live rows `findPage` pages under the same `order` and `where`, and how many come before `start`, for
+ * "Page X of Y"; one statement over the page's own key, join and threshold.
  */
 export function findPageCount<
   TTable extends PgTable & Unscoped & NotSpellScoped & NotIngredientScoped & Identified,
@@ -150,10 +143,8 @@ export function findPageInWorkspace<
 }
 
 /**
- * The same, across the tiers `memberships` may read: the compendium, and each
- * coven one of them proves. No proofs pages the compendium alone. Inside the
- * folder only: a two-tier list is the repository's to build, so its finders
- * call this and a service calls them.
+ * The same across the tiers `memberships` may read; no proofs pages the compendium alone. Inside the folder only: a
+ * two-tier list is the repository's to build, so its finders call this and a service calls them.
  */
 export function findPageInTiers<
   TTable extends PgTable & WorkspaceScoped & NotVisibilityScoped & Identified,
@@ -182,14 +173,9 @@ export function findPageCountInTiers<
 }
 
 /**
- * The same, for `spells` or a table hung off a spell by `spell_id`
- * (`spell_steps`, the workings): only rows of spells this member may
- * read, under `readableSpells` — the coven's shared spells and the
- * reader's own private ones. The rule is ANDed here rather than left to a
- * caller's `where`, so a private spell never reaches a page (CLAUDE.md
- * rule 7). A child table has no `workspace_id`, so its coven and visibility
- * both come from the parent spell through a correlated `EXISTS`, as in
- * `findManyInSpell`.
+ * The same for `spells` or a table hung off one by `spell_id`: only rows of spells this member may read, under
+ * `readableSpells`, ANDed here so a private spell never reaches a page (CLAUDE.md rule 7). A child table has no
+ * `workspace_id`, so its coven and visibility come from the parent through a correlated `EXISTS`.
  */
 export function findPageInReadableSpells<
   TTable extends PgTable & Identified & (typeof spells | (SpellScoped & Unscoped)),
@@ -211,10 +197,8 @@ export function findPageInReadableSpells<
 }
 
 /**
- * How many rows `findPageInReadableSpells` would page under the same order and
- * `where`, and how many sit before `start`: the count a numbered pager reads.
- * It counts under the same `readableSpells` rule as the pages, so a
- * private spell never reaches another member's count either.
+ * How many rows `findPageInReadableSpells` would page under the same order and `where`, and how many sit before `start`,
+ * under the same `readableSpells` rule, so a private spell never reaches another member's count.
  */
 export function findPageCountInReadableSpells<
   TTable extends PgTable & Identified & (typeof spells | (SpellScoped & Unscoped)),
@@ -245,12 +229,8 @@ function readableSpellRows(
 }
 
 /**
- * A page of live rows under a scope the calling finder spells itself, for a
- * table none of the pagers above admits: `invitations`' site tier,
- * two-tier yet no compendium row, so neither `findPage` nor
- * `findPageInTiers`. Inside the folder only, as `selectFrom` is, and no
- * looser: the scope is the finder's own, and the tombstone filter is ANDed
- * here so the scope cannot forget it.
+ * A page of live rows under a scope the calling finder spells itself, for a table no pager above admits (`invitations`'
+ * site tier: two-tier yet no compendium row). Inside the folder only; the tombstone filter is ANDed here.
  */
 export function findPageInScope<TTable extends PgTable & Identified, Carried extends object>(
   table: TTable,
@@ -274,12 +254,9 @@ export function findPageCountInScope(
 }
 
 /**
- * `findPageInScope` without the tombstone filter: the scope decides alone
- * which deleted rows it admits. The coven's Ingredients list is its one
- * caller, whose scope admits a retired compendium entry only while
- * the coven's live cupboard row names it. A hatch, not a flag on
- * `findPageInScope`, so a scope that forgets the filter cannot reach it by a
- * default; `tests/guards/soft-delete-finder-guard.test.ts` pins its caller.
+ * `findPageInScope` without the tombstone filter: the scope decides which deleted rows it admits. Its one caller is the
+ * coven's Ingredients list, which admits a retired compendium entry only while the cupboard names it. A hatch, not a flag;
+ * `tests/guards/soft-delete-finder-guard.test.ts` pins its caller.
  */
 export function findPageInScopeIncludingSoftDeleted<
   TTable extends PgTable & Identified,
@@ -344,11 +321,8 @@ function isSortAlone<Carried extends object>(
 }
 
 /**
- * The escape hatch, for admin restore paths only. Named rather than a flag a
- * later edit could default the wrong way; any other bypass is named too, and
- * argued for in the diff — the two spell hatches in `spells.ts` are the only
- * others. Workspace-scoped tables are not reachable through it — v1 has no
- * restore UI, and the task that adds one adds its proof-scoped counterpart.
+ * The escape hatch for admin restore paths only. Named rather than a flag that could default the wrong way; the two spell
+ * hatches in `spells.ts` are the only other bypasses. Workspace-scoped tables are not reachable through it.
  */
 export function findManyIncludingSoftDeleted<
   TTable extends PgTable & Unscoped & NotSpellScoped & NotIngredientScoped,

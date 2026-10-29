@@ -30,10 +30,8 @@ import type {
 const SIMILARITY_THRESHOLD = 0.4;
 
 /**
- * The threshold `<%` reads: the query against the best-matching run of words
- * in a longer text, which whole-string `%` scores too low to find — `serpent`
- * is 0.12 similar to Ophiuchus's description and 1.0 word-similar. pg_trgm's
- * own default, set anyway so the server's configuration cannot move it.
+ * The threshold `<%` reads: the query against the best-matching run of words in a longer text, which whole-string `%`
+ * scores too low (`serpent` is 0.12 similar to a long description, 1.0 word-similar). Set anyway, so server config cannot move it.
  */
 const WORD_SIMILARITY_THRESHOLD = 0.6;
 
@@ -105,13 +103,9 @@ export async function selectFrom(
   const joined = order && 'leftJoin' in order ? order : undefined;
   const aggregated = order && 'aggregate' in order ? order : undefined;
   const keyed = keyset ?? tally?.count ?? aggregated?.over;
-  // A table is read whole, and a page adds its key — each part read as
-  // Postgres prints it: a `timestamptz` read into a Date loses its
-  // microseconds, and a cursor built from it would replay rows. A count reads
-  // its two numbers instead, a tally its aggregates, and a left join both
-  // rows, which Drizzle reads as null where every joined column is. A derived
-  // relation names its own columns. A table with a column no finder reads
-  // (`unread-columns.ts`) is read by name, without it.
+  //   // A table is read whole, and a page adds its key, each part as Postgres prints it: a `timestamptz` read into a Date
+  //   // loses microseconds and its cursor would replay rows. A count, tally, left join, derived relation and a table with
+  //   // columns no finder reads (`unread-columns.ts`) each read their own columns.
   const [source, selection] = is(relation, PgTable)
     ? [
         relation,
@@ -228,12 +222,8 @@ export async function selectOne<TTable extends PgTable>(
 }
 
 /**
- * Each carried value, one `sql` layer deeper. Selecting from one table with
- * no join, Drizzle renders a column written directly in a selected expression
- * without its table name, so a correlated subquery there — `… where
- * folk.ingredient_id = ingredients.id` — would compare the inner table with
- * itself. It unqualifies only the expression's own top-level columns, so one
- * wrapper keeps every name.
+ * Each carried value, one `sql` layer deeper. With no join, Drizzle renders a column in a selected expression without its
+ * table name, so a correlated subquery there would compare the inner table with itself; one wrapper keeps every name.
  */
 function carried(carry: object | undefined): Record<string, SQL> {
   return Object.fromEntries(
@@ -257,11 +247,8 @@ function countsOf({ count: order, start }: KeysetCount) {
 }
 
 /**
- * Runs a keyset read, in a transaction under the thresholds its key says its
- * `where` reads: the search's word threshold for `wordMatch`, the similarity
- * threshold for `similarityMatch`. A page and its count both come through
- * here, and so does a tally over a list, so all three read the same
- * rows: at the server's 0.6 a count would miss rows the pages hold.
+ * Runs a keyset read in a transaction under the thresholds its key says its `where` reads (word for `wordMatch`,
+ * similarity for `similarityMatch`). Pages, counts and tallies all come through here, so all read the same rows.
  */
 function readKeyed<T>(
   { wordMatch, similarityMatch }: Pick<KeyOrder, 'wordMatch' | 'similarityMatch'>,
@@ -277,11 +264,8 @@ function readKeyed<T>(
 }
 
 /**
- * Runs a read under these pg_trgm thresholds, each left at the server's when
- * absent: in a transaction that sets them with `set_config(…, true)`, which is
- * `SET LOCAL` with a bind parameter, so a setting ends with the transaction
- * and cannot ride a pooled connection onward. With neither, on `db` and in no
- * transaction.
+ * Runs a read under these pg_trgm thresholds, each left at the server's when absent, in a transaction setting them with
+ * `set_config(…, true)` (`SET LOCAL` with a bind parameter), so they end with it and never ride a pooled connection.
  */
 function readUnder<T>(
   thresholds: { similarity?: number; word?: number },
@@ -301,14 +285,9 @@ function readUnder<T>(
 }
 
 /**
- * A correlated `EXISTS` over `table` under `where`, for a finder whose scope
- * lives on a parent row — a spell's rows, an ingredient's children, a
- * membership's coven. The parent's `deleted_at IS NULL` is ANDed here, on the
- * table the subquery reads, so a deleted parent hides what hangs off it by
- * construction rather than by each caller remembering to say so. Returns
- * `SQL` rather than the builder: nothing can be appended to it or awaited, and
- * `where` names the outer row by its own table's columns, which Drizzle
- * qualifies, so the subquery correlates without an alias.
+ * A correlated `EXISTS` over `table` under `where`, for a finder scoped by a parent row. The parent's `deleted_at IS NULL`
+ * is ANDed on the table the subquery reads, so a deleted parent hides its children by construction. Returns `SQL`, so
+ * nothing can be appended or awaited, and `where` names the outer row by its own columns, correlating without an alias.
  */
 export function existsIn<TTable extends PgTable>(table: TTable, where: SQL | undefined): SQL {
   // Same cast as `selectFrom`'s: `.from()` is typed against the table's own
@@ -322,12 +301,8 @@ export function existsIn<TTable extends PgTable>(table: TTable, where: SQL | und
 }
 
 /**
- * `existsIn` without the parent's tombstone filter: a correlated `EXISTS`
- * over `table` under `where` alone. Only for `inUseIngredientParent` in
- * `ingredient-parent.ts`, which puts the filter back on one arm and, on the
- * other, admits a retired compendium entry only while the reading coven's
- * cupboard names it. Named as the escape hatches are, so no other
- * caller reaches it unnoticed.
+ * `existsIn` without the parent's tombstone filter, only for `inUseIngredientParent` in `ingredient-parent.ts`, which puts
+ * it back on one arm and admits a retired compendium entry on the other only while the coven's cupboard names it.
  */
 export function existsInIncludingSoftDeleted<TTable extends PgTable>(
   table: TTable,
@@ -348,10 +323,8 @@ function isDataException(error: unknown): boolean {
 }
 
 /**
- * A sort part as the order, the bound and the key all read it. An expression
- * is cast to its declared type here too, so the value ordered on is the value
- * its cursor text casts back to: `length(name)::real / 3` is
- * `double precision`, and compared against a `real` cursor it would replay rows.
+ * A sort part as the order, the bound and the key all read it. An expression is cast to its declared type, so the value
+ * ordered on is the one its cursor casts back to (`double precision` against a `real` cursor would replay rows).
  */
 function expressionOf(part: SortPart): SQL | SortColumn {
   return is(part, PgColumn) ? part : sql`cast(${part.expression} as ${sql.raw(part.type)})`;
@@ -363,8 +336,7 @@ function typeOf(part: SortPart): string {
 }
 
 /**
- * The cursor bounds: rows strictly after `after` and before `before` in
- * `(...sort, id)` order, whichever way the page walks.
+ * The cursor bounds: rows strictly after `after` and before `before` in `(...sort, id)` order.
  *
  * @throws {InvalidCursor} a cursor's key has more or fewer parts than `sort`.
  */
@@ -382,10 +354,7 @@ function rowKey({ sort, id }: KeyOrder): SQL {
 }
 
 /**
- * A cursor's position as the same row value, each part of its key cast back
- * to its part's own type, so it compares as the part does. A key with the
- * wrong number of parts names no position in this list, and is refused before
- * any read.
+ * A cursor's position as a row value, each part cast back to its part's own type so it compares as the part does.
  *
  * @throws {InvalidCursor} the key has more or fewer parts than `sort`.
  */
