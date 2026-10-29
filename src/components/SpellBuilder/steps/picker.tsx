@@ -255,12 +255,14 @@ export function StepPicker({ workspaceId, oneOffs, onAdd }: StepPickerProps): Re
           none pressed is no filter, one or more keeps ingredients carrying any of them. */}
       {assigned.size > 0 && (
         <div className="spell-steps__filter">
-          <span id={`${id}-filter-label`} className="spell-steps__filter-label">
-            Filter By Category
-          </span>
-          <InfoTip id={`${id}-filter-tip`} label="Filter By Category">
-            Show only ingredients in any of the pressed categories.
-          </InfoTip>
+          <div className="spell-steps__filter-head">
+            <span id={`${id}-filter-label`} className="spell-steps__filter-label">
+              Filter By Category
+            </span>
+            <InfoTip id={`${id}-filter-tip`} label="Filter By Category">
+              Show only ingredients in any of the pressed categories.
+            </InfoTip>
+          </div>
           <div
             role="group"
             aria-labelledby={`${id}-filter-label`}
