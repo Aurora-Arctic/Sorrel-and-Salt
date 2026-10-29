@@ -14,14 +14,10 @@ import type { ShellViewer, ShellWorkspace } from '../src/lib/types';
 import { WorkshopPathname } from './navigation';
 import type { ShellFrameProps } from './types';
 
-// The application shell around a story, as `src/app/(shell)/layout.tsx` and
-// the area layouts draw it: the bar, the context row, then the page. Not the
-// layouts themselves, which are server components that read the session; this
-// is their markup with fixture props, as ./admin-frame.tsx is for the admin
-// layout. The create page's row is the page's own, not a layout's, and the page
-// draws it only for someone with a coven to switch to, as `new` does here.
-// `role` is the admin area's: an admin sees People in its nav, a curator does
-// not, as the layout reads it from the session.
+// The application shell around a story, as `src/app/(shell)/layout.tsx` and the area layouts draw
+// it, in fixture-prop markup (the layouts are server components that read the session). The create
+// page's row is the page's own, drawn only for someone with a coven to switch to, as `new` does here.
+// `role` is the admin area's: an admin sees People in its nav, a curator does not.
 
 export const FIXTURE_VIEWER: ShellViewer = {
   name: 'Fixture Member',

@@ -42,14 +42,10 @@ import type {
 } from './types';
 import { EMPTY_VALUES, EMPTY_VARIANT } from './values';
 
-// Render-only; behaviour is asserted in tests/components/IngredientForm. The
-// workshop has no API, so the fake API (.storybook/mock-api.ts) answers: a
-// request naming one of the form's lookups gets the invented rows below,
-// filtered by what was typed, and a save is answered after a pause long enough
-// to watch Save wait. None of it leaves the page. "What to try" above the
-// form says what to type for each state. The TanStack Query client comes from
-// the workshop's global provider (.storybook/preview.tsx), as it does from the
-// app's root layout.
+// Render-only; behaviour is asserted in tests/components/IngredientForm. The fake
+// API (.storybook/mock-api.ts) answers lookups with the invented rows below,
+// filtered by what was typed, and a save after a pause. "What to try" above the
+// form says what to type. The query client comes from .storybook/preview.tsx.
 const meta = {
   title: 'Ingredients / Ingredient Form',
   // Every story is answered from the rows below, and the one that shows a wait
@@ -57,7 +53,6 @@ const meta = {
   beforeEach: ({ msw }) => msw.use(CANNED_API),
 } satisfies Meta;
 export default meta;
-// The dropdown story's `state` arg is the node it draws (see its argTypes mapping).
 type Story = StoryObj<{ state?: import('react').ReactNode }>;
 
 const WORKSPACE_ID = '00000000-0000-4000-8000-000000000000';
@@ -66,7 +61,7 @@ const WORKSPACE_ID = '00000000-0000-4000-8000-000000000000';
 const matches = (query: string, ...texts: (string | null)[]) =>
   texts.some((text) => text?.toLowerCase().includes(query.trim().toLowerCase()));
 
-// A curated row carries the id a pick sends (MB.169); one only in use has none.
+// A curated row carries the id a pick sends; one only in use has none.
 const FORMS: FormSuggestionsQuery['formSuggestions']['edges'][number]['node'][] = [
   {
     id: '00000000-0000-4000-8000-000000000101',
@@ -199,7 +194,7 @@ const DEITIES = [
 ];
 
 // The two Testworts differ only in forms and tier, which a picked pill's
-// tooltip tells (MB.164, MB.222). A row's forms are its variants.
+// tooltip tells. A row's forms are its variants.
 const INGREDIENTS = [
   {
     id: '00000000-0000-4000-8000-000000000201',
@@ -207,7 +202,7 @@ const INGREDIENTS = [
     canonicalName: 'Fixtura testalis',
     description: 'A fixture herb, for the workshop.',
     isGlobal: true,
-    // In forms, so a variant's substitutes rank it and offer it form by form (MB.115).
+    // In forms, so a variant's substitutes rank it and offer it form by form.
     variants: [
       { id: '00000000-0000-4000-8000-000000000401', form: 'Dried leaf', formChoice: null },
       { id: '00000000-0000-4000-8000-000000000402', form: 'Oil', formChoice: null },
@@ -242,7 +237,7 @@ const INGREDIENTS = [
 ];
 
 /**
- * What a linked substitute's summary reads of each ingredient above (MB.115):
+ * What a linked substitute's summary reads of each ingredient above:
  * its classification and correspondences, and each form's own, which add to
  * the ingredient's.
  */
@@ -276,10 +271,9 @@ const SUMMARIES = Object.fromEntries(
   ]),
 ) satisfies Record<string, IngredientSummaryQuery['ingredient']>;
 
-// Invented sources in both tiers — a book, an article by two authors and a
-// web page, so the rows show each short form — one long enough to wrap and
-// one carrying an address, rendered by the one renderer as the server
-// renders them. Each one's fields are kept whole, for the edit to open on.
+// Invented sources in both tiers (a book, an article by two authors, a web
+// page), one long enough to wrap and one with an address, rendered by the one
+// renderer the server uses. Each one's fields are kept whole for the edit.
 const SOURCE_FIELDS = new Map<string, CitationFields>();
 const source = (id: string, isGlobal: boolean, fields: CitationFields) => {
   SOURCE_FIELDS.set(id, fields);
@@ -362,10 +356,9 @@ const CATS_CLAW: PossibleDuplicatesQuery['possibleDuplicates']['edges'][number][
 const SAVE_DELAY_MS = 2000;
 
 /**
- * The seed's eight groups and their colour pairs, copied from
- * src/db/seed/category-groups.ts, which a component may not import (CLAUDE.md
- * rule 1), each with two invented categories (MB.126): the picker reads them
- * all, as one page.
+ * The seed's eight groups and colour pairs, copied from
+ * src/db/seed/category-groups.ts (a component may not import it, CLAUDE.md
+ * rule 1), each with two invented categories.
  */
 const CATEGORY_GROUPS = [
   ['Protection & Defense', '#5d8ab1', '#286ba6', ['Testward', 'Fixture Shield']],
@@ -599,10 +592,9 @@ const SAVES = new Set([
 ]);
 
 /**
- * The refusal a save meets, or undefined for a save that lands: a name holding
- * "taken" is refused on the name, one holding "refuse" as a whole, and one
- * holding "retired" on its first category picked, so each server error can be
- * seen. A new or edited reference is refused the same way by its title.
+ * The refusal a save meets, or undefined for a save that lands. A name holding
+ * "taken" is refused on the name, "refuse" as a whole, "retired" on its first
+ * category. A reference is refused the same way by its title.
  */
 function saveRefusal(operation: string, variables: Record<string, unknown>) {
   const input = variables.input as
@@ -610,7 +602,7 @@ function saveRefusal(operation: string, variables: Record<string, unknown>) {
   const field = operation.endsWith('Reference') ? 'title' : 'name';
   const name = String(input?.[field] ?? '');
   // A compendium save whose name holds "redirect" would take another entry's
-  // old address (MB.82), until it is sent again confirmed.
+  // old address, until it is sent again confirmed.
   if (
     /redirect/i.test(name) &&
     operation.endsWith('CompendiumIngredient') &&
@@ -677,7 +669,7 @@ type CompendiumFormProps =
       }
     : never;
 
-/** The form as the admin draws it over a compendium entry: no coven, so every lookup asks the compendium alone. */
+/** The form as the admin draws it over a compendium entry: lookups ask the compendium alone. */
 function CompendiumForm(props: CompendiumFormProps) {
   return (
     <IngredientForm
@@ -868,9 +860,8 @@ const cited = ({ citation, ...link }: (typeof SOURCES)[number], locator = '') =>
   locator,
 });
 
-// The entry the edit story opens: a celestial body listed, a category picked
-// (MB.126), three sources — a book, an article by two authors and a web
-// page — and two forms, one carrying details of its own.
+// The entry the edit story opens: a celestial body, a category, three sources (a
+// book, an article by two authors, a web page) and two forms, one with details.
 const ENTRY = {
   id: '00000000-0000-4000-8000-000000000301',
   values: {
@@ -878,8 +869,8 @@ const ENTRY = {
     name: 'Testwort',
     nomenclature: 'botanical',
     canonicalName: 'Fixtura testalis',
-    // Two forms (MB.221), the first with details of its own and the second
-    // with none, so their summary lines show both (MB.115).
+    // Two forms, the first with details of its own and the second
+    // with none, so their summary lines show both.
     variants: [
       {
         ...EMPTY_VARIANT,
@@ -893,11 +884,11 @@ const ENTRY = {
           description: null,
         },
         safetyNotes: 'Dry away from damp.',
-        // Its own toxic flag, the entry's left off (M11.21): its card line says so.
+        // Its own toxic flag, the entry's left off: its card line says so.
         toxic: true,
         celestialBodies: [{ value: 'Mercury' }],
         categoryIds: [CATEGORIES[0].id, CATEGORIES[1].id],
-        // A form's link names one form of what it links (MB.115): Fixturewort
+        // A form's link names one form of what it links: Fixturewort
         // in its one form, beside a name typed.
         substitutes: [
           {
@@ -924,8 +915,8 @@ const ENTRY = {
     ],
     description: 'A fixture herb, for the workshop.',
     celestialBodies: [{ value: 'Mercury' }],
-    // Two linked compendium entries, one in a form of it, and a name typed
-    // (MB.115): the linked chips lead with a link mark and open a summary.
+    // Two linked compendium entries (one in a form of it) and a typed name: the
+    // linked chips lead with a link mark and open a summary.
     substitutes: [
       { value: 'Fixturewort', link: linkOf(INGREDIENTS[2]) },
       {
@@ -942,10 +933,9 @@ const ENTRY = {
 };
 
 /**
- * Opens the form's section titled `title` once the story is drawn, as a
- * person opens it, by its heading: an edit opens with every section closed
- * (MB.115), and which are open is the form's own state. Within `root`, an
- * open variant's card, it opens that variant's section of the name.
+ * Opens the form's section titled `title` once the story is drawn, by its
+ * heading. An edit opens with every section closed. Within `root`, an open
+ * variant's card, it opens that variant's section of the name.
  */
 function openSection(title: string, root: ParentNode = document): void {
   [...root.querySelectorAll<HTMLButtonElement>('.collapsible-section__toggle')]
@@ -953,7 +943,7 @@ function openSection(title: string, root: ParentNode = document): void {
     ?.click();
 }
 
-/** Opens the entry's Dried leaf by its Edit, its sections closed as an edit's are, and returns its card. */
+/** Opens the entry's Dried leaf by its Edit, sections closed as an edit's are; returns its card. */
 function openDriedLeaf(): HTMLElement | null {
   const edit = document.querySelector<HTMLButtonElement>('button[aria-label="Edit Dried leaf"]');
   edit?.click();
@@ -1008,7 +998,7 @@ function WhatToTryOnTheCompendium({ editing }: { editing: boolean }) {
   );
 }
 
-/** The admin's form for a new compendium entry (M5.5): no coven, so every lookup asks the compendium alone. */
+/** The admin's form for a new compendium entry: no coven, so every lookup asks the compendium alone. */
 const CompendiumView = () => {
   return (
     <>
@@ -1041,7 +1031,7 @@ export const CompendiumEntrySectionOpen: Story = {
 /**
  * The same entry, a colour left typed in its box, saved: the save refuses the
  * text, and Correspondences, closed, opens on the error, flagged, the box
- * focused (MB.115). Submitted once drawn, Save being off until a change.
+ * focused. Submitted once drawn, Save being off until a change.
  */
 export const CompendiumEntrySaveError: Story = {
   render: () => {
@@ -1074,7 +1064,7 @@ export const CompendiumEntrySaveError: Story = {
 /**
  * The same entry with its first form open, as its Edit leaves it: the form's
  * own sections closed, as an edit's are, each summarising what it holds
- * (MB.115).
+ *.
  */
 export const CompendiumEntryVariantOpen: Story = {
   render: () => {
@@ -1102,7 +1092,7 @@ export const CompendiumEntryVariantSectionOpen: Story = {
 /**
  * A coven's new ingredient with a form just added from the New Form box: it
  * opens first of the cards with every one of its sections open, as a new
- * entry's are (MB.115). Typed and added once drawn, as a person would.
+ * entry's are. Typed and added once drawn, as a person would.
  */
 export const VariantAdded: Story = {
   render: () => {
@@ -1121,11 +1111,9 @@ export const VariantAdded: Story = {
 };
 
 /**
- * The same entry, Mockleaf, in no form at all, among its substitutes, with its
- * first form open, its Relations opened, and that form's Substitute
- * Ingredients copied (MB.115): Testwort links its Dried leaf, and the notice
- * beneath the list names Mockleaf, skipped, with Copy Anyway. Pressed once
- * drawn, as a person would.
+ * The same entry, Mockleaf, in no form, among its substitutes, with its first form
+ * open and that form's Substitute Ingredients copied. Testwort links its Dried
+ * leaf, and the notice names Mockleaf, skipped, with Copy Anyway. Pressed once drawn.
  */
 export const CompendiumEntryCopySkipped: Story = {
   render: () => {
@@ -1176,7 +1164,7 @@ export const CompendiumEntryEditSource: Story = {
 };
 
 /**
- * The same entry with its first linked substitute's summary open (MB.115):
+ * The same entry with its first linked substitute's summary open:
  * pressed once it is drawn, the summary being the chip's own state.
  */
 export const CompendiumEntrySubstituteSummary: Story = {
@@ -1192,9 +1180,9 @@ export const CompendiumEntrySubstituteSummary: Story = {
 };
 
 /**
- * The edit in its modal, as the admin compendium opens it: the eyebrow over
- * the entry's saved name and formal name, Open All / Close All beside them, and the header staying at the top as the form
- * scrolls beneath it (MB.115).
+ * The edit in its modal, as the admin compendium opens it: the eyebrow over the
+ * entry's names, Open All / Close All beside them, and the header staying at the
+ * top as the form scrolls.
  */
 const CompendiumEntryInModalForm = () => {
   return (
@@ -1224,7 +1212,7 @@ function scrollBody(share: number): void {
 /**
  * The edit in its modal, every section open and scrolled to the foot, where
  * Delete Ingredient is, and pressed: the question over the long form,
- * centred in the part in view, the form dimmed and held beneath it (MB.115).
+ * centred in the part in view, the form dimmed and held beneath it.
  */
 export const AskingToDeleteInModal: Story = {
   render: () => {
@@ -1242,10 +1230,9 @@ export const AskingToDeleteInModal: Story = {
 };
 
 /**
- * The edit in its modal, a change typed, every section open and scrolled half
- * way, then the Close button pressed: the unsaved changes' question over the
- * form, centred where the person had scrolled to (MB.115). Close again
- * flashes it.
+ * The edit in its modal with a change typed, every section open and scrolled half
+ * way, then Close pressed: the unsaved-changes question appears over the form,
+ * centred where the person had scrolled. Close again flashes it.
  */
 export const AskingToDiscardInModal: Story = {
   render: () => {
@@ -1265,7 +1252,7 @@ export const AskingToDiscardInModal: Story = {
   },
 };
 
-// Promoting a folk name (M12.1): the arrow on a saved folk name's chip, and the
+// Promoting a folk name: the arrow on a saved folk name's chip, and the
 // question it always asks.
 
 /** The entry with two saved folk names, which only a saved entry has. */
@@ -1280,7 +1267,7 @@ const PROMOTABLE = {
   },
 };
 
-/** The promotable entry's form, its Identity open, optionally with the question asked and a change made first. */
+/** The promotable entry's form, Identity open, optionally with the question asked and a change made. */
 function PromotableEntry({ asking, changed }: { asking: boolean; changed: boolean }) {
   useEffect(() => {
     openSection('Identity');
@@ -1321,7 +1308,7 @@ export const PromoteQuestionWithChanges: Story = {
 
 /**
  * A coven's ingredient: the question without the compendium's note that the
- * swap is global. The coven's form does not edit yet (M8.17), so the question
+ * swap is global. The coven's form does not edit yet, so the question
  * stands alone, open over nothing.
  */
 export const PromoteQuestionCoven: Story = {
@@ -1345,10 +1332,9 @@ export const PromoteQuestionCoven: Story = {
 };
 
 /**
- * A linked substitute's summary while its read is on the way (M12.33): the
- * chip pressed open, the request left unanswered, so the `line` skeleton
- * stands where the facts will be. The ingredient's id is fresh each time, so a
- * summary another story already read cannot answer from the cache.
+ * A linked substitute's summary while its read is on the way: the chip is pressed
+ * open and the request left unanswered, so the `line` skeleton shows. The
+ * ingredient's id is fresh each time, so no cached summary can answer.
  */
 export const LoadingSubstituteSummary: Story = {
   beforeEach: ({ msw }) => msw.use(hangAllOperations()),
@@ -1380,10 +1366,9 @@ export const LoadingSubstituteSummary: Story = {
   },
 };
 
-// The duplicates notice in its two states: the warning while a name is typed
-// against, and the same notice once a save is held on it, told apart by their
-// words as well as their colour. Built from fixed state rather than the
-// lookup, so both show at once.
+// The duplicates notice in its two states: the warning while a name is typed, and
+// the notice once a save is held on it, told apart by words as well as colour.
+// Built from fixed state rather than the lookup, so both show at once.
 const NEAR_MATCHES = CATS_CLAW.map((match) => ({
   ...match,
   isGlobal: true,
@@ -1431,8 +1416,6 @@ function Duplicates() {
 
 export const DuplicatesNotice: Story = { render: () => <Duplicates /> };
 
-// One story with a control to choose the state: each is a whole page or list,
-// too big to sit beside the others (claude-docs/workshop.md, rule 5).
 const STATES_STATES: Record<string, ReactNode> = {
   Coven: covenNode,
   Compendium: compendiumNode,

@@ -15,13 +15,11 @@ const meta = {
   title: 'Ingredients / Card Density Switch',
 } satisfies Meta;
 export default meta;
-// The dropdown story's `state` arg is the node it draws (see its argTypes mapping).
 type Story = StoryObj<{ state?: import('react').ReactNode }>;
 
-// The switch as the coven ingredients page draws it, in the search row when narrow
-// (MB.120, review item 6; the owner's call, 2026-10-20): the word beside its switch on the
-// Filters line, level with the button, and with Clear All showing it wraps beneath, at the
-// line's start. The real row (`CompendiumListFilter`, coven audience). Names are invented (M1.25).
+// The switch as the coven ingredients page draws it in the narrow search row
+// (`CompendiumListFilter`, coven audience): the word beside its switch on the
+// Filters line, wrapping beneath at the line's start when Clear All shows.
 const NAMES = ['Testwort', 'Fixture Salt', 'Sample Root'];
 
 const CovenSearchRow = ({ filter }: { filter: Filter }): ReactElement => (
@@ -72,8 +70,6 @@ const covenRowNode = <CovenSearchRow filter={NO_FILTER} />;
 // A form chosen, so Clear All is drawn and the switch wraps beneath.
 const covenRowFilteredNode = <CovenSearchRow filter={{ ...NO_FILTER, forms: ['Oil'] }} />;
 
-// One story with a control to choose the state: each is a whole page or list,
-// too big to sit beside the others (claude-docs/workshop.md, rule 5).
 // Switch: on by default. Toggling it sets `data-card-density` on the story frame's <html>
 // and writes localStorage, so it persists across stories until cleared.
 const STATES: Record<string, ReactNode> = {

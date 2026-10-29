@@ -28,11 +28,9 @@ const AdminName = () => (
   </PendingLink>
 );
 
-// The admin area's row: the word "Admin", the area's home link, in the display
-// face, the nav beside it; an admin's nav ends with People, a curator's does not. A coven's
-// row: the switcher is the lead, the coven's nav beside it, as a member sees it
-// (Overview and Members); a viewer's nav has no Members; the zero-coven row is
-// the switcher with nothing to choose but Create Coven.
+// Admin row: "Admin" home link, then the nav (an admin's ends with People). Coven
+// row: the switcher leads, then the coven's nav (a viewer's has no Members). The
+// zero-coven row is the switcher alone, with only Create Coven to choose.
 export const States: Story = {
   render: () => (
     <StatesGrid

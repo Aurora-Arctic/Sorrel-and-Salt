@@ -52,7 +52,7 @@ const BASE = {
 // the Toxic flag, so Toxic shows alone: it wins over Caution.
 const defaultNode = <IngredientCard {...BASE} kind="compendium" />;
 
-// A coven's own entry, with the jar lines M9.6 will fill the slot with.
+// A coven's own entry, with the jar lines in its slot.
 const ownWithJarsNode = (
   <IngredientCard {...BASE} kind="own">
     <Jars />
@@ -81,7 +81,7 @@ const mineralNameNode = (
 );
 
 // A compendium entry the cupboard holds, under its own label: the card shows neither Compendium
-// nor Annotated, which the entry page shows (the owner's call, 2026-10-20).
+// nor Annotated, which the entry page shows.
 const inCupboardNode = (
   <IngredientCard {...BASE} kind="cupboard" label="Our Testwort">
     <Jars />
@@ -151,11 +151,9 @@ const noFormalNameNode = (
   </IngredientCard>
 );
 
-// Two buttons in the foot, right-aligned beneath the jar lines (M9.9, M9.10). Each
-// sits above the card's link, so pressing one never opens the entry page. In the
-// app each opens the stock dialog; here each calls the handler the story was
-// given (logged in the Actions panel) and the line beneath the card names the
-// last one pressed.
+// Two buttons in the foot beneath the jar lines, each above the card's link so a
+// press never opens the entry page. Each calls its handler (logged in Actions);
+// the line beneath names the last one pressed.
 const withActionsNode = (
   onUse: () => void,
   onRestock: () => void,
@@ -183,7 +181,7 @@ const withActionsNode = (
 );
 
 // The coven's Quick Look eye in the start slot, at the foot's bottom left, with the
-// other actions kept at its right (M12.5). In a story the eye is a plain link.
+// other actions kept at its right. In a story the eye is a plain link.
 const withStartActionsNode = (onRestock: () => void): ReactNode => (
   <IngredientCard
     {...BASE}
@@ -228,7 +226,7 @@ const manyCategoriesNode = (
   </div>
 );
 
-// The compact look, which the coven's Ingredients page can choose (M9.6). The card has no
+// The compact look, which the coven's Ingredients page can choose. The card has no
 // density prop: an ancestor's `data-density` switches it, as `IngredientCardList` sets it.
 const compactNode = (
   <div data-density="compact">
@@ -247,7 +245,7 @@ const newAndUpdatedNode = (
 );
 
 // New or Updated sits just left of the safety badge in the card's top-right corner, and the
-// safety badge keeps the very corner (the owner's call, 2026-10-20). NewAndUpdated shows it beside the badge;
+// safety badge keeps the very corner. NewAndUpdated shows it beside the badge;
 // this shows the mark alone in the corner.
 const newWithoutSafetyNode = (
   <IngredientCard
@@ -258,7 +256,7 @@ const newWithoutSafetyNode = (
   />
 );
 
-// The newest edit across the ingredient's jars (M6.18): who, and when, under the jar lines.
+// The newest edit across the ingredient's jars: who, and when, under the jar lines.
 const lastEditedNode = (
   <IngredientCard
     {...BASE}

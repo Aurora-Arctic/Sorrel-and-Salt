@@ -1,11 +1,9 @@
 import type { CSSProperties, ReactElement, ReactNode } from 'react';
 
 /**
- * Every data state of one small component side by side, each under a small
- * heading with its name, so the workshop shows the set at once instead of one
- * story per state (claude-docs/workshop.md, rule 5). A state that needs a
- * canvas of its own (a click, an open dialog, a hanging request, a viewport) is
- * not a cell: it stays a story.
+ * Every data state of one small component side by side, each under its name (claude-docs/workshop.md,
+ * rule 5). A state needing a canvas of its own (a click, an open dialog, a hanging request, a
+ * viewport) is not a cell: it stays a story.
  */
 export function StatesGrid({
   states,

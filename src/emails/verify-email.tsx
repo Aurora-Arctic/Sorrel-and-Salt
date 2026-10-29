@@ -27,9 +27,8 @@ function providerList(providers: readonly ProviderId[]): string {
     : (labels[0] ?? '');
 }
 
-// No greeting by name, though the invitations open with one: this mail goes to
-// an address the account has not yet proved, and a mistyped one would hand a
-// stranger the name of the account that typed it (the owner's call, MB.118).
+// No greeting by name, unlike the invitations: the address is not yet proved, and a
+// mistyped one would hand a stranger the account's name.
 export function VerifyEmail({
   url,
   purpose = 'sign-up',

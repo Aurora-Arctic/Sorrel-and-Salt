@@ -1,7 +1,5 @@
-// primitives-base hung off the preview body, as the app hangs it off `body`, so a
-// story gets the same classes at the same specificity a page does. The class is
-// `where()`-wrapped so the scope adds none: `body:where(.workshop-app) .x` weighs
-// what `body .x` does (preview.tsx adds the class to the body).
+// primitives-base hung off the preview body, as the app hangs it off `body`, at the same
+// specificity. The class is `where()`-wrapped so the scope adds none (preview.tsx adds it to the body).
 
 @use '../src/scss/primitives' as *;
 

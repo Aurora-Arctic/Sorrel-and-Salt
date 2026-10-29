@@ -5,16 +5,13 @@ import { ENTRIES, jarLinesOf } from './story-fixtures';
 import IngredientCardList from '.';
 import { route } from '../../../.storybook/route';
 
-// Render-only; the wrapping and the density are asserted in tests/components/IngredientCardList.
-// The same nine entries in every grid, for the two pages that use the list: the public
-// compendium (M8.18: no marks of whose, no jars, no actions) and the coven's Ingredients
-// page (M9.6: marks, jar lines, Edit and Delete). The preview ignores `meta.width`, so set
-// the viewport to see the columns change.
+// Render-only; wrapping and density are asserted in tests/components/IngredientCardList.
+// The same nine entries for the public compendium (no marks, jars or actions) and
+// the coven's Ingredients page. The preview ignores `meta.width`; set the viewport.
 const meta = {
   title: 'Ingredients / Ingredient Card List',
 } satisfies Meta;
 export default meta;
-// The dropdown story's `state` arg is the node it draws (see its argTypes mapping).
 type Story = StoryObj<{ state?: import('react').ReactNode }>;
 
 const CompendiumCards = () => (
@@ -72,8 +69,6 @@ const defaultNode = <CompendiumCards />;
 const cupboardGridNode = <CupboardCards />;
 const cupboardGridCompactNode = <CupboardCards density="compact" />;
 
-// One story with a control to choose the state: each is a whole page or list,
-// too big to sit beside the others (claude-docs/workshop.md, rule 5).
 const STATES: Record<string, ReactNode> = {
   Default: defaultNode,
   'Cupboard Grid': cupboardGridNode,

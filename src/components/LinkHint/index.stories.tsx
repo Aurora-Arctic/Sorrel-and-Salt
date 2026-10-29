@@ -5,9 +5,8 @@ import Spinner from '../Spinner';
 import './index.scss';
 
 // The workshop has no Next router, so `useLinkStatus` (stubbed in
-// .storybook/UnoptimizedLink.tsx) is always false. The two states are drawn as
-// the markup `LinkHint` renders for each; behaviour is asserted in
-// tests/components/LinkHint.
+// .storybook/UnoptimizedLink.tsx) is always false. The two states are drawn as the
+// markup `LinkHint` renders; behaviour is asserted in tests/components/LinkHint.
 const meta = {
   title: 'Navigation / Link Hint',
 } satisfies Meta;

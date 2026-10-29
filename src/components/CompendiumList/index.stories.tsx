@@ -24,15 +24,12 @@ import {
 } from '@/modules/ingredients/schema/ingredient-enums';
 
 // Render-only; behaviour is asserted in tests/components/CompendiumList. The
-// filter reaches `/admin/compendium`, which the workshop does not serve. Each
-// story is the page as `src/app/(shell)/admin/compendium/page.tsx` draws it,
-// in the admin layout's frame (`AdminFrame`), at its width: a `main` holding
-// the page header with Add Ingredient, then the list.
+// filter reaches `/admin/compendium`, which the workshop does not serve. Each story
+// is the page from `src/app/(shell)/admin/compendium/page.tsx` in `AdminFrame`.
 const meta = {
   title: 'Ingredients / Compendium List',
 } satisfies Meta;
 export default meta;
-// The dropdown story's `state` arg is the node it draws (see its argTypes mapping).
 type Story = StoryObj<{ state?: import('react').ReactNode }>;
 
 // The page around the list: the layout's frame, then `main` with the heading
@@ -359,8 +356,6 @@ const FilterPanelOpenView = () => {
 };
 const filterPanelOpenNode = <FilterPanelOpenView />;
 
-// One story with a control to choose the state: each is a whole page or list,
-// too big to sit beside the others (claude-docs/workshop.md, rule 5).
 const STATES: Record<string, ReactNode> = {
   Default: defaultNode,
   'First Page': firstPageNode,

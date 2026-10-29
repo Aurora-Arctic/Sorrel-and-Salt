@@ -1,7 +1,6 @@
-// The token layer of src/app/globals.scss, and only that: importing it whole
-// would drop _typography.scss's element rules onto Storybook's own chrome. The
-// three theme blocks are a verbatim copy, kept in step with globals.scss, and
-// must not grow layout rules of their own.
+// The token layer of src/app/globals.scss and only that: importing it whole would drop
+// _typography.scss's element rules onto Storybook's chrome. The three theme blocks are a verbatim
+// copy, kept in step with globals.scss, with no layout rules of their own.
 
 @use '../src/scss/variables' as *;
 @use '../src/scss/mixins' as *;

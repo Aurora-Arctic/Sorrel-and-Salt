@@ -7,15 +7,13 @@ import { answerMutation, refusal, useMockHandlers } from '../../../.storybook/mo
 import StockDialog from '.';
 import type { StockForm, StockJar } from './types';
 
-// Render-only; behaviour is asserted in tests/components/StockDialog. In the
-// workshop the call reaches no server: the fake API (.storybook/mock-api.ts)
-// answers it, and the two refused states each get a refusal the real server can send. Every name is
-// invented.
+// Render-only; behaviour is asserted in tests/components/StockDialog. The fake API
+// (.storybook/mock-api.ts) answers the call, and the two refused states each get a
+// refusal the real server can send. Every name is invented.
 const meta = {
   title: 'Ingredients / Stock Dialog',
 } satisfies Meta;
 export default meta;
-// The dropdown story's `state` arg is the node it draws (see its argTypes mapping).
 type Story = StoryObj<{ state?: import('react').ReactNode }>;
 
 const WORKSPACE = '00000000-0000-4000-8000-000000000001';
@@ -77,11 +75,9 @@ const press = (selector: string): void =>
   document.querySelector<HTMLButtonElement>(selector)?.click();
 
 // The field issues a batch of two edits and a removal can earn, in the shape
-// src/graphql/errors.ts sends a ValidationError
-// (claude-docs/components/stock-dialog.md, "Saving"): an issue on each edited
-// jar's box, by its place in `update`. The server checks every row before it
-// reads a jar, so a refusal of this kind carries field issues only, and the
-// removal staged beside them earns none.
+// src/graphql/errors.ts sends a ValidationError (claude-docs/components/stock-dialog.md,
+// "Saving"): an issue on each edited jar's box. The server checks every row before
+// reading a jar, so this refusal carries field issues only.
 const REFUSED = [
   answerMutation(SaveStockDocument, () =>
     refusal({
@@ -111,19 +107,15 @@ const GONE = [
 // With neither state, a save is answered as accepted.
 const NONE: RequestHandler[] = [];
 
-// Pressed already, as after a click on the stock button: the dialog over the
-// page, Dried Leaf chosen and badged Low Stock (with every form held, Resin
-// is listed as unmeasured). With no jar, the fields' column holds its place
-// with the three shut, so the dialog is the size it will be once a form is
-// added.
-// `remove` then presses the chosen jar's bin, so its removal waits for Save.
-// `save` then types into the chosen jar's Quantity and presses Save, which
-// NOT_FOUND answers: the server's sentence in the alert above the fields, no
-// form marked, and what was typed kept.
-// `refuse` then edits Dried Leaf's Quantity and Oil's Low Stock At, removes
-// Resin and presses Save, which REFUSAL answers: both forms marked, Dried
-// Leaf (the first) chosen with its error in view, Resin still staged, and no
-// alert.
+// Pressed already, as after a click on the stock button: Dried Leaf chosen and
+// badged Low Stock (with every form held, Resin is listed as unmeasured). With no
+// jar, the fields' column holds its place so the dialog keeps its size.
+// `remove` presses the chosen jar's bin, so its removal waits for Save.
+// `save` types into the chosen jar's Quantity and presses Save, which NOT_FOUND
+// answers: the server's sentence in the alert, no form marked, input kept.
+// `refuse` edits Dried Leaf's Quantity and Oil's Low Stock At, removes Resin and
+// presses Save, which REFUSAL answers: both forms marked, Dried Leaf chosen with
+// its error in view, Resin still staged, no alert.
 const Pressed = ({
   jars,
   remove = false,
@@ -183,8 +175,6 @@ const openOnAFormNotHeldNode = <Pressed jars={[LEAF, OIL]} openOn={FORMS[2].vari
 // A modal draws in the page's own document, so its stories sit in a frame of
 // their own (claude-docs/workshop.md).
 
-// One story with a control to choose the state: each is a whole page or list,
-// too big to sit beside the others (claude-docs/workshop.md, rule 5).
 const STOCK_STATES: Record<string, ReactNode> = {
   Open: openNode,
   'Open On A Held Form': openOnAHeldFormNode,
