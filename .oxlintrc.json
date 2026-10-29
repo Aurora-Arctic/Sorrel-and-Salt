@@ -136,7 +136,12 @@
       }
     },
     {
-      "files": ["scripts/**/*.ts", "scripts/**/*.mjs"],
+      "files": [
+        "scripts/**/*.ts",
+        "scripts/**/*.mjs",
+        ".design-sync/**/*.mjs",
+        ".github/scripts/**/*.mjs"
+      ],
       "rules": {
         "no-console": "off"
       }

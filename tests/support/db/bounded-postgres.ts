@@ -24,6 +24,7 @@ function bounded(first?: string | ClientOptions, second?: ClientOptions) {
   // or anything else the server says still prints, as postgres.js would.
   const capped = {
     onnotice: (notice: postgres.Notice) => {
+      // oxlint-disable-next-line no-console -- a deliberate diagnostic: a server WARNING must still reach the run's output
       if (notice.severity !== 'NOTICE') console.log(notice);
     },
     ...options,

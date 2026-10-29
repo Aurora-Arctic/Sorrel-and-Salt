@@ -2,16 +2,12 @@
 
 import { useCombobox, type UseComboboxStateChangeOptions } from 'downshift';
 import {
-  type CSSProperties,
   type KeyboardEvent,
   type MouseEvent,
   type ReactElement,
-  type ReactNode,
   useEffect,
   useId,
-  useLayoutEffect,
   useMemo,
-  useRef,
   useState,
 } from 'react';
 import { chipColors } from '../../lib/chip-colors';

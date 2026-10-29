@@ -1,6 +1,6 @@
 import { act, fireEvent, render, screen, within } from '@testing-library/react';
 import { renderToString } from 'react-dom/server';
-import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
+import { afterEach, describe, expect, it, vi } from 'vitest';
 import { buildSearchSentence } from '@/components/IngredientSearch/sentence';
 import SearchSentence from '@/components/SearchSentence';
 import type { SearchSentenceProps } from '@/components/SearchSentence/types';

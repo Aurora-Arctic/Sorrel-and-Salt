@@ -3,7 +3,7 @@ import { beforeEach, describe, expect, it } from 'vitest';
 import postgres from 'postgres';
 import { useTestDatabase } from '../../support/db/database';
 import { fromRoot } from '../../support/paths';
-import { FIXTURE_USERS, WORKSPACE_W_ID } from '@/db/seed/standard';
+import { FIXTURE_USERS } from '@/db/seed/standard';
 
 // A migration test, retired once `0089` is in production's journal. `0089` is
 // the contract half of M13.1's renames: it refills `position` from

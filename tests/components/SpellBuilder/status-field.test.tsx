@@ -1,12 +1,7 @@
 import { QueryClientProvider } from '@tanstack/react-query';
 import { fireEvent, render, screen, waitFor } from '@testing-library/react';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
-import type {
-  CreateSpellMutation,
-  CreateSpellMutationVariables,
-  UpdateSpellMutation,
-  UpdateSpellMutationVariables,
-} from '@/gql/graphql';
+import type { CreateSpellMutation, CreateSpellMutationVariables } from '@/gql/graphql';
 import { makeQueryClient } from '@/lib/graphql-client';
 import type { SpellBuilderProps, SpellBuilderSpell } from '@/components/SpellBuilder/types';
 import { mockGraphQLMutation } from '../../support/msw/graphql';
@@ -71,22 +66,6 @@ function acceptCreate() {
     (variables) => {
       calls.push(variables);
       return { createSpell: answer('s1', 1, variables.input) };
-    },
-  );
-  return calls;
-}
-
-function acceptUpdate() {
-  const calls: UpdateSpellMutationVariables[] = [];
-  mockGraphQLMutation<UpdateSpellMutation, UpdateSpellMutationVariables>(
-    'UpdateSpell',
-    (variables) => {
-      calls.push(variables);
-      return {
-        updateSpell: answer(String(variables.id), (variables.input.expectedRevision ?? 0) + 1, {
-          ...variables.input,
-        }),
-      };
     },
   );
   return calls;

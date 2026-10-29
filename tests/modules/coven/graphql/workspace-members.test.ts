@@ -1,6 +1,6 @@
 import { isObjectType } from 'graphql';
 import { afterEach, beforeAll, beforeEach, describe, expect, it, vi } from 'vitest';
-import { WORKSPACE_W_ID, WORKSPACE_X_ID } from '@/db/seed/standard';
+import { WORKSPACE_W_ID } from '@/db/seed/standard';
 import { schema } from '@/graphql/schema';
 import { A, B, C, D, E, asUser } from '../../../support/as-user';
 import { sql, useRawClient } from '../../../support/db/probe-tables';
