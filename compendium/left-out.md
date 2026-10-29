@@ -560,3 +560,7 @@ A tradition is a people or a religion. These are medical systems, practices, reg
 
 - 816 Dragon Bones: the only source is a disambiguation page whose one relevant sentence says dragon bones (long gu) are fossilised remains of prehistoric life used in traditional Chinese medicine. It names no species or formal name and is too short for a description. It needs a source that says what the fossils are.
 - 826 Hisakaki (Eurya japonica): the only source (Wikipedia, oldid 1267052140) has three sentences on the plant (size, range, ornamental use, a sacred tree in Shinto whose leaves are offerings), too short for 100 words without padding. It needs a second source on its Shinto use.
+
+## M14.19 — West Asia and North Africa
+
+No row of the 60 (861 to 920) was left out; every one has an entry file. Thirty-two are `needs-review`, each with its questions in the file. Rows whose Wikipedia page is only a genus page, a common-name page or a short stub were written as `needs-review` with a "too thin" or identity question rather than cited for a formal name the page does not print.
