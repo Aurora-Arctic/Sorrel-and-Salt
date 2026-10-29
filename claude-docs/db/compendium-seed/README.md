@@ -240,6 +240,36 @@ These are the lane brief's hard rules, repeated in every content task:
 
 **What a source is recorded in.** An entry file's citations say which source supports which fields (`supports`), and each source is a work in `works.ts` or a file under `compendium/sources/`. Until M14.10 each shard also had a doc recording its sources; M14.10 moved those docs to `claude-docs/archive/compendium-seed-shards/`. From M14.10 a content task's pull request body carries its "What is left out, and why": each candidate row it did not write, and each value a source gave that is off a closed list, with the reason.
 
+### Conservation and closed-practice files
+
+M14.29 gathers, from sources, three kinds of fact about an entry: its conservation listings, any concern about taking an animal part, and any tradition a source says is closed. It gathers data only; it builds no warning (`claude-docs/backlog.md`). The files live in `compendium/ethics/`, beside `compendium/ingredients/`. **The seed never reads `compendium/ethics/`**: it reads only `ingredients/` and `sources/`, so nothing here changes an entry's hash.
+
+- **The folder.** `compendium/ethics/<nomenclature>/<entry-file-slug>.yaml`, mirroring the entry's path under `compendium/ingredients/`. A file is written only when there is something to record or to ask. An entry with nothing to record gets no file.
+- **The sources folder.** `compendium/ethics/sources/<handle>.yaml`, in the same shape as `compendium/sources/*.yaml`. Ethics sources never go in `compendium/sources/`, because the seed reads that folder. A source an entry already cites is copied across under the same handle. Fixed handles for the shared lists: `cites-appendices`, `ups-species-at-risk`, and `iucn-<genus>-<species>` for each IUCN assessment.
+- **`checked.md`.** `compendium/ethics/checked.md` lists each entry that was checked and has nothing to record, one line `<nomenclature>/<entry-file-slug>`, under a heading `## <task id>` for the task that checked it (`## M14.29` for the seeded entries). The heading also says which lists were checked against.
+
+A file has these fields. Leave out any section with nothing in it, and add no other key.
+
+| Field                  | Meaning                                                                                                                                         |
+| ---------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------- |
+| `entry`                | The entry's path under `compendium/ingredients/`, without `.md`, e.g. `botanical/american-ginseng-panax-quinquefolius`.                         |
+| `status`               | `approved`, or `needs-review` when any value is in doubt or a question is open. A `needs-review` file joins M14.13's review.                    |
+| `listings[]`           | One item per list that names the entry.                                                                                                         |
+| `listings[].list`      | `cites`, `iucn` or `other`.                                                                                                                     |
+| `listings[].name`      | The list's own title; for `other`, e.g. "United Plant Savers Species At-Risk".                                                                  |
+| `listings[].value`     | The category exactly as the source prints it, e.g. `Appendix II`.                                                                               |
+| `listings[].listedAs`  | The name the list prints.                                                                                                                       |
+| `listings[].nameBasis` | `stated` (the list prints this entry's formal name) or `resolved` (an authority maps the list's name to it; adds `resolvedBy`).                 |
+| `listings[].source`    | A handle in `compendium/ethics/sources/`.                                                                                                       |
+| `listings[].locator`   | Where in the source, e.g. `Appendix II, Araliaceae`.                                                                                            |
+| `animalPart[]`         | A concern about taking an animal part: `quote` (the source's words), `source`, `locator`.                                                       |
+| `closedPractice[]`     | A tradition a source names as closed or restricted: `tradition` (the vocabulary's name, or the source's wording), `quote`, `source`, `locator`. |
+| `questions[]`          | A question for the owner, with a recommendation.                                                                                                |
+
+Absence from a list means nothing to record. It does not mean the entry is safe or "Least Concern". A practice is never inferred to be closed from a tradition's name.
+
+**The formal-name rule applies to a listing.** A listing is this entry's only when the list prints this entry's formal name (`stated`), or an authority such as POWO says the list's name is a synonym of exactly this formal name (`resolved`). An assessment of another species, subspecies or synonym is not this entry's. A genus-level listing (CITES lists some genera whole) counts only where the list or an authority states that it covers this formal name. Any doubt makes the file `needs-review`, with the question under `questions`.
+
 ### Write-once, and how a correction lands
 
 The seed has two ways to meet an entry. Both apply to `approved` files only; a `draft` or `needs-review` file is never written. (This describes the seed from M14.7, reading the files from M14.10. Before M14.7 the seed was write-once over the TypeScript shards: it inserted an entry once and skipped it on every later run.)
