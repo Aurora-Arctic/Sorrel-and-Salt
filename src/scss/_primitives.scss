@@ -225,8 +225,10 @@
   // The spinner a save in flight shows is `Spinner`'s (src/components/Spinner).
 
   // The side padding is sized for a word, and reads as a gap before a small
-  // round mark, so the left side comes in a step while the spinner shows.
-  .btn[aria-busy='true'] {
+  // round mark, so the left side comes in a step while the spinner shows. Only while one
+  // does: a `PendingLink` button is busy on its way with no spinner in it (Quick Look's Edit
+  // Spell), and would lose its left side for nothing.
+  .btn[aria-busy='true']:has(.spinner) {
     padding-left: space(3);
   }
 
