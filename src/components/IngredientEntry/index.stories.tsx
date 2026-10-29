@@ -483,6 +483,9 @@ const compendiumEntryForCuratorNode = (
       deletedHref: '/compendium' as Route,
     }}
     replaces={COMPENDIUM_CASE}
+    reviewControl={
+      <ReviewMark ingredientId="00000000-0000-4000-8000-0000000000e1" reviewedAt={null} />
+    }
   />
 );
 
@@ -1115,5 +1118,18 @@ export const ReviewMarkReviewed: Story = {
       ingredientId="00000000-0000-4000-8000-0000000000e1"
       reviewedAt="2026-10-01T09:30:00.000Z"
     />
+  ),
+};
+
+// The switch where the Quick Look draws it (M14.8): as the last row of the head, the switch at
+// the start and the review day at the end.
+export const ReviewLineInTheQuickLook: Story = {
+  render: () => (
+    <div className="modal-dialog__under">
+      <ReviewMark
+        ingredientId="00000000-0000-4000-8000-0000000000e1"
+        reviewedAt="2026-10-01T09:30:00.000Z"
+      />
+    </div>
   ),
 };

@@ -212,7 +212,10 @@ describe('the review mark', () => {
   it('says a reviewed compendium entry is, and on what day', () => {
     render(<EntryMarks kind="compendium" reviewedAt={AT} />);
 
-    expect(reviewed()?.querySelector('time')).toHaveAttribute('datetime', AT);
+    // The day is the badge's tip, read as its description; the badge is the row's last.
+    expect(screen.getByRole('button', { name: 'Reviewed By Curator' })).toHaveAccessibleDescription(
+      'Reviewed 1 Oct 2026',
+    );
     expect(needsReview()).toBeNull();
   });
 

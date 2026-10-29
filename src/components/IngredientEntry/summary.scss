@@ -150,23 +150,8 @@
   color: $text-muted;
 }
 
-// The details modal's foot bar itself is in _primitives.scss, which every page loads (the Quick Look
-// of a spell draws it too). Only its variant with a control beside the link is here.
-.ingredient-details-foot {
-  // With a control beside the link (the admin's review switch, M14.8) the two share the bar, the
-  // link taking what the control leaves.
-  &--control {
-    align-items: center;
-    justify-content: space-between;
-    gap: space(4);
-    padding-inline: space(4);
-
-    > .btn {
-      width: auto;
-      flex: 1;
-    }
-  }
-}
+// The details modal's foot bar, with its variant that has a control beside the link, is in
+// _primitives.scss, which every page loads (the Quick Look of a spell draws it too).
 
 // The description and its Show More bar (the owner's calls, 2026-10-20). The
 // clip box round the paragraph is cut to six lines by the script, which sets

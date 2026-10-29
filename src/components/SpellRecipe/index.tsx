@@ -8,7 +8,8 @@ import type { SpellRecipeProps } from './types';
 
 // A saved spell as a page (MB.6): what it is for, its four facts, then its steps in
 // order, then its note (those are `SpellRecipeBody`, which the Quick Look modal draws too, M13.21). Read-only: Edit is the `action` slot's, for a role that may update
-// the spell (M13.10), and there is no Delete. Presentational: the page reads through the
+// the spell (M13.10), beside Delete Spell's bin for a role that may delete one (M13.11; both
+// `delete-spell.tsx`'s and the page's, not this component's). Presentational: the page reads through the
 // service and hands the values here. The steps are drawn here, read-only, until M13.3's
 // StepRow can be shown without a form around it. The page is the only view M10.22 styles for
 // print, so nothing here sets print rules. claude-docs/components/spell-recipe.md.

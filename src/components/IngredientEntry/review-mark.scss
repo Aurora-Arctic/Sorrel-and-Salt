@@ -1,10 +1,65 @@
 @use '../../scss/variables' as *;
 
-// The admin's review switch in the details' foot (M14.8), beside the link to the entry's page.
-// Tokens only, before the section's design review.
-.review-mark {
+// The curator's Reviewed switch (M14.8), on one line: the label beside a smaller track, with no
+// padding of its own, so it fits in a head's row and in the form's first row without making either taller. Tokens only, before the section's design review.
+// Under `body`, as the primitives are, so it outweighs the `.switch` rules it adjusts.
+body .review-mark {
   display: flex;
-  flex-direction: column;
-  align-items: flex-start;
+  flex-direction: row;
+  align-items: center;
+
+  .switch {
+    flex-direction: row;
+    align-items: center;
+    gap: space(1);
+
+    .field__label {
+      font-size: type-size('caption');
+      text-align: start;
+      white-space: nowrap;
+    }
+
+    .switch__control {
+      min-block-size: 0;
+    }
+
+    // Four fifths of the track's size, drawn from its inner edge so the label stays close.
+    input {
+      scale: 0.8;
+      transform-origin: right center;
+      margin-inline-start: calc(#{$switch-width} * -0.2);
+    }
+  }
+}
+
+// The review row (review-row.tsx): the standing badge and the day in muted caption text at the start, the switch at
+// the end. One hairline above it; the one below is the first section's own top border. Its block
+// padding is space(4), one step past a section head's space(3) (the owner's call), and its sides are the modal body's, so it adds none.
+body .review-row {
+  inline-size: 100%;
+  padding-block: space(4);
+  border-top: 1px solid $hairline;
+}
+
+body .review-row__line {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
   gap: space(2);
+}
+
+body .review-row__standing {
+  display: flex;
+  align-items: center;
+}
+
+// The busy ring in place of the thumb, at four fifths of its size and travel, as the track is.
+body .review-mark .switch .switch__spinner {
+  inline-size: calc(#{$glyph-size} * 0.8);
+  block-size: calc(#{$glyph-size} * 0.8);
+  inset-inline-start: calc(((#{$icon-size} - 2px - #{$glyph-size}) / 2 + 1px) * 0.8);
+}
+
+body .review-mark .switch input:checked ~ .switch__spinner {
+  translate: calc((#{$switch-width} - #{$icon-size}) * 0.8) -50%;
 }

@@ -41,6 +41,7 @@ export default function CompendiumDialog({
               key={entry?.id ?? 'new'}
               workspaceId={null}
               mayPromote
+              review={opened.review}
               entry={entry}
               // Save Ingredient opens the entry it saved, at the address its name
               // now spells; Save & Add Another stays on the new form, which clears

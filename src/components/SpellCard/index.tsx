@@ -5,6 +5,7 @@ import CategoryChips from '../CategoryChips';
 import LastEdit from '../LastEdit';
 import { EditLink, QuickLookLink } from '../IconTip';
 import LinkHint from '../LinkHint';
+import DeleteSpellAction from '../SpellRecipe/delete-spell';
 import type { SpellCardProps } from './types';
 import './index.scss';
 
@@ -26,6 +27,7 @@ const SpellCard = ({
   id,
   href,
   editHref,
+  deleteSpell,
   lookHref,
   title,
   intent,
@@ -87,12 +89,12 @@ const SpellCard = ({
       {purpose !== '' && <p className="spell-card__intent">{purpose}</p>}
       <CategoryChips categories={categories} label={name} />
       {/* In the foot, as IngredientCard's, so cards in one grid row end on the same line. */}
-      {(lastEdit != null || lookHref || editHref) && (
+      {(lastEdit != null || lookHref || editHref || deleteSpell) && (
         // The foot, as IngredientCard's: who last edited, then the actions on one row, the
-        // Quick Look eye at the bottom left (the start group) and the Edit pencil at the right.
+        // Quick Look eye at the bottom left (the start group) and the Edit pencil and the Delete Spell bin (M13.11) at the right.
         <div className="specimen__foot">
           {lastEdit != null && <LastEdit by={lastEdit.by} at={lastEdit.at} />}
-          {(lookHref || editHref) && (
+          {(lookHref || editHref || deleteSpell) && (
             <div className="specimen__actions">
               {lookHref && (
                 <span className="specimen__actions-start">
@@ -111,6 +113,7 @@ const SpellCard = ({
                   heading={{ eyebrow: 'Edit Spell', title: name }}
                 />
               )}
+              {deleteSpell && <DeleteSpellAction {...deleteSpell} spellId={id} name={name} />}
             </div>
           )}
         </div>

@@ -151,6 +151,8 @@ export interface SwitchFieldProps {
   onChange: (checked: boolean) => void;
   /** Shut: dashed, faded, its name dimmed. */
   disabled?: boolean;
+  /** A change is in flight: `aria-busy` on the toggle, which stays enabled (loading.md, "Control"). */
+  busy?: boolean;
   /** Optional: what the switch is for, behind an info tip beside the label. */
   hint?: string;
   /** Optional: a line under the toggle, read with it, saying what its state means (M10.13). */

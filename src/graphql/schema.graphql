@@ -848,6 +848,11 @@ type Mutation {
   """
   deleteIngredientFormValue(id: ID!): ID!
 
+  """
+  Soft-deletes a spell and its steps together; the spell's stock is untouched.
+  """
+  deleteSpell(id: ID!, workspaceId: ID!): ID!
+
   """A soft delete of the jar; the entry stays."""
   deleteStock(id: ID!, workspaceId: ID!): ID!
 

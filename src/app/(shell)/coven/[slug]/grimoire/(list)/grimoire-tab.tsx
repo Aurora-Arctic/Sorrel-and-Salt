@@ -3,7 +3,9 @@ import { lookHrefOf } from '@/components/GrimoireList/recipe-href';
 import type { ReactElement } from 'react';
 import { readCategories } from '@/app/compendium-reads';
 import GrimoireList from '@/components/GrimoireList';
+import Notice from '@/components/Notice';
 import DetailsDialog from '@/components/IngredientEntry/details-dialog';
+import { deletedHrefOf as deletedHrefFor } from '@/components/SpellRecipe/deleted-href';
 import SpellRecipeBody from '@/components/SpellRecipe/body';
 import SpellLookDialog from '@/components/SpellRecipe/look-dialog';
 import SpellDialog from '@/components/SpellBuilder/spell-dialog';
@@ -35,6 +37,12 @@ import { viewedDetailsOf } from '../../ingredients/viewed-details';
 // `?edit=<id>` for a saved spell, over the tab as it was, for a role that may write a spell. A viewer's opens
 // nothing. `?new` is shared with the shell's Add Ingredient, `?new=ingredient-coven-<slug>`, and its
 // value says which dialog (claude-docs/design-decisions/m10.12-spell-builder-modal.md).
+// A delete on a spell's page leaves for the tab it was listed on with `?deleted=<name>`
+// (M13.11), which the tab says in a success Notice above the list, read once: the next
+// address the tab builds drops it. The Notice is a status, so it is announced as the list
+// shows, and the heading the closing dialog gives the focus to stands above it.
+// A role that may delete one also gets the bin on each card and in the Quick Look, landing on this
+// address with `deleted` added (M13.11).
 // A role that may update a spell also gets each card's Edit pencil, a link to the tab's own
 // address with `?edit=<id>` added (M13.10), so closing the dialog returns to it as it was.
 // A function the two pages call rather than a component they draw, so each page is the
@@ -120,7 +128,11 @@ export async function grimoireTab({
   const spellId = typeof edit === 'string' ? RowId.safeParse(edit) : undefined;
   const canCreate = rolePermits(role, { spell: ['create'] });
   const canUpdate = rolePermits(role, { spell: ['update'] });
+  const canDelete = rolePermits(role, { spell: ['delete'] });
   const closeHref = GRIMOIRE_PARAMS.href(path, filter, { after, before });
+  // Where a delete from the card or the Quick Look lands: this tab as it was, filter and page
+  // kept, `?spell` dropped, with the name for the Notice.
+  const deletedHrefOf = (title: string | null): Route => deletedHrefFor(closeHref, title);
   const opened =
     opensNewSpell(single(adding) ?? null, workspace.slug) && canCreate
       ? {}
@@ -152,8 +164,15 @@ export async function grimoireTab({
       ? await readViewedEntry(membership, entryId)
       : undefined;
 
+  const deleted = single(query.deleted)?.trim();
+
   return (
     <>
+      {deleted && (
+        <Notice kind="success" className="page-frame__notice">
+          <strong>{deleted}</strong> was deleted.
+        </Notice>
+      )}
       <GrimoireList
         path={path}
         workspaceId={workspace.id}
@@ -163,6 +182,9 @@ export async function grimoireTab({
           ...spell,
           lookHref: lookHrefOf(closeHref, spell.id),
           ...(canUpdate && { editHref: editHrefOf(closeHref, spell.id) }),
+          ...(canDelete && {
+            deleteSpell: { workspaceId: workspace.id, deletedHref: deletedHrefOf(spell.title) },
+          }),
         }))}
         filter={filter}
         categories={counted}
@@ -181,6 +203,7 @@ export async function grimoireTab({
         closeHref={closeHref}
         opened={opened}
         canCreate={canCreate}
+        canDelete={canDelete}
         userId={membership.userId}
       />
       <SpellLookDialog
@@ -193,6 +216,13 @@ export async function grimoireTab({
                 lastEdit: looked.recipe.lastEdit,
                 recipeHref: `/coven/${workspace.slug}/grimoire/${looked.spell.id}` as Route,
                 ...(canUpdate && { editHref: editHrefOf(closeHref, looked.spell.id) }),
+                ...(canDelete && {
+                  deleteSpell: {
+                    workspaceId: workspace.id,
+                    spellId: looked.spell.id,
+                    deletedHref: deletedHrefOf(looked.spell.title),
+                  },
+                }),
                 children: (
                   <SpellRecipeBody
                     title={looked.spell.title}

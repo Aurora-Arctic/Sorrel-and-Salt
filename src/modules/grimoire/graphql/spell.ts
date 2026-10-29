@@ -3,7 +3,7 @@ import { sessionOf } from '../../../graphql/context-helpers';
 import { AuditInfo } from '../../../graphql/schema/audit';
 import { compareSpellCategories } from '../validation/categories/compare';
 import { listGrimoire, readSpell } from '../services/spell-reads';
-import { createSpell, updateSpell } from '../services/spells';
+import { createSpell, deleteSpell, updateSpell } from '../services/spells';
 import { clearSpell } from '../loaders/spell-children';
 import { GRIMOIRE_ORDERS, spellStatus, spellVisibility } from '../schema/spells';
 import type { SpellRow, SpellStepView } from '../types';
@@ -321,6 +321,24 @@ builder.mutationField('updateSpell', (t) =>
       });
       clearSpell(loaders, spell);
       return spell;
+    },
+  }),
+);
+
+// Answers the deleted id, not the entity: the page leaves by it, and a
+// deleted spell's steps and categories would resolve empty (M13.11).
+builder.mutationField('deleteSpell', (t) =>
+  t.id({
+    description: "Soft-deletes a spell and its steps together; the spell's stock is untouched.",
+    args: {
+      workspaceId: t.arg.id({ required: true }),
+      id: t.arg.id({ required: true }),
+    },
+    authScopes: { signedIn: true },
+    resolve: async (_root, { workspaceId, id }, { loaders, ...context }) => {
+      await deleteSpell(sessionOf(context), workspaceId, id);
+      clearSpell(loaders, { id, workspaceId });
+      return id;
     },
   }),
 );

@@ -12,7 +12,7 @@ import type {
   IngredientUpdateInput,
 } from '../../gql/graphql';
 import { graphqlRequest } from '../../lib/graphql-client';
-import { placeServerIssues } from '../../lib/graphql-failure';
+import { placeServerIssues, readGraphqlFailure } from '../../lib/graphql-failure';
 import BusyButton from '../BusyButton';
 import { ConfirmQuestion, useDiscardGuard, useModalHeaderNote } from '../Modal';
 import { PanelChangesContext, usePanelChanges } from './panel-changes';
@@ -26,6 +26,7 @@ import {
 import { PromoteIcon } from './icons';
 import { DeleteUsers } from './delete-users';
 import Notice from '../Notice';
+import { SetCompendiumEntryReviewedDocument } from '../IngredientEntry/review-mark';
 import { COMPENDIUM_EDIT_NOTICE } from './compendium-notice';
 import { NAMELESS_KIND, UNSETTLED_KIND } from '@/modules/ingredients/schema/ingredient-enums';
 import { CategoryField } from './categories';
@@ -85,6 +86,7 @@ import {
 } from './values';
 import { VariantsField, useVariantFolds } from './variants';
 import './index.scss';
+import ReviewRow from '../IngredientEntry/review-row';
 
 // Every property of an ingredient, validated by the shared schema before the
 // mutation is sent, and by the service again after. An error from either side
@@ -196,6 +198,7 @@ const IngredientForm = ({
   quickLookOf,
   entryHref,
   mayPromote = false,
+  review,
 }: IngredientFormProps): ReactElement => {
   // A null coven is the compendium: the classification answered, the
   // vocabulary boxes picked from the curated rows, and every lookup asking
@@ -324,7 +327,14 @@ const IngredientForm = ({
   // save or a delete does not. A reference panel's own edits count too:
   // they are in a form of their own, which `isDirty` never sees.
   const panels = usePanelChanges();
-  const discard = useDiscardGuard(isDirty || panels.changed);
+  // The Reviewed switch (M14.8), a field of the form that lives beside react-hook-form's
+  // values: it is not part of the entry's input, so it is saved on its own once the entry is. It
+  // counts as a change all the same, so Save enables, and Cancel and the guard ask, on a flip.
+  const [reviewed, setReviewed] = useState(review?.reviewed ?? false);
+  const [reviewedSaved, setReviewedSaved] = useState(review?.reviewed ?? false);
+  const reviewChanged = compendium && review !== undefined && reviewed !== reviewedSaved;
+  const changed = isDirty || reviewChanged;
+  const discard = useDiscardGuard(changed || panels.changed);
 
   // Open All / Close All: Close All while any section is open, so a press
   // from any mix folds the form to its summary lines, the view the sections
@@ -442,13 +452,27 @@ const IngredientForm = ({
   const deliver = async (input: IngredientFormInput, endRedirect: boolean): Promise<boolean> => {
     try {
       const row = await mutation.mutateAsync({ input, endRedirect });
+      // The review mark goes after the entry, which a new one has no id before. The entry is
+      // saved either way: a refusal here is said above the fields and leaves the switch changed.
+      let reviewRefusal: string | undefined;
+      if (reviewChanged) {
+        try {
+          await graphqlRequest(SetCompendiumEntryReviewedDocument, { id: row.id, reviewed });
+          setReviewedSaved(reviewed);
+        } catch (error) {
+          reviewRefusal = `Saved, but the review mark was not: ${readGraphqlFailure(error).alert}`;
+        }
+      }
       onSaved?.(row, next.current);
+      if (reviewRefusal) setRefusal(reviewRefusal);
       setSaved(row.name);
       // Save Ingredient's page opens what it made, so its form is about to go
       // and keeps its values; Save & Add Another clears for the next one. An
       // edit keeps what it saved, now nothing to save until it changes again.
       if (next.current === 'another') {
         setSaves((count) => count + 1);
+        setReviewed(review?.reviewed ?? false);
+        setReviewedSaved(review?.reviewed ?? false);
         // The next entry is a new one, so every section opens, as for this one.
         setOpen(new Set(SECTION_KEYS));
         variantFolds.setAll(true, 0);
@@ -831,6 +855,22 @@ const IngredientForm = ({
                       folds={variantFolds}
                     />
                   </div>
+                  {/* The compendium's review row (M14.8; the owner's call, 2026-10-29): a row of
+              its own after the last section and before the buttons, the same row the Quick Look
+              ends its head with. The last section's bottom border is the one line above it
+              (the row's own top line is off here, in index.scss); the buttons draw none. The
+              words show the saved state, the switch the form's own value, a field that Save
+              carries and Cancel discards. For a curator or admin only. */}
+                  {compendium && review && (
+                    <div data-focus-skip>
+                      <ReviewRow
+                        standing={reviewedSaved}
+                        reviewedAt={reviewedSaved === review.reviewed ? review.reviewedAt : null}
+                        checked={reviewed}
+                        onChange={setReviewed}
+                      />
+                    </div>
+                  )}
                   {/* Two saves, both held down from the press to the answer, the
               duplicate check included: Save Ingredient, first and so the
               default Enter presses, opens what it made; Save & Add Another
@@ -839,7 +879,7 @@ const IngredientForm = ({
               Delete apart at the far end, in either tier (M8.17). */}
                   <FormActions
                     noun="Ingredient"
-                    dirty={isDirty}
+                    dirty={changed}
                     submitting={isSubmitting}
                     busy={busy('open')}
                     saveValue="open"
@@ -857,7 +897,7 @@ const IngredientForm = ({
                       <BusyButton
                         type="submit"
                         value="another"
-                        disabled={!isDirty || isSubmitting}
+                        disabled={!changed || isSubmitting}
                         busy={busy('another')}
                         busyLabel="Saving Ingredient"
                       >
@@ -874,9 +914,12 @@ const IngredientForm = ({
                       folkName={promoting}
                       displayName={entry?.values.name ?? ''}
                       tier={compendium ? 'compendium' : 'coven'}
-                      dirty={isDirty || panels.changed}
+                      dirty={changed || panels.changed}
                       saveFirst={saveForPromotion}
-                      discardFirst={() => reset()}
+                      discardFirst={() => {
+                        reset();
+                        setReviewed(reviewedSaved);
+                      }}
                       onPromoted={promoted}
                       onKeep={() => setPromoting(null)}
                       onRefused={(message) => {

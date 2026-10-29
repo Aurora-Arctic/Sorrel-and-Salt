@@ -111,6 +111,15 @@ $recipe-column: 48rem;
   }
 }
 
+// The pencil and the bin (M13.10, M13.11) on one line at the heading's end, as the
+// ingredient entry's icons stand (`.ingredient-entry__cupboard--icons`).
+.spell-recipe__actions {
+  display: flex;
+  flex-wrap: nowrap;
+  align-items: center;
+  gap: space(2);
+}
+
 .spell-recipe__intent,
 .spell-recipe__note {
   margin: 0;
@@ -313,15 +322,30 @@ $recipe-column: 48rem;
   gap: space(4);
 }
 
-// The Quick Look foot (M13.21): the bar of `ingredient-details-foot` (in _primitives.scss),
-// with See Full Recipe at the start and Edit Spell at the end. With See Full Recipe alone the
-// bar's own centred two-thirds button stands.
-.ingredient-details-foot.spell-look-foot:has(> .btn:nth-child(2)) {
-  justify-content: space-between;
-  gap: space(3);
-  padding-inline: space(4);
+// The Quick Look's Edit and Delete icons (`formalActions`, wrapped in `.spell-look-actions`, so
+// the ingredient's Quick Look, which shares the Modal's slot, is left as it is). A spell has no formal
+// name to ride on, so the Modal's own placement puts them level with the head's `$icon-size` and
+// short of the right edge by the × reserve. Here they stand on the middle of the title's first
+// line (its `h2` size and line height, so a wrapped title keeps them on its first line) and run to
+// the dialog's right edge, beneath the × (the head stops short of it by the × width and a gap,
+// which the naming grid takes back). A wrapped title stays clear of them, being the grid's first column.
+.modal-dialog__naming:has(.spell-look-actions) {
+  margin-inline-end: calc(-1 * (#{$close-target} + #{space(3)}));
 
-  > .btn {
-    width: auto;
+  > .modal-dialog__formal-actions {
+    align-self: start;
+    margin-block: calc((#{heading-size(2)} * 1.15 - #{$action-icon-size}) / 2);
   }
+}
+
+.spell-look-actions {
+  display: contents;
+}
+
+// The Quick Look's head content (the Edited line, the title, the icons) stands lower than the
+// Modal's default, for room between the × and the bin beneath it (the owner's call, 2026-10-29).
+// The × is the header's own child and does not move. Scoped by the same hook, so the ingredient's
+// Quick Look is as it was.
+.modal-dialog__heading:has(.spell-look-actions) {
+  padding-block-start: space(3);
 }
