@@ -340,10 +340,12 @@ test(
       // The coven's jar of one root is empty, and of the other holds plenty.
       const empty = await localIngredient(sql, coven.id, A, {
         name: 'Fixture Emptywort',
+        nomenclature: 'none',
         variants: [makeVariant({ form: 'Root' })],
       });
       const full = await localIngredient(sql, coven.id, A, {
         name: 'Fixture Fullwort',
+        nomenclature: 'none',
         variants: [makeVariant({ form: 'Root' })],
       });
       await insertStock(sql, coven.id, empty, { quantity: 0, unit: 'g', threshold: 0 }, A);
