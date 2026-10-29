@@ -296,11 +296,6 @@
   font-style: italic;
 }
 
-// The next step's number, shown only where the button is a line of the list.
-.spell-steps__next {
-  display: none;
-}
-
 .spell-steps__body > .spell-steps__list {
   grid-column: 1 / -1;
   grid-row: 1;
@@ -321,7 +316,7 @@
     grid-column: 1;
   }
 
-  // The dashed last line of the list, numbered as the next step, full width.
+  // The dashed last line of the list, full width, with no number (the owner, 2026-10-29).
   .spell-steps__add-step {
     grid-column: 1;
     grid-row: 3;
@@ -332,11 +327,6 @@
     border: 1px dashed $hairline;
     background-color: transparent;
     color: $text-primary;
-  }
-
-  .spell-steps__next {
-    display: inline;
-    color: $text-muted;
   }
 }
 
