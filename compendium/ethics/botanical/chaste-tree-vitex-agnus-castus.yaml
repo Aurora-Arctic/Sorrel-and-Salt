@@ -1,0 +1,12 @@
+# Gathered for M14.29; the seed never reads this folder.
+entry: botanical/chaste-tree-vitex-agnus-castus
+status: needs-review
+listings:
+  - list: iucn
+    name: IUCN Red List of Threatened Species, as printed by Wikipedia
+    value: Data Deficient
+    listedAs: Vitex agnus-castus
+    scope: global
+    nameBasis: stated
+    source: wikipedia-vitex-agnus-castus
+    locator: 'taxobox status DD (IUCN3.1); reference printed: '

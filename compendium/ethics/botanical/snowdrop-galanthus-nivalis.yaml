@@ -1,0 +1,14 @@
+# Gathered for M14.29; the seed never reads this folder.
+entry: botanical/snowdrop-galanthus-nivalis
+status: needs-review
+listings:
+  - list: iucn
+    name: IUCN Red List of Threatened Species, as printed in Wikipedia's taxobox
+    value: NT
+    listedAs: Galanthus nivalis
+    scope: global
+    nameBasis: stated
+    source: wikipedia-iucn-galanthus-nivalis
+    locator: 'Taxobox: status = NT, status_system = IUCN3.1; its status_ref reads: "Galanthus nivalis", Crook, V., 2011, 10.2305/IUCN.UK.2011-1.RLTS.T162168A5551773.en'
+questions:
+  - 'The CITES Appendices (valid from 5 March 2026) list the whole genus: p. 61, Appendix II column, family AMARYLLIDACEAE, "Galanthus spp.", annotation #4. They do not print Galanthus nivalis by name, so the formal-name rule keeps this out of the listings. Owner: say whether a genus-wide listing may be recorded for this species. Recommendation: yes, as list: cites with nameBasis: resolved.'

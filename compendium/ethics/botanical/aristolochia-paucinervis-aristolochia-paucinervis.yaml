@@ -1,0 +1,12 @@
+# Gathered for M14.29; the seed never reads this folder.
+entry: botanical/aristolochia-paucinervis-aristolochia-paucinervis
+status: approved
+listings:
+  - list: iucn
+    name: IUCN Red List of Threatened Species, as printed by Wikipedia
+    value: Least Concern
+    listedAs: Aristolochia paucinervis
+    scope: global
+    nameBasis: stated
+    source: wikipedia-aristolochia-paucinervis
+    locator: 'taxobox status LC (IUCN3.1); reference printed: Rankou, H. et al. 2015, Aristolochia paucinervis, e.T53785726A53798727'

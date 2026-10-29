@@ -1,0 +1,12 @@
+# Gathered for M14.29; the seed never reads this folder.
+entry: botanical/neem-azadirachta-indica
+status: approved
+listings:
+  - list: iucn
+    name: IUCN Red List of Threatened Species, as printed in the Wikipedia taxobox
+    value: Least Concern
+    listedAs: Azadirachta indica
+    scope: global
+    nameBasis: stated
+    source: wikipedia-azadirachta-indica
+    locator: 'taxobox "Conservation status": Least Concern (IUCN 3.1)'

@@ -1,0 +1,12 @@
+# Gathered for M14.29; the seed never reads this folder.
+entry: botanical/kawakawa-piper-excelsum
+status: approved
+listings:
+  - list: iucn
+    name: IUCN Red List
+    value: Least Concern (IUCN 3.1)
+    listedAs: Piper excelsum
+    scope: global
+    nameBasis: stated
+    source: wikipedia-piper-excelsum
+    locator: taxobox, conservation status (status = LC, IUCN3.1)

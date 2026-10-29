@@ -1,0 +1,5 @@
+# Gathered for M14.29; the seed never reads this folder.
+entry: botanical/cyclamen-cyclamen
+status: needs-review
+questions:
+  - 'The CITES Appendices (valid from 5 March 2026) list the whole genus: p. 76, Appendix II column, family PRIMULACEAE, "Cyclamen spp.", annotation #4. The entry is the genus Cyclamen, so the listing names it directly, but covers every species and carries an exemption footnote for Cyclamen persicum specimens. Owner: say whether to record it. Recommendation: yes, as list: cites with nameBasis: stated, and the annotation quoted in the locator.'

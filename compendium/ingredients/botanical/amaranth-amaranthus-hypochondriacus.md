@@ -28,6 +28,9 @@ deities:
   - Artemis
   - Chalchiuhtlicue
   - Demeter
+  - Chicomecoatl
+  - Huitzilopochtli
+  - Xiuhtecuhtli
 categories:
   - Healing
   - Protection

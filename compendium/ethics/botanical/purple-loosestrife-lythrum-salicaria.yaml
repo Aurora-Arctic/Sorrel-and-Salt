@@ -1,0 +1,12 @@
+# Gathered for M14.29; the seed never reads this folder.
+entry: botanical/purple-loosestrife-lythrum-salicaria
+status: approved
+listings:
+  - list: iucn
+    name: IUCN Red List of Threatened Species, as printed in Wikipedia's taxobox
+    value: LC
+    listedAs: Lythrum salicaria
+    scope: global
+    nameBasis: stated
+    source: wikipedia-iucn-lythrum-salicaria
+    locator: 'Taxobox: status = LC, status_system = IUCN3.1; its status_ref reads: "Lythrum salicaria", Kavak, S., 2014, 10.2305/IUCN.UK.2014-1.RLTS.T164323A42329075.en'

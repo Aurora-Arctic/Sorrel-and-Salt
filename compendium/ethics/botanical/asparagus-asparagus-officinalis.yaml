@@ -1,0 +1,12 @@
+# Gathered for M14.29; the seed never reads this folder.
+entry: botanical/asparagus-asparagus-officinalis
+status: approved
+listings:
+  - list: iucn
+    name: IUCN Red List of Threatened Species, as printed in Wikipedia's taxobox
+    value: LC
+    listedAs: Asparagus officinalis
+    scope: global
+    nameBasis: stated
+    source: wikipedia-iucn-asparagus-officinalis
+    locator: 'Taxobox: status = LC, status_system = IUCN3.1; its status_ref reads: "Asparagus officinalis", Kell, S.P.; Rhodes, L.; Maxted, N., 2016, e.T176377A19392993'

@@ -12,6 +12,8 @@ deities:
   - Isis
   - Diana
   - Selene
+  - Lucina
+  - Luna
 categories:
   - Love
   - Peace
@@ -76,7 +78,7 @@ variants:
         supports:
           - form
           - description
-seedUpdate: 2ea7760d82d224e5e8229434fbce5cb413d2055723ce0c0594906d33dd8f41bc
+seedUpdate: 5ad80e05241dfefb26864352feef6d8baf9720fa94f1b41f333c8d2e9e3a2336
 ---
 
 # Silver

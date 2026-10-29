@@ -1,0 +1,14 @@
+# Gathered for M14.29; the seed never reads this folder.
+entry: botanical/coffee-coffea-arabica
+status: approved
+listings:
+  - list: iucn
+    name: IUCN Red List of Threatened Species, as printed by Wikipedia
+    value: Endangered
+    listedAs: Coffea arabica
+    scope: global
+    nameBasis: stated
+    source: wikipedia-coffea-arabica
+    locator: 'taxobox status EN (IUCN3.1); reference printed: Moat, J. et al. 2020, Coffea arabica, e.T18289789A174149937'
+questions:
+  - 'Approved by the owner 2026-10-29: the entry stays under the cultivated exception to the no-endangered-species rule (M14.29), because its source says the trade supply is cultivated. Nothing more to ask.'

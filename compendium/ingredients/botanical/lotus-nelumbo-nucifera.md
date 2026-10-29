@@ -39,6 +39,10 @@ deities:
   - Ra
   - Thoth
   - Vishnu
+  - Atum
+  - Brahma
+  - Buddha
+  - Nefertem
 categories:
   - Protection
   - Harmony
@@ -179,3 +183,7 @@ variants:
 # Lotus
 
 The sacred lotus is an aquatic perennial, one of just two living species in the family Nelumbonaceae, and often confused with the true water lilies, although modern classification places its nearest relatives among the sycamores. It roots in the mud of ponds and river beds, and its round leaves, up to a metre across, either float or stand high above the water on long stalks. The flowers, as much as 35 centimetres wide, are usually pink with a yellow centre, and the central cone ripens into the seed head. Its native range runs from East Asia through northern Indochina to central and northern India. It has been grown for its edible seeds for some three thousand years, and its starchy rhizomes are a common vegetable across Asia. It is the national flower of India, sacred in both Hinduism and Buddhism, and closely tied to Lakshmi and Vishnu. Kynes notes that Hindu texts make it an emblem of the womb and the life-giving mother, while Buddhists see the four elements in its rise from mud through water into air and sunlight. The ancient Egyptians held it sacred and offered it to their gods. In magical practice its scent is said to protect whoever breathes it in, and carrying any part of it is meant to win divine favour and good fortune.
+
+#### Edit Notes for Claude
+
+- Deity gap: Padma (Kynes's Plants, under "Lotus"), not in the vocabulary after M14.15: Padma is Sanskrit for lotus, or a river; no deity page was found.

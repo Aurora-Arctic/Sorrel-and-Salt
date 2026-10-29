@@ -512,3 +512,69 @@ Each name below is a slur. It was left out of the entry's `folkNames` on purpose
 - Pennyroyal: "Squaw Mint", printed by Cunningham under "Pennyroyal".
 - Spurge: "madwoman's milk", printed by Kynes under "Spurge" (as a folk name of sun spurge).
 - Wintergreen: "squaw vine", printed by the Wikipedia revision the entry cites (oldid 1376725677).
+
+## The deity and tradition vocabulary (M14.15)
+
+M14.15 widened `src/db/seed/deities.ts` from the M14.15 list in `claude-docs/db/compendium-seed/candidates.md` and from every "Deity gap" note in `compendium/ingredients/`. What it added is argued in `claude-docs/db/deity-vocabulary-seed.md`. This section is what it left out, with the reason. A note for a deity left out stays in its entry file under "Edit Notes for Claude", with the same reason.
+
+### Deities and figures left out of the vocabulary
+
+- Heme: a molecule, not a deity.
+- Rowen: a village, not a deity.
+- Dianus: a planthopper on Wikipedia; no deity page of the name was found.
+- Nanna: a disambiguation page (Norse and Sumerian figures); the note does not say which.
+- Carna: a Roman goddess some sources conflate with Cardea; the note does not say which it means.
+- Philyra: a disambiguation page; no source read fixes who she is.
+- Padma: Sanskrit for lotus, or a river; no deity page was found.
+- Anu: the Mesopotamian sky god, and also given as another name of the Irish Danu; the owner chooses.
+- Mara: a demon in Buddhism and a sea deity elsewhere; the note does not say which.
+- Marian: the note may mean the Virgin Mary, whom the vocabulary leaves out.
+- The Great Spirit: a term used across many peoples, so it belongs to no one tradition.
+- Erato, Phoebe, Althea: the note does not say which figure of the name it means.
+- Belinus and Bilé: legendary kings (of Britain, and in the Lebor Gabála), not deities.
+- Kupala: modern scholars deny that Kupala was an ancient Slavic deity.
+- Hoenin and Lodr: reading them as the Norse Hœnir and Lóðurr is an inference the notes do not make.
+- San Ku Fu Jen: no Wikipedia page or other open source was found.
+- The Furies: the Roman name of the Erinyes; the Erinyes row names the Eumenides only.
+- Irene: only a given name in the source read; the goddess is Eirene.
+
+### Traditions held for the owner
+
+These pairs name one tradition twice. Nothing is written for either name until the owner chooses (see the M14.15 report to the owner). Navajo and Diné, held here first, were merged on the owner's say-so on 2026-10-29 into one tradition, Navajo.
+
+- Traditional Korean medicine and Korean traditional medicine
+- Tibetan medicine, Tibetan folk medicine and Sowa-Rigpa
+- Traditional Chinese medicine and Chinese herbology
+
+These are also unwritten, for the reasons given:
+
+- Iroquois and Haudenosaunee; Dene and Athabaskan; Algonquian peoples; Anishinaabe: one name or a family of peoples, to be chosen by the owner.
+- Chinese, Palauan, Mouride brotherhood: Chinese is a nationality; Wikipedia has no page of its own for the Palauans; the Mouride brotherhood needs the owner's call.
+- Daoism, Chinese Buddhism, Japanese Buddhism, Shinto, Nahua and Mexica: the vocabulary already holds Taoist, Chinese Buddhist, Japanese and Aztec for them.
+
+### Traditions left out because they are not a people or a religion
+
+A tradition is a people or a religion. These are medical systems, practices, regions or nationalities: Ayurveda, Siddha, Unani, Sinhala folk medicine, Traditional Chinese medicine, Tibetan medicine, Traditional Mongolian medicine, Kampo, Traditional Korean medicine, Japanese incense, Chinese incense, African traditional medicine, Zimbabwean traditional medicine, West African and Central African traditional medicine, South African traditional medicine, Central African ordeal practice, East African animist practice, the Middle Eastern, Arabian, Arabic, Iranian, Iraqi, Jordanian, Lebanese, Moroccan, Saudi, Turkish, Yemeni, Omani and Emirati medicine and culinary entries, and the nationalities and regions Filipino, Vietnamese, Cambodian, Thai, Malaysian, Indonesian, Southeast Asian and Pacific Islander.
+
+## M14.19 — West Asia and North Africa
+
+No row of the 60 (861 to 920) was left out; every one has an entry file. Thirty-two are `needs-review`, each with its questions in the file. Rows whose Wikipedia page is only a genus page, a common-name page or a short stub were written as `needs-review` with a "too thin" or identity question rather than cited for a formal name the page does not print.
+
+## M14.18 — East Asia
+
+- 816 Dragon Bones: the only source is a disambiguation page whose one relevant sentence says dragon bones (long gu) are fossilised remains of prehistoric life used in traditional Chinese medicine. It names no species or formal name and is too short for a description. It needs a source that says what the fossils are.
+- 826 Hisakaki (Eurya japonica): the only source (Wikipedia, oldid 1267052140) has three sentences on the plant (size, range, ornamental use, a sacred tree in Shinto whose leaves are offerings), too short for 100 words without padding. It needs a second source on its Shinto use.
+
+## M14.29 — Endangered species (owner, 2026-10-29)
+
+The owner ruled "No endangered species in the compendium please." These entries are removed because the species is globally IUCN Endangered or Critically Endangered, or is on CITES Appendix I. The full record, with the cultivated exceptions that were kept, is `compendium/ethics/endangered-removals.md`; each entry's ethics file stays as the record of why it went.
+
+- agarwood-aquilaria-malaccensis: IUCN CR, scope global, listed as Aquilaria malaccensis, source `wikipedia-iucn-aquilaria-malaccensis`. Already landed on staging; it still needs removing from seeded databases by a separate task.
+- red-sandalwood-pterocarpus-santalinus: IUCN EN, scope global, listed as Pterocarpus santalinus, source `wikipedia-iucn-pterocarpus-santalinus`. Already landed on staging; it still needs removing from seeded databases by a separate task.
+- spikenard-nardostachys-jatamansi: IUCN CR, scope global, listed as Nardostachys jatamansi, source `wikipedia-iucn-nardostachys-jatamansi`. Already landed on staging; it still needs removing from seeded databases by a separate task.
+- storax-liquidambar-orientalis: IUCN EN, scope global, listed as Liquidambar orientalis, source `wikipedia-iucn-liquidambar-orientalis`. Already landed on staging; it still needs removing from seeded databases by a separate task.
+- himalayan-yew-taxus-wallichiana: IUCN Endangered, scope global, listed as Taxus wallichiana, source `wikipedia-taxus-wallichiana`.
+- indian-atees-aconitum-heterophyllum: IUCN Endangered, scope global, listed as Aconitum heterophyllum, source `wikipedia-aconitum-heterophyllum`.
+- pepper-bark-tree-warburgia-salutaris: IUCN Endangered (IUCN 2.3), scope global, listed as Warburgia salutaris, source `wikipedia-warburgia-salutaris`.
+- costus-dolomiaea-costus: CITES Appendix I, scope global, listed as Saussurea costus, source `cites-appendices`.
+- grey-parrot-psittacus-erithacus: IUCN Endangered (IUCN 3.1), scope global, listed as Psittacus erithacus, source `wikipedia-grey-parrot`; CITES Appendix I, scope global, listed as Psittacus erithacus, source `cites-appendices`.

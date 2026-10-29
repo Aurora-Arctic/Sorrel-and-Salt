@@ -46,6 +46,7 @@ deities:
   - Mercury
   - Ra
   - Vesta
+  - Daphne
 categories:
   - Protection
   - Psychic Work
@@ -168,7 +169,7 @@ variants:
         nameBasis: unaudited
         supports:
           - safetyNotes
-seedUpdate: 5fc41c5897b384ee544213429ae31cf742fd5a427151198cd80672f9fb84d00f
+seedUpdate: 9618a5627f1433ee99bd0efb4a967f333c3eb1ebf2926c36eb1eed39698f6263
 ---
 
 # Bay Laurel

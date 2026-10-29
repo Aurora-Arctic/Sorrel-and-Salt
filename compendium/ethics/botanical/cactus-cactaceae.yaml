@@ -1,0 +1,5 @@
+# Gathered for M14.29; the seed never reads this folder.
+entry: botanical/cactus-cactaceae
+status: needs-review
+questions:
+  - 'The CITES Appendices (valid from 5 March 2026) list the whole family: p. 64, Appendix II column, "CACTACEAE spp. (Except the species included in Appendix I and ...)", annotation #4, which exempts "d) fruits, and parts and derivatives thereof, of naturalized or artificially propagated plants of ... the family Cactaceae;". The entry is the family, so the formal name is printed, but the listing has exceptions and annotations. Owner: say whether to record it. Recommendation: yes, as list: cites with nameBasis: stated.'

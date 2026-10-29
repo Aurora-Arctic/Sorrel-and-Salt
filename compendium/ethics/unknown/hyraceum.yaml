@@ -1,0 +1,19 @@
+# Gathered for M14.29; the seed never reads this folder.
+entry: unknown/hyraceum
+status: needs-review
+listings:
+  - list: other
+    name: Wikipedia article text (no assessor named)
+    value: Essentially a non-renewable resource; collection for commercial sale criticised in scientific circles
+    listedAs: null
+    scope: unknown
+    nameBasis: stated
+    source: wikipedia-hyraceum
+    locator: '"Hyraceum accumulates extremely slowly, making it essentially a non-renewable resource."'
+animalPart:
+  - quote: because animals are not harmed in its harvesting, it is often an ethical substitute for deer musk and civet
+    source: wikipedia-hyraceum
+    locator: lead section on harvesting
+questions:
+  - Wikipedia says 'Hyraceum accumulates extremely slowly, making it essentially a non-renewable resource.' but names no assessor. Find the assessment, or drop the row? I recommend finding the assessment.
+  - 'The source does not say where the status "Essentially a non-renewable resource; collection for commercial sale criticised in scientific circles" (Wikipedia article text (no assessor named)) applies, so its scope is recorded as unknown. Owner: say whether it is global or for one place, and whether to keep the row. Recommendation: keep it as unknown and do not remove the entry on it.'

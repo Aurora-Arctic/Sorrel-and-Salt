@@ -34,6 +34,9 @@ deities:
   - Rhiannon
   - Venus
   - Zeus
+  - Badb
+  - Cailleach
+  - Macha
 categories:
   - Abundance
   - Ancestor Work

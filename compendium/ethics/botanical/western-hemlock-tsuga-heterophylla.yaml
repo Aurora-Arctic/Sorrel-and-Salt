@@ -1,0 +1,20 @@
+# Gathered for M14.29; the seed never reads this folder.
+entry: botanical/western-hemlock-tsuga-heterophylla
+status: approved
+listings:
+  - list: iucn
+    name: IUCN Red List
+    value: Least Concern (IUCN 3.1)
+    listedAs: Tsuga heterophylla
+    scope: global
+    nameBasis: stated
+    source: wikipedia-tsuga-heterophylla
+    locator: taxobox, conservation status (status = LC, IUCN3.1)
+  - list: natureserve
+    name: NatureServe
+    value: Global rank G5
+    listedAs: Tsuga heterophylla
+    scope: global
+    nameBasis: stated
+    source: wikipedia-tsuga-heterophylla
+    locator: taxobox, status2 = G5 (TNC)

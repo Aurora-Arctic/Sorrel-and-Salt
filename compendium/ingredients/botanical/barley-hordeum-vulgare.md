@@ -24,6 +24,7 @@ deities:
   - Lugh
   - Osiris
   - Persephone
+  - Centeotl
 categories:
   - Love
   - Healing
@@ -144,7 +145,7 @@ variants:
         supports:
           - form
           - description
-seedUpdate: d65c50040675bc41c3566f43ed6a65e5268c0b72fb83086cf17b38633284a1f5
+seedUpdate: bd2c6575cec1ed55b84d525130c6f73901ff35f0202227248f4336ee3ce1e421
 ---
 
 # Barley

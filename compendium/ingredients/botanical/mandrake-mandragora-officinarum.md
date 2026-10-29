@@ -48,6 +48,7 @@ deities:
   - Circe
   - Diana
   - Saturn
+  - Moirai
 categories:
   - Protection
   - Fertility

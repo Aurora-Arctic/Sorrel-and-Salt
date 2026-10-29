@@ -1,0 +1,28 @@
+# Gathered for M14.29; the seed never reads this folder.
+entry: botanical/skunk-cabbage-symplocarpus-foetidus
+status: approved
+listings:
+  - list: other
+    name: United Plant Savers Species At-Risk List
+    value: In Review
+    listedAs: Symplocarpus foetidus
+    scope: global
+    nameBasis: stated
+    source: ups-species-at-risk
+    locator: under the heading "In Review", entry for Skunk Cabbage
+  - list: iucn
+    name: IUCN Red List of Threatened Species, as printed in Wikipedia's taxobox
+    value: LC
+    listedAs: Symplocarpus foetidus
+    scope: global
+    nameBasis: stated
+    source: wikipedia-iucn-symplocarpus-foetidus
+    locator: 'Taxobox: status = LC, status_system = IUCN3.1; its status_ref reads: "Symplocarpus foetidus", Maiz-Tome, L., 2016, 10.2305/IUCN.UK.2016-1.RLTS.T64325342A67731102.en'
+  - list: other
+    name: Tennessee state listing, as stated by Wikipedia
+    value: endangered
+    listedAs: Symplocarpus foetidus
+    scope: Tennessee
+    nameBasis: stated
+    source: wikipedia-symplocarpus-foetidus-conservation
+    locator: 'Section on distribution (sentence beginning "In Tennessee"): "In Tennessee, it is protected as an endangered species."'

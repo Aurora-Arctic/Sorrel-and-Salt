@@ -21,6 +21,8 @@ folkNames:
   - Euphrasy
   - Casse-lunette
   - Augentröst
+deities:
+  - Charites
 categories:
   - Psychic Work
   - Clarity
@@ -52,6 +54,7 @@ references:
       - categories
       - folkNames
       - description
+      - deities
   - source: ahpa-safety
     locator: pp. 356–357; p. xxii
     nameBasis: unaudited

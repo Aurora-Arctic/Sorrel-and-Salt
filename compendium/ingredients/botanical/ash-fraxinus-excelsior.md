@@ -40,6 +40,9 @@ deities:
   - Manannan mac Lir
   - Minerva
   - Odin
+  - Uranus
+  - Macha
+  - Nemesis
 categories:
   - Protection
   - Prosperity
@@ -173,7 +176,7 @@ variants:
         supports:
           - form
           - description
-seedUpdate: 1a551d79e80c250cbd348ba43cee82dd0f2aba5d36e7a3b0980ab57eeb19b258
+seedUpdate: e63b1f0cf90e383c6aa60a4f8a93c8de351fb67df1b8afba4f66c3fb7f79da27
 ---
 
 # Ash

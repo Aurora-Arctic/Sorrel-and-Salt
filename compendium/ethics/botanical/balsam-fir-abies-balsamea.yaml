@@ -1,0 +1,20 @@
+# Gathered for M14.29; the seed never reads this folder.
+entry: botanical/balsam-fir-abies-balsamea
+status: approved
+listings:
+  - list: iucn
+    name: IUCN Red List
+    value: Least Concern (IUCN 3.1)
+    listedAs: Abies balsamea
+    scope: global
+    nameBasis: stated
+    source: wikipedia-abies-balsamea
+    locator: taxobox, conservation status (status = LC, IUCN3.1)
+  - list: state-listing
+    name: Connecticut
+    value: Endangered (native populations only)
+    listedAs: Abies balsamea
+    scope: Connecticut
+    nameBasis: stated
+    source: wikipedia-abies-balsamea
+    locator: section "Conservation status"

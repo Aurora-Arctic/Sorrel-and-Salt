@@ -37,6 +37,9 @@ deities:
   - Saturn
   - Zeus
   - Astarte
+  - Brahma
+  - Fides
+  - Indra
 categories:
   - Healing
   - Peace
@@ -120,10 +123,4 @@ The olive is the tree that gives the fruit and the oil, an evergreen of the Medi
 
 #### Edit Notes for Claude
 
-Deity gap: Irene (Cunningham, under "Olive"), not in the vocabulary; link once M14.15 adds it.
-
-Deity gap: Brahma (Kynes, under "Olive"), not in the vocabulary; link once M14.15 adds it.
-
-Deity gap: Fides (Kynes, under "Olive"), not in the vocabulary; link once M14.15 adds it.
-
-Deity gap: Indra (Kynes, under "Olive"), not in the vocabulary; link once M14.15 adds it.
+Deity gap: Irene (Cunningham, under "Olive"), not in the vocabulary after M14.15: Irene is only a given name in the source read; the goddess is Eirene.

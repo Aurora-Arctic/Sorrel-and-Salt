@@ -1,0 +1,20 @@
+# Gathered for M14.29; the seed never reads this folder.
+entry: botanical/slippery-elm-ulmus-rubra
+status: approved
+listings:
+  - list: other
+    name: United Plant Savers Species At-Risk List
+    value: At-Risk
+    listedAs: Ulmus rubra
+    scope: global
+    nameBasis: stated
+    source: ups-species-at-risk
+    locator: under the heading "At-Risk", entry for Slippery Elm
+  - list: iucn
+    name: IUCN Red List of Threatened Species, as printed in Wikipedia's taxobox
+    value: LC
+    listedAs: Ulmus rubra
+    scope: global
+    nameBasis: stated
+    source: wikipedia-iucn-ulmus-rubra
+    locator: 'Taxobox: status = LC, status_system = IUCN3.1; its status_ref reads: "Ulmus rubra", Stritch, L., 2018, 10.2305/IUCN.UK.2018-1.RLTS.T61967382A61967384.en'

@@ -1,0 +1,14 @@
+# Gathered for M14.29; the seed never reads this folder.
+entry: botanical/pau-darco-handroanthus-impetiginosus
+status: needs-review
+listings:
+  - list: iucn
+    name: IUCN Red List
+    value: Near Threatened (IUCN 3.1)
+    listedAs: Handroanthus impetiginosus
+    scope: global
+    nameBasis: stated
+    source: wikipedia-handroanthus-impetiginosus
+    locator: taxobox, conservation status (status = NT, IUCN3.1)
+questions:
+  - 'The CITES Appendices (valid from 5 March 2026) list the whole genus: p. 63, Appendix II column, "Handroanthus spp.", annotation #17: "Logs, sawn wood, veneer sheets, plywood and transformed wood." They do not print Handroanthus impetiginosus by name. Owner: say whether a genus-wide listing may be recorded. Recommendation: yes, as list: cites with nameBasis: resolved, with the wood-only annotation shown in the locator (the entry is the bark, which the annotation does not name).'

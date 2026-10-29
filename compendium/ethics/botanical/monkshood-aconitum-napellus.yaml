@@ -1,0 +1,12 @@
+# Gathered for M14.29; the seed never reads this folder.
+entry: botanical/monkshood-aconitum-napellus
+status: approved
+listings:
+  - list: iucn
+    name: IUCN Red List of Threatened Species, as printed in Wikipedia's taxobox
+    value: LC
+    listedAs: Aconitum napellus
+    scope: global
+    nameBasis: stated
+    source: wikipedia-iucn-aconitum-napellus
+    locator: 'Taxobox: status = LC, status_system = IUCN3.1; its status_ref reads: "Aconitum napellus", Chappuis, E., 2014, 10.2305/IUCN.UK.2014-1.RLTS.T165155A57117867.en'

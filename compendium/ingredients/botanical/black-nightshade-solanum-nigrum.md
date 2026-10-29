@@ -21,6 +21,7 @@ folkNames:
 deities:
   - Circe
   - Hecate
+  - Macha
 categories:
   - Creativity
   - Divination
@@ -112,7 +113,7 @@ variants:
         supports:
           - form
           - colours
-seedUpdate: 4cec74c4c27c8af859607fa9af035c70978e742c20432320be35ebc523857164
+seedUpdate: 5e7195f0611f0afdedb3aab3563c6569a5e49a3cf3dd9e576e91ca89782d4a0d
 ---
 
 # Black Nightshade

@@ -26,6 +26,7 @@ deities:
   - Lugh
   - Osiris
   - Persephone
+  - Centeotl
 categories:
   - Protection
   - Divination
@@ -117,7 +118,7 @@ variants:
         nameBasis: stated
         supports:
           - description
-seedUpdate: c66017fcaaaa97ae7e599849d9c16b7de0d002f4ad0d4087c9daff2967048d7b
+seedUpdate: b9cba5d87d702a98f05e270d7a1033d4899a92a9862c3bddd306369b8cd15d49
 ---
 
 # Maize

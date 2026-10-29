@@ -13,6 +13,7 @@ folkNames:
   - Fairy Stone
 deities:
   - Odin
+  - Buddha
 categories:
   - Protection
   - Nightmare Protection

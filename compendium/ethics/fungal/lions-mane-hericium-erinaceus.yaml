@@ -1,0 +1,14 @@
+# Gathered for M14.29; the seed never reads this folder.
+entry: fungal/lions-mane-hericium-erinaceus
+status: needs-review
+listings:
+  - list: other
+    name: Red-listed in several European countries (assessor not named)
+    value: red listed
+    listedAs: Hericium erinaceus
+    scope: several European countries
+    nameBasis: stated
+    source: wikipedia-hericium-erinaceus
+    locator: Wikipedia, Hericium erinaceus, oldid 1380741038
+questions:
+  - Wikipedia says 'it has been red listed in several European countries due to poor germination and establishment' but names no assessor. Find the assessment, or drop the row?

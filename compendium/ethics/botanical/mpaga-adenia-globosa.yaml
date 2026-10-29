@@ -1,0 +1,12 @@
+# Gathered for M14.29; the seed never reads this folder.
+entry: botanical/mpaga-adenia-globosa
+status: approved
+listings:
+  - list: iucn
+    name: IUCN Red List of Threatened Species
+    value: Least Concern (IUCN 3.1)
+    listedAs: Adenia globosa
+    scope: global
+    nameBasis: stated
+    source: wikipedia-adenia-globosa
+    locator: 'taxobox, "Conservation status": "Least Concern (IUCN 3.1)"'

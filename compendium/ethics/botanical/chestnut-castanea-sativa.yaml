@@ -1,0 +1,12 @@
+# Gathered for M14.29; the seed never reads this folder.
+entry: botanical/chestnut-castanea-sativa
+status: approved
+listings:
+  - list: iucn
+    name: IUCN Red List of Threatened Species, as printed in Wikipedia's taxobox
+    value: LC
+    listedAs: Castanea sativa
+    scope: global
+    nameBasis: stated
+    source: wikipedia-iucn-castanea-sativa
+    locator: 'Taxobox: status = LC, status_system = IUCN3.1; its status_ref reads: "Castanea sativa", Barstow, M., 2018, 10.2305/IUCN.UK.2018-1.RLTS.T202948A67740523.en'

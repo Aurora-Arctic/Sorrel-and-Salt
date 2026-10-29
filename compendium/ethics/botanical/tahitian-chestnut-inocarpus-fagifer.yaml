@@ -1,0 +1,12 @@
+# Gathered for M14.29; the seed never reads this folder.
+entry: botanical/tahitian-chestnut-inocarpus-fagifer
+status: approved
+listings:
+  - list: iucn
+    name: IUCN Red List
+    value: Least Concern (IUCN 3.1)
+    listedAs: Inocarpus fagifer
+    scope: global
+    nameBasis: stated
+    source: wikipedia-inocarpus-fagifer
+    locator: taxobox, conservation status (status = LC, IUCN3.1)

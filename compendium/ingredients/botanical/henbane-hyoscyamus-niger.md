@@ -33,6 +33,7 @@ deities:
   - Hera
   - Jupiter
   - Morrigan
+  - Medea
 categories:
   - Ancestor Work
 references:
@@ -112,7 +113,3 @@ variants:
 # Henbane
 
 Henbane, or black henbane, is a poisonous plant of the nightshade family, native to temperate Europe and Siberia and naturalised in Britain and Ireland. Kynes describes lance-shaped leaves with wavy edges on stalks up to three feet tall, and brownish-yellow bell-shaped flowers veined with purple. The name comes from the Anglo-Saxon for "hen killer", and they used it to ward off evil. The ancient Greeks crowned the dead with its leaves and decorated graves with it. By the Middle Ages it belonged to witches and sorcerers, who were said to use it in spells and to control the weather, with its power thought strongest around the summer solstice. Wikipedia adds that it was brewed with mandrake and deadly nightshade into anaesthetic potions, and that Apollo's priestesses used it to give oracles. Cunningham calls it a love herb: a man should gather it naked, early in the morning, standing on one foot, and wear it to bring love. Burned outdoors it is said to attract rain. Kynes places seeds on the altar when working with spirit guides, and a dried stalk at Samhain.
-
-#### Edit Notes for Claude
-
-Deity gap: Medea (Kynes, under "Henbane"), not in the vocabulary; link once M14.15 adds it.

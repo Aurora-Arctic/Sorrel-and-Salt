@@ -1,0 +1,12 @@
+# Gathered for M14.29; the seed never reads this folder.
+entry: botanical/miswak-salvadora-persica
+status: needs-review
+listings:
+  - list: iucn
+    name: IUCN Red List of Threatened Species, as printed by Wikipedia
+    value: Least Concern
+    listedAs: Salvadora persica
+    scope: global
+    nameBasis: stated
+    source: wikipedia-salvadora-persica
+    locator: 'taxobox status LC (IUCN3.1); reference printed: Smith, P. 2019, Salvadora persica'

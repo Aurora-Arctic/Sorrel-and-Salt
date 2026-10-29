@@ -1,0 +1,16 @@
+# Gathered for M14.29; the seed never reads this folder.
+entry: botanical/costus-dolomiaea-costus
+status: approved
+listings:
+  - list: cites
+    name: CITES Appendices I, II and III, valid from 5 March 2026
+    value: Appendix I
+    listedAs: Saussurea costus
+    scope: global
+    nameBasis: resolved
+    resolvedBy: wikipedia-dolomiaea-costus
+    source: cites-appendices
+    locator: 'p. 66, Appendix I column, no annotation: "Saussurea costus". The entry''s cited Wikipedia page, Dolomiaea costus (oldid 1365843603), says the plant is "formerly Saussurea costus" and has been placed on Appendix I.'
+questions:
+  - The page says the root was used in the ketoret, the consecrated incense of the Temple, and was recommended in a hadith as Indian incense. It says nothing about the practice being closed, so nothing is recorded as closed practice.
+  - "Approved by the owner 2026-10-29: Saussurea costus is recorded as this entry's Appendix I listing (nameBasis resolved, via the entry's Wikipedia page), and the entry is removed under the no-endangered-species rule (M14.29)."

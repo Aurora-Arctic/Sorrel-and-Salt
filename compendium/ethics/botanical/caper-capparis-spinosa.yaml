@@ -1,0 +1,14 @@
+# Gathered for M14.29; the seed never reads this folder.
+entry: botanical/caper-capparis-spinosa
+status: needs-review
+listings:
+  - list: iucn
+    name: IUCN Red List of Threatened Species, as printed in Wikipedia's taxobox
+    value: LC
+    listedAs: Capparis spinosa
+    scope: global
+    nameBasis: stated
+    source: wikipedia-iucn-capparis-spinosa
+    locator: 'Taxobox: status = LC, status_system = IUCN3.1; its status_ref reads: (no assessment named)'
+questions:
+  - 'The assessment Wikipedia names for Capparis spinosa is not identified by title (the cited assessment is titled "null"). Raw status_ref: Rankou, H., M''Sou, S., Diarra, A. & Ait Babahmad, R.A. 2020. ''''Capparis spinosa''''. [[The IUCN Red List of Threatened Species]] 2020: e.T137745831A139593491. https://dx.doi.org/10.2305/IUCN.UK.2020-1.RLTS.T137745831A139593491.en. Downloaded on 24 September 2021.. Recommendation: do not list until the assessment is read for Capparis spinosa.'

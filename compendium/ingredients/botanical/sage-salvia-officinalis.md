@@ -163,3 +163,7 @@ seedUpdate: 4310be87723ee1fb3cce8246df028fe8680c7a21d074d31c45fb860b84a81b69
 # Sage
 
 Common sage is an evergreen subshrub of the mint family, native to the Mediterranean and now naturalised widely, with woody stems, wrinkled grey-green leaves that are softly hairy beneath, and whorls of blue to purple flowers in late spring or summer. Grieve found it growing wild on the limestone hills along the Adriatic, where gathering it was a cottage industry in Dalmatia. Its genus name comes from the Latin salvere, to be saved, a nod to its healing fame: the Romans called it a holy herb, Charlemagne had it grown, and an old saying asked why anyone should die while sage grows in the garden. It is a staple of European cooking, from Italian saltimbocca to British sage and onion stuffing, and has long been drunk as a tea and used as a gargle for sore throats. Folklore sowed it on graves to soften grief and held that it thrived or withered with its owner's business. In magic Cunningham gives it to Jupiter and air, for longevity, wisdom and protection, quoting the rhyme that whoever would live for ever must eat sage in May, and has it carried for wisdom; Kynes adds earth and Mercury, uses it for divination, healing, purification and psychic work, and notes that common sage now often stands in for white sage in smoke cleansing.
+
+#### Edit Notes for Claude
+
+- Deity gap: Kupala (Kynes's Plants, under "Sage"), not in the vocabulary after M14.15: Modern scholars deny that Kupala was an ancient Slavic deity, so it is left out.

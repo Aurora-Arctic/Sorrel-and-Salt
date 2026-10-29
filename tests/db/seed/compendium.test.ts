@@ -1,4 +1,5 @@
 import { afterAll, beforeAll, beforeEach, describe, expect, it } from 'vitest';
+import { readFileSync } from 'node:fs';
 import postgres from 'postgres';
 import { drizzle } from 'drizzle-orm/postgres-js';
 import { truncateAllTables } from '../../support/seeded-database';
@@ -6,6 +7,7 @@ import { asTouch } from '../../support/db/touch-row';
 import { insertStock } from '../../support/db/insert-stock';
 import { liveFolkNames } from '../../support/db/folk-names';
 import { variantIdOf, variantRowsOf } from '../../support/db/read-variants';
+import { fromRoot } from '../../support/paths';
 import { makeWorkspace, workspaceColumns } from '../../support/fixtures';
 import { BOOTSTRAP_USER_ID } from '@/db/bootstrap';
 import { seed } from '@/db/seed/index';
@@ -1281,6 +1283,53 @@ describe('the update path (M14.7)', () => {
     expect(report.updated).toEqual([]);
     expect((await testwortRow()).deleted_at).not.toBeNull();
     expect(await compendiumRows()).toEqual(before);
+  });
+
+  // M14.30: an entry M14.29 ruled out stays in every database seeded before,
+  // because the seed never deletes a row whose file is gone. Migration 0090
+  // soft-deletes it by seed key; a file that ever names it again must find it
+  // retired and leave it so.
+  describe('an entry migration 0090 retired', () => {
+    const RETIRED = 'Aquilaria malaccensis';
+
+    beforeEach(async () => {
+      await sql`update ingredients set canonical_name = ${RETIRED}, seed_key = lower(${RETIRED})
+        where seed_key = ${identityOf(TESTWORT)}`;
+      const statements = readFileSync(
+        fromRoot('src/db/migrations/0090_retire-endangered-entries.sql'),
+        'utf8',
+      )
+        .split('--> statement-breakpoint')
+        .map((statement) => statement.replace(/^\s*--.*$/gm, '').trim())
+        .filter(Boolean);
+      for (const statement of statements) await sql.unsafe(statement);
+    });
+
+    const retiredRow = async () => {
+      const [row] = await sql<{ deleted_at: Date | null }[]>`
+        select deleted_at from ingredients where seed_key = lower(${RETIRED})`;
+      return row;
+    };
+
+    it('is reported as retired by a file that names it again, and not revived', async () => {
+      const before = await compendiumRows();
+      const named = fileOf(TESTWORT, (draft) => {
+        draft.entry.canonicalName = RETIRED;
+      });
+
+      const report = await run([named]);
+
+      expect(report.retired).toEqual([entryFilePath({ ...TESTWORT, canonicalName: RETIRED })]);
+      expect(report.refused).toEqual([]);
+      expect((await retiredRow()).deleted_at).not.toBeNull();
+      expect(await compendiumRows()).toEqual(before);
+    });
+
+    it('stays retired when the seed runs without its file', async () => {
+      await run([fileOf(TESTWORT)]);
+
+      expect((await retiredRow()).deleted_at).not.toBeNull();
+    });
   });
 
   it('decides and reports a dry run, then writes nothing', async () => {

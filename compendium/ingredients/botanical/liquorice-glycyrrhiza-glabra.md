@@ -23,6 +23,7 @@ folkNames:
   - True Licorice
 deities:
   - Osiris
+  - Brahma
 categories:
   - Lust
   - Love

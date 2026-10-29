@@ -1,0 +1,17 @@
+# Gathered for M14.29; the seed never reads this folder.
+entry: botanical/ferula-aucheri-ferula-aucheri
+status: needs-review
+listings:
+  - list: other
+    name: Conservation statement in Wikipedia prose, no assessor named
+    value: endangered in local provinces
+    listedAs: Ferula aucheri
+    scope: unknown
+    nameBasis: stated
+    source: wikipedia-ferula-aucheri
+    locator: 'body, last sentence: "Excessive harvesting of these plants for both cooking and traditional medicine has led it to become endangered in local provinces", citing Mosaddegh 2012, Journal of Ethnopharmacology 141(1):80-95, doi 10.1016/j.jep.2012.02.004'
+questions:
+  - 'Deeper research 2026-10-29. The sentence (Wikipedia, Ferula aucheri, oldid 1306008749) cites one source: Mosaddegh, M. 2012, "Ethnobotanical survey of herbal remedies traditionally used in Kohghiluyeh va Boyer Ahmad province of Iran". The article names no province in that sentence. The only province the cited paper is titled for is Kohghiluyeh and Boyer-Ahmad; I did not read the paper, so I cannot say it makes the endangered statement. The Wikipedia lead places the plant in the mountains of western Iran (Sedeh and Kermanshah).'
+  - 'Deeper research 2026-10-29. Assessments: none found. The Wikipedia page has no taxobox status and no red list reference, and GBIF returns NOT_EVALUATED (evidence only). I found no global IUCN rating, no CITES listing, and no Iranian national assessment. So the only statement is the prose claim, a status with no assessor, which is a claim and not a listing. Scope stays unknown.'
+  - 'Deeper research 2026-10-29. Cultivated stock: no statement. The page says the young leaves and branches are harvested traditionally for cooking, and nothing about cultivation.'
+  - 'Recommendation: keep the entry. There is no global IUCN EN or CR rating and no CITES listing, and the prose claim is regional at most. Owner: nothing to decide unless you want entries removed on an unsourced regional claim; I recommend not.'

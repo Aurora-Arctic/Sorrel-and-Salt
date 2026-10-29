@@ -1,0 +1,12 @@
+# Gathered for M14.29; the seed never reads this folder.
+entry: botanical/yellow-loosestrife-lysimachia-vulgaris
+status: approved
+listings:
+  - list: iucn
+    name: "IUCN Red List of Threatened Species, as printed in Wikipedia's taxobox"
+    value: 'LC'
+    listedAs: Lysimachia vulgaris
+    scope: 'global'
+    nameBasis: stated
+    source: wikipedia-iucn-lysimachia-vulgaris
+    locator: 'Taxobox: status = LC, status_system = IUCN3.1; Lansdown, R.V., 2014, 10.2305/IUCN.UK.2014-1.RLTS.T164460A42404562.en'

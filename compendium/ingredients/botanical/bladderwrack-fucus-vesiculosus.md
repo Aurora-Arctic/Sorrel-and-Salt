@@ -32,6 +32,14 @@ deities:
   - Poseidon
   - Njord
   - Manannan mac Lir
+  - Aegir
+  - Amphitrite
+  - Lir
+  - Llyr
+  - Ran
+  - Sedna
+  - Seonaidh
+  - Varuna
 categories:
   - Protection
   - Psychic Work

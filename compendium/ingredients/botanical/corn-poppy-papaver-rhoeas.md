@@ -31,6 +31,8 @@ deities:
   - Minerva
   - Persephone
   - Venus
+  - Modron
+  - Morpheus
 categories:
   - Dream Work
   - Fertility

@@ -1,0 +1,14 @@
+# Gathered for M14.29; the seed never reads this folder.
+entry: botanical/tree-of-heaven-ailanthus-altissima
+status: approved
+listings:
+  - list: iucn
+    name: "IUCN Red List of Threatened Species, as printed in Wikipedia's taxobox"
+    value: 'LC'
+    listedAs: Ailanthus altissima
+    scope: 'global'
+    nameBasis: stated
+    source: wikipedia-iucn-ailanthus-altissima
+    locator: 'Taxobox: status = LC, status_system = IUCN3.1; Oldfield, S., 2024, 10.2305/IUCN.UK.2024-1.RLTS.T62993A67810745.en'
+questions:
+  - "The same Wikipedia page says variety tanakae (A. altissima var. tanakai, Pan 1998) is listed Endangered. That is a variety, not this entry's species, so I recorded only the species' Least Concern and did not leave the row out. Agree? Recommendation: yes."

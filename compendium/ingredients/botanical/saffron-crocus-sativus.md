@@ -27,6 +27,7 @@ deities:
   - Hera
   - Thoth
   - Zeus
+  - Eos
 categories:
   - Love
   - Healing

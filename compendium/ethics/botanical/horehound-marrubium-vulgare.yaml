@@ -1,0 +1,12 @@
+# Gathered for M14.29; the seed never reads this folder.
+entry: botanical/horehound-marrubium-vulgare
+status: needs-review
+listings:
+  - list: iucn
+    name: IUCN Red List of Threatened Species, as printed in Wikipedia's taxobox
+    value: NT
+    listedAs: Marrubium vulgare
+    scope: Europe
+    nameBasis: stated
+    source: wikipedia-iucn-marrubium-vulgare
+    locator: 'Taxobox: status = NT, status_system = IUCN3.1; its status_ref reads: "Marrubium vulgare (Europe assessment)", 2013'

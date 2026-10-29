@@ -29,6 +29,7 @@ folkNames:
 deities:
   - Aphrodite
   - Venus
+  - Mut
 categories:
   - Purification
   - Cleansing

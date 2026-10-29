@@ -1,0 +1,6 @@
+# Gathered for M14.29; the seed never reads this folder.
+entry: botanical/candelabra-tree-euphorbia-candelabrum
+status: needs-review
+questions:
+  - 'The CITES Appendices (valid from 5 March 2026) list Euphorbia in Appendix II as "Euphorbia spp. (Succulent species only, except the species included in Appendix I and Euphorbia misera)", p. 68, annotation #4. Euphorbia candelabrum is not printed by name, and none of the Appendix I species named under Euphorbia is E. candelabrum. Whether it counts as a succulent species is not stated in the Appendices. Owner: say whether to record it. Recommendation: no listing row for the species; keep this question.'
+  - 'The CITES Appendices (valid from 5 March 2026) list part of the genus: p. 68, Appendix II column, "Euphorbia spp. (Succulent species only, except the species included in Appendix I and Euphorbia misera which is not included in the Appendices)". They do not print Euphorbia candelabrum by name, and the listing covers succulent species only. Owner: say whether to record it. Recommendation: no listing row; keep this question.'

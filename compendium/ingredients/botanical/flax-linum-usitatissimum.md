@@ -19,6 +19,8 @@ deities:
   - Freya
   - Frigg
   - Minerva
+  - Moirai
+  - Norns
 categories:
   - Protection
   - Psychic Work
@@ -140,7 +142,7 @@ variants:
         supports:
           - form
           - description
-seedUpdate: f5846bd91ee32fb0f139acdc8469b27af51629630a2fd79a9bdb8fe1ede185bc
+seedUpdate: f9885e8a3905c1ba77c4a912c47f6c0453ec9ff25893fcc2f98ea100690ffb59
 ---
 
 # Flax

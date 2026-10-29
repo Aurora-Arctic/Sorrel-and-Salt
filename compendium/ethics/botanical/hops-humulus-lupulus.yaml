@@ -1,0 +1,12 @@
+# Gathered for M14.29; the seed never reads this folder.
+entry: botanical/hops-humulus-lupulus
+status: needs-review
+listings:
+  - list: iucn
+    name: IUCN Red List of Threatened Species, as printed in Wikipedia's taxobox
+    value: LC
+    listedAs: Humulus lupulus
+    scope: Europe
+    nameBasis: stated
+    source: wikipedia-iucn-humulus-lupulus
+    locator: 'Taxobox: status = LC, status_system = IUCN3.1; its status_ref reads: "Humulus lupulus (Europe assessment)", Khela, 2012'

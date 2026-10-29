@@ -1,0 +1,12 @@
+# Gathered for M14.29; the seed never reads this folder.
+entry: botanical/pomegranate-punica-granatum
+status: approved
+listings:
+  - list: iucn
+    name: IUCN Red List of Threatened Species, as printed in Wikipedia's taxobox
+    value: LC
+    listedAs: Punica granatum
+    scope: global
+    nameBasis: stated
+    source: wikipedia-iucn-punica-granatum
+    locator: 'Taxobox: status = LC, status_system = IUCN3.1; its status_ref reads: "Punica granatum", ((Participants of the FFI/IUCN SSC Central Asian regional tree Red Listing workshop, Bishkek, Kyrgyzstan (11-13 July 2006))), 2020'

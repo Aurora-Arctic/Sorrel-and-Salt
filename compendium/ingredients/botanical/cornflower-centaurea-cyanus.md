@@ -35,6 +35,7 @@ folkNames:
   - Hurtsickle
 deities:
   - Flora
+  - Puck
 categories:
   - Love
   - Divination
@@ -55,6 +56,7 @@ references:
       - folkNames
       - categories
       - description
+      - deities
   - source: kynes-plants
     locator: under "Cornflower"
     nameBasis: resolved

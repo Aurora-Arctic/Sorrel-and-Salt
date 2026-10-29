@@ -1,0 +1,12 @@
+# Gathered for M14.29; the seed never reads this folder.
+entry: botanical/candlenut-aleurites-moluccanus
+status: approved
+listings:
+  - list: iucn
+    name: IUCN Red List
+    value: Least Concern (IUCN 3.1)
+    listedAs: Aleurites moluccanus
+    scope: global
+    nameBasis: stated
+    source: wikipedia-aleurites-moluccanus
+    locator: taxobox, conservation status (status = LC, IUCN3.1)
