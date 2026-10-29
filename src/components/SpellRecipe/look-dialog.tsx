@@ -59,7 +59,7 @@ export default function SpellLookDialog({
           foot: (
             <div className="ingredient-details-foot spell-look-foot">
               <PendingLink className="btn" href={opened.recipeHref}>
-                See Recipe Page
+                See Full Recipe
               </PendingLink>
               {opened.editHref && (
                 <PendingLink className="btn btn--solid" href={opened.editHref}>

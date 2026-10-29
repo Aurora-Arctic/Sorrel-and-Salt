@@ -233,7 +233,7 @@ $recipe-column: 48rem;
 }
 
 // The Quick Look foot (M13.21): the bar of `ingredient-details-foot` (in _primitives.scss),
-// with See Recipe Page at the start and Edit Spell at the end. With See Recipe Page alone the
+// with See Full Recipe at the start and Edit Spell at the end. With See Full Recipe alone the
 // bar's own centred two-thirds button stands.
 .ingredient-details-foot.spell-look-foot:has(> .btn:nth-child(2)) {
   justify-content: space-between;

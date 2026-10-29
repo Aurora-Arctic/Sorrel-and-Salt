@@ -46,7 +46,7 @@ describe('SpellLookDialog', () => {
     expect(within(dialog()).getByRole('button', { name: /^Edited/ })).toHaveAccessibleDescription(
       /Fixture A/,
     );
-    expect(within(dialog()).getByRole('link', { name: 'See Recipe Page' })).toHaveAttribute(
+    expect(within(dialog()).getByRole('link', { name: 'See Full Recipe' })).toHaveAttribute(
       'href',
       RECIPE,
     );
@@ -68,19 +68,19 @@ describe('SpellLookDialog', () => {
       </RouteModalProvider>,
     );
     expect(within(dialog()).queryByRole('link', { name: /^Edit/ })).not.toBeInTheDocument();
-    expect(within(dialog()).getByRole('link', { name: 'See Recipe Page' })).toBeInTheDocument();
+    expect(within(dialog()).getByRole('link', { name: 'See Full Recipe' })).toBeInTheDocument();
     rerender(
       <RouteModalProvider>
         <SpellLookDialog closeHref={LIST} opened={{ ...OPENED, editHref: EDIT }} />
       </RouteModalProvider>,
     );
-    // A link in the foot after See Recipe Page, and no pencil in the head.
+    // A link in the foot after See Full Recipe, and no pencil in the head.
     const links = within(dialog()).getAllByRole('link');
     expect(within(dialog()).getByRole('link', { name: 'Edit Spell' })).toHaveAttribute(
       'href',
       EDIT,
     );
-    expect(links.map((link) => link.textContent)).toEqual(['See Recipe Page', 'Edit Spell']);
+    expect(links.map((link) => link.textContent)).toEqual(['See Full Recipe', 'Edit Spell']);
     expect(within(dialog()).queryByRole('link', { name: 'Edit Fixture Working' })).toBeNull();
   });
 
