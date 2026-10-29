@@ -204,7 +204,7 @@ const IngredientForm = ({
     shouldFocusError: false,
     // A field is checked when it is first left, and on every change after, so
     // an untouched one stays quiet until submit. Not the default (submit, then
-    // change): story 31 wants the error beside the field as the person moves on.
+    // change): the error appears beside the field as the person moves on.
     mode: 'onTouched',
     reValidateMode: 'onChange',
   });
