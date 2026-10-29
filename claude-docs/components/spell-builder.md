@@ -474,7 +474,7 @@ instruction steps move alike.
 
 ## Why Save Spell is off
 
-While Save Spell is disabled, a muted line beside it says why (`spell-builder__save-reason`, text and not a tooltip; second design review, 2026-10-28, finding 6), and the button's `aria-describedby` names it. In this order: "Fix the unit in step N to save" (a unit the jar cannot be measured in), "Waiting for the jar to load", "Nothing to save yet". It is left out while a save is on its way.
+While Save Spell is off, a tip on the button says why (the owner's call, 2026-10-29: it was a muted line beside the button from the second design review, 2026-10-28, finding 6). `FormActions` takes the reason as `saveReason`: the tip opens on hover (after the wait), focus and a tap, through `IconTip`, and the same words are the button's description. The button is then `aria-disabled` rather than `disabled`, so it keeps focus and the tip has something to open from; it looks off and its press does nothing. In this order: "Fix the unit in step N to save" (a unit the jar cannot be measured in), "Waiting for the jar to load", "Nothing to save yet". It is left out while a save is on its way, and "Nothing to save yet" only while the spell has not been edited (the autosave status is idle): an edit that has been autosaved leaves nothing to save too, but the line had come back after every autosave, for the owner a message that stayed after an edit.
 
 ## Styling
 
