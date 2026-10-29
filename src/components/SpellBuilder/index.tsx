@@ -1,14 +1,7 @@
 'use client';
 
 import { zodResolver } from '@hookform/resolvers/zod';
-import {
-  type ReactElement,
-  type ReactNode,
-  useCallback,
-  useEffect,
-  useRef,
-  useState,
-} from 'react';
+import { type ReactElement, type ReactNode, useCallback, useEffect, useRef, useState } from 'react';
 import { FormProvider, type Resolver, useForm, useWatch } from 'react-hook-form';
 import { CollapsibleSection, FoldAll } from '../CollapsibleSection';
 import {
@@ -353,7 +346,8 @@ const SpellBuilder = ({
         return restoredSteps(value as SpellStepValue[], liveStepIds());
       if (/^steps\.\d+$/.test(name) && value)
         return restoredSteps([value as SpellStepValue], liveStepIds())[0];
-      if (/^steps\.\d+\.stepId$/.test(name)) return liveStepIds().has(value as string) ? value : null;
+      if (/^steps\.\d+\.stepId$/.test(name))
+        return liveStepIds().has(value as string) ? value : null;
       return value;
     },
     [liveStepIds],

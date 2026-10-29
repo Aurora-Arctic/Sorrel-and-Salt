@@ -244,10 +244,7 @@ export function useFormHistory<V extends FieldValues>(
           setValue(
             diff.name as never,
             (prepare
-              ? prepare(
-                  diff.name,
-                  cloneValues(direction === 'undo' ? diff.before : diff.after),
-                )
+              ? prepare(diff.name, cloneValues(direction === 'undo' ? diff.before : diff.after))
               : cloneValues(direction === 'undo' ? diff.before : diff.after)) as never,
             {
               shouldDirty: true,

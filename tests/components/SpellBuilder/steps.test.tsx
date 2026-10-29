@@ -824,9 +824,8 @@ describe('the spell builder’s safety warning', () => {
 // text alternative, so the bands are counted as the drawing's own elements.
 describe('the spell builder’s jar fill', () => {
   const bands = () =>
-    screen
-      .getByRole('group', { name: 'Jar Details' })
-      .querySelectorAll('svg .jar-shelf__band-fill').length;
+    screen.getByRole('group', { name: 'Jar Details' }).querySelectorAll('svg .jar-shelf__band-fill')
+      .length;
 
   it('draws a band for each ingredient step, a one-off too, and none for an instruction', async () => {
     suggest(MOCKROOT);

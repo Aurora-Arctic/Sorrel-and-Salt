@@ -225,12 +225,12 @@ The fields sit in four `CollapsibleSection`s at `h3`
 `.collapsible-sections`, as Add Ingredient's are (M8.16; the owner, 2026-10-28,
 "Use add ingredient modal as reference"):
 
-| Section         | Fields                                                                                                                |
-| --------------- | --------------------------------------------------------------------------------------------------------------------- |
-| Purpose         | Title, Intent, Categories (M10.14)                                                                                    |
+| Section         | Fields                                                                                             |
+| --------------- | -------------------------------------------------------------------------------------------------- |
+| Purpose         | Title, Intent, Categories (M10.14)                                                                 |
 | Jar             | The jar details (Seal Wax, Jar Description), What Goes In (the steps, M10.15), then the comparison |
-| When to Work It | Moon Phase, Day                                                                                                       |
-| Notes           | Note, Share With the Coven (M10.13)                                                                                   |
+| When to Work It | Moon Phase, Day                                                                                    |
+| Notes           | Note, Share With the Coven (M10.13)                                                                |
 
 A new spell opens with every section open, to be filled in order; a saved
 spell opens with every section shut. Shut, a section's line names the values

@@ -48,7 +48,14 @@ function Row({
     <div className="comparison-panel__row">
       <dt>{label}</dt>
       <dd>
-        <CategoryChips categories={categories} label={label} compact absent={absent} showAll tipOf={tipOf} />
+        <CategoryChips
+          categories={categories}
+          label={label}
+          compact
+          absent={absent}
+          showAll
+          tipOf={tipOf}
+        />
       </dd>
     </div>
   );

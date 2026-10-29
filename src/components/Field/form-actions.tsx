@@ -42,21 +42,23 @@ export function FormActions({
   // Told only while Save is off for a reason the form can say.
   const told = off && saveReason ? saveReason : null;
   const save = (
-      <BusyButton
-        // The form's submit, unless the form is a panel inside another and
-        // so has none of its own to press.
-        type={onSave || told ? 'button' : 'submit'}
-        value={saveValue}
-        className="btn btn--solid"
-        disabled={off && !told}
-        aria-disabled={told ? true : undefined}
-        busy={busy}
-        busyLabel={busyLabel}
-        aria-describedby={[saveDescribedBy, told ? reasonId : undefined].filter(Boolean).join(' ') || undefined}
-        onClick={told ? undefined : onSave}
-      >
-        {label}
-      </BusyButton>
+    <BusyButton
+      // The form's submit, unless the form is a panel inside another and
+      // so has none of its own to press.
+      type={onSave || told ? 'button' : 'submit'}
+      value={saveValue}
+      className="btn btn--solid"
+      disabled={off && !told}
+      aria-disabled={told ? true : undefined}
+      busy={busy}
+      busyLabel={busyLabel}
+      aria-describedby={
+        [saveDescribedBy, told ? reasonId : undefined].filter(Boolean).join(' ') || undefined
+      }
+      onClick={told ? undefined : onSave}
+    >
+      {label}
+    </BusyButton>
   );
   return (
     <div className="form__actions">
