@@ -45,20 +45,9 @@ export const NO_MATCH_HINT = 'Change or clear the filter to see more.';
 export const NO_MATCH_ADVICE = `. ${NO_MATCH_HINT}`;
 
 /**
- * What an admin list says when it shows no rows. With a filter in
- * force, `parts` names each filter as the caller phrases it — `“wort”`, `the
- * role Admin`, `No Refs` — and the sentence says nothing matches them and how
- * to see more: "No users match “ada” and the role Admin. Change or clear the
- * filter to see more." With none, the list itself is empty, and `emptyText`
- * is the caller's own sentence for that.
- *
- * `noun` is the plural, matched by a plural verb: one wording for all six
- * lists, where the compendium said "No entry matches", the invitations "No
- * invitation matches", the users "No users match", the group and value lists
- * "No category matches that filter. Try another name." and the ledger "No
- * admin changes for “x”." The plural reads true however many rows the list
- * could have held, and each filter is named rather than called "that filter",
- * so an admin sees which one to change.
+ * What an admin list says when it shows no rows: with a filter, a sentence
+ * naming each filter in `parts`; with none, the caller's `emptyText`. `noun` is
+ * the plural, so one wording serves every list. (claude-docs/modules.md, "Library comments in full")
  */
 export function noMatchText(noun: string, parts: readonly string[], emptyText: string): string {
   return parts.length ? `${noMatchLead(noun)}${joinAnd(parts)}${NO_MATCH_ADVICE}` : emptyText;

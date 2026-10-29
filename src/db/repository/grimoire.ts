@@ -237,19 +237,9 @@ export function findGrimoireCategoryCounts(
 }
 
 /**
- * The counts behind the four facets, in four grouped reads (one per
- * facet, run together) under the same visibility rule as the list, so another
- * member's private spell is never counted and its moon phase, day or maker is
- * never offered. Each facet's counts leave its own picks out of the query and
- * keep every other facet, the categories, the status and the search in force,
- * as `findGrimoireCategoryCounts` drops the categories under Match Any. A
- * value no readable spell carries is absent rather than at zero.
- *
- * Moon phase and day of the week group on the trimmed, lower-cased text and
- * name the group by its most-used spelling (`mode()`, the smallest on a tie),
- * so `Full Moon` and `full moon` are one choice. A maker is a user id, and
- * stays a choice after leaving the coven, since the read looks at spells and
- * not seats.
+ * The counts behind the four grimoire facets, under the list's visibility rule, so
+ * another member's private spell is never counted. Each facet leaves its own picks
+ * out of its query; a value no readable spell carries is absent, not zero. (claude-docs/db/write-path.md, "Repository comments in full")
  */
 export async function findGrimoireFacetCounts(
   membership: Membership,

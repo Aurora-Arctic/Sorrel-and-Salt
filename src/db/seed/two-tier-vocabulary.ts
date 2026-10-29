@@ -121,15 +121,9 @@ async function groupsByItemKey(
 }
 
 /**
- * The backfill a slug carrying its group needs, run by `seedTwoTierVocabulary`
- * on every seed of a vocabulary whose slug does — the forms and the
- * deities, each given a `slugOf`:
- * each live item's slug re-derived by `slugOf` from its name and its group's
- * name, and written where it differs, so a reseed with nothing to change
- * writes nothing. A database seeded before holds `slugify(name)`; a rewrite
- * in SQL would be a second slug rule, so the seed is the backfill, as it was
- * for ingredient slugs (claude-docs/db/ingredient-slugs.md). A soft-deleted
- * item keeps its slug: the index reserves none.
+ * The backfill for a slug that carries its group: each live item's slug is re-derived
+ * by `slugOf` and written only where it differs, so a reseed with nothing to change
+ * writes nothing. A soft-deleted item keeps its slug. (claude-docs/db/compendium-seed/README.md, "Seed comments in full")
  */
 async function reslugItems(
   tx: SeedTransaction,

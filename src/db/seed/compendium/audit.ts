@@ -158,16 +158,9 @@ function nameKey(value: string): string {
 }
 
 /**
- * Whether a Wikipedia page is the article on exactly the formal name given,
- * for a mineral or a chemical, which have no taxobox to say so.
- *
- * A plain name ("Iron", "Beryl") needs the page title, or its infobox's name,
- * to equal it, and the page to be a mineral, a chemical element or a chembox
- * compound: a rock ("Marble"), a group ("Garnet", "Tourmaline") and a page
- * with no infobox to say what it is do not count. A variety ("Quartz var.
- * amethyst") needs the page to be the variety's own article and its infobox,
- * or failing that its first sentence, to say it is a variety of the named
- * mineral. Anything less stays a doubt for a person to settle.
+ * Whether a Wikipedia page is the article on exactly the formal name given, for a
+ * mineral or chemical (no taxobox). Rocks, groups and pages with no infobox do not
+ * count; a variety needs its own article. Anything less stays a doubt for a person. (claude-docs/db/compendium-seed/README.md, "Seed comments in full")
  */
 export function pageNamesEntry(page: string, title: string, canonicalName: string): boolean {
   const templates = templatesIn(page);

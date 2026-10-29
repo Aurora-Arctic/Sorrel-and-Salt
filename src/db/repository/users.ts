@@ -91,20 +91,9 @@ export async function findProvidersOfUsers(
 }
 
 /**
- * The name of each of these users who holds or has held a seat in a coven
- * `viewerId` sits in now, and nothing else of the row: the display names a
- * member may read. The fourth read that takes no proof, for the
- * reason `findMembershipsOfUsers` takes none: the viewer's covens are several,
- * so there is no one workspace to hold a proof for, and the viewer's own live
- * seat in a live coven is the scope instead. The service passes the session's
- * id as `viewerId`; a fifth proofless read is a decision.
- *
- * Rule 4's third named exception: it skips the
- * filter on the user's row, so a deleted user reads under the name their row
- * last held, and on the user's seat, so a removed member still counts. The
- * viewer's seat and the coven keep theirs, through `existsIn`. Read from the
- * seats, which a left join names, so one statement answers the batch however
- * many covens a pair shares.
+ * The display name of each given user who holds or has held a seat in a coven
+ * `viewerId` sits in now, and nothing else of the row. A proofless read: the
+ * viewer's own live seat is the scope. Skips the soft-delete filter on the user. (claude-docs/db/write-path.md, "Repository comments in full")
  */
 export async function findCoMemberNamesIncludingSoftDeleted(
   viewerId: string,

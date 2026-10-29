@@ -445,23 +445,9 @@ function groupingOf(vocabulary: ListedVocabulary): TwoTierPair | undefined {
 }
 
 /**
- * One page of what a member's autofill offers for `vocabulary`'s column:
- * the live curated rows matching `query`, name matches before description
- * matches, then the values written on live ingredients in the compendium or
- * a coven one of `memberships` proves that match it and fold to no live
- * row's name. No proofs reads the compendium alone, which is the admin's
- * compendium form. Each tier is alphabetical, case-folded. A blank
- * `query` matches everything.
- *
- * A name or value matches by `%` or `<%` and a description by `<%` alone, so
- * a query finds a word inside a description and completes a typed prefix
- * (claude-docs/db/member-autofill.md, "The member's autofill"). A form or a
- * deity also matches when its group or tradition name holds the query as a
- * case-folded substring, so typing the heading lists everything under it.
- *
- * A form suggestion also carries its group and the in-scope ingredients whose
- * form folds to it, and a deity suggestion its tradition. A form or a deity
- * is curated only while its group or tradition is live too.
+ * One page of what a member's autofill offers for `vocabulary`'s column: live
+ * curated rows matching `query`, then values written on live ingredients the
+ * `memberships` prove. No proofs reads the compendium alone. (claude-docs/db/write-path.md, "Repository comments in full")
  */
 export function findVocabularySuggestions(
   memberships: readonly Membership[],

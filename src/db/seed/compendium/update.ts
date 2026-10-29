@@ -35,21 +35,9 @@ import { spellSteps } from '../../../modules/grimoire/schema/spell-steps';
 import type { CitationFields } from '../../../lib/types';
 import type { SeedCompendiumEntry, SeedCompendiumVariant, SeedTransaction } from '../types';
 
-// The compendium seed's update path: what happens to an entry that is
-// already present. The decision is the state table in
-// claude-docs/db/compendium-seed/README.md, "Write-once, and how a correction
-// lands"; this file reads what the decision needs in bulk (`readStates`),
-// decides one entry (`decide`) and applies an update (`applyUpdate`). The
-// rows it writes are rows.ts's, the same the insert writes, so the two cannot
-// disagree on what a column holds.
-//
-// Children are reconciled by key, never dropped and re-created: a stock row
-// and a spell layer hold a variant id, so a form is matched to its live row
-// (by curated form, then by folded name) and updated in place, as
-// `writeChildren` keeps a variant's id across an edit. A removed form is
-// soft-deleted only when nothing holds it, and the entry is refused whole
-// otherwise. Folk names, deities, substitutes and reference links are
-// soft-deleted; category links are hard-deleted, as the table is.
+// The seed's update path for an entry already present (state table: "Write-once,
+// and how a correction lands"). Children are reconciled by key, never dropped and
+// re-created, because stock rows and spell layers hold a variant id. (claude-docs/db/compendium-seed/README.md, "Seed comments in full")
 
 /** One approved entry file as the seed takes it. */
 export interface SeedItem {

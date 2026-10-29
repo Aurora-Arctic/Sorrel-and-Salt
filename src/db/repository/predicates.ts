@@ -134,19 +134,9 @@ export function trigramMatch(text: SQLWrapper, query: string): SQL {
 const NOWHERE = 2147483647;
 
 /**
- * A search for `query` — trimmed, never blank — by word similarity: `matches`
- * holds where it is word-similar (`<%`) to a text and `similarity` scores it,
- * each side folded through `unaccent_immutable`, so the expression indexes of
- * migration 0027 answer the match. `contains` holds where the text holds the
- * query verbatim, folded the same way and lower-cased, since `<%` ignores
- * case: `word_similarity` scores against whole words, so a caller ranks a
- * fragment inside a longer word — `wood` in Sandalwood — as a full hit with
- * it. `position` is the character that verbatim match starts at, or
- * `NOWHERE`: what orders hits of equal score, so Wood Ash leads Sandalwood.
- * `strpos` rather than `ilike`: it reads the query as plain text, where a
- * pattern would need its `%`, `_` and `\` escaped as `containsText`
- * escapes them. The compendium search and the reference picker's
- * (claude-docs/db/compendium-read.md, "The compendium read").
+ * A search for `query` by word similarity: `matches`, `similarity`, `contains` and
+ * `position` (the first character of a verbatim hit, or `NOWHERE`), each side folded
+ * through `unaccent_immutable` so the expression indexes answer the match. (claude-docs/db/write-path.md, "Repository comments in full")
  */
 export function foldedWordMatch(query: string): WordMatch {
   const folded = sql`unaccent_immutable(${query})`;

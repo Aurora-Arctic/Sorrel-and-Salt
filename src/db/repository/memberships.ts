@@ -38,16 +38,9 @@ export async function findWorkspaceRole(
 }
 
 /**
- * Every live membership each of these users holds, in a workspace that is
- * itself live. The second read that takes no proof, and for the reason the
- * first does: a user's own memberships span workspaces, so there is no one
- * workspace to hold a proof for. The service calling it decides whose ids may
- * be asked about; the index's export list is pinned, so a third is a
- * decision.
- *
- * The workspace's own `deleted_at` is `existsIn`'s to check: a correlated
- * `EXISTS` rather than a join, so the rows come back in the membership's own
- * shape.
+ * Every live membership each of these users holds, in a live workspace. A proofless
+ * read: a user's memberships span workspaces, so the service decides whose ids may be
+ * asked about, and the index's export list is pinned. (claude-docs/db/write-path.md, "Repository comments in full")
  */
 export async function findMembershipsOfUsers(
   userIds: readonly string[],

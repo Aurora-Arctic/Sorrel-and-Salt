@@ -54,17 +54,9 @@ export function readableVariantParent(
 }
 
 /**
- * `readableIngredientParent`, or a compendium entry the curators have retired
- * while `heldBy`'s coven has a live cupboard entry naming it: an
- * entry a coven still uses, which the compendium no longer lists. The tier is
- * checked whatever the tombstone, so a cupboard row naming a coven's own
- * ingredient, which the table does not refuse, admits nothing. One `EXISTS`
- * over the parent, which is why it skips `existsIn`'s tombstone filter and
- * puts it back on the first arm. `where` reads the parent as `ingredients`,
- * as `readableIngredientParent`'s does; a retired entry's tier is the
- * compendium's (claude-docs/db/workspace-compendium-entries.md, "When the
- * compendium retires the entry"). No `heldBy` is `readableIngredientParent`
- * itself, so a finder takes the proof as an optional last argument.
+ * `readableIngredientParent`, or a compendium entry the curators have retired while
+ * `heldBy`'s coven has a live cupboard entry naming it. One `EXISTS` over the parent,
+ * so it skips `existsIn`'s tombstone filter and restores it on the first arm. (claude-docs/db/write-path.md, "Repository comments in full")
  */
 export function inUseIngredientParent(
   memberships: readonly Membership[],

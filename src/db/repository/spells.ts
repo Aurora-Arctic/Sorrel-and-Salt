@@ -18,16 +18,9 @@ import type {
 } from './types';
 
 /**
- * §5's reader rule, as a predicate: the coven's own spells, shared ones plus
- * this reader's private ones. `created_by` is the author — §5 gives spells no
- * separate author column — so the proof supplies both halves and a caller has
- * no id to pass that could disagree with it.
- *
- * Exported for the repository's own finders (the workings
- * reach their spell through it) and not from the index: above the
- * repository nothing builds SQL. It builds a condition and runs
- * nothing, and the lint rule `sorrel/spell-visibility-read-in-one-place` fails a
- * `spells.visibility` comparison written anywhere else.
+ * The reader rule as a predicate: the coven's shared spells plus this reader's private
+ * ones. Exported for the repository's finders, not the index; the lint rule
+ * `sorrel/spell-visibility-read-in-one-place` fails a visibility comparison elsewhere. (claude-docs/db/write-path.md, "Repository comments in full")
  */
 export function readableSpells(membership: Membership): SQL | undefined {
   return and(

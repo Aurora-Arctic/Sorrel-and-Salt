@@ -54,25 +54,9 @@ export function readGraphqlIssues(error: unknown): ValidationIssue[] {
 }
 
 /**
- * Places every issue a failed save carries on a react-hook-form form: each
- * one `toField` names a field for beside that field, the rest, each distinct
- * message once, joined into one
- * sentence on the form's `root`, which its alert region shows. Both as
- * `type: 'server'`, so the next submit or an edit to the field clears them
- * as it clears the resolver's own. Answers whether it set any error.
- *
- * `toField` sees the whole issue, path and message, so each form keeps its
- * own reading of a path: a flat form names a field only for a one-segment
- * path it shows, the ingredient form follows a path into its lists. It may
- * also answer `false` for an issue the form takes up itself, which is
- * placed nowhere: the ingredient form's redirect question asks
- * rather than errs.
- *
- * Every error at once rather than `readGraphqlFailure`'s first, as the admin
- * forms place them, so none carries its own copy of this loop.
- * Generic over the field names rather than the form's values, so a form's
- * own `setError` passes as it is: TypeScript cannot work a form's values
- * back out of its field paths, and infers the names straight from them.
+ * Places every issue a failed save carries on a react-hook-form form: a field
+ * `toField` names gets its own error, the rest join into one message on `root`.
+ * Answers whether it set any error. (claude-docs/modules.md, "Library comments in full")
  */
 export function placeServerIssues<Name extends string>(
   error: unknown,

@@ -32,15 +32,9 @@ function deploymentKeyPart(): string[] {
 }
 
 /**
- * `read`, held in the data cache under `COMPENDIUM_TAG` and keyed by `key` and
- * its arguments, so each argument list is an entry of its own. Only a read
- * every viewer sees alike may be wrapped: its arguments are the whole key, so
- * a session among them would be a cache per viewer, and one left out of them
- * a leak (claude-docs/db/compendium-cache.md lists the reads).
- *
- * The value is stored as superjson rather than left to Next's `JSON.stringify`,
- * which would answer a hit's `Date` columns as strings while a miss answered
- * them as dates.
+ * `read`, held in the data cache under `COMPENDIUM_TAG` and keyed by `key` and its
+ * arguments, so only a read every viewer sees alike may be wrapped. Stored as superjson,
+ * since Next's `JSON.stringify` would turn a hit's `Date` columns into strings. (claude-docs/modules.md, "Library comments in full")
  */
 export function cachedCompendiumRead<A extends unknown[], R>(
   key: string,

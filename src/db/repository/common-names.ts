@@ -9,17 +9,9 @@ import { claimantList, readSuggestionPage } from './suggestion-page';
 import type { CommonNameSuggestion } from './types';
 
 /**
- * One page of what a common-name field offers: the display names and live
- * folk names of live ingredients in the compendium or a coven one of
- * `memberships` proves that match `query`, folded to `lower(btrim(name))` and
- * offered once each, alphabetically. No proofs reads the compendium alone,
- * which is the admin's compendium form. Each names the in-scope
- * ingredients answering to it, formal names first. A formal name is not a
- * common name and is not read. A blank `query` matches everything.
- *
- * Each arm matches its own column by `%` or `<%`, so each can reach its own
- * trigram index; the fold happens after (claude-docs/db/member-autofill.md,
- * "The member's autofill").
+ * One page of what a common-name field offers: display and live folk names of live
+ * ingredients in the compendium or the `memberships`' covens that match `query`,
+ * folded and offered once each. No proofs reads the compendium alone. (claude-docs/db/write-path.md, "Repository comments in full")
  */
 export async function findCommonNameSuggestions(
   memberships: readonly Membership[],

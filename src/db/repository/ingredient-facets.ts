@@ -46,27 +46,8 @@ import type {
 
 /**
  * How many compendium entries each filter value would list under the rest of
- * `filter` — the public list, so no proof. A value's count is what
- * `findCompendiumCount` reads with that value as its kind's only choice; a
- * category under `all` is counted with the chosen ones beside it.
- *
- * Zodiac signs and celestial bodies list every live curated row, by position
- * (nulls last) then name, and elements and toxic every setting, zeros
- * included, in the vocabulary's own order. Forms, deities and categories list
- * the values some entry carries, and every chosen one, at zero if none does,
- * alphabetically in natural-language order and never by count: a category by
- * group then name, a deity by tradition then name. A form is spelled
- * as the live curated form folding the same, else as its counted variants most
- * often spell it, ties alphabetically.
- *
- * `withoutReferences` is how many entries cite no live reference, on
- * themselves or a live form, under the rest of the filter: the filter's own
- * `withoutReferences` is set to true for it, so the count is the same whether
- * the switch is on or off. `withoutForms` is the same for the No Form switch:
- * how many entries have no live form. Both come from one read.
- *
- * `withReview` is whether to read the Reviewed counts, a curator's
- * alone: false sends no statement for them and answers `reviewed: null`.
+ * `filter`, with no proof (the public list). Orderings, the `withoutReferences`
+ * and `withoutForms` counts and `withReview` are set out in full. (claude-docs/db/write-path.md, "Repository comments in full")
  */
 export async function findCompendiumFacets(
   filter: IngredientFilter,

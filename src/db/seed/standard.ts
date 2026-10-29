@@ -1094,19 +1094,9 @@ async function insertMissingFolkNames(
 }
 
 /**
- * Each entry's deities, picked in the literal's order. Keyed on the case-folded
- * name the row holds rather than the pick, over the live rows: a database that
- * ran the earlier fill already holds these deities as typed names at these
- * positions, and a pick beside each would take a position its typed twin
- * holds. Over every row instead when `restoreDeleted` is off, so a deleted
- * pick counts as present.
- *
- * A missing pick goes after every live pick of its entry, in the literal's
- * order, rather than at its literal index: the service renumbers the
- * picks it keeps, so a pick removed from anywhere but the end leaves its index
- * held by the pick below it. On an entry with no live pick that is the literal
- * index, and no live row moves, so a second run moves nothing —
- * claude-docs/db/standard-scenario.md.
+ * Each entry's deities, picked in the literal's order, keyed on the case-folded name
+ * the row holds. A missing pick goes after the entry's live picks, so a second run
+ * moves nothing (claude-docs/db/standard-scenario.md). (claude-docs/db/compendium-seed/README.md, "Seed comments in full")
  */
 async function insertMissingDeities(
   tx: SeedTransaction,

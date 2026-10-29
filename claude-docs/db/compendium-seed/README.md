@@ -403,3 +403,81 @@ Carried from the candidate list for the owner, the pilot and the lanes. None is 
 - **Wikipedia's current names over older usage**: the list follows Wikipedia, so _Betonica officinalis_ (often _Stachys officinalis_), _Senega officinalis_ (often _Polygala senega_) and _Atropa bella-donna_, among others the list names. POWO decides each when the lane checks it.
 - **Kynes's _Complete Book of Correspondences_** is an excerpt in the library (above); the full book would be a second source for the minerals, animals and waters.
 - **The variant description ceiling** of 120 words, and whether MB.249 folds into MB.248, are the plan's open items for the owner.
+
+## Seed comments in full
+
+The full text of comments that the source files now cite and summarise in a line or two.
+
+#### `src/db/seed/standard.ts`: `async function insertMissingDeities(`
+
+Each entry's deities, picked in the literal's order. Keyed on the case-folded
+name the row holds rather than the pick, over the live rows: a database that
+ran the earlier fill already holds these deities as typed names at these
+positions, and a pick beside each would take a position its typed twin
+holds. Over every row instead when `restoreDeleted` is off, so a deleted
+pick counts as present.
+
+A missing pick goes after every live pick of its entry, in the literal's
+order, rather than at its literal index: the service renumbers the
+picks it keeps, so a pick removed from anywhere but the end leaves its index
+held by the pick below it. On an entry with no live pick that is the literal
+index, and no live row moves, so a second run moves nothing —
+claude-docs/db/standard-scenario.md.
+
+#### `src/db/seed/compendium/update.ts`: `/** One approved entry file as the seed takes it. */`
+
+The compendium seed's update path: what happens to an entry that is
+already present. The decision is the state table in
+claude-docs/db/compendium-seed/README.md, "Write-once, and how a correction
+lands"; this file reads what the decision needs in bulk (`readStates`),
+decides one entry (`decide`) and applies an update (`applyUpdate`). The
+rows it writes are rows.ts's, the same the insert writes, so the two cannot
+disagree on what a column holds.
+
+Children are reconciled by key, never dropped and re-created: a stock row
+and a spell layer hold a variant id, so a form is matched to its live row
+(by curated form, then by folded name) and updated in place, as
+`writeChildren` keeps a variant's id across an edit. A removed form is
+soft-deleted only when nothing holds it, and the entry is refused whole
+otherwise. Folk names, deities, substitutes and reference links are
+soft-deleted; category links are hard-deleted, as the table is.
+
+#### `src/db/seed/forms.ts`: `/**`
+
+DESIGN.md §5's form vocabulary: six groups and every form, a starting set an
+admin may edit. Reference data, not a scenario — migrate.yml seeds it alone,
+so it inserts the bootstrap user itself. The groups answer "what are you
+holding", not "how was it made": three by source (Botanical, Animal, Mineral),
+three by state (Fluid, Curio, Substance), and no `Other` — an unfitting value
+stays free text and surfaces for curation. No slug is written down; a group's
+is `slugify(name)`, and a form's `formSlug` of its name and its group's,
+since two live forms may share a name under two groups — a form's
+seed key stays `slugify(name)`, as every database seeded before holds it.
+Where a value fits two groups the seed takes one sense and leaves the other
+row for an admin (claude-docs/db/form-vocabulary-seed.md, "The form
+vocabulary seed").
+
+#### `src/db/seed/compendium/audit.ts`: `export function pageNamesEntry(page: string, title: string, canonicalName: string): boolea`
+
+Whether a Wikipedia page is the article on exactly the formal name given,
+for a mineral or a chemical, which have no taxobox to say so.
+
+A plain name ("Iron", "Beryl") needs the page title, or its infobox's name,
+to equal it, and the page to be a mineral, a chemical element or a chembox
+compound: a rock ("Marble"), a group ("Garnet", "Tourmaline") and a page
+with no infobox to say what it is do not count. A variety ("Quartz var.
+amethyst") needs the page to be the variety's own article and its infobox,
+or failing that its first sentence, to say it is a variety of the named
+mineral. Anything less stays a doubt for a person to settle.
+
+#### `src/db/seed/two-tier-vocabulary.ts`: `async function reslugItems(`
+
+The backfill a slug carrying its group needs, run by `seedTwoTierVocabulary`
+on every seed of a vocabulary whose slug does — the forms and the
+deities, each given a `slugOf`:
+each live item's slug re-derived by `slugOf` from its name and its group's
+name, and written where it differs, so a reseed with nothing to change
+writes nothing. A database seeded before holds `slugify(name)`; a rewrite
+in SQL would be a second slug rule, so the seed is the backfill, as it was
+for ingredient slugs (claude-docs/db/ingredient-slugs.md). A soft-deleted
+item keeps its slug: the index reserves none.

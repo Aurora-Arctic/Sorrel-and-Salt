@@ -83,15 +83,9 @@ export interface PathInCovenOptions {
 }
 
 /**
- * Where the same page is in another workspace: `/coven/a/ingredients/x`
- * becomes `/coven/b/ingredients/x` when the page said it opens there (`opens`),
- * and `/coven/b/ingredients` when it did not. What lies beneath a section (an
- * ingredient, a spell) belongs to the workspace it was opened in, unless the
- * page vouched for the next, and would otherwise be a 404 there. Outside a
- * workspace, or at its index, the answer is the new workspace's index. A people
- * page the viewer's role cannot open there steps back: invitations to the
- * members page beside it when members are readable (a member reads them and
- * cannot invite), anything else to the index.
+ * Where the same page is in another workspace: a section's index, or a page beneath
+ * it only when the page said it opens there. A people page the viewer's role cannot
+ * open steps back to the members page or the index. (claude-docs/modules.md, "Library comments in full")
  */
 export function pathInCoven(
   pathname: string,

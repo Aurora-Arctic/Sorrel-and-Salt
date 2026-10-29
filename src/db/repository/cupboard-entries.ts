@@ -52,16 +52,9 @@ export function findCupboardEntriesOf(
 }
 
 /**
- * The compendium entry with this id, soft-deleted or not, beside the proof's
- * live cupboard entry naming it, or `undefined` when the proof's coven has no
- * such row. The sixth escape hatch: a compendium entry the curators
- * retire stays readable to exactly the covens whose cupboard names it, and
- * reads as gone to every other reader (claude-docs/db/workspace-compendium-entries.md,
- * "When the compendium retires the entry"). It skips the entry's own filter
- * and no other: the cupboard row's tombstone filters, the proof scopes it, and
- * the entry must be the compendium's, so a row naming a coven's own
- * ingredient reads as none. One statement: the cupboard row is a left join
- * read as an inner one, which is what lets the entry's tombstone go unread.
+ * The compendium entry with this id, retired or not, beside the proof's live cupboard
+ * entry naming it. A retired entry stays readable to exactly the covens whose cupboard
+ * names it (claude-docs/db/workspace-compendium-entries.md); it skips only the entry's filter. (claude-docs/db/write-path.md, "Repository comments in full")
  */
 export async function findCupboardEntryIncludingSoftDeleted(
   membership: Membership,

@@ -4,19 +4,9 @@ import { foldedWordMatch } from './predicates';
 import type { SearchField, WeightedSearch } from './types';
 
 /**
- * A best-match search over several text fields, as a relation to join onto
- * the listed table, each row's rank, and where its best field holds the
- * query. One `UNION ALL` arm per field, so each arm's `where` is that field's
- * own `<%` match (an index can answer it) and the position an arm reports
- * belongs to the field it scored. An arm scores its field's
- * `word_similarity`, or 1 where the field holds the query verbatim, times the
- * field's weight. The rank is the best of a row's arms, `max … group by id`,
- * so a row two of whose fields match is still one row, and its position is
- * that best arm's, earliest first among equal arms. The threshold is the
- * keyset read's, so the order using this must say `wordMatch`. Shared by the
- * compendium and coven ingredient search (`searchMatch`) and the grimoire's,
- * so both rank one way (claude-docs/db/compendium-read.md, "The
- * compendium read"). `query` is trimmed and never blank.
+ * A best-match search over several text fields: a relation to join onto the listed
+ * table, giving each row's rank and where its best field holds the query. Shared by
+ * the ingredient and grimoire searches, so both rank one way. (claude-docs/db/write-path.md, "Repository comments in full")
  */
 export function weightedSearch(
   query: string,

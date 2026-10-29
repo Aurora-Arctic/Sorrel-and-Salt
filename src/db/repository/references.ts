@@ -29,20 +29,9 @@ import type {
 // readers look, so a link written past the service's rule shows nothing.
 
 /**
- * The live links of these rows of the sourced table `key` names (the
- * `SOURCED` list), each beside the live reference it cites. An ingredient's read
- * exactly when it is, as `findManyOfIngredients` reads it — live, and in the
- * compendium or a coven one of `memberships` proves — and only where the
- * reference is one its readers may read: the compendium's, or its own
- * coven's. A variant's the same, through the variant to its ingredient
- * (`readableVariantParent`): a variant is a coven's where its
- * ingredient is, though it carries no `workspace_id`. Every other sourced table is global reference data, so its links
- * read while the row is live, and only to a compendium reference, the one
- * tier every reader shares. A link to a soft-deleted reference reads as
- * nothing and is left in place, so a restore returns it (DESIGN.md §5,
- * "Nothing deletes a reference in v1"). One statement for the whole batch:
- * the reference a left join read as an inner one, since the parent's
- * correlated subquery compares its tier with the reference's.
+ * The live links of these rows of the sourced table `key` names, each beside the
+ * live reference it cites, read only where the reader may read the reference:
+ * the compendium's or its own coven's. One statement for the whole batch. (claude-docs/db/write-path.md, "Repository comments in full")
  */
 export async function findReferencesOf(
   memberships: readonly Membership[],

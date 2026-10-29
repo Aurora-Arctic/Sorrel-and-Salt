@@ -26,18 +26,9 @@ export const ActiveNavigationContext = createContext<ActiveNavigation | undefine
 export const NavigationActionsContext = createContext<NavigationActions | null>(null);
 
 /**
- * Owns every navigation the site starts. It is mounted once, in the
- * providers, and never unmounts, so a wait can never be lost with the control
- * that began it: `MainBody` and `CovenBody` swap their children for a
- * skeleton, which unmounts the link that was pressed. The wait is an
- * optimistic value set inside the same transition as the router call; React
- * puts it back when that transition ends, on arrival, supersession or error,
- * so nothing here settles by hand. Where two navigations overlap the later
- * one's value shows, and the value goes when the last of them has ended.
- * A navigation waits first on any mounted form with unsaved changes
- * (`useLeaveGuard`); a refresh leaves the page where it is, so
- * nothing holds it.
- * claude-docs/design-decisions/m12.33-loading-standard.md
+ * Owns every navigation the site starts. It is mounted once and never unmounts, so
+ * a wait is never lost with the control that began it; React puts the optimistic
+ * wait back when the transition ends. A mounted form with unsaved changes is waited on first. (claude-docs/design-decisions/m12.33-loading-standard.md, "Navigation provider")
  */
 export function NavigationProvider({ children }: { children: ReactNode }): ReactElement {
   const router = useRouter();

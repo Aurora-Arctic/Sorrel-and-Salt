@@ -10,18 +10,9 @@ import type {
   SeedTransaction,
 } from './types';
 
-// DESIGN.md §5's form vocabulary: six groups and every form, a starting set an
-// admin may edit. Reference data, not a scenario — migrate.yml seeds it alone,
-// so it inserts the bootstrap user itself. The groups answer "what are you
-// holding", not "how was it made": three by source (Botanical, Animal, Mineral),
-// three by state (Fluid, Curio, Substance), and no `Other` — an unfitting value
-// stays free text and surfaces for curation. No slug is written down; a group's
-// is `slugify(name)`, and a form's `formSlug` of its name and its group's,
-// since two live forms may share a name under two groups — a form's
-// seed key stays `slugify(name)`, as every database seeded before holds it.
-// Where a value fits two groups the seed takes one sense and leaves the other
-// row for an admin (claude-docs/db/form-vocabulary-seed.md, "The form
-// vocabulary seed").
+// The form vocabulary: six groups and every form, a starting set an admin may edit.
+// Reference data, not a scenario, so it inserts the bootstrap user itself. A group's
+// slug is `slugify(name)`; a form's is `formSlug` of its name and its group's. (claude-docs/db/compendium-seed/README.md, "Seed comments in full")
 
 /**
  * §5's six groups in §5's order, which nothing reads — groups list

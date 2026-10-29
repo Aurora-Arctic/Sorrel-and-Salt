@@ -102,15 +102,9 @@ export function applyAudit<T extends object>(
 }
 
 /**
- * Publishes who is writing as the four transaction-local settings every write
- * publishes — `app.current_user_id`, `app.impersonated_by`,
- * `app.privilege_route` and `app.privilege_note` — each always set, an
- * absent one as '', so no reader sees a value an earlier transaction left on
- * a pooled connection. `set_config(…, true)` is `SET LOCAL` with a bind
- * parameter, and one statement costs one round trip
- * (claude-docs/db/write-path.md, "app.current_user_id, published per
- * transaction"). The executor is the caller's transaction, so this module
- * stays client-free and serves `withAudit` and the seed alike.
+ * Publishes who is writing as the four transaction-local `app.*` settings, each always
+ * set (an absent one as ''), so a pooled connection never shows an earlier value.
+ * The executor is the caller's transaction, so this module stays client-free. (claude-docs/db/write-path.md, "Repository comments in full")
  */
 export async function publishActor(
   executor: ActorExecutor,
