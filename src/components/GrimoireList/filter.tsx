@@ -15,7 +15,8 @@ import { buildSearchSentence } from '../IngredientSearch/sentence';
 import { useListNavigation } from '../ListFrame';
 import SearchSentence from '../SearchSentence';
 import { GRIMOIRE_PARAMS } from './params';
-import { recipeHref } from './recipe-href';
+import { SPELL_LOOK_PLACE } from '../SpellCard';
+import { lookHrefOf } from './recipe-href';
 import { nounOf } from './noun';
 import type { GrimoireFilterProps, GrimoireListFilter } from './types';
 
@@ -210,7 +211,7 @@ const PanelCategories = ({
 const GrimoireFilterRow = ({
   path,
   workspaceId,
-  covenSlug,
+  cursor,
   status,
   filter,
   categories,
@@ -234,8 +235,11 @@ const GrimoireFilterRow = ({
       clear={false}
       className="compendium-list__row"
       searchHref={(query) => hrefFor(path, filter, held, query)}
-      // A picked title opens that spell's recipe page (MB.6).
-      pickHref={({ id }) => recipeHref(covenSlug, id)}
+      // A picked title opens the spell's Quick Look over the list as shown, as the card's eye
+      // does (M13.21): the page and the filter kept, the text typed and not searched not applied.
+      pickHref={({ id }) => lookHrefOf(GRIMOIRE_PARAMS.href(path, filter, { ...cursor }), id)}
+      pickHeading={({ name }) => ({ title: name })}
+      pickPlace={SPELL_LOOK_PLACE}
       source={{ kind: 'grimoire', workspaceId, status }}
     >
       <PanelCategories
@@ -264,7 +268,7 @@ function filterOf(href: string): GrimoireListFilter {
 const GrimoireFilter = ({
   path,
   workspaceId,
-  covenSlug,
+  cursor,
   status,
   filter,
   categories,
@@ -298,7 +302,7 @@ const GrimoireFilter = ({
         key={filter.query}
         path={path}
         workspaceId={workspaceId}
-        covenSlug={covenSlug}
+        cursor={cursor}
         status={status}
         filter={filter}
         categories={categories}

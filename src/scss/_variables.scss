@@ -730,10 +730,11 @@ $control-height-compact: 2rem;
 $wide-column: 80rem;
 
 // A dialog's content column, and the wide one for a form with nested panels,
-// such as the ingredient form (M5.5). Each was a raw width in
-// `Modal/index.scss`; the modal adds its padding and caps both at the window.
+// such as the ingredient form (M5.5), or two columns side by side, the spell
+// builder's jar (55rem: its step list at 30rem or more beside an 18rem aside). Each was a
+// raw width in `Modal/index.scss`; the modal adds its padding and caps both at the window.
 $dialog-column: 32rem;
-$dialog-column-wide: 48rem;
+$dialog-column-wide: 55rem;
 
 // The page's ground at three quarters over what lies behind: a dialog's backdrop
 // over the page, and a question's scrim over the form it asks about (MB.115). The
@@ -839,6 +840,11 @@ $switch-width: 2.75rem;
 // switch's thumb sliding (MB.115). Short, so the new state shows before the
 // finger lifts; the combobox's group bar widens on a highlight in the same 150ms.
 $motion-short: 150ms;
+
+// A jar's press on the entry page's shelf and on a recipe's inventory line: how far the name
+// grows on hover and focus, and how long the jar's wobble lasts (JarShelf/index.scss).
+$jar-name-grow: 1.15;
+$jar-shake-duration: 500ms;
 // A larger thing moving into place: an ingredient card's face sliding out (M12.44).
 $motion-medium: 300ms;
 // How far a card's face slides down out of its slot, and so how tall the drawer body

@@ -1,6 +1,7 @@
 'use client';
 
 import { useState, type ReactElement } from 'react';
+import { createPortal } from 'react-dom';
 import { clockTime } from '../LastEdit/relative';
 import Notice from '../Notice';
 import Spinner from '../Spinner';
@@ -9,7 +10,10 @@ import './index.scss';
 
 // Where an autosaving form says how its saves are going (M13.16): inline
 // beside the form's primary action, never a toast, because it describes this
-// form and stays until the next save. The visible line updates on every
+// form and stays until the next save. The conflict notice alone may go
+// elsewhere (`conflictInto`): under a dialog's title, where a long form's
+// footer is out of view, since it asks for a decision rather than reporting
+// (the owner's call, 2026-10-29). The visible line updates on every
 // change; screen readers hear only the first save of a burst, from a live
 // region of its own, since a save every few seconds read out each time would
 // drown what the person is typing. claude-docs/components/autosave.md.
@@ -36,6 +40,7 @@ const SaveStatus = ({
   onRetry,
   onReload,
   onKeepMine,
+  conflictInto,
   className,
 }: SaveStatusProps): ReactElement => {
   const saved = savedAt ? `${draft ? 'Draft saved' : 'Saved'} ${clockTime(savedAt)}` : '';
@@ -68,24 +73,29 @@ const SaveStatus = ({
 
   const retrying = next.failing && status === 'saving';
   const classes = className ? `save-status ${className}` : 'save-status';
+  const conflict = status === 'conflict' && (
+    <Notice kind="warn" block className="save-status__conflict">
+      <span>{conflictMessage}</span>
+      <span className="save-status__actions">
+        {/* One primary: Reload Latest, the safe choice; Keep My Version sits back, quiet (the owner's call, 2026-10-29). */}
+        <button type="button" className="btn btn--small btn--solid" onClick={onReload}>
+          Reload Latest
+        </button>
+        <button type="button" className="btn btn--small btn--quiet" onClick={onKeepMine}>
+          Keep My Version
+        </button>
+      </span>
+    </Notice>
+  );
 
   return (
     <div className={classes}>
-      {status === 'conflict' ? (
-        <Notice kind="caution" block className="save-status__conflict">
-          <span>{conflictMessage}</span>
-          <span className="save-status__actions">
-            <button type="button" className="btn btn--small" onClick={onReload}>
-              Reload Latest
-            </button>
-            <button type="button" className="btn btn--small" onClick={onKeepMine}>
-              Keep My Version
-            </button>
-          </span>
-        </Notice>
+      {conflict && conflictInto && createPortal(conflict, conflictInto)}
+      {conflict && !conflictInto ? (
+        conflict
       ) : next.failing ? (
-        <p role="alert" className="save-status__failed">
-          Couldn&rsquo;t save.{' '}
+        <Notice kind="warn" block className="save-status__failed">
+          <span>Couldn&rsquo;t save.</span>
           <button
             type="button"
             className="btn btn--small"
@@ -96,7 +106,7 @@ const SaveStatus = ({
             {retrying ? <Spinner /> : null}
             Retry
           </button>
-        </p>
+        </Notice>
       ) : (
         // Hidden from assistive technology: the live region below says it, once per burst.
         <span className="save-status__text" aria-hidden="true">

@@ -58,9 +58,7 @@ const SpellStepRef = builder.objectRef<SpellStepView>('SpellStep').implement({
   description: 'One step of a recipe: an ingredient laid, an instruction, or both.',
   fields: (t) => ({
     id: t.exposeID('id'),
-    // `position` is null on a row written before M13.1 filled it; `layerOrder`
-    // is the same order under its old name, so the wire never shows a gap.
-    position: t.int({ resolve: (step) => step.position ?? step.layerOrder }),
+    position: t.int({ resolve: (step) => step.position }),
     body: t.exposeString('body', {
       nullable: true,
       description: 'The instruction; null on an ingredient-only step.',
@@ -91,7 +89,6 @@ const SpellStepRef = builder.objectRef<SpellStepView>('SpellStep').implement({
     }),
     quantity: t.float({ nullable: true, resolve: (step) => amount(step.quantity) }),
     unit: t.expose('unit', { type: InventoryUnitEnum, nullable: true }),
-    note: t.exposeString('note', { nullable: true }),
     audit: t.field({ type: AuditInfo, resolve: (step) => step }),
   }),
 });
@@ -209,7 +206,6 @@ const SpellStepInputRef = builder.inputType('SpellStepInput', {
     form: t.string(),
     quantity: t.float(),
     unit: t.field({ type: InventoryUnitEnum }),
-    note: t.string(),
   }),
 });
 
@@ -237,7 +233,7 @@ const SpellInputRef = builder.inputType('SpellInput', {
 
 const UpdateSpellInputRef = builder.inputType('UpdateSpellInput', {
   description:
-    'Changes a spell: a field left out keeps its value, and null clears it. Visibility only widens.',
+    'Changes a spell: a field left out keeps its value, and null clears it. Visibility only widens once the spell is complete.',
   fields: (t) => ({
     title: t.string({ description: 'Required once the status is complete.' }),
     intent: t.string(),

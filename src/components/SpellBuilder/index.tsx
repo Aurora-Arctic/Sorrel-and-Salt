@@ -1,7 +1,8 @@
 'use client';
 
 import { zodResolver } from '@hookform/resolvers/zod';
-import { type ReactElement, type ReactNode, useEffect, useRef, useState } from 'react';
+import { type ReactElement, type ReactNode, useCallback, useEffect, useRef, useState } from 'react';
+import { createPortal } from 'react-dom';
 import { FormProvider, type Resolver, useForm, useWatch } from 'react-hook-form';
 import { CollapsibleSection, FoldAll } from '../CollapsibleSection';
 import {
@@ -24,20 +25,23 @@ import {
 } from '../Field';
 import { clockTime } from '../LastEdit/relative';
 import { moonPhaseIcon } from './moon-phase-icon';
+import { useModalHeaderNote } from '../Modal';
 import Notice from '../Notice';
 import SaveStatus from '../SaveStatus';
 import Skeleton from '../Skeleton';
 import { SpellCategoriesField, sameCategories, useCategoryName } from './categories-field';
 import { SpellComparison } from './comparison-panel';
+import { JarDetails } from './jar-details';
 import { DAYS_OF_THE_WEEK, MOON_PHASES } from './constants';
-import { saveSpell } from './autosave';
+import { readLatestSpell, saveSpell } from './autosave';
 import { useSaveOnClose } from './save-on-close';
 import { SpellSteps } from './steps';
-import type { SpellStepSend } from './steps/types';
+import type { SpellStepSend, SpellStepValue } from './steps/types';
 import {
   isBlankNewInstruction,
   isBlankSavedInstruction,
   stepInputOf,
+  restoredSteps,
   stepValueOf,
   stepsChanged,
   unitIssues,
@@ -68,6 +72,9 @@ import './index.scss';
 // its id and revision and `onCreated` moves the dialog's address to it. There
 // is no Cancel: Close saves what is unsaved, then closes (./save-on-close.ts).
 // See claude-docs/components/spell-builder.md.
+
+/** A step's saved id, set by a save's answer: bookkeeping, never a step of the history. */
+const isStepIdName = (name: string): boolean => /^steps\.\d+\.stepId$/.test(name);
 
 const FIELDS: readonly SpellBuilderField[] = [
   'title',
@@ -206,6 +213,9 @@ const resolver: Resolver<SpellBuilderValues, unknown, SpellBuilderInput> = async
 const STEPS_FAILED =
   "The spell's steps could not be loaded, so nothing can be saved. Reload the page to try again.";
 
+/** Said on the form when Reload Latest could not read the spell: the conflict stays, to try again. */
+const RELOAD_FAILED = "The latest version couldn't be loaded. Try again.";
+
 /** Said on the form when a save is tried while a field holds an error the form shows. */
 const FIX_FIELDS = 'Some fields need fixing before this can be saved.';
 
@@ -218,6 +228,7 @@ const fieldsRefused = (): GraphQLClientError =>
 
 const SpellBuilder = ({
   workspaceId,
+  covenSlug,
   userId,
   spell,
   onCreated,
@@ -226,6 +237,7 @@ const SpellBuilder = ({
   // The spell this builder opened on. The dialog hands the builder a different
   // `spell` once the builder's own first save has moved the address to it; the
   // builder keeps what it opened with and carries the id its save returned.
+  const look = covenSlug === undefined ? undefined : { workspaceId, covenSlug };
   const [opened] = useState(spell);
   const [createdId, setCreatedId] = useState<string | null>(null);
   // True while a save the person asked for runs: the resolver then checks a blank new instruction too.
@@ -275,7 +287,8 @@ const SpellBuilder = ({
     ) ||
     stepsChanged(sendable, (defaultValues?.steps ?? []) as SpellBuilderValues['steps']);
   // A unit the jar cannot be measured in holds Save, as the service would refuse it.
-  const unitRefused = unitIssues(steps).size > 0;
+  const unitIssueSteps = unitIssues(steps);
+  const unitRefused = unitIssueSteps.size > 0;
   // A saved instruction cleared of its text cannot be left out (that would delete it), so the autosave waits.
   const blankSaved = steps.some(isBlankSavedInstruction);
 
@@ -321,7 +334,30 @@ const SpellBuilder = ({
   );
 
   const root = useRef<HTMLFormElement>(null);
-  const history = useFormHistory(methods, { root });
+  // An Undo or Redo writes saved steps back as they were; one a save has since removed is
+  // gone from the server, so it comes back as a new step (no id) and the next save adds it.
+  const liveStepIds = useCallback(
+    (): Set<string> =>
+      new Set(
+        ((methods.control._defaultValues.steps ?? []) as (SpellStepValue | undefined)[]).flatMap(
+          (step) => (step?.stepId ? [step.stepId] : []),
+        ),
+      ),
+    [methods.control],
+  );
+  const prepareRestored = useCallback(
+    (name: string, value: unknown): unknown => {
+      if (name === 'steps' && Array.isArray(value))
+        return restoredSteps(value as SpellStepValue[], liveStepIds());
+      if (/^steps\.\d+$/.test(name) && value)
+        return restoredSteps([value as SpellStepValue], liveStepIds())[0];
+      if (/^steps\.\d+\.stepId$/.test(name))
+        return liveStepIds().has(value as string) ? value : null;
+      return value;
+    },
+    [liveStepIds],
+  );
+  const history = useFormHistory(methods, { root, prepare: prepareRestored, skip: isStepIdName });
 
   // The steps of a saved spell are on their way, or could not be read: until
   // they are in the form nothing is saved, since an update's steps are the
@@ -416,7 +452,8 @@ const SpellBuilder = ({
         workspaceId,
         id === null
           ? { kind: 'new' }
-          : { kind: 'spell', id, revision: context.force ? null : context.revision },
+          : // After Keep My Version the engine's revision is the one the refusal reported (M13.18).
+            { kind: 'spell', id, revision: context.revision },
         input,
       );
     } catch (error) {
@@ -505,6 +542,21 @@ const SpellBuilder = ({
       asked.current = false;
     }
   };
+  // Why Save Spell is off, a tip on the button (the owner's call, 2026-10-29; it was text beside
+  // it from the second design review), so a disabled button is never a silent one. Left out while
+  // a save is on its way, and once an edit has been autosaved: the save left nothing to save, and
+  // "Nothing to save yet" is for a spell not yet edited.
+  const firstUnitIssue = [...unitIssueSteps.keys()][0];
+  const saveReason =
+    autosave.status === 'saving'
+      ? null
+      : firstUnitIssue !== undefined
+        ? `Fix the unit in step ${firstUnitIssue + 1} to save`
+        : !jarReady
+          ? 'Waiting for the jar to load'
+          : !dirty && autosave.status === 'idle'
+            ? 'Nothing to save yet'
+            : null;
   // Steps that could not be read leave nothing a save would take, so Close closes, unsaved.
   useSaveOnClose(dirty && stepsRead !== 'failed', saveForClose);
 
@@ -551,11 +603,59 @@ const SpellBuilder = ({
   }, []);
   const keepRecovered = () => {
     if (!recovered) return;
-    reset(recovered.value, { keepDefaultValues: true });
+    // The draft may be older than a save that removed a step: its ids are checked against the saved ones.
+    reset(
+      { ...recovered.value, steps: restoredSteps(recovered.value.steps, liveStepIds()) },
+      { keepDefaultValues: true },
+    );
     setRecovered(null);
   };
   const discardRecovered = () => {
     if (mirror) clearMirror(mirror);
+    setRecovered(null);
+  };
+  // Where the two notices that ask for a decision go, the recovery banner and
+  // the conflict notice: under the dialog's title, in view however far the
+  // form has scrolled, since in the footer and above the fields they were
+  // missed (the owner's call, 2026-10-29). Outside a modal they stay in the
+  // form's flow.
+  const headerNote = useModalHeaderNote();
+  const recovery = recovered && jarReady && (
+    <Notice kind="warn" block className="spell-builder__restored">
+      <span>Restored unsaved changes from {clockTime(recovered.at)}</span>
+      <span className="spell-builder__recovered">
+        {/* One primary: Keep, the choice that loses no typing; Discard sits back, quiet (the owner's call, 2026-10-29). */}
+        <button type="button" className="btn btn--small btn--solid" onClick={keepRecovered}>
+          Keep
+        </button>
+        <button type="button" className="btn btn--small btn--quiet" onClick={discardRecovered}>
+          Discard
+        </button>
+      </span>
+    </Notice>
+  );
+
+  /**
+   * Reload Latest, after someone else's save got in first (M13.18): the spell
+   * as the server has it now replaces the form, what was typed into it
+   * included, and the form starts clean from it. The engine takes the revision
+   * the refusal reported; a save made since is met as the next conflict. A read
+   * that fails leaves the conflict and the typing as they are, and says so.
+   */
+  const reloadLatest = async () => {
+    const id = createdId ?? opened?.id;
+    if (!id) return;
+    let latest: SpellBuilderSpell;
+    try {
+      latest = await readLatestSpell(workspaceId, id);
+    } catch {
+      setError('root', { message: RELOAD_FAILED });
+      openErred();
+      return;
+    }
+    await autosave.resolveConflict('reload');
+    reset(valuesOf(latest));
+    clearErrors('root');
     setRecovered(null);
   };
 
@@ -571,19 +671,7 @@ const SpellBuilder = ({
           }}
           noValidate
         >
-          {recovered && jarReady && (
-            <Notice kind="plain" block>
-              <span>Restored unsaved changes from {clockTime(recovered.at)}</span>
-              <span className="spell-builder__recovered">
-                <button type="button" className="btn btn--small" onClick={keepRecovered}>
-                  Keep
-                </button>
-                <button type="button" className="btn btn--small" onClick={discardRecovered}>
-                  Discard
-                </button>
-              </span>
-            </Notice>
-          )}
+          {recovery && (headerNote ? createPortal(recovery, headerNote) : recovery)}
           {errors.root?.message && <Notice kind="error">{errors.root.message}</Notice>}
           <div className="collapsible-sections">
             <FoldAll
@@ -613,20 +701,26 @@ const SpellBuilder = ({
             {section(
               'Jar',
               <>
-                <TextField<SpellBuilderValues>
-                  name="jarDescription"
-                  label="Jar Description"
-                  placeholder="Add a description"
-                  autoComplete="off"
-                />
-                <TextField<SpellBuilderValues>
-                  name="sealWaxColor"
-                  label="Seal Wax Colour"
-                  placeholder="Add a colour"
-                  autoComplete="off"
+                <JarDetails
+                  descriptionField={
+                    <TextField<SpellBuilderValues>
+                      name="jarDescription"
+                      label="Jar Description"
+                      placeholder="Add a description"
+                      autoComplete="off"
+                    />
+                  }
+                  waxField={
+                    <TextField<SpellBuilderValues>
+                      name="sealWaxColor"
+                      label="Seal Wax"
+                      placeholder="Add a colour"
+                      autoComplete="off"
+                    />
+                  }
                 />
                 {jarReady ? (
-                  <SpellSteps workspaceId={workspaceId} />
+                  <SpellSteps workspaceId={workspaceId} look={look} />
                 ) : stepsRead === 'failed' ? (
                   <Notice kind="error">{STEPS_FAILED}</Notice>
                 ) : (
@@ -634,7 +728,6 @@ const SpellBuilder = ({
                     <Skeleton shape="line" />
                   </section>
                 )}
-                {/* Intent against the jar's categories (M10.17), after the jar it reads. */}
                 {jarReady && <SpellComparison />}
               </>,
             )}
@@ -652,7 +745,7 @@ const SpellBuilder = ({
                 />
                 <SpellSuggestField
                   name="dayOfWeek"
-                  label="Day of the Week"
+                  label="Day"
                   placeholder="Add a day"
                   options={DAYS_OF_THE_WEEK}
                 />
@@ -679,6 +772,7 @@ const SpellBuilder = ({
             dirty={dirty && !unitRefused && jarReady}
             submitting={autosave.status === 'saving'}
             onSave={() => void saveNow()}
+            saveReason={saveReason ?? undefined}
           >
             <SpellStatusField flush={flush} />
             <SaveStatus
@@ -686,11 +780,9 @@ const SpellBuilder = ({
               savedAt={autosave.savedAt}
               draft={defaultValues?.status !== 'complete'}
               conflictMessage="This spell was changed elsewhere."
+              conflictInto={headerNote}
               onRetry={autosave.retry}
-              onReload={() => {
-                // Reloading the page reads the saved row afresh (the proper reload is M13.18's).
-                void autosave.resolveConflict('reload').then(() => window.location.reload());
-              }}
+              onReload={() => void reloadLatest()}
               onKeepMine={() => void autosave.resolveConflict('keep-mine').catch(() => undefined)}
             />
           </FormActions>

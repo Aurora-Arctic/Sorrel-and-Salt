@@ -121,4 +121,10 @@ describe('CategoryChips', () => {
     fireEvent.focus(more()!);
     expect(more()).toHaveAttribute('aria-expanded', 'true');
   });
+  it('shows every chip and no +N button when asked to show them all', () => {
+    render(<CategoryChips categories={many(CATEGORY_CHIP_LIMIT + 3)} label="Testwort" showAll />);
+
+    expect(chips()).toHaveLength(CATEGORY_CHIP_LIMIT + 3);
+    expect(more()).toBeNull();
+  });
 });

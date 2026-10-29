@@ -1,19 +1,24 @@
 import type { Locator, Page } from '@playwright/test';
 import { test, expect } from '../fixtures';
+import { assertNoAccessibilityViolations } from '../axe';
 import { recreateE2eDatabase } from '../database';
 import { signInAgainAs } from '../session';
 import {
+  applyFilters,
+  chooseChip,
   compendiumVariant,
   insertSpell,
+  insertStep,
   insertStock,
   localIngredient,
+  openFilters,
   seedCoven,
   withSql,
 } from './coven-ingredients';
 import { categoryChip, pickCategoryIn } from './ingredient-dialogs';
 import { makeVariant } from '../../support/fixtures/ingredient';
 
-// Stories 47 to 57 and 76 to 80: the grimoire, from naming a spell to the
+// Stories 47 to 57, 76 to 80, 83 and 84: the grimoire, from naming a spell to the
 // workings recorded against it. Every story here is a scaffold: the page it
 // walks is not built yet, and the task named in its annotation turns its
 // `fixme` into `test` and makes it pass. Each body is the flow as the finished
@@ -54,8 +59,13 @@ function grimoireList(page: Page): Locator {
  * "Rosemary (Herb)", and returns the step's row in the list.
  */
 async function addIngredientStep(page: Page, name: string): Promise<Locator> {
-  await page.getByRole('combobox', { name: 'Search Ingredients' }).fill(name);
-  await page.getByRole('option', { name }).first().click();
+  await page.getByRole('combobox', { name: 'Add to Jar' }).fill(name);
+  // The box's first row offers the typed text as a one-off; it is not the ingredient.
+  await page
+    .getByRole('option', { name })
+    .filter({ hasNotText: 'as a one-off ingredient' })
+    .first()
+    .click();
   return stepList(page).getByRole('listitem').filter({ hasText: name });
 }
 
@@ -159,13 +169,17 @@ test(
     );
     await signInAgainAs(page, coven.users.B);
     await openBuilder(page, coven.slug);
-    const search = page.getByRole('combobox', { name: 'Search Ingredients' });
+    const search = page.getByRole('combobox', { name: 'Add to Jar' });
     await search.fill('Rose');
     const yours = page.getByRole('group', { name: 'Your Ingredients' });
     await expect(yours.getByRole('option', { name: /Rosemary \(Herb\)/ })).toBeVisible();
     await expect(page.getByRole('group', { name: 'Compendium' })).toBeVisible();
     await search.fill('Fixture Nothing Matches');
-    await expect(page.getByRole('option')).toHaveCount(0);
+    // Nothing matches, so the one row left offers the typed name as a one-off.
+    await expect(page.getByRole('option')).toHaveCount(1);
+    await expect(
+      page.getByRole('option', { name: 'Add "Fixture Nothing Matches" as a one-off ingredient' }),
+    ).toBeVisible();
   },
 );
 
@@ -241,10 +255,10 @@ test(
     await expect(save).toBeDisabled();
     await expect(save).not.toHaveAttribute('aria-busy', 'true');
     // The builder has no page to reopen a saved spell on until M13.10, so the
-    // order is read where the save left it: position and layer_order together.
+    // order is read where the save left it: the position.
     const rows = await withSql(
-      (sql) => sql<{ name: string; position: number; layer_order: number }[]>`
-        select i.name, st.position, st.layer_order from spell_steps st
+      (sql) => sql<{ name: string; position: number }[]>`
+        select i.name, st.position from spell_steps st
         join spells s on s.id = st.spell_id
         join ingredients i on i.id = st.ingredient_id
         where s.workspace_id = ${coven.id} and s.title = 'Fixture Working'
@@ -252,8 +266,8 @@ test(
         order by st.position`,
     );
     expect(rows).toEqual([
-      { name: 'Mugwort', position: 1, layer_order: 1 },
-      { name: 'Rosemary', position: 2, layer_order: 2 },
+      { name: 'Mugwort', position: 1 },
+      { name: 'Rosemary', position: 2 },
     ]);
   },
 );
@@ -268,21 +282,26 @@ test(
     });
     await signInAgainAs(page, coven.users.B);
     await openBuilder(page, coven.slug);
-    const panel = page.getByRole('complementary', { name: 'Intent Against Ingredients' });
+    const panel = page.getByRole('region', { name: 'Category Match' });
     await page
       .getByRole('group', { name: 'Categories', exact: true })
       .getByRole('combobox')
       .fill('Prosperity');
     await page.getByRole('option', { name: 'Prosperity' }).click();
-    await expect(panel.getByRole('list', { name: 'Intended, Not Carried' })).toContainText(
-      'Prosperity',
-    );
+    // The rows: Missing (intended, not in the jar) and Extra (in the jar, not intended).
+    const row = (label: string) => panel.locator('dt', { hasText: label });
+    await expect(row('Missing')).toBeVisible();
+    await expect(panel.getByText('Prosperity')).toBeVisible();
     await addIngredientStep(page, 'Mugwort');
-    await expect(panel.getByRole('list', { name: 'Carried, Not Intended' })).toContainText(
-      'Psychic Work',
+    await expect(row('Extra')).toBeVisible();
+    // Prosperity is still intended and nothing carries it: its chip says so in its tip.
+    await expect(panel.getByRole('button', { name: 'Prosperity' })).toHaveAccessibleDescription(
+      'Assigned to this spell, and nothing in the jar carries it',
     );
+    // The step just added is open: its pencil reads Close, and Remove is hidden until it is shut.
+    await page.getByRole('button', { name: /Close Mugwort/ }).click();
     await page.getByRole('button', { name: /Remove Mugwort/ }).click();
-    await expect(panel.getByRole('list', { name: 'Carried, Not Intended' })).toHaveCount(0);
+    await expect(row('Extra')).toHaveCount(0);
   },
 );
 
@@ -313,18 +332,48 @@ test(
 );
 
 test(
-  'a member sees when they are adding something the coven has none of',
+  "a member sees on a spell's Quick Look and its recipe page what the coven has none of",
   { tag: '@story-54' },
   async ({ page }) => {
     const coven = await seedCoven(page, 'Fixture Coven Fifty-Four', 'story-54.test', {
       A: 'owner',
       B: 'member',
     });
+    const A = coven.users.A;
+    const spellId = await withSql(async (sql) => {
+      // The coven's jar of one root is empty, and of the other holds plenty.
+      const empty = await localIngredient(sql, coven.id, A, {
+        name: 'Fixture Emptywort',
+        nomenclature: 'none',
+        variants: [makeVariant({ form: 'Root' })],
+      });
+      const full = await localIngredient(sql, coven.id, A, {
+        name: 'Fixture Fullwort',
+        nomenclature: 'none',
+        variants: [makeVariant({ form: 'Root' })],
+      });
+      await insertStock(sql, coven.id, empty, { quantity: 0, unit: 'g', threshold: 0 }, A);
+      await insertStock(sql, coven.id, full, { quantity: 50, unit: 'g', threshold: 0 }, A);
+      const id = await insertSpell(sql, coven.id, 'Fixture Working', 'workspace', A, 'complete');
+      await insertStep(sql, id, empty, { quantity: 2, unit: 'g', position: 0 }, A);
+      await insertStep(sql, id, full, { quantity: 2, unit: 'g', position: 1 }, A);
+      return id;
+    });
     await signInAgainAs(page, coven.users.B);
-    await openBuilder(page, coven.slug);
-    // Rosemary is in the compendium and not in this coven's cupboard.
-    const step = await addIngredientStep(page, 'Rosemary (Herb)');
-    await expect(step.getByRole('button', { name: 'Out of Stock' })).toBeVisible();
+    await page.goto(`/coven/${coven.slug}/grimoire`);
+    await grimoireList(page).getByRole('link', { name: 'Quick Look Fixture Working' }).click();
+    // The Quick Look marks the step the coven has none of, and only that one.
+    const look = page.getByRole('dialog', { name: /Fixture Working/ });
+    await expect(look.getByRole('button', { name: 'Out' })).toHaveCount(1);
+    const emptyStep = look.getByRole('listitem').filter({ hasText: 'Fixture Emptywort' });
+    await expect(emptyStep.getByRole('button', { name: 'Out' })).toBeVisible();
+    // The recipe page says the same in its In Coven Inventory.
+    await look.getByRole('link', { name: 'See Full Recipe' }).click();
+    await expect(page).toHaveURL(new RegExp(`/coven/${coven.slug}/grimoire/${spellId}$`));
+    const inventory = page.getByRole('region', { name: 'In Coven Inventory' });
+    await expect(inventory.getByRole('button', { name: 'Out' })).toHaveCount(1);
+    const emptyLine = inventory.getByRole('listitem').filter({ hasText: 'Fixture Emptywort' });
+    await expect(emptyLine.getByRole('button', { name: 'Out' })).toBeVisible();
   },
 );
 
@@ -343,21 +392,19 @@ test('a member saves a spell as a draft', { tag: '@story-55' }, async ({ page })
   await page.goto(`/coven/${coven.slug}/grimoire/drafts`);
   const card = grimoireList(page).getByRole('listitem', { name: /Fixture Working/ });
   await expect(card.getByText('Draft')).toBeVisible();
-  // Marking it complete is explicit, and reversible.
+  // Marking it complete is explicit, and final: the button goes and nothing replaces it.
   await page.goto(draft);
   const edit = page.getByRole('dialog', { name: 'Edit Spell, Fixture Working' });
   await edit.getByRole('button', { name: 'Mark Complete' }).click();
-  await expect(edit.getByRole('button', { name: 'Reopen as Draft' })).toBeVisible();
-  await edit.getByRole('button', { name: 'Reopen as Draft' }).click();
-  await expect(edit.getByRole('button', { name: 'Mark Complete' })).toBeVisible();
+  await expect(edit.getByRole('button', { name: 'Mark Complete' })).toHaveCount(0);
   // A saved spell is edited from its card's link, and the change reads back on the card.
-  await page.goto(`/coven/${coven.slug}/grimoire/drafts`);
+  await page.goto(`/coven/${coven.slug}/grimoire`);
   await grimoireList(page).getByRole('link', { name: 'Edit Fixture Working' }).click();
   const renamed = page.getByRole('dialog', { name: 'Edit Spell, Fixture Working' });
   await renamed.getByRole('button', { name: 'Open All' }).click();
   await renamed.getByRole('textbox', { name: 'Title' }).fill('Fixture Working Renamed');
   await renamed.getByRole('button', { name: 'Close', exact: true }).click();
-  await expect(page).toHaveURL(`/coven/${coven.slug}/grimoire/drafts`);
+  await expect(page).toHaveURL(`/coven/${coven.slug}/grimoire`);
   await expect(
     grimoireList(page).getByRole('link', { name: 'Fixture Working Renamed', exact: true }),
   ).toBeVisible();
@@ -408,12 +455,12 @@ test(
     await signInAgainAs(page, coven.users.B);
     await openBuilder(page, coven.slug);
     await page.getByRole('textbox', { name: 'Title' }).fill('Fixture Working');
-    await page.getByRole('textbox', { name: 'One-Off Name' }).fill('Testwort');
-    await page.getByRole('textbox', { name: 'One-Off Form' }).fill('Dried Root');
-    await page.getByRole('button', { name: 'Add One-Off Ingredient' }).click();
-    await expect(
-      stepList(page).getByRole('listitem').filter({ hasText: 'Testwort' }),
-    ).toBeVisible();
+    await page.getByRole('combobox', { name: 'Add to Jar' }).fill('Testwort');
+    await page.getByRole('option', { name: 'Add "Testwort" as a one-off ingredient' }).click();
+    // The new step opens at once, for its form.
+    const oneOff = stepList(page).getByRole('listitem').filter({ hasText: 'Testwort' });
+    await oneOff.getByRole('textbox', { name: /^Form/ }).fill('Dried Root');
+    await expect(oneOff).toContainText('One-Off');
     const save = page.getByRole('button', { name: 'Save' });
     // The autosave may already have saved it by now, so the press is not waited for.
     await expect(page.getByRole('status').filter({ hasText: /^Draft saved/ })).toBeVisible({
@@ -482,6 +529,8 @@ test(
     const step = await addIngredientStep(page, 'Rosemary (Herb)');
     const unit = step.getByRole('combobox', { name: /^Unit/ });
     const save = page.getByRole('button', { name: 'Save' });
+    // The step starts in the unit the jar is kept in.
+    await expect(unit).toHaveText('g');
     // A volume is refused with a reason, and nothing can be saved.
     await pickUnit(step, 'ml');
     await expect(unit).toHaveAttribute('aria-invalid', 'true');
@@ -561,7 +610,7 @@ test(
     await signInAgainAs(page, coven.users.B);
     await openBuilder(page, coven.slug);
     await page.getByRole('textbox', { name: 'Title' }).fill('Fixture Working');
-    await page.getByRole('button', { name: 'Add a Step' }).click();
+    await page.getByRole('button', { name: 'Add Instruction' }).click();
     const steps = stepList(page).getByRole('listitem');
     await steps.first().getByRole('textbox', { name: 'Instruction' }).fill('Light the candle');
     const withIngredient = await addIngredientStep(page, 'Rosemary');
@@ -575,10 +624,18 @@ test(
     // A saved spell opens with its sections shut (M10.12).
     await page.getByRole('button', { name: 'Open All' }).click();
     await expect(steps).toHaveCount(2);
+    // A saved instruction step is shut too, and reads as its text; its pencil opens the field.
+    await expect(steps.first()).toContainText('Light the candle');
+    await steps.first().getByRole('button', { name: 'Edit step 1' }).click();
     await expect(steps.first().getByRole('textbox', { name: 'Instruction' })).toHaveValue(
       'Light the candle',
     );
     await expect(steps.last()).toContainText('Rosemary');
+    // A saved ingredient step opens shut: its pencil shows its fields.
+    await steps
+      .last()
+      .getByRole('button', { name: /^Edit Rosemary/ })
+      .click();
     await expect(steps.last().getByRole('textbox', { name: 'Instruction' })).toHaveValue(
       'Crush it first',
     );
@@ -625,5 +682,192 @@ test(
     await expect(page.getByRole('textbox', { name: 'Intent' })).toHaveValue(
       'To see clearly, offline',
     );
+  },
+);
+
+/** The builder on a saved spell, every section open, in `page`'s browser. */
+async function openSavedSpell(page: Page, slug: string, spellId: string, title: string) {
+  await page.goto(`/coven/${slug}/grimoire?edit=${spellId}`);
+  const dialog = page.getByRole('dialog', { name: `Edit Spell, ${title}` });
+  await dialog.getByRole('button', { name: 'Open All' }).click();
+  return dialog;
+}
+
+test(
+  'two members edit one spell: the second save is refused, and Reload Latest or Keep My Version settles it',
+  { tag: '@story-81' },
+  async ({ page, browser, baseURL }) => {
+    const coven = await seedCoven(page, 'Fixture Coven Eighty-One Shared', 'story-81-shared.test', {
+      A: 'owner',
+      B: 'member',
+    });
+    const spellId = await withSql((sql) =>
+      insertSpell(sql, coven.id, 'Shared Working', 'workspace', coven.users.A),
+    );
+    // Two browsers on the one spell: B here, A in a second context on the same server.
+    await signInAgainAs(page, coven.users.B);
+    const other = await browser.newContext({ baseURL });
+    const otherPage = await other.newPage();
+    await signInAgainAs(otherPage, coven.users.A);
+    const first = await openSavedSpell(page, coven.slug, spellId, 'Shared Working');
+    const second = await openSavedSpell(otherPage, coven.slug, spellId, 'Shared Working');
+    const conflict = 'This spell was changed elsewhere.';
+
+    // Both edit the same field; the first save lands, the second is refused.
+    await first.getByRole('textbox', { name: 'Intent' }).fill('Seen by B');
+    await first.getByRole('button', { name: 'Save Spell' }).click();
+    await expect(first.getByRole('button', { name: 'Save Spell' })).toBeDisabled();
+    await second.getByRole('textbox', { name: 'Intent' }).fill('Seen by A');
+    await second.getByRole('button', { name: 'Save Spell' }).click();
+    await expect(second.getByText(conflict)).toBeVisible();
+    await assertNoAccessibilityViolations(otherPage);
+
+    // Reload Latest shows the other's text, and there is nothing left to save.
+    await second.getByRole('button', { name: 'Reload Latest' }).click();
+    await expect(second.getByRole('textbox', { name: 'Intent' })).toHaveValue('Seen by B');
+    await expect(second.getByText(conflict)).toBeHidden();
+    await expect(second.getByRole('button', { name: 'Save Spell' })).toBeDisabled();
+    // Edited again from the latest, the save lands.
+    await second.getByRole('textbox', { name: 'Intent' }).fill('Seen by A, after reload');
+    await second.getByRole('button', { name: 'Save Spell' }).click();
+    await expect(second.getByRole('button', { name: 'Save Spell' })).toBeDisabled();
+
+    // The first browser is now the one behind: Keep My Version writes over A's save.
+    await first.getByRole('textbox', { name: 'Intent' }).fill('Kept by B');
+    await first.getByRole('button', { name: 'Save Spell' }).click();
+    await expect(first.getByText(conflict)).toBeVisible();
+    await first.getByRole('button', { name: 'Keep My Version' }).click();
+    await expect(first.getByText(conflict)).toBeHidden();
+    await expect(first.getByRole('button', { name: 'Save Spell' })).toBeDisabled();
+    await page.reload();
+    await page.getByRole('button', { name: 'Open All' }).click();
+    await expect(page.getByRole('textbox', { name: 'Intent' })).toHaveValue('Kept by B');
+
+    // And the other open builder meets the conflict in its turn.
+    await second.getByRole('textbox', { name: 'Intent' }).fill('Seen by A, once more');
+    await second.getByRole('button', { name: 'Save Spell' }).click();
+    await expect(second.getByText(conflict)).toBeVisible();
+    await other.close();
+  },
+);
+
+test(
+  "a member opens a spell's details over the grimoire list, from its card or a search pick",
+  { tag: '@story-83' },
+  async ({ page }) => {
+    const coven = await seedCoven(page, 'Fixture Coven Eighty-Three', 'story-83.test', {
+      A: 'owner',
+      B: 'member',
+      C: 'viewer',
+    });
+    const spell = await withSql((sql) =>
+      insertSpell(sql, coven.id, 'Fixture Working', 'workspace', coven.users.B, 'complete'),
+    );
+    const grimoire = `/coven/${coven.slug}/grimoire`;
+    const look = page.getByRole('dialog', { name: 'Fixture Working' });
+
+    // From the card's eye, and back to the list with focus where it was.
+    await signInAgainAs(page, coven.users.B);
+    await page.goto(grimoire);
+    const eye = grimoireList(page).getByRole('link', { name: 'Quick Look Fixture Working' });
+    await eye.click();
+    await expect(look).toBeVisible();
+    await page.keyboard.press('Escape');
+    await expect(look).toHaveCount(0);
+    await expect(eye).toBeFocused();
+
+    // From a pick in the title search: the same details, over the list, and back to the box.
+    const title = page.getByRole('combobox', { name: 'Title' });
+    await title.fill('fixture');
+    await page.getByRole('option', { name: 'Fixture Working' }).click();
+    await expect(page).toHaveURL(`${grimoire}?spell=${spell}`);
+    await expect(look).toBeVisible();
+    await expect(grimoireList(page)).toBeVisible();
+    await page.keyboard.press('Escape');
+    await expect(look).toHaveCount(0);
+    await expect(title).toBeFocused();
+
+    // A member who may change the spell is offered Edit, which opens the builder on it.
+    await eye.click();
+    await look.getByRole('link', { name: 'Edit Spell', exact: true }).click();
+    await expect(page.getByRole('dialog', { name: 'Edit Spell, Fixture Working' })).toBeVisible();
+
+    // A viewer sees the same details and is offered no Edit.
+    await signInAgainAs(page, coven.users.C);
+    await page.goto(grimoire);
+    await grimoireList(page).getByRole('link', { name: 'Quick Look Fixture Working' }).click();
+    await expect(look).toBeVisible();
+    await expect(look.getByRole('link', { name: /^Edit / })).toHaveCount(0);
+  },
+);
+
+test(
+  'a member narrows the grimoire by moon phase, visibility and maker',
+  { tag: '@story-84' },
+  async ({ page }) => {
+    const coven = await seedCoven(page, 'Fixture Coven Eighty-Four', 'story-84.test', {
+      A: 'owner',
+      B: 'member',
+    });
+    await withSql(async (sql) => {
+      const full = await insertSpell(
+        sql,
+        coven.id,
+        'Shared Full Moon Working',
+        'workspace',
+        coven.users.A,
+        'complete',
+      );
+      const waning = await insertSpell(
+        sql,
+        coven.id,
+        'Shared Waning Working',
+        'workspace',
+        coven.users.B,
+        'complete',
+      );
+      const mine = await insertSpell(
+        sql,
+        coven.id,
+        'Private Full Moon Working',
+        'private',
+        coven.users.B,
+        'complete',
+      );
+      await sql`update spells set moon_phase = 'Full Moon' where id in (${full}, ${mine})`;
+      await sql`update spells set moon_phase = 'Waning Crescent' where id = ${waning}`;
+    });
+    await signInAgainAs(page, coven.users.B);
+    await page.goto(`/coven/${coven.slug}/grimoire`);
+    const items = grimoireList(page).getByRole('listitem');
+    const item = (name: string) => grimoireList(page).getByRole('listitem', { name });
+    await expect(items).toHaveCount(3);
+
+    // The moon phase it is worked under.
+    let panel = await openFilters(page);
+    await panel.getByRole('combobox', { name: 'Moon Phase' }).fill('full');
+    await page.getByRole('option', { name: /Full Moon/ }).click();
+    await applyFilters(page, panel);
+    await expect(items).toHaveCount(2);
+    await expect(item('Shared Waning Working')).toHaveCount(0);
+
+    // Of those, only what is shared.
+    panel = await openFilters(page);
+    await chooseChip(panel.getByRole('group', { name: 'Visibility' }), /^Shared/);
+    await applyFilters(page, panel);
+    await expect(items).toHaveCount(1);
+    await expect(item('Shared Full Moon Working')).toBeVisible();
+
+    // Who made it: a member's own, whatever its phase.
+    await page.goto(`/coven/${coven.slug}/grimoire`);
+    panel = await openFilters(page);
+    await panel.getByRole('combobox', { name: 'Coven Member' }).fill('Fixture B');
+    await page.getByRole('option', { name: /^Fixture B/ }).click();
+    // The box takes several members, so its menu stays open on the rest until it is shut.
+    await panel.getByRole('button', { name: 'Show Coven Member coven members' }).click();
+    await applyFilters(page, panel);
+    await expect(items).toHaveCount(2);
+    await expect(item('Private Full Moon Working')).toBeVisible();
+    await expect(item('Shared Waning Working')).toBeVisible();
   },
 );

@@ -10,7 +10,16 @@ import type { SpellStepView } from '@/modules/grimoire';
 /** What a linked step reads when the service withheld its ingredient (another coven's, say). */
 export const UNAVAILABLE_INGREDIENT = 'Unavailable Ingredient';
 
-export function recipeStepsOf(views: readonly SpellStepView[], covenSlug: string): RecipeStep[] {
+/**
+ * `hereHref` with the ingredient's details asked for: the page's own address, or the tab's with
+ * `?spell=` kept, plus `entry=<id>`, so the details open over the spell rather than leaving it
+ * (the owner, 2026-10-28).
+ */
+export const entryHrefOf = (hereHref: Route, id: string): Route =>
+  `${hereHref}${hereHref.includes('?') ? '&' : '?'}entry=${id}` as Route;
+
+/** `views` as the recipe draws them on the page at `hereHref`, whose address the Quick Look eyes add `entry=` to. */
+export function recipeStepsOf(views: readonly SpellStepView[], hereHref: Route): RecipeStep[] {
   const steps = views.map((view): RecipeStep => {
     const linked = view.ingredientId !== null;
     if (!linked && view.name === null) {
@@ -27,13 +36,26 @@ export function recipeStepsOf(views: readonly SpellStepView[], covenSlug: string
       formal: null,
       quantity: view.quantity === null ? null : String(view.quantity),
       unit: view.unit,
-      href:
+      look:
         ingredient && !ingredient.deleted
-          ? (`/coven/${covenSlug}/ingredients/${ingredient.id}` as Route)
+          ? {
+              href: entryHrefOf(hereHref, ingredient.id),
+              name: ingredient.name,
+              canonicalName: ingredient.canonicalName,
+              nomenclature: ingredient.nomenclature,
+            }
           : null,
+      safety: ingredient
+        ? {
+            toxic: ingredient.toxic,
+            safetyNotes: ingredient.safetyNotes,
+            variants: variant
+              ? [{ form: variant.form, toxic: variant.toxic, safetyNotes: variant.safetyNotes }]
+              : [],
+          }
+        : null,
       oneOff: !linked,
       deleted: linked && (ingredient?.deleted === true || variant?.deleted === true),
-      note: view.note,
       body: view.body,
     };
   });

@@ -46,6 +46,8 @@ So a jar at its threshold stands half full, and one at twice its threshold or mo
 
 TODO(owner): a faceted jar's two bands (`__shade`, `__shine`) are made from the text and card colours with `color-mix`, as no token of their own exists. In the dark theme the text colour is the light one, so the two bands swap roles there. Say whether they should be tokens, one pair for each theme.
 
+The module also exports `JarDrawing` (the drawing alone, level and tint) and `pickJarShape` (the vessel for a seed and a form). The spell builder's jar details reuse both ([`spell-builder.md`](spell-builder.md), "The jar details"). It seeds the vessel for a linked step with the ingredient id, so a vessel there can differ from the one the ingredient's own page shelves.
+
 ## Markup and accessibility
 
 - The shelf is a `ul` named **Jars**; each jar is an `li`.

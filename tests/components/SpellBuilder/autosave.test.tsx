@@ -4,13 +4,15 @@ import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import type {
   CreateSpellMutation,
   CreateSpellMutationVariables,
+  SpellBuilderReloadQuery,
+  SpellBuilderReloadQueryVariables,
   UpdateSpellMutation,
   UpdateSpellMutationVariables,
 } from '@/gql/graphql';
 import { makeQueryClient } from '@/lib/graphql-client';
 import { mirrorKey, readMirror, writeMirror } from '@/lib/autosave';
 import type { SpellBuilderProps, SpellBuilderValues } from '@/components/SpellBuilder/types';
-import { mockGraphQLMutation } from '../../support/msw/graphql';
+import { mockGraphQLError, mockGraphQLMutation, mockGraphQLQuery } from '../../support/msw/graphql';
 import { offerCategories } from '../../support/msw/ingredient-lookups';
 
 vi.mock('next/navigation', () => ({ useRouter: () => ({ push: vi.fn(), refresh: vi.fn() }) }));
@@ -138,7 +140,7 @@ describe('the spell builder’s saves', () => {
     renderBuilder();
 
     type('Title', 'Fixture Working');
-    fireEvent.click(screen.getByRole('button', { name: 'Add a Step' }));
+    fireEvent.click(screen.getByRole('button', { name: 'Add Instruction' }));
     fireEvent.click(save());
 
     expect(await screen.findByText('Write the instruction, or remove it')).toBeInTheDocument();
@@ -151,7 +153,7 @@ describe('the spell builder’s saves', () => {
     vi.useFakeTimers({ shouldAdvanceTime: true });
 
     type('Title', 'Fixture Working');
-    fireEvent.click(screen.getByRole('button', { name: 'Add a Step' }));
+    fireEvent.click(screen.getByRole('button', { name: 'Add Instruction' }));
     await act(async () => {
       await vi.advanceTimersByTimeAsync(3100);
     });
@@ -162,6 +164,8 @@ describe('the spell builder’s saves', () => {
     expect(screen.queryByRole('alert')).toBeNull();
     expect(screen.queryByText(/Failed|could not be saved/i)).toBeNull();
 
+    // The new instruction is open, and an open row has no Remove: close it first.
+    fireEvent.click(screen.getByRole('button', { name: 'Close step 1' }));
     fireEvent.click(screen.getByRole('button', { name: /^Remove/ }));
     await act(async () => {
       await vi.advanceTimersByTimeAsync(3100);
@@ -184,7 +188,6 @@ describe('the spell builder’s saves', () => {
             form: null,
             quantity: null,
             unit: null,
-            note: null,
             body: 'Stir three times',
             ingredient: null,
             variant: null,
@@ -195,6 +198,7 @@ describe('the spell builder’s saves', () => {
     vi.useFakeTimers({ shouldAdvanceTime: true });
 
     fireEvent.click(screen.getByRole('button', { name: 'Jar' }));
+    fireEvent.click(screen.getByRole('button', { name: 'Edit step 1' }));
     fireEvent.change(screen.getByRole('textbox', { name: /Instruction/ }), {
       target: { value: '' },
     });
@@ -278,5 +282,56 @@ describe('the recovery banner', () => {
 
     await waitFor(() => expect(readMirror(KEY)).toBeNull());
     expect(screen.queryByText(/^Restored unsaved changes from/)).toBeNull();
+  });
+});
+
+describe('a save someone else got in first (M13.18)', () => {
+  /** Opens the saved spell, types an intent, and presses Save into a stale-write refusal. */
+  async function conflict() {
+    const sends = accept();
+    mockGraphQLError('UpdateSpell', { code: 'STALE_WRITE', currentRevision: 5 });
+    renderBuilder({ spell: SPELL });
+    fireEvent.click(screen.getByRole('button', { name: 'Open All' }));
+    type('Intent', 'Mine');
+    fireEvent.click(save());
+    expect(await screen.findByText('This spell was changed elsewhere.')).toBeInTheDocument();
+    return sends;
+  }
+
+  it('offers Reload Latest and Keep My Version, and Reload Latest puts the server’s spell in the form, clean', async () => {
+    await conflict();
+    expect(screen.getByRole('button', { name: 'Keep My Version' })).toBeInTheDocument();
+    mockGraphQLQuery<SpellBuilderReloadQuery, SpellBuilderReloadQueryVariables>(
+      'SpellBuilderReload',
+      () => ({
+        spell: {
+          ...answer('s9', 5, { intent: 'Theirs', title: 'Fixture Working' }),
+          categories: [],
+        },
+      }),
+    );
+
+    fireEvent.click(screen.getByRole('button', { name: 'Reload Latest' }));
+
+    await waitFor(() => expect(field('Intent')).toHaveValue('Theirs'));
+    expect(screen.queryByText('This spell was changed elsewhere.')).toBeNull();
+    // Clean: off for a reason it can say, so aria-disabled rather than disabled.
+    expect(save().matches(':disabled, [aria-disabled="true"]')).toBe(true);
+  });
+
+  it('Keep My Version sends the form again against the revision the server is at', async () => {
+    const { updated } = await conflict();
+    // The refusal was the last handler added; an acceptance added now answers instead.
+    mockGraphQLMutation<UpdateSpellMutation, UpdateSpellMutationVariables>('UpdateSpell', (v) => {
+      updated.push(v);
+      return { updateSpell: answer(String(v.id), (v.input.expectedRevision ?? 0) + 1, v.input) };
+    });
+
+    fireEvent.click(screen.getByRole('button', { name: 'Keep My Version' }));
+
+    await waitFor(() => expect(updated[updated.length - 1]?.input.expectedRevision).toBe(5));
+    expect(updated[updated.length - 1]?.input.intent).toBe('Mine');
+    expect((await screen.findAllByText(/^Draft saved/)).length).toBeGreaterThan(0);
+    expect(screen.queryByText('This spell was changed elsewhere.')).toBeNull();
   });
 });

@@ -19,6 +19,19 @@ describe('StepRow', () => {
     expect(row()).toHaveTextContent('Light the candle');
   });
 
+  it('draws a name given as markup, so a read-only caller can link the ingredient', () => {
+    render(
+      <ol>
+        <StepRow position={1} name={<a href="/ingredients/a">Testwort (Dried Leaf)</a>} />
+      </ol>,
+    );
+
+    expect(within(row()).getByRole('link', { name: 'Testwort (Dried Leaf)' })).toHaveAttribute(
+      'href',
+      '/ingredients/a',
+    );
+  });
+
   it('draws an ingredient step with its amount and its text', () => {
     render(
       <ol>
@@ -58,5 +71,67 @@ describe('StepRow', () => {
     expect(within(row()).getByRole('textbox', { name: 'Instruction' })).toBeInTheDocument();
     expect(within(row()).getByRole('textbox', { name: 'Quantity' })).toBeInTheDocument();
     expect(row()).not.toHaveTextContent('Plain');
+  });
+  it('shows an amount with only the decimals that carry information', () => {
+    render(
+      <ol>
+        <StepRow position={1} name="Testwort" quantity="1.000" unit="tbsp" />
+        <StepRow position={2} name="Testwort" quantity="2.500" unit="tsp" />
+        <StepRow position={3} name="Testwort" quantity="10" unit="g" />
+      </ol>,
+    );
+
+    const rows = within(screen.getByRole('list')).getAllByRole('listitem');
+    expect(rows[0]).toHaveTextContent('1 tbsp');
+    expect(rows[0]).not.toHaveTextContent('1.000');
+    expect(rows[1]).toHaveTextContent('2.5 tsp');
+    expect(rows[2]).toHaveTextContent('10 g');
+  });
+  it('shows a dash before a unit that has no quantity', () => {
+    render(
+      <ol>
+        <StepRow position={1} name="Testwort" unit="tsp" />
+      </ol>,
+    );
+
+    expect(row()).toHaveTextContent('— tsp');
+  });
+
+  describe('as an open or closed card', () => {
+    const card = (open: boolean) => (
+      <ol>
+        <StepRow
+          position={1}
+          name="Testwort"
+          open={open}
+          fieldsId="fields"
+          summary="2 tsp · Crush it first"
+          badge={<span>One-Off</span>}
+          edit={<button aria-label="Edit Testwort">Edit</button>}
+          aside={<span>Goes in this jar only</span>}
+          quantityField={<input aria-label="Quantity" />}
+        />
+      </ol>
+    );
+
+    it('closed, draws the name, badge, summary and pencil, and none of the fields', () => {
+      render(card(false));
+
+      expect(row()).toHaveTextContent('Testwort');
+      expect(row()).toHaveTextContent('One-Off');
+      expect(row()).toHaveTextContent('2 tsp');
+      expect(row()).toHaveTextContent('Crush it first');
+      expect(within(row()).getByRole('button', { name: 'Edit Testwort' })).toBeInTheDocument();
+      expect(within(row()).queryByRole('textbox', { name: 'Quantity' })).toBeNull();
+      expect(row()).not.toHaveTextContent('Goes in this jar only');
+    });
+
+    it('open, draws the fields and the aside line under the id the pencil controls', () => {
+      render(card(true));
+
+      expect(within(row()).getByRole('textbox', { name: 'Quantity' })).toBeInTheDocument();
+      expect(row()).toHaveTextContent('Goes in this jar only');
+      expect(row().querySelector('#fields')).not.toBeNull();
+    });
   });
 });

@@ -10,6 +10,13 @@ export interface ComboboxOption {
   label?: string;
   /** A second line, also part of the name: what already claims the value, or a curated row's description. */
   note?: string;
+  /**
+   * More small print on the note's line, after it, muted: an ingredient's categories.
+   * The line stays one line and ends in an ellipsis where it runs long. Part of the name.
+   * A node rather than text so a caller can draw its words in colour (the spell picker's
+   * categories, in their groups' chips); only its text counts toward the name.
+   */
+  meta?: ReactNode;
   /** Which bucket it is in, curated or in use; left out by a source with one bucket. */
   curated?: boolean;
   /**
@@ -30,6 +37,11 @@ export interface ComboboxOption {
    * combobox knows no icon set; the caller hands over a drawn, decorative one.
    */
   icon?: ReactNode;
+  /**
+   * A mark at the end of the label's line, after the count: information only (the spell picker's
+   * In Jar badge). Its text counts toward the name, so a caller gives its words for a reader.
+   */
+  badge?: ReactNode;
   /** How many results picking it would match (M12.4): read after the label, "Wax (3)", part of the option's name. */
   count?: number;
   /**
@@ -119,6 +131,12 @@ export interface ComboboxProps<O extends ComboboxOption = ComboboxOption> {
    * says why. Offered unless said otherwise.
    */
   offerTyped?: boolean;
+  /**
+   * Put the action row first rather than last, the row nearest the box where the list
+   * opens beneath it: for an action that stands for what was typed, such as the spell
+   * builder's one-off ingredient. Last unless said otherwise.
+   */
+  actionFirst?: boolean;
   /**
    * Whether the list opens and narrows with its first row highlighted, so
    * Enter takes it: a closed set's type-ahead. Free text highlights nothing.

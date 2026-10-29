@@ -103,23 +103,15 @@ export type VariantInput = NonNullable<z.input<typeof LocalIngredientInput>['var
 export interface SpellStepFixture extends Required<
   Pick<
     typeof spellSteps.$inferInsert,
-    | 'ingredientId'
-    | 'name'
-    | 'form'
-    | 'quantity'
-    | 'unit'
-    | 'note'
-    | 'body'
-    | 'position'
-    | 'layerOrder'
+    'ingredientId' | 'name' | 'form' | 'quantity' | 'unit' | 'body' | 'position'
   >
 > {}
 
 /**
- * What a test says about a step. `position` and `layerOrder` are the index in
- * the array, so neither can be stated as well.
+ * What a test says about a step. `position` is the index in
+ * the array, so it cannot be stated as well.
  */
-export type SpellStepOverrides = Omit<Overrides<SpellStepFixture>, 'position' | 'layerOrder'>;
+export type SpellStepOverrides = Omit<Overrides<SpellStepFixture>, 'position'>;
 
 /** A spell, plus the categories it intends and the steps of its recipe. */
 export interface SpellFixture extends Required<
@@ -133,7 +125,6 @@ export interface SpellFixture extends Required<
     | 'moonPhase'
     | 'dayOfWeek'
     | 'note'
-    | 'instructions'
     | 'status'
     | 'visibility'
   >

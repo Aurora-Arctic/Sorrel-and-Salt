@@ -41,6 +41,18 @@ const readSpell = vi.fn();
 const stepsOfSpells = vi.fn();
 const assignedCategoriesOf = vi.fn();
 vi.mock('@/modules/grimoire', () => ({ readSpell, stepsOfSpells, assignedCategoriesOf }));
+const none = async (_s: unknown, refs: unknown[]): Promise<unknown[][]> => refs.map(() => []);
+const categoriesOf = vi.fn(none);
+const categoriesOfVariants = vi.fn(none);
+const stockOf = vi.fn(none);
+const variantsOf = vi.fn(none);
+vi.mock('@/modules/ingredients', async (importOriginal) => ({
+  ...(await importOriginal<typeof import('@/modules/ingredients')>()),
+  categoriesOf,
+  categoriesOfVariants,
+  stockOf,
+  variantsOf,
+}));
 const displayNamesOf = vi.fn();
 vi.mock('@/modules/identity', async (importOriginal) => ({
   ...(await importOriginal<typeof import('@/modules/identity')>()),
@@ -70,7 +82,6 @@ const stepRow = {
   quantity: null,
   unit: null,
   body: null,
-  note: null,
   ingredient: null,
   variant: null,
 };
@@ -106,8 +117,16 @@ beforeEach(() => {
         variantId: 'v-1',
         quantity: '2',
         unit: 'tsp',
-        ingredient: { id: 'ing-1', name: 'Testwort', canonicalName: null, deleted: false },
-        variant: { id: 'v-1', form: 'dried leaf', deleted: false },
+        ingredient: {
+          id: 'ing-1',
+          name: 'Testwort',
+          canonicalName: null,
+          nomenclature: 'none',
+          toxic: false,
+          safetyNotes: null,
+          deleted: false,
+        },
+        variant: { id: 'v-1', form: 'dried leaf', toxic: false, safetyNotes: null, deleted: false },
       },
       { ...stepRow, id: 's-a', body: 'Stir three times' },
     ],
@@ -128,14 +147,48 @@ describe('the spell recipe page', () => {
     await draw();
     expect(screen.getByRole('heading', { level: 1, name: 'Fixture Working' })).toBeInTheDocument();
     expect(screen.getByText('To keep the testwort fresh.')).toBeInTheDocument();
-    expect(screen.getByRole('list', { name: 'Categories' })).toHaveTextContent('Testwarding');
+    // The body's list first; the side column's Category Match lists chips under the same name.
+    expect(screen.getAllByRole('list', { name: 'Categories' })[0]).toHaveTextContent('Testwarding');
     const steps = within(screen.getByRole('list', { name: 'Steps' }));
     expect(steps.getAllByRole('listitem').map((li) => li.textContent)).toEqual([
       expect.stringContaining('Testwort'),
-      'Stir three times',
+      expect.stringContaining('Stir three times'),
     ]);
     expect(screen.getByText('Best on a dry night.')).toBeInTheDocument();
     expect(screen.getAllByText(/Fixture Author/).length).toBeGreaterThan(0);
+  });
+
+  it("gives an ingredient step a Quick Look eye to this page's own address with ?entry=<id>, so the details open over the recipe", async () => {
+    await draw();
+    // The step's own eye, in the recipe's list: the inventory line carries another.
+    const steps = within(screen.getByRole('list', { name: 'Steps' }));
+    expect(steps.getByRole('link', { name: 'Quick Look Testwort' })).toHaveAttribute(
+      'href',
+      `/coven/fixture-coven/grimoire/${SPELL_ID}?entry=ing-1`,
+    );
+  });
+
+  it('draws In Coven Inventory and Category Match beside the recipe, read for this coven (the owner, 2026-10-29)', async () => {
+    categoriesOf.mockResolvedValueOnce([[{ id: 'cat-1', name: 'Testwarding' }]]);
+    stockOf.mockResolvedValueOnce([
+      [{ variantId: 'v-1', unit: 'tsp', quantityOnHand: '1', lowStockThreshold: null }],
+    ]);
+    await draw();
+    const aside = screen.getByRole('complementary');
+    const inventory = within(aside).getByRole('region', { name: 'In Coven Inventory' });
+    expect(within(inventory).getByText('Testwort (Dried Leaf)')).toBeInTheDocument();
+    expect(within(inventory).getByText('need 2 tsp · have 1 tsp')).toBeInTheDocument();
+    expect(within(inventory).getByRole('button', { name: 'Not Enough' })).toBeInTheDocument();
+    const match = within(aside).getByRole('region', { name: 'Category Match' });
+    expect(within(match).getByText('Carried')).toBeInTheDocument();
+    expect(within(match).getByText('Testwarding')).toBeInTheDocument();
+    // Category Match stands over the inventory (the owner, 2026-10-29).
+    expect(
+      match.compareDocumentPosition(inventory) & Node.DOCUMENT_POSITION_FOLLOWING,
+    ).toBeTruthy();
+    expect(stockOf).toHaveBeenCalledWith(session, [
+      { ingredientId: 'ing-1', workspaceId: COVEN.id },
+    ]);
   });
 
   describe('editing (M13.10)', () => {

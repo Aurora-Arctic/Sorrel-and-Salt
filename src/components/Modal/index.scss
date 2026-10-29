@@ -129,6 +129,16 @@ $eyebrow-line: calc(#{type-size('overline')} * 1.65);
     }
   }
 
+  // One modal in place of another (`data-handover`, which the component sets):
+  // the backdrop starts dimmed, so the page never shows between the two, and
+  // only the box fades in. It still fades out at its own close.
+  &[data-handover]::backdrop {
+    // stylelint-disable-next-line plugin/use-baseline -- enhancement: the element appears without fading in, widely available 2027-02-06
+    @starting-style {
+      opacity: 1;
+    }
+  }
+
   &.is-closing,
   &.is-closing::backdrop {
     opacity: 0;
@@ -327,8 +337,16 @@ $eyebrow-line: calc(#{type-size('overline')} * 1.65);
 // the sentence (the owner's call of 2026-10-20). Hidden while nothing is in
 // it, so a dialog with no sentence is as it was.
 .modal-dialog__header-note {
+  display: grid;
   grid-column: 1 / -1;
+  gap: space(2);
   margin-top: space(2);
+
+  // A notice put here (the spell builder's recovery banner and conflict notice,
+  // M13.18) keeps the grid's gap rather than its own margin below.
+  > .notice {
+    margin-block-end: 0;
+  }
 
   &:empty {
     display: none;

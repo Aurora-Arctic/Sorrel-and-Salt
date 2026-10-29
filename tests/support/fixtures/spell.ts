@@ -23,10 +23,8 @@ const DEFAULT_STEP: SpellStepFixture = {
   form: 'ash',
   quantity: '1.000',
   unit: 'pinch',
-  note: null,
   body: null,
   position: 1,
-  layerOrder: 1,
 };
 
 const DEFAULTS: SpellFixture = {
@@ -39,7 +37,6 @@ const DEFAULTS: SpellFixture = {
   moonPhase: null,
   dayOfWeek: null,
   note: null,
-  instructions: null,
   // Both restated rather than left to the column: a fixture arriving
   // `complete` would be a finished spell in every test that never mentioned
   // status, and one arriving `private` would be a spell only its author can
@@ -75,7 +72,6 @@ function makeStep(overrides: SpellStepOverrides, index: number): SpellStepFixtur
     ...DEFAULT_STEP,
     name: defaultLayerName(position),
     position,
-    layerOrder: position,
   };
   const step = mergeFixture(defaults, overrides as Overrides<SpellStepFixture>);
 
@@ -95,10 +91,8 @@ function makeStep(overrides: SpellStepOverrides, index: number): SpellStepFixtur
     if (!stated(overrides, 'unit')) step.unit = null;
   }
 
-  // The place is the index; the override type cannot say otherwise. Both
-  // columns carry it until M13.9 drops `layer_order` (rule 10).
+  // The place is the index; the override type cannot say otherwise.
   step.position = position;
-  step.layerOrder = position;
 
   return step;
 }

@@ -5,7 +5,7 @@ import type { SaveStatusProps } from '@/components/SaveStatus/types';
 
 // An autosaving form's status line (M13.16): inline, a line that always
 // shows the latest, a live region that announces a burst of saves once, an
-// alert with Retry that stays until a save succeeds, and a caution notice for
+// alert with Retry that stays until a save succeeds, and a warning notice for
 // a conflict.
 
 /** 2:02 pm and some seconds on the reader's clock. */
@@ -80,7 +80,7 @@ describe('SaveStatus', () => {
     expect(screen.getByRole('status')).toHaveTextContent('Saved 2:02 pm');
   });
 
-  it('shows a conflict as a caution notice with Reload Latest and Keep My Version', () => {
+  it('shows a conflict as a warning notice with Reload Latest and Keep My Version', () => {
     const { onReload, onKeepMine } = setup({ status: 'conflict', savedAt: at(2) });
 
     expect(screen.getByRole('alert')).toHaveTextContent('This record was changed elsewhere.');
@@ -88,5 +88,22 @@ describe('SaveStatus', () => {
     fireEvent.click(screen.getByRole('button', { name: 'Keep My Version' }));
     expect(onReload).toHaveBeenCalledTimes(1);
     expect(onKeepMine).toHaveBeenCalledTimes(1);
+  });
+
+  it('puts the conflict notice where conflictInto points, and keeps the saved line beside Save', () => {
+    const into = document.createElement('div');
+    document.body.append(into);
+    const { container, onReload } = setup({
+      status: 'conflict',
+      savedAt: at(2),
+      conflictInto: into,
+    });
+
+    expect(within(into).getByRole('alert')).toHaveTextContent('This record was changed elsewhere.');
+    expect(within(container).queryByRole('alert')).toBeNull();
+    expect(container).toHaveTextContent('Saved 2:02 pm');
+    fireEvent.click(within(into).getByRole('button', { name: 'Reload Latest' }));
+    expect(onReload).toHaveBeenCalledTimes(1);
+    into.remove();
   });
 });

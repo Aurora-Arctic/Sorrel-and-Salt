@@ -16,6 +16,12 @@ export interface StepCategory {
 export interface SpellStepValue {
   /** The saved step this is; null for one added since the last save. */
   stepId: string | null;
+  /**
+   * The row's own key, stable for as long as the step is in the list: what the list keys its
+   * rows and drag ids by. react-hook-form's own row ids are made afresh whenever the whole
+   * array is written back (Undo and Redo do), which would remount every row. Never sent.
+   */
+  rowKey?: string;
   /** The linked ingredient and the form of it laid; both null for a one-off or an instruction. */
   ingredientId: string | null;
   variantId: string | null;
@@ -28,9 +34,8 @@ export interface SpellStepValue {
   unit: string;
   /** The unit last saved, which the unit rule leaves alone, as the service does. */
   savedUnit: string | null;
-  /** An instruction step's text, and a step's note: kept and sent back untouched (M13.3). */
+  /** An instruction step's text, kept and sent back untouched (M13.3). */
   body: string | null;
-  note: string | null;
   /** The form's group icon; null draws the generic spoon. */
   icon: FormGroupIcon | null;
   /** The ingredient's categories and the form's own. */
@@ -75,7 +80,6 @@ export interface SpellStepSend {
   quantity?: number;
   unit?: Unit;
   body?: string;
-  note?: string;
 }
 
 /** The step list's order: the rows' keys and names, in order, and the rows. */

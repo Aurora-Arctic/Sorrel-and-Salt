@@ -1,132 +1,132 @@
 'use client';
 
 import { useQuery } from '@tanstack/react-query';
-import { type ReactElement, useMemo } from 'react';
+import { type ReactElement, useId, useMemo } from 'react';
 import { useFormContext, useWatch } from 'react-hook-form';
-import { graphqlQuery } from '../../lib/graphql-client';
 import { CategoriesDocument } from '../IngredientForm/categories';
+import { graphqlQuery } from '../../lib/graphql-client';
+import { useCategoryColors } from './category-colors';
+import CategoryChips, { type CardCategory } from '../CategoryChips';
+import type { GroupColors } from '../../lib/types';
 import type { SpellBuilderValues } from './types';
 import { compareSpellCategories } from '@/modules/grimoire/validation/categories/compare';
 import { summarizeSpellCategories } from '@/modules/grimoire/validation/categories/summarize';
 import type { SpellStepValue, StepCategory } from './steps/types';
 import { stepNameOf } from './steps/values';
 
-// The intent-against-ingredients panel (M10.17, story 52): the categories the
-// author assigned set beside the ones the jar's ingredients carry, with the gap
-// named in each direction. It reads what the builder holds now, saved or not,
-// through M10.8's pure comparison, so it moves as a pick or an ingredient does.
-// The second list is one list at two levels of emphasis, said in words and not
-// by weight or colour alone: an ingredient that carries nothing intended leads
-// it and says so; one that also carries an intended category is a footnote.
+// Category Match (M10.17, story 52), in the Jar's aside: the categories the
+// author assigned set beside the ones the jar's ingredients carry, in three rows. Carried
+// is intended and present, Missing intended and absent from the jar, Extra present but not
+// intended. A row with nothing in it is
+// left out. The words lead each row and carry it alone.
+// It reads what the builder holds now, saved or not, through M10.8's pure comparison.
 // See claude-docs/components/spell-builder.md, "The comparison panel".
 
 export interface ComparisonPanelProps {
   /** The categories the spell is assigned, named. */
   intended: readonly StepCategory[];
   steps: readonly SpellStepValue[];
+  /** Each category's group colours by id, so a chip is drawn as the site draws one; a category not in it is left out. */
+  groups: ReadonlyMap<string, GroupColors>;
+  /** The heading's level: h5 under the builder's Jar heading, h2 on the recipe page (M13.21). */
+  heading?: 'h2' | 'h5';
 }
 
-interface Stray {
-  key: string;
-  name: string;
-  /** What it carries that was not intended. */
-  unintended: StepCategory[];
-  /** What it carries that was. */
-  intended: StepCategory[];
+// The chips are the compact size, the one the admin Compendium table's Categories column uses,
+// and every one is drawn: the panel is a comparison, so none is folded behind a +N.
+function Row({
+  label,
+  categories,
+  tipOf,
+  absent = false,
+}: {
+  absent?: boolean;
+  label: string;
+  categories: readonly CardCategory[];
+  tipOf: (category: CardCategory['category']) => string;
+}): ReactElement | null {
+  if (categories.length === 0) return null;
+  return (
+    <div className="comparison-panel__row">
+      <dt>{label}</dt>
+      <dd>
+        <CategoryChips
+          categories={categories}
+          label={label}
+          compact
+          absent={absent}
+          showAll
+          tipOf={tipOf}
+        />
+      </dd>
+    </div>
+  );
 }
 
-const names = (categories: readonly StepCategory[]): string =>
-  categories.map(({ name }) => name).join(', ');
-
-/** The ingredients bringing something unintended, those carrying nothing intended first. */
-function strays(steps: readonly SpellStepValue[], intended: ReadonlySet<string>): Stray[] {
-  const list = steps.flatMap((step, index) => {
-    if (step.ingredientId === null) return [];
-    const unintended = step.categories.filter(({ id }) => !intended.has(id));
-    if (unintended.length === 0) return [];
-    return [
-      {
-        key: `${index}-${step.variantId ?? step.ingredientId}`,
-        name: stepNameOf(step),
-        unintended,
-        intended: step.categories.filter(({ id }) => intended.has(id)),
-      },
-    ];
-  });
-  // Stable, so the jar's own order holds within each level.
-  return [
-    ...list.filter((s) => s.intended.length === 0),
-    ...list.filter((s) => s.intended.length > 0),
-  ];
-}
-
-export function ComparisonPanel({ intended, steps }: ComparisonPanelProps): ReactElement {
-  const intendedIds = intended.map(({ id }) => id);
+/**
+ * The comparison of the assigned categories with what the jar's steps carry: the one derivation
+ * Category Match draws from and the Add to Jar picker orders its rows by (Missing first).
+ */
+export function compareJar(intendedIds: readonly string[], steps: readonly SpellStepValue[]) {
   const present = summarizeSpellCategories(
     steps.map((step) => ({
       ingredientId: step.ingredientId,
       categoryIds: step.categories.map(({ id }) => id),
     })),
   );
-  const gaps = compareSpellCategories(intendedIds, present);
-  const notCarried = intended.filter(({ id }) => gaps.intendedNotPresent.includes(id));
-  // With nothing intended every ingredient would read as a stray, which says nothing.
-  const carried = intended.length === 0 ? [] : strays(steps, new Set(intendedIds));
+  return compareSpellCategories(intendedIds, present);
+}
+
+export function ComparisonPanel({
+  intended,
+  steps,
+  groups,
+  heading: Heading = 'h5',
+}: ComparisonPanelProps): ReactElement {
+  const headingId = useId();
+  const intendedIds = intended.map(({ id }) => id);
+  const ingredientSteps = steps.filter((step) => step.ingredientId !== null);
+  const gaps = compareJar(intendedIds, steps);
+  const missing = intended.filter(({ id }) => gaps.intendedNotPresent.includes(id));
+  const carried = intended.filter(({ id }) => !gaps.intendedNotPresent.includes(id));
+  const chipsOf = (list: readonly StepCategory[]): CardCategory[] =>
+    list.flatMap(({ id, name }) => {
+      const group = groups.get(id);
+      return group ? [{ category: { id, name }, group }] : [];
+    });
+  // The ingredients carrying a category, in the jar's order: what a Carried or Extra chip's tip names.
+  const fromTip = ({ id }: { id: string }): string =>
+    `From ${ingredientSteps
+      .filter((step) => step.categories.some((c) => c.id === id))
+      .map(stepNameOf)
+      .join(', ')}`;
+  const missingTip = (): string => 'Assigned to this spell, and nothing in the jar carries it';
+  // Each extra category, once, named by the first ingredient that carries it.
+  const extras = gaps.presentNotIntended.flatMap((id) => {
+    const name = ingredientSteps.flatMap((step) => step.categories).find((c) => c.id === id)?.name;
+    return name === undefined ? [] : [{ id, name }];
+  });
 
   let body: ReactElement;
-  if (intended.length === 0 && present.length === 0) {
-    body = <p>Nothing to compare yet. Pick categories and add ingredients.</p>;
+  if (intended.length === 0 && steps.length === 0) {
+    body = <p className="spell-aside__empty">Nothing to compare yet.</p>;
   } else if (intended.length === 0) {
-    body = <p>Pick categories above to see what the jar adds beyond them.</p>;
-  } else if (notCarried.length === 0 && carried.length === 0) {
-    body = <p>Intent and ingredients match.</p>;
+    body = <p className="spell-aside__empty">Assign categories to compare.</p>;
   } else {
     body = (
-      <>
-        {notCarried.length > 0 && (
-          <section>
-            <h5>Intended, Not Carried</h5>
-            <ul aria-label="Intended, Not Carried">
-              {notCarried.map(({ id, name }) => (
-                <li key={id}>{name}: nothing in the jar carries it</li>
-              ))}
-            </ul>
-          </section>
-        )}
-        {carried.length > 0 && (
-          <section>
-            <h5>Carried, Not Intended</h5>
-            <ul aria-label="Carried, Not Intended">
-              {carried.map((stray) => (
-                <li
-                  key={stray.key}
-                  className={`comparison-panel__stray${stray.intended.length === 0 ? ' is-unplaced' : ''}`}
-                >
-                  {stray.intended.length === 0 ? (
-                    <>
-                      <strong>{stray.name}</strong> adds {names(stray.unintended)}.{' '}
-                      <strong>Carries nothing you intended.</strong>
-                    </>
-                  ) : (
-                    <>
-                      {stray.name} adds {names(stray.unintended)}. Also carries{' '}
-                      {names(stray.intended)}.
-                    </>
-                  )}
-                </li>
-              ))}
-            </ul>
-          </section>
-        )}
-      </>
+      <dl className="comparison-panel__rows">
+        <Row label="Carried" categories={chipsOf(carried)} tipOf={fromTip} />
+        <Row label="Missing" categories={chipsOf(missing)} absent tipOf={missingTip} />
+        <Row label="Extra" categories={chipsOf(extras)} tipOf={fromTip} />
+      </dl>
     );
   }
 
   return (
-    <aside className="comparison-panel" aria-label="Intent Against Ingredients">
-      <h4>Intent Against Ingredients</h4>
+    <section className="comparison-panel" aria-labelledby={headingId}>
+      <Heading id={headingId}>Category Match</Heading>
       {body}
-    </aside>
+    </section>
   );
 }
 
@@ -140,6 +140,7 @@ export function SpellComparison(): ReactElement {
   const watchedPicks = useWatch({ control, name: 'categoryIds' });
   const steps = useWatch({ control, name: 'steps' }) ?? [];
   const { data } = useQuery({ ...graphqlQuery(CategoriesDocument), throwOnError: false });
+  const groups = useCategoryColors();
   const intended = useMemo(() => {
     const byId = new Map(data?.categories.edges.map(({ node }) => [node.id, node]));
     // A pick whose name has not landed yet is left out until it does.
@@ -148,5 +149,5 @@ export function SpellComparison(): ReactElement {
       return found ? [{ id, name: found.name }] : [];
     });
   }, [data, watchedPicks]);
-  return <ComparisonPanel intended={intended} steps={steps} />;
+  return <ComparisonPanel intended={intended} steps={steps} groups={groups} />;
 }

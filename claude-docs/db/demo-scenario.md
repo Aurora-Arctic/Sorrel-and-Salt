@@ -61,7 +61,7 @@ by tier and identity, so the extra entries make none of them ambiguous.
 - **W's cupboard** (M12.26), the compendium entries a coven holds as
   `workspace_compendium_entries` rows ([workspace-compendium-entries.md](workspace-compendium-entries.md)).
   The seed inserts them directly, stamped like every other row, and does not
-  call the cupboard service. Seven, so that a member opening them sees annotated entries
+  call the cupboard service. Nine, so that a member opening them sees annotated entries
   with a variety of fields (the first three are the original M12.26 rows):
   - **Rosemary**, labelled `Garden Rosemary`, with its own description,
     "Cut from the bush by the back door, dried in bunches over the stove."
@@ -77,10 +77,13 @@ by tier and identity, so the extra entries make none of them ambiguous.
     `elements` `air` and `water`, and `zodiac_signs` `Pisces`;
   - **Comfrey**, with a safety note alone;
   - **Sea Salt**, labelled `Kitchen Salt`, with `elements` an empty array (an
-    answer, not an absence) and `colors` `grey` and `white`.
+    answer, not an absence) and `colors` `grey` and `white`;
+  - **Black Salt** and **Amethyst** (_Quartz var. amethyst_), with no override:
+    held because a spell below lays each, and a step names only what the coven
+    holds (the recipe service checks it; the seed writes raw, so it holds them).
 
-  Six of the seven are `standard`'s rows ([standard-scenario.md](standard-scenario.md),
-  "W's cupboard"); `demo` adds German Chamomile. The Annotate action shows in a held entry's cupboard menu only for a role that may update
+  Six of the nine are `standard`'s rows ([standard-scenario.md](standard-scenario.md),
+  "W's cupboard"); `demo` adds German Chamomile, Black Salt and Amethyst. The Annotate action shows in a held entry's cupboard menu only for a role that may update
   ingredients.
 
   Every other column is null, so it reads as the compendium's value. These
@@ -188,7 +191,7 @@ middle leaves the ones below it renumbered, so the depth the seed wants is
 occupied by a different ingredient (the layer index) and the ingredient it
 wants is already at another depth
 (`spell_ingredients_spell_id_variant_id_unique` since MB.217, on the
-ingredient's variant). Either collision fails the
+ingredient's variant; dropped by `0087`, so only the layer collision remains). Either collision fails the
 whole scenario rather than the row.
 
 So a jar that already has layers is left exactly as it is — removed ones

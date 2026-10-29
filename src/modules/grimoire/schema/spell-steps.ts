@@ -56,34 +56,24 @@ export const spellSteps = pgTable(
     // The same enum a jar is measured in, so the converter can go between them.
     // No `unitDimension` here: nothing groups a spell's layers by dimension.
     unit: inventoryUnit('unit'),
-    // The old name of `position`, kept until M13.9 drops it: the deploy before
-    // this one writes only this column, through the `spell_ingredients` view,
-    // so the code writes the same value to both (expand/contract, CLAUDE.md
-    // rule 10).
-    layerOrder: integer('layer_order').notNull(),
     // The step's place in the recipe. Stored, never inferred from insertion
-    // order. Nullable until M13.9 sets `NOT NULL`, because the deploy before
-    // writes `layer_order` alone and would have its inserts refused.
-    position: integer('position'),
+    // order.
+    position: integer('position').notNull(),
     // The instruction: what to do at this step, in the member's words.
     body: text('body'),
-    // A short line on this ingredient's role in the jar — unrelated to the
-    // deferred notes subsystem (§13).
-    note: text('note'),
     ...auditColumns,
   },
   (table) => [
     // One live step per place; leading on `spell_id` makes it the index that
     // reads a recipe in order. Checked per row, not at end of statement, so a
     // reorder moves the live rows through a scratch offset rather than
-    // sweeping `position + 1`. The `layer_order` index goes with its column
-    // in M13.9.
+    // sweeping `position + 1`.
     liveUnique('spell_steps_spell_id_position_unique', table, table.spellId, table.position),
-    liveUnique('spell_steps_spell_id_layer_order_unique', table, table.spellId, table.layerOrder),
 
-    // One form per jar (MB.217): wanted at two depths is one row with a note.
-    // A custom row's null `variant_id` collides with nothing in a btree.
-    liveUnique('spell_steps_spell_id_variant_id_unique', table, table.spellId, table.variantId),
+    // No unique index on a jar's forms: a spell may lay one form in several
+    // steps, at different depths or for different purposes (the owner, 2026-10-28;
+    // before it, MB.217 allowed one step per form). A custom row is still
+    // identified by its name, below.
     // Its mirror over the custom rows, on name alone: a custom row is matched
     // against nothing, so `form` is part of no key.
     uniqueIndex('spell_steps_spell_id_custom_name_unique')
@@ -95,11 +85,11 @@ export const spellSteps = pgTable(
     // sees.
     check('spell_steps_one_identity', sql`num_nonnulls(ingredient_id, name) <= 1`),
     check('spell_steps_not_empty', sql`num_nonnulls(ingredient_id, name, body) >= 1`),
-    // An amount and a note describe an ingredient's place in the jar, so an
-    // instruction-only step carries neither.
+    // An amount describes an ingredient's place in the jar, so an
+    // instruction-only step carries none.
     check(
       'spell_steps_amount_on_ingredient',
-      sql`(ingredient_id is not null or name is not null) or (quantity is null and unit is null and note is null)`,
+      sql`(ingredient_id is not null or name is not null) or (quantity is null and unit is null)`,
     ),
     // Beside an ingredient id, `form` would shadow half that ingredient's identity.
     check('spell_steps_form_only_on_custom', sql`ingredient_id is null or form is null`),

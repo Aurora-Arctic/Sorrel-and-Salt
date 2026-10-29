@@ -54,8 +54,12 @@ It returns `status`, `savedAt`, `error`, `conflict`, `id`, and three actions:
   stops at `failed` at once, because asking again gets the same answer.
 - **A `StaleWriteError` from `save` pauses autosave** at `conflict`, carrying the
   row's revision now. `keep-mine` sends the value again with `force: true`
-  against that revision. `reload` drops the unsaved value and its copy and
-  returns to `idle`; the caller resets the form from the server.
+  against that revision: the adapter is handed the reported revision as
+  `context.revision`, and the spell builder sends it as `expectedRevision`
+  (M13.18), so a third save in between is a conflict too, never written over.
+  `reload` drops the unsaved value and its copy and returns to `idle`; the
+  caller reads the row and resets the form from it (the spell builder's
+  `readLatestSpell`, [`spell-builder.md`](spell-builder.md), "Two people, one spell").
 - **It flushes**, saving at once instead of waiting for the timer, when the tab
   is hidden, when focus leaves `root` for something outside it, and when the
   caller calls `flush()` (Mark Complete and Save, M13.17). `flush()` resolves
@@ -114,17 +118,24 @@ that a closed tab, a crash or a failed save loses nothing.
 `src/components/SaveStatus/`: the line beside the form's primary action that
 says where the save is. Never a toast. Its props are the hook's `status` and
 `savedAt`, `draft` (say "Draft saved"), `conflictMessage` (the caller's
-words, so the component names no entity) and `onRetry`, `onReload` and
-`onKeepMine`.
+words, so the component names no entity), `onRetry`, `onReload` and
+`onKeepMine`, and `conflictInto`: an element the conflict notice is put in
+instead of this line, so a form in a dialog can show it under the title, in
+view however far the form has scrolled, while the saved line stays beside
+Save (the spell builder passes the modal's header note; the owner's call,
+2026-10-29). The failure and its Retry stay beside Save, since they are about
+that button.
 
-| Status     | Shows                                                                         |
-| ---------- | ----------------------------------------------------------------------------- |
-| `idle`     | Nothing                                                                       |
-| `pending`  | The last "Saved" line, if any                                                 |
-| `saving`   | A spinner and "Saving…"                                                       |
-| `saved`    | "Saved 2:02 pm", or "Draft saved 2:02 pm"                                     |
-| `failed`   | "Couldn’t save." and a Retry button, as `role="alert"`, until a save succeeds |
-| `conflict` | A `caution` `Notice` with the message, Reload Latest and Keep My Version      |
+| Status     | Shows                                                                                                  |
+| ---------- | ------------------------------------------------------------------------------------------------------ |
+| `idle`     | Nothing                                                                                                |
+| `pending`  | The last "Saved" line, if any                                                                          |
+| `saving`   | A spinner and "Saving…"                                                                                |
+| `saved`    | "Saved 2:02 pm", or "Draft saved 2:02 pm"                                                              |
+| `failed`   | A `warn` `Notice` (`role="alert"`) with "Couldn’t save." and a Retry button, until a save succeeds     |
+| `conflict` | A `warn` `Notice` with the message, Reload Latest (solid, the one primary) and Keep My Version (quiet) |
+
+The conflict notice has one primary, Reload Latest, the choice that loses nothing of anyone else's, and Keep My Version sits back as a quiet button; it is roomier than a notice of text alone, with a step more padding and a step more between the sentence and the buttons, since the buttons need air inside the bar, and the triangle moves with that padding (the owner's call, 2026-10-29). The failure and the conflict are both warnings, not errors and not the quieter caution (the owner's calls, 2026-10-29). The notice draws its triangle level with the first line of text; beside the Retry button that line is taller than the text, so `.save-status__failed` centres the triangle on the row instead (Notice itself is right for text alone and is unchanged). Both notices (failed, conflict) drop the notice's bottom margin so they stand level with Save in the footer; the failure was a bare `<p>` of default-ink text before 2026-10-29, with nothing to say it was an error.
 
 The time is `clockTime` from `src/components/LastEdit/relative.ts`: hours and
 minutes on a 12-hour clock with am or pm ("2:02 pm"), in the viewer's time zone.
@@ -160,8 +171,10 @@ expectedRevision, values)` in `src/db/repository/write.ts`, for a table that
   - no such row (another coven's, soft-deleted, or absent): answers `[]`, as
     `updateByIdInWorkspace` does. `StaleWrite` here would tell another coven's
     member that the row exists.
-- **`expectedRevision: null` writes whatever the row's revision.** That is
-  Keep My Version.
+- **`expectedRevision: null` writes whatever the row's revision.** The
+  unconditional write, for a caller that read nothing; the spell builder's Keep
+  My Version does not use it, since it names the revision the refusal reported
+  (M13.18).
 - **Over GraphQL**, a revisioned mutation's input takes `expectedRevision: Int`
   and its payload returns `revision: Int!`. `maskError` in
   `src/graphql/errors.ts` maps `StaleWrite` to `STALE_WRITE` with
@@ -173,7 +186,12 @@ expectedRevision, values)` in `src/db/repository/write.ts`, for a table that
   unchanged. The hook pauses on it rather than retrying.
 
 M10.10's `updateSpell` is the first mutation that uses the write, and M13.18
-builds the conflict path end to end on it.
+built the conflict path end to end on it: the service test in
+`tests/modules/grimoire/services/spells.test.ts` proves two members' saves
+against one revision, that a non-member's stale save is `Forbidden` and never
+`StaleWrite`, and that null writes; the resolver test in
+`tests/modules/grimoire/graphql/spell-saves.test.ts` proves the error code and
+`currentRevision` on the answer.
 
 ## Tests
 

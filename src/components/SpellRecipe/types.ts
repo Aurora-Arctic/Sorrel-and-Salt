@@ -2,7 +2,13 @@ import type { Route } from 'next';
 import type { ReactNode } from 'react';
 import type { CardCategory } from '../CategoryChips/types';
 import type { LastEditProps } from '../LastEdit/types';
+import type { SpellStepValue, StepCategory } from '../SpellBuilder/steps/types';
+import type { GroupColors } from '../../lib/types';
+import type { StockDialogProps } from '../StockDialog/types';
+import type { SafetyMarkProps } from '../SafetyNote/types';
 import type { SpellStatus, SpellVisibility } from '@/modules/grimoire';
+import type { VerdictKind } from '../SpellBuilder/verdict-mark';
+import type { IngredientRow } from '@/modules/ingredients';
 
 /** A step that does something in words: "Stir three times", with no ingredient. */
 export interface InstructionRecipeStep {
@@ -30,15 +36,31 @@ export interface IngredientRecipeStep {
   /** The amount, as written; null for none ("a pinch" has no number). */
   quantity: string | null;
   unit: string | null;
-  /** The ingredient's page in this coven; null for a one-off, or an ingredient since deleted. */
-  href: Route | null;
+  /**
+   * What the step's Quick Look eye opens: the ingredient's details modal over the coven's
+   * ingredients (M8.19), with what the modal's head needs. The name itself is no link (the owner,
+   * 2026-10-28). Null for a one-off, or an ingredient since deleted.
+   */
+  look: IngredientLook | null;
+  /** The ingredient's and the laid form's safety, for the Toxic and Caution marks; null for a one-off. */
+  safety: Pick<SafetyMarkProps, 'toxic' | 'safetyNotes' | 'variants'> | null;
+  /**
+   * The coven’s stock verdict on the step, as In Coven Inventory gives it: drawn in the row only
+   * where the recipe has no side column (the Quick Look modal, M13.21). Left out on the page.
+   */
+  supply?: VerdictKind | null;
   oneOff: boolean;
   /** The ingredient or its form has been deleted since; the step still says what went in. */
   deleted: boolean;
-  /** The step's own line on the ingredient's role. */
-  note: string | null;
   /** An instruction given on the same step. */
   body: string | null;
+}
+
+export interface IngredientLook extends Pick<
+  IngredientRow,
+  'name' | 'canonicalName' | 'nomenclature'
+> {
+  href: Route;
 }
 
 export type RecipeStep = InstructionRecipeStep | IngredientRecipeStep;
@@ -54,8 +76,74 @@ export interface SpellRecipeProps {
   /** The spell's single free-text note. */
   note: string | null;
   steps: readonly RecipeStep[];
+  /** The four facts the body's strip draws; null or blank draws no cell. */
+  jarDescription?: string | null;
+  sealWaxColor?: string | null;
+  moonPhase?: string | null;
+  dayOfWeek?: string | null;
   /** The way back to the grimoire. */
   back: { href: Route; label: string };
   /** The Edit control, for a role that may update the spell (M13.10). */
   action?: ReactNode;
+  /** The page's side column (`SpellRecipeAside`), beside the body; the Quick Look modal gives none. */
+  aside?: ReactNode;
+}
+
+/**
+ * An In Coven Inventory line's doors on the recipe page (M13.21; the owner, 2026-10-29): the
+ * Quick Look eye beside the name, and Edit Stock behind the jar and the name, each null where
+ * there is nothing to open (the ingredient deleted since; a role that may not update stock).
+ */
+export interface InventoryDoor {
+  stepId: string;
+  look: IngredientLook | null;
+  stock: StockDialogProps | null;
+}
+
+/**
+ * What the recipe page's side column draws (M13.21): the spell's steps as the builder's Jar
+ * aside holds them, the categories the spell is assigned, and each category's group colours
+ * as entries, since a Map cannot cross from the server page to the client component.
+ */
+export interface SpellRecipeAsideProps {
+  steps: SpellStepValue[];
+  /** Each linked step's doors; a one-off or an instruction has none. */
+  doors: InventoryDoor[];
+  intended: StepCategory[];
+  groups: [string, GroupColors][];
+}
+
+/** What the body below a spell's head draws, shared by the recipe page and the Quick Look modal. */
+export type SpellRecipeBodyProps = Pick<
+  SpellRecipeProps,
+  | 'title'
+  | 'intent'
+  | 'categories'
+  | 'note'
+  | 'steps'
+  | 'jarDescription'
+  | 'sealWaxColor'
+  | 'moonPhase'
+  | 'dayOfWeek'
+>;
+
+/** The spell a Quick Look modal is open on (M13.21); the body arrives as the page's rendered children. */
+export interface SpellLookOpened {
+  /** The spell's title; a draft may have none. */
+  title: string | null;
+  lastEdit: LastEditProps | null;
+  /** The spell's recipe page (MB.6), which the foot links to. */
+  recipeHref: Route;
+  /** Where Edit Spell opens the spell in the builder, for a role that may update it; none draws no Edit Spell. */
+  editHref?: Route;
+  children: ReactNode;
+}
+
+export interface SpellLookDialogProps {
+  /** The list as it was, which closing returns to. */
+  closeHref: Route;
+  /** Absent when the address opens nothing. */
+  opened?: SpellLookOpened;
+  /** The read failed for a reason other than the spell being unavailable: a Notice says so. */
+  failed?: boolean;
 }

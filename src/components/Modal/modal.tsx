@@ -34,6 +34,16 @@ import './index.scss';
  */
 const FADE_LIMIT_MS = 400;
 
+/**
+ * How soon after one modal is taken away, open and not faded out, another that
+ * opens takes its place: a link in the first one's foot opening the second
+ * (Quick Look's Edit Spell) unmounts the one and mounts the other in one commit.
+ */
+const HANDOVER_MS = 100;
+
+/** When a modal last went while still open, which the next one to open reads. */
+let handedAt = Number.NEGATIVE_INFINITY;
+
 /** Motion turned down, or no way to ask, so a close is not held for a fade. */
 const fadesAreOff = (): boolean =>
   typeof window.matchMedia !== 'function' ||
@@ -98,6 +108,13 @@ const Modal = ({
     fallback.current = returnTo;
   });
 
+  // Whether it has begun to close itself, set by `close` below, for the open
+  // effect's cleanup: a modal unmounted while still open was replaced, or left
+  // behind by a navigation, and the next to open takes its place. A ref set in
+  // the event, not a mirror of `phase`: under reduced motion the owner unmounts
+  // it in the same render, before any effect could copy the phase across.
+  const shutting = useRef(false);
+
   useEffect(() => {
     const dialog = ref.current;
     if (!dialog) return;
@@ -112,6 +129,10 @@ const Modal = ({
       }
       // Measured before showModal(), while the scrollbar it is to replace is still there.
       release = holdPage();
+      // One modal in place of another keeps the page dimmed: the backdrop shows
+      // at once, and only the box fades in (index.scss). Without it the page
+      // shows undimmed for a frame between the one going and the other fading in.
+      if (performance.now() - handedAt < HANDOVER_MS) dialog.dataset.handover = '';
       dialog.showModal();
       // showModal() puts the focus on the first thing that takes it, which is
       // Close, in the header; the person opened the dialog to fill it in, so
@@ -135,7 +156,9 @@ const Modal = ({
       release?.();
       // Strict Mode's rehearsal leaves the dialog in the page; only a real
       // unmount takes it out, and only that gives the focus back.
-      if (!dialog.isConnected) giveFocusBack(opener.current, fallback.current);
+      if (dialog.isConnected) return;
+      if (!shutting.current) handedAt = performance.now();
+      giveFocusBack(opener.current, fallback.current);
     };
   }, []);
 
@@ -162,6 +185,7 @@ const Modal = ({
   // was before the fade: `asked` marks it, so the effect below asks no more.
   const close = (): void => {
     if (phase !== 'open') return;
+    shutting.current = true;
     if (!fadesAreOff()) return setPhase('fading');
     setPhase('asked');
     onClose();

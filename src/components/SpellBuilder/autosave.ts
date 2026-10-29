@@ -7,7 +7,10 @@ import type { SpellBuilderInput, SpellBuilderSpell } from './types';
 // target rather than assuming "the row", so that a later edit to a complete
 // spell can go into a draft revision (spell history, v2) by naming another
 // target. Today both targets are the spell's one row, draft or complete.
-// claude-docs/components/spell-builder.md, "Saving".
+// Beside it, the read Reload Latest makes after a stale write (M13.18): the
+// spell as the server has it now, fields, categories and steps, which the
+// builder puts in the form in place of what was typed.
+// claude-docs/components/spell-builder.md, "Saving" and "Two people, one spell".
 
 const CreateSpellDocument = graphql(`
   mutation CreateSpell($workspaceId: ID!, $input: SpellInput!) {
@@ -27,7 +30,6 @@ const CreateSpellDocument = graphql(`
         form
         quantity
         unit
-        note
         body
         ingredient {
           id
@@ -85,7 +87,71 @@ const UpdateSpellDocument = graphql(`
         form
         quantity
         unit
-        note
+        body
+        ingredient {
+          id
+          toxic
+          safetyNotes
+          categories {
+            id
+            name
+          }
+          stock(workspaceId: $workspaceId) {
+            unit
+            quantityOnHand
+            lowStockThreshold
+            variant {
+              id
+            }
+          }
+        }
+        variant {
+          id
+          toxic
+          safetyNotes
+          categories {
+            id
+            name
+          }
+          formChoice {
+            group {
+              icon
+            }
+          }
+        }
+      }
+      visibility
+      status
+    }
+  }
+`);
+
+/**
+ * The spell as the server has it now, read for Reload Latest. The step's
+ * selection is written out once more here rather than shared (./steps/documents.ts
+ * says why): `SpellBuilderSpell` types the answer where it is read.
+ */
+const SpellBuilderReloadDocument = graphql(`
+  query SpellBuilderReload($workspaceId: ID!, $id: ID!) {
+    spell(workspaceId: $workspaceId, id: $id) {
+      id
+      revision
+      title
+      intent
+      jarDescription
+      sealWaxColor
+      moonPhase
+      dayOfWeek
+      note
+      categories {
+        id
+      }
+      steps {
+        id
+        name
+        form
+        quantity
+        unit
         body
         ingredient {
           id
@@ -132,7 +198,9 @@ export type SpellSaveTarget =
 /**
  * Saves `input` to `target`: `createSpell` for a new spell, otherwise
  * `updateSpell` against the revision the target names. A `null` revision
- * writes over whatever the row is at (Keep My Version, M13.18).
+ * writes over whatever the row is at; the builder never sends one, since Keep
+ * My Version names the revision the refusal reported (M13.18), so a third
+ * save in between is met as a conflict too rather than written over.
  */
 export async function saveSpell(
   workspaceId: string,
@@ -149,4 +217,14 @@ export async function saveSpell(
     input: { ...input, expectedRevision: target.revision },
   });
   return updateSpell;
+}
+
+/**
+ * Reads the spell as the server has it now, for Reload Latest (M13.18): the
+ * fields, the categories as the ids the form picks, and the whole recipe.
+ */
+export async function readLatestSpell(workspaceId: string, id: string): Promise<SpellBuilderSpell> {
+  const { spell } = await graphqlRequest(SpellBuilderReloadDocument, { workspaceId, id });
+  const { categories, ...rest } = spell;
+  return { ...rest, categoryIds: categories.map((category) => category.id) };
 }

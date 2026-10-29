@@ -15,10 +15,11 @@ $-drawing-width: $jar-drawing-width;
 $-drawing-height: $jar-drawing-height;
 $-plank: $jar-plank;
 $-bracket: 7px;
-// The hover (the owner, 2026-10-21): how far the name grows, and how long the jar's
-// shake lasts. Neither has a token. The name's own transition is `$motion-short`.
-$-name-grow: 1.15;
-$-shake-duration: 500ms;
+// The hover (the owner, 2026-10-21): how far the name grows, and how long the jar's shake lasts.
+// Shared with the recipe page's inventory lines (SpellBuilder/index.scss), whose press shakes
+// the same jar; the values live in _variables.scss so both say the same.
+$-name-grow: $jar-name-grow;
+$-shake-duration: $jar-shake-duration;
 
 .jar-shelf {
   // `$items: false`: the mixin's `> li::before { content: none }` (bullets off) is more specific
@@ -321,6 +322,47 @@ $-shake-duration: 500ms;
   @include reduced-motion {
     transition: none;
   }
+}
+
+// The spell jar's ingredient bands: two tints of the one ink, alternating, with a thin line
+// along each boundary. The top band's upper edge is drawn as the level line of a held jar.
+.jar-shelf__band {
+  transition: transform 0.4s ease;
+
+  @include reduced-motion {
+    transition: none;
+  }
+}
+
+.jar-shelf__band-fill {
+  fill: $text-primary;
+}
+
+.jar-shelf__band--0 .jar-shelf__band-fill {
+  opacity: 0.08;
+}
+
+.jar-shelf__band--1 .jar-shelf__band-fill {
+  opacity: 0.18;
+}
+
+// A layer drawn in its category group's colours (data on the row, so read from custom
+// properties, as a chip does): 55% in the light theme and 65% in the dark, so the top
+// line stays legible over it.
+.jar-shelf__band .jar-shelf__band-fill--group {
+  fill: light-dark(
+    color-mix(in srgb, var(--band-light) 55%, transparent),
+    color-mix(in srgb, var(--band-dark) 65%, transparent)
+  );
+  opacity: 1;
+}
+
+// Only the top band draws a line (the owner, 2026-10-29): the level line, with none between layers.
+.jar-shelf__band-edge {
+  fill: none;
+  stroke: $accent;
+  stroke-width: 1.2;
+  opacity: 0.9;
 }
 
 // A form with no jar: the same vessel in dashes, its corks and cloths left off.

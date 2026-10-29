@@ -114,11 +114,11 @@ export type SeedLayerIngredient =
 /**
  * One step: an instruction (`body`), a layer (`ingredient`), or both. Its
  * `position` is its place in `SeedSpell['steps']`, so two steps cannot share
- * one. An amount and a note belong to a layer, so an instruction-only step
- * carries neither, as the table's CHECK requires.
+ * one. An amount belongs to a layer, so an instruction-only step carries
+ * none, as the table's CHECK requires.
  */
 export type SeedStep =
-  | (Pick<typeof spellSteps.$inferInsert, 'quantity' | 'unit' | 'note'> & {
+  | (Pick<typeof spellSteps.$inferInsert, 'quantity' | 'unit'> & {
       ingredient: SeedLayerIngredient;
       body?: string;
     })

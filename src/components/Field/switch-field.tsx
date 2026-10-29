@@ -23,6 +23,8 @@ import type { SwitchFieldProps } from './types';
  * A `hint` stands in an InfoTip beside the label, read with the toggle, as
  * `FieldShell` draws one; a filter switch takes none. A `note` is a line under
  * the toggle, read with it as `RadioGroupField`'s is: what its state means.
+ * A `noteTip` is the rest of that note behind an InfoTip beside it, its text
+ * listed in the toggle's description too.
  */
 export function SwitchField({
   label,
@@ -34,11 +36,15 @@ export function SwitchField({
   disabled,
   hint,
   note,
+  noteTip,
 }: SwitchFieldProps): ReactElement {
   const id = useId();
   const hintId = `${id}-hint`;
   const noteId = `${id}-note`;
-  const describedBy = [hint && hintId, note && noteId].filter(Boolean).join(' ') || undefined;
+  const noteTipId = `${id}-note-tip`;
+  const describedBy =
+    [hint && hintId, note && noteId, note && noteTip && noteTipId].filter(Boolean).join(' ') ||
+    undefined;
   const labelElement = (
     <label className="field__label" htmlFor={id} {...pressFeedback}>
       {label}
@@ -83,6 +89,14 @@ export function SwitchField({
       {note && (
         <p id={noteId} className="field__hint">
           {note}
+          {noteTip && (
+            <>
+              {' '}
+              <InfoTip id={noteTipId} label={label}>
+                {noteTip}
+              </InfoTip>
+            </>
+          )}
         </p>
       )}
     </div>

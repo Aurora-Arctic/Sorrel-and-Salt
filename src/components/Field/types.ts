@@ -58,6 +58,8 @@ export interface FieldShellProps extends FieldProps, Omit<FieldDescription, 'ari
   after?: ReactNode;
   /** At the right end of the label row: a control acting on the field, a variant's Copy From Ingredient. */
   action?: ReactNode;
+  /** Where the error is drawn instead of beneath the control, a node elsewhere on the page: a step row's Unit says its error across the whole row of inputs, not in its narrow column. */
+  errorInto?: HTMLElement | null;
   /** A class beside `field` on the block: a filter's type-ahead, `filter-row__choice`. */
   className?: string;
 }
@@ -122,6 +124,8 @@ export interface SelectFieldProps<V extends FieldValues = FieldValues> extends F
   /** Shut, for a field the form has no use for yet: the select-only box only. */
   disabled?: boolean;
   deps?: FieldPath<V>[];
+  /** See `FieldShellProps.errorInto`. */
+  errorInto?: HTMLElement | null;
   /** Runs on a new choice, before the field and its `deps` revalidate. */
   onChange?: (value: string) => void;
 }
@@ -151,6 +155,8 @@ export interface SwitchFieldProps {
   hint?: string;
   /** Optional: a line under the toggle, read with it, saying what its state means (M10.13). */
   note?: string;
+  /** Optional: more of the note, behind an info tip beside it and still read with the toggle. */
+  noteTip?: string;
 }
 
 /** One choice of a `RadioGroupField`: its value, its name and what it means. */
@@ -208,6 +214,11 @@ export interface FormActionsProps {
   saveValue?: string;
   /** Save's description, a note above the row about what saving will do. */
   saveDescribedBy?: string;
+  /**
+   * Why Save is off, said in a tip on the button (hover, focus and a tap) and as its description.
+   * The button is then `aria-disabled` so it keeps focus. Left out, an off Save is plain `disabled`.
+   */
+  saveReason?: string;
   /** Save as a plain button calling this, for a panel inside another form, rather than the form's submit. */
   onSave?: () => void;
   /** Cancel, drawn when given: the form's way out, through its discard guard. */
@@ -340,6 +351,12 @@ export interface UseFormHistoryOptions {
     diffs: readonly HistoryDiff[],
     direction: 'undo' | 'redo',
   ) => string | void;
+  /**
+   * Adjusts a value just before it is written back by an undo or a redo, for a form whose values
+   * name things that can stop existing (a saved row a save has since deleted). Left out, the
+   * value is written as recorded.
+   */
+  prepare?: (name: string, value: unknown) => unknown;
   /** True for a name the history leaves out: interface state kept among the values. */
   skip?: (name: string) => boolean;
   /** How long a pause in typing ends its step. */

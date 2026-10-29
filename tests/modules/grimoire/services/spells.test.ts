@@ -228,35 +228,35 @@ describe('a custom, one-off ingredient row', () => {
 
     // Why the refusals are the rule's: the author and the owner both write the shared one.
     await updateSpellStep(asUser(A), WORKSPACE_W_ID, shared, (await stepOf(shared)).id, {
-      note: 'Owner note',
+      body: 'Owner note',
     });
     const added = await addSpellStep(asUser(B), WORKSPACE_W_ID, hidden, {
       name: 'Fixture Salt',
       form: 'coarse',
     });
-    expect(added).toMatchObject({ position: 2, layerOrder: 2, spellId: hidden });
+    expect(added).toMatchObject({ position: 2, spellId: hidden });
 
     const hiddenStep = await stepOf(hidden);
     await expect(
-      updateSpellStep(asUser(A), WORKSPACE_W_ID, hidden, hiddenStep.id, { note: 'Sneaky' }),
+      updateSpellStep(asUser(A), WORKSPACE_W_ID, hidden, hiddenStep.id, { body: 'Sneaky' }),
     ).rejects.toBeInstanceOf(NotFound);
     await expect(
       addSpellStep(asUser(A), WORKSPACE_W_ID, hidden, { name: 'Sneaky Salt' }),
     ).rejects.toBeInstanceOf(NotFound);
     await expect(
       updateSpellStep(asUser(C), WORKSPACE_W_ID, shared, (await stepOf(shared)).id, {
-        note: 'Viewer note',
+        body: 'Viewer note',
       }),
     ).rejects.toBeInstanceOf(Forbidden);
     await expect(
       addSpellStep(asUser(C), WORKSPACE_W_ID, shared, { name: 'Viewer Salt' }),
     ).rejects.toBeInstanceOf(Forbidden);
     await expect(
-      updateSpellStep(asUser(D), WORKSPACE_W_ID, hidden, hiddenStep.id, { note: 'Foreign' }),
+      updateSpellStep(asUser(D), WORKSPACE_W_ID, hidden, hiddenStep.id, { body: 'Foreign' }),
     ).rejects.toBeInstanceOf(Forbidden);
 
-    expect((await stepOf(hidden)).note).toBeNull();
-    expect((await stepOf(shared)).note).toBe('Owner note');
+    expect((await stepOf(hidden)).body).toBeNull();
+    expect((await stepOf(shared)).body).toBe('Owner note');
     expect(
       (
         await sql`select count(*) from spell_steps where name like 'Viewer%' or name like 'Sneaky%'`
@@ -270,7 +270,7 @@ describe('a custom, one-off ingredient row', () => {
     const stepOfOther = (await readWithSteps(asUser(B), WORKSPACE_W_ID, other)).steps[0];
 
     await expect(
-      updateSpellStep(asUser(B), WORKSPACE_W_ID, mine, stepOfOther.id, { note: 'Crossed' }),
+      updateSpellStep(asUser(B), WORKSPACE_W_ID, mine, stepOfOther.id, { body: 'Crossed' }),
     ).rejects.toBeInstanceOf(NotFound);
   });
 });
@@ -348,8 +348,8 @@ async function ingredientWithForm(
 /** Every step row of the spell, live and tombstoned, by the place each was given. */
 function stepRowsOf(spellId: string) {
   return sql`
-    select id, position, layer_order, body, ingredient_id, variant_id, name, form, quantity,
-      unit, note, deleted_at, deleted_by
+    select id, position, body, ingredient_id, variant_id, name, form, quantity,
+      unit, deleted_at, deleted_by
     from spell_steps where spell_id = ${spellId} order by position, id`;
 }
 
@@ -381,7 +381,7 @@ describe('createSpell, with its recipe', () => {
     expect(await countSpells()).toBe(before);
   });
 
-  it('writes the spell’s fields, its note alone and never the old instructions column', async () => {
+  it('writes the spell’s fields, and its note', async () => {
     const spell = await createSpell(asUser(B), WORKSPACE_W_ID, {
       title: 'Hearth Ward',
       intent: 'Keep the hearth safe',
@@ -400,11 +400,10 @@ describe('createSpell, with its recipe', () => {
       moon_phase: 'Waxing',
       day_of_week: 'Sunday',
       note: 'Do it at dusk.',
-      instructions: null,
     });
   });
 
-  it('writes the steps in the order given, each place in position and layer_order alike', async () => {
+  it('writes the steps in the order given, each at its place', async () => {
     const coven = await ingredientWithForm('Fixture Leaf');
     const compendium = await ingredientWithForm('Fixture Compendium Root', null);
 
@@ -412,25 +411,19 @@ describe('createSpell, with its recipe', () => {
       title: 'Layered Jar',
       steps: [
         { body: 'Cleanse the jar.' },
-        { ...coven, quantity: 2, unit: 'tsp', note: 'Packed down', body: 'Lay the leaf.' },
+        { ...coven, quantity: 2, unit: 'tsp', body: 'Lay the leaf.' },
         { name: 'Fixture Pebble', form: 'whole' },
         compendium,
       ],
     });
 
     const rows = await stepRowsOf(spell.id);
-    expect(rows.map((row) => [row.position, row.layer_order])).toEqual([
-      [1, 1],
-      [2, 2],
-      [3, 3],
-      [4, 4],
-    ]);
+    expect(rows.map((row) => row.position)).toEqual([1, 2, 3, 4]);
     expect(rows[1]).toMatchObject({
       ingredient_id: coven.ingredientId,
       variant_id: coven.variantId,
       quantity: '2.000',
       unit: 'tsp',
-      note: 'Packed down',
       body: 'Lay the leaf.',
     });
     // The instruction-only step reads back in its place.
@@ -528,7 +521,7 @@ describe('updateSpell, with its recipe', () => {
     ]);
   });
 
-  it('reorders the steps, position and layer_order following the new order', async () => {
+  it('reorders the steps, position following the new order', async () => {
     const { id, ids } = await saved([{ body: 'One' }, { body: 'Two' }, { body: 'Three' }]);
 
     await updateSpell(asUser(B), WORKSPACE_W_ID, id, {
@@ -543,9 +536,9 @@ describe('updateSpell, with its recipe', () => {
     const live = (await stepRowsOf(id)).filter((row) => row.deleted_at === null);
     const byId = new Map(live.map((row) => [row.id, row]));
     expect([ids[2], ids[0], ids[1]].map((step) => byId.get(step))).toEqual([
-      expect.objectContaining({ position: 1, layer_order: 1, body: 'Three' }),
-      expect.objectContaining({ position: 2, layer_order: 2, body: 'One' }),
-      expect.objectContaining({ position: 3, layer_order: 3, body: 'Two, reworded' }),
+      expect.objectContaining({ position: 1, body: 'Three' }),
+      expect.objectContaining({ position: 2, body: 'One' }),
+      expect.objectContaining({ position: 3, body: 'Two, reworded' }),
     ]);
   });
 
@@ -569,9 +562,9 @@ describe('updateSpell, with its recipe', () => {
     expect(rows.every((row) => row.deleted_at === null)).toBe(true);
     const byId = new Map(rows.map((row) => [row.id, row]));
     expect([ids[2], ids[0], ids[1]].map((step) => byId.get(step))).toEqual([
-      expect.objectContaining({ position: 1, layer_order: 1, body: 'Stir.' }),
-      expect.objectContaining({ position: 2, layer_order: 2, variant_id: leaf.variantId }),
-      expect.objectContaining({ position: 3, layer_order: 3, name: 'Fixture Pebble' }),
+      expect.objectContaining({ position: 1, body: 'Stir.' }),
+      expect.objectContaining({ position: 2, variant_id: leaf.variantId }),
+      expect.objectContaining({ position: 3, name: 'Fixture Pebble' }),
     ]);
   });
 
@@ -604,7 +597,7 @@ describe('updateSpell, with its recipe', () => {
     await updateSpell(asUser(B), WORKSPACE_W_ID, id, {
       expectedRevision: null,
       steps: [
-        { id: ids[1], ...gone, note: 'Kept' },
+        { id: ids[1], ...gone, body: 'Kept' },
         { id: ids[0], body: 'Begin.' },
       ],
     });
@@ -667,15 +660,6 @@ describe('updateSpell, with its recipe', () => {
     const { id, ids } = await saved([{ body: 'One' }]);
     await updateSpell(asUser(B), WORKSPACE_W_ID, id, { expectedRevision: null, note: 'Only this' });
     expect((await liveRecipe(id)).map((step) => step.id)).toEqual(ids);
-  });
-
-  it('writes the note alone, leaving the old instructions column as it was', async () => {
-    const { id } = await saved([]);
-    // A row the deploy before M13.1 wrote, whose old column holds text.
-    await sql`update spells set instructions = 'Old words' where id = ${id}`;
-    await updateSpell(asUser(B), WORKSPACE_W_ID, id, { expectedRevision: null, note: 'At dusk' });
-    const [row] = await sql`select note, instructions from spells where id = ${id}`;
-    expect(row).toEqual({ note: 'At dusk', instructions: 'Old words' });
   });
 
   it('lets a draft drop its title and refuses completing without one', async () => {
@@ -930,5 +914,79 @@ describe('a spell’s assigned categories', () => {
     );
     await expect(updateSpell(asUser(D), WORKSPACE_X_ID, id, save)).rejects.toBeInstanceOf(NotFound);
     expect(await assigned(id)).toEqual(['Protection']);
+  });
+});
+
+describe('updateSpell, against the revision it was read at (M13.18)', () => {
+  /** A spell two members have both read at the same revision. */
+  async function readByBoth() {
+    const id = await seed(A, 'workspace', { title: 'Shared Jar' });
+    const readByA = await readSpell(asUser(A), WORKSPACE_W_ID, id);
+    const readByB = await readSpell(asUser(B), WORKSPACE_W_ID, id);
+    expect(readByB.revision).toBe(readByA.revision);
+    return { id, revision: readByA.revision };
+  }
+
+  it('refuses the second save of two written against one revision, naming the revision now', async () => {
+    const { id, revision } = await readByBoth();
+
+    const first = await updateSpell(asUser(A), WORKSPACE_W_ID, id, {
+      expectedRevision: revision,
+      title: 'Renamed by A',
+    });
+    expect(first.revision).toBe(revision + 1);
+
+    const second = updateSpell(asUser(B), WORKSPACE_W_ID, id, {
+      expectedRevision: revision,
+      title: 'Renamed by B',
+    });
+    await expect(second).rejects.toThrow(StaleWrite);
+    await expect(second).rejects.toMatchObject({ currentRevision: revision + 1 });
+    // Nothing of B's landed.
+    const [row] = await sql<{ title: string; revision: number }[]>`
+      select title, revision from spells where id = ${id}`;
+    expect(row).toEqual({ title: 'Renamed by A', revision: revision + 1 });
+    // Why B's save could have succeeded: B may write here, and the same save at the revision now lands.
+    const again = await updateSpell(asUser(B), WORKSPACE_W_ID, id, {
+      expectedRevision: revision + 1,
+      title: 'Renamed by B',
+    });
+    expect(again).toMatchObject({ title: 'Renamed by B', revision: revision + 2 });
+  });
+
+  it('refuses a non-member’s stale save as Forbidden, never as stale', async () => {
+    const { id, revision } = await readByBoth();
+    await updateSpell(asUser(A), WORKSPACE_W_ID, id, {
+      expectedRevision: revision,
+      title: 'Renamed by A',
+    });
+    // The revision D names is stale: a member naming it is told so.
+    await expect(
+      updateSpell(asUser(B), WORKSPACE_W_ID, id, { expectedRevision: revision, title: 'By B' }),
+    ).rejects.toThrow(StaleWrite);
+
+    const byOutsider = updateSpell(asUser(D), WORKSPACE_W_ID, id, {
+      expectedRevision: revision,
+      title: 'Renamed by D',
+    });
+    await expect(byOutsider).rejects.toThrow(Forbidden);
+    await expect(byOutsider).rejects.not.toThrow(StaleWrite);
+  });
+
+  it('writes over whatever the spell is at when the expected revision is null, and returns the next', async () => {
+    const { id, revision } = await readByBoth();
+    await updateSpell(asUser(A), WORKSPACE_W_ID, id, {
+      expectedRevision: revision,
+      title: 'Renamed by A',
+    });
+
+    const kept = await updateSpell(asUser(B), WORKSPACE_W_ID, id, {
+      expectedRevision: null,
+      title: 'Kept by B',
+    });
+
+    expect(kept).toMatchObject({ title: 'Kept by B', revision: revision + 2 });
+    const [row] = await sql<{ title: string }[]>`select title from spells where id = ${id}`;
+    expect(row!.title).toBe('Kept by B');
   });
 });

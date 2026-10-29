@@ -41,10 +41,13 @@ export const BinButton = ({
 export const AnnotateButton = ({
   name,
   onClick,
+  size,
   ref,
 }: {
   name: string;
   onClick: () => void;
+  /** `small`: the eye at 1rem in a 24px box, for a row that is already full (a spell's steps). */
+  size?: 'small';
   ref?: Ref<HTMLButtonElement>;
 }): ReactElement => (
   <IconTip tip="Annotate">
@@ -63,14 +66,22 @@ export const AnnotateButton = ({
 export const QuickLookButton = ({
   name,
   onClick,
+  size,
   ref,
 }: {
   name: string;
   onClick: () => void;
+  /** `small`: the eye at 1rem in a 24px box, for a row already full (a spell's steps). */
+  size?: 'small';
   ref?: Ref<HTMLButtonElement>;
 }): ReactElement => (
   <IconTip tip="Quick Look">
-    <button ref={ref} type="button" className="icon-tip__look" onClick={onClick}>
+    <button
+      ref={ref}
+      type="button"
+      className={size === 'small' ? 'icon-tip__look icon-tip__look--small' : 'icon-tip__look'}
+      onClick={onClick}
+    >
       <MysticEyeIcon />
       <span className="visually-hidden">Quick Look {name}</span>
     </button>

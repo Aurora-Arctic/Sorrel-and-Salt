@@ -85,6 +85,7 @@ export function useFormHistory<V extends FieldValues>(
     enabled = true,
     ignore,
     skip,
+    prepare,
     onRestored,
     pauseMs = TYPING_PAUSE_MS,
     limit = HISTORY_LIMIT,
@@ -102,7 +103,6 @@ export function useFormHistory<V extends FieldValues>(
   }, []);
 
   const present = useRef<unknown>(undefined);
-  const defaultsSeen = useRef<unknown>(undefined);
   const restoring = useRef(false);
   // The newest step was recorded in the action still running.
   const tickOpen = useRef(false);
@@ -128,7 +128,6 @@ export function useFormHistory<V extends FieldValues>(
   // The recorder: one subscription to the form's values.
   useEffect(() => {
     present.current = cloneValues(getValues());
-    defaultsSeen.current = undefined;
     const closeAction = () => {
       tickOpen.current = false;
       typedInto.current = null;
@@ -161,7 +160,7 @@ export function useFormHistory<V extends FieldValues>(
 
     const unsubscribe = subscribe({
       formState: { values: true },
-      callback: ({ name, values, defaultValues }) => {
+      callback: ({ name, values }) => {
         if (restoring.current) return;
         if (name !== undefined && skip?.(name)) {
           // Interface state: kept current so the next diff starts from it, but never a step.
@@ -169,12 +168,13 @@ export function useFormHistory<V extends FieldValues>(
           return;
         }
         const previous = present.current;
-        const defaultsChanged =
-          defaultsSeen.current !== undefined && defaultsSeen.current !== defaultValues;
-        defaultsSeen.current = defaultValues;
-        if (name === undefined || defaultsChanged) {
-          // The form started itself over: its old steps no longer lead anywhere.
-          if (defaultsChanged || !sameValues(previous, values)) {
+        // A save moves the defaults without a named event, so only an event with no name is the form starting over.
+        if (name === undefined) {
+          // The form started itself over: its old steps no longer lead anywhere. A save is
+          // the exception: it moves the baseline to what is on screen and leaves the values
+          // alone, so the steps still lead back to the values before it (Undo then marks the
+          // form changed against the new baseline, and the next save sends them).
+          if (!sameValues(previous, values)) {
             commit({ type: 'cleared' });
             sealed.current = true;
           }
@@ -243,7 +243,9 @@ export function useFormHistory<V extends FieldValues>(
           // Validated only once a submit has shown errors: before one the form is quiet.
           setValue(
             diff.name as never,
-            cloneValues(direction === 'undo' ? diff.before : diff.after) as never,
+            (prepare
+              ? prepare(diff.name, cloneValues(direction === 'undo' ? diff.before : diff.after))
+              : cloneValues(direction === 'undo' ? diff.before : diff.after)) as never,
             {
               shouldDirty: true,
               shouldValidate: isSubmitted,
@@ -262,7 +264,7 @@ export function useFormHistory<V extends FieldValues>(
       );
       pendingFocus.current = [focusOn || step.diffs[0].name];
     },
-    [setValue, getValues, isSubmitted, onRestored],
+    [setValue, getValues, isSubmitted, onRestored, prepare],
   );
 
   const undo = useCallback(() => {

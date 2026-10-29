@@ -28,6 +28,13 @@ on:
           to merge. False posts nothing.
         required: true
         type: boolean
+      suites-failed:
+        description: >-
+          True when the gate suite or the story suite failed. The comment then
+          reads as a failure, so a passing merge never shows a red suite as green.
+        required: false
+        type: boolean
+        default: false
 
 permissions:
   contents: read
@@ -94,7 +101,7 @@ jobs:
         uses: ./.github/actions/job-summary
         with:
           check-name: Playwright Coverage
-          outcome: ${{ steps.merge.outcome }}
+          outcome: ${{ inputs.suites-failed && 'failure' || steps.merge.outcome }}
           log-file: /app/output.log
           summary: ${{ steps.merge.outputs.summary }}
           details: ${{ steps.merge.outputs.details }}
@@ -106,7 +113,7 @@ jobs:
           check-name: Playwright Coverage
           marker-slug: playwright-coverage
           pr-number: ${{ inputs.pr-number }}
-          outcome: ${{ steps.merge.outcome }}
+          outcome: ${{ inputs.suites-failed && 'failure' || steps.merge.outcome }}
           log-file: /app/output.log
           success-mode: comment
           summary: ${{ steps.merge.outputs.summary }}

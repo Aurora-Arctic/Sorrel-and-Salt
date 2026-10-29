@@ -194,12 +194,12 @@
   `playwright` and runs beside it, under its own `stories` path filter. The
   input switches the run command (`npm run test:stories` with
   `STORIES_JSON=/app/stories.json`), the summariser
-  (`.github/scripts/summarize-stories.mjs`: "3 of 55 stories passing" and a
+  (`.github/scripts/summarize-stories.mjs`: "3 of 57 stories passing" and a
   markdown checklist), the check name, the comment thread
   (`marker-slug: stories`) and the report artifact's name (`stories-report`,
   since one workflow run may not upload two artifacts under one name), and
   the coverage artifact's (`playwright-coverage-stories`, M14.28). The
-  summariser adds this run's own coverage figure and table through
+  summariser adds this run's own coverage figure to the summary line through
   `lib/coverage-table.mjs`, as `summarize-playwright.mjs` does, and posts the
   checklist alone when no report was written. Both suites' coverage artifacts
   hold monocart's raw data too, for the `playwright-coverage` job below. The run step carries `continue-on-error: true`
@@ -220,7 +220,11 @@
   by name into a folder of its own, `merge-playwright-coverage.mjs` merges the
   `raw/` data that is there, and the job uploads `playwright-coverage-merged`, writes the job
   summary and comments as "Playwright Coverage" (`marker-slug: playwright-coverage`).
-  The summary line names the suites included.
+  The summary line names the suites included. Only this comment carries the
+  per-file table; the two suites' comments carry their figure alone. It reads
+  as a failure when either suite failed (`suites-failed`): `playwright`'s
+  result, and `stories`'s run step outcome, which `playwright.yml` exposes as
+  its `outcome` output because the stories job passes whatever its stories did.
 - **`playwright.yml`** (M1.14) — `npm run e2e` against the servers
   `webServer` builds and starts: one per worker slot on 8001 and up — four
   on GitHub's 4-vCPU runner, since the job sets `E2E_WORKERS: 4` over the
