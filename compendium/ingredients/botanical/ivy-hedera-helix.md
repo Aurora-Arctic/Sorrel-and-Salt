@@ -44,6 +44,13 @@ categories:
   - Love
   - Protection
   - Healing
+  - Luck
+  - Spirituality
+  - Security
+  - Renewal
+  - Negativity
+  - Secrets
+  - Growth
 references:
   - source: cunningham-herbs
     locator: under "Ivy"

@@ -27,6 +27,7 @@ categories:
   - Healing
   - Grief Work
   - Wisdom
+  - Chastity
 references:
   - source: cunningham-crystals
     locator: pp. 118–120

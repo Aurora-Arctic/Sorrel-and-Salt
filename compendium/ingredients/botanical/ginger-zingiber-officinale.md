@@ -26,6 +26,17 @@ categories:
   - Protection
   - Psychic Work
   - Purification
+  - Wealth
+  - Strength
+  - Consecration
+  - Blessing
+  - Relationships
+  - Negativity
+  - Hex-Breaking
+  - Sex
+  - Sexuality
+  - Emotions
+  - Secrets
 references:
   - source: cunningham-herbs
     locator: under "Ginger"; p. 266

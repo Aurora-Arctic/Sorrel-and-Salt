@@ -51,6 +51,13 @@ categories:
   - Prosperity
   - Protection
   - Strength
+  - Wealth
+  - Luck
+  - Renewal
+  - Negativity
+  - Secrets
+  - Growth
+  - Spirit Work
 references:
   - source: kynes-plants
     locator: under "Marsh Marigold"

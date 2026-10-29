@@ -20,6 +20,8 @@ categories:
   - Fertility
   - Healing
   - Love
+  - Sex
+  - Sexuality
 references:
   - source: kynes-plants
     locator: under "Lady's Smock"

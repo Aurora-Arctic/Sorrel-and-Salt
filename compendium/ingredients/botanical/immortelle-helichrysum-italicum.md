@@ -14,6 +14,8 @@ folkNames:
   - Italian Strawflower
 categories:
   - Ancestor Work
+  - Funeral Rites
+  - Spirit Work
 references:
   - source: kynes-plants
     locator: under "Immortelle"

@@ -52,6 +52,11 @@ categories:
   - Prosperity
   - Protection
   - Strength
+  - Wealth
+  - Trust
+  - Secrets
+  - Spirit Work
+  - Youth
 references:
   - source: cunningham-herbs
     locator: under "Cowslip"; p. 266

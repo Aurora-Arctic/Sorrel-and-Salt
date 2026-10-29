@@ -32,6 +32,7 @@ categories:
   - Protection
   - Purification
   - Success
+  - Determination
 references:
   - source: cunningham-herbs
     locator: under "Mesquite"; p. 266

@@ -35,6 +35,12 @@ categories:
   - Peace
   - Release
   - Wisdom
+  - Chastity
+  - Grief Work
+  - Sex
+  - Sexuality
+  - Challenges
+  - Ancestor Work
 references:
   - source: cunningham-herbs
     locator: under "Witch Hazel"

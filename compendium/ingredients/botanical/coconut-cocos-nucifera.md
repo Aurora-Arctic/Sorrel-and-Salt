@@ -34,6 +34,15 @@ categories:
   - Healing
   - Intuition
   - Success
+  - Chastity
+  - Spirituality
+  - Consecration
+  - Blessing
+  - Hope
+  - Sex
+  - Sexuality
+  - Family
+  - Home Blessing
 references:
   - source: cunningham-herbs
     locator: under "Coconut"

@@ -31,6 +31,8 @@ categories:
   - Binding
   - Healing
   - Peace
+  - Sex
+  - Sexuality
 references:
   - source: cunningham-herbs
     locator: under "Licorice"; p. 266

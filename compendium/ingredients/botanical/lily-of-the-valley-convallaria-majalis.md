@@ -40,6 +40,14 @@ categories:
   - Peace
   - Protection
   - Success
+  - Luck
+  - Spirituality
+  - Consecration
+  - Blessing
+  - Joy
+  - Challenges
+  - Emotions
+  - Skill
 references:
   - source: cunningham-herbs
     locator: under "Lily of the Valley"
@@ -55,6 +63,7 @@ references:
       - description
       - safetyNotes
       - toxic
+      - categories
   - source: kynes-plants
     locator: under "Lily of the Valley"
     nameBasis: resolved

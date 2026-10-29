@@ -32,6 +32,14 @@ categories:
   - Fertility
   - Healing
   - Peace
+  - Spirituality
+  - Determination
+  - Hex-Breaking
+  - Sex
+  - Sexuality
+  - Challenges
+  - Spirit Work
+  - Nightmare Protection
 references:
   - source: cunningham-herbs
     locator: under "Mallow"; p. 266

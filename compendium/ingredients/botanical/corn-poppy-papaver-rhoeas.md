@@ -40,6 +40,12 @@ categories:
   - Prosperity
   - Protection
   - Wisdom
+  - Wealth
+  - Luck
+  - Funeral Rites
+  - Renewal
+  - Relationships
+  - Challenges
 references:
   - source: kynes-plants
     locator: under "Poppy"

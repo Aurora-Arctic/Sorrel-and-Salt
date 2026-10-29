@@ -11,6 +11,9 @@ categories:
   - Protection
   - Abundance
   - Healing
+  - Luck
+  - Determination
+  - Chastity
 references:
   - source: cunningham-herbs
     locator: under "Cactus"

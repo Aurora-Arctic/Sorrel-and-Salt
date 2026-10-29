@@ -66,6 +66,14 @@ categories:
   - Inspiration
   - Strength
   - Wisdom
+  - Luck
+  - Consecration
+  - Blessing
+  - Hex-Breaking
+  - Faerie Sight
+  - Skill
+  - Leadership
+  - Spirit Work
 references:
   - source: cunningham-herbs
     locator: under "Rowan"; p. 266

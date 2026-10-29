@@ -30,6 +30,9 @@ categories:
   - Peace
   - Sleep
   - Fertility
+  - Wealth
+  - Luck
+  - Joy
 references:
   - source: cunningham-crystals
     locator: p. 83

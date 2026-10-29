@@ -27,6 +27,12 @@ categories:
   - Communication
   - Divination
   - Inspiration
+  - Wealth
+  - Prophetic Dreams
+  - Luck
+  - Relationships
+  - Negativity
+  - Leadership
 references:
   - source: cunningham-herbs
     locator: under "Cinquefoil"

@@ -14,6 +14,8 @@ categories:
   - Love
   - Prosperity
   - Protection
+  - Wealth
+  - Hex-Breaking
 references:
   - source: wikipedia-rumex
     nameBasis: stated

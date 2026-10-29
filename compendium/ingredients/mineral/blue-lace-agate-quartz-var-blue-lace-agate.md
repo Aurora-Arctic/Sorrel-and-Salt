@@ -11,6 +11,7 @@ categories:
   - Peace
   - Healing
   - Truth
+  - Garden Magic
 references:
   - source: cunningham-crystals
     locator: p. 67

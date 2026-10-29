@@ -27,6 +27,8 @@ categories:
   - Fidelity
   - Love
   - Abundance
+  - Sex
+  - Sexuality
 references:
   - source: cunningham-herbs
     locator: under "Rhubarb"; p. 266

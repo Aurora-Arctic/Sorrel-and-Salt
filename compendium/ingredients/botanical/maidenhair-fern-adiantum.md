@@ -27,6 +27,11 @@ categories:
   - Protection
   - Psychic Work
   - Release
+  - Luck
+  - Focus
+  - Security
+  - Hex-Breaking
+  - Beauty
 references:
   - source: cunningham-herbs
     locator: under "Maidenhair"; p. 266

@@ -31,6 +31,16 @@ categories:
   - Prosperity
   - Strength
   - Transformation
+  - Wealth
+  - Beauty
+  - Awareness
+  - Renewal
+  - Sex
+  - Sexuality
+  - Family
+  - Home Blessing
+  - Secrets
+  - Skill
 references:
   - source: cunningham-herbs
     locator: under "Flax"

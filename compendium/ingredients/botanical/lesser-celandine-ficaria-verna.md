@@ -25,6 +25,9 @@ categories:
   - Protection
   - Release
   - Success
+  - Hope
+  - Joy
+  - Challenges
 references:
   - source: kynes-plants
     locator: under "Celandine"

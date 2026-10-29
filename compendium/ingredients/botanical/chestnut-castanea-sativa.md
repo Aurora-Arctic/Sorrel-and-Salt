@@ -33,6 +33,13 @@ categories:
   - Prosperity
   - Protection
   - Strength
+  - Wealth
+  - Luck
+  - Consecration
+  - Blessing
+  - Manifestation
+  - Hex-Breaking
+  - Family
 references:
   - source: cunningham-herbs
     locator: under "Chestnut"

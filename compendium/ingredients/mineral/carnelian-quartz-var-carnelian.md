@@ -18,6 +18,7 @@ categories:
   - Peace
   - Healing
   - Courage
+  - Patience
   - Harmony
   - Confidence
   - Nightmare Protection
@@ -30,6 +31,8 @@ categories:
   - Meditation
   - Abundance
   - Fertility
+  - Communication
+  - Sex
 substitutes:
   - name: Coral
   - name: Red Jasper

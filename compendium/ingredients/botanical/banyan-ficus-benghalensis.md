@@ -17,6 +17,8 @@ folkNames:
   - Nuga
 deities:
   - Maui
+categories:
+  - Luck
 references:
   - source: cunningham-herbs
     locator: under "Banyan"; p. 266
@@ -28,6 +30,7 @@ references:
       - folkNames
       - description
       - deities
+      - categories
   - source: wikipedia-ficus-benghalensis
     nameBasis: stated
     supports:

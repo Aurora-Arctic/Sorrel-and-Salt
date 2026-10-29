@@ -33,6 +33,8 @@ categories:
   - Psychic Work
   - Transformation
   - Truth
+  - Spirituality
+  - Awareness
 references:
   - source: cunningham-herbs
     locator: under "Bodhi"

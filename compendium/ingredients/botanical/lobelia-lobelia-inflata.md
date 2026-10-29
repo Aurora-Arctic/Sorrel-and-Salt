@@ -21,6 +21,8 @@ categories:
   - Love
   - Dream Work
   - Purification
+  - Hex-Breaking
+  - Protection
 references:
   - source: cunningham-herbs
     locator: under "Lobelia"; p. 266

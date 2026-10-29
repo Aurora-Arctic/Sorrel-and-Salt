@@ -41,6 +41,8 @@ categories:
   - Manifestation
   - Abundance
   - Creativity
+  - Spirituality
+  - Sex
 substitutes:
   - name: Herkimer Diamond
   - identity: quartz

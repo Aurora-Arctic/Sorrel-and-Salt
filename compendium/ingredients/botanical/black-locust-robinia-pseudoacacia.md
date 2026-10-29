@@ -24,6 +24,10 @@ categories:
   - Fidelity
   - Protection
   - Strength
+  - Determination
+  - Negativity
+  - Challenges
+  - Secrets
 references:
   - source: kynes-plants
     locator: under "Locust"

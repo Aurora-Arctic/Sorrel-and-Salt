@@ -46,6 +46,13 @@ categories:
   - Intuition
   - Love
   - Wisdom
+  - Funeral Rites
+  - Hope
+  - Focus
+  - Renewal
+  - Negativity
+  - Transformation
+  - Growth
 references:
   - source: cunningham-herbs
     locator: under "Birch"; p. 266

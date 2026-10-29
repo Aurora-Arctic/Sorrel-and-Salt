@@ -28,6 +28,10 @@ categories:
   - Purification
   - Success
   - Truth
+  - Security
+  - Family
+  - Home Blessing
+  - Transformation
 references:
   - source: cunningham-herbs
     locator: under "Yellow Evening Primrose"

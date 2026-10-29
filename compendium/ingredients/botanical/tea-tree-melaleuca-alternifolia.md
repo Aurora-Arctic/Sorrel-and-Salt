@@ -12,6 +12,7 @@ categories:
   - Healing
   - Protection
   - Purification
+  - Emotions
 references:
   - source: kynes-plants
     locator: under "Tea Tree"

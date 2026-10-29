@@ -44,6 +44,13 @@ categories:
   - Purification
   - Strength
   - Truth
+  - Luck
+  - Renewal
+  - Negativity
+  - Hex-Breaking
+  - Sex
+  - Sexuality
+  - Challenges
 references:
   - source: cunningham-herbs
     locator: under "Southernwood"; p. 266

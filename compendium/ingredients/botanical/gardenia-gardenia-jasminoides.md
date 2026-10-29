@@ -23,6 +23,9 @@ categories:
   - Peace
   - Harmony
   - Healing
+  - Spirituality
+  - Emotions
+  - Spirit Work
 references:
   - source: cunningham-herbs
     locator: under "Gardenia"; p. 266

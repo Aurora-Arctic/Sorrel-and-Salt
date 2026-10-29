@@ -36,6 +36,15 @@ categories:
   - Prophecy
   - Prosperity
   - Truth
+  - Wealth
+  - Luck
+  - Funeral Rites
+  - Consecration
+  - Blessing
+  - Hope
+  - Trust
+  - Renewal
+  - Hex-Breaking
 references:
   - source: cunningham-herbs
     locator: under "Corn"; p. 266

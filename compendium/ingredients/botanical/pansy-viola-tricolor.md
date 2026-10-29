@@ -35,6 +35,11 @@ categories:
   - Healing
   - Inspiration
   - Peace
+  - Focus
+  - Grief Work
+  - Renewal
+  - Negativity
+  - Rain Magic
 references:
   - source: cunningham-herbs
     locator: under "Pansy"

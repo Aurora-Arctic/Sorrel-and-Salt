@@ -11,6 +11,12 @@ folkNames:
   - Garden Savory
 categories:
   - Healing
+  - Focus
+  - Joy
+  - Sex
+  - Sexuality
+  - Challenges
+  - Clarity
 references:
   - source: cunningham-herbs
     locator: under "Savory, Summer"
@@ -22,6 +28,7 @@ references:
       - celestialBodies
       - folkNames
       - description
+      - categories
   - source: kynes-plants
     locator: under "Savory"
     nameBasis: unresolved

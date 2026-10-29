@@ -36,6 +36,12 @@ categories:
   - Fertility
   - Protection
   - Psychic Work
+  - Funeral Rites
+  - Awareness
+  - Hex-Breaking
+  - Sex
+  - Sexuality
+  - Prophecy
 references:
   - source: cunningham-herbs
     locator: under "Hemp"; p. 266

@@ -51,6 +51,16 @@ categories:
   - Dream Work
   - Intuition
   - Manifestation
+  - Luck
+  - Spirituality
+  - Funeral Rites
+  - Consecration
+  - Blessing
+  - Renewal
+  - Hex-Breaking
+  - Family
+  - Home Blessing
+  - Spirit Work
 references:
   - source: cunningham-herbs
     locator: under "Holly"

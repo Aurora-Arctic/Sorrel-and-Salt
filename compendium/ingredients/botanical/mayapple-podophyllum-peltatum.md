@@ -23,6 +23,9 @@ categories:
   - Love
   - Prosperity
   - Protection
+  - Wealth
+  - Security
+  - Negativity
 references:
   - source: cunningham-herbs
     locator: under "May Apple"; Part II, How to Read the Entries
@@ -35,6 +38,7 @@ references:
       - safetyNotes
       - toxic
       - description
+      - categories
   - source: kynes-plants
     locator: under "Mayapple"
     nameBasis: unaudited

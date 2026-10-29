@@ -24,6 +24,15 @@ categories:
   - Clarity
   - Peace
   - Strength
+  - Wealth
+  - Luck
+  - Spirituality
+  - Joy
+  - Manifestation
+  - Determination
+  - Negativity
+  - Challenges
+  - Healing
 references:
   - source: cunningham-herbs
     locator: under "Sunflower"

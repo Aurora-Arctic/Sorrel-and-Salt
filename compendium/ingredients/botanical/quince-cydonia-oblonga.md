@@ -25,6 +25,12 @@ categories:
   - Peace
   - Prosperity
   - Lust
+  - Wealth
+  - Luck
+  - Negativity
+  - Sex
+  - Sexuality
+  - Joy
 references:
   - source: cunningham-herbs
     locator: under "Quince"

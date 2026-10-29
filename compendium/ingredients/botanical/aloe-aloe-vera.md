@@ -31,6 +31,15 @@ categories:
   - Purification
   - Success
   - Wisdom
+  - Luck
+  - Funeral Rites
+  - Security
+  - Grief Work
+  - Relationships
+  - Sex
+  - Sexuality
+  - Family
+  - Home Blessing
 references:
   - source: cunningham-herbs
     locator: under "Aloe"; p. 266

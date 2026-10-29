@@ -21,6 +21,10 @@ categories:
   - Protection
   - Psychic Work
   - Memory
+  - Wealth
+  - Energy
+  - Spirituality
+  - Grounding
 references:
   - source: cunningham-crystals
     locator: under "Calcite"; pp. 79–80

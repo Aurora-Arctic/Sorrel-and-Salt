@@ -24,6 +24,7 @@ categories:
   - Sleep
   - Abundance
   - Courage
+  - Strength
 substitutes:
   - identity: garnet
   - name: Red Tourmaline

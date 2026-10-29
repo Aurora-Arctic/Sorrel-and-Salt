@@ -22,6 +22,12 @@ categories:
   - Fertility
   - Psychic Work
   - Strength
+  - Joy
+  - Awareness
+  - Sex
+  - Sexuality
+  - Secrets
+  - Spirit Work
 references:
   - source: kynes-plants
     locator: under "Mushroom"

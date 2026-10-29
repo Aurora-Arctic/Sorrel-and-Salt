@@ -8,6 +8,7 @@ celestialBodies:
   - Mars
 categories:
   - Purification
+  - Banishing
 references:
   - source: cunningham-herbs
     locator: under "Horseradish"

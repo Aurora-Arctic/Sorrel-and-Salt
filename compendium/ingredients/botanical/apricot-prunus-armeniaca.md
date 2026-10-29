@@ -32,6 +32,14 @@ categories:
   - Peace
   - Prophecy
   - Purification
+  - Protection
+  - Joy
+  - Determination
+  - Renewal
+  - Relationships
+  - Sex
+  - Sexuality
+  - Transformation
 references:
   - source: cunningham-herbs
     locator: under "Apricot"; p. 266

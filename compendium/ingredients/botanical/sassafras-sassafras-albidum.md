@@ -25,6 +25,9 @@ folkNames:
 categories:
   - Prosperity
   - Protection
+  - Wealth
+  - Healing
+  - Negativity
 references:
   - source: cunningham-herbs
     locator: under "Sassafras"; p. 266
@@ -36,6 +39,7 @@ references:
       - celestialBodies
       - safetyNotes
       - folkNames
+      - categories
   - source: kynes-plants
     locator: under "Sassafras"
     nameBasis: unaudited

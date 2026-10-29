@@ -34,6 +34,14 @@ categories:
   - Peace
   - Strength
   - Success
+  - Spirituality
+  - Consecration
+  - Blessing
+  - Renewal
+  - Negativity
+  - Hex-Breaking
+  - Growth
+  - Prophecy
 substitutes:
   - name: American Angelica
 references:

@@ -36,6 +36,13 @@ categories:
   - Divination
   - Fidelity
   - Purification
+  - Funeral Rites
+  - Renewal
+  - Hex-Breaking
+  - Sex
+  - Sexuality
+  - Challenges
+  - Spirit Work
 references:
   - source: cunningham-herbs
     locator: under "Wormwood"; p. 266

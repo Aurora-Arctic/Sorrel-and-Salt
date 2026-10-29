@@ -21,6 +21,7 @@ categories:
   - Grounding
   - Cleansing
   - Warding
+  - Wealth
 references:
   - source: cunningham-crystals
     locator: pp. 129–131

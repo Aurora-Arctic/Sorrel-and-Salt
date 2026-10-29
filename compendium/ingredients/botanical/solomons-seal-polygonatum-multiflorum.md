@@ -31,6 +31,12 @@ categories:
   - Purification
   - Success
   - Wisdom
+  - Luck
+  - Focus
+  - Negativity
+  - Secrets
+  - Growth
+  - Spirit Work
 references:
   - source: cunningham-herbs
     locator: under "Solomon's Seal"

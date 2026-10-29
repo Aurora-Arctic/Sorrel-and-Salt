@@ -35,6 +35,8 @@ categories:
   - Peace
   - Creativity
   - Wisdom
+  - Luck
+  - Beauty
 references:
   - source: cunningham-crystals
     locator: under "Amber"; pp. 69–71

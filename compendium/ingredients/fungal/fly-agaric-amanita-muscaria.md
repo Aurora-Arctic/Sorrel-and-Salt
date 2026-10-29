@@ -39,6 +39,12 @@ categories:
   - Prophecy
   - Protection
   - Psychic Work
+  - Luck
+  - Funeral Rites
+  - Awareness
+  - Renewal
+  - Secrets
+  - Spirit Work
 references:
   - source: cunningham-herbs
     locator: under "Agaric"

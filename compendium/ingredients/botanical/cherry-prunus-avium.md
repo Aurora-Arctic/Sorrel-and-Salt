@@ -42,6 +42,12 @@ categories:
   - Transformation
   - Wisdom
   - Manifestation
+  - Luck
+  - Spirituality
+  - Joy
+  - Awareness
+  - Renewal
+  - Challenges
 references:
   - source: cunningham-herbs
     locator: under "Cherry"; p. 266

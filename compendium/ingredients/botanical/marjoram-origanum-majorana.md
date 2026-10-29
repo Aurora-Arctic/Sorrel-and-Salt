@@ -32,6 +32,14 @@ categories:
   - Psychic Work
   - Purification
   - Release
+  - Wealth
+  - Joy
+  - Funeral Rites
+  - Focus
+  - Security
+  - Hex-Breaking
+  - Family
+  - Home Blessing
 references:
   - source: cunningham-herbs
     locator: under "Marjoram"; p. 266

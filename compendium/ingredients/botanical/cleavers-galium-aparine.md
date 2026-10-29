@@ -16,6 +16,8 @@ folkNames:
 categories:
   - Binding
   - Protection
+  - Determination
+  - Relationships
 references:
   - source: cunningham-herbs
     locator: under "Cleavers (Galium aparine)"

@@ -18,6 +18,7 @@ categories:
   - Protection
   - Nightmare Protection
   - Healing
+  - Psychic Work
 references:
   - source: cunningham-crystals
     locator: pp. 101–102

@@ -27,6 +27,15 @@ categories:
   - Peace
   - Purification
   - Release
+  - Spirituality
+  - Consecration
+  - Blessing
+  - Trust
+  - Relationships
+  - Negativity
+  - Family
+  - Home Blessing
+  - Emotions
 references:
   - source: cunningham-herbs
     locator: under "Columbine"

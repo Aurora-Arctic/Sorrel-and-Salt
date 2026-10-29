@@ -31,6 +31,11 @@ categories:
   - Clarity
   - Dream Work
   - Healing
+  - Grief Work
+  - Negativity
+  - Challenges
+  - Spirit Work
+  - Nightmare Protection
 references:
   - source: cunningham-herbs
     locator: under "Betony, Wood"

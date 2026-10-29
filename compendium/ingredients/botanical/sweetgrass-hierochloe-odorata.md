@@ -19,6 +19,10 @@ folkNames:
 categories:
   - Healing
   - Purification
+  - Spirituality
+  - Consecration
+  - Blessing
+  - Spirit Work
 references:
   - source: cunningham-herbs
     locator: under "Sweetgrass"
@@ -26,6 +30,7 @@ references:
     supports:
       - canonicalName
       - description
+      - categories
   - source: kynes-plants
     locator: under "Sweetgrass"
     nameBasis: unaudited

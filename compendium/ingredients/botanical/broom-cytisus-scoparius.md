@@ -41,6 +41,11 @@ categories:
   - Intuition
   - Release
   - Strength
+  - Funeral Rites
+  - Focus
+  - Determination
+  - Negativity
+  - Challenges
 references:
   - source: cunningham-herbs
     locator: under "Broom"

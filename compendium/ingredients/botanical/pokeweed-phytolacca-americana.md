@@ -28,6 +28,7 @@ categories:
   - Courage
   - Hex-Breaking
   - Spirit Work
+  - Negativity
 references:
   - source: cunningham-herbs
     locator: under "Poke"

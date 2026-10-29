@@ -39,6 +39,8 @@ categories:
   - Harmony
   - Creativity
   - Fertility
+  - Sex
+  - Sexuality
 references:
   - source: kynes-plants
     locator: under "Lords and Ladies"

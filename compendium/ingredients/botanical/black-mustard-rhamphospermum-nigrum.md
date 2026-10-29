@@ -18,6 +18,8 @@ categories:
   - Justice
   - Legal Matters
   - Prosperity
+  - Wealth
+  - Clarity
 references:
   - source: cunningham-herbs
     locator: under "Mustard, Black"; p. 266

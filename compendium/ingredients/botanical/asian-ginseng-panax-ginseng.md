@@ -16,6 +16,10 @@ categories:
   - Healing
   - Love
   - Protection
+  - Luck
+  - Manifestation
+  - Sex
+  - Sexuality
 references:
   - source: kynes-plants
     locator: under "Ginseng"

@@ -38,6 +38,16 @@ categories:
   - Prosperity
   - Purification
   - Strength
+  - Wealth
+  - Luck
+  - Spirituality
+  - Consecration
+  - Blessing
+  - Manifestation
+  - Awareness
+  - Sex
+  - Sexuality
+  - Transformation
 references:
   - source: cunningham-herbs
     locator: under "Cinnamon"; p. 266

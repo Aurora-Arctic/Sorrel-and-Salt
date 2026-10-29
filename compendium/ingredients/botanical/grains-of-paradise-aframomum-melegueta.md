@@ -16,6 +16,9 @@ folkNames:
 categories:
   - Lust
   - Love
+  - Wealth
+  - Luck
+  - Manifestation
 references:
   - source: cunningham-herbs
     locator: under "Grains of Paradise"; p. 266

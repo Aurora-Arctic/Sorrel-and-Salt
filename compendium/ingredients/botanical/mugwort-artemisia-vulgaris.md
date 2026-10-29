@@ -53,6 +53,18 @@ categories:
   - Peace
   - Purification
   - Release
+  - Luck
+  - Consecration
+  - Blessing
+  - Joy
+  - Awareness
+  - Negativity
+  - Family
+  - Home Blessing
+  - Leadership
+  - Spirit Work
+  - Prophetic Dreams
+  - Astral Projection
 references:
   - source: cunningham-herbs
     locator: under "Mugwort"; p. 266

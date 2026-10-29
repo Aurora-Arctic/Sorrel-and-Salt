@@ -37,6 +37,10 @@ categories:
   - Divination
   - Healing
   - Strength
+  - Focus
+  - Relationships
+  - Sex
+  - Sexuality
 references:
   - source: cunningham-herbs
     locator: under "Cardamon"

@@ -31,6 +31,10 @@ categories:
   - Fertility
   - Protection
   - Purification
+  - Relationships
+  - Negativity
+  - Sex
+  - Sexuality
 references:
   - source: cunningham-herbs
     locator: under "Lovage"; p. 266

@@ -37,6 +37,13 @@ categories:
   - Harmony
   - Prosperity
   - Release
+  - Wealth
+  - Funeral Rites
+  - Grief Work
+  - Relationships
+  - Emotions
+  - Spirit Work
+  - Invisibility
 references:
   - source: cunningham-herbs
     locator: under "Amaranth"

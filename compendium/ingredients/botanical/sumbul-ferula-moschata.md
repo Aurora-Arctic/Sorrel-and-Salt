@@ -9,6 +9,8 @@ folkNames:
   - Ouchi
 categories:
   - Love
+  - Luck
+  - Healing
 references:
   - source: cunningham-herbs
     locator: under "Sumbul"

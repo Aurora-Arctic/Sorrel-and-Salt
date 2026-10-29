@@ -36,6 +36,15 @@ categories:
   - Fidelity
   - Manifestation
   - Psychic Work
+  - Luck
+  - Spirituality
+  - Awareness
+  - Relationships
+  - Negativity
+  - Faerie Sight
+  - Spirit Work
+  - Chastity
+  - Joy
 references:
   - source: cunningham-herbs
     locator: under "Lavender"; p. 266

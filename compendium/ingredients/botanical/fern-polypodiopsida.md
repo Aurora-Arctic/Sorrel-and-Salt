@@ -13,6 +13,12 @@ deities:
   - Puck
 categories:
   - Protection
+  - Luck
+  - Youth
+  - Rain Magic
+  - Banishing
+  - Healing
+  - Wealth
 references:
   - source: cunningham-herbs
     locator: under "Fern"

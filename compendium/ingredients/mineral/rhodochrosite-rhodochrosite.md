@@ -21,6 +21,7 @@ categories:
   - Creativity
   - Release
   - Healing
+  - Energy
 references:
   - source: wikipedia-rhodochrosite
     nameBasis: stated

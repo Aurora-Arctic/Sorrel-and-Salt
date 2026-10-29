@@ -48,6 +48,15 @@ categories:
   - Healing
   - Justice
   - Prophecy
+  - Prophetic Dreams
+  - Consecration
+  - Blessing
+  - Hope
+  - Joy
+  - Relationships
+  - Negativity
+  - Faerie Sight
+  - Nightmare Protection
 references:
   - source: cunningham-herbs
     locator: under "Marigold"; p. 266

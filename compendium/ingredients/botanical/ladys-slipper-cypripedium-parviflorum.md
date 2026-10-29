@@ -19,6 +19,7 @@ categories:
   - Dream Work
   - Love
   - Peace
+  - Awareness
 references:
   - source: cunningham-herbs
     locator: under "Lady's Slipper"

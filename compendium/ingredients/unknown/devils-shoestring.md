@@ -10,6 +10,10 @@ categories:
   - Gambling
   - Banishing
   - Hex-Breaking
+  - Luck
+  - Negativity
+  - Career
+  - Strength
 references:
   - source: cunningham-herbs
     locator: under "Devil's Shoestring"

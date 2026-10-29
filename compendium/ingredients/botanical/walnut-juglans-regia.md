@@ -15,6 +15,10 @@ folkNames:
   - Walnoot
   - Common Walnut
   - Persian Walnut
+categories:
+  - Manifestation
+  - Healing
+  - Clarity
 references:
   - source: cunningham-herbs
     locator: under "Walnut"; p. 266
@@ -27,6 +31,7 @@ references:
       - folkNames
       - safetyNotes
       - description
+      - categories
   - source: ahpa-safety
     locator: p. 485
     nameBasis: unresolved

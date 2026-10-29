@@ -10,6 +10,8 @@ celestialBodies:
 categories:
   - Healing
   - Protection
+  - Luck
+  - Rain Magic
 references:
   - source: cunningham-herbs
     locator: under "Cotton"

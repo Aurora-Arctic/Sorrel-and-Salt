@@ -41,6 +41,16 @@ categories:
   - Knowledge
   - Love
   - Protection
+  - Wealth
+  - Luck
+  - Spirituality
+  - Hope
+  - Joy
+  - Awareness
+  - Renewal
+  - Sex
+  - Sexuality
+  - Spirit Work
 references:
   - source: cunningham-herbs
     locator: under "Almond"

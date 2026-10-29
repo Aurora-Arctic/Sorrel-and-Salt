@@ -24,6 +24,7 @@ folkNames:
 categories:
   - Peace
   - Protection
+  - Manifestation
 references:
   - source: cunningham-herbs
     locator: under "Loosestrife"; p. 266

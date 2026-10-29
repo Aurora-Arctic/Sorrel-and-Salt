@@ -12,6 +12,9 @@ folkNames:
   - Aluminum
 substitutes:
   - identity: mercury
+categories:
+  - Safe Travel
+  - Clarity
 references:
   - source: cunningham-crystals
     locator: pp. 151–152
@@ -22,6 +25,7 @@ references:
       - folkNames
       - substitutes
       - description
+      - categories
   - source: wikipedia-aluminium
     nameBasis: stated
     supports:

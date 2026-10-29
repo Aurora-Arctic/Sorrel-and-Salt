@@ -16,6 +16,10 @@ categories:
   - Divination
   - Fertility
   - Protection
+  - Wealth
+  - Luck
+  - Funeral Rites
+  - Manifestation
 references:
   - source: cunningham-herbs
     locator: under "Pea"

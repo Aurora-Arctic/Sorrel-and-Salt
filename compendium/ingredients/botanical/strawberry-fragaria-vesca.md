@@ -19,6 +19,7 @@ deities:
   - Freya
 categories:
   - Love
+  - Luck
 references:
   - source: cunningham-herbs
     locator: under "Strawberry"

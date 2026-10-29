@@ -35,6 +35,9 @@ categories:
   - Intuition
   - Protection
   - Strength
+  - Spirituality
+  - Awareness
+  - Spirit Work
 references:
   - source: cunningham-herbs
     locator: under "Uva Ursa"; p. 266

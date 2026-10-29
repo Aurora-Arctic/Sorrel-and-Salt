@@ -39,6 +39,15 @@ categories:
   - Lust
   - Strength
   - Success
+  - Wealth
+  - Luck
+  - Spirituality
+  - Consecration
+  - Blessing
+  - Manifestation
+  - Awareness
+  - Sex
+  - Sexuality
 references:
   - source: kynes-plants
     locator: under "Cinnamon"

@@ -26,6 +26,13 @@ categories:
   - Prosperity
   - Release
   - Spirit Work
+  - Wealth
+  - Luck
+  - Spirituality
+  - Protection
+  - Challenges
+  - Secrets
+  - Invisibility
 references:
   - source: cunningham-herbs
     locator: under "Chicory"
@@ -37,6 +44,7 @@ references:
       - celestialBodies
       - folkNames
       - description
+      - categories
   - source: kynes-plants
     locator: under "Chicory"
     nameBasis: stated

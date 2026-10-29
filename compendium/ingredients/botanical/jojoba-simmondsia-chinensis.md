@@ -20,6 +20,7 @@ folkNames:
 categories:
   - Healing
   - Love
+  - Relationships
 references:
   - source: kynes-plants
     locator: under "Jojoba"

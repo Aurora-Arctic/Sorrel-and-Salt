@@ -31,6 +31,9 @@ deities:
 categories:
   - Love
   - Protection
+  - Luck
+  - Family
+  - Home Blessing
 references:
   - source: cunningham-herbs
     locator: under "Houseleek"

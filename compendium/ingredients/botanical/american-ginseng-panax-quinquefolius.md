@@ -22,6 +22,11 @@ categories:
   - Protection
   - Lust
   - Fertility
+  - Luck
+  - Manifestation
+  - Sex
+  - Sexuality
+  - Beauty
 references:
   - source: cunningham-herbs
     locator: under "Ginseng, American"

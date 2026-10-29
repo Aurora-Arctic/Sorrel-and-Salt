@@ -45,6 +45,17 @@ categories:
   - Healing
   - Prosperity
   - Purification
+  - Wealth
+  - Consecration
+  - Blessing
+  - Joy
+  - Manifestation
+  - Negativity
+  - Hex-Breaking
+  - Emotions
+  - Secrets
+  - Spirit Work
+  - Banishing
 references:
   - source: cunningham-herbs
     locator: under "Juniper"

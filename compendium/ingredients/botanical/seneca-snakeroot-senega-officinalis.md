@@ -12,6 +12,7 @@ folkNames:
   - Senegaroot
 categories:
   - Protection
+  - Wealth
 references:
   - source: cunningham-herbs
     locator: under "Rattlesnake Root"; p. 266

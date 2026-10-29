@@ -22,12 +22,14 @@ categories:
   - Confidence
   - Truth
   - Healing
+  - Clarity
 references:
   - source: cunningham-crystals
     locator: under "Fluorite"; pp. 95–96
     nameBasis: stated
     supports:
       - description
+      - categories
   - source: hall-crystal-bible
     locator: under "Fluorite"
     nameBasis: stated

@@ -46,6 +46,14 @@ categories:
   - Protection
   - Purification
   - Wisdom
+  - Wealth
+  - Luck
+  - Consecration
+  - Blessing
+  - Negativity
+  - Hex-Breaking
+  - Family
+  - Home Blessing
 references:
   - source: cunningham-herbs
     locator: under "Fumitory"
@@ -57,6 +65,7 @@ references:
       - celestialBodies
       - folkNames
       - description
+      - categories
   - source: kynes-plants
     locator: under "Fumitory"
     nameBasis: unaudited

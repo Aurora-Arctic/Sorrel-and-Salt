@@ -33,6 +33,13 @@ categories:
   - Fertility
   - Psychic Work
   - Strength
+  - Focus
+  - Security
+  - Renewal
+  - Family
+  - Home Blessing
+  - Transformation
+  - Spirit Work
 references:
   - source: cunningham-herbs
     locator: under "Fennel"; p. 266

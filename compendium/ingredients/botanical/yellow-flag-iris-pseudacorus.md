@@ -28,6 +28,13 @@ categories:
   - Release
   - Success
   - Wisdom
+  - Wealth
+  - Luck
+  - Focus
+  - Determination
+  - Family
+  - Home Blessing
+  - Adaptability
 references:
   - source: kynes-plants
     locator: under "Iris"

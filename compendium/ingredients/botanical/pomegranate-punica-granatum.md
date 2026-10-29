@@ -54,6 +54,14 @@ categories:
   - Psychic Work
   - Wisdom
   - Lust
+  - Luck
+  - Funeral Rites
+  - Hope
+  - Manifestation
+  - Grief Work
+  - Renewal
+  - Sex
+  - Sexuality
 references:
   - source: cunningham-herbs
     locator: under "Pomegranate"; p. 266

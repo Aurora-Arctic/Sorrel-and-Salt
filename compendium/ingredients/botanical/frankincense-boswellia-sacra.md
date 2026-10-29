@@ -45,6 +45,17 @@ categories:
   - Psychic Work
   - Success
   - Transformation
+  - Luck
+  - Spirituality
+  - Consecration
+  - Blessing
+  - Focus
+  - Joy
+  - Awareness
+  - Past-Life Work
+  - Negativity
+  - Growth
+  - Spirit Work
 substitutes:
   - name: Rosemary
 references:

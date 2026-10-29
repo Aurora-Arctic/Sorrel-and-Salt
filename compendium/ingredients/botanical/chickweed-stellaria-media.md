@@ -35,6 +35,10 @@ categories:
   - Fertility
   - Purification
   - Home Blessing
+  - Relationships
+  - Negativity
+  - Family
+  - Emotions
 references:
   - source: cunningham-herbs
     locator: under "Chickweed"; p. 266

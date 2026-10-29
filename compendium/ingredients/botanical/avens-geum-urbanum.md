@@ -35,6 +35,7 @@ categories:
   - Love
   - Abundance
   - Protection
+  - Banishing
 references:
   - source: cunningham-herbs
     locator: under "Avens"; p. 266

@@ -24,6 +24,15 @@ categories:
   - Peace
   - Protection
   - Purification
+  - Spirituality
+  - Consecration
+  - Blessing
+  - Negativity
+  - Hex-Breaking
+  - Sex
+  - Sexuality
+  - Transformation
+  - Spirit Work
 references:
   - source: cunningham-herbs
     locator: under "Hyssop"

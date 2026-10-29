@@ -25,6 +25,14 @@ categories:
   - Peace
   - Protection
   - Psychic Work
+  - Joy
+  - Relationships
+  - Sex
+  - Sexuality
+  - Family
+  - Home Blessing
+  - Emotions
+  - Prophecy
 references:
   - source: cunningham-herbs
     locator: under "Crocus"; p. 266

@@ -28,6 +28,15 @@ categories:
   - Intuition
   - Peace
   - Psychic Work
+  - Luck
+  - Consecration
+  - Blessing
+  - Joy
+  - Security
+  - Awareness
+  - Determination
+  - Renewal
+  - Prophetic Dreams
 references:
   - source: cunningham-herbs
     locator: under "Mimosa"; p. 266

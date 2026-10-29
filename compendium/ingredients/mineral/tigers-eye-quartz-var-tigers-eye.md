@@ -28,6 +28,8 @@ categories:
   - Manifestation
   - Healing
   - Creativity
+  - Luck
+  - Energy
 substitutes:
   - identity: chrysoberyl var. cymophane
 references:

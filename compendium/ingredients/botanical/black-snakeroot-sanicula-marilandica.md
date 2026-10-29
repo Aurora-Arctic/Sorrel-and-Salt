@@ -12,6 +12,7 @@ folkNames:
 categories:
   - Love
   - Lust
+  - Wealth
 references:
   - source: cunningham-herbs
     locator: under "Snakeroot, Black"

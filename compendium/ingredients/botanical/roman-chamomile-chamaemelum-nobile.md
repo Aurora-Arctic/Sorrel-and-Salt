@@ -50,6 +50,12 @@ categories:
   - Prosperity
   - Psychic Work
   - Release
+  - Wealth
+  - Consecration
+  - Blessing
+  - Negativity
+  - Hex-Breaking
+  - Emotions
 references:
   - source: cunningham-herbs
     locator: under "Chamomile, Roman"; p. 266

@@ -47,6 +47,14 @@ categories:
   - Dream Work
   - Inspiration
   - Fidelity
+  - Youth
+  - Banishing
+  - Funeral Rites
+  - Consecration
+  - Blessing
+  - Focus
+  - Negativity
+  - Nightmare Protection
 references:
   - source: cunningham-herbs
     locator: under "Rosemary"; p. 266

@@ -19,6 +19,12 @@ categories:
   - Banishing
   - Divination
   - Prophecy
+  - Spirituality
+  - Funeral Rites
+  - Hope
+  - Negativity
+  - Hex-Breaking
+  - Ancestor Work
 references:
   - source: cunningham-herbs
     locator: under "Tamarisk"

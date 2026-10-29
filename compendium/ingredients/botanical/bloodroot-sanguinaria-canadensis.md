@@ -26,6 +26,8 @@ categories:
   - Home Blessing
   - Release
   - Strength
+  - Negativity
+  - Family
 references:
   - source: cunningham-herbs
     locator: under "Bloodroot"

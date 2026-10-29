@@ -37,6 +37,13 @@ categories:
   - Healing
   - Clarity
   - Fertility
+  - Spirituality
+  - Focus
+  - Past-Life Work
+  - Renewal
+  - Relationships
+  - Emotions
+  - Spirit Work
 references:
   - source: cunningham-herbs
     locator: under "Balm, Lemon"; p. 266

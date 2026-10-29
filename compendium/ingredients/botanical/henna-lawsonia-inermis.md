@@ -24,6 +24,14 @@ categories:
   - Prosperity
   - Protection
   - Wisdom
+  - Wealth
+  - Luck
+  - Spirituality
+  - Consecration
+  - Blessing
+  - Joy
+  - Sex
+  - Sexuality
 references:
   - source: cunningham-herbs
     locator: under "Henna"

@@ -10,6 +10,11 @@ folkNames:
   - Marmalade Orange
   - Bigarade
   - Bigaradier
+categories:
+  - Wealth
+  - Focus
+  - Joy
+  - Spirit Work
 references:
   - source: kynes-plants
     locator: under "Orange"
@@ -18,6 +23,7 @@ references:
       - canonicalName
       - folkNames
       - description
+      - categories
   - source: ahpa-safety
     locator: pp. 220–221, 223; pp. xxii–xxiii
     nameBasis: unaudited

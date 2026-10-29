@@ -49,6 +49,8 @@ categories:
   - Prosperity
   - Protection
   - Psychic Work
+  - Wealth
+  - Funeral Rites
 references:
   - source: cunningham-herbs
     locator: under "Fig"; p. 266

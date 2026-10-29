@@ -27,6 +27,13 @@ categories:
   - Purification
   - Release
   - Home Blessing
+  - Wealth
+  - Funeral Rites
+  - Focus
+  - Joy
+  - Security
+  - Hex-Breaking
+  - Family
 references:
   - source: kynes-plants
     locator: under "Oregano and Marjoram"

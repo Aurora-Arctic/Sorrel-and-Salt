@@ -33,6 +33,12 @@ categories:
   - Healing
   - Fidelity
   - Protection
+  - Funeral Rites
+  - Awareness
+  - Hex-Breaking
+  - Sex
+  - Sexuality
+  - Clarity
 references:
   - source: cunningham-herbs
     locator: under "Celery"

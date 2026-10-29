@@ -10,6 +10,8 @@ celestialBodies:
 colours:
   - black
   - brown
+categories:
+  - Wealth
 references:
   - source: cunningham-crystals
     locator: under "Coal"; p. 84
@@ -18,6 +20,7 @@ references:
       - elements
       - celestialBodies
       - description
+      - categories
   - source: wikipedia-coal
     nameBasis: stated
     supports:

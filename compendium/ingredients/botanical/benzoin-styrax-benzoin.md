@@ -37,6 +37,12 @@ categories:
   - Protection
   - Banishing
   - Love
+  - Spirituality
+  - Focus
+  - Awareness
+  - Hex-Breaking
+  - Transformation
+  - Spirit Work
 references:
   - source: cunningham-herbs
     locator: under "Benzoin"

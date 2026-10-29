@@ -25,6 +25,9 @@ categories:
   - Prosperity
   - Protection
   - Success
+  - Wealth
+  - Luck
+  - Joy
 substitutes:
   - name: Henna
 references:

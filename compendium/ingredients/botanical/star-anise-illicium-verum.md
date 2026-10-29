@@ -20,6 +20,13 @@ categories:
   - Protection
   - Purification
   - Success
+  - Luck
+  - Spirituality
+  - Consecration
+  - Blessing
+  - Joy
+  - Awareness
+  - Skill
 references:
   - source: cunningham-herbs
     locator: under "Star Anise"
@@ -40,6 +47,7 @@ references:
       - deities
       - safetyNotes
       - description
+      - categories
   - source: ahpa-safety
     locator: pp. 472-473
     nameBasis: stated

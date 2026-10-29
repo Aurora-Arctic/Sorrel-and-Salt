@@ -39,6 +39,17 @@ categories:
   - Peace
   - Protection
   - Nightmare Protection
+  - Luck
+  - Funeral Rites
+  - Consecration
+  - Blessing
+  - Security
+  - Renewal
+  - Relationships
+  - Negativity
+  - Family
+  - Home Blessing
+  - Spirit Work
 references:
   - source: cunningham-herbs
     locator: under "Daffodil"

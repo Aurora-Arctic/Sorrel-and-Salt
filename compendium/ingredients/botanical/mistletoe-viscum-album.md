@@ -49,6 +49,16 @@ categories:
   - Divination
   - Dream Work
   - Purification
+  - Luck
+  - Funeral Rites
+  - Renewal
+  - Negativity
+  - Sex
+  - Sexuality
+  - Challenges
+  - Transformation
+  - Spirit Work
+  - Healing
 references:
   - source: cunningham-herbs
     locator: under "Mistletoe"; p. 266

@@ -30,6 +30,11 @@ categories:
   - Protection
   - Hex-Breaking
   - Ancestor Work
+  - Wealth
+  - Luck
+  - Funeral Rites
+  - Joy
+  - Renewal
 references:
   - source: kynes-plants
     locator: under "Boxwood"

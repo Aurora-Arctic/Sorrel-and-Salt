@@ -26,6 +26,11 @@ categories:
   - Success
   - Psychic Work
   - Peace
+  - Wealth
+  - Banishing
+  - Luck
+  - Hex-Breaking
+  - Faerie Sight
 references:
   - source: cunningham-herbs
     locator: under "Clover"; p. 266

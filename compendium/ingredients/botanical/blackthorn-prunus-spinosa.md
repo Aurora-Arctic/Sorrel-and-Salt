@@ -38,6 +38,10 @@ categories:
   - Purification
   - Strength
   - Truth
+  - Negativity
+  - Hex-Breaking
+  - Challenges
+  - Leadership
 references:
   - source: cunningham-herbs
     locator: under "Sloe"; p. 266

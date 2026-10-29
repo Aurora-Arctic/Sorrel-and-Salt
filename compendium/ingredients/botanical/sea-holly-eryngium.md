@@ -16,6 +16,7 @@ categories:
   - Love
   - Lust
   - Peace
+  - Safe Travel
 references:
   - source: cunningham-herbs
     locator: under "Eryngo"; p. 266

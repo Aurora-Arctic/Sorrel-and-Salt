@@ -17,6 +17,11 @@ folkNames:
   - Globe Ranunculus
   - Globe Crowfoot
   - Lucken-Gowans
+categories:
+  - Protection
+  - Negativity
+  - Hex-Breaking
+  - Secrets
 references:
   - source: kynes-plants
     locator: under "Globeflower"
@@ -29,6 +34,7 @@ references:
       - safetyNotes
       - toxic
       - description
+      - categories
   - source: grieve-globe-flower
     nameBasis: unaudited
     supports:

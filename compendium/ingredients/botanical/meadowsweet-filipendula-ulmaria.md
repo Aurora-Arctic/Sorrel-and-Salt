@@ -44,6 +44,12 @@ categories:
   - Inspiration
   - Strength
   - Truth
+  - Luck
+  - Joy
+  - Security
+  - Relationships
+  - Family
+  - Home Blessing
 references:
   - source: cunningham-herbs
     locator: under "Meadowsweet"; p. 266

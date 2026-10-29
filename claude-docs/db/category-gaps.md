@@ -37,7 +37,7 @@ Answers to the sweep, 2026-10-29:
 - Love Divination maps to Love and Divination. Breaking Love Spells maps to Love and Hex-Breaking. Removing Obstacles maps to Challenges, not Success.
 - Every other row in both sweep tables, and the single-word mappings, stand as proposed. Attraction maps to Attraction. Friendship, Business, Reconciliation and Hex-Breaking exist in the 63, so "if seeded" no longer applies.
 - The left-off rows stay off.
-- Held for the owner: Potency (7 cunningham-herbs entries; proposed Sex) and Marital Happiness on sardonyx (proposed Love, Harmony and Joy, Joy being where Happiness maps).
+- Potency (7 cunningham-herbs entries) maps to Sex. Marital Happiness (sardonyx) maps to Love, Harmony and Happiness; Happiness maps to Joy under the standing mapping, so the entry gets Love, Harmony and Joy.
 
 ## The Gaps
 

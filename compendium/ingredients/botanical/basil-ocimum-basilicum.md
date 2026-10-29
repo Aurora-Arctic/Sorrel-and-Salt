@@ -44,6 +44,14 @@ categories:
   - Prosperity
   - Psychic Work
   - Success
+  - Luck
+  - Funeral Rites
+  - Focus
+  - Joy
+  - Trust
+  - Negativity
+  - Hex-Breaking
+  - Banishing
 references:
   - source: cunningham-herbs
     locator: under "Basil"; p. 266

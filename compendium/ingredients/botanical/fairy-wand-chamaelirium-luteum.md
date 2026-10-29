@@ -24,6 +24,14 @@ categories:
   - Fidelity
   - Protection
   - Purification
+  - Consecration
+  - Blessing
+  - Manifestation
+  - Grief Work
+  - Relationships
+  - Sex
+  - Sexuality
+  - Emotions
 references:
   - source: kynes-plants
     locator: under "Fairy Wand"

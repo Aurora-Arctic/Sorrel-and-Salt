@@ -33,6 +33,13 @@ categories:
   - Purification
   - Success
   - Truth
+  - Luck
+  - Determination
+  - Negativity
+  - Sex
+  - Sexuality
+  - Family
+  - Snake Repelling
 references:
   - source: cunningham-herbs
     locator: under "Plantain"

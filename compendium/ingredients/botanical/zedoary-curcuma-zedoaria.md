@@ -16,6 +16,10 @@ folkNames:
   - Temu Putih
 categories:
   - Healing
+  - Renewal
+  - Relationships
+  - Hex-Breaking
+  - Nightmare Protection
 references:
   - source: kynes-plants
     locator: under "Zedoary"

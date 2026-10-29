@@ -26,6 +26,7 @@ categories:
   - Fidelity
   - Psychic Work
   - Success
+  - Luck
 references:
   - source: kynes-plants
     locator: under "Orchid"

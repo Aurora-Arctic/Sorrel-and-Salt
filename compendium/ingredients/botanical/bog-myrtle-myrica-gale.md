@@ -23,6 +23,12 @@ categories:
   - Prosperity
   - Protection
   - Purification
+  - Wealth
+  - Luck
+  - Focus
+  - Determination
+  - Relationships
+  - Adaptability
 references:
   - source: kynes-plants
     locator: under "Bog Myrtle"

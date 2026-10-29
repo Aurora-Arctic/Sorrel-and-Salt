@@ -30,6 +30,10 @@ categories:
   - Banishing
   - Courage
   - Protection
+  - Funeral Rites
+  - Hex-Breaking
+  - Challenges
+  - Spirit Work
 references:
   - source: cunningham-herbs
     locator: under "Hellebore, Black"

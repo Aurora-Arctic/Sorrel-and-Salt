@@ -32,6 +32,8 @@ categories:
   - Meditation
   - Communication
   - Creativity
+  - Wealth
+  - Luck
 substitutes:
   - identity: chrysocolla
 references:

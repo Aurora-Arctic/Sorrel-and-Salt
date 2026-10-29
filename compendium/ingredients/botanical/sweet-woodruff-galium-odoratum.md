@@ -31,6 +31,14 @@ categories:
   - Peace
   - Purification
   - Success
+  - Wealth
+  - Consecration
+  - Blessing
+  - Relationships
+  - Negativity
+  - Transformation
+  - Skill
+  - Adaptability
 references:
   - source: cunningham-herbs
     locator: under "Woodruff"; p. 266

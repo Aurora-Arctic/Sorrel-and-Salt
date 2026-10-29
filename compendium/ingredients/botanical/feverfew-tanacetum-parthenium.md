@@ -25,6 +25,7 @@ categories:
   - Love
   - Purification
   - Strength
+  - Emotions
 references:
   - source: cunningham-herbs
     locator: under "Feverfew"; p. 266

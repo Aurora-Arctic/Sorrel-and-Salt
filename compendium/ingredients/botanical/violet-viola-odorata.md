@@ -22,6 +22,8 @@ categories:
   - Lust
   - Peace
   - Healing
+  - Luck
+  - Manifestation
 references:
   - source: cunningham-herbs
     locator: under "Violet"

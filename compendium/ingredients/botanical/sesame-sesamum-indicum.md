@@ -33,6 +33,16 @@ categories:
   - Healing
   - Prosperity
   - Truth
+  - Wealth
+  - Consecration
+  - Blessing
+  - Protection
+  - Negativity
+  - Sex
+  - Sexuality
+  - Transformation
+  - Secrets
+  - Spirit Work
 references:
   - source: cunningham-herbs
     locator: under "Sesame"; p. 266

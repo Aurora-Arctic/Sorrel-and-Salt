@@ -25,6 +25,7 @@ categories:
   - Friendship
   - Intuition
   - Sleep
+  - Strength
 references:
   - source: cunningham-crystals
     locator: under "Malachite"; p. 112

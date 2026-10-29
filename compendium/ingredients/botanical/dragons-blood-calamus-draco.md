@@ -26,6 +26,16 @@ categories:
   - Manifestation
   - Release
   - Success
+  - Spirituality
+  - Consecration
+  - Blessing
+  - Security
+  - Determination
+  - Negativity
+  - Hex-Breaking
+  - Sex
+  - Sexuality
+  - Challenges
 references:
   - source: cunningham-herbs
     locator: under "Dragon's Blood"

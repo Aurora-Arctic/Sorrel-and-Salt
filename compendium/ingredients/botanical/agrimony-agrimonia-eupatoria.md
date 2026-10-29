@@ -36,6 +36,10 @@ categories:
   - Healing
   - Purification
   - Release
+  - Negativity
+  - Family
+  - Home Blessing
+  - Spirit Work
 references:
   - source: cunningham-herbs
     locator: under "Agrimony"; p. 266

@@ -5,6 +5,7 @@ categories:
   - Longevity
   - Healing
   - Protection
+  - Past-Life Work
 references:
   - source: cunningham-crystals
     locator: p. 125

@@ -10,6 +10,8 @@ colours:
   - grey
 categories:
   - Divination
+  - Wealth
+  - Luck
 references:
   - source: cunningham-crystals
     locator: pp. 171–172

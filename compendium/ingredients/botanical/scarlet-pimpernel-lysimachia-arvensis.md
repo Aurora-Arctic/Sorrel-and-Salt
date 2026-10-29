@@ -29,6 +29,7 @@ categories:
   - Protection
   - Psychic Work
   - Truth
+  - Transformation
 references:
   - source: kynes-plants
     locator: under "Pimpernel"

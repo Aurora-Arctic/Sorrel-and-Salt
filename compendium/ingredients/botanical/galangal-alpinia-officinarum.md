@@ -41,6 +41,17 @@ categories:
   - Legal Matters
   - Prosperity
   - Success
+  - Wealth
+  - Healing
+  - Luck
+  - Consecration
+  - Blessing
+  - Awareness
+  - Negativity
+  - Sex
+  - Sexuality
+  - Challenges
+  - Secrets
 substitutes:
   - identity: zingiber officinale
 references:

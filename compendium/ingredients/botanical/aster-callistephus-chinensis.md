@@ -27,6 +27,7 @@ categories:
   - Protection
   - Psychic Work
   - Truth
+  - Hex-Breaking
 references:
   - source: cunningham-herbs
     locator: under "Aster"; p. 266

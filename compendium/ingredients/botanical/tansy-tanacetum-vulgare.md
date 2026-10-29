@@ -20,6 +20,10 @@ categories:
   - Banishing
   - Purification
   - Release
+  - Funeral Rites
+  - Protection
+  - Negativity
+  - Healing
 references:
   - source: cunningham-herbs
     locator: under "Tansy"; p. 266

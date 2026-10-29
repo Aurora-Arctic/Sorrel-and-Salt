@@ -16,6 +16,16 @@ folkNames:
   - Thorn Mimosa
   - Egyptian Acacia
   - Thorny Acacia
+categories:
+  - Wealth
+  - Spirituality
+  - Funeral Rites
+  - Consecration
+  - Blessing
+  - Awareness
+  - Relationships
+  - Negativity
+  - Ancestor Work
 references:
   - source: grieve-acacia-gum
     nameBasis: resolved
@@ -31,6 +41,7 @@ references:
       - elements
       - celestialBodies
       - zodiacSigns
+      - categories
   - source: wikipedia-vachellia-nilotica
     nameBasis: stated
     supports:

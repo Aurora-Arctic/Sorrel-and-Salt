@@ -52,6 +52,16 @@ categories:
   - Strength
   - Transformation
   - Ancestor Work
+  - Wealth
+  - Funeral Rites
+  - Consecration
+  - Blessing
+  - Focus
+  - Awareness
+  - Past-Life Work
+  - Grief Work
+  - Renewal
+  - Growth
 references:
   - source: cunningham-herbs
     locator: under "Cypress"; p. 266

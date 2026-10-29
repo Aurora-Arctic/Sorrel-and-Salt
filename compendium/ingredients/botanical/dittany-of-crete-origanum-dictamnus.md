@@ -27,6 +27,9 @@ categories:
   - Divination
   - Love
   - Psychic Work
+  - Manifestation
+  - Astral Projection
+  - Spirit Work
 references:
   - source: wikipedia-origanum-dictamnus
     nameBasis: stated

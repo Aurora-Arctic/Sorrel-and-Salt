@@ -28,6 +28,8 @@ categories:
   - Healing
   - Prosperity
   - Protection
+  - Wealth
+  - Negativity
 references:
   - source: kynes-plants
     locator: under "Barberry and Oregon Grape"

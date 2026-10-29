@@ -36,6 +36,12 @@ deities:
   - Medea
 categories:
   - Ancestor Work
+  - Funeral Rites
+  - Consecration
+  - Blessing
+  - Awareness
+  - Negativity
+  - Spirit Work
 references:
   - source: cunningham-herbs
     locator: under "Henbane"

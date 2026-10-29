@@ -38,6 +38,11 @@ categories:
   - Knowledge
   - Purification
   - Release
+  - Funeral Rites
+  - Relationships
+  - Negativity
+  - Challenges
+  - Transformation
 references:
   - source: cunningham-herbs
     locator: under "Bistort"

@@ -35,6 +35,14 @@ categories:
   - Prosperity
   - Purification
   - Lust
+  - Wealth
+  - Trust
+  - Negativity
+  - Hex-Breaking
+  - Sex
+  - Sexuality
+  - Challenges
+  - Family
 references:
   - source: cunningham-herbs
     locator: under "Pennyroyal"

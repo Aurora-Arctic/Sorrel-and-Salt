@@ -24,6 +24,10 @@ categories:
   - Love
   - Prosperity
   - Wisdom
+  - Wealth
+  - Luck
+  - Grief Work
+  - Challenges
 references:
   - source: cunningham-herbs
     locator: under "Goldenrod"; p. 266

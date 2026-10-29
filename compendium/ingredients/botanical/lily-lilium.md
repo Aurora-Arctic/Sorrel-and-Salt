@@ -31,6 +31,13 @@ categories:
   - Love
   - Manifestation
   - Peace
+  - Funeral Rites
+  - Consecration
+  - Blessing
+  - Hope
+  - Negativity
+  - Transformation
+  - Hex-Breaking
 references:
   - source: cunningham-herbs
     locator: under "Lily"

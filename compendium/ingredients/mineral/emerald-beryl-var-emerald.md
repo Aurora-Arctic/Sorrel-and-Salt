@@ -29,6 +29,8 @@ categories:
   - Healing
   - Clarity
   - Truth
+  - Wealth
+  - Banishing
 substitutes:
   - identity: beryl var. aquamarine
   - identity: beryl

@@ -25,6 +25,10 @@ categories:
   - Healing
   - Prosperity
   - Wisdom
+  - Wealth
+  - Consecration
+  - Blessing
+  - Negativity
 substitutes:
   - identity: zingiber officinale
 references:

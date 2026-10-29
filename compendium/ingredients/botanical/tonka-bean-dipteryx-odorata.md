@@ -25,6 +25,9 @@ categories:
   - Love
   - Courage
   - Prosperity
+  - Wealth
+  - Manifestation
+  - Luck
 references:
   - source: cunningham-herbs
     locator: under "Tonka"; p. 266

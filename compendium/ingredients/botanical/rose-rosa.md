@@ -41,6 +41,16 @@ categories:
   - Communication
   - Dream Work
   - Intuition
+  - Luck
+  - Funeral Rites
+  - Consecration
+  - Blessing
+  - Trust
+  - Sex
+  - Sexuality
+  - Emotions
+  - Secrets
+  - Spirit Work
 references:
   - source: cunningham-herbs
     locator: under "Rose"; p. 266

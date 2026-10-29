@@ -36,6 +36,13 @@ categories:
   - Purification
   - Release
   - Truth
+  - Wealth
+  - Luck
+  - Focus
+  - Security
+  - Hex-Breaking
+  - Secrets
+  - Spirit Work
 references:
   - source: cunningham-herbs
     locator: under "Moonwort"

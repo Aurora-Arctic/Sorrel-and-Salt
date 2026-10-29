@@ -29,6 +29,13 @@ categories:
   - Love
   - Purification
   - Release
+  - Spirituality
+  - Renewal
+  - Negativity
+  - Family
+  - Home Blessing
+  - Transformation
+  - Emotions
 references:
   - source: cunningham-herbs
     locator: under "Cumin"; p. 266

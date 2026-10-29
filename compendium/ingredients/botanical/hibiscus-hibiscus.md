@@ -25,6 +25,10 @@ categories:
   - Divination
   - Creativity
   - Psychic Work
+  - Focus
+  - Joy
+  - Sex
+  - Sexuality
 references:
   - source: cunningham-herbs
     locator: under "Hibiscus"

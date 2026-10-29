@@ -40,6 +40,13 @@ categories:
   - Truth
   - Creativity
   - Lust
+  - Luck
+  - Consecration
+  - Blessing
+  - Awareness
+  - Challenges
+  - Family
+  - Skill
 references:
   - source: cunningham-herbs
     locator: under "Daisy"; p. 266

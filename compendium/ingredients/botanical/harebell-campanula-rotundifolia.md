@@ -29,6 +29,12 @@ categories:
   - Love
   - Fidelity
   - Peace
+  - Luck
+  - Grief Work
+  - Negativity
+  - Challenges
+  - Faerie Sight
+  - Spirit Work
 references:
   - source: cunningham-herbs
     locator: under "Bluebell"

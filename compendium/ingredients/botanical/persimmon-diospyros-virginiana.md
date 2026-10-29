@@ -8,6 +8,7 @@ celestialBodies:
   - Venus
 categories:
   - Healing
+  - Luck
 references:
   - source: cunningham-herbs
     locator: under "Persimmon"

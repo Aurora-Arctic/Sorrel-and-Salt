@@ -44,6 +44,14 @@ categories:
   - Protection
   - Strength
   - Truth
+  - Luck
+  - Consecration
+  - Blessing
+  - Awareness
+  - Challenges
+  - Family
+  - Home Blessing
+  - Skill
 references:
   - source: cunningham-herbs
     locator: under "Daisy"

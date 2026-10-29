@@ -35,6 +35,7 @@ categories:
   - Wealth
   - Prosperity
   - Release
+  - Strength
 substitutes:
   - identity: quartz var. amethyst
   - name: Blue Tourmaline

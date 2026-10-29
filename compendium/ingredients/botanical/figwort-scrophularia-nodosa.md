@@ -30,6 +30,8 @@ categories:
   - Protection
   - Abundance
   - Peace
+  - Joy
+  - Healing
 references:
   - source: cunningham-herbs
     locator: under "Figwort"; p. 266

@@ -16,6 +16,7 @@ folkNames:
   - Dutch Cabbage
 categories:
   - Fertility
+  - Luck
 references:
   - source: cunningham-herbs
     locator: under "Cabbage"
@@ -26,6 +27,7 @@ references:
       - elements
       - celestialBodies
       - description
+      - categories
   - source: kynes-plants
     locator: under "Cabbage"
     nameBasis: unresolved

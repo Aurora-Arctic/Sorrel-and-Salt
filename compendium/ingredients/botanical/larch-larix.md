@@ -23,6 +23,8 @@ categories:
   - Legal Matters
   - Knowledge
   - Success
+  - Luck
+  - Spirituality
 references:
   - source: cunningham-herbs
     locator: under "Larch"; p. 266

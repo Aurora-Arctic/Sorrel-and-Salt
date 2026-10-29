@@ -58,6 +58,14 @@ categories:
   - Prophecy
   - Strength
   - Wisdom
+  - Wealth
+  - Luck
+  - Focus
+  - Awareness
+  - Negativity
+  - Hex-Breaking
+  - Transformation
+  - Faerie Sight
 references:
   - source: cunningham-herbs
     locator: under "Ash"

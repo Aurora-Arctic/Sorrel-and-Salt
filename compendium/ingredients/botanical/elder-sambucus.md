@@ -51,6 +51,14 @@ categories:
   - Fidelity
   - Purification
   - Wisdom
+  - Wealth
+  - Spirituality
+  - Funeral Rites
+  - Consecration
+  - Blessing
+  - Hex-Breaking
+  - Faerie Sight
+  - Spirit Work
 references:
   - source: cunningham-herbs
     locator: under "Elder, American"; p. 266

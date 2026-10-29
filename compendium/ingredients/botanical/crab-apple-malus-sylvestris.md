@@ -48,6 +48,8 @@ categories:
   - Prosperity
   - Protection
   - Wisdom
+  - Wealth
+  - Funeral Rites
 references:
   - source: kynes-plants
     locator: under "Crabapple"

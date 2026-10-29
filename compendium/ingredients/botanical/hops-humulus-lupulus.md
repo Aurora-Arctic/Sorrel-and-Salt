@@ -27,6 +27,12 @@ categories:
   - Dream Work
   - Fertility
   - Peace
+  - Hope
+  - Determination
+  - Sex
+  - Sexuality
+  - Growth
+  - Skill
 references:
   - source: cunningham-herbs
     locator: under "Hops"

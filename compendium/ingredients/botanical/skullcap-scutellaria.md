@@ -25,6 +25,11 @@ categories:
   - Harmony
   - Creativity
   - Healing
+  - Focus
+  - Relationships
+  - Family
+  - Home Blessing
+  - Emotions
 references:
   - source: cunningham-herbs
     locator: under "Scullcap"; p. 266

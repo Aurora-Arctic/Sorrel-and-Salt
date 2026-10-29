@@ -36,6 +36,8 @@ categories:
   - Banishing
   - Clarity
   - Strength
+  - Manifestation
+  - Hex-Breaking
 references:
   - source: cunningham-herbs
     locator: under "Horehound"

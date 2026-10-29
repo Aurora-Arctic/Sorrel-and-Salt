@@ -18,6 +18,11 @@ categories:
   - Harmony
   - Love
   - Purification
+  - Luck
+  - Consecration
+  - Blessing
+  - Focus
+  - Negativity
 references:
   - source: cunningham-herbs
     locator: under "Spikenard"

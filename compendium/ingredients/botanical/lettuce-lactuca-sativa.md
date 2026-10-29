@@ -16,6 +16,8 @@ categories:
   - Protection
   - Divination
   - Sleep
+  - Chastity
+  - Love
 references:
   - source: cunningham-herbs
     locator: under "Lettuce"; p. 266

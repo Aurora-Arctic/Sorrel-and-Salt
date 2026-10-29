@@ -45,6 +45,10 @@ categories:
   - Fidelity
   - Peace
   - Strength
+  - Luck
+  - Longevity
+  - Negativity
+  - Transformation
 references:
   - source: cunningham-herbs
     locator: under "Linden"; p. 266

@@ -38,6 +38,14 @@ categories:
   - Strength
   - Truth
   - Wisdom
+  - Luck
+  - Spirituality
+  - Funeral Rites
+  - Relationships
+  - Negativity
+  - Skill
+  - Banishing
+  - Sex
 references:
   - source: cunningham-herbs
     locator: under "Bean"

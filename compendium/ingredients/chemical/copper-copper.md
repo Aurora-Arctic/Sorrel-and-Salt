@@ -17,6 +17,8 @@ categories:
   - Love
   - Protection
   - Attraction
+  - Wealth
+  - Luck
 references:
   - source: cunningham-crystals
     locator: pp. 154–155

@@ -28,6 +28,7 @@ categories:
   - Love
   - Fidelity
   - Protection
+  - Hex-Breaking
 references:
   - source: cunningham-herbs
     locator: under "Senna"; p. 266

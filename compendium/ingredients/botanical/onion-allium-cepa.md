@@ -25,6 +25,14 @@ categories:
   - Fertility
   - Strength
   - Spirit Work
+  - Wealth
+  - Prophetic Dreams
+  - Funeral Rites
+  - Negativity
+  - Hex-Breaking
+  - Sex
+  - Sexuality
+  - Secrets
 references:
   - source: cunningham-herbs
     locator: under "Onion"

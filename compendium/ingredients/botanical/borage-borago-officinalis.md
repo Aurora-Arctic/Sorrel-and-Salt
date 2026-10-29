@@ -30,6 +30,11 @@ categories:
   - Peace
   - Strength
   - Transformation
+  - Joy
+  - Security
+  - Awareness
+  - Grief Work
+  - Emotions
 references:
   - source: cunningham-herbs
     locator: under "Borage"; p. 266

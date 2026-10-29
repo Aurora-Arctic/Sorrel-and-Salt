@@ -22,6 +22,7 @@ categories:
   - Banishing
   - Transformation
   - Healing
+  - Luck
 references:
   - source: cunningham-herbs
     locator: under "China Berry"

@@ -24,6 +24,14 @@ folkNames:
   - Wild Iris
 categories:
   - Prosperity
+  - Wealth
+  - Luck
+  - Protection
+  - Focus
+  - Determination
+  - Family
+  - Home Blessing
+  - Adaptability
 references:
   - source: cunningham-herbs
     locator: under "Blue Flag"
@@ -48,6 +56,7 @@ references:
       - toxic
       - safetyNotes
       - description
+      - categories
   - source: ahpa-safety
     locator: p. 480
     nameBasis: unresolved

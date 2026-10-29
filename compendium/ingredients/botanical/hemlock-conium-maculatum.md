@@ -48,6 +48,8 @@ categories:
   - Protection
   - Purification
   - Release
+  - Negativity
+  - Hex-Breaking
 references:
   - source: cunningham-herbs
     locator: under "Hemlock"

@@ -24,6 +24,8 @@ categories:
   - Love
   - Peace
   - Healing
+  - Sex
+  - Beauty
 substitutes:
   - identity: diamond
 references:

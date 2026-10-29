@@ -16,6 +16,7 @@ folkNames:
 categories:
   - Healing
   - Fertility
+  - Chastity
 references:
   - source: cunningham-herbs
     locator: under "Cucumber"; p. 266

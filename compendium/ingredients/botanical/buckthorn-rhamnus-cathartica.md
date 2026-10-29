@@ -26,6 +26,8 @@ categories:
   - Hex-Breaking
   - Legal Matters
   - Justice
+  - Manifestation
+  - Negativity
 references:
   - source: cunningham-herbs
     locator: under "Buckthorn"

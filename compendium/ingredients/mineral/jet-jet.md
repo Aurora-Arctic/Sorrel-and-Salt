@@ -24,6 +24,7 @@ categories:
   - Warding
   - Cleansing
   - Business
+  - Luck
 substitutes:
   - identity: obsidian
 references:

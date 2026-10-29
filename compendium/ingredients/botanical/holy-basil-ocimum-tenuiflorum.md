@@ -7,6 +7,15 @@ folkNames:
   - Tulsi
   - Tulasi
   - Sacred Basil
+categories:
+  - Wealth
+  - Luck
+  - Funeral Rites
+  - Focus
+  - Joy
+  - Trust
+  - Negativity
+  - Hex-Breaking
 references:
   - source: kynes-plants
     locator: under "Basil"
@@ -16,6 +25,7 @@ references:
     supports:
       - folkNames
       - description
+      - categories
   - source: ahpa-safety
     locator: p. 602
     nameBasis: stated

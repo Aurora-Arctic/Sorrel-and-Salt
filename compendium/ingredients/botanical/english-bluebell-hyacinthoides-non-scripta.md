@@ -30,6 +30,11 @@ deities:
   - Luna
   - Saturn
   - Selene
+categories:
+  - Renewal
+  - Challenges
+  - Faerie Sight
+  - Nightmare Protection
 references:
   - source: kynes-plants
     locator: under "Bluebell"
@@ -44,6 +49,7 @@ references:
       - deities
       - safetyNotes
       - toxic
+      - categories
   - source: grieve-bluebell
     nameBasis: resolved
     headedAs: Scilla nutans (S. M.)

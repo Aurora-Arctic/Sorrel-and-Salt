@@ -40,6 +40,16 @@ categories:
   - Manifestation
   - Purification
   - Spirit Work
+  - Wealth
+  - Spirituality
+  - Consecration
+  - Blessing
+  - Protection
+  - Negativity
+  - Sex
+  - Sexuality
+  - Growth
+  - Skill
 references:
   - source: cunningham-herbs
     locator: under "Patchouly"

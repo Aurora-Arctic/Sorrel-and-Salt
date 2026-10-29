@@ -26,6 +26,7 @@ categories:
   - Joy
   - Cleansing
   - Healing
+  - Luck
 references:
   - source: cunningham-crystals
     locator: p. 82

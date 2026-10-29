@@ -29,6 +29,14 @@ categories:
   - Fertility
   - Peace
   - Protection
+  - Consecration
+  - Blessing
+  - Security
+  - Sex
+  - Sexuality
+  - Transformation
+  - Emotions
+  - Secrets
 references:
   - source: cunningham-herbs
     locator: under "Coriander"; p. 266

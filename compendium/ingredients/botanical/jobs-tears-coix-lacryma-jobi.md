@@ -11,6 +11,8 @@ folkNames:
   - Coix
 categories:
   - Healing
+  - Luck
+  - Manifestation
 references:
   - source: cunningham-herbs
     locator: under "Job’s Tears"

@@ -15,6 +15,9 @@ categories:
   - Success
   - Courage
   - Confidence
+  - Wealth
+  - Sex
+  - Strength
 references:
   - source: cunningham-crystals
     locator: pp. 156–158

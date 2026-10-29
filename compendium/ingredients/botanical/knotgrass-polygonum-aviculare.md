@@ -29,6 +29,11 @@ folkNames:
   - Common Knotgrass
 categories:
   - Banish
+  - Determination
+  - Grief Work
+  - Hex-Breaking
+  - Challenges
+  - Healing
 references:
   - source: cunningham-herbs
     locator: under "Knotweed"
@@ -40,6 +45,7 @@ references:
       - celestialBodies
       - folkNames
       - description
+      - categories
   - source: kynes-plants
     locator: under "Knotgrass"
     nameBasis: unresolved

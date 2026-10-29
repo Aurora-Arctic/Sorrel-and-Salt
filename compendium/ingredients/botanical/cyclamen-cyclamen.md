@@ -27,6 +27,10 @@ categories:
   - Divination
   - Love
   - Nightmare Protection
+  - Joy
+  - Past-Life Work
+  - Relationships
+  - Negativity
 references:
   - source: cunningham-herbs
     locator: under "Cyclamen"; p. 266

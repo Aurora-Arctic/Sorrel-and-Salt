@@ -40,6 +40,12 @@ categories:
   - Prosperity
   - Protection
   - Success
+  - Wealth
+  - Funeral Rites
+  - Determination
+  - Renewal
+  - Negativity
+  - Hex-Breaking
 references:
   - source: kynes-plants
     locator: under "Aspen"

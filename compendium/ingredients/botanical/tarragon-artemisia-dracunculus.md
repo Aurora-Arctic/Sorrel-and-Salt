@@ -34,6 +34,9 @@ categories:
   - Knowledge
   - Peace
   - Protection
+  - Security
+  - Secrets
+  - Growth
 references:
   - source: kynes-plants
     locator: under "French Tarragon"

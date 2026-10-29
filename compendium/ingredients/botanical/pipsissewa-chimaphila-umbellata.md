@@ -10,6 +10,7 @@ folkNames:
 categories:
   - Prosperity
   - Spirit Work
+  - Wealth
 references:
   - source: cunningham-herbs
     locator: under "Pipsissewa"

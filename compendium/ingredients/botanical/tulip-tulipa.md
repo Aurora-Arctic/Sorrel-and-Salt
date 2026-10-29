@@ -11,6 +11,11 @@ categories:
   - Prosperity
   - Love
   - Protection
+  - Wealth
+  - Luck
+  - Joy
+  - Sex
+  - Sexuality
 references:
   - source: cunningham-herbs
     locator: under "Tulip"
@@ -29,6 +34,7 @@ references:
       - canonicalName
       - nomenclature
       - description
+      - categories
   - source: wikipedia-tulipa
     nameBasis: stated
     supports:

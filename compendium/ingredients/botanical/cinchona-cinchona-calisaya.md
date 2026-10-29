@@ -11,6 +11,7 @@ folkNames:
   - Calisaya
 categories:
   - Protection
+  - Luck
 references:
   - source: cunningham-herbs
     locator: under "Cinchona"

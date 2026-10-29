@@ -17,6 +17,15 @@ categories:
   - Love
   - Prophecy
   - Home Blessing
+  - Luck
+  - Awareness
+  - Determination
+  - Relationships
+  - Negativity
+  - Hex-Breaking
+  - Challenges
+  - Family
+  - Adaptability
 references:
   - source: kynes-plants
     locator: under "Butterwort"

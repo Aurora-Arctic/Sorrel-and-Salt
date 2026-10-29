@@ -54,6 +54,13 @@ categories:
   - Transformation
   - Truth
   - Wisdom
+  - Spirituality
+  - Consecration
+  - Blessing
+  - Awareness
+  - Sex
+  - Sexuality
+  - Growth
 references:
   - source: cunningham-herbs
     locator: under "Lotus"; p. 266

@@ -28,6 +28,7 @@ categories:
   - Meditation
   - Cleansing
   - Memory
+  - Strength
 substitutes:
   - identity: diamond
 references:

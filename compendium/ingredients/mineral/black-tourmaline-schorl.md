@@ -17,6 +17,10 @@ categories:
   - Protection
   - Creativity
   - Healing
+  - Wealth
+  - Energy
+  - Astral Projection
+  - Friendship
 references:
   - source: cunningham-crystals
     locator: p. 142

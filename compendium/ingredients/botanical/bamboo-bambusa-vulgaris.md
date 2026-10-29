@@ -29,6 +29,11 @@ categories:
   - Peace
   - Strength
   - Wisdom
+  - Luck
+  - Joy
+  - Manifestation
+  - Negativity
+  - Adaptability
 references:
   - source: cunningham-herbs
     locator: under "Bamboo"; p. 266

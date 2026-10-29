@@ -29,6 +29,11 @@ categories:
   - Banishing
   - Psychic Work
   - Success
+  - Joy
+  - Security
+  - Negativity
+  - Family
+  - Home Blessing
 references:
   - source: cunningham-herbs
     locator: under "Ague Root"; p. 266

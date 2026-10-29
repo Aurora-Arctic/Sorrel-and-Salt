@@ -14,6 +14,7 @@ folkNames:
 categories:
   - Lust
   - Love
+  - Sex
 references:
   - source: cunningham-herbs
     locator: under "Caper"

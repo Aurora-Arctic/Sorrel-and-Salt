@@ -27,6 +27,7 @@ categories:
   - Fidelity
   - Psychic Work
   - Success
+  - Luck
 references:
   - source: cunningham-herbs
     locator: under "Orchid"

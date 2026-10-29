@@ -27,6 +27,12 @@ categories:
   - Love
   - Fidelity
   - Prosperity
+  - Wealth
+  - Luck
+  - Focus
+  - Awareness
+  - Hex-Breaking
+  - Transformation
 references:
   - source: cunningham-herbs
     locator: under "Nutmeg"; p. 266

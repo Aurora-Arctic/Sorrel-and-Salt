@@ -40,6 +40,12 @@ categories:
   - Psychic Work
   - Purification
   - Release
+  - Luck
+  - Security
+  - Negativity
+  - Hex-Breaking
+  - Sex
+  - Sexuality
 references:
   - source: cunningham-herbs
     locator: under "Nettle"

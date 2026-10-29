@@ -51,6 +51,12 @@ categories:
   - Love
   - Prophecy
   - Protection
+  - Manifestation
+  - Spirit Work
+  - Awareness
+  - Negativity
+  - Skill
+  - Leadership
 references:
   - source: cunningham-herbs
     locator: under "Dandelion"

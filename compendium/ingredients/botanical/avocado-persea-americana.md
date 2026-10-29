@@ -27,6 +27,10 @@ categories:
   - Prosperity
   - Strength
   - Success
+  - Wealth
+  - Sex
+  - Sexuality
+  - Beauty
 references:
   - source: cunningham-herbs
     locator: under "Avocado"; p. 266

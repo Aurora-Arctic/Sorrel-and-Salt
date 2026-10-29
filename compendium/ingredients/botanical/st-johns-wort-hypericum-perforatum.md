@@ -38,6 +38,15 @@ categories:
   - Purification
   - Release
   - Abundance
+  - Spirituality
+  - Consecration
+  - Blessing
+  - Joy
+  - Security
+  - Renewal
+  - Negativity
+  - Faerie Sight
+  - Spirit Work
 references:
   - source: cunningham-herbs
     locator: under "St. John’s Wort"; p. 266

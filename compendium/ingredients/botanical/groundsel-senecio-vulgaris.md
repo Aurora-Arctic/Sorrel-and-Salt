@@ -30,6 +30,8 @@ categories:
   - Inspiration
   - Protection
   - Release
+  - Focus
+  - Negativity
 references:
   - source: cunningham-herbs
     locator: under "Groundsel"; p. 266

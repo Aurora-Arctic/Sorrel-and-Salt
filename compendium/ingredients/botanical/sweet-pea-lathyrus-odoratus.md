@@ -11,6 +11,7 @@ categories:
   - Friendship
   - Courage
   - Strength
+  - Chastity
 references:
   - source: cunningham-herbs
     locator: under "Sweetpea"; p. 266

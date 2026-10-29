@@ -17,6 +17,7 @@ folkNames:
   - Marginal Fern
 categories:
   - Love
+  - Luck
 references:
   - source: cunningham-herbs
     locator: under "Male Fern"

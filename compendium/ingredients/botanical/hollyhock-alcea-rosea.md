@@ -18,6 +18,13 @@ categories:
   - Release
   - Success
   - Prosperity
+  - Wealth
+  - Joy
+  - Family
+  - Home Blessing
+  - Transformation
+  - Emotions
+  - Faerie Sight
 references:
   - source: kynes-plants
     locator: under "Hollyhock"

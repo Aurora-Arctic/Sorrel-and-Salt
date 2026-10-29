@@ -32,6 +32,16 @@ categories:
   - Intuition
   - Fidelity
   - Purification
+  - Luck
+  - Spirituality
+  - Protection
+  - Focus
+  - Trust
+  - Negativity
+  - Sex
+  - Sexuality
+  - Spirit Work
+  - Snake Repelling
 references:
   - source: cunningham-herbs
     locator: under "Lemongrass"; p. 266

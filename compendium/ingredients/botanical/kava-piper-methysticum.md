@@ -30,6 +30,10 @@ deities:
 categories:
   - Divination
   - Protection
+  - Luck
+  - Spirit Work
+  - Ancestor Work
+  - Prophecy
 references:
   - source: cunningham-herbs
     locator: under "Kava-Kava"

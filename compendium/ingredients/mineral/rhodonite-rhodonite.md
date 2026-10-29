@@ -22,6 +22,7 @@ categories:
   - Confidence
   - Fertility
   - Healing
+  - Clarity
 references:
   - source: wikipedia-rhodonite
     nameBasis: stated

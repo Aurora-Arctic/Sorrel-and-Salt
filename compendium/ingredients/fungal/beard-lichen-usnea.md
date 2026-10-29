@@ -22,6 +22,10 @@ folkNames:
 categories:
   - Prosperity
   - Psychic Work
+  - Wealth
+  - Luck
+  - Negativity
+  - Spirit Work
 references:
   - source: wikipedia-usnea
     nameBasis: stated

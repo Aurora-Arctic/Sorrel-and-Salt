@@ -32,6 +32,14 @@ categories:
   - Knowledge
   - Peace
   - Lust
+  - Spirituality
+  - Focus
+  - Grief Work
+  - Relationships
+  - Sex
+  - Sexuality
+  - Growth
+  - Faerie Sight
 references:
   - source: cunningham-herbs
     locator: under "Primrose"; p. 266

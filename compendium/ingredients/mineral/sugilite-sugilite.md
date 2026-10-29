@@ -25,6 +25,7 @@ categories:
   - Grounding
   - Protection
   - Truth
+  - Spirituality
 substitutes:
   - identity: lapis lazuli
 references:

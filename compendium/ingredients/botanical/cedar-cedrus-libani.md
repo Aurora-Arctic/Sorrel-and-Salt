@@ -43,6 +43,10 @@ categories:
   - Fidelity
   - Prosperity
   - Transformation
+  - Wealth
+  - Spirituality
+  - Hex-Breaking
+  - Spirit Work
 substitutes:
   - name: Eastern Red Cedar
 references:

@@ -22,6 +22,7 @@ categories:
   - Meditation
   - Communication
   - Memory
+  - Dream Work
 references:
   - source: cunningham-crystals
     locator: under "Azurite"; p. 76

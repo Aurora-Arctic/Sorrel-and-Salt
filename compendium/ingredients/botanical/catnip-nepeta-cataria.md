@@ -40,6 +40,11 @@ categories:
   - Spirit Work
   - Strength
   - Sleep
+  - Luck
+  - Joy
+  - Awareness
+  - Family
+  - Beauty
 references:
   - source: cunningham-herbs
     locator: under "Catnip"

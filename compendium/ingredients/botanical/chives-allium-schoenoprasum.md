@@ -17,6 +17,7 @@ folkNames:
   - Garlic Chives
 categories:
   - Protection
+  - Negativity
 references:
   - source: kynes-plants
     locator: under "Chive"

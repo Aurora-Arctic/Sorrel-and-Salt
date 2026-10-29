@@ -22,6 +22,9 @@ categories:
   - Protection
   - Purification
   - Transformation
+  - Awareness
+  - Negativity
+  - Hex-Breaking
 references:
   - source: cunningham-herbs
     locator: under "Yucca"; p. 266

@@ -9,6 +9,7 @@ celestialBodies:
 categories:
   - Banishing
   - Protection
+  - Healing
 references:
   - source: cunningham-crystals
     locator: pp. 126–127

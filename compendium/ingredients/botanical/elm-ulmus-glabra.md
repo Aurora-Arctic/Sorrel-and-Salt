@@ -43,6 +43,10 @@ categories:
   - Protection
   - Psychic Work
   - Wisdom
+  - Determination
+  - Renewal
+  - Negativity
+  - Transformation
 references:
   - source: cunningham-herbs
     locator: under "Elm"

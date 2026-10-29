@@ -22,6 +22,8 @@ categories:
   - Psychic Work
   - Safe Travel
   - Attraction
+  - Wealth
+  - Dream Work
 references:
   - source: cunningham-crystals
     locator: pp. 169–171

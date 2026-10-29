@@ -40,6 +40,12 @@ categories:
   - Protection
   - Strength
   - Transformation
+  - Luck
+  - Funeral Rites
+  - Renewal
+  - Negativity
+  - Faerie Sight
+  - Spirit Work
 references:
   - source: kynes-plants
     locator: under "Alder"

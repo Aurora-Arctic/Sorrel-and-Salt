@@ -30,6 +30,14 @@ categories:
   - Manifestation
   - Protection
   - Psychic Work
+  - Luck
+  - Joy
+  - Negativity
+  - Hex-Breaking
+  - Challenges
+  - Faerie Sight
+  - Spirit Work
+  - Banishing
 references:
   - source: cunningham-herbs
     locator: under "Witch Grass"; p. 266

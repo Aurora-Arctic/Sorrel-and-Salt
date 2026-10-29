@@ -27,6 +27,10 @@ categories:
   - Courage
   - Prosperity
   - Strength
+  - Wealth
+  - Luck
+  - Hex-Breaking
+  - Spirit Work
 references:
   - source: cunningham-herbs
     locator: under "Garlic"; p. 266

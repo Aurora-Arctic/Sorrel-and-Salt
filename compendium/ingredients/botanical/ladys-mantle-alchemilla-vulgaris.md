@@ -32,6 +32,14 @@ categories:
   - Healing
   - Peace
   - Purification
+  - Luck
+  - Spirituality
+  - Focus
+  - Joy
+  - Awareness
+  - Relationships
+  - Challenges
+  - Transformation
 references:
   - source: cunningham-herbs
     locator: under "Lady's Mantle"; p. 266

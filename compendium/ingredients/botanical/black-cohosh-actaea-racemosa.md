@@ -27,6 +27,10 @@ categories:
   - Protection
   - Fertility
   - Strength
+  - Luck
+  - Hex-Breaking
+  - Challenges
+  - Sex
 references:
   - source: cunningham-herbs
     locator: under "Cohosh, Black"; p. 266

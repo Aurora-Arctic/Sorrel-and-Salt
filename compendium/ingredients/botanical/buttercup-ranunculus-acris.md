@@ -27,6 +27,11 @@ categories:
   - Success
   - Truth
   - Wisdom
+  - Wealth
+  - Spirituality
+  - Joy
+  - Emotions
+  - Adaptability
 references:
   - source: kynes-plants
     locator: under "Buttercup"

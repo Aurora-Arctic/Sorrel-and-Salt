@@ -24,6 +24,7 @@ categories:
   - Courage
   - Sleep
   - Nightmare Protection
+  - Garden Magic
 substitutes:
   - name: Carnelian
   - name: Red Jasper

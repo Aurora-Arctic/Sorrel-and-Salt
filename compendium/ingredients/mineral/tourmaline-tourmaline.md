@@ -29,6 +29,9 @@ categories:
   - Inspiration
   - Prosperity
   - Healing
+  - Wealth
+  - Energy
+  - Astral Projection
 references:
   - source: cunningham-crystals
     locator: pp. 141–142

@@ -50,6 +50,11 @@ categories:
   - Prophecy
   - Prosperity
   - Truth
+  - Wealth
+  - Awareness
+  - Negativity
+  - Skill
+  - Spirit Work
 references:
   - source: cunningham-herbs
     locator: under "Bladderwrack"; p. 266

@@ -25,6 +25,9 @@ categories:
   - Legal Matters
   - Release
   - Strength
+  - Determination
+  - Renewal
+  - Challenges
 references:
   - source: cunningham-herbs
     locator: under "Pepper"; p. 266

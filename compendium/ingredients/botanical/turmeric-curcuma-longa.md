@@ -30,6 +30,13 @@ categories:
   - Healing
   - Prosperity
   - Protection
+  - Wealth
+  - Luck
+  - Spirituality
+  - Consecration
+  - Blessing
+  - Hex-Breaking
+  - Secrets
 references:
   - source: cunningham-herbs
     locator: under "Turmeric"

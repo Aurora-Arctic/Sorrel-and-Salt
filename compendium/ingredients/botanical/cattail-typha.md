@@ -42,6 +42,14 @@ categories:
   - Inspiration
   - Fidelity
   - Protection
+  - Consecration
+  - Blessing
+  - Determination
+  - Relationships
+  - Sex
+  - Sexuality
+  - Family
+  - Growth
 references:
   - source: cunningham-herbs
     locator: under "Cat Tail"

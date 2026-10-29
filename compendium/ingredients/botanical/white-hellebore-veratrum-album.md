@@ -9,6 +9,11 @@ folkNames:
   - European White Hellebore
   - White Veratrum
   - White False Hellebore
+categories:
+  - Funeral Rites
+  - Hex-Breaking
+  - Challenges
+  - Spirit Work
 references:
   - source: kynes-plants
     locator: under "Hellebore"
@@ -20,6 +25,7 @@ references:
       - safetyNotes
       - toxic
       - description
+      - categories
   - source: wikipedia-veratrum-album
     nameBasis: stated
     supports:

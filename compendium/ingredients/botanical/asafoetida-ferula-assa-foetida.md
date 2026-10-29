@@ -33,6 +33,9 @@ categories:
   - Banishing
   - Fertility
   - Healing
+  - Negativity
+  - Hex-Breaking
+  - Spirit Work
 references:
   - source: cunningham-herbs
     locator: under "Asafoetida"

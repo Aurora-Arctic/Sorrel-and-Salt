@@ -21,6 +21,11 @@ categories:
   - Peace
   - Prosperity
   - Protection
+  - Wealth
+  - Luck
+  - Joy
+  - Secrets
+  - Faerie Sight
 references:
   - source: kynes-plants
     locator: under "Wood Sorrel"

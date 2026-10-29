@@ -23,6 +23,7 @@ categories:
   - Healing
   - Love
   - Protection
+  - Clarity
 references:
   - source: cunningham-herbs
     locator: under "Spearmint"

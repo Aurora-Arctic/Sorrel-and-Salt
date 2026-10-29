@@ -29,6 +29,13 @@ categories:
   - Peace
   - Purification
   - Truth
+  - Luck
+  - Joy
+  - Relationships
+  - Sex
+  - Sexuality
+  - Secrets
+  - Spirit Work
 references:
   - source: cunningham-herbs
     locator: under "Elecampane"; p. 266

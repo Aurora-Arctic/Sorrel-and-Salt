@@ -40,6 +40,7 @@ deities:
 categories:
   - Creativity
   - Divination
+  - Secrets
 references:
   - source: cunningham-herbs
     locator: under "Belladonna"; "How to Read the Entries"

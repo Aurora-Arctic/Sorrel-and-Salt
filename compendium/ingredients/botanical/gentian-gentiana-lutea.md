@@ -14,6 +14,7 @@ folkNames:
 categories:
   - Love
   - Hex-Breaking
+  - Strength
 references:
   - source: cunningham-herbs
     locator: under "Gentian"; p. 266

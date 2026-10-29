@@ -29,6 +29,12 @@ categories:
   - Love
   - Peace
   - Protection
+  - Luck
+  - Joy
+  - Grief Work
+  - Negativity
+  - Emotions
+  - Nightmare Protection
 references:
   - source: cunningham-herbs
     locator: under "Hyacinth"

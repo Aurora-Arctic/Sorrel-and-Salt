@@ -40,6 +40,15 @@ categories:
   - Purification
   - Truth
   - Wisdom
+  - Spirituality
+  - Consecration
+  - Blessing
+  - Awareness
+  - Past-Life Work
+  - Hex-Breaking
+  - Sex
+  - Sexuality
+  - Spirit Work
 references:
   - source: cunningham-herbs
     locator: under "Sandalwood, White"

@@ -46,6 +46,12 @@ categories:
   - Psychic Work
   - Release
   - Strength
+  - Wealth
+  - Consecration
+  - Blessing
+  - Security
+  - Family
+  - Home Blessing
 references:
   - source: cunningham-herbs
     locator: under "Comfrey"; p. 266

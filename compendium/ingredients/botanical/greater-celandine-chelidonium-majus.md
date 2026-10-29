@@ -30,6 +30,9 @@ categories:
   - Prophecy
   - Release
   - Success
+  - Hope
+  - Joy
+  - Challenges
 references:
   - source: cunningham-herbs
     locator: under "Celandine"

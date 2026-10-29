@@ -25,6 +25,19 @@ deities:
 categories:
   - Courage
   - Release
+  - Funeral Rites
+  - Hope
+  - Joy
+  - Manifestation
+  - Trust
+  - Determination
+  - Grief Work
+  - Negativity
+  - Challenges
+  - Family
+  - Home Blessing
+  - Transformation
+  - Adaptability
 references:
   - source: kynes-plants
     locator: under "Snowdrop"

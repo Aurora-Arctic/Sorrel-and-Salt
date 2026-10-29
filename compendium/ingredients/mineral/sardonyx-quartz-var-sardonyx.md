@@ -25,6 +25,9 @@ categories:
   - Strength
   - Friendship
   - Healing
+  - Luck
+  - Love
+  - Harmony
 references:
   - source: cunningham-crystals
     locator: pp. 133–134

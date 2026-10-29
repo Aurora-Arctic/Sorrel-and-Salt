@@ -44,6 +44,10 @@ categories:
   - Prophecy
   - Prosperity
   - Success
+  - Wealth
+  - Luck
+  - Family
+  - Home Blessing
 references:
   - source: cunningham-herbs
     locator: under "Huckleberry"

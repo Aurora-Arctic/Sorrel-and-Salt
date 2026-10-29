@@ -34,6 +34,8 @@ categories:
   - Spirit Work
   - Wisdom
   - Binding
+  - Wealth
+  - Luck
 references:
   - source: cunningham-herbs
     locator: under "Calamus"

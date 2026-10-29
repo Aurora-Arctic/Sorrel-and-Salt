@@ -29,6 +29,11 @@ categories:
   - Love
   - Release
   - Truth
+  - Funeral Rites
+  - Consecration
+  - Blessing
+  - Joy
+  - Family
 references:
   - source: cunningham-herbs
     locator: under "Chrysanthemum"

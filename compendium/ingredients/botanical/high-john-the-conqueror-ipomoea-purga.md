@@ -23,6 +23,13 @@ categories:
   - Prosperity
   - Protection
   - Strength
+  - Wealth
+  - Joy
+  - Luck
+  - Sex
+  - Sexuality
+  - Leadership
+  - Spirit Work
 references:
   - source: cunningham-herbs
     locator: under "High John the Conqueror"

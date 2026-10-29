@@ -33,6 +33,13 @@ categories:
   - Psychic Work
   - Release
   - Banishing
+  - Luck
+  - Focus
+  - Trust
+  - Negativity
+  - Hex-Breaking
+  - Prophetic Dreams
+  - Rain Magic
 references:
   - source: cunningham-herbs
     locator: under "Bracken"; p. 266

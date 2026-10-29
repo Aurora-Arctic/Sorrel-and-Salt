@@ -47,6 +47,15 @@ categories:
   - Protection
   - Psychic Work
   - Release
+  - Security
+  - Awareness
+  - Relationships
+  - Negativity
+  - Hex-Breaking
+  - Faerie Sight
+  - Leadership
+  - Spirit Work
+  - Nightmare Protection
 references:
   - source: cunningham-herbs
     locator: under "Mullein"; p. 266

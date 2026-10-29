@@ -22,6 +22,11 @@ categories:
   - Manifestation
   - Strength
   - Truth
+  - Wealth
+  - Spirituality
+  - Funeral Rites
+  - Trust
+  - Awareness
 references:
   - source: cunningham-herbs
     locator: under "Camellia"

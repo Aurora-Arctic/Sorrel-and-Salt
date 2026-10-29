@@ -43,6 +43,15 @@ categories:
   - Knowledge
   - Protection
   - Psychic Work
+  - Funeral Rites
+  - Grief Work
+  - Negativity
+  - Hex-Breaking
+  - Transformation
+  - Faerie Sight
+  - Skill
+  - Spirit Work
+  - Nightmare Protection
 references:
   - source: cunningham-herbs
     locator: under "Yew"

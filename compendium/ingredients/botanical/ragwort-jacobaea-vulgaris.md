@@ -33,6 +33,10 @@ categories:
   - Courage
   - Divination
   - Prosperity
+  - Wealth
+  - Luck
+  - Negativity
+  - Hex-Breaking
 references:
   - source: cunningham-herbs
     locator: under "Ragwort"; p. 266

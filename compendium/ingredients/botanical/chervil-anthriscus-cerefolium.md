@@ -18,6 +18,8 @@ categories:
   - Grief Work
   - Nightmare Protection
   - Spirit Work
+  - Joy
+  - Renewal
 references:
   - source: kynes-plants
     locator: under "Chervil"

@@ -38,6 +38,14 @@ categories:
   - Protection
   - Purification
   - Transformation
+  - Spirituality
+  - Funeral Rites
+  - Hope
+  - Joy
+  - Awareness
+  - Renewal
+  - Hex-Breaking
+  - Spirit Work
 references:
   - source: kynes-plants
     locator: under "Fir"

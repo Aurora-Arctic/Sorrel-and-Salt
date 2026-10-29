@@ -42,6 +42,13 @@ categories:
   - Prosperity
   - Purification
   - Strength
+  - Wealth
+  - Luck
+  - Hope
+  - Determination
+  - Renewal
+  - Negativity
+  - Hex-Breaking
 references:
   - source: cunningham-herbs
     locator: under "Gorse"

@@ -33,6 +33,9 @@ categories:
   - Intuition
   - Cleansing
   - Nightmare Protection
+  - Dream Work
+  - Psychic Work
+  - Joy
 references:
   - source: cunningham-crystals
     locator: pp. 71–73

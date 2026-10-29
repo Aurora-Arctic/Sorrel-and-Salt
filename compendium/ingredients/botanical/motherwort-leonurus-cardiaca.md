@@ -21,6 +21,7 @@ categories:
   - Love
   - Peace
   - Protection
+  - Joy
 references:
   - source: kynes-plants
     locator: under "Motherwort"

@@ -21,6 +21,9 @@ categories:
   - Psychic Work
   - Love
   - Protection
+  - Awareness
+  - Sex
+  - Sexuality
 references:
   - source: wikipedia-carphephorus-odoratissimus
     nameBasis: stated

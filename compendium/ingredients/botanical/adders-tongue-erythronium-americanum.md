@@ -25,6 +25,10 @@ categories:
   - Divination
   - Dream Work
   - Strength
+  - Spirituality
+  - Sex
+  - Sexuality
+  - Emotions
 references:
   - source: cunningham-herbs
     locator: under "Adder's Tongue"

@@ -68,6 +68,11 @@ categories:
   - Release
   - Success
   - Wisdom
+  - Wealth
+  - Security
+  - Manifestation
+  - Negativity
+  - Hex-Breaking
 references:
   - source: cunningham-herbs
     locator: under "Bay"; p. 266

@@ -11,6 +11,8 @@ folkNames:
   - Lucky Nut
   - Kaneru
   - Manjal Arali
+categories:
+  - Luck
 references:
   - source: cunningham-herbs
     locator: under "Be-Still"
@@ -20,6 +22,7 @@ references:
       - description
       - safetyNotes
       - toxic
+      - categories
   - source: wikipedia-cascabela-thevetia
     nameBasis: stated
     supports:

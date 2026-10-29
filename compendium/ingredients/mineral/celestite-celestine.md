@@ -24,6 +24,7 @@ categories:
   - Creativity
   - Communication
   - Clarity
+  - Compassion
 references:
   - source: cunningham-crystals
     locator: under "Celestite"; pp. 81–82

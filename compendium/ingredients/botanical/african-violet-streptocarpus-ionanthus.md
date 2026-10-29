@@ -14,6 +14,12 @@ categories:
   - Abundance
   - Harmony
   - Love
+  - Spirituality
+  - Consecration
+  - Blessing
+  - Family
+  - Home Blessing
+  - Growth
 references:
   - source: cunningham-herbs
     locator: under "African Violet"; p. 266

@@ -25,6 +25,7 @@ deities:
 categories:
   - Creativity
   - Divination
+  - Secrets
 references:
   - source: kynes-plants
     locator: under "Nightshade"

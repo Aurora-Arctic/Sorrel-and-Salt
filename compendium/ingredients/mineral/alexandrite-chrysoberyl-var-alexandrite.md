@@ -14,6 +14,7 @@ categories:
   - Creativity
   - Manifestation
   - Healing
+  - Luck
 references:
   - source: cunningham-crystals
     locator: p. 68

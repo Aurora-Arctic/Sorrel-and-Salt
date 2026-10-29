@@ -8,6 +8,7 @@ folkNames:
   - Aerolite
 categories:
   - Protection
+  - Astral Projection
 references:
   - source: cunningham-crystals
     locator: pp. 167–168

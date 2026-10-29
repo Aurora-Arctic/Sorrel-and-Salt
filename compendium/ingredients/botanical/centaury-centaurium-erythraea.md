@@ -32,6 +32,12 @@ categories:
   - Protection
   - Psychic Work
   - Strength
+  - Luck
+  - Consecration
+  - Blessing
+  - Negativity
+  - Skill
+  - Snake Repelling
 references:
   - source: cunningham-herbs
     locator: under "Centaury"

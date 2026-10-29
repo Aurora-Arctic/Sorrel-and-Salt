@@ -33,6 +33,8 @@ categories:
   - Prosperity
   - Release
   - Transformation
+  - Wealth
+  - Grief Work
 references:
   - source: cunningham-herbs
     locator: under "Maple"; p. 266

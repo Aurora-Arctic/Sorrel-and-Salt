@@ -38,6 +38,11 @@ categories:
   - Prosperity
   - Protection
   - Psychic Work
+  - Wealth
+  - Negativity
+  - Family
+  - Home Blessing
+  - Prophecy
 references:
   - source: cunningham-herbs
     locator: under "Coltsfoot"; p. 266

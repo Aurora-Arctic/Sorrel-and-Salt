@@ -15,6 +15,8 @@ deities:
   - Sif
 categories:
   - Prosperity
+  - Wealth
+  - Luck
 references:
   - source: cunningham-herbs
     locator: under "Moss"
@@ -25,6 +27,7 @@ references:
       - canonicalName
       - nomenclature
       - description
+      - categories
   - source: kynes-plants
     locator: under "Moss"
     nameBasis: unresolved

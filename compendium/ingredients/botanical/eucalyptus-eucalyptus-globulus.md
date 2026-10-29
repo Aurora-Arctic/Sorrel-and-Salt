@@ -38,6 +38,16 @@ categories:
   - Psychic Work
   - Purification
   - Wisdom
+  - Spirituality
+  - Focus
+  - Security
+  - Determination
+  - Past-Life Work
+  - Grief Work
+  - Negativity
+  - Emotions
+  - Growth
+  - Spirit Work
 references:
   - source: cunningham-herbs
     locator: under "Eucalyptus"; p. 266

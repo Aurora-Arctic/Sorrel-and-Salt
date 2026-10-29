@@ -25,6 +25,7 @@ categories:
   - Strength
   - Wealth
   - Success
+  - Energy
 references:
   - source: cunningham-crystals
     locator: p. 136

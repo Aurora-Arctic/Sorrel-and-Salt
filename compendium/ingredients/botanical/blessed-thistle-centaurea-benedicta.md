@@ -20,6 +20,13 @@ categories:
   - Purification
   - Hex-Breaking
   - Protection
+  - Manifestation
+  - Trust
+  - Determination
+  - Negativity
+  - Challenges
+  - Spirit Work
+  - Nightmare Protection
 substitutes:
   - name: Milk Thistle
   - name: Cotton Thistle
@@ -44,6 +51,7 @@ references:
       - deities
       - folkNames
       - description
+      - categories
   - source: culpeper-herbal
     locator: under "Carduus Benedictus"
     nameBasis: unaudited

@@ -14,6 +14,8 @@ folkNames:
 categories:
   - Prosperity
   - Protection
+  - Wealth
+  - Luck
 references:
   - source: cunningham-herbs
     locator: under "Irish Moss"

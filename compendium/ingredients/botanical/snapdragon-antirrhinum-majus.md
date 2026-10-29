@@ -29,6 +29,9 @@ categories:
   - Banishing
   - Release
   - Truth
+  - Negativity
+  - Hex-Breaking
+  - Nightmare Protection
 references:
   - source: cunningham-herbs
     locator: under "Snapdragon"; p. 266

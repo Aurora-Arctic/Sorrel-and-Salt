@@ -24,6 +24,13 @@ categories:
   - Protection
   - Strength
   - Success
+  - Luck
+  - Focus
+  - Awareness
+  - Grief Work
+  - Relationships
+  - Secrets
+  - Adaptability
 references:
   - source: kynes-plants
     locator: under "Forget-Me-Not"

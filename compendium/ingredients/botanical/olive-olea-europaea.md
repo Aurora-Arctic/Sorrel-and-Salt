@@ -52,6 +52,16 @@ categories:
   - Fidelity
   - Prosperity
   - Purification
+  - Wealth
+  - Luck
+  - Spirituality
+  - Funeral Rites
+  - Consecration
+  - Blessing
+  - Hope
+  - Sex
+  - Sexuality
+  - Family
 references:
   - source: cunningham-herbs
     locator: under "Olive"

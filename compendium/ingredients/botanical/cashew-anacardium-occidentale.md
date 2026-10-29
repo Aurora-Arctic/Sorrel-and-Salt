@@ -14,6 +14,7 @@ folkNames:
   - Mkanju
 categories:
   - Prosperity
+  - Wealth
 references:
   - source: cunningham-herbs
     locator: under "Cashew"

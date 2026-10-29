@@ -35,6 +35,7 @@ categories:
   - Inspiration
   - Fidelity
   - Manifestation
+  - Emotions
 references:
   - source: cunningham-herbs
     locator: under "Dogwood"; p. 266

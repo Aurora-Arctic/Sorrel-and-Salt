@@ -12,6 +12,9 @@ categories:
   - Confidence
   - Prosperity
   - Protection
+  - Wealth
+  - Luck
+  - Spirit Work
 references:
   - source: kynes-plants
     locator: under "Bergamot"

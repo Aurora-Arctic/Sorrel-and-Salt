@@ -17,6 +17,7 @@ categories:
   - Justice
   - Prosperity
   - Protection
+  - Wealth
 references:
   - source: cunningham-herbs
     locator: under "Cascara Sagrada"

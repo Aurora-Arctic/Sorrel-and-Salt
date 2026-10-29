@@ -40,6 +40,11 @@ categories:
   - Manifestation
   - Prosperity
   - Purification
+  - Wealth
+  - Hex-Breaking
+  - Sex
+  - Sexuality
+  - Transformation
 references:
   - source: wikipedia-dill
     nameBasis: stated

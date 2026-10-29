@@ -32,6 +32,7 @@ categories:
   - Confidence
   - Memory
   - Cleansing
+  - Garden Magic
 references:
   - source: cunningham-crystals
     locator: under "Agate"; pp. 66–67

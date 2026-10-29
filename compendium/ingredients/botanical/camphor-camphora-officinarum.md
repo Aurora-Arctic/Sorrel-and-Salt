@@ -34,6 +34,11 @@ categories:
   - Divination
   - Banishing
   - Purification
+  - Chastity
+  - Healing
+  - Focus
+  - Past-Life Work
+  - Negativity
 references:
   - source: cunningham-herbs
     locator: under "Camphor"; p. 266

@@ -29,6 +29,7 @@ categories:
   - Reconciliation
   - Friendship
   - Courage
+  - Energy
 substitutes:
   - identity: beryl var. aquamarine
   - identity: beryl var. emerald

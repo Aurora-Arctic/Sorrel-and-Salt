@@ -26,6 +26,9 @@ categories:
   - Love
   - Fertility
   - Fidelity
+  - Luck
+  - Security
+  - Trust
 references:
   - source: cunningham-herbs
     locator: under "Raspberry"; p. 266

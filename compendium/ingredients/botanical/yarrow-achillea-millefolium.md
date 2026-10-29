@@ -68,6 +68,14 @@ categories:
   - Fidelity
   - Prophecy
   - Purification
+  - Consecration
+  - Blessing
+  - Awareness
+  - Relationships
+  - Negativity
+  - Hex-Breaking
+  - Faerie Sight
+  - Spirit Work
 references:
   - source: cunningham-herbs
     locator: under "Yarrow"; p. 266
