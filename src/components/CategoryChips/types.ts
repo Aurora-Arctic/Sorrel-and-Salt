@@ -17,6 +17,8 @@ export interface CategoryChipsProps {
   absent?: boolean;
   /** Show every chip with no +N button (default false: the first few, then +N). */
   showAll?: boolean;
+  /** How many chips show before +N, in place of the default (ignored when `showAll`). */
+  limit?: number;
   /** Words for a chip's tip, opened by hover, focus and tap; given, each chip is a button carrying its tip. */
   tipOf?: (category: CardCategory['category']) => string;
 }

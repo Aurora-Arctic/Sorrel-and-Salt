@@ -1231,15 +1231,17 @@ describe('the spell builder’s Add to Jar categories', () => {
     const many = await lookUp('Fixture', /Fixture Manywort/);
     const one = screen.getByRole('option', { name: /Fixture Onewort/ });
 
-    expect(many).toHaveTextContent('Aid · +4');
-    expect(within(many).getByText(/^\+4/)).toHaveTextContent('+4 more: Bind, Calm, Dawn, Ember');
-    // Hovering the chip shows the folded names in the app's tip, not a native title.
-    const chip = within(many).getByText(/^\+4/);
-    expect(chip).not.toHaveAttribute('title');
-    fireEvent.mouseEnter(chip.parentElement as HTMLElement);
-    expect(await within(many).findByRole('tooltip', { hidden: true })).toHaveTextContent(
-      'Bind, Calm, Dawn, Ember',
-    );
+    // The same CategoryMore button the cards have, not a hand-rolled chip.
+    const more = within(many).getByRole('button', { name: /4 more categories/ });
+    expect(more).toHaveTextContent('+4');
+    expect(more).not.toHaveAttribute('title');
+    expect(more).toHaveAttribute('aria-expanded', 'false');
+    // A click pins its panel open with the folded names, and does not pick the row.
+    fireEvent.click(more);
+    expect(more).toHaveAttribute('aria-expanded', 'true');
+    const panel = within(many).getByRole('group', { name: /More categories/ });
+    expect(panel).toHaveTextContent('BindCalmDawnEmber');
+    expect(screen.queryByRole('listbox')).not.toBeNull();
     // Why this could have folded: Onewort has one, at the cap, and is whole.
     expect(within(one).queryByText(/^\+/)).toBeNull();
     expect(one).toHaveTextContent('Love');

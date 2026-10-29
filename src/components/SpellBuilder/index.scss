@@ -207,13 +207,6 @@ $spell-columns-switch: $spell-main-min + $spell-columns-gap + $spell-side;
   @include chip($size: compact);
 }
 
-// The Add to Jar picker's folded categories: a neutral "+N" in place of an ellipsis. It sits in
-// the combobox, which owns the row, so the rule is scoped to the list.
-.combobox__list .combobox__note--meta .chip--more {
-  @include chip($dark: $text-primary, $light: $text-primary, $state: quiet, $size: compact);
-  border-color: $hairline;
-}
-
 // A row's category chips may wrap onto a second line rather than be clipped (the owner's call,
 // 2026-10-29): the one-line clip would cut the pills' tops. The line height gives wrapped lines
 // the room the chips have side to side, and the block padding keeps the first line clear of the
@@ -229,9 +222,17 @@ $spell-columns-switch: $spell-main-min + $spell-columns-gap + $spell-side;
 // is an outline in the group's colours; on is the full wash with a heavier ring, so the state is
 // not carried by colour alone.
 // The In Jar mark on a picker row: the site's compact badge size, as the step rows' marks wear.
+// The label line becomes a flex row when it holds the mark, so the mark sits flush at the row's
+// inline end on the name's line whatever the name's length, with no fixed width.
+.combobox__label:has(> .spell-steps__in-jar) {
+  display: flex;
+  align-items: baseline;
+  gap: space(1);
+}
+
 .spell-steps__in-jar {
   @include badge-size('small');
-  margin-inline-start: space(2);
+  margin-inline-start: auto;
 }
 
 .spell-steps__filter {
@@ -291,7 +292,6 @@ $spell-columns-switch: $spell-main-min + $spell-columns-gap + $spell-side;
 
   &[aria-pressed='true'] {
     box-shadow: inset 0 0 0 1px light-dark(var(--chip-light), var(--chip-dark));
-    font-weight: 600;
   }
 
   &[aria-pressed='true']:hover {

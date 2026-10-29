@@ -2,7 +2,7 @@
 
 import { formLabel } from '@/modules/ingredients/validation/form-label';
 
-import { Fragment, type ReactElement, type ReactNode, useId, useMemo, useState } from 'react';
+import { type ReactElement, type ReactNode, useId, useMemo, useState } from 'react';
 import { useFormContext, useWatch } from 'react-hook-form';
 import { chipColors } from '../../../lib/chip-colors';
 import type { GroupColors } from '../../../lib/types';
@@ -13,7 +13,7 @@ import type { SpellIngredientSuggestionsQuery } from '../../../gql/graphql';
 import type { FormGroupIcon } from '@/modules/vocabulary/schema/form-group-icons';
 import Combobox from '../../Combobox';
 import InfoTip from '../../InfoTip';
-import IconTip from '../../IconTip/icon-tip';
+import CategoryChips from '../../CategoryChips';
 import { FieldError } from '../../Field';
 import FormIcon from '../../FormIcon';
 import { useLookup } from '../../IngredientForm/suggestions';
@@ -58,56 +58,41 @@ const assignedFirst = <T extends { id: string }>(
   ...categories.filter(({ id }) => !assigned.has(id)),
 ];
 
+/** The chip colours of a category whose group has not loaded (or has none): a neutral grey. */
+const NEUTRAL: GroupColors = { colorDark: '#a1a1aa', colorLight: '#52525b' };
+
 /**
- * The categories as small print on a row: each in its group's chip colours, as CategoryChips
- * draws them, plain text until the colours land or for a category without a group. The first
- * `ROW_CATEGORY_CAP` are drawn and the rest fold into a neutral "+N" chip rather than an
- * ellipsis, a fixed count because a measured fit would need the row's laid-out width. The folded
- * names stay in the row's accessible name, as visually hidden text inside the chip, and shown on hover
- * in the app's own IconTip bubble, which draws on a chip that is not a button: the option keeps its role.
+ * The categories as small print on a row, drawn by CategoryChips (compact size, group colours)
+ * so the "+N" is the same CategoryMore button and floating panel the cards and the admin table
+ * have. The first `ROW_CATEGORY_CAP` show; the rest fold behind it. The click and press are
+ * kept from the option, so using the chips never picks the row or closes the list.
  */
 const categoryNames = (
+  name: string,
   categories: readonly { id: string; name: string }[],
   colors: ReadonlyMap<string, GroupColors>,
   assigned: ReadonlySet<string>,
   missing: ReadonlySet<string>,
 ): ReactNode => {
   if (categories.length === 0) return undefined;
-  const ordered = assignedFirst(categories, assigned, missing);
-  const shown = ordered.slice(0, ROW_CATEGORY_CAP);
-  const hidden = ordered.slice(ROW_CATEGORY_CAP);
   return (
-    <>
-      {shown.map(({ id, name }, index) => {
-        const pair = colors.get(id);
-        return (
-          <Fragment key={id}>
-            {index > 0 && ' · '}
-            {pair ? (
-              <span className="chip" style={chipColors(pair)}>
-                {name}
-              </span>
-            ) : (
-              name
-            )}
-          </Fragment>
-        );
-      })}
-      {hidden.length > 0 && (
-        <>
-          {' · '}
-          <IconTip tip={hidden.map(({ name }) => name).join(', ')} placement="above">
-            <span className="chip chip--more">
-              +{hidden.length}
-              <span className="visually-hidden">
-                {' '}
-                more: {hidden.map(({ name }) => name).join(', ')}
-              </span>
-            </span>
-          </IconTip>
-        </>
-      )}
-    </>
+    // oxlint-disable-next-line jsx-a11y/no-static-element-interactions, jsx-a11y/click-events-have-key-events -- only stops a pointer reaching the option
+    <span
+      onClick={(event) => event.stopPropagation()}
+      onMouseDown={(event) => event.preventDefault()}
+    >
+      <CategoryChips
+        compact
+        label={name}
+        limit={ROW_CATEGORY_CAP}
+        categories={assignedFirst(categories, assigned, missing).map(
+          ({ id, name: categoryName }) => ({
+            category: { id, name: categoryName },
+            group: colors.get(id) ?? NEUTRAL,
+          }),
+        )}
+      />
+    </span>
   );
 };
 
@@ -139,6 +124,7 @@ function pickRows(
             ) : undefined,
             // The form's categories, else the ingredient's, as small print on that line.
             meta: categoryNames(
+              name,
               variant.categories.length > 0 ? variant.categories : node.categories,
               colors,
               assigned,
