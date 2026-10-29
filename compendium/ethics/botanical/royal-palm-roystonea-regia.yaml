@@ -1,0 +1,18 @@
+# Gathered for M14.29; the seed never reads this folder.
+entry: botanical/royal-palm-roystonea-regia
+status: approved
+listings:
+  - list: iucn
+    name: 'IUCN Red List of Threatened Species'
+    value: 'Least Concern (IUCN 3.1)'
+    listedAs: 'Roystonea regia'
+    nameBasis: stated
+    source: wikipedia-roystonea-regia
+    locator: 'taxobox, "Conservation status": "Least Concern (IUCN 3.1)"'
+  - list: other
+    name: 'NatureServe'
+    value: 'Imperiled'
+    listedAs: 'Roystonea regia'
+    nameBasis: stated
+    source: wikipedia-roystonea-regia
+    locator: 'taxobox, "Conservation status": "Imperiled (NatureServe)"'
