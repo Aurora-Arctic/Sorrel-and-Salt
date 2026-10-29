@@ -907,10 +907,7 @@ $panel-head-gap: space(3);
   margin-top: space(1);
 }
 
-// The compendium's review switch (M14.8), at the foot of the modal's header (or above the form
-// outside a modal). It takes the one-line drawing of `.review-mark` (review-mark.scss).
-
-// The review row at the foot of the form (M14.8): the last section's bottom border is the line above
+// The review row at the foot of the form: the last section's bottom border is the line above
 // it, so the row's own top line is dropped to leave exactly one. Under `body` to outweigh review-mark.scss.
 body .ingredient-form .review-row {
   border-top: 0;

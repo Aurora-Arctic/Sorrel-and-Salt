@@ -190,12 +190,10 @@ export async function updateSpellStep(
 }
 
 /**
- * Deletes a spell: a soft delete of the spell and its steps in one
- * transaction (M13.11). Owners and members delete, viewers are refused; the
- * spell must be one the caller can read, so another member's private spell
- * is refused as if it did not exist. Story 56's rule governs widening, not
- * existence, so a shared or complete spell goes too. Stock is never touched;
- * a working's rows wait for M13.5, which extends the same writer.
+ * Deletes a spell: a soft delete of the spell and its steps in one transaction. Owners and
+ * members delete, viewers are refused; another member's private spell is refused as if it did not
+ * exist. The visibility lock governs widening, not existence, so a shared or complete spell goes
+ * too. Stock is never touched.
  *
  * @throws {Forbidden} the caller may not delete in this coven's grimoire.
  * @throws {NotFound} no such spell here, or none this caller may read.

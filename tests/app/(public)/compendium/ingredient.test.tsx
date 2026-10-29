@@ -21,7 +21,7 @@ const viewerIfSignedIn = vi.fn();
 vi.mock('@/lib/viewer', () => ({ viewerIfSignedIn }));
 
 const readCompendiumEntry = vi.fn();
-// The review switch's read (M14.8), per viewer, made for a curator or admin only.
+// The review switch's read, per viewer, made for a curator or admin only.
 const readCompendiumReview = vi.fn();
 vi.mock('@/modules/ingredients', () => ({ readCompendiumEntry, readCompendiumReview }));
 const SESSION = { userId: 'user-fixture' };
@@ -169,7 +169,7 @@ describe('the compendium entry page', () => {
   });
 });
 
-// M14.8: the Reviewed switch as the last row of the page's head, for a curator or
+// The Reviewed switch as the last row of the page's head, for a curator or
 // admin. Its read is per viewer and made for them alone, so a visitor's page is the cached one.
 describe('the compendium entry page, with the review switch', () => {
   const reviewSwitches = () => screen.queryAllByRole('switch', { name: 'Reviewed' });

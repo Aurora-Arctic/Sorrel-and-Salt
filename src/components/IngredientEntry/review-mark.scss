@@ -33,7 +33,7 @@ body .review-mark {
 
 // The review row (review-row.tsx): the standing badge and the day in muted caption text at the start, the switch at
 // the end. One hairline above it; the one below is the first section's own top border. Its block
-// padding is space(4), one step past a section head's space(3) (the owner's call), and its sides are the modal body's, so it adds none.
+// padding is space(4), one step past a section head's space(3), and its sides are the modal body's, so it adds none.
 body .review-row {
   inline-size: 100%;
   padding-block: space(4);

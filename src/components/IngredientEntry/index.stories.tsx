@@ -1106,8 +1106,7 @@ export const ReviewMarkReviewed: Story = {
   ),
 };
 
-// The switch where the Quick Look draws it (M14.8): as the last row of the head, the switch at
-// the start and the review day at the end.
+// The switch as the Quick Look draws it: the last row of the head, switch at the start, review day at the end.
 export const ReviewLineInTheQuickLook: Story = {
   render: () => (
     <div className="modal-dialog__under">

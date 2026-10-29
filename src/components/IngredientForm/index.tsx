@@ -314,9 +314,8 @@ const IngredientForm = ({
   // other question; a save or a delete does not. A reference panel's own edits count too, though
   // `isDirty` never sees them.
   const panels = usePanelChanges();
-  // The Reviewed switch (M14.8), a field of the form that lives beside react-hook-form's
-  // values: it is not part of the entry's input, so it is saved on its own once the entry is. It
-  // counts as a change all the same, so Save enables, and Cancel and the guard ask, on a flip.
+  // The Reviewed switch lives beside react-hook-form's values, not in the entry's input, and is
+  // saved on its own once the entry is. A flip still counts as a change: Save enables, Cancel and the guard ask.
   const [reviewed, setReviewed] = useState(review?.reviewed ?? false);
   const [reviewedSaved, setReviewedSaved] = useState(review?.reviewed ?? false);
   const reviewChanged = compendium && review !== undefined && reviewed !== reviewedSaved;

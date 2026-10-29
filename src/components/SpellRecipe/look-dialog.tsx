@@ -39,8 +39,7 @@ export default function SpellLookDialog({
   const name = opened ? opened.title?.trim() || UNTITLED_SPELL : '';
   const heading: ModalHeading | undefined = opened && {
     title: name,
-    // Edit and Delete as icons at the end of the title's line, as the ingredient's Quick Look has
-    // them (the owner's call, 2026-10-29), made by the card's own components.
+    // Edit and Delete as icons at the end of the title's line, as the ingredient's Quick Look has them.
     ...((opened.editHref || opened.deleteSpell) && {
       formalActions: (
         <span className="spell-look-actions">

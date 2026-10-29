@@ -60,9 +60,8 @@ interface IngredientFormCallbacks {
    */
   mayPromote?: boolean;
   /**
-   * Offers the compendium's Reviewed switch (M14.8) as a field of the form, on an add
-   * and on an edit: the page gives it, with the mark as it stands, to a curator or admin only.
-   * Flipping it changes the form, Save sends it after the entry is saved, and Cancel drops it.
+   * Offers the compendium's Reviewed switch as a field of the form, on an add and an edit, for a
+   * curator or admin only. A flip changes the form, Save sends it after the entry, Cancel drops it.
    */
   review?: ReviewOffer;
 }

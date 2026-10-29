@@ -616,7 +616,7 @@ const OPEN_WRITES = [
   // The coven's `spell: create` and `spell: update` decide, which the spell service checks.
   'createSpell',
   'updateSpell',
-  // The coven's `spell: delete` decides, which the spell service checks (M13.11).
+  // The coven's `spell: delete` decides, which the spell service checks.
   'deleteSpell',
 ];
 

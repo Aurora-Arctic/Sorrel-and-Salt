@@ -442,7 +442,7 @@ test(
   'a member deletes a shared spell from its page after being asked, naming it; the grimoire says so, and a viewer is offered no Delete',
   { tag: '@story-56' },
   async ({ page }) => {
-    // Story 56's rule governs widening, not existence (M13.11): a complete, shared spell can be
+    // The visibility lock governs widening, not existence: a complete, shared spell can be
     // deleted, which the confirmation says the coven loses.
     const coven = await seedCoven(page, 'Fixture Coven Fifty-Six Deletes', 'story-56-delete.test', {
       A: 'owner',

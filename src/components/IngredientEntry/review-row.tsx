@@ -4,11 +4,10 @@ import TipMark from '../EntryMarks/tip-mark';
 import { reviewDay } from './review-date';
 import './review-mark.scss';
 
-// The compendium entry's review row (M14.8): the entry's standing as its badge at the start, the day in the badge's tip (EntryMarks leaves its own review badge out wherever this row is shown), the Reviewed
-// switch at the end. The Quick Look's head, the entry page's head and the edit and add modals all
-// draw this one row, so they match. It saves nothing itself: the caller owns the switch (ReviewMark
-// saves on flip, IngredientForm carries it with Save). The words show the SAVED state (`standing`),
-// never the switch's unsaved value, and the day only when the page knows it: an add has none.
+// The compendium entry's review row: the standing as a badge at the start (its day in the badge's
+// tip), the Reviewed switch at the end; the Quick Look, the entry page and the add and edit modals draw it.
+// It saves nothing: the caller owns the switch. The words show the SAVED state (`standing`), never
+// the switch's unsaved value, and the day only when known: an add has none.
 
 export interface ReviewRowProps {
   /** Whether a curator has marked the entry, as saved. */
@@ -39,7 +38,7 @@ export default function ReviewRow({
           {!standing ? (
             <output className="badge badge--attention">Needs Review</output>
           ) : reviewedAt !== null ? (
-            // The day is the badge's tip, never drawn beside it (the owner's call, 2026-10-29).
+            // The day is the badge's tip, never drawn beside it.
             <TipMark
               label="Reviewed By Curator"
               palette="local"

@@ -472,9 +472,8 @@ const SpellBuilder = ({
     return { revision: answer.revision, savedAt: new Date(), id: answer.id };
   };
 
-  // Delete (M13.11), as the ingredient form has it: asked over the form, and once confirmed the
-  // spell is going, so `removed` holds the autosave and the save on close down: a save
-  // after the delete would answer not found, or bring the spell back. A refusal lifts it.
+  // Delete is asked over the form; once confirmed the spell is going, so `removed` holds the autosave
+  // and the save on close down (a save after the delete would answer not found). A refusal lifts it.
   const [deleting, setDeleting] = useState(false);
   const [removed, setRemoved] = useState(false);
   const { navigate } = usePendingNavigation();

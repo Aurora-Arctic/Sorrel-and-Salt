@@ -13,7 +13,7 @@ export async function assertNoAccessibilityViolations(
   const scan = async () =>
     (await new AxeBuilder({ page }).disableRules(skipRules).analyze()).violations;
   let violations = await scan();
-  // The metadata swap can also land between the wait above and the scan's read (story 24): a
+  // The metadata swap can also land between the wait above and the scan's read: a
   // missing title is scanned again once, after waiting for one. A page that never has a title
   // still fails, at the wait.
   if (violations.some((v) => v.id === 'document-title')) {

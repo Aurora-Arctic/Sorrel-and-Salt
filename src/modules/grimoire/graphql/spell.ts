@@ -318,7 +318,7 @@ builder.mutationField('updateSpell', (t) =>
 );
 
 // Answers the deleted id, not the entity: the page leaves by it, and a
-// deleted spell's steps and categories would resolve empty (M13.11).
+// deleted spell's steps and categories would resolve empty.
 builder.mutationField('deleteSpell', (t) =>
   t.id({
     description: "Soft-deletes a spell and its steps together; the spell's stock is untouched.",

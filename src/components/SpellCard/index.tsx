@@ -90,7 +90,7 @@ const SpellCard = ({
       {/* In the foot, as IngredientCard's, so cards in one grid row end on the same line. */}
       {(lastEdit != null || lookHref || editHref || deleteSpell) && (
         // The foot, as IngredientCard's: who last edited, then the actions on one row, the
-        // Quick Look eye at the bottom left (the start group) and the Edit pencil and the Delete Spell bin (M13.11) at the right.
+        // Quick Look eye at the bottom left (the start group) and the Edit pencil and Delete Spell bin at the right.
         <div className="specimen__foot">
           {lastEdit != null && <LastEdit by={lastEdit.by} at={lastEdit.at} />}
           {(lookHref || editHref || deleteSpell) && (

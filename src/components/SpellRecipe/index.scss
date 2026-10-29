@@ -109,7 +109,7 @@ $recipe-column: 48rem;
   }
 }
 
-// The pencil and the bin (M13.10, M13.11) on one line at the heading's end, as the
+// The pencil and the bin on one line at the heading's end, as the
 // ingredient entry's icons stand (`.ingredient-entry__cupboard--icons`).
 .spell-recipe__actions {
   display: flex;
@@ -335,7 +335,7 @@ $recipe-column: 48rem;
 }
 
 // The Quick Look's head content (the Edited line, the title, the icons) stands lower than the
-// Modal's default, for room between the × and the bin beneath it (the owner's call, 2026-10-29).
+// Modal's default, for room between the × and the bin beneath it.
 // The × is the header's own child and does not move. Scoped by the same hook, so the ingredient's
 // Quick Look is as it was.
 .modal-dialog__heading:has(.spell-look-actions) {

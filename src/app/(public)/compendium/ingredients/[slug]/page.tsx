@@ -84,9 +84,8 @@ export default async function CompendiumEntryPage({ params, searchParams }: Comp
   // name says any does, and the cupboard choices say which. Someone in no coven has none to ask.
   const holding = shell?.workspaces.length ? await covensHolding(entry.id) : [];
   const covens = shell ? await publicCupboardOf(entry, own, search, holding) : undefined;
-  // The review switch (M14.8), for a curator or admin only: a per-viewer read with their session,
-  // never in the cached read above and not made at all for anyone else, so a visitor's page is
-  // the same as ever. One read serves the side column's switch and the edit form's field.
+  // The review switch's read, for a curator or admin only: per viewer, never in the cached read
+  // above, so a visitor's page is unchanged. One read serves the head's switch and the form's field.
   const review = canEdit ? await reviewOf(entry.id) : undefined;
 
   return (

@@ -427,7 +427,7 @@ describe('IngredientForm on the compendium', () => {
       expect(screen.getByText(COMPENDIUM_EDIT_NOTICE)).toBeInTheDocument();
     });
 
-    // M14.8: the Reviewed switch is a field of the form, offered by the page to a
+    // The Reviewed switch is a field of the form, offered by the page to a
     // curator or admin: Save carries it, Cancel drops it, and it never saves on its own.
     describe('the Reviewed switch', () => {
       const reviewSwitch = () => screen.getByRole('switch', { name: 'Reviewed' });

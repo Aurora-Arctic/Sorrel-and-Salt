@@ -18,7 +18,7 @@ vi.mock('next/navigation', () => ({ useRouter: () => router }));
 
 const { default: SpellBuilder } = await import('@/components/SpellBuilder');
 
-// Delete in the spell builder's Edit dialog (M13.11), as the ingredient's Edit dialog has its
+// Delete in the spell builder's Edit dialog, as the ingredient's Edit dialog has its
 // Delete: a button at the far end of the row, which asks over the form, and once confirmed
 // leaves the autosave and the save on close nothing to send.
 

@@ -98,8 +98,7 @@ const EntryMarks = ({
         node: <output className="badge badge--attention">Needs Review</output>,
       });
     } else {
-      // Reviewed By Curator stands last in the row, after every other badge, with its day in
-      // the badge's tip rather than beside it (the owner's call, 2026-10-29).
+      // Reviewed By Curator stands last in the row, with its day in the badge's tip, not beside it.
       reviewed = (
         <TipMark
           label="Reviewed By Curator"

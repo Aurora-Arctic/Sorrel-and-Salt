@@ -7,7 +7,7 @@ import { insertSpell } from '../../../support/db/insert-spell';
 import { makeSpell } from '../../../support/fixtures';
 import { run } from '../../../support/graphql/run';
 
-// `deleteSpell` over the wire (M13.11): what the transport adds to
+// `deleteSpell` over the wire: what the transport adds to
 // services/spell-delete.test.ts, which owns who may delete what. Here: the
 // answer is the deleted id, for the page to leave by, and one refusal per
 // code the delete can answer.

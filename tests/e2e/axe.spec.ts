@@ -27,7 +27,7 @@ test('a title that is briefly absent does not fail the scan', async ({ page }) =
 });
 
 // A soft navigation's metadata swap can land between the wait for a title and the scan's read of
-// it, so the scan itself finds none (story 24, 2026-10-29). The document here reads a title for
+// it, so the scan itself finds none. The document here reads a title for
 // the wait (which reads the element, not this),
 // none for the scan's first read, and a title again after: a gap that closed on its
 // own, which the scan must not report. The count, not a timer, puts the gap where the race is.

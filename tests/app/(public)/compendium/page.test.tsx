@@ -50,7 +50,7 @@ vi.mock('@/lib/request-session', () => ({ getSession }));
 // The viewer's own covens that hold the open entry, for the details' In Your Cupboards.
 // Which covens it admits is tests/modules/ingredients/services/covens-holding.test.ts's.
 const covensHoldingEntry = vi.fn();
-// The review switch's read (M14.8), per viewer, made for a curator or admin only.
+// The review switch's read, per viewer, made for a curator or admin only.
 const readCompendiumReview = vi.fn();
 vi.mock('@/modules/ingredients', () => ({
   readCompendiumReview,
@@ -615,7 +615,7 @@ describe('the public compendium page metadata', () => {
   );
 });
 
-// M14.8: the Reviewed switch in the Quick Look and the edit dialog, for a curator or
+// The Reviewed switch in the Quick Look and the edit dialog, for a curator or
 // admin. The review read is per viewer and made only for them, never inside the cached reads.
 describe('the public compendium page, with the review switch', () => {
   const DETAIL = entryDetail({ id: NODE.id, slug: NODE.slug, name: NODE.name });

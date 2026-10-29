@@ -45,8 +45,8 @@ export interface OpenedEntry {
   /** The entry edited; none for an add. */
   entry?: EditedEntry;
   /**
-   * The Reviewed switch (M14.8) as a field of the form, on an add and an edit: the page
-   * gives it, from the uncached review read, to a curator or admin, and leaves it out for anyone else.
+   * The Reviewed switch as a field of the form, on an add and an edit: built from the uncached
+   * review read for a curator or admin, left out for anyone else.
    */
   review?: ReviewOffer;
 }
