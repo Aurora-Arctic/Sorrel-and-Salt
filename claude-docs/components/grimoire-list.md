@@ -62,10 +62,12 @@ variables, so a search and its categories live in the address and combine.
 - **The title search.** The search box is `IngredientSearch`'s, labelled Title, with the
   same submit behaviour as the ingredients page. It matches title and intent, from two
   characters (M10.11's floor in the query). Its suggestions come from the coven's spells on
-  this tab, by title. Picking a suggestion opens the spell's recipe page (MB.6) through
-  `IngredientSearch`'s `pickHref`, the row's `match` holding the spell id, and M13.21 then makes it open the spell's Quick Look
-  instead, as a pick on the coven's Ingredients page opens the entry's Quick Look (the
-  owner's rule of 2026-10-27).
+  this tab, by title. Picking a suggestion opens the spell's Quick Look over the list (M13.21), at the address
+  the card's eye opens, `?spell=<id>` added to the tab's address with its filter and its page
+  (the list's `cursor` prop) kept and the text typed and not searched not applied. It goes
+  through `IngredientSearch`'s `pickHref`, `pickHeading` and `pickPlace`, the row's `match`
+  holding the spell id, as a pick on the coven's Ingredients page opens the entry's Quick
+  Look (the owner's rule of 2026-10-27).
 - **The Categories panel.** The panel is `FacetShell` holding the shared `CategoryLine`
   ([`facet-panel.md`](facet-panel.md)): the category picker and its Match chip, nothing
   else. Each category shows how many spells on this tab, under the search, the viewer can

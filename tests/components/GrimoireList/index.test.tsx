@@ -6,7 +6,12 @@ import { QueryClientProvider } from '@tanstack/react-query';
 import GrimoireList from '@/components/GrimoireList';
 import type { GrimoireListProps } from '@/components/GrimoireList/types';
 import { makeQueryClient } from '@/lib/graphql-client';
+import { GRIMOIRE_PARAMS } from '@/components/GrimoireList/params';
+import { DEBOUNCE_MS } from '@/lib/debounce';
 import { filterForm, sent } from '../../support/filter-form';
+import { waitFor } from '../../support/ingredient-form';
+import { typeIn } from '../../support/interact';
+import { mockGraphQLQuery } from '../../support/msw/graphql';
 import { Navigating } from '../../support/navigating';
 
 // The filter navigates through the App Router; Vitest hoists the mock above the imports.
@@ -417,6 +422,47 @@ describe('GrimoireList', () => {
         />,
       );
       expect(screen.getByRole('status', { name: 'No Matches' })).toBeInTheDocument();
+    });
+  });
+  // M13.21: a picked title opens the spell's Quick Look over the list as it stands, as the
+  // card's eye does, the page and the filter kept and the text typed and not searched not applied.
+  describe('picking a title from the dropdown', () => {
+    beforeEach(() => {
+      vi.useFakeTimers({ shouldAdvanceTime: true });
+      mockGraphQLQuery('GrimoireSearchMatches', () => ({
+        grimoire: {
+          pageInfo: { hasNextPage: false },
+          edges: [{ node: { id: 's9', title: 'Hearth Ward' } }],
+        },
+      }));
+    });
+    afterEach(() => {
+      vi.useRealTimers();
+    });
+
+    it("opens the spell's Quick Look over the page and filter shown, not its recipe page", async () => {
+      const filter = {
+        query: '',
+        categories: [],
+        categoryMode: 'all' as const,
+        ...OPEN,
+        moonPhases: ['Full'],
+      };
+      const cursor = { after: 'cursor-x' };
+      render(<List {...props({ filter, cursor })} />);
+
+      const box = screen.getByRole('combobox', { name: 'Title' });
+      act(() => box.focus());
+      typeIn(box, 'hearth');
+      await act(async () => {
+        await vi.advanceTimersByTimeAsync(DEBOUNCE_MS);
+      });
+      fireEvent.click(await screen.findByRole('option', { name: 'Hearth Ward' }));
+      await waitFor(() => expect(router.push).toHaveBeenCalled());
+
+      expect(router.push.mock.calls).toEqual([
+        [`${GRIMOIRE_PARAMS.href(PATH, filter, cursor)}&spell=s9`],
+      ]);
     });
   });
 });

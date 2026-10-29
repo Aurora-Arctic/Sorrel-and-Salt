@@ -1,4 +1,5 @@
 import type { Route } from 'next';
+import { lookHrefOf } from '@/components/GrimoireList/recipe-href';
 import type { ReactElement } from 'react';
 import { readCategories } from '@/app/compendium-reads';
 import GrimoireList from '@/components/GrimoireList';
@@ -41,10 +42,6 @@ import { viewedDetailsOf } from '../../ingredients/viewed-details';
 /** `closeHref` with a saved spell's dialog open over it. */
 const editHrefOf = (closeHref: Route, id: string): Route =>
   `${closeHref}${closeHref.includes('?') ? '&' : '?'}${new URLSearchParams({ edit: id })}` as Route;
-
-/** `closeHref` with a spell's Quick Look open over it. */
-const lookHrefOf = (closeHref: Route, id: string): Route =>
-  `${closeHref}${closeHref.includes('?') ? '&' : '?'}${new URLSearchParams({ spell: id })}` as Route;
 
 const VISIBILITY_LABELS: Record<(typeof VISIBILITIES)[number], string> = {
   private: 'Private',
@@ -171,6 +168,7 @@ export async function grimoireTab({
         categories={counted}
         facets={facets}
         position={page.position}
+        cursor={{ after, before }}
         total={page.totalCount}
         {...pagerHrefs(page.pageInfo, (cursor) =>
           GRIMOIRE_PARAMS.href(path, filter, { ...cursor }),
