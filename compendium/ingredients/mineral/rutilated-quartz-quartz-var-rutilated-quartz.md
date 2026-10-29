@@ -19,12 +19,15 @@ categories:
   - Healing
   - Forgiveness
   - Release
+  - Psychic Work
+  - Strength
 references:
   - source: cunningham-crystals
     locator: p. 25; pp. 91–92
     nameBasis: unaudited
     supports:
       - description
+      - categories
   - source: hall-crystal-bible
     locator: 'under "Quartz: Rutilated Quartz"'
     nameBasis: unaudited

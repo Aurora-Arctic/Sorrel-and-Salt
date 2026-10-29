@@ -16,6 +16,9 @@ categories:
   - Manifestation
   - Communication
   - Cleansing
+  - Healing
+  - Psychic Work
+  - Strength
 references:
   - source: cunningham-crystals
     locator: p. 92

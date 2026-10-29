@@ -11,6 +11,9 @@ categories:
   - Harmony
   - Healing
   - Release
+  - Protection
+  - Psychic Work
+  - Strength
 references:
   - source: cunningham-crystals
     locator: p. 92; pp. 142–143
@@ -19,6 +22,7 @@ references:
       - colours
       - celestialBodies
       - description
+      - categories
   - source: hall-crystal-bible
     locator: 'under "Quartz: Tourmalinated Quartz"'
     nameBasis: unaudited

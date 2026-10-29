@@ -15,6 +15,9 @@ categories:
   - Forgiveness
   - Grief Work
   - Fertility
+  - Protection
+  - Psychic Work
+  - Strength
 references:
   - source: cunningham-crystals
     locator: p. 91

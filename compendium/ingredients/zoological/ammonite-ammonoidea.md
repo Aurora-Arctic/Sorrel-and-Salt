@@ -15,6 +15,7 @@ categories:
   - Longevity
   - Healing
   - Warding
+  - Past-Life Work
 references:
   - source: cunningham-crystals
     locator: pp. 96–97
