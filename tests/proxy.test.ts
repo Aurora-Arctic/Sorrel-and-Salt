@@ -231,9 +231,8 @@ describe('the workshop', () => {
   }
 
   /**
-   * What every refusal below rests on: the proxy runs on the path, and the same request with an
-   * admin's live session reaches the files. So the refusal is the gate reading who is asking,
-   * not a path the proxy never sees or a response that would have failed anyway.
+   * Each refusal below is the gate reading who is asking, not a path the proxy never sees or a response that would have failed anyway:
+   * the same request with an admin's live session reaches the files.
    */
   async function expectAnAdminReaches(path: string) {
     expect(matches(path)).toBe(true);
@@ -321,13 +320,8 @@ describe('the workshop', () => {
   });
 
   /**
-   * Whether `policy`, on a page at `page`, lets its scripts request `url` (fetch, XHR,
-   * WebSocket): CSP Level 3's `connect-src`, falling back to `default-src`. No CSP matcher ships
-   * in the dependencies, so this follows the spec's host-source rule for the sources the proxy
-   * writes: a source with no scheme takes the page's, scheme, host and port match the request's,
-   * and a path ending `/` matches every path beneath it while one without matches only itself.
-   * It leaves out the spec's http-to-https allowance, which only makes it stricter. A keyword it
-   * does not know throws, so a policy it cannot read fails loudly.
+   * Whether `policy`, on a page at `page`, lets scripts request `url`: CSP Level 3's `connect-src`, falling back to `default-src`.
+   * A source with no scheme takes the page's, and a path ending `/` matches every path beneath it while one without matches only itself. A keyword it does not know throws.
    */
   function connectAllows(
     policy: string | null,

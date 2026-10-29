@@ -1,10 +1,7 @@
 import { afterEach, describe, expect, it, vi } from 'vitest';
 
-// Both id and secret, never an empty string, which Better Auth reads as configured. This module
-// is the one place the provider→env-var mapping lives, and .oxlintrc.json refuses it to any
-// importer but src/lib/auth.ts and a server component; this file is the third named exception,
-// as tests/db/test-database-isolation.test.ts is for the db-client boundary (CLAUDE.md rule 2).
-// The pair itself and the one-provider case are proved through tests/lib/auth.test.ts.
+// Both id and secret, never an empty string, which Better Auth reads as configured. This module is the one place the provider-to-env-var mapping lives, and `.oxlintrc.json` refuses it to any importer but src/lib/auth.ts and a server component;
+// this file is the third named exception, as tests/db/test-database-isolation.test.ts is for the db-client boundary (CLAUDE.md rule 2). The pair and the one-provider case are proved through tests/lib/auth.test.ts.
 describe('configuredProviders', () => {
   afterEach(() => {
     vi.unstubAllEnvs();

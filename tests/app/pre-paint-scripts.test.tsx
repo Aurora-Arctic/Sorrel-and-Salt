@@ -4,10 +4,8 @@ import { renderToString } from 'react-dom/server';
 import { describe, expect, it } from 'vitest';
 import PrePaintScripts from '@/app/pre-paint-scripts';
 
-// The root layout's four pre-paint scripts run from the server's HTML. A
-// document the browser renders itself — Next's recovery when `forbidden()` or
-// `notFound()` is thrown — must not get them: React creates such a script
-// inert and warns (claude-docs/auth/admin-guard.md, "The admin guard").
+// The root layout's four pre-paint scripts run from the server's HTML. A document the browser renders itself (Next's recovery when `forbidden()` or `notFound()` is thrown)
+// must not get them: React creates such a script inert and warns (claude-docs/auth/admin-guard.md, "The admin guard").
 
 describe('PrePaintScripts', () => {
   // Hydration starts from the server's snapshot, then re-renders from the

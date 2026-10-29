@@ -8,13 +8,8 @@ import { asManualFix } from '../support/db/privileges';
 import { run } from '../support/graphql/run';
 import type { AuthInstance } from '../support/types';
 
-// A revoked admin's sessions stay valid, since they are still a user,
-// and their next request reads `role: 'user'` off the users row, so `/admin`
-// and every admin mutation close to them at once, with no new session issued
-// (claude-docs/design-decisions/m2.9-granting-admin.md, "Revoking"). Through
-// the real session reader, from the cookie Better Auth would have set; the
-// cookie cache that would keep the old role is pinned off in
-// tests/lib/auth.test.ts.
+// A revoked admin's sessions stay valid and their next request reads `role: 'user'` off the users row, so `/admin` and every admin mutation close at once (claude-docs/design-decisions/m2.9-granting-admin.md, "Revoking").
+// Through the real session reader; the cookie cache that would keep the old role is pinned off in tests/lib/auth.test.ts.
 
 let sql: ReturnType<typeof postgres>;
 let auth: AuthInstance;

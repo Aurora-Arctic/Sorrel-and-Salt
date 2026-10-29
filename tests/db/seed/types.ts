@@ -1,21 +1,13 @@
 import type { SeedDatabase, SeedRunOptions } from '@/db/seed/types';
 
-/**
- * One seed entry point under the shape every seed shares: a scenario, or a
- * reference-data seed run alone, and the tables that run is the seed of —
- * empty before it, filled by it, every row the bootstrap user's.
- */
+/** One seed entry point under the shape every seed shares: a scenario, or a reference-data seed run alone, and the tables that run is the seed of (empty before it, filled by it, every row the bootstrap user's). */
 export interface SeedEntry {
   name: string;
   /** The seeds this one reads from, run for real first. */
   prepare?: (handle: SeedDatabase) => Promise<void>;
   /** The seed itself, which a dry run rolls back. */
   seed: (handle: SeedDatabase, options?: SeedRunOptions) => Promise<void>;
-  /**
-   * The seed the fill sweep runs in place of `seed`, when the other sweeps
-   * take a smaller input: the compendium's real files, where they take the
-   * fixture.
-   */
+  /** The seed the fill sweep runs in place of `seed`, when the other sweeps take a smaller input: the compendium's real files, where they take the fixture. */
   fillSeed?: (handle: SeedDatabase) => Promise<void>;
   /** `prepare`, then `seed`. */
   run: (handle: SeedDatabase) => Promise<void>;

@@ -4,10 +4,8 @@ import { useTestDatabase } from '../support/db/database';
 import { FIXTURE_USERS, WORKSPACE_W_ID } from '@/db/seed/standard';
 import type { PartialIndexRow, PartialUniqueIndex, Row } from './types';
 
-// Rule 4's other half, once for every table: a unique index carries
-// `deleted_at IS NULL`, so a second live row is refused and a soft delete
-// frees the slot. A catalogue sweep rather than a pair per schema test, so a
-// new partial unique index fails here until it is classified below
+// Every unique index carries `deleted_at IS NULL`: a second live row is refused and a soft delete frees the slot.
+// A catalogue sweep, so a new partial unique index fails here until classified below
 // (claude-docs/testing/db-harness.md, "The db test harness").
 
 const AUTHOR = FIXTURE_USERS.A.id;

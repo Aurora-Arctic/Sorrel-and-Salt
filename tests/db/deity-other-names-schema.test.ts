@@ -3,11 +3,8 @@ import postgres from 'postgres';
 import { failureOf, useTestDatabase } from '../support/db/database';
 import { FIXTURE_USERS } from '@/db/seed/standard';
 
-// What `deity_other_names` rows may hold: a name that is not blank,
-// once per deity whatever its case. The catalogue sweep in
-// partial-unique-indexes.test.ts proves for every index alike that a
-// soft-deleted row reserves nothing; this file proves the index folds case and
-// is keyed per deity.
+// What `deity_other_names` rows may hold: a name that is not blank, once per deity whatever its case.
+// partial-unique-indexes.test.ts proves a soft-deleted row reserves nothing; this file proves the index folds case and is keyed per deity.
 
 const AUTHOR = FIXTURE_USERS.A.id;
 const UNIQUE_INDEX = 'deity_other_names_unique';

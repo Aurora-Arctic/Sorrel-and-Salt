@@ -16,12 +16,8 @@ import type { SeedDatabase } from '@/db/seed/types';
 import { fixtureFiles } from './compendium/files-fixture';
 import type { SeedEntry, UserRow } from './types';
 
-// The shape every production seed shares, asserted here once over all of them
-//  and in no per-seed file: the bootstrap user inserted and published as the acting user,
-// every row stamped as it, a second run a no-op, and nothing an admin deleted
-// brought back. The handle is this file's own; that the seed writes through
-// it rather than a client of its own is enforced by lint, not here —
-// claude-docs/db/seed-module.md, "The seed module".
+// The shape every production seed shares, asserted once over all of them: the bootstrap user inserted and published as the acting user, every row stamped as it, a second run a no-op, and nothing an admin deleted brought back.
+// The handle is this file's own; that the seed writes through it rather than a client of its own is enforced by lint (claude-docs/db/seed-module.md, "The seed module").
 
 const PROBE = 'seed_probe_acting_user';
 
@@ -76,10 +72,8 @@ beforeAll(async () => {
     ).map((row) => row.table_name),
   );
 
-  // Records, per inserted row, what `app.current_user_id` held inside the
-  // inserting transaction; it is transaction-local and gone by the time a test
-  // could read it. One function, a trigger on every table, so the one probe
-  // watches every seed's own rows and not only the bootstrap user's.
+  // Records, per inserted row, what `app.current_user_id` held inside the inserting transaction; it is transaction-local and gone by the time a test could read it.
+  // One function, a trigger on every table, so the one probe watches every seed's own rows and not only the bootstrap user's.
   await sql`create table ${sql(PROBE)} (table_name text not null, acting_user text)`;
   await sql.unsafe(`
     create function ${PROBE}() returns trigger language plpgsql as $$

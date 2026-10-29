@@ -25,13 +25,8 @@ import type { Context } from '@/graphql/types';
 import type { InvitationSender } from '@/modules/identity';
 import type { Answer, WorkspaceIdProbe } from './types';
 
-// A `workspaceId` is whatever string the client sent, and asked of the
-// database one that is not a uuid is a driver error, which leaves masked as
-// INTERNAL_SERVER_ERROR. `assertMembership` refuses it as FORBIDDEN first,
-// the answer a coven the caller is not in gets. Every field taking a
-// `workspaceId` is named here, and the first test fails on one that is not,
-// so a field added later is held to the same answer
-// (claude-docs/db/membership-proof.md, "What the check asks").
+// A non-uuid `workspaceId` is a driver error masked as INTERNAL_SERVER_ERROR, so `assertMembership` refuses it as FORBIDDEN first, the answer a coven the caller is not in gets.
+// Every field taking a `workspaceId` is named here and the first test fails on one that is not (claude-docs/db/membership-proof.md, "What the check asks").
 
 const MALFORMED = ['not-a-coven', WORKSPACE_W_ID.slice(0, -1)];
 

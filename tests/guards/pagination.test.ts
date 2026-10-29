@@ -2,10 +2,8 @@ import { getNamedType, getNullableType, isListType, isObjectType } from 'graphql
 import { describe, expect, it } from 'vitest';
 import { schema } from '@/graphql/schema';
 
-// CLAUDE.md rule 8's guard (claude-docs/graphql/pagination.md, "Pagination"), read off the built
-// schema: a list query declared without the helper fails here, in its own diff, rather than
-// shipping a field that can return the whole table. That `t.connection` is called only inside the
-// helper is lint's (`sorrel/pagination-helper` in `.oxlintrc.json`).
+// CLAUDE.md rule 8's guard (claude-docs/graphql/pagination.md, "Pagination"), read off the built schema: a list query declared without the helper fails here, in its own diff.
+// That `t.connection` is called only inside the helper is lint's (`sorrel/pagination-helper` in `.oxlintrc.json`).
 
 describe('every list query paginates through the one helper', () => {
   // Nested lists on an object stay bare: they are bounded by their parent.

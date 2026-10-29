@@ -9,12 +9,8 @@ import {
   UNAUDITED_TABLES,
 } from '../support/db/table-metadata';
 
-// One catalogue sweep rather than a copy in every schema test: a table added
-// without `...auditColumns` fails here, where a per-file copy would simply not
-// exist. The catalogue, because it is the side a schema test cannot see — a
-// spread removed from a schema file leaves the migrated database's columns
-// standing, while each module schema test pins its table's exact column set on
-// the code side (claude-docs/testing/db-harness.md, "The db test harness").
+// A catalogue sweep: a table added without `...auditColumns` fails here, where a per-file copy would not exist, and a spread removed from a schema file leaves the migrated columns standing.
+// Each module schema test pins its table's exact column set on the code side (claude-docs/testing/db-harness.md, "The db test harness").
 
 /** Hard-deleted, so four stamps and no tombstone. */
 const STAMPED = ['ingredient_categories', 'spell_categories'];
@@ -90,11 +86,8 @@ describe('the audit columns', () => {
       Object.fromEntries(AUDITED_TABLES.map((table) => [table, expected(table)])),
     );
 
-    // Why the sweep could pass wrongly: it reads whatever the migrations built,
-    // so its discriminator is proved on real tables carrying the `updated_at` a
-    // careless sweep would have matched on, and no audit id. By name rather
-    // than every `*_by`: `sessions.impersonated_by` is the `admin` plugin's
-    // column, and no audit id.
+    // Why the sweep could pass wrongly: it reads whatever the migrations built, so its discriminator is proved on real tables carrying the `updated_at` a careless sweep would match on, and no audit id.
+    // By name rather than every `*_by`: `sessions.impersonated_by` is the `admin` plugin's column, not an audit id.
     for (const table of UNAUDITED_TABLES) {
       const { columns: found, references: linked } = audit(table);
       expect(found, table).toHaveProperty('updated_at');

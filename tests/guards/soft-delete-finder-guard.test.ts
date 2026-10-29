@@ -3,12 +3,8 @@ import { join } from 'node:path';
 import { describe, expect, it } from 'vitest';
 import { REPO_ROOT } from '../support/paths';
 
-// CLAUDE.md rule 4, read as text off the repository (claude-docs/db/soft-delete.md, "Soft-delete
-// filtering"): every finder the index exports filters tombstones, bar the escape hatches, each of which
-// says so in its name. Each reader's behaviour is its service's READS table's
-// (claude-docs/testing/layer-ownership.md, "The owning layer"); this sweep fails a new finder in the diff
-// that adds it. Read as text rather than imported: importing the repository would instantiate a Postgres
-// client, which the `unit` project must not.
+// CLAUDE.md rule 4, read as text off the repository (claude-docs/db/soft-delete.md, "Soft-delete filtering"): every finder the index exports filters tombstones, bar the escape hatches, each of which says so in its name.
+// Each reader's behaviour is its service's READS table's (claude-docs/testing/layer-ownership.md, "The owning layer"). Read as text, not imported, because importing the repository would instantiate a Postgres client, which the `unit` project must not.
 
 const REPOSITORY = 'src/db/repository';
 const INDEX = `${REPOSITORY}/index.ts`;
@@ -24,10 +20,7 @@ const ESCAPE_HATCHES = [
   'findCupboardEntryIncludingSoftDeleted',
 ];
 
-/**
- * The folder's internal builders that skip a filter, none of them exported from the index, each with
- * the only functions allowed to call it (claude-docs/db/soft-delete.md, "Soft-delete filtering").
- */
+/** The folder's internal builders that skip a filter, none exported from the index, each with the only functions allowed to call it (claude-docs/db/soft-delete.md, "Soft-delete filtering"). */
 const INTERNAL_HATCHES: Record<string, string[]> = {
   existsInIncludingSoftDeleted: ['inUseIngredientParent'],
   findPageInScopeIncludingSoftDeleted: ['findWorkspaceIngredientPage'],
@@ -88,11 +81,8 @@ describe('CLAUDE.md rule 4 — soft-delete filtering lives in the repository', (
         )
       )
         continue;
-      // Either it filters itself, or it delegates to something that does: a
-      // sibling finder, `findPage` and its kin included, though never a
-      // hatch; `readableSpells`, which carries the filter with the
-      // visibility rule; `readableInTiers`, which carries it with the tier;
-      // or `curated`, with the group's.
+      // Either it filters itself or it delegates to something that does: a sibling finder (`findPage` and its kin included, never a hatch),
+      // `readableSpells` (with the visibility rule), `readableInTiers` (with the tier) or `curated` (with the group's).
       expect(
         /notSoftDeleted\(|find(?:Many|One|Page)\w*(?<!IncludingSoftDeleted)\(|readableSpells\(|readableInTiers\(|\bcurated\(/.test(
           body,

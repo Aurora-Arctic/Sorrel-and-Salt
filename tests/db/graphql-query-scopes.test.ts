@@ -9,11 +9,9 @@ import { A, E, F, asUser } from '../support/as-user';
 import { run } from '../support/graphql/run';
 import type { AdminWrite, Governed, ScopeProbe } from './types';
 
-// The compendium is the one public surface, so its queries answer a null session and every other
-// query refuses one. Every `Query` field is classified here, and the first test fails on one that is not
-// (claude-docs/graphql/schema.md, "Auth scopes"). Every `Mutation` field is probed the same way, and
-// every query taking a `workspaceId` again with a null one, so no resolver file needs a signed-out test
-// of its own (claude-docs/design-decisions/mb.180-graphql-transport-half.md).
+// Only the compendium's queries answer a null session; every other query, and every mutation, refuses one.
+// Every `Query` field is classified here, and the first test fails on one that is not (claude-docs/graphql/schema.md, "Auth scopes").
+// Resolver files need no signed-out test of their own (claude-docs/design-decisions/mb.180-graphql-transport-half.md).
 
 let compendiumId: string;
 
@@ -309,10 +307,8 @@ describe('a null session and a null workspaceId at every Query field taking one'
   it.each(Object.entries(NULL_WORKSPACE_PROBES))('%s: %o', expectOutcome);
 });
 
-// Every write refuses a null session. The ids are NOWHERE, since a
-// signed-out caller is refused before any row is looked for, and the inputs
-// are the least each SDL type takes, so the refusal is the field's and not
-// the document's.
+// Every write refuses a null session before any row is looked for, so ids are NOWHERE
+// and inputs are the least each SDL type takes: the refusal is the field's, not the document's.
 
 const write = (source: string, variables?: Record<string, unknown>): ScopeProbe => ({
   source,
@@ -510,11 +506,8 @@ describe('a null session at every Mutation field', () => {
   it.each(Object.entries(MUTATION_PROBES))('%s: %o', expectOutcome);
 });
 
-// Every admin write carries the `admin` scope, which refuses a signed-in user before the service is
-// asked. The service refuses them too, and its refusal is the gate (CLAUDE.md rule 1), so a code alone
-// cannot say which check spoke: the scope answers `Forbidden`'s default message and `assertSiteAdmin`
-// one of its own, and the message is how this sweep knows the field refused on its own. Every write is
-// named as an admin write or one any session may reach, so a new write must say which it is.
+// Every admin write carries the `admin` scope, which refuses a signed-in user before the service is asked; the service refuses too, so the message tells which check spoke
+// (the scope answers `Forbidden`'s default message, `assertSiteAdmin` its own). Every write is named admin or any-session, so a new write must say which.
 const SCOPE_REFUSAL = new Forbidden().message;
 
 const ADMIN_WRITES: Record<string, AdminWrite> = {
@@ -672,10 +665,8 @@ describe('a signed-in non-admin at every admin write', () => {
   });
 });
 
-// The people page's writes are an admin's alone, and every other admin
-// write is curation, which a curator's scope admits as an admin's does. The
-// split is by what a write governs, so a write added to ADMIN_WRITES lands on
-// one side or the other without a list of its own.
+// The people page's writes are an admin's alone; every other admin write is curation, which a curator's scope admits.
+// A write added to ADMIN_WRITES lands on one side or the other.
 const PEOPLE_PAGE: readonly Governed[] = ['workspace creation', 'site role'];
 const governsPeople = (field: string) => PEOPLE_PAGE.includes(ADMIN_WRITES[field].governs);
 const PEOPLE_WRITES = Object.keys(ADMIN_WRITES).filter(governsPeople);

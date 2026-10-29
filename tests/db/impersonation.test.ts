@@ -8,9 +8,7 @@ import { importAuth } from '../support/auth-module';
 import { asManualFix } from '../support/db/privileges';
 import type { AuthInstance } from '../support/types';
 
-// Through Better Auth's real endpoints with the plugin registered: an
-// admin becomes the user they impersonate — that user's role, coven and
-// stamps — and Stop gives the admin their own session back
+// Through Better Auth's real endpoints with the plugin registered: an admin becomes the user they impersonate (role, coven, stamps) and Stop returns their own session
 // (claude-docs/auth/impersonation.md, "Impersonation").
 
 let sql: ReturnType<typeof postgres>;

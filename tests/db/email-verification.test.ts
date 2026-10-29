@@ -78,11 +78,7 @@ async function userRow(email: string) {
     { id: string; email_verified: boolean; updated_by: string; updated_at: Date } | undefined;
 }
 
-/**
- * Hands the row's stamp to the bootstrap user, so a write that restamps it is
- * visible: the create hook already stamps a new row as itself, and an assertion
- * that `updated_by` is the user's own id would pass with no update hook at all.
- */
+/** Hands the row's stamp to the bootstrap user so a restamping write is visible: an `updated_by` assertion would pass with no update hook at all. */
 async function restamp(email: string): Promise<void> {
   await asTouch(
     sql,
@@ -365,11 +361,9 @@ describe('the primary admin is promoted at first-party verification', () => {
     expect((await userRow(OWNER))?.updated_by).toBe(before.id);
   });
 
-  // The email page's change link: Better Auth's own change branch
-  // skips the session check, so src/lib/auth.ts gates it before the endpoint.
-  // Followed from the row's session it swaps the address, and the address
-  // being the bootstrap one, promotes — only the owner's inbox and the owner's
-  // session together can do that.
+  // The email page's change link: Better Auth's change branch skips the session check, so src/lib/auth.ts gates it.
+  // Followed from the row's session it swaps the address and, the address being the bootstrap one, promotes:
+  // only the owner's inbox and session together can do that.
   it('promotes at a change-email link to the bootstrap address from the row’s own session, and refuses one from none', async () => {
     const response = await signIn('microsoft', { sub: 'ms-7', email: STRANGER, verified: true });
     expectSignedIn(response);

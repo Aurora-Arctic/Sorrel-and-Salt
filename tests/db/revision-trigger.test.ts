@@ -6,11 +6,8 @@ import { useTestDatabase } from '../support/db/database';
 import { insertSpell } from '../support/db/insert-spell';
 import { makeSpell } from '../support/fixtures';
 
-// `revision` is a counter the database adds one to on every UPDATE,
-// so a save can name the revision it read and be refused if the row has moved
-// since (claude-docs/db/grimoire.md, "Revision"). One function,
-// `bump_revision()`, and each table carrying the column adds its own trigger
-// line in its own migration, as `set_updated_at` does.
+// `revision` is a counter the database adds one to on every UPDATE, so a save can name the revision it read and be refused if the row moved
+// (claude-docs/db/grimoire.md, "Revision"). Each table carrying the column adds its own trigger line to `bump_revision()`, as `set_updated_at` does.
 
 const FUNCTION = 'bump_revision';
 const TRIGGER = 'bump_revision';

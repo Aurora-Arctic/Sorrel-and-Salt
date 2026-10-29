@@ -7,10 +7,7 @@ import { FIXTURE_USERS } from '@/db/seed/standard';
 import { users } from '@/modules/identity/schema/users';
 import type { PrivilegeLedgerRow } from './types';
 
-// `users` fills `user_privilege_changes` itself. A change to `role` or
-// `can_create_workspace` writes one row per column, its route read from
-// `app.privilege_route` and refused when none was declared, so neither a
-// service nor a `psql` session can change a privilege and leave no trace
+// `users` fills `user_privilege_changes` itself: a change to `role` or `can_create_workspace` writes one row per column, its route read from `app.privilege_route` and refused when none is declared
 // (claude-docs/design-decisions/mb.194-privilege-ledger-by-trigger.md).
 
 let sql: ReturnType<typeof postgres>;
