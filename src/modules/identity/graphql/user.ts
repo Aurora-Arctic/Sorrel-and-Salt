@@ -14,9 +14,8 @@ import type { UserRow } from '../types';
 const UserRoleEnum = builder.enumType('UserRole', { values: userRole.enumValues });
 
 /**
- * A user's own business, not a co-member's: readable on one's own row and by
- * a site admin, refused with `Forbidden` otherwise — the second check behind
- * the service that chose the row (claude-docs/graphql/schema.md, "Auth scopes").
+ * A user's own business, not a co-member's: readable on one's own row and by a site admin, else `Forbidden`
+ * (claude-docs/graphql/schema.md, "Auth scopes").
  */
 const selfOrAdmin = (user: UserRow) => ({ self: user.id, admin: true });
 

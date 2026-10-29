@@ -20,10 +20,8 @@ declare const brand: unique symbol;
 const workspaceRole = cache(findWorkspaceRole);
 
 /**
- * Proof that `assertMembership` admitted this user to this workspace at this
- * role. Every workspace-scoped finder and `AuditWriter` method demands one and
- * scopes its own query by `workspaceId`, so forgetting the check is a compile
- * error rather than a missing runtime guard (DESIGN.md §8).
+ * Proof that `assertMembership` admitted this user to this workspace at this role. Finders and `AuditWriter` methods demand one,
+ * so forgetting the check is a compile error (DESIGN.md §8).
  */
 export type Membership = {
   readonly workspaceId: string;

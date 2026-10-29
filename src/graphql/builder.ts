@@ -14,18 +14,10 @@ import type { SchemaTypes } from './types';
 // service returns (DESIGN.md §7, "Four rules follow from dropping the Drizzle
 // plugin").
 
-/**
- * The most a query may cost, in the complexity plugin's units: 1 a field, and
- * a connection's selection times the page it will fetch. So two nested pages
- * of 10 are answered and two of 100 refused, however `first` is written.
- */
+/** The most a query may cost: 1 a field, and a connection's selection times its page size. */
 export const MAX_COST = 5000;
 
-/**
- * A builder under the schema's configuration. The app has one, `builder`
- * below; a factory so a test can build a throwaway schema under the same
- * scopes and scalars without registering types on the real one.
- */
+/** A builder under the schema's configuration; a factory so a test can build a throwaway schema. */
 export function createBuilder() {
   const created = new SchemaBuilder<SchemaTypes>({
     plugins: [ScopeAuthPlugin, ComplexityPlugin, RelayPlugin],

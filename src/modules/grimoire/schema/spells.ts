@@ -57,11 +57,8 @@ export const spells = pgTable(
       'spells_complete_has_title',
       sql`${table.status} <> 'complete' OR ${table.title} IS NOT NULL`,
     ),
-    // The grimoire search's fold, `unaccent_immutable($1) <% unaccent_immutable(title)`
-    // and the same over intent, reaches a trigram index only through an
-    // expression index over the same fold, as `ingredients_unaccent_trgm` does
-    // (claude-docs/db/grimoire.md, "The grimoire search"). One index over both
-    // columns serves either arm. Not partial: it reserves nothing.
+    // The grimoire search's fold reaches a trigram index only through an expression index over the same fold, as
+    // `ingredients_unaccent_trgm` does (claude-docs/db/grimoire.md, "Grimoire service and schema details"). Not partial: it reserves nothing.
     index('spells_unaccent_trgm').using(
       'gin',
       sql`unaccent_immutable(${table.title}) gin_trgm_ops`,

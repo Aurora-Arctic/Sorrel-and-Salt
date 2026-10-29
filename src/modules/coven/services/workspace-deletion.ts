@@ -4,11 +4,8 @@ import { Forbidden } from '../../../lib/errors';
 import type { Session } from '../../../lib/session';
 import { assertMembership } from './membership';
 
-// An owner deletes a workspace. The workspace row is soft-deleted
-// (marked deleted rather than removed) and nothing else is touched: every
-// member loses access because `findWorkspaceRole` stops finding a role in a
-// deleted workspace, while their membership rows stay, so a workspace
-// restored by hand comes back with its members.
+// An owner deletes a workspace. Only the workspace row is soft-deleted: members lose access because `findWorkspaceRole`
+// stops finding a role in it, while their membership rows stay, so a workspace restored by hand comes back with its members.
 
 /**
  * Deletes the workspace. The caller needs `workspace: delete`, which only

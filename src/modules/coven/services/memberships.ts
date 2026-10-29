@@ -6,17 +6,9 @@ import { workspaces } from '../schema/workspaces';
 import type { MembershipWithWorkspace } from '../types';
 
 /**
- * The live memberships of each user named, one answer per id in the order
- * given: a DataLoader's batch. A caller may list their own covens, and a site
- * admin may list anyone's, by workspace and role alone; any other id is
- * answered with a `Forbidden` in its own slot, and the rest of the batch
- * stands. Two queries whatever the batch size.
- *
- * An admin's reading widens this list and nothing else: it yields no
- * `Membership` proof, so a coven's ingredients and grimoire stay out of reach
- * (claude-docs/design-decisions/m9.19-admin-sees-user-covens.md). The role is
- * read off the session, as `identity`'s own admin check does, because
- * `coven` may import only that module's index, which does not export it.
+ * The live memberships of each user named, in order: a DataLoader's batch. A caller may list their own covens and a site admin anyone's,
+ * by workspace and role alone; any other id is a `Forbidden` in its own slot. The admin read yields no `Membership` proof
+ * (claude-docs/design-decisions/m9.19-admin-sees-user-covens.md); its role is read off the session because `coven` may import only `identity`'s index.
  */
 export async function membershipsOf(
   session: Session,
@@ -48,11 +40,7 @@ export function byCovenName(a: { name: string }, b: { name: string }): number {
   return a.name.localeCompare(b.name);
 }
 
-/**
- * The slug of the first coven the switcher lists for this account, or
- * `undefined` for one in none. The sign-in callback lands a member there
- * itself, so the browser makes no stop at `/coven` on the way.
- */
+/** The slug of the first coven the switcher lists for this account, or `undefined` for one in none. */
 export async function firstCovenSlugOf(session: Session): Promise<string | undefined> {
   const [memberships] = await membershipsOf(session, [session.userId]);
   if (!memberships || memberships instanceof Error) return undefined;

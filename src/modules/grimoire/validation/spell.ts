@@ -107,15 +107,8 @@ export const SpellInput = SpellFields.superRefine(titleRule)
   .superRefine(distinctSteps)
   .superRefine(categoryRule);
 
-// An update also says which revision of the spell it was written against, so
-// a save over someone else's change is caught (claude-docs/design-decisions/
-// m13.14-plan.md, "Server contract"). Null overwrites without checking: the
-// "Keep My Version" path. Required, never left out by accident. Revisions
-// count from 1.
-//
-// An update is partial: a field left out is unchanged and a null clears it.
-// The steps are the whole recipe when given, so a step left out of them is
-// removed, and left out altogether they are unchanged.
+// An update names the revision it was written against so a save over someone else's change is caught; null overwrites.
+// A field left out is unchanged and a null clears it; steps are the whole recipe when given (claude-docs/db/grimoire.md, "Grimoire service and schema details").
 export const UpdateSpellInput = SpellFields.extend({
   steps: z.array(SpellStepInput).optional(),
   expectedRevision: z

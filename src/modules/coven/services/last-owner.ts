@@ -13,10 +13,8 @@ import type { Membership } from './membership';
 export type LastOwnerRemedy = 'promote' | 'delete';
 
 /**
- * Refusal of a change that would leave a workspace with no owner. A
- * `Forbidden`, so it reaches the browser as one, but carrying the way out so
- * the members page can offer it: `promote` when other members exist (`promotable` lists
- * their user ids), `delete` when the owner is the only member.
+ * Refusal of a change that would leave a workspace with no owner. A `Forbidden` carrying the way out:
+ * `promote` (`promotable` lists the user ids) when other members exist, `delete` when the owner is alone.
  */
 export class LastOwner extends Forbidden {
   readonly remedy: LastOwnerRemedy;

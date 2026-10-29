@@ -31,12 +31,8 @@ const FALLBACK_SLUG = 'coven';
 const SLUG_ATTEMPTS = 5;
 
 /**
- * The first free slug for `name`: the plain slug, then `-2`, `-3` and so on,
- * so the same names made in the same order always get the same addresses.
- * A segment the router already answers, `new` for the create page,
- * counts as taken, so a coven named "New" is `new-2` and stays reachable.
- * Free as of this read; the unique index decides a race, and the caller
- * retries.
+ * The first free slug for `name`: the plain slug, then `-2`, `-3` and so on. A segment the router already answers
+ * (`new`) counts as taken. Free as of this read; the unique index decides a race and the caller retries.
  */
 async function freeSlug(name: string): Promise<string> {
   const base = slugify(name) || FALLBACK_SLUG;

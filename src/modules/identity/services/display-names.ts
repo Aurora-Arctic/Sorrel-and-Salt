@@ -10,12 +10,8 @@ import { inIdOrder } from '../../../lib/in-id-order';
 // (claude-docs/auth/display-names.md, "Display names").
 
 /**
- * The display name of each user named, one answer per id in the order given:
- * a DataLoader's batch. A user who holds or has held a seat in a coven the
- * caller sits in now is answered by name, a removed member's and a deleted
- * user's last included; anyone else is null, as is an id that is not one, so
- * a stranger's name cannot be read by asking for it. A site admin gets no
- * reach past their own covens. One query whatever the batch size.
+ * The display name of each user named, in order: a DataLoader's batch. Anyone who holds or has held a seat in a coven the caller sits in
+ * now is named; anyone else, or a non-id, is null. A site admin gets no reach past their own covens.
  */
 export async function displayNamesOf(
   session: Session,

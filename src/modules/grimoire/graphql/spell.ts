@@ -10,13 +10,9 @@ import type { SpellRow, SpellStepView } from '../types';
 import { IngredientRef, IngredientVariantRef, InventoryUnitEnum } from '@/modules/ingredients';
 import { CategoryRef, type CategoryRow } from '@/modules/vocabulary';
 
-// The grimoire over the wire: a coven's spells a page at a time, one
-// spell by id, and each spell's steps and its two kinds of category. Every
-// field a list could repeat per spell reads through a loader, so a page of
-// spells costs a fixed number of statements, not one per spell (CLAUDE.md
-// rule 9). The resolvers hold no check and no query: which spells a member
-// may read is the grimoire service's, which keeps a private spell its
-// author's in SQL (claude-docs/graphql/schema.md, "The grimoire").
+// The grimoire over the wire: a coven's spells a page at a time, one spell by id, each spell's steps and categories.
+// Fields a list could repeat per spell read through a loader (CLAUDE.md rule 9). The resolvers hold no check and no query;
+// the grimoire service keeps a private spell its author's in SQL (claude-docs/graphql/schema.md, "The grimoire").
 
 const SpellVisibilityEnum = builder.enumType('SpellVisibility', {
   description: 'Who reads a spell: its author alone, or every member of its coven.',
@@ -263,11 +259,7 @@ const UpdateSpellInputRef = builder.inputType('UpdateSpellInput', {
   }),
 });
 
-/**
- * A status, visibility, recipe or category list sent as null, read as left
- * out: none of the four can be cleared that way (an empty list clears the
- * last two), and GraphQL lets any nullable input field be null.
- */
+/** A status, visibility, recipe or category list sent as null is read as left out: none of the four can be cleared that way. */
 function unstated<
   T extends { status?: unknown; visibility?: unknown; steps?: unknown; categoryIds?: unknown },
 >(input: T) {

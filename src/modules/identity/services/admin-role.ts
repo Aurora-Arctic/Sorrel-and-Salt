@@ -11,19 +11,12 @@ import type { PrimaryAdminOutcome, SignInProfile } from '../types';
 // and claude-docs/auth/admin-bootstrap.md, "Admin bootstrap".
 
 /**
- * Google marks an address verified only for a domain its owner has proved to
- * Google, and Discord only for one it has mailed a code to. Facebook never
- * vouches in Better Auth's mapping; Microsoft's `common` tenant lets any Entra
- * tenant mint the claim (the 2023 "nOAuth" surface), so it is left out on
- * purpose rather than by omission.
+ * Google marks an address verified only for a domain its owner has proved, and Discord only for one it has mailed a code to.
+ * Facebook never vouches; Microsoft's `common` tenant lets any Entra tenant mint the claim ("nOAuth"), so it is left out on purpose.
  */
 const VOUCHING_PROVIDERS: ReadonlySet<string> = new Set(['google', 'discord']);
 
-/**
- * Promotes the signed-in user to admin when their account is the address
- * `primaryAdminEmail` names and this sign-in's provider vouches for it.
- * `session` is the user's own, so the write is stamped as them.
- */
+/** Promotes the signed-in user to admin when their account is `primaryAdminEmail` and this sign-in's provider vouches for it. */
 export async function promotePrimaryAdmin(
   session: Session,
   {
@@ -49,10 +42,8 @@ export async function promotePrimaryAdmin(
 }
 
 /**
- * Promotes the user who has just verified their address by our own mail, when
- * it is the address `primaryAdminEmail` names. The mail vouches only because
- * the link is honoured from a session holding the row, so the caller must have
- * checked that before this runs. `session` is the user's own.
+ * Promotes the user who has just verified their address by our own mail, when it is `primaryAdminEmail`. The caller must have checked
+ * that the link was honoured from a session holding the row, since that is what makes the mail vouch.
  */
 export async function promotePrimaryAdminAtVerification(
   session: Session,

@@ -61,21 +61,13 @@ const ROLE_ABILITIES: Record<WorkspaceRole, ReturnType<typeof ac.newRole>> = {
   owner,
 };
 
-/**
- * What a call is asking to do — `{ spell: ['create'] }`. Naming a resource or
- * an action the statements above do not declare is a compile error, so a typo
- * cannot read as a permission nobody holds.
- */
+/** What a call is asking to do, e.g. `{ spell: ['create'] }`. An undeclared resource or action is a compile error. */
 export type WorkspacePermission = RoleAuthorizeRequest<typeof statements>;
 
 /** The resource/action vocabulary itself, for the tests that pin the policy. */
 export const WORKSPACE_STATEMENTS = statements;
 
-/**
- * Whether `role` may do everything `permission` asks. Several resources in one
- * request are ANDed, which is better-auth's default and the safe reading of
- * "this call needs both".
- */
+/** Whether `role` may do everything `permission` asks; several resources in one request are ANDed. */
 export function rolePermits(role: WorkspaceRole, permission: WorkspacePermission): boolean {
   return ROLE_ABILITIES[role].authorize(permission).success;
 }

@@ -2,11 +2,8 @@ import { bigint, index, integer, pgTable, text, timestamp, uuid } from 'drizzle-
 import { users } from './users';
 import { idColumn } from '../../../db/schema-parts';
 
-// Better Auth's own adapter tables, generated with `usePlural: true` and
-// `generateId: 'uuid'` (src/lib/auth.ts); `users` lives in ./users.ts.
-// No audit columns and nothing writes them through `withAudit`, so the
-// `updated_at` trigger skips them. `sessions.impersonated_by` is the `admin`
-// plugin's column, not an audit id.
+// Better Auth's own adapter tables, generated with `usePlural: true` and `generateId: 'uuid'` (src/lib/auth.ts); `users` is in ./users.ts.
+// No audit columns, so the `updated_at` trigger skips them. `sessions.impersonated_by` is the `admin` plugin's column, not an audit id.
 
 export const sessions = pgTable(
   'sessions',

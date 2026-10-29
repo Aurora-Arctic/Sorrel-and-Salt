@@ -4,13 +4,9 @@ import { namedWrites } from '../../../db/table-marks';
 import { auditColumns, users } from './users';
 import { idColumn } from '../../../db/schema-parts';
 
-// The primary admin's switch on admin grants and revokes, kept as one row per
-// pause rather than a flag on a one-row settings table: a pause is opened by
-// an insert, so no migration has to seed a row before any user exists to
-// stamp it, and each pause keeps who began it (`created_by`) and who ended it
-// (claude-docs/design-decisions/mb.62-pause-ledger.md). Marked `namedWrites`:
-// reached only through the writer's pause and resume and the
-// open-pause finder.
+// The primary admin's switch on admin grants and revokes, one row per pause so no migration has to seed a row before any user
+// exists; each pause keeps who began it and who ended it (claude-docs/design-decisions/mb.62-pause-ledger.md).
+// Marked `namedWrites`: reached only through the writer's pause and resume and the open-pause finder.
 export const adminRoleChangePauses = namedWrites(
   pgTable(
     'admin_role_change_pauses',
