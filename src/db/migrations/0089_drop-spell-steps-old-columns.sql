@@ -1,7 +1,9 @@
 -- M13.9, the contract half of rule 10 for M13.1's renames and the step note's
 -- retirement: the `spell_ingredients` view, `spell_steps.layer_order` with its
--- unique index, `spell_steps.note` and `spells.instructions` are dropped, once
--- a release carrying M13.1 has reached production.
+-- unique index, `spell_steps.note` and `spells.instructions` are dropped. It
+-- ships in the same release as M13.1 and PR #1308 (the owner's call, 2026-10-29:
+-- the site has no real users yet, so the old deploy's few minutes of errors while
+-- this runs harm no one).
 --
 -- `position` is refilled from `layer_order` first, on every step where the two
 -- differ, not only where `position` is null: the deploy before M13.1 kept

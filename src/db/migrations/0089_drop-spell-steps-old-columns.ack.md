@@ -17,7 +17,7 @@ Destructive DDL acknowledged: this is the contract step of M13.1's renames and o
 
 ## Why no deploy breaks
 
-`migrate.yml` runs before `deploy.yml` promotes, so the risk in a drop is the deploy still serving while the migration runs. This task merges only after a release carrying M13.1 has reached production, so the deploy serving is M13.1's or later, and its Drizzle schema names `position`, `body` and `spells.note` instead of the old columns. The `NOT NULL` is safe for the same reason: the deploy before M13.1, which wrote `layer_order` alone and left `position` null, is gone. The tests named the four old objects in `PENDING_DROPS` until now, and that list is empty here.
+`migrate.yml` runs before `deploy.yml` promotes, so the risk in a drop is the deploy still serving while the migration runs. This task was to merge only after a release carrying M13.1 had reached production, so that the deploy serving would be M13.1's or later, whose Drizzle schema names `position`, `body` and `spells.note` instead of the old columns. The owner chose instead to ship it in the same release as M13.1 and PR #1308 (2026-10-29), because the site has no real users yet: production has no spell steps, and the deploy before M13.1 errors on its grimoire pages only for the minutes between `migrate.yml` finishing and `deploy.yml` promoting. The `NOT NULL` is safe because the refill above gives every step a `position` first. The tests named the four old objects in `PENDING_DROPS` until now, and that list is empty here.
 
 ## What is lost
 
