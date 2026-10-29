@@ -7,6 +7,24 @@ folkNames:
   - Virginian Juniper
   - Eastern Juniper
   - Red Juniper
+categories:
+  - Abundance
+  - Ancestor Work
+  - Dream Work
+  - Healing
+  - Hex-Breaking
+  - Legal Matters
+  - Justice
+  - Love
+  - Fidelity
+  - Prosperity
+  - Wealth
+  - Protection
+  - Psychic Work
+  - Purification
+  - Spirit Work
+  - Spirituality
+  - Transformation
 references:
   - source: wikipedia-juniperus-virginiana
     nameBasis: stated
@@ -15,6 +33,11 @@ references:
       - nomenclature
       - description
       - folkNames
+  - source: kynes-plants
+    locator: under "Cedar"
+    nameBasis: stated
+    supports:
+      - categories
 variants:
   - form: Wood
     description: The aromatic heartwood is durable and repels moths. Its smoke is burned before ceremonies, and some nations use the wood ceremonially.
@@ -24,6 +47,7 @@ variants:
         supports:
           - form
           - description
+seedUpdate: f5ac7e5510ba3c822406b79635e2bd5585ac321f8b8d0be930d357d1e20108e7
 ---
 
 # Eastern Red Cedar

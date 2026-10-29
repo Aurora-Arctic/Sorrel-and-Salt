@@ -13,6 +13,24 @@ folkNames:
   - Kulanja
   - Khulanjan
   - Rasna
+categories:
+  - Awareness
+  - Banishing
+  - Challenges
+  - Consecration
+  - Blessing
+  - Courage
+  - Hex-Breaking
+  - Legal Matters
+  - Justice
+  - Luck
+  - Negativity
+  - Prosperity
+  - Wealth
+  - Secrets
+  - Sex
+  - Sexuality
+  - Success
 references:
   - source: wikipedia-alpinia-galanga
     locator: lead; Names; Description; Uses
@@ -22,6 +40,11 @@ references:
       - description
       - folkNames
       - colours
+  - source: kynes-plants
+    locator: under "Galangal"
+    nameBasis: stated
+    supports:
+      - categories
 variants:
   - form: Root
     references:
@@ -29,6 +52,7 @@ variants:
         nameBasis: stated
         supports:
           - form
+seedUpdate: fa594a485d8972bd449c0ef3bb4580db839eead8a1a38b14103b97d5c645dcce
 ---
 
 # Greater Galangal

@@ -6,6 +6,13 @@ toxic: true
 safetyNotes: Grieve heads the page "Poison!" and says the plant ranks as a dangerous irritant poison; an overdose of the root can cause death, and the berries act as an emetic, so children should be warned against them. Wikipedia says all parts of the plant, including the tubers, are poisonous because of their saponin content, and that topical use may cause painful blisters.
 folkNames:
   - Blackeye Root
+categories:
+  - Abundance
+  - Fertility
+  - Luck
+  - Prosperity
+  - Wealth
+  - Protection
 references:
   - source: grieve-bryony-black
     nameBasis: resolved
@@ -24,6 +31,11 @@ references:
       - description
       - safetyNotes
       - toxic
+  - source: kynes-plants
+    locator: under "Bryony"
+    nameBasis: stated
+    supports:
+      - categories
 variants:
   - form: Root
     description: The large, fleshy tuber is black outside and exceedingly acrid. Grieve calls it an old cathartic and a most dangerous remedy taken internally.

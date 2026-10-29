@@ -9,6 +9,14 @@ folkNames:
   - Black Alder
   - Glossy Buckthorn
   - Breaking Buckthorn
+categories:
+  - Banishing
+  - Protection
+  - Hex-Breaking
+  - Legal Matters
+  - Justice
+  - Negativity
+  - Manifestation
 references:
   - source: grieve-buckthorn-alder
     nameBasis: resolved
@@ -34,6 +42,11 @@ references:
       - folkNames
       - description
       - safetyNotes
+  - source: kynes-plants
+    locator: under "Buckthorn"
+    nameBasis: stated
+    supports:
+      - categories
 variants:
   - form: Bark
     description: The dried bark of the young trunk and branches, kept at least a year, is the part used. Grieve describes it as papery quills, greyish or blackish-brown outside and crimson within, which colours the saliva yellow when chewed.
