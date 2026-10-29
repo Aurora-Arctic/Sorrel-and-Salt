@@ -62,6 +62,8 @@ export type SpellBuilderSpell = {
 export interface SpellBuilderProps {
   /** The coven the spell is written in. */
   workspaceId: string;
+  /** The coven's URL segment, for In Coven Inventory's Quick Look to link the entry's page; left out, the lines have no Quick Look. */
+  covenSlug?: string;
   /** The signed-in member, whose browser copy of the draft is the one offered back; left out, no copy is kept. */
   userId?: string;
   /** A saved spell to edit; left out, the builder opens empty and its first save creates one. */

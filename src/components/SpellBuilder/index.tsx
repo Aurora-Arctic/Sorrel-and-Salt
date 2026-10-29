@@ -218,6 +218,7 @@ const fieldsRefused = (): GraphQLClientError =>
 
 const SpellBuilder = ({
   workspaceId,
+  covenSlug,
   userId,
   spell,
   onCreated,
@@ -648,6 +649,7 @@ const SpellBuilder = ({
                   </div>
                   <JarAside
                     ready={jarReady}
+                    look={covenSlug === undefined ? undefined : { workspaceId, covenSlug }}
                     descriptionField={
                       <TextField<SpellBuilderValues>
                         name="jarDescription"
