@@ -243,11 +243,9 @@ const Page = ({ children }: { children: ReactNode }) => (
   <main className="page-column">{children}</main>
 );
 
-// The cupboard choices beside the title. The workshop has no API, so
-// a press answers with the generic error, which shows in the failure callout
-// under the button. A member sees the Annotate icon, More (Make It
-// Ours) and the Remove bin once the coven holds the entry; a viewer sees none.
-// Adding is the plus's (AddIcon).
+// The cupboard choices beside the title. With no API, a press answers with the
+// generic error in the failure callout. A member sees Annotate, More and the Remove
+// bin once the coven holds the entry; a viewer sees none.
 const CUPBOARD = {
   workspaceId: nextId(),
   covenSlug: FIXTURE_COVEN.slug,
@@ -280,10 +278,9 @@ const Entry = (props: Partial<IngredientEntryProps>) => (
   </ShellFrame>
 );
 
-// The compendium's public page, `src/app/(public)/layout.tsx` giving it a frame by who looks: a
-// visitor with no session gets the site name and Sign In; someone signed in gets the shell's bar
-// without a coven's row. A state that only an account reaches (a held entry, an Edit pencil) is
-// drawn signed in; the rest are drawn as the visitor sees them.
+// The compendium's public page, framed by `src/app/(public)/layout.tsx`: a visitor
+// gets the site name and Sign In, an account the shell's bar. States only an
+// account reaches (a held entry, an Edit pencil) are drawn signed in.
 const PublicEntry = (props: Partial<IngredientEntryProps>) => (
   <ShellFrame area="none" open="/compendium" signedOut={!props.heldInCovens && !props.edit}>
     <Page>
@@ -374,7 +371,7 @@ const nothingRecordedNode = (
   />
 );
 
-// A compendium entry this coven holds in its cupboard, with nothing changed: marked Compendium, and no Local badge.
+// A compendium entry this coven holds, unchanged: marked Compendium, no Local badge.
 const fromTheCompendiumNode = <Entry detail={{ ...FULL, cupboardEntry: cupboardEntry() }} />;
 
 // The same, annotated: the coven's label heads the page with the compendium's
@@ -519,11 +516,9 @@ const localReplacingCompendiumEntryNode = (
   />
 );
 
-// Four compendium entries share the formal name: the first three, then See All
-// to the compendium search.
-// An own entry with no formal name: the Similar block, a read-only list of the
-// compendium entries it might be. The second title is long, to show it wrapping
-// with the icon never alone on a line.
+// Four compendium entries share the formal name: three, then See All. Then an own
+// entry with no formal name: the Similar block, a read-only list of compendium
+// entries it might be. The second title is long, to wrap the icon with text.
 const similarInTheCompendiumNode = (
   <Entry
     similar={{
@@ -721,10 +716,9 @@ const detailsWithStockDialogNode = (
 // From the public compendium, to anyone but a curator: the same summary, and
 // only the page link.
 const detailsFromCompendiumNode = <Details detail={FULL} {...PUBLIC_LINKS} />;
-// From the public compendium, to a member of four covens that hold the entry: a
-// last block, In Your Cupboards, links the entry in each by the coven's name, each
-// link led by the In Your Cupboard shelf. The
-// long name wraps, its shelf level with its first line.
+// From the public compendium, to a member of four covens that hold the entry: the
+// last block, In Your Cupboards, links the entry in each coven by name, led by the
+// In Your Cupboard shelf. The long name wraps, its shelf level with its first line.
 const HOLDING = [
   { id: FIXTURE_WORKSPACE_ID, ...FIXTURE_COVEN },
   { id: '00000000-0000-4000-8000-0000000000c2', slug: 'testwort-circle', name: 'Testwort Circle' },
@@ -851,10 +845,9 @@ const detailsToxicNode = (
     pageHref={'/compendium/ingredients/fixture-banewort' as Route}
   />
 );
-// The head with a name that wraps: the safety
-// badge and the Edit pencil end the name's last line where they fit, else drop under it
-// (pencil first); the formal name stands on its
-// own line below, and the provenance badges in a row of their own, New first.
+// A head with a name that wraps: the safety badge and the Edit pencil end the
+// last line where they fit, else drop under it (pencil first). The formal name
+// stands on its own line below, then the provenance badges, New first.
 const detailsLongNameNode = (
   <Details
     detail={{

@@ -4,9 +4,8 @@ import ReceivedInvitations from '.';
 import type { ReceivedInvitationEntry, ReceivedInvitationsProps } from './types';
 
 // Render-only; behaviour is asserted in tests/components/ReceivedInvitations.
-// Each story sits in the account page's Invitations section as the page writes
-// it, a panel in the narrow frame under its head: the list's stacked rows
-// depend on the panel's width.
+// Each story sits in the account page's Invitations section, a panel in the narrow
+// frame, because the list's stacked rows depend on the panel's width.
 const meta = {
   title: 'Account / Invitations Received',
 } satisfies Meta;

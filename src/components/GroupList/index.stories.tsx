@@ -8,12 +8,9 @@ import GroupList from '.';
 import { slugify } from '../../lib/slugify';
 import { groupsHref } from './href';
 
-// Render-only; behaviour is asserted in tests/components/GroupList. Three of
-// the seed's colour pairs, copied from src/db/seed/category-groups.ts, which a
-// component may not import (CLAUDE.md rule 1), on invented groups. The stories
-// of the bare list are the list alone; the phone stories stand for the page, which
-// draws the list only inside its tabbed page (`GroupPage`, `tabbed-layout.tsx`):
-// the admin layout's frame, the heading and tabs, and the tab's Add.
+// Render-only; behaviour is asserted in tests/components/GroupList. Three seed
+// colour pairs copied from src/db/seed/category-groups.ts (a component may not
+// import it, CLAUDE.md rule 1). The phone stories stand for the `GroupPage` page.
 const meta = {
   title: 'Admin / Group List',
 } satisfies Meta;

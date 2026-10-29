@@ -6,10 +6,9 @@ import MenuButton from '.';
 import { sectionsFor } from './sections';
 import type { MenuButtonItem } from './types';
 
-// Render-only; the keys and the closing are asserted in
-// tests/components/MenuButton/index.test.tsx. The entry page's More menu, a
-// link first and the destructive choice last; the button busy; and the
-// Annotate dialog's More, opening above from a dialog's foot.
+// Render-only; keys and closing are asserted in tests/components/MenuButton/index.test.tsx.
+// The entry page's More menu (a link first, the destructive choice last), the
+// button busy, and the Annotate dialog's More, opening above from a dialog's foot.
 const meta = {
   title: 'Forms / Menu Button',
 } satisfies Meta;
@@ -98,8 +97,8 @@ const SectionedRow = ({ viewing }: { viewing: 'compendium' | 'coven' }) => (
   </div>
 );
 
-// One story with a control to choose the state: some open the menu on a tall frame, and one
-// sits at the window's foot, too big to sit beside the others (claude-docs/workshop.md, rule 5).
+// One control chooses the state (claude-docs/workshop.md, rule 5); some open the
+// menu on a tall frame and one sits at the window's foot.
 const STATES: Record<string, ReactNode> = {
   Closed: <Row />,
   Pending: <Row busy />,

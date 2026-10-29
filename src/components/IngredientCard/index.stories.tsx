@@ -151,11 +151,9 @@ const noFormalNameNode = (
   </IngredientCard>
 );
 
-// Two buttons in the foot, right-aligned beneath the jar lines. Each
-// sits above the card's link, so pressing one never opens the entry page. In the
-// app each opens the stock dialog; here each calls the handler the story was
-// given (logged in the Actions panel) and the line beneath the card names the
-// last one pressed.
+// Two buttons in the foot beneath the jar lines, each above the card's link so a
+// press never opens the entry page. Each calls its handler (logged in Actions);
+// the line beneath names the last one pressed.
 const withActionsNode = (
   onUse: () => void,
   onRestock: () => void,

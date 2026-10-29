@@ -5,11 +5,9 @@ import { ENTRIES, jarLinesOf } from './story-fixtures';
 import IngredientCardList from '.';
 import { route } from '../../../.storybook/route';
 
-// Render-only; the wrapping and the density are asserted in tests/components/IngredientCardList.
-// The same nine entries in every grid, for the two pages that use the list: the public
-// compendium (no marks of whose, no jars, no actions) and the coven's Ingredients
-// page (marks, jar lines, Edit and Delete). The preview ignores `meta.width`, so set
-// the viewport to see the columns change.
+// Render-only; wrapping and density are asserted in tests/components/IngredientCardList.
+// The same nine entries for the public compendium (no marks, jars or actions) and
+// the coven's Ingredients page. The preview ignores `meta.width`; set the viewport.
 const meta = {
   title: 'Ingredients / Ingredient Card List',
 } satisfies Meta;

@@ -4,9 +4,8 @@ import { usePressOnMount } from '../../../.storybook/press';
 import { FIXTURE_WORKSPACES, ShellFrame } from '../../../.storybook/shell-frame';
 
 // Render-only; behaviour is asserted in tests/components/AppShell. Each story
-// draws the shell as a layout does (.storybook/shell-frame.tsx), around a stub
-// page that wraps and names itself as the real page of that area does. The
-// workshop's router goes nowhere, so a press only closes a list.
+// draws the shell as a layout does (.storybook/shell-frame.tsx) around a stub
+// page. The workshop's router goes nowhere, so a press only closes a list.
 const meta = {
   title: 'Shell / App Shell',
 } satisfies Meta;
@@ -60,16 +59,9 @@ const MenuOpened = ({ children }: { children: ReactNode }): ReactElement => {
 const ONE_COVEN = [FIXTURE_WORKSPACES[0]];
 const CURATOR = { name: 'Fixture Curator', canCurate: true };
 
-// Each state is the whole shell around a stub page, so one control chooses it.
-// Member: the switcher names the coven, three to choose from and Create Coven
-// last. Admin Page: Your Covens and Admin in the bar, "Admin" in the row, and
-// Add Ingredient as a split button (the compendium and each coven). Curator
-// Page: the same without People in the row's nav. Add Menu Open: the menu's
-// two groups, with the third coven, where the viewer may not write, disabled.
-// Your Coven, singular, is the label for a curator in one coven. Create Page:
-// the switcher alone, since the page belongs to no one coven. Account Page: no
-// context row. Invitations Waiting: the account menu's count. Unverified: the
-// brand as text, the account menu and the theme disc, and nothing else.
+// One control chooses the whole shell around a stub page. Add Menu Open: the coven
+// where the viewer may not write is disabled. Create Page: the switcher alone.
+// Account Page: no context row. Unverified: brand, account menu and theme disc only.
 const STATES: Record<string, ReactNode> = {
   Member: (
     <ShellFrame>

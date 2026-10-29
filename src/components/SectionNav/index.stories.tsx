@@ -5,10 +5,9 @@ import { WorkshopPathname } from '../../../.storybook/navigation';
 import AdminNav from '../AdminNav';
 import CovenNav from '../CovenNav';
 
-// Render-only; behaviour is asserted in tests/components/SectionNav. The
-// workshop's `usePathname` stub answers whatever the wrapping provider says.
-// The shape is chosen by the window's width, so the narrow stories set the
-// workshop's own width (`meta.width`) rather than a frame's.
+// Render-only; behaviour is asserted in tests/components/SectionNav. The workshop's
+// `usePathname` stub answers whatever the wrapping provider says. The window's
+// width chooses the shape, so narrow stories set `meta.width`, not a frame's.
 const meta = {
   title: 'Navigation / Section Nav',
 } satisfies Meta;

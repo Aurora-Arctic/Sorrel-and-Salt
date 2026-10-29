@@ -5,10 +5,9 @@ import { AdminFrame as InAdminLayout } from '../../../.storybook/admin-frame';
 import AddAction from '../../app/(shell)/admin/add-action';
 import PageHeader from '.';
 
-// Render-only: a heading and its action are the whole component, so the
-// story is for the look, at desktop and, by the toolbar's viewport menu, at a phone's width, where the action
-// is a plus beside the heading, with its label as a tip. Each sits in the
-// admin layout as it is (`AdminFrame`; claude-docs/styling.md, "The page column").
+// Render-only: a heading and its action are the whole component, so this is for the
+// look at desktop and phone width (toolbar viewport menu), where the action is a
+// plus with its label as a tip. Each sits in `AdminFrame` (claude-docs/styling.md, "The page column").
 const meta = {
   title: 'Layout / Page Header',
 } satisfies Meta;

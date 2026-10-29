@@ -5,10 +5,9 @@ import { HeldMark } from '../CompendiumCards/held-mark';
 import IconTip, { CheckIcon, PlusIcon } from '../IconTip';
 import Spinner from '../Spinner';
 
-// Render-only; the names, the menu and the busy plus are asserted in tests/components/AddIcon and
-// tests/components/CompendiumCards/add-icon.test.tsx. The workshop serves no /api/graphql, so a
-// press shows its refusal; Busy and Added are the plus's markup in those states, since only a
-// press reaches them. The names are invented.
+// Render-only; behaviour is asserted in tests/components/AddIcon and
+// tests/components/CompendiumCards/add-icon.test.tsx. The workshop serves no
+// /api/graphql, so a press shows its refusal. Names are invented.
 const meta = {
   title: 'Surfaces / Add Icon',
 } satisfies Meta;
@@ -62,12 +61,9 @@ const returning = (
   </IconTip>
 );
 
-// One coven: a press adds there at once. Two covens: the plus is a menu of both, and the first
-// already holds the entry, so it is disabled and marked in its cupboard. Pending: the spinner in
-// the plus's place, and the plus refusing presses. Added: the check drawn along its stroke, which
-// holds, then fades back to the plus. Returning: the check and the plus stacked, one fading into
-// the other. Held: every coven holds it, so CompendiumCards' check stands in the plus's place,
-// tipped In Every Cupboard and the entry's name.
+// One coven: a press adds at once. Two: the plus is a menu and the first, which
+// holds the entry, is disabled. Pending: spinner. Added: the check draws, holds,
+// fades to the plus. Returning: check and plus cross-fade. Held: every coven holds it.
 export const States: Story = {
   render: () => (
     <StatesGrid

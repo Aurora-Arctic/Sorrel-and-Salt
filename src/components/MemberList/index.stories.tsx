@@ -5,10 +5,9 @@ import ListFrame, { ListBody } from '../ListFrame';
 import Notice from '../Notice';
 import type { MemberListEntry } from './types';
 
-// Render-only; behaviour is asserted in tests/components/MemberList. A
-// member's view leaves the addresses out; an owner's draws them. The
-// controls are plain buttons standing in for the page's own, styled as the
-// admin user table styles its own: Change Role quiet, Remove destructive.
+// Render-only; behaviour is asserted in tests/components/MemberList. A member's
+// view leaves the addresses out; an owner's draws them. The controls are plain
+// buttons styled as the admin user table's: Change Role quiet, Remove destructive.
 const meta = {
   title: 'Coven / Member List',
 } satisfies Meta;

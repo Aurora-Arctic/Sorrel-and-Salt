@@ -5,12 +5,9 @@ import type { CompendiumFacetCounts } from '../CompendiumList/types';
 import FacetPanel, { WIDE } from '.';
 import type { FacetPanelFilter } from './types';
 
-// Render-only; behaviour is asserted in tests/components/FacetPanel. Invented values.
-// A change is held, not applied (the list's page holds it until Apply Filters or a close),
-// and marks the chips "loading" for a moment, as the live counts on their way do. The
-// counts themselves do not follow the choices; they are fixed here. A value counting
-// nothing is left out of its list unless chosen. Narrow the preview below the tablet
-// width for the modal sheet.
+// Render-only; behaviour is asserted in tests/components/FacetPanel. A change is held
+// until Apply Filters or a close, and marks the chips "loading" briefly. Counts are
+// fixed. Narrow the preview below the tablet width for the modal sheet.
 const meta = {
   title: 'Ingredients / Facet Panel',
 } satisfies Meta;
@@ -60,7 +57,7 @@ const FACETS: CompendiumFacetCounts = {
   withoutForms: 4,
 };
 
-// The coven's counts: Source's two values, one at zero as Toxic's may be, the In Stock count and the Low Stock Only count.
+// The coven's counts: Source's two values (one at zero), In Stock and Low Stock Only.
 const COVEN_FACETS: CompendiumFacetCounts = {
   ...FACETS,
   source: [
@@ -222,8 +219,8 @@ const sourceStuckNode = (
 // The admin list also has the No Refs switch, after Toxic on the Forms row.
 const adminNode = <Panel admin start={{ ...NONE, withoutReferences: true }} />;
 
-// The coven's list also has a Source chip, the In Stock switch and the Low Stock Only switch, on the Forms row beside Toxic.
-// Their values count on the Filters button, so the three chosen here make 3.
+// The coven's list adds a Source chip and the In Stock and Low Stock Only
+// switches on the Forms row. Their values count on the Filters button (3 here).
 const covenNode = (
   <Panel
     facets={COVEN_FACETS}

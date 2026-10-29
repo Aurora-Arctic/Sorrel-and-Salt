@@ -86,12 +86,9 @@ const deity = (name: string, groupName: string, description: string) => {
   };
 };
 
-// The paging, narrowing, no-match and empty states are the list's own and are
-// the same for every kind, so only the categories show them; the other kinds
-// show what differs: the form's icon, the deity's tradition filter, the flat
-// kinds' missing group column and filter.
-// The Categories tab as the route draws it (`/admin/categories`): the app shell, the admin row, the
-// heading with its toggle and Add Category, then the Name and Group filters over the list.
+// Paging, narrowing, no-match and empty states are the same for every kind, so
+// only the categories show them; the other kinds show what differs. The
+// Categories tab as `/admin/categories` draws it, with the shell and admin row.
 const defaultNode = (
   <AdminTabbedFrame
     shell
@@ -232,11 +229,9 @@ const celestialBodiesNode = (
   />
 );
 
-// Inside the admin layout and the Categories page with its Categories tab
-// open, as the page draws it; at a phone's width, the tab's Add
-// at its own width beneath the heading, the filter stacked and each row a
-// card. The page and the filter are the real `TabbedPage` and
-// `FilterForm`, so these show what the sign-off settled.
+// Inside the admin layout and the Categories page, as the page draws it. At a
+// phone's width the tab's Add sits beneath the heading, the filter stacks and
+// each row is a card. `TabbedPage` and `FilterForm` are the real ones.
 const CategoriesPage = () => (
   <AdminTabbedFrame
     page="categories"
@@ -250,10 +245,9 @@ const CategoriesPage = () => (
   </AdminTabbedFrame>
 );
 
-// The same page with a filter applied and the filtered list on its way: the filter row greyed and off, and the tabs' skeleton,
-// rows and pager, in place of the list. The workshop's router goes nowhere,
-// so a list navigation provided above the page holds one on its way, as the
-// tabbed page's own Loading stories do.
+// The same page with a filter applied and the list on its way: filter row greyed
+// and off, skeleton rows and pager in place of the list, held by a list
+// navigation provided above the page.
 const ON_ITS_WAY = { pending: true, searching: false, go: () => undefined };
 
 const PendingView = () => (

@@ -117,10 +117,9 @@ export const Open: ChosenStory = {
   render: ({ state }) => <div key={String(state)}>{state}</div>,
 };
 
-// The coven's index page as src/app/(shell)/coven/[slug]/page.tsx draws it, in the app shell:
-// eyebrow, title and the sentence naming the caller's role, the jump menu, Contents (Members only
-// for a role that may read it), Your Membership, and for an owner Delete This Coven. A story, not
-// a copy: the page itself reads the session, so this is its markup with fixture props.
+// The coven's index page as src/app/(shell)/coven/[slug]/page.tsx draws it, in the
+// shell: role sentence, jump menu, Contents (Members only for a role that may read
+// it), Your Membership, and Delete This Coven for an owner. Fixture props.
 const ROLE_NAME = { owner: 'an owner', member: 'a member', viewer: 'a viewer' } as const;
 type Role = keyof typeof ROLE_NAME;
 

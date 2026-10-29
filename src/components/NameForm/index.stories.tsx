@@ -4,10 +4,9 @@ import { ShellFrame } from '../../../.storybook/shell-frame';
 import PageNav from '../PageNav';
 import NameForm from '.';
 
-// Render-only; behaviour is asserted in tests/components/NameForm. The
-// component talks to the network only on submit, so nothing is mocked — a
-// submit in the workshop fails into the alert region. The TanStack Query
-// client comes from the workshop's global provider (.storybook/components.tsx).
+// Render-only; behaviour is asserted in tests/components/NameForm. Nothing is
+// mocked: a submit fails into the alert region. The TanStack Query client comes
+// from the workshop's global provider (.storybook/components.tsx).
 const meta = {
   title: 'Account / Name Form',
 } satisfies Meta;

@@ -21,10 +21,9 @@ const listed = (user: Omit<UserListEntry, 'openHref' | 'heading'>): UserListEntr
   },
 });
 
-// Render-only; behaviour is asserted in tests/components/UserList. The filter
-// and the pager reach `/admin/users`, and each name's privilege changes icon
-// `/admin/privilege-changes`, neither of which the workshop serves;
-// hover or focus an icon to see its tip.
+// Render-only; behaviour is asserted in tests/components/UserList. The filter, the
+// pager and each name's privilege changes icon reach `/admin/users` and
+// `/admin/privilege-changes`, which the workshop does not serve.
 const meta = {
   title: 'Admin / User List',
 } satisfies Meta;
@@ -69,17 +68,13 @@ const USERS: readonly UserListEntry[] = [
   }),
 ];
 
-// Each story sits inside the admin layout's frame and the People page, its
-// Users tab open, so the workshop shows what the page shows: the switch on
-// admin changes, where a story gives it, beside the heading as the tab's
-// action.
+// Each story sits inside the admin layout's frame and the People page, Users tab
+// open, with the switch on admin changes beside the heading where a story gives it.
 
-// The page as /admin/users draws it where impersonation is registered: the seven columns, the facts no control
-// changes muted, Impersonate ruled in red at the right. Impersonate and Pause
-// Admin Changes each ask first; in the workshop the call reaches no server,
-// so confirming shows the refusal.
-// Drawn inside the app shell, so the phone shows the header and the bottom bar the admin nav
-// moves to; the other states draw the admin frame alone.
+// The page as /admin/users draws it where impersonation is registered: seven columns,
+// facts no control changes muted, Impersonate ruled in red at the right. Impersonate
+// and Pause Admin Changes each ask first; the call reaches no server, so confirming
+// shows the refusal. Drawn in the app shell, so the phone shows the bottom bar.
 const defaultNode = (
   <ShellFrame area="admin">
     <TabbedPage
@@ -143,7 +138,7 @@ const PageTwo = (): ReactElement => (
 
 const middlePageNode = <PageTwo />;
 
-// Every filter in use, which the sentence names. Spread, since a `role` attribute reads to the linter as an ARIA role.
+// Every filter in use, which the sentence names. Spread, since a `role` attribute reads as an ARIA role.
 const EVERY_FILTER = { query: 'nobody', role: 'admin', awaitingApproval: true } as const;
 
 const roleFilterNode = (
@@ -196,11 +191,10 @@ const unverifiedApprovalNode = (
   </AdminTabbedFrame>
 );
 
-// The primary admin, labelled, its Change Role in view but
-// unusable with the reason beside it; every other row's Change Role opens its
-// choice of the roles the user does not hold, a promotion warning on Bo's
-// unverified address. Dee is a curator, in bold as an admin is, with no
-// coven-creation control, since every curator holds it.
+// The primary admin, labelled, with Change Role in view but unusable (reason
+// beside it). Every other row's Change Role opens the roles the user lacks, with
+// a promotion warning on Bo's unverified address. Dee is a curator, in bold as an
+// admin is, with no coven-creation control since every curator holds it.
 const adminRolesNode = (
   <AdminTabbedFrame page="people">
     <UserList
@@ -236,8 +230,8 @@ const adminRolesNode = (
   </AdminTabbedFrame>
 );
 
-// The switch as the Users tab's action beside the heading, as /admin/users draws it. Paused, to the primary admin: the warning and a
-// usable Resume, and every row's control usable, since the pause exempts it.
+// The switch as the Users tab's action beside the heading, as /admin/users draws it.
+// Paused: the warning and a usable Resume, and every row's control usable.
 const adminChangesPausedNode = (
   <AdminTabbedFrame page="people" action={<PauseControl paused canToggle />}>
     <UserList

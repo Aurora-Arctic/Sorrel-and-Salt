@@ -15,10 +15,9 @@ import Modal, {
 import { RouteModalContext } from './route-modal-provider';
 import { usePressOnMount } from '../../../.storybook/press';
 
-// Render-only; behaviour is asserted in tests/components/Modal. The owner
-// closes it by unmounting it, so the story keeps an Open button to bring it
-// back after Close or Escape; a story with no state of its own stands on
-// `Reopenable` (.storybook/reopenable.tsx), which does the same.
+// Render-only; behaviour is asserted in tests/components/Modal. The owner closes
+// it by unmounting it, so the story keeps an Open button; a story with no state of
+// its own stands on `Reopenable` (.storybook/reopenable.tsx).
 const meta = {
   title: 'Surfaces / Modal',
 } satisfies Meta;
@@ -99,10 +98,9 @@ const WideView = () => {
 const wideNode = <WideView />;
 
 /**
- * An edit dialog's head: the eyebrow says what it does to what
- * kind, the title which entry, by the name it was saved under, and a
- * qualifier after it, here a binomial in its italics. The name wraps rather
- * than pushing the × out, as the phone stories show.
+ * An edit dialog's head: the eyebrow says the action, the title which entry, and a
+ * qualifier follows it (here a binomial in italics). The name wraps rather than
+ * pushing the × out, as the phone stories show.
  */
 const EditingView = () => {
   const [open, setOpen] = useState(true);
@@ -161,11 +159,9 @@ const OpenedByAButtonOpenView = () => {
 };
 const openedByAButtonOpenNode = <OpenedByAButtonOpenView />;
 
-// The address-driven wrapper the admin pages open: the workshop's router goes
-// nowhere, but reports where it was sent (.storybook/navigation.ts), which
-// `Reopenable` answers by unmounting it, as the changed address does in the
-// app. Close, Escape and Done fade it out and leave Open Again. Done stands
-// for a form's save.
+// The address-driven wrapper the admin pages open. The workshop's router reports
+// where it was sent (.storybook/navigation.ts) and `Reopenable` unmounts it. Close,
+// Escape and Done fade it out and leave Open Again; Done stands for a save.
 const openedByItsAddressNode = (
   <Reopenable>
     {() => (
@@ -186,10 +182,9 @@ const openedByItsAddressNode = (
   </Reopenable>
 );
 
-// A route modal pressed open while its page is on its way: the
-// pressed row's head over the form's skeleton, through a provider whose
-// navigation never arrives, since the workshop's router goes nowhere. Close
-// still leaves it, as the press being forgotten would in the app.
+// A route modal pressed open while its page is on its way: the pressed row's head
+// over the form's skeleton, through a provider whose navigation never arrives.
+// Close still leaves it.
 const LoadingView = () => (
   <Reopenable>
     {() => (
@@ -209,11 +204,9 @@ const LoadingView = () => (
 const loadingNode = <LoadingView />;
 
 /**
- * A form with a change, asked on opening whether to discard it, as Cancel,
- * Close, Escape or a click outside would ask: over the form, which
- * is dimmed and held until it is answered. Escape, Close or a click outside
- * now flashes it, as each try while asking does. Keep Editing goes back to
- * the form, whose Cancel asks again; Discard Changes closes.
+ * A form with a change, asked on opening whether to discard it, as Cancel, Close,
+ * Escape or a click outside would ask. The form is dimmed until answered, and each
+ * further try flashes the question. Keep Editing returns; Discard Changes closes.
  */
 function ChangedForm({ close }: { close: () => void }) {
   const [name, setName] = useState('Testwort Renamed');
@@ -354,10 +347,9 @@ const PICKS = asSlugs(GROUP_NAMES.form.slice(0, 3)).map(({ slug, name }) => ({
 }));
 
 /**
- * A form asked to confirm a delete over itself: Delete, destructive, and
- * Keep It, the focus on it. A press of Delete leaves it busy, "Deleting",
- * as a delete in flight does, since this one never lands; Keep It closes
- * the question.
+ * A form asked to confirm a delete over itself: Delete (destructive) and Keep It,
+ * focused. Delete leaves it busy, "Deleting", since this one never lands; Keep It
+ * closes the question.
  */
 function DeletingForm() {
   const [asked, setAsked] = useState(true);

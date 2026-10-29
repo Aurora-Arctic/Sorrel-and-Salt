@@ -10,11 +10,9 @@ const meta = {
 export default meta;
 type Story = StoryObj<{ state?: import('react').ReactNode }>;
 
-// Follows the toolbar's theme control. The first four stories draw the
-// `corner` variant, as the root layout mounts it on the pages with no shell
-// (Welcome, Sign In and the invitation page): a
-// quarter disc pinned to the story frame's top-right corner and clipped by its
-// edge, which is the design.
+// Follows the toolbar's theme control. The first four stories draw the `corner`
+// variant, as the root layout mounts it on pages with no shell: a quarter disc
+// pinned to the frame's top-right corner and clipped by its edge.
 const defaultNode = <ThemeToggle />;
 
 // `.meta = { reducedMotion: true }` simulates the OS setting (.storybook/components.tsx):

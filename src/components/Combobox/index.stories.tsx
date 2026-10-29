@@ -162,7 +162,10 @@ export const Qualifier: Story = {
   },
 };
 
-/** A list's box: its entries inside the control with an x each, one cut off with a tooltip, a pick that adds rather than fills, and Backspace in the empty box taking the last. */
+/**
+ * A list's box: entries inside the control with an x each, one cut off with a
+ * tooltip. A pick adds rather than fills; Backspace in the empty box takes the last.
+ */
 const ListView = () => {
   const [value, setValue] = useState('');
   // One entry too long for the control: cut off, its whole text in a tooltip.
@@ -335,7 +338,7 @@ const KINDS = ['Botanical', 'Fungal', 'Zoological', 'Mineral', 'Chemical', 'Unkn
   (label) => ({ value: label.toLowerCase(), label }),
 );
 
-/** The select-only box: a closed set on the same control and list, nothing typed, a placeholder until a choice is made. */
+/** The select-only box: a closed set, nothing typed, a placeholder until a choice. */
 export const SelectOnly: Story = {
   render: () => {
     const [value, setValue] = useState('');
@@ -356,7 +359,7 @@ export const SelectOnly: Story = {
   },
 };
 
-/** The select-only box with an icon on each choice, in its list and in its closed value: the group picker of a form. */
+/** The select-only box with an icon on each choice, in the list and the closed value. */
 export const SelectWithIcons: Story = {
   render: () => {
     const [value, setValue] = useState('');
@@ -385,7 +388,10 @@ const TRADITIONS = ['Fixtural', 'Mockish', 'Old Testic', 'Stubbish', 'Testwardis
   (label) => ({ value: label.toLowerCase(), label }),
 );
 
-/** The type-ahead box: a closed set typed into, the list narrowing to the choices holding the text, the first highlighted, and only a choice the value. */
+/**
+ * The type-ahead box: a closed set typed into. The list narrows to the choices
+ * holding the text, the first is highlighted, and only a choice becomes the value.
+ */
 export const Typeahead: Story = {
   render: () => {
     const [value, setValue] = useState('');
@@ -414,7 +420,11 @@ const ELEMENTS = ['Earth', 'Air', 'Fire', 'Water', 'Spirit'].map((label) => ({
   label,
 }));
 
-/** The multi-select box: a closed set holding several, each choice a chip inside the control with its x, a clear and the chevron on the right, the list offering only what is left, and Backspace taking the last. */
+/**
+ * The multi-select box: a closed set holding several, each choice a chip with its
+ * x inside the control, a clear and the chevron on the right. The list offers only
+ * what is left, and Backspace takes the last.
+ */
 export const MultiSelect: Story = {
   render: () => {
     const [values, setValues] = useState(['fire', 'air']);
@@ -435,11 +445,9 @@ export const MultiSelect: Story = {
   },
 };
 
-// The qualifier as the ingredient form draws it: the Form box under the field
-// before it, "Wax" picked under Substance, with a detail long enough to wrap.
-// Focus in the box or a hover on "(Substance)" opens the tooltip above the
-// box from its right edge, so the Form label stays clear; the first printable
-// key and the list opening close it.
+// The qualifier as the ingredient form draws it: "Wax" picked under Substance in
+// the Form box, with a detail long enough to wrap. Focus or a hover on
+// "(Substance)" opens the tooltip; the first printable key or the list closes it.
 const LONG_DETAIL =
   'A long description, as a curated form can carry: what the form is, how it is prepared, and what sets it apart from another form of the same name.';
 
@@ -479,7 +487,7 @@ const QualifiedField = (): ReactElement => {
 
 export const QualifierInForm: Story = { render: () => <QualifiedField /> };
 
-/** A caller's own control at the box's start, inside the control: a form's submit. Typing opens the list, and `toggle={false}` leaves the chevron out. */
+/** A caller's own control at the box's start, such as a form's submit. */
 export const Leading: Story = {
   render: () => {
     const [value, setValue] = useState('');
@@ -506,7 +514,7 @@ export const Leading: Story = {
   },
 };
 
-/** A lookup under way: the box is `aria-busy` and the ring turns in the indicator strip, beside the chevron. */
+/** A lookup under way: the box is `aria-busy` and the ring turns beside the chevron. */
 export const LoadingSearch: Story = {
   render: () => {
     const [value, setValue] = useState('moon');
@@ -528,7 +536,7 @@ export const LoadingSearch: Story = {
   },
 };
 
-/** The select-only box while its change is on its way: the choice made stays shown, the box is `aria-busy` and carries the ring. */
+/** The select-only box while its change is on its way: choice shown, `aria-busy`, ring. */
 export const LoadingSelect: Story = {
   render: () => {
     const [value, setValue] = useState('fungal');
@@ -579,10 +587,9 @@ const GROUPED: ComboboxOption[] = [
 ];
 
 /**
- * An open list in rows of every kind: buckets under a category group's heading,
- * each row edged in the group's colour, a count, a disabled row with its reason,
- * the typed row led by its own mark, the first row highlighted as a closed
- * set's type-ahead has it, and the box marked required.
+ * An open list in rows of every kind: buckets under a group heading edged in the
+ * group's colour, a count, a disabled row with its reason, the typed row with its
+ * mark, and the first row highlighted. The box is marked required.
  */
 export const GroupedRows: Story = {
   render: () => {
@@ -613,10 +620,9 @@ export const GroupedRows: Story = {
 const GLYPH = <span aria-hidden="true">*</span>;
 
 /**
- * One chip of a list in each of its forms: plain, a linked entry opening its
- * summary, outlined, with a count and while the count is loading, naming what
- * it removes, flagged by its list's error, carrying an action of its own, with
- * a group icon, and coloured by its group.
+ * One chip in each form: plain, linked, outlined, with a count (and while loading),
+ * naming what it removes, flagged by its list's error, with an action, with a
+ * group icon, and coloured by its group.
  */
 export const EntryChips: Story = {
   render: () => (

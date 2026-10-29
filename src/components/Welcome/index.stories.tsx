@@ -3,10 +3,9 @@ import type { ReactElement, ReactNode } from 'react';
 import Backdrop from '../Backdrop';
 import Welcome from '.';
 
-// Render-only; behaviour is asserted in tests/components/Welcome. The page
-// decides `landing` from the session; a story fixes it by hand. Every story
-// sits in the page's real frame, `main.page-frame.welcome-page`, so the
-// column it shows is the one `/` draws (claude-docs/workshop.md).
+// Render-only; behaviour is asserted in tests/components/Welcome. The page decides
+// `landing` from the session; a story fixes it. Each sits in the page's real frame,
+// `main.page-frame.welcome-page` (claude-docs/workshop.md).
 const meta = {
   title: 'Pages / Welcome',
 } satisfies Meta;

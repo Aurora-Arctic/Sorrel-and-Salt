@@ -6,8 +6,7 @@ import { setInputValue, submitForm, useSteps } from '../../../.storybook/press';
 import CreateWorkspaceForm from '.';
 
 // Render-only; behaviour is asserted in tests/components/CreateWorkspaceForm.
-// The component talks to the network only on submit, so nothing is mocked: a
-// submit in the workshop fails into the alert region. The TanStack Query
+// Nothing is mocked: a submit fails into the alert region. The TanStack Query
 // client comes from the workshop's global provider (.storybook/components.tsx).
 const meta = {
   title: 'Coven / Create Coven Form',

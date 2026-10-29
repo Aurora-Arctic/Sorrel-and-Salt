@@ -5,22 +5,18 @@ import { verifyErrorMessage } from '../../lib/account-email';
 import EmailForm from '.';
 import type { EmailFormProps } from './types';
 
-// Render-only; behaviour is asserted in tests/components/EmailForm. The
-// component talks to the network only on submit, so nothing is mocked — a
-// submit in the workshop fails into the alert region, which is itself a state
-// worth seeing. The TanStack Query client `useMutation` needs comes from the
-// workshop's global provider (.storybook/components.tsx), as it does from the
-// app's root layout.
+// Render-only; behaviour is asserted in tests/components/EmailForm. Nothing is
+// mocked: a submit fails into the alert region. The TanStack Query client comes
+// from the workshop's global provider (.storybook/components.tsx).
 const meta = {
   title: 'Account / Email Form',
 } satisfies Meta;
 export default meta;
 type Story = StoryObj<{ state?: import('react').ReactNode }>;
 
-// Inside the app shell, then the page's own frame and panel, so the workshop shows what
-// the page shows: the header, with the account's initials at a phone's width, and an
-// unverified account's header without Add Ingredient. The shell's viewer is verified
-// when the address is.
+// The app shell, then the page's own frame and panel: the header with the
+// account's initials at phone width, and an unverified account's header without
+// Add Ingredient. The shell's viewer is verified when the address is.
 const Page = (props: EmailFormProps) => (
   <ShellFrame area="none" viewer={{ verified: props.verified }} open="/account/email">
     <main className="page-frame page-frame--narrow">

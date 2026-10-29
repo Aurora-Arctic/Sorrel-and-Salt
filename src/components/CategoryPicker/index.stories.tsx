@@ -5,9 +5,8 @@ import CategoryPicker from '.';
 import type { CategoryPickerProps, PickerCategory } from './types';
 
 // Render-only; behaviour is asserted in tests/components/CategoryPicker. Four
-// of the seed's groups with their colour pairs, copied from
-// src/db/seed/category-groups.ts, which a component may not import (CLAUDE.md
-// rule 1); the categories under them are invented, two or three to a group.
+// seed groups with their colour pairs, copied from src/db/seed/category-groups.ts
+// (a component may not import it, CLAUDE.md rule 1). The categories are invented.
 const meta = {
   title: 'Ingredients / Category Picker',
 } satisfies Meta;

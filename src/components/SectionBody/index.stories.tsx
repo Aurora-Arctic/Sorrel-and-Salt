@@ -7,9 +7,8 @@ import SectionBody from '.';
 import { route } from '../../../.storybook/route';
 
 // Render-only; behaviour is asserted in tests/components/SectionBody. At rest it
-// shows its page; the skeleton stands in only while a navigation aimed at the
-// section is on its way. The Loading stories open with a link already pressed,
-// so the wait stays on screen (the workshop's navigation never arrives).
+// shows its page; the skeleton shows only while a navigation aimed at the section
+// is on its way. The Loading stories open with a link pressed (it never arrives).
 const meta = {
   title: 'Shell / Section Body',
 } satisfies Meta;
@@ -48,12 +47,9 @@ const Waiting = ({ name, target }: { name: string; target: NavigationTarget }): 
 };
 
 // Resting is the page itself. The rest are a wait, each in the skeleton of the
-// destination it names: the coven's Ingredients (heading, filter and cards in
-// the wide column) with and without an Add action, its Members (the heading
-// with the tab row, then the table), its Overview (the page with its contents
-// menu beside it), an ingredient's page (the wide column with a side menu), and
-// the admin index (a heading and line, then titled lists of links, no cards).
-// The account page is aimed at the shell's body, not this one: see Main Body.
+// destination it names: the coven's Ingredients (with and without an Add action),
+// Members, Overview, an ingredient's page, and the admin index. The account page
+// is aimed at the shell's body, not this one: see Main Body.
 const STATES: Record<string, ReactNode> = {
   Resting,
   'Loading List': (

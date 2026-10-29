@@ -3,13 +3,9 @@ import type { ReactElement, ReactNode } from 'react';
 import { AdminFrame as Frame } from '../../../.storybook/admin-frame';
 import { AdminContents } from '.';
 
-// Render-only; behaviour is asserted in tests/components/AdminNav. It takes
-// one prop, `managesPeople`: an admin sees every page, a curator all but
-// People. The workshop's `usePathname`
-// stub answers `/admin/users` (.storybook/navigation.ts), the People page's
-// Users tab, so People is the current page unless a story opens another address. Each sits in the
-// admin layout as it is (`AdminFrame`): the nav in the context row led by
-// "Admin", above the `.page-column` column that holds the page.
+// Render-only; behaviour is asserted in tests/components/AdminNav. `managesPeople`
+// is the one prop. The workshop's `usePathname` stub answers `/admin/users`
+// (.storybook/navigation.ts), so People is current. Each story sits in `AdminFrame`.
 const meta = {
   title: 'Admin / Nav',
 } satisfies Meta;
@@ -32,10 +28,9 @@ const invitationsCurrentNode = <Frame open="/admin/invitations" />;
 // compendium, since a curator never reaches the People page.
 const curatorNode = <Frame open="/admin/compendium" managesPeople={false} />;
 
-// The `/admin` index under the nav: a lede, then the table of contents in
-// the nav's sections. The page is a server component behind the guard, so
-// its heading and lede are copied here; the contents are the real part. Opened
-// at `/admin`, where the site marks no page current.
+// The `/admin` index under the nav: a lede, then the contents in the nav's
+// sections. The page is a server component, so its heading and lede are copied
+// here. Opened at `/admin`, where no page is current.
 const Index = ({ managesPeople = true }: { managesPeople?: boolean }): ReactElement => (
   <Frame shell open="/admin" managesPeople={managesPeople}>
     <main>

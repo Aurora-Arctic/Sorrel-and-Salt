@@ -24,10 +24,8 @@ import {
 } from '@/modules/ingredients/schema/ingredient-enums';
 
 // Render-only; behaviour is asserted in tests/components/CompendiumList. The
-// filter reaches `/admin/compendium`, which the workshop does not serve. Each
-// story is the page as `src/app/(shell)/admin/compendium/page.tsx` draws it,
-// in the admin layout's frame (`AdminFrame`), at its width: a `main` holding
-// the page header with Add Ingredient, then the list.
+// filter reaches `/admin/compendium`, which the workshop does not serve. Each story
+// is the page from `src/app/(shell)/admin/compendium/page.tsx` in `AdminFrame`.
 const meta = {
   title: 'Ingredients / Compendium List',
 } satisfies Meta;

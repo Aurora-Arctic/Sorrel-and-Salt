@@ -3,10 +3,9 @@ import type { CSSProperties, ReactElement, ReactNode } from 'react';
 import { usePressOnMount } from '../../../.storybook/press';
 import { useClickFeedback } from '.';
 
-// Render-only; the opening, closing and focus are asserted in
-// tests/components/ClickFeedback, and the placement, layout and axe in
-// tests/e2e/workshop/click-feedback.spec.ts. Each button stands for a page's action
-// whose service refuses it.
+// Render-only; opening, closing and focus are asserted in tests/components/ClickFeedback,
+// placement and axe in tests/e2e/workshop/click-feedback.spec.ts. Each button
+// stands for an action whose service refuses it.
 const meta = {
   title: 'Surfaces / Click Feedback',
 } satisfies Meta;
@@ -89,15 +88,10 @@ const PinnedView = () => {
   );
 };
 
-// Every placement the badge and callout take. Each state but the first presses
-// its button once drawn, so the story opens on the refusal; changing the
-// control draws it again, which presses again.
-// - Resting: press any button for its refusal; the badge then brings it back.
-// - Bordered: the badge on the corner, the callout below it.
-// - Borderless: no corner to sit on, so the badge goes beside the button.
-// - Near Right Edge: no room for the callout's start under the control's, so
-//   its end goes under the control's end.
-// - Pinned: see PinnedView.
+// Every placement the badge and callout take. Each state but Resting presses its
+// button once drawn, so it opens on the refusal. Bordered: badge on the corner.
+// Borderless: badge beside the button. Near Right Edge: callout's end under the
+// control's end. Pinned: see PinnedView.
 const STATES: Record<string, ReactNode> = {
   Resting: <Row />,
   Bordered: <Pressed name="Remove" />,

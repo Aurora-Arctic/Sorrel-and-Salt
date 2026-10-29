@@ -7,11 +7,9 @@ import { Reopenable } from '../../../.storybook/reopenable';
 import SpellDialog from './spell-dialog';
 import type { SpellBuilderSpell } from './types';
 
-// Render-only; behaviour is asserted in tests/components/SpellBuilder. The
-// builder talks to the network only when it saves (the autosave, three seconds
-// after a change, or Save), so nothing is mocked: a save in the workshop fails,
-// and the status beside Save reads "Couldn't save" with Retry. The TanStack Query client comes from the
-// workshop's global provider (.storybook/components.tsx).
+// Render-only; behaviour is asserted in tests/components/SpellBuilder. Nothing is
+// mocked: a save (autosave after three seconds, or Save) fails, and the status
+// reads "Couldn't save" with Retry. The query client comes from .storybook/components.tsx.
 const meta = {
   title: 'Grimoire / Spell Builder',
 } satisfies Meta;

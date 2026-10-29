@@ -17,9 +17,9 @@ const meta = {
 export default meta;
 type Story = StoryObj<{ state?: import('react').ReactNode }>;
 
-// The switch as the coven ingredients page draws it, in the search row when narrow: the word beside its switch on the
-// Filters line, level with the button, and with Clear All showing it wraps beneath, at the
-// line's start. The real row (`CompendiumListFilter`, coven audience). Names are invented.
+// The switch as the coven ingredients page draws it in the narrow search row
+// (`CompendiumListFilter`, coven audience): the word beside its switch on the
+// Filters line, wrapping beneath at the line's start when Clear All shows.
 const NAMES = ['Testwort', 'Fixture Salt', 'Sample Root'];
 
 const CovenSearchRow = ({ filter }: { filter: Filter }): ReactElement => (

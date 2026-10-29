@@ -52,9 +52,9 @@ const WithDeclinedView = () => (
 
 const withDeclinedNode = <WithDeclinedView />;
 
-// The page as the coven's people layout draws it for an owner: in the app shell, with the coven switcher,
-// the Members heading, the Members and Invitations toggle with Invitations open, and Invite at the end
-// of the heading line (src/app/(shell)/coven/[slug]/(people)/layout.tsx).
+// The page as the coven's people layout draws it for an owner: the shell, the
+// Members heading, the Members and Invitations toggle with Invitations open, and
+// Invite at the heading's end (src/app/(shell)/coven/[slug]/(people)/layout.tsx).
 const emptyNode = (
   <ShellFrame area="coven" open="/coven/fixture-coven/invitations">
     <TabbedPage

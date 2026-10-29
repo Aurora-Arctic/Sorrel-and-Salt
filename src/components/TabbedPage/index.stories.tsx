@@ -10,13 +10,11 @@ import TabbedPage from '.';
 import { TabSwitchContext } from './tab-switch';
 import type { TabSwitch } from './types';
 
-// Render-only; behaviour is asserted in tests/components/TabbedPage. The
-// People page as `/admin/invitations` draws it: the admin layout's frame and
-// nav, the page's heading with its three tabs beside it, Invitations open, and
-// the open tab's New Invitation at the end of the line, then the tab's own content
-// beneath. The workshop's stub says which address is open (.storybook/navigation.ts), and
-// a tab switch provided above the page says a tab is on its way, since the
-// stub router goes nowhere.
+// Render-only; behaviour is asserted in tests/components/TabbedPage. The People page
+// as `/admin/invitations` draws it: the admin frame and nav, the heading with its
+// three tabs, Invitations open, and its New Invitation. The workshop's stub names
+// the open address (.storybook/navigation.ts); a tab switch provided above the
+// page says a tab is on its way.
 const meta = {
   title: 'Layout / Tabbed Page',
 } satisfies Meta;
@@ -46,13 +44,10 @@ const Invitations = () => (
   </People>
 );
 
-// Users pressed and on its way: the heading where it was, New Invitation and
-// every tab greyed out and closed to another press, the pill moved to Users
-// in its pending look, grey and flat, while Invitations is still the current
-// page, and in place of the invitations the skeleton of the list on its
-// way, its filter row, a table's heading and six rows, and the pager,
-// shimmering. At 375px the rows are cards. Under reduced motion the shapes
-// stand still.
+// Users pressed and on its way: New Invitation and every tab greyed and closed to
+// another press, the Users pill in its pending look while Invitations is still the
+// current page, and the list's skeleton shimmering below. At 375px the rows are
+// cards. Under reduced motion the shapes stand still.
 const Loading = ({ tab = ON_ITS_WAY }: { tab?: TabSwitch }) => (
   <TabSwitchContext.Provider value={tab}>
     <Invitations />
@@ -68,10 +63,9 @@ const loadingUnfilteredNode = (
   <Loading tab={{ ...ON_ITS_WAY, target: ADMIN_PAGES.people.tabs[1] }} />
 );
 
-// The last tab open, Privilege Changes, at 375px: the three pills fit under
-// the heading, and a row too wide for its line would scroll inside its track
-// to centre the open tab. Privilege Changes has no action, so the heading
-// line holds the heading and the pills alone.
+// The last tab open, Privilege Changes, at 375px: the three pills fit under the
+// heading, and a row too wide would scroll inside its track to centre the open
+// tab. Privilege Changes has no action.
 const privilegeChangesTabNode = (
   <People open="/admin/privilege-changes" action={null}>
     <PrivilegeLedger
@@ -92,11 +86,9 @@ const privilegeChangesTabNode = (
   </People>
 );
 
-// The Add the way a list page draws it (`AddAction`, which has a labelled
-// button and a plus for the narrow header), where Default has the plain
-// New Invitation link. Open it at 600px wide to see the plus at the heading's
-// end with the pills on its line, and at 382px for the label beneath the heading,
-// the width at which the plus gives way to it.
+// The Add as a list page draws it (`AddAction`: a labelled button, and a plus for the
+// narrow header), where Default has the plain New Invitation link. At 600px wide the
+// plus sits at the heading's end; at 382px the label drops beneath the heading.
 const addActionLabelAndPlusNode = (
   <People
     action={

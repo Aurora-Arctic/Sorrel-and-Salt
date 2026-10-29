@@ -5,12 +5,9 @@ import { InModal } from '../../../.storybook/in-modal';
 import { submitForm, usePressOnMount, useSteps } from '../../../.storybook/press';
 import GroupForm from '.';
 
-// Render-only; behaviour is asserted in tests/components/GroupForm. The
-// workshop has no API, so a save answers with the form's generic error. Shown
-// in the modal the admin pages open it in, each story in its own iframe, so
-// the modal's top layer covers the story's frame rather than Storybook's sidebar.
-// One Adding and one Editing per kind the form draws differently: a category
-// group has colours, a form group an icon, a tradition neither.
+// Render-only; behaviour is asserted in tests/components/GroupForm. The workshop
+// has no API, so a save answers with the generic error. Shown in the admin modal.
+// One Adding and one Editing per kind: colours, an icon, or neither.
 const meta = {
   title: 'Admin / Group Form',
 } satisfies Meta;
