@@ -16,15 +16,9 @@ import { renderWithClient, waitFor } from '../../support/ingredient-form';
 import { offerForms, offerIngredients, offerNothing } from '../../support/msw/ingredient-lookups';
 import type { FormNode, IngredientNode } from './types';
 
-// The Variants section's fixtures, locators and harness, shared by
-// variants.test.tsx, which renders the whole form, and variants-field,
-// copy and substitutes, which render `VariantsField` alone. The harness is
-// the field on react-hook-form with the form's own resolver, as
-// list-field.test.tsx renders `ListField`: what a save sends is what the
-// resolver gives `handleSubmit`, the input the form's save mutation
-// carries. What the form adds around the field — a save opening the variant
-// and section an error is in, Close All, undo, the unsaved-changes question
-// — is not here, and stays in variants.test.tsx.
+// The Variants section's fixtures, locators and harness, shared by variants.test.tsx (which renders the whole form) and variants-field, copy and substitutes (which render `VariantsField` alone).
+// The harness is the field on react-hook-form with the form's own resolver, as list-field.test.tsx renders `ListField`: what a save sends is what the resolver gives `handleSubmit`, the input the form's save mutation carries.
+// What the form adds around the field (a save opening the variant and section an error is in, Close All, undo, the unsaved-changes question) is not here and stays in variants.test.tsx.
 
 export const OIL_ID = '8d2c4e6f-1a3b-4c5d-9e7f-0a1b2c3d4e5f';
 export const HERB_VARIANT_ID = '1c2d3e4f-5a6b-4c7d-8e9f-0a1b2c3d4e5f';
@@ -85,10 +79,8 @@ export const FORMLESS_PLAINWORT = {
   },
 };
 
-// Found by label, as tests/support/interact.tsx finds them, but
-// within a variant's card: its fields share their labels with the
-// ingredient's and with each other variant's. The required marker, hidden
-// from the name, is dropped from the label's text.
+// Found by label, as tests/support/interact.tsx finds them, but within a variant's card, because its fields share their labels with the ingredient's and with each other variant's.
+// The required marker, hidden from the name, is dropped from the label's text.
 const byLabel = (scope: HTMLElement, name: string, selector: string) =>
   within(scope).getByLabelText(name, {
     selector,
@@ -277,13 +269,8 @@ export async function openSubstitutes(oil: HTMLElement) {
 }
 
 /**
- * `VariantsField` on its own, its section open, under the resolver the form
- * uses for `workspaceId` (null, the compendium's). `values` are an entry's,
- * opened as the form opens an edit's; without them the field starts on a new
- * coven ingredient named Testwort. Beside it, the ingredient's own
- * Description, which a variant copies from, and Save Ingredient, which
- * submits: `onSubmit` is called with what the resolver passes, the input a
- * save sends.
+ * `VariantsField` on its own, its section open, under the resolver the form uses for `workspaceId` (null, the compendium's). `values` are an entry's, opened as the form opens an edit's;
+ * without them the field starts on a new coven ingredient named Testwort. Beside it are the ingredient's own Description, which a variant copies from, and Save Ingredient, which calls `onSubmit` with what the resolver passes, the input a save sends.
  */
 export function renderVariants({
   workspaceId,

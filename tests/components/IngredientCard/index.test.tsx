@@ -8,10 +8,8 @@ import IngredientCard from '@/components/IngredientCard';
 import { CATEGORY_CHIP_LIMIT } from '@/components/CategoryChips/constants';
 import { StockBadge } from '@/components/StockBadge';
 
-// (claude-docs/components/ingredient-card.md): the card is presentational,
-// so each case is its props in and what rendered out. The names, forms and
-// notes are the test's own data. Marks are found by their exact text and
-// asserted by presence or absence, never by what the words say.
+// (claude-docs/components/ingredient-card.md): the card is presentational, so each case is its props in and what rendered out. The names, forms and notes are the test's own data.
+// Marks are found by their exact text and asserted by presence or absence, never by what the words say.
 
 // The name link navigates through the shared hook, so the App Router is mocked.
 const router = vi.hoisted(() => ({ push: vi.fn(), replace: vi.fn(), refresh: vi.fn() }));

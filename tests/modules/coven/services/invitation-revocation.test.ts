@@ -13,11 +13,8 @@ import { useTestDatabase } from '../../../support/db/database';
 import { makeWorkspace, workspaceColumns } from '../../../support/fixtures';
 import type { CovenInvitationStateRow } from './types';
 
-// An owner withdraws a pending invitation and reads the pending list.
-// Both check `member: invite`, which only owners hold; `member: read` is the
-// roll's, and members hold it. The row is stamped and kept. An accepted
-// invitation is a member to remove, so it is refused in words that say so
-// (claude-docs/db/invitations.md).
+// An owner withdraws a pending invitation and reads the pending list. Both check `member: invite`, which only owners hold; `member: read` is the roll's, and members hold it.
+// The row is stamped and kept. An accepted invitation is a member to remove, so it is refused in words that say so (claude-docs/db/invitations.md).
 
 let sql: postgres.Sql;
 useTestDatabase((client) => {

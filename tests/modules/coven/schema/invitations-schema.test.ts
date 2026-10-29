@@ -10,11 +10,8 @@ import type { Membership } from '@/modules/coven';
 import { invitations } from '@/modules/coven/schema/invitations';
 import type { SiteAdmin } from '@/modules/identity';
 
-// One invitations table in two tiers, the shape `ingredients` has. A
-// row naming a workspace and a role invites into that coven; a row with
-// neither is a site-tier invitation, which grants admin, as a null workspace
-// is a compendium entry. The named writes are the only ones to reach it
-// (claude-docs/design-decisions/mb.201-two-tier-invitations.md).
+// One invitations table in two tiers, the shape `ingredients` has: a row naming a workspace and a role invites into that coven, and a row with neither is a site-tier invitation, which grants admin, as a null workspace is a compendium entry.
+// The named writes are the only ones to reach it (claude-docs/design-decisions/mb.201-two-tier-invitations.md).
 
 // DESIGN.md §5's column list, transcribed.
 const OWN_COLUMNS = [
@@ -49,12 +46,9 @@ describe('invitations schema', () => {
     expect(Object.keys(byName).sort()).toEqual([...OWN_COLUMNS, ...AUDIT_COLUMNS].sort());
   });
 
-  // No body runs: each `@ts-expect-error` fails `npm run typecheck` the
-  // moment the mark is lost or a generic method stops demanding `Generic`.
-  // The row is what authorises a membership or a grant, so only the
-  // named writes may make or stamp one. The unscoped methods refuse the table
-  // for its `workspace_id` too; the scoped and compendium-tier ones would take
-  // a nullable `workspace_id`, so there the mark alone refuses.
+  // No body runs: each `@ts-expect-error` fails `npm run typecheck` the moment the mark is lost or a generic method stops demanding `Generic`.
+  // The row is what authorises a membership or a grant, so only the named writes may make or stamp one. The unscoped methods refuse the table for its `workspace_id` too;
+  // the scoped and compendium-tier ones would take a nullable `workspace_id`, so there the mark alone refuses.
   it('carries the namedWrites mark, so every generic write refuses it at compile time', () => {
     // The mark itself, as a type: a table that lost it fails this assignment.
     const marked: NamedWrites = invitations;

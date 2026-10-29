@@ -17,10 +17,8 @@ import { openSections } from '../../support/ingredient-sections';
 import { press, type } from '../../support/interact';
 import { ENTRY_ID, WORKSPACE_ID, offerNothing } from '../../support/msw/ingredient-lookups';
 
-// Promoting a folk name: the control on a saved folk name's chip, the
-// question it always asks, and what the form is left holding, tried on the
-// compendium's edit; the coven tier is tried on the question and its hook,
-// and the control on a coven's edit is coven-edit.test.tsx's.
+// Promoting a folk name: the control on a saved folk name's chip, the question it always asks, and what the form is left holding, tried on the compendium's edit.
+// The coven tier is tried on the question and its hook; the control on a coven's edit is coven-edit.test.tsx's.
 
 const HEDGE_ID = '5a1b2c3d-4e5f-4a6b-8c7d-0e1f2a3b4c01';
 const BANE_ID = '5a1b2c3d-4e5f-4a6b-8c7d-0e1f2a3b4c02';

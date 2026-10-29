@@ -22,18 +22,10 @@ import {
 } from '../../support/msw/ingredient-lookups';
 import { server } from '../../support/msw/server';
 
-// The new reference panel on its own: `ReferencePanel`, the citation
-// sub-form beneath the References field, saving through MSW as
-// /api/graphql answers. How the field opens it, lists what it saves and is
-// held while it is open is references.test.tsx's; what the schema refuses and
-// how each field is tidied is tests/modules/ingredients/validation/'s
-// (claude-docs/components/ingredient-form.md, "Testing").
+// The new reference panel on its own: `ReferencePanel`, the citation sub-form beneath the References field, saving through MSW as /api/graphql answers.
+// How the field opens it, lists what it saves and is held while it is open is references.test.tsx's; what the schema refuses and how each field is tidied is tests/modules/ingredients/validation/'s (claude-docs/components/ingredient-form.md, "Testing").
 
-/**
- * The panel, asked for `summons` times; `summon` asks for it again, as New
- * Reference does. Rendered here rather than by `renderWithClient`: a summons
- * re-renders the panel under the client it opened with.
- */
+/** The panel, asked for `summons` times; `summon` asks for it again, as New Reference does. Rendered here rather than by `renderWithClient`, because a summons re-renders the panel under the client it opened with. */
 function renderPanel() {
   const onSaved = vi.fn();
   const onCancel = vi.fn();
@@ -351,10 +343,8 @@ describe('ReferencePanel', () => {
     await waitFor(() => expect(onSaved).toHaveBeenCalledOnce());
   });
 
-  // Each field is tidied as it is left, as the
-  // server will store it, so what is seen is what is saved. Each format is
-  // FORMAT_OF's (validation/reference-format.test.ts); here, that the panel
-  // applies its field's.
+  // Each field is tidied as it is left, as the server will store it, so what is seen is what is saved.
+  // Each format is FORMAT_OF's (validation/reference-format.test.ts); here, the panel applies its field's.
   it('tidies each field by its own format as it is left', () => {
     renderPanel();
     chooseKind('Book');

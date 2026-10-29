@@ -4,13 +4,9 @@ import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { makeQueryClient } from '@/lib/graphql-client';
 import type { Session } from '@/lib/session';
 
-// Where the email page's Continue goes once a followed link has proved the
-// address: the `next` the account was sent with, or with none, the landing
-// for the role it holds now — a primary admin promoted by that very link
-// included (claude-docs/auth/admin-bootstrap.md, "The email page"). The session and the row
-// are mocked; what they are is tests/lib/request-session.test.ts's and the
-// identity service's, and which landing a role gets and which `next` is safe
-// are tests/lib/sign-in.test.ts's.
+// Where the email page's Continue goes once a followed link has proved the address: the `next` the account was sent with, or with none, the landing for the role it holds now,
+// a primary admin promoted by that very link included (claude-docs/auth/admin-bootstrap.md, "The email page"). The session and row are mocked (tests/lib/request-session.test.ts's and the identity service's);
+// which landing a role gets and which `next` is safe are tests/lib/sign-in.test.ts's.
 
 const requireSession = vi.fn<() => Promise<Session>>();
 vi.mock('@/lib/request-session', () => ({ requireSession }));

@@ -85,10 +85,8 @@ describe('Combobox', () => {
     expect(screen.queryByRole('button', { name: /Show/ })).not.toBeInTheDocument();
   });
 
-  // Regression: a box left while its list was
-  // empty — a pick-only box's lookup still answering — kept wanting it open,
-  // and when the answer came the list opened and took the focus back from
-  // whatever box was then in use.
+  // Regression: a box left while its list was empty (a pick-only box's lookup still answering) kept wanting it open,
+  // and when the answer came the list opened and took the focus back from whatever box was then in use.
   it('stays shut and unfocused when suggestions arrive after it was left with none', () => {
     const PICK_ONLY = { offerTyped: false };
     const { rerender } = render(
@@ -784,10 +782,8 @@ describe('Combobox', () => {
       expect(onRemove).toHaveBeenCalledTimes(1);
     });
 
-    // A linked entry's text opens a panel beside the chip, which
-    // shuts on a second press, on Escape — cancelled, so a modal around the
-    // form takes no cancel from it — on a press elsewhere and on the focus
-    // leaving it; Escape hands the focus back to the text.
+    // A linked entry's text opens a panel beside the chip, which shuts on a second press, on Escape (cancelled, so a modal around the form takes no cancel from it), on a press elsewhere and on the focus leaving it.
+    // Escape hands the focus back to the text.
     describe('with a summary', () => {
       const panel = () => screen.queryByRole('dialog', { name: 'About Hedge Fixture' });
       const opener = () => screen.getByRole('button', { name: 'Hedge Fixture' });
@@ -986,11 +982,8 @@ describe('Combobox', () => {
       expect(handle('Mars')).not.toHaveAttribute('aria-pressed', 'true');
     });
 
-    // On wrapped rows the arrows moved a chip by where
-    // the chips sit, so Left from the second chip on row 2 went to a chip on
-    // row 1 whose corners were nearer; and the chips making way overlapped or
-    // left gaps. Left and Right step through the list, Up and Down jump a
-    // row, and the chips making way sit as the row would lay them out.
+    // On wrapped rows the arrows moved a chip by where the chips sit, so Left from the second chip on row 2 went to a chip on row 1 whose corners were nearer, and the chips making way overlapped or left gaps.
+    // Left and Right now step through the list, Up and Down jump a row, and the chips making way sit as the row would lay them out.
     describe('on wrapped rows', () => {
       const SEVEN = ['Sun', 'Moon', 'Mercury', 'Venus', 'Mars', 'Jupiter', 'Saturn'].map(
         (value) => ({ id: value, value, onRemove: () => {} }),
@@ -1332,10 +1325,8 @@ describe('Combobox', () => {
       expect(elements()).toHaveTextContent('Fire, Earth');
     });
 
-    // A placeholder that went with the
-    // first chip left nothing prompting for the next.
-    // In a modal, an Escape let through shuts the whole dialog, as
-    // the select-only box's test says.
+    // A placeholder that went with the first chip left nothing prompting for the next.
+    // In a modal, an Escape let through shuts the whole dialog, as the select-only box's test says.
     it('keeps Escape to itself while its list is open, and lets it through once shut', () => {
       render(<MultiHarness />);
 

@@ -9,12 +9,8 @@ import { encodeCursor } from '@/lib/pagination';
 import type { PageRequest } from '@/lib/types';
 import { entryDetail } from '../../../../support/entry-detail';
 
-// The `/admin/compendium` page: the guard, one page of the compendium
-// under the address's filter, and the modal its address opens — `?new=ingredient-compendium`
-// (or a bare `?new`), `?edit=` an entry by slug, an old slug sent on to the new one. The guard,
-// the services and the entry's values are mocked: what they decide is
-// tests/lib/request-session.test.ts's, the compendium services' tests', and
-// tests/db/entry-values.test.ts's.
+// The `/admin/compendium` page: the guard, one page of the compendium under the address's filter, and the modal its address opens (`?new=ingredient-compendium` or a bare `?new`, `?edit=` an entry by slug, an old slug sent on to the new one).
+// The guard, services and entry values are mocked: what they decide is tests/lib/request-session.test.ts's, the compendium services' tests' and tests/db/entry-values.test.ts's.
 
 const requireCuratorSession = vi.fn();
 vi.mock('@/lib/request-session', () => ({

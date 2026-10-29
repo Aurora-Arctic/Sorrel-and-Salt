@@ -53,10 +53,8 @@ describe('GroupList', () => {
   });
 });
 
-// The traditions' name search: FilterForm's controls are its own
-// to test (CompendiumList's, GroupedValueList's); the shared rows assert the
-// search reaches the address and leaves it, and this that a kind not handed
-// one draws none.
+// The traditions' name search: FilterForm's controls are its own to test (CompendiumList's, GroupedValueList's).
+// The shared rows assert the search reaches the address and leaves it; this proves a kind not handed one draws none.
 describe('GroupList, searched by name', () => {
   beforeEach(() => {
     router.push.mockReset();

@@ -4,10 +4,8 @@ import InviteDialog from '@/components/InviteDialog';
 import type { CreateInvitationMutation, CreateInvitationMutationVariables } from '@/gql/graphql';
 import { mockGraphQLError, mockGraphQLMutation } from '../../support/msw/graphql';
 
-// The invite dialog: an address, a role of viewer or member,
-// and a confirmation naming where the mail went. Render-and-send only: the
-// service behind the mutation is tested in its own module
-// (claude-docs/components/invite-dialog.md).
+// The invite dialog: an address, a role of viewer or member, and a confirmation naming where the mail went (claude-docs/components/invite-dialog.md).
+// It is render-and-send only; the service behind the mutation is tested in its own module.
 
 const router = { push: vi.fn(), replace: vi.fn(), refresh: vi.fn() };
 vi.mock('next/navigation', () => ({ useRouter: () => router }));
@@ -52,10 +50,7 @@ function mockSending() {
   return calls;
 }
 
-/**
- * Nothing in the page to copy or follow: no link, no URL or token in the text
- * or in any field's value. The mail carries the only link there is.
- */
+/** Nothing in the page to copy or follow: no link, no URL or token in the text or in any field's value. The mail carries the only link there is. */
 function expectNothingToCopy() {
   expect(screen.queryAllByRole('link')).toEqual([]);
   expect(document.body.innerHTML).not.toMatch(/https?:|\/invite\/|token/i);
