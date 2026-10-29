@@ -7,22 +7,25 @@ import type { MouseEvent, ReactElement, ReactNode } from 'react';
 import { PendingLink } from '../../lib/navigation';
 import { ingredientLinkTarget } from '../AppShell/site-target';
 import { listReturnHref } from './back-href';
+import './back-link.scss';
 
 interface BackLinkProps {
-  /** The bare list, `/compendium` or this coven's `/coven/<slug>/ingredients`. */
+  /** The bare list, `/compendium`, this coven's `/coven/<slug>/ingredients` or its `/grimoire`. */
   href: Route;
+  /** Other paths that are the same list: the grimoire's Drafts tab beside its Spells tab. */
+  also?: readonly string[];
   className?: string;
   children: ReactNode;
 }
 
-/** The page before this one, when it is `listPath` itself: its path and query. */
-function previousListHref(listPath: string): string | undefined {
+/** The page before this one, when it is one of `listPaths` itself: its path and query. */
+function previousListHref(listPaths: readonly string[]): string | undefined {
   // An enhancement past the floor, behind the `in` check: without it the link stays bare.
   const navigation = 'navigation' in window ? window.navigation : undefined;
   const current = navigation?.currentEntry;
   if (!navigation || !current || current.index < 1) return undefined;
   const previous = navigation.entries()[current.index - 1];
-  return listReturnHref(previous?.url, window.location.origin, listPath);
+  return listReturnHref(previous?.url, window.location.origin, listPaths);
 }
 
 /**
@@ -38,7 +41,8 @@ function subscribe(onChange: () => void): () => void {
 }
 
 /**
- * The entry's "Back to …" link (MB.271). The server draws it as the bare list. Once the page is
+ * The "Back to …" link of an ingredient entry (MB.271) and of a spell's recipe page (M13.21),
+ * a left chevron before its words. The server draws it as the bare list. Once the page is
  * in the browser, when the page before this one in the tab's history is that same list with a
  * search, filters or a page, the link takes that address, and a plain press goes back through
  * history rather than loading the list afresh, so the list returns where it was scrolled to.
@@ -50,13 +54,19 @@ function subscribe(onChange: () => void): () => void {
  * address, and the list's address is not passed along in the entry's own (no `?from=`), so a
  * crafted address can never point the link elsewhere.
  */
-export default function BackLink({ href, className, children }: BackLinkProps): ReactElement {
+export default function BackLink({
+  href,
+  also = [],
+  className,
+  children,
+}: BackLinkProps): ReactElement {
   const router = useRouter();
+  const listPaths = [href.split(/[?#]/)[0] ?? href, ...also];
   // The server, and the first render in the browser, draw the bare list: the server cannot see
   // the tab's history, and the hydrating render must match it. React then reads the history.
   const historyHref = useSyncExternalStore(
     subscribe,
-    () => previousListHref(href),
+    () => previousListHref(listPaths),
     () => undefined,
   );
 
@@ -73,11 +83,21 @@ export default function BackLink({ href, className, children }: BackLinkProps): 
 
   return (
     <PendingLink
-      className={className}
+      className={className ? `back-link ${className}` : 'back-link'}
       href={(historyHref ?? href) as Route}
       navigationTarget={ingredientLinkTarget(href)}
       onClick={goBack}
     >
+      <svg viewBox="0 0 16 16" width="1em" height="1em" aria-hidden="true" focusable="false">
+        <path
+          d="M10 3.5L5.5 8l4.5 4.5"
+          fill="none"
+          stroke="currentColor"
+          strokeWidth="1.5"
+          strokeLinecap="round"
+          strokeLinejoin="round"
+        />
+      </svg>
       {children}
     </PendingLink>
   );

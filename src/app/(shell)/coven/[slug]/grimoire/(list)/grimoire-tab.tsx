@@ -1,7 +1,11 @@
 import type { Route } from 'next';
+import { lookHrefOf } from '@/components/GrimoireList/recipe-href';
 import type { ReactElement } from 'react';
 import { readCategories } from '@/app/compendium-reads';
 import GrimoireList from '@/components/GrimoireList';
+import DetailsDialog from '@/components/IngredientEntry/details-dialog';
+import SpellRecipeBody from '@/components/SpellRecipe/body';
+import SpellLookDialog from '@/components/SpellRecipe/look-dialog';
 import SpellDialog from '@/components/SpellBuilder/spell-dialog';
 import { GRIMOIRE_PARAMS, VISIBILITIES } from '@/components/GrimoireList/params';
 import type { GrimoireFacets, GrimoireListFilter } from '@/components/GrimoireList/types';
@@ -17,8 +21,11 @@ import {
   readGrimoire,
   readGrimoireCategoryCounts,
   readGrimoireFacetCounts,
+  readLookedSpell,
 } from './reads';
 import type { GrimoireTabProps } from './types';
+import { readViewedEntry } from '../../ingredients/reads';
+import { viewedDetailsOf } from '../../ingredients/viewed-details';
 
 // One grimoire tab, Spells or Drafts (M10.11): the guard on the slug from the address, the
 // address read as the filter, and one page of 24 cards of the tab's status. Read per request
@@ -123,6 +130,28 @@ export async function grimoireTab({
           )
         : undefined;
 
+  // Quick Look (M13.21): `?spell=<id>` opens a read-only modal for any role, and waits beneath
+  // another dialog the way `?edit` does. Its Edit link is the card pencil's own check.
+  const look = query.spell;
+  const lookId =
+    adding === undefined && opened === undefined && typeof look === 'string'
+      ? RowId.safeParse(look)
+      : undefined;
+  // The tab with the Quick Look open, which its steps' eyes add `&entry=` to and the details close back to.
+  const lookHref = lookId?.success ? lookHrefOf(closeHref, lookId.data) : undefined;
+  const looked =
+    lookHref && lookId?.success
+      ? await readLookedSpell(workspace.id, lookHref, lookId.data)
+      : undefined;
+  // An ingredient step's eye opens the ingredient's details over the spell's modal, at
+  // `&entry=<id>` (the owner, 2026-10-28), read as the coven's Ingredients page reads it. It
+  // waits on the spell's modal: no spell open, no details.
+  const entryId = typeof query.entry === 'string' && query.entry ? query.entry : undefined;
+  const viewed =
+    entryId && looked && !('failed' in looked)
+      ? await readViewedEntry(membership, entryId)
+      : undefined;
+
   return (
     <>
       <GrimoireList
@@ -130,15 +159,16 @@ export async function grimoireTab({
         workspaceId={workspace.id}
         covenSlug={workspace.slug}
         status={status}
-        spells={
-          canUpdate
-            ? page.spells.map((spell) => ({ ...spell, editHref: editHrefOf(closeHref, spell.id) }))
-            : page.spells
-        }
+        spells={page.spells.map((spell) => ({
+          ...spell,
+          lookHref: lookHrefOf(closeHref, spell.id),
+          ...(canUpdate && { editHref: editHrefOf(closeHref, spell.id) }),
+        }))}
         filter={filter}
         categories={counted}
         facets={facets}
         position={page.position}
+        cursor={{ after, before }}
         total={page.totalCount}
         {...pagerHrefs(page.pageInfo, (cursor) =>
           GRIMOIRE_PARAMS.href(path, filter, { ...cursor }),
@@ -153,6 +183,39 @@ export async function grimoireTab({
         canCreate={canCreate}
         userId={membership.userId}
       />
+      <SpellLookDialog
+        closeHref={closeHref}
+        failed={looked !== undefined && 'failed' in looked}
+        opened={
+          looked && !('failed' in looked)
+            ? {
+                title: looked.spell.title,
+                lastEdit: looked.recipe.lastEdit,
+                recipeHref: `/coven/${workspace.slug}/grimoire/${looked.spell.id}` as Route,
+                ...(canUpdate && { editHref: editHrefOf(closeHref, looked.spell.id) }),
+                children: (
+                  <SpellRecipeBody
+                    title={looked.spell.title}
+                    intent={looked.spell.intent}
+                    categories={looked.recipe.categories}
+                    note={looked.spell.note}
+                    jarDescription={looked.spell.jarDescription}
+                    sealWaxColor={looked.spell.sealWaxColor}
+                    moonPhase={looked.spell.moonPhase}
+                    dayOfWeek={looked.spell.dayOfWeek}
+                    steps={looked.recipe.steps}
+                  />
+                ),
+              }
+            : undefined
+        }
+      />
+      {lookHref && (
+        <DetailsDialog
+          closeHref={lookHref}
+          opened={viewed && viewedDetailsOf(viewed, workspace.slug)}
+        />
+      )}
     </>
   );
 }

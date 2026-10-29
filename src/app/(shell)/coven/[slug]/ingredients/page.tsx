@@ -17,9 +17,7 @@ import AnnotateDialog from '../../../../../components/IngredientEntry/annotate-d
 import EntryDialog from '../../../../../components/IngredientEntry/entry-dialog';
 import { COVEN_PARAMS } from '../../../../../components/IngredientSearch/coven-params';
 import type { JarLine } from '../../../../../components/JarLines/types';
-import { detailsHeading, detailsMarks } from '../../../../../components/IngredientEntry/details';
 import DetailsDialog from '../../../../../components/IngredientEntry/details-dialog';
-import IngredientSummary from '../../../../../components/IngredientEntry/summary';
 // From its own client file: the Modal index re-exports modules a server
 // component cannot import.
 import { RouteModalProvider } from '../../../../../components/Modal/route-modal-provider';
@@ -28,7 +26,9 @@ import { pagerHrefs } from '../../../../../lib/list-href';
 import { readPageCursors } from '../../../../../lib/numbered-page';
 import { requireCovenMembership } from '../../../../../lib/request-session';
 import { readCategories, readDeities, readFormIcons } from '../../../../compendium-reads';
+import { detailsHeading } from '../../../../../components/IngredientEntry/details';
 import { readCovenFacets, readCovenIngredients, readEditedEntry, readViewedEntry } from './reads';
+import { viewedDetailsOf } from './viewed-details';
 import type { CovenIngredientsParams } from './types';
 import { rolePermits } from '@/modules/coven';
 import {
@@ -198,23 +198,7 @@ export default async function CovenIngredientsPage({
           closeHref={listHref}
           opened={
             viewed && {
-              heading: detailsHeading(viewed.shown),
-              marks: detailsMarks(viewed.detail, true),
-              lastEdit: viewed.lastEdit,
-              pageHref: `/coven/${workspace.slug}/ingredients/${viewed.shown.id}` as Route,
-              // The coven's jars of it, to every role: each form shows its stock (M9.9).
-              children: (
-                <IngredientSummary
-                  detail={viewed.detail}
-                  covens={viewed.covens}
-                  jars={
-                    stockDialogOf(
-                      viewed.detail.variants.map(({ variant }) => variant),
-                      viewed.jars,
-                    ).jars
-                  }
-                />
-              ),
+              ...viewedDetailsOf(viewed, workspace.slug),
               // The card's own controls for this entry (the owner's call, 2026-10-20): Edit over the
               // details or Annotate, and More or the bin, whose delete or remove goes back to the
               // list, which closes them.

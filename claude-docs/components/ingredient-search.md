@@ -143,7 +143,7 @@ in the filter slot to carry.
   the hidden label is "Title", the placeholder "Search titles & intents", the
   clear "Clear Title". A row is the spell's title, and an untitled draft reads
   "Untitled Spell". A spell's row carries a `match` whose `id` and `slug` are the spell id, so with a
-  `pickHref` a pick opens the spell's recipe page (MB.6); without one a pick applies the row's
+  `pickHref` a pick opens what it names: the Grimoire list's opens the spell's Quick Look (M13.21); without one a pick applies the row's
   title as the search, and an untitled row the text typed. The floor,
   the 25 rows and See all results. are as for an ingredient.
 - **The dropdown shows at most 25 rows, the first page, in the server's

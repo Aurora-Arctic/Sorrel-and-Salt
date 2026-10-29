@@ -13,6 +13,11 @@ export interface SpellCardProps {
    * `?edit=<id>`, worked out by the page for a role that may update a spell. None draws no pencil.
    */
   editHref?: Route;
+  /**
+   * Where the Quick Look eye opens the spell over the list (M13.21): the tab's own address plus
+   * `?spell=<id>`, worked out by the page. None draws no eye.
+   */
+  lookHref?: Route;
   /** The title; a draft may have none, and lists as "Untitled Spell". */
   title: string | null;
   /** What the spell is for, in the member's words; none draws no paragraph. */

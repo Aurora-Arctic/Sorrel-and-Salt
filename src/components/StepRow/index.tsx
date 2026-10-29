@@ -1,4 +1,4 @@
-import type { MouseEvent, ReactElement } from 'react';
+import type { MouseEvent, ReactElement, ReactNode } from 'react';
 import FormIcon from '../FormIcon';
 import './index.scss';
 import type { StepRowProps } from './types';
@@ -8,9 +8,31 @@ import type { StepRowProps } from './types';
 // hands it editing controls, the recipe page (MB.6) none, and a working's
 // deduction lines (M13.8) draw theirs with it. See claude-docs/components/step-row.md.
 
-/** The amount and unit as one phrase, "2 tsp", or null where there is neither. */
-const amountOf = (quantity?: string | null, unit?: string | null): string | null =>
-  [quantity, unit].filter(Boolean).join(' ') || null;
+/**
+ * The quantity as the person typed it rather than as the column stores it: "1.000" is
+ * "1" and "2.500" is "2.5", so only the decimals that carry information show (the owner,
+ * 2026-10-28). A plain string edit, not a Number round trip, which would lose a quantity
+ * past 15 digits.
+ */
+const plainQuantity = (quantity: string): string =>
+  quantity.includes('.') ? quantity.replace(/0+$/, '').replace(/\.$/, '') : quantity;
+
+/**
+ * The amount and unit as one phrase, "2 tsp", or null where there is neither. A unit with no
+ * quantity reads "— tsp", an en dash where the number would be: a missing amount, not an
+ * amount of nothing, which "0 tsp" would claim (the owner, 2026-10-28).
+ */
+const amountOf = (quantity?: string | null, unit?: string | null): ReactNode => {
+  if (!quantity && !unit) return null;
+  const number = quantity ? plainQuantity(quantity) : <span className="step-row__dash">—</span>;
+  return unit ? (
+    <>
+      {number} {unit}
+    </>
+  ) : (
+    number
+  );
+};
 
 /**
  * A click on the card's plain face toggles it, as a mouse shortcut for the pencil (which stays the

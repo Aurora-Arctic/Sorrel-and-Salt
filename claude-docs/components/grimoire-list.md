@@ -41,17 +41,17 @@ named in one batch too: the page reads through the services rather than GraphQL,
 
 `GrimoireListProps` (`types.ts`):
 
-| Prop                       | What it is                                                                  |
-| -------------------------- | --------------------------------------------------------------------------- |
-| `path`                     | The tab's own address: the filter's GET target and what Clear All opens     |
-| `workspaceId`              | The coven the title search suggests from                                    |
-| `status`                   | The tab's status, which the title search keeps to and the empty state names |
-| `spells`                   | The page's spells, each as its card draws it                                |
-| `filter`                   | The address's filter: the search text, the categories and their Match mode  |
-| `categories`               | Every category the filter offers, by slug, each with its count on this tab  |
-| `position`                 | The page number and the page count, for the pager                           |
-| `total`                    | How many spells the filter found on this tab, every page                    |
-| `previousHref`, `nextHref` | The pager's links, which keep the tab's path and the filter                 |
+| Prop                       | What it is                                                                                                        |
+| -------------------------- | ----------------------------------------------------------------------------------------------------------------- |
+| `path`                     | The tab's own address: the filter's GET target and what Clear All opens                                           |
+| `workspaceId`              | The coven the title search suggests from                                                                          |
+| `status`                   | The tab's status, which the title search keeps to and the empty state names                                       |
+| `spells`                   | The page's spells, each as its card draws it, with its `lookHref` and, for a role that may update, its `editHref` |
+| `filter`                   | The address's filter: the search text, the categories and their Match mode                                        |
+| `categories`               | Every category the filter offers, by slug, each with its count on this tab                                        |
+| `position`                 | The page number and the page count, for the pager                                                                 |
+| `total`                    | How many spells the filter found on this tab, every page                                                          |
+| `previousHref`, `nextHref` | The pager's links, which keep the tab's path and the filter                                                       |
 
 `GRIMOIRE_PARAMS` (`params.ts`) is the grimoire's parameter set in `defineSearchParams`:
 `query`, `categories` and `categoryMode`. It reads the address and writes the GraphQL
@@ -62,10 +62,12 @@ variables, so a search and its categories live in the address and combine.
 - **The title search.** The search box is `IngredientSearch`'s, labelled Title, with the
   same submit behaviour as the ingredients page. It matches title and intent, from two
   characters (M10.11's floor in the query). Its suggestions come from the coven's spells on
-  this tab, by title. Picking a suggestion opens the spell's recipe page (MB.6) through
-  `IngredientSearch`'s `pickHref`, the row's `match` holding the spell id, and M13.21 then makes it open the spell's Quick Look
-  instead, as a pick on the coven's Ingredients page opens the entry's Quick Look (the
-  owner's rule of 2026-10-27).
+  this tab, by title. Picking a suggestion opens the spell's Quick Look over the list (M13.21), at the address
+  the card's eye opens, `?spell=<id>` added to the tab's address with its filter and its page
+  (the list's `cursor` prop) kept and the text typed and not searched not applied. It goes
+  through `IngredientSearch`'s `pickHref`, `pickHeading` and `pickPlace`, the row's `match`
+  holding the spell id, as a pick on the coven's Ingredients page opens the entry's Quick
+  Look (the owner's rule of 2026-10-27).
 - **The Categories panel.** The panel is `FacetShell` holding the shared `CategoryLine`
   ([`facet-panel.md`](facet-panel.md)): the category picker and its Match chip, nothing
   else. Each category shows how many spells on this tab, under the search, the viewer can
@@ -120,6 +122,23 @@ variables, so a search and its categories live in the address and combine.
 - **The loading shape** is `PARTS_OF_SECTION.grimoire` in `src/lib/coven-path.ts`: cards
   under a title, the tab row and a filter. Drafts is the grimoire's second tab, so it draws
   the same; any other path beneath `grimoire` draws as a spell's own page.
+
+## Quick Look
+
+`?spell=<id>` on either tab opens `SpellLookDialog` over the list (M13.21), for every role. The
+tab reads it with `readLookedSpell` (`reads.ts`): `readSpell` for the signed-in member, which
+keeps another member's private spell and another coven's spell as a NotFound, so the tab opens
+nothing and says nothing of the spell. Any other failure draws the modal's own Notice. The steps,
+assigned categories and editor come from `readRecipeOf` (`grimoire/recipe-read.ts`), the same
+function the recipe page calls, with the editor named in one `displayNamesOf` call. Each ingredient step then carries its stock mark (`supply`), from one `readStepSuppliesOf` call (`grimoire/[id]/recipe-supply.ts`), since the modal has no In Coven Inventory column to show it (story 54; [spell-recipe.md](spell-recipe.md), "Quick Look"). A malformed
+id reads nothing, and `?new` or `?edit` hold the modal back so one dialog shows at a time. The
+modal's Edit shows for the same `rolePermits(role, { spell: ['update'] })` check as the card's
+pencil and links to `?edit=<id>` in place of `?spell=<id>`. An ingredient step's Quick Look eye
+opens the ingredient's details (`DetailsDialog`, M12.5) over the spell's modal, at the same
+address plus `&entry=<id>`, read with the Ingredients page's `readViewedEntry` and drawn with
+its `viewedDetailsOf` (`ingredients/viewed-details.tsx`), without the card's actions; closing
+the details returns to the spell's modal (the owner, 2026-10-28). The details wait on the spell's
+modal: `?entry` with no spell open opens nothing.
 
 ## The Compact switch
 

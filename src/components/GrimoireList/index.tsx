@@ -25,6 +25,7 @@ const GrimoireList = ({
   categories,
   facets,
   position,
+  cursor,
   total,
   previousHref,
   nextHref,
@@ -35,11 +36,11 @@ const GrimoireList = ({
       <GrimoireFilter
         path={path}
         workspaceId={workspaceId}
-        covenSlug={covenSlug}
         status={status}
         filter={filter}
         categories={categories}
         facets={facets}
+        cursor={cursor}
         total={total}
       />
     }

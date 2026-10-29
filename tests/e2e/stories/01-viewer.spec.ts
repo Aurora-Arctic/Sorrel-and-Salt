@@ -66,16 +66,9 @@ function editingFields(page: Page): Locator {
     .or(main.getByLabel('Visibility').and(outsideFilter));
 }
 
-test.fixme(
+test(
   'a viewer reads the ingredients and the grimoire a member reads, and is offered no write and refused every one',
-  {
-    tag: '@story-12',
-    annotation: {
-      type: 'fixme',
-      description:
-        'M9.6 builds /coven/[slug]/ingredients and M10.11 /coven/[slug]/grimoire; the later of the two turns this on',
-    },
-  },
+  { tag: '@story-12' },
   async ({ page }) => {
     const coven = await seedCoven(page, 'Fixture Coven Twelve', 'story-12.test', {
       A: 'owner',
@@ -94,7 +87,14 @@ test.fixme(
       );
       const rosemary = await compendiumVariant(sql, 'Rosemary', 'Herb');
       await insertStock(sql, coven.id, rosemary, { quantity: 20, unit: 'g', threshold: 10 }, B);
-      const spellId = await insertSpell(sql, coven.id, 'Fixture Working', 'workspace', B);
+      const spellId = await insertSpell(
+        sql,
+        coven.id,
+        'Fixture Working',
+        'workspace',
+        B,
+        'complete',
+      );
       return { testwort, stockId, spellId };
     });
     const ingredientsPath = `/coven/${coven.slug}/ingredients`;

@@ -498,6 +498,69 @@ describe('Modal', () => {
     expect(close).toHaveBeenCalledTimes(1);
   });
 
+  // A link in one modal's foot opening another (Quick Look's Edit Spell) takes
+  // the one away and puts the other in its place: the other is marked, and its
+  // backdrop starts dimmed (index.scss), so the page does not show between them.
+  describe('one in place of another', () => {
+    afterEach(() => {
+      vi.restoreAllMocks();
+    });
+
+    function Swap({ second }: { second: boolean }): ReactElement {
+      return second ? (
+        <Modal key="edit" title="Edit Spell" onClose={vi.fn()}>
+          <p>Builder</p>
+        </Modal>
+      ) : (
+        <Modal key="look" title="Quick Look" onClose={vi.fn()}>
+          <p>Recipe</p>
+        </Modal>
+      );
+    }
+
+    it('marks a modal opened as an open one goes', () => {
+      // Long past any unmount an earlier test left behind, and still while the swap runs.
+      vi.spyOn(performance, 'now').mockReturnValue(1e12);
+      const { rerender } = render(<Swap second={false} />);
+      expect(screen.getByRole('dialog', { name: 'Quick Look' })).not.toHaveAttribute(
+        'data-handover',
+      );
+
+      rerender(<Swap second />);
+
+      expect(screen.getByRole('dialog', { name: 'Edit Spell' })).toHaveAttribute('data-handover');
+    });
+
+    it('does not mark one opened after the last closed itself', () => {
+      vi.stubGlobal(
+        'matchMedia',
+        vi.fn(() => ({ matches: true })),
+      );
+      function Closer(): ReactElement {
+        const [second, setSecond] = useState(false);
+        return second ? (
+          <Modal key="edit" title="Edit Spell" onClose={vi.fn()}>
+            <p>Builder</p>
+          </Modal>
+        ) : (
+          <Modal key="look" title="Quick Look" onClose={() => setSecond(true)}>
+            <p>Recipe</p>
+          </Modal>
+        );
+      }
+      // Long past any unmount an earlier test left behind.
+      vi.spyOn(performance, 'now').mockReturnValue(1e12);
+      render(<Closer />);
+
+      fireEvent.click(screen.getByRole('button', { name: 'Close' }));
+
+      expect(screen.getByRole('dialog', { name: 'Edit Spell' })).not.toHaveAttribute(
+        'data-handover',
+      );
+      vi.unstubAllGlobals();
+    });
+  });
+
   // The guard over a form's unsaved changes (MB.115, the owner's call): every
   // way out asks first while the form has changes. Its shape is asserted
   // here, on a form of the test's own; each admin form's test asserts only

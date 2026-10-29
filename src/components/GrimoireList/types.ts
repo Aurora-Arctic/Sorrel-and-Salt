@@ -1,6 +1,6 @@
 import type { Route } from 'next';
 import type { SpellStatus } from '@/modules/grimoire';
-import type { SearchFilter } from '../../lib/search-param-table';
+import type { SearchCursor, SearchFilter } from '../../lib/search-param-table';
 import type { PagePosition } from '../../lib/types';
 import type { CompendiumCategoryChoice } from '../CompendiumList/types';
 import type { SpellCardProps } from '../SpellCard/types';
@@ -43,6 +43,8 @@ export interface GrimoireListProps {
   /** Moon Phase, Day of Week, Visibility and Coven Member, each with its counts. */
   facets: GrimoireFacets;
   position?: PagePosition;
+  /** The cursor of the page shown, which a picked title's Quick Look opens over and closes back to. */
+  cursor?: SearchCursor;
   /** How many spells the filter found on this tab, every page. */
   total: number;
   previousHref?: Route;
@@ -51,7 +53,7 @@ export interface GrimoireListProps {
 
 export interface GrimoireFilterProps extends Pick<
   GrimoireListProps,
-  'path' | 'workspaceId' | 'covenSlug' | 'status' | 'filter' | 'categories' | 'facets' | 'total'
+  'path' | 'workspaceId' | 'status' | 'filter' | 'categories' | 'facets' | 'total' | 'cursor'
 > {}
 
 export interface EmptyGrimoireProps extends Pick<GrimoireListProps, 'status' | 'filter'> {}

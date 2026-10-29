@@ -546,7 +546,7 @@ describe('StockDialog openOn (M12.29)', () => {
     expect(save()).toBeDisabled();
   });
 
-  it('adds a form the coven holds no jar of as a new row and chooses it, which is a change to save', async () => {
+  it('adds a form the coven holds no jar of as a new row and chooses it, with nothing to save until it is filled', async () => {
     const calls = mockSaving();
     open({ openOn: RESIN });
 
@@ -556,9 +556,11 @@ describe('StockDialog openOn (M12.29)', () => {
     await waitFor(() => expect(quantity('Resin')).toHaveFocus());
     // The one new row, not two, and the form is no longer on offer under Add Form.
     expect(inDialog().getAllByRole('button', { name: /^Resin\b/ })).toHaveLength(1);
-    expect(save()).toBeEnabled();
+    // Opened, the dialog is unedited (the owner, 2026-10-29): the row is a place to fill, not a change.
+    expect(save()).toBeDisabled();
 
     typeIn(quantity('Resin'), '12');
+    expect(save()).toBeEnabled();
     choose('Unit, Resin', 'g');
     const { input } = await sent(calls);
     expect(input.create).toEqual([

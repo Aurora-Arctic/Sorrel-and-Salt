@@ -7,9 +7,9 @@ import { useFormContext, useWatch } from 'react-hook-form';
 import { ChevronIcon, ClearIcon, GripIcon } from '../../Combobox/icons';
 import { EditIcon } from '../../IngredientForm/icons';
 import { SelectField, TextField } from '../../Field';
-import IconTip from '../../IconTip';
 import SafetyNote, { SafetyMark } from '../../SafetyNote';
 import StepRow from '../../StepRow';
+import OneOffBadge from '../../StepRow/one-off-badge';
 import { UNIT_OPTIONS } from '../../StockFields';
 import type { SpellStepValue, SpellStepsValues } from './types';
 import { type QuickLookCoven, StepQuickLook } from '../step-quick-look';
@@ -20,8 +20,6 @@ import { isInstruction, safetyOf, stepNameOf } from './values';
 // line, open or closed like the ingredient form's variant card: closed it reads
 // its amount and its instruction on one muted line beneath the name; open it shows its amount, unit and instruction (and,
 // for a one-off, its form). An instruction-only step has the instruction alone. See claude-docs/components/spell-builder.md, "Steps".
-
-const ONE_OFF_TIP = 'Used in this spell only; not kept in your cupboard.';
 
 export interface BuilderStepRowProps {
   /** The row's field-array key, its place in the sortable list. */
@@ -165,24 +163,8 @@ export function BuilderStepRow({
         ) : null
       }
       note={safety && <SafetyNote level={5} compact {...safety} />}
-      badge={
-        oneOff ? (
-          // The badge is a button so the tip is reached by focus; its name stays One-Off and the
-          // sentence is its description (IconTip's own bubble is drawn only, never read).
-          <IconTip tip={ONE_OFF_TIP} placement="above" opensOnPress>
-            <button
-              type="button"
-              className="badge badge--retired step-row__one-off"
-              aria-describedby={`${fieldsId}-one-off`}
-            >
-              One-Off
-            </button>
-            <span id={`${fieldsId}-one-off`} className="visually-hidden">
-              {ONE_OFF_TIP}
-            </span>
-          </IconTip>
-        ) : null
-      }
+      // The One-Off badge with its tip, the one the recipe page draws too (one-off-badge.tsx).
+      badge={oneOff ? <OneOffBadge /> : null}
       summary={
         instruction ? (
           (bodyTyped ?? '').trim() || <span className="step-row__placeholder">Write the step</span>

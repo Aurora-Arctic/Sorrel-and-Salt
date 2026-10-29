@@ -28,6 +28,8 @@ export interface ComparisonPanelProps {
   steps: readonly SpellStepValue[];
   /** Each category's group colours by id, so a chip is drawn as the site draws one; a category not in it is left out. */
   groups: ReadonlyMap<string, GroupColors>;
+  /** The heading's level: h5 under the builder's Jar heading, h2 on the recipe page (M13.21). */
+  heading?: 'h2' | 'h5';
 }
 
 // The chips are the compact size, the one the admin Compendium table's Categories column uses,
@@ -75,7 +77,12 @@ export function compareJar(intendedIds: readonly string[], steps: readonly Spell
   return compareSpellCategories(intendedIds, present);
 }
 
-export function ComparisonPanel({ intended, steps, groups }: ComparisonPanelProps): ReactElement {
+export function ComparisonPanel({
+  intended,
+  steps,
+  groups,
+  heading: Heading = 'h5',
+}: ComparisonPanelProps): ReactElement {
   const headingId = useId();
   const intendedIds = intended.map(({ id }) => id);
   const ingredientSteps = steps.filter((step) => step.ingredientId !== null);
@@ -117,7 +124,7 @@ export function ComparisonPanel({ intended, steps, groups }: ComparisonPanelProp
 
   return (
     <section className="comparison-panel" aria-labelledby={headingId}>
-      <h5 id={headingId}>Category Match</h5>
+      <Heading id={headingId}>Category Match</Heading>
       {body}
     </section>
   );

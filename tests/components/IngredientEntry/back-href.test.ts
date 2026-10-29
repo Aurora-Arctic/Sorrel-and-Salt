@@ -63,4 +63,17 @@ describe('listReturnHref', () => {
     expect(listReturnHref('', ORIGIN, COMPENDIUM)).toBeUndefined();
     expect(listReturnHref('not a url', ORIGIN, COMPENDIUM)).toBeUndefined();
   });
+
+  it("takes any of several list paths as the list, the grimoire's two tabs (M13.21), and nothing beneath them", () => {
+    const GRIMOIRE = ['/coven/fixture-coven/grimoire', '/coven/fixture-coven/grimoire/drafts'];
+    expect(
+      listReturnHref(`${ORIGIN}/coven/fixture-coven/grimoire/drafts?query=a`, ORIGIN, GRIMOIRE),
+    ).toBe('/coven/fixture-coven/grimoire/drafts?query=a');
+    expect(listReturnHref(`${ORIGIN}/coven/fixture-coven/grimoire`, ORIGIN, GRIMOIRE)).toBe(
+      '/coven/fixture-coven/grimoire',
+    );
+    expect(
+      listReturnHref(`${ORIGIN}/coven/fixture-coven/grimoire/some-spell`, ORIGIN, GRIMOIRE),
+    ).toBeUndefined();
+  });
 });

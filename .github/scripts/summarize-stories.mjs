@@ -76,8 +76,7 @@ if (unknown.length > 0 || untagged.length > 0) {
 }
 lines.push('', '</details>');
 
-let details = lines.join('\n');
-if (coverage?.table) details = `${details}\n\n${coverage.table}`;
+const details = lines.join('\n');
 
 setOutput('summary', summary);
 setOutput('details', details);

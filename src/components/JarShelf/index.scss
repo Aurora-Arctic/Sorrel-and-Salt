@@ -15,10 +15,11 @@ $-drawing-width: $jar-drawing-width;
 $-drawing-height: $jar-drawing-height;
 $-plank: $jar-plank;
 $-bracket: 7px;
-// The hover (the owner, 2026-10-21): how far the name grows, and how long the jar's
-// shake lasts. Neither has a token. The name's own transition is `$motion-short`.
-$-name-grow: 1.15;
-$-shake-duration: 500ms;
+// The hover (the owner, 2026-10-21): how far the name grows, and how long the jar's shake lasts.
+// Shared with the recipe page's inventory lines (SpellBuilder/index.scss), whose press shakes
+// the same jar; the values live in _variables.scss so both say the same.
+$-name-grow: $jar-name-grow;
+$-shake-duration: $jar-shake-duration;
 
 .jar-shelf {
   // `$items: false`: the mixin's `> li::before { content: none }` (bullets off) is more specific
