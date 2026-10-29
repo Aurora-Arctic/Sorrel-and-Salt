@@ -1,0 +1,41 @@
+# Gathered for M14.29; the seed never reads this folder.
+entry: botanical/merbau-intsia-bijuga
+status: needs-review
+listings:
+  - list: iucn
+    name: IUCN Red List
+    value: Near Threatened (IUCN 3.1)
+    listedAs: Intsia bijuga
+    nameBasis: stated
+    source: wikipedia-intsia-bijuga
+    locator: taxobox, conservation status (status = NT, IUCN3.1)
+  - list: state-listing
+    name: Northern Territory
+    value: Critically endangered
+    listedAs: Intsia bijuga
+    nameBasis: stated
+    source: wikipedia-intsia-bijuga
+    locator: 'Conservation: "in the neighbouring Northern Territory it is listed as critically endangered"'
+  - list: state-listing
+    name: Queensland
+    value: Least concern
+    listedAs: Intsia bijuga
+    nameBasis: stated
+    source: wikipedia-intsia-bijuga
+    locator: 'Conservation: "in Queensland, Australia, it has been given least concern status"'
+  - list: other
+    name: Singapore (assessor not named)
+    value: Critically endangered
+    listedAs: Intsia bijuga
+    nameBasis: stated
+    source: wikipedia-intsia-bijuga
+    locator: 'Conservation: "It is also listed as critically endangered in Singapore"'
+  - list: other
+    name: India (assessor not named)
+    value: Vulnerable
+    listedAs: Intsia bijuga
+    nameBasis: stated
+    source: wikipedia-intsia-bijuga
+    locator: 'Conservation: "as vulnerable in India"'
+questions:
+  - Wikipedia says the tree is "listed as critically endangered in Singapore" and "vulnerable in India" but names no assessor for either. Find the assessments, or drop the rows?
