@@ -11,17 +11,12 @@ import type { WorkspaceRole } from '../types';
 // and the `Membership` it returns is the proof the check ran. The brand below
 // is the whole mechanism — see claude-docs/db/membership-proof.md, "The Membership proof".
 
-// Not exported, which is what makes `Membership` unconstructible outside this
-// module: no other file can name the property, so no object literal satisfies
-// the type.
+// Not exported, so no other file can name the property and no object literal satisfies `Membership`.
 declare const brand: unique symbol;
 
-// One lookup per (user, workspace) per server render, however many layouts and
-// pages ask and whatever permission each asks for: the check below the lookup
-// stays uncached. Keyed by the two ids rather than the session, which
-// `cache()` would compare by identity. Outside a render — the GraphQL route
-// handler included — it is the plain finder (claude-docs/graphql/two-transports.md, "The two
-// transports").
+// One lookup per (user, workspace) per server render, whatever permission each caller asks for; the check stays uncached. Keyed by
+// the two ids because `cache()` compares a session by identity. Outside a render, the GraphQL handler included, it is the plain
+// finder (claude-docs/graphql/two-transports.md, "The two transports").
 const workspaceRole = cache(findWorkspaceRole);
 
 /**
@@ -59,16 +54,12 @@ export async function assertMembership(
   workspaceId: string,
   permission: WorkspacePermission,
 ): Promise<Membership> {
-  // An empty request authorizes vacuously, so it would admit any member to
-  // anything. A call that means "a member, at all" asks for the read it is
-  // about to do; reaching here with `{}` is a bug in the caller, not a refusal.
+  // An empty request authorizes vacuously and would admit any member to anything, so `{}` is a bug in the caller, not a refusal.
   if (Object.keys(permission).length === 0) {
     throw new Error('assertMembership requires a permission to check');
   }
 
-  // An id is whatever string the client sent. One that cannot name a
-  // workspace is refused as one the user is not in, rather than asked of the
-  // database, where it would be a driver error.
+  // An id is whatever string the client sent: one that cannot name a workspace is refused as a stranger, not sent to the driver.
   if (!RowId.safeParse(workspaceId).success) throw new Forbidden();
 
   const role = await workspaceRole(session.userId, workspaceId);
@@ -77,11 +68,8 @@ export async function assertMembership(
   // workspace exists is itself private (claude-docs/auth/service-session.md).
   if (!role) throw new Forbidden();
 
-  // Unlike the bare refusals above, this one is said to a member who is
-  // really there, and reaches the page as the alert beside the button they
-  // pressed (a stale page after a demotion, say). It is a coven's own
-  // wording, since only a workspace-scoped call gets this far, and it names
-  // neither the role nor the permission: both are the service's to decide.
+  // Said to a real member, and shown as the alert beside the button they pressed (a stale page after a demotion, say). It names
+  // neither the role nor the permission, which are the service's to decide.
   if (!rolePermits(role, permission)) {
     throw new Forbidden("Your role in this coven doesn't allow that. Ask an owner if you need it.");
   }
@@ -92,12 +80,9 @@ export async function assertMembership(
 }
 
 /**
- * The proofs a read spanning the compendium and, optionally, one coven runs
- * under, as a two-tier finder takes them: none without `workspaceId`, so the
- * compendium alone, else that coven's, checked for `permission`. How every
- * "the compendium, or this coven too" read — an entry, a suggestion, a
- * duplicate warning — names its scope, so none can widen it by forgetting the
- * check.
+ * The proofs a read spanning the compendium and, optionally, one coven runs under: none without `workspaceId`, so the
+ * compendium alone, else that coven's, checked for `permission`. Every "the compendium, or this coven too" read names its scope
+ * this way, so none can widen it by forgetting the check.
  *
  * @throws {Forbidden} a coven is named and the caller is signed out, or
  * `assertMembership` refuses them.
