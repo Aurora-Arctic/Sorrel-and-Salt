@@ -189,6 +189,7 @@ export async function grimoireTab({
         opened={opened}
         canCreate={canCreate}
         canDelete={canDelete}
+        canDuplicate={canCreate}
         userId={membership.userId}
       />
       <SpellLookDialog

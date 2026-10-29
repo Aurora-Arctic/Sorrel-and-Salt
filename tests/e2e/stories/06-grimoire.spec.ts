@@ -1032,3 +1032,45 @@ test(
     await expect(item('Shared Waning Working')).toBeVisible();
   },
 );
+
+test(
+  'a member duplicates a spell and lands in the builder on a private draft copy',
+  { tag: '@story-82' },
+  async ({ page }) => {
+    const coven = await seedCoven(page, 'Fixture Coven Eighty-Two', 'story-82.test', {
+      A: 'owner',
+      B: 'member',
+      C: 'viewer',
+    });
+    const spell = await withSql((sql) =>
+      insertSpell(sql, coven.id, 'Fixture Working', 'workspace', coven.users.A, 'complete'),
+    );
+    const recipe = `/coven/${coven.slug}/grimoire/${spell}`;
+
+    // A viewer may not create a spell, so the recipe page offers no Duplicate.
+    await signInAgainAs(page, coven.users.C);
+    await page.goto(recipe);
+    await expect(page.getByRole('button', { name: 'Duplicate' })).toHaveCount(0);
+
+    // A member duplicates it and lands in the copy's builder.
+    await signInAgainAs(page, coven.users.B);
+    await page.goto(recipe);
+    await page.getByRole('button', { name: 'Duplicate' }).click();
+    const builder = page.getByRole('dialog', { name: 'Edit Spell, Fixture Working (Copy)' });
+    await expect(builder).toBeVisible();
+    await expect(page).toHaveURL(/\/grimoire\/drafts\?edit=[0-9a-f-]{36}$/);
+
+    // Closed, the copy is in the grimoire, a draft badged private; the original is untouched.
+    await page.keyboard.press('Escape');
+    await expect(builder).toHaveCount(0);
+    const copy = grimoireList(page)
+      .getByRole('listitem')
+      .filter({ hasText: 'Fixture Working (Copy)' });
+    await expect(copy).toContainText('Private');
+    await expect(copy).toContainText('Draft');
+    await page.goto(`/coven/${coven.slug}/grimoire`);
+    await expect(
+      grimoireList(page).getByRole('listitem').filter({ hasText: 'Fixture Working' }),
+    ).toHaveCount(1);
+  },
+);

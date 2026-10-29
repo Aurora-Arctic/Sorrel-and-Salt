@@ -6,7 +6,7 @@ query (DESIGN.md §11, "Acceptance tests — story traceability";
 `claude-docs/design-decisions/m9.1-stories-are-browser-flows.md`).
 
 `npm run test:stories` (or `make test-stories`) runs only this directory, with
-`playwright.stories.config.ts`, and prints a checklist of the 62 v1 stories.
+`playwright.stories.config.ts`, and prints a checklist of the 63 v1 stories.
 A story with no test reads "no test yet". CI runs it as the `stories` job of
 `.github/workflows/pr-gate.yml`, never a required check, so a red scaffold is
 never on the merge path.

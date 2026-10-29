@@ -161,3 +161,13 @@ export interface DeleteSpellActionProps {
   /** The grimoire tab the page leaves for, with what was deleted in its address. */
   deletedHref: Route;
 }
+
+/** Duplicate's button on the recipe page, for a role that may create a spell. */
+export interface DuplicateSpellActionProps {
+  workspaceId: string;
+  /** The coven's slug, which the copy's address needs. */
+  covenSlug: string;
+  spellId: string;
+  /** The spell's name as the page shows it, Untitled Spell for a draft with none. */
+  name: string;
+}

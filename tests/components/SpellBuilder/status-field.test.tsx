@@ -1,17 +1,27 @@
 import { QueryClientProvider } from '@tanstack/react-query';
 import { fireEvent, render, screen, waitFor } from '@testing-library/react';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
-import type { CreateSpellMutation, CreateSpellMutationVariables } from '@/gql/graphql';
+import type { Route } from 'next';
+import type {
+  CreateSpellMutation,
+  CreateSpellMutationVariables,
+  DuplicateSpellMutation,
+  DuplicateSpellMutationVariables,
+} from '@/gql/graphql';
 import { makeQueryClient } from '@/lib/graphql-client';
 import type { SpellBuilderProps, SpellBuilderSpell } from '@/components/SpellBuilder/types';
-import { mockGraphQLMutation } from '../../support/msw/graphql';
+import { mockGraphQLError, mockGraphQLMutation } from '../../support/msw/graphql';
 import { offerCategories } from '../../support/msw/ingredient-lookups';
 
-vi.mock('next/navigation', () => ({ useRouter: () => ({ push: vi.fn(), refresh: vi.fn() }) }));
+const router = vi.hoisted(() => ({ push: vi.fn(), replace: vi.fn(), refresh: vi.fn() }));
+vi.mock('next/navigation', () => ({ useRouter: () => router }));
 
 const { default: SpellBuilder } = await import('@/components/SpellBuilder');
 
-beforeEach(() => offerCategories([]));
+beforeEach(() => {
+  router.push.mockClear();
+  offerCategories([]);
+});
 
 // The spell builder's status control: a spell is a draft until marked complete, and a complete spell shows no button because it cannot be reopened.
 // That the service keeps a complete spell titled is tests/modules/grimoire's; here the builder refuses a blank title on the title field and sends the chosen status.
@@ -106,6 +116,55 @@ describe('SpellBuilder status', () => {
 
     expect(screen.queryByRole('button', { name: 'Mark Complete' })).toBeNull();
     expect(screen.queryByRole('button', { name: /reopen/i })).toBeNull();
+    expect(screen.queryByRole('button', { name: 'Copy as Draft' })).toBeNull();
+  });
+
+  describe('Copy as Draft', () => {
+    const complete = { ...SPELL, status: 'complete' as const };
+    const copiedHrefOf = (id: string) => `/coven/fixture-coven/grimoire/drafts?edit=${id}` as Route;
+
+    it('duplicates a complete spell and opens the copy', async () => {
+      const calls: DuplicateSpellMutationVariables[] = [];
+      mockGraphQLMutation<DuplicateSpellMutation, DuplicateSpellMutationVariables>(
+        'DuplicateSpell',
+        (variables) => {
+          calls.push(variables);
+          return { duplicateSpell: { id: 'copy-1' } };
+        },
+      );
+      renderBuilder({ spell: complete, copiedHrefOf });
+
+      fireEvent.click(screen.getByRole('button', { name: 'Copy as Draft' }));
+
+      await waitFor(() =>
+        expect(router.push).toHaveBeenCalledWith(
+          '/coven/fixture-coven/grimoire/drafts?edit=copy-1',
+        ),
+      );
+      expect(calls).toEqual([{ workspaceId: 'w1', id: 's3' }]);
+    });
+
+    it('is not drawn for a draft, nor where the member may not create a spell', () => {
+      const draft = renderBuilder({ spell: SPELL, copiedHrefOf });
+      expect(screen.queryByRole('button', { name: 'Copy as Draft' })).toBeNull();
+      draft.unmount();
+
+      renderBuilder({ spell: complete });
+      expect(screen.queryByRole('button', { name: 'Copy as Draft' })).toBeNull();
+    });
+
+    it('says why when the copy is refused, and stays on the spell', async () => {
+      mockGraphQLError('DuplicateSpell', {
+        code: 'FORBIDDEN',
+        message: 'Not allowed to create a spell here.',
+      });
+      renderBuilder({ spell: complete, copiedHrefOf });
+
+      fireEvent.click(screen.getByRole('button', { name: 'Copy as Draft' }));
+
+      expect(await screen.findByText(/not allowed to create/i)).toBeVisible();
+      expect(router.push).not.toHaveBeenCalled();
+    });
   });
 
   it('reads a saved spell with no status as a draft', () => {
