@@ -1,0 +1,11 @@
+# Gathered for M14.29; the seed never reads this folder.
+entry: botanical/white-ginger-lily-hedychium-coronarium
+status: approved
+listings:
+  - list: iucn
+    name: IUCN Red List of Threatened Species, as printed in the Wikipedia taxobox
+    value: Data Deficient
+    listedAs: Hedychium coronarium
+    nameBasis: stated
+    source: wikipedia-hedychium-coronarium
+    locator: 'taxobox "Conservation status": Data Deficient (IUCN 3.1)'

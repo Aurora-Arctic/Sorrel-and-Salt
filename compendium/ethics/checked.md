@@ -31,6 +31,14 @@ botanical/pata-cissampelos-pareira
 botanical/pride-of-india-lagerstroemia-speciosa
 botanical/punarnava-boerhavia-diffusa
 botanical/rosary-pea-abrus-precatorius
+botanical/saptarangi-salacia-reticulata
+botanical/shankhpushpi-evolvulus-alsinoides
+botanical/shatavari-asparagus-racemosus
+botanical/stonebreaker-phyllanthus-amarus
+botanical/veldt-grape-cissus-quadrangularis
+botanical/velvet-bean-mucuna-pruriens
+botanical/vidanga-embelia-ribes
+botanical/yellow-nailwort-barleria-prionitis
 unknown/ashtadhatu
 unknown/banalinga
 unknown/bell-metal
@@ -39,4 +47,6 @@ unknown/cow-urine
 unknown/ghee
 unknown/kala-namak
 unknown/kumkuma
+unknown/sindoor
+unknown/tabasheer
 zoological/chank-turbinella-pyrum

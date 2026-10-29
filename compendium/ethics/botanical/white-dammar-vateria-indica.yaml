@@ -1,0 +1,11 @@
+# Gathered for M14.29; the seed never reads this folder.
+entry: botanical/white-dammar-vateria-indica
+status: approved
+listings:
+  - list: iucn
+    name: IUCN Red List of Threatened Species, as printed in the Wikipedia taxobox
+    value: Vulnerable
+    listedAs: Vateria indica
+    nameBasis: stated
+    source: wikipedia-vateria-indica
+    locator: 'taxobox "Conservation status": Vulnerable (IUCN 3.1)'
