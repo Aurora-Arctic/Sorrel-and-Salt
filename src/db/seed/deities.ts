@@ -13,7 +13,7 @@ import type {
   SeedTransaction,
 } from './types';
 
-// MB.127's deity vocabulary: 87 traditions and the deities filed
+// MB.127's deity vocabulary: 88 traditions and the deities filed
 // under them, a starting set an admin may edit. Reference data, not a
 // scenario — migrate.yml seeds it alone, so it inserts the bootstrap user
 // itself. Transcribed from the seed doc's two tables, which review holds in
@@ -431,6 +431,11 @@ export const DEITY_TRADITIONS: SeedDeityTradition[] = [
     name: 'Scottish Gaelic',
     description:
       'The Gaels of Scotland, whose Gaelic language and culture extended from Ireland into western Scotland.',
+  },
+  {
+    name: 'Navajo',
+    description:
+      'The Navajo, an Athabaskan-speaking people of the United States, most of whom live in Arizona and New Mexico; they call themselves Diné.',
   },
 ];
 

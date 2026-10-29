@@ -5110,6 +5110,17 @@ export const SOURCES: SeedSource[] = [
   {
     reference: {
       kind: 'entry',
+      title: 'Navajo',
+      container: 'Wikipedia',
+      url: 'https://en.wikipedia.org/w/index.php?title=Navajo&oldid=1382625452',
+      modified: '2026-10-29',
+      accessed: '2026-10-29',
+    },
+    traditions: ['Navajo'],
+  },
+  {
+    reference: {
+      kind: 'entry',
       title: 'Achilles',
       container: 'Wikipedia',
       url: 'https://en.wikipedia.org/w/index.php?title=Achilles&oldid=1377070946',

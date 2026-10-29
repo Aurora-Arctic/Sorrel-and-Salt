@@ -2,11 +2,11 @@
 
 The starting list for `deity_traditions` and `deities`
 ([the model](deity-vocabulary.md)), recorded by MB.127 for MB.129 to seed:
-87 traditions and 290 deities, in the order the two tables below give
+88 traditions and 290 deities, in the order the two tables below give
 them. The owner asked for a broad list, 100 to 200, across the practices the
 project serves, and that the deities be grouped by tradition; the five
 African traditions added on review carried it past 200. The seed's literal
-transcribes both tables, every deity filed under one of the 87;
+transcribes both tables, every deity filed under one of the 88;
 review holds the two in step, and `deities.test.ts` what a re-run leaves of
 an admin's edits (MB.225).
 
@@ -282,6 +282,7 @@ refusal is per tradition, so both stand.
 | Jewish                             | The Jewish people, an ethnoreligious group and nation originating in the Israelites of ancient Israel and Judah, and their religion, Judaism.              |
 | Christian                          | Christianity, the Abrahamic religion based on the Bible and the teachings of Jesus.                                                                        |
 | Scottish Gaelic                    | The Gaels of Scotland, whose Gaelic language and culture extended from Ireland into western Scotland.                                                      |
+| Navajo                             | The Navajo, an Athabaskan-speaking people of the United States, most of whom live in Arizona and New Mexico; they call themselves Diné.                    |
 
 ### Deities
 
@@ -1564,7 +1565,7 @@ Roman.
 
 #### Widened by M14.15
 
-M14.15 added 52 traditions and 74 deities that the compendium's herb sources
+M14.15 added 53 traditions and 74 deities that the compendium's herb sources
 name, each read on Wikipedia on October 29, 2026 and cited by the permanent link to
 the revision read. The descriptions gloss the page cited; none names an herb or plant.
 Wikipedia is the source for each row, the owner's call for these rows; an academic
@@ -1677,6 +1678,8 @@ Traditions:
   - Wikipedia, under "Christianity." Last modified October 28, 2026. Accessed October 29, 2026. https://en.wikipedia.org/w/index.php?title=Christianity&oldid=1382348243.
 - **Scottish Gaelic** (The Gaels of Scotland, whose Gaelic language and culture extended from Ireland into western Scotland)
   - Wikipedia, under "Gaels." Last modified October 2, 2026. Accessed October 29, 2026. https://en.wikipedia.org/w/index.php?title=Gaels&oldid=1377933923.
+- **Navajo** (The Navajo, an Athabaskan-speaking people of the United States, most of whom live in Arizona and New Mexico; they call themselves Diné)
+  - Wikipedia, under "Navajo." Last modified October 29, 2026. Accessed October 29, 2026. https://en.wikipedia.org/w/index.php?title=Navajo&oldid=1382625452.
 
 Per-deity:
 

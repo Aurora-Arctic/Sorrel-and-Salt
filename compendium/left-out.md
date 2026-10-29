@@ -540,9 +540,8 @@ M14.15 widened `src/db/seed/deities.ts` from the M14.15 list in `claude-docs/db/
 
 ### Traditions held for the owner
 
-These pairs name one tradition twice. Nothing is written for either name until the owner chooses (see the M14.15 report to the owner).
+These pairs name one tradition twice. Nothing is written for either name until the owner chooses (see the M14.15 report to the owner). Navajo and Diné, held here first, were merged on the owner's say-so on 2026-10-29 into one tradition, Navajo.
 
-- Navajo and Diné (Navajo)
 - Traditional Korean medicine and Korean traditional medicine
 - Tibetan medicine, Tibetan folk medicine and Sowa-Rigpa
 - Traditional Chinese medicine and Chinese herbology

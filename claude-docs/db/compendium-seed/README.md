@@ -151,7 +151,7 @@ A compendium entry may only name values the curated vocabularies hold (MB.162, M
 | ----------------- | ----------------------------------------------------------------------------- | --------------------------------------------------------------------------- |
 | a form's `form`   | 78 forms in 6 groups (Botanical, Animal, Mineral, Substance, Fluid, Curio)    | `src/db/seed/forms.ts`, `FORMS`                                             |
 | `categories`      | 63 categories in 8 groups                                                     | `src/db/seed/categories.ts`, `CATEGORIES`                                   |
-| `deities`         | 290 deities in 87 traditions                                                  | `src/db/seed/deities.ts`, `DEITIES`                                         |
+| `deities`         | 290 deities in 88 traditions                                                  | `src/db/seed/deities.ts`, `DEITIES`                                         |
 | `celestialBodies` | 19 celestial bodies, Sun to South Node                                        | `src/db/seed/astrology.ts`, `CELESTIAL_BODIES`                              |
 | `zodiacSigns`     | 13 signs, Ophiuchus included                                                  | `src/db/seed/astrology.ts`, `ZODIAC_SIGNS`                                  |
 | `elements`        | `earth`, `air`, `fire`, `water`, `spirit`                                     | `src/modules/ingredients/schema/ingredient-enums.ts`, `INGREDIENT_ELEMENTS` |
