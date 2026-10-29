@@ -179,6 +179,10 @@ describe('the spell recipe page', () => {
     const match = within(aside).getByRole('region', { name: 'Category Match' });
     expect(within(match).getByText('Carried')).toBeInTheDocument();
     expect(within(match).getByText('Testwarding')).toBeInTheDocument();
+    // Category Match stands over the inventory (the owner, 2026-10-29).
+    expect(
+      match.compareDocumentPosition(inventory) & Node.DOCUMENT_POSITION_FOLLOWING,
+    ).toBeTruthy();
     expect(stockOf).toHaveBeenCalledWith(session, [
       { ingredientId: 'ing-1', workspaceId: COVEN.id },
     ]);

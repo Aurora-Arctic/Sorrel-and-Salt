@@ -8,8 +8,8 @@ import type { SpellRecipeAsideProps } from './types';
 // mounts the builder's dialog too, but the column loads them itself rather than by that chance.
 import '../SpellBuilder/index.scss';
 
-// The recipe page's side column (M13.21; the owner, 2026-10-29): In Coven Inventory and
-// Category Match, the builder's Jar aside panels, read for the saved spell and laid out as the
+// The recipe page's side column (M13.21; the owner, 2026-10-29): Category Match and In Coven
+// Inventory, the builder's Jar aside panels, read for the saved spell and laid out as the
 // ingredient entry page lays its side column, beside the text past a tablet's width and beneath
 // it on a phone. The page alone draws it; the Quick Look modal keeps to the recipe body. Both
 // panels are read-only here, as they are in the builder: the page hands them the saved steps.
@@ -24,8 +24,9 @@ export default function SpellRecipeAside({
   const colours = useMemo(() => new Map(groups), [groups]);
   return (
     <>
-      <InCovenInventory steps={steps} heading="h2" />
+      {/* Category Match first, over the inventory (the owner, 2026-10-29): the builder's order reversed. */}
       <ComparisonPanel intended={intended} steps={steps} groups={colours} heading="h2" />
+      <InCovenInventory steps={steps} heading="h2" />
     </>
   );
 }
