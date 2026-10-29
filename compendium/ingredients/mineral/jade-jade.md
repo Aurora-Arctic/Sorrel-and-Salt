@@ -18,6 +18,7 @@ folkNames:
 deities:
   - Kuan Yin
   - Maat
+  - Buddha
 categories:
   - Love
   - Healing
@@ -74,7 +75,3 @@ Jade is the name Wikipedia gives to two different decorative rocks, nephrite and
 #### Questions for the Curator
 
 Wikipedia (Jade, line 43) calls jade 'an umbrella term for two different types of decorative rocks' (nephrite and jadeite) and line 45 says nephrite was deprecated as a mineral species name. Hall's JADE heading covers both ('also known as jadeite, nephrite'). The roster gives nomenclature 'mineral' for 'Jade'. Lead to decide the nomenclature.
-
-#### Edit Notes for Claude
-
-- Deity gap: Buddha (Cunningham, pp. 102–103), not in the vocabulary; link once M14.15 adds it.

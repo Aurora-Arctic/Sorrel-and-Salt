@@ -28,6 +28,7 @@ deities:
   - Mercury
   - Selene
   - Venus
+  - Luna
 categories:
   - Healing
   - Protection
@@ -147,7 +148,3 @@ seedUpdate: ef07ad397ee3877157350b878b24e7e4b0e5c8a147c7a83d42139bdf788c9e1a
 # Eucalyptus
 
 The southern or Tasmanian blue gum is a tall evergreen tree of the family Myrtaceae, endemic to the south-east of Australia, where its four subspecies grow in New South Wales, Victoria and Tasmania. It usually reaches about 45 metres and, in ideal conditions, twice that. Its smooth bark peels away in large pieces, its narrow leaves run from blue-green to yellowish green, and its creamy white flowers are followed by woody, top-shaped capsules; the species name, from the Latin for a little ball, refers to that fruit. Proclaimed the floral emblem of Tasmania in 1962, it is now among the most widely planted eucalypts and has naturalised in Ireland, Spain, Portugal, southern Africa, New Zealand and the western United States. Its leaves are the world's main source of eucalyptus oil. Kynes writes that the Indigenous peoples of Australia hold the tree sacred, that its hollow branches still become didgeridoos, and that it belongs to the Dreaming, when ancestral spirits made the world. Cunningham's eucalyptus is a healing plant: its leaves fill healing poppets and are carried to keep well, and a sprig hung over a sickbed or leaves and pods ringed round a burning green candle are meant to drive off a cold. Kynes adds that its scent helps to let go of sorrow.
-
-#### Edit Notes for Claude
-
-- Deity gap: Luna (Kynes, under "Eucalyptus"), not in the vocabulary; link once M14.15 adds it.

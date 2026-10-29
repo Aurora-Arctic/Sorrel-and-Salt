@@ -27,6 +27,7 @@ deities:
   - Pan
   - Shiva
   - Vesta
+  - Indra
 categories:
   - Healing
   - Love
@@ -131,7 +132,3 @@ variants:
 # Hemp
 
 Hemp is the everyday English name for Cannabis sativa, a fast-growing annual herb that Linnaeus named in 1753, its epithet meaning 'cultivated'. Native to eastern Asia, it is now grown almost everywhere. Slender, cane-like stalks can reach twelve feet, the toothed leaves spread like the fingers of a hand, and the small greenish-yellow flowers sit in cone-like heads, male and female usually on separate plants. Fibre hemp and marijuana are one species, told apart by how much THC, the compound behind the high, they carry, and the law decides which name applies. It was among the first plants ever spun into fibre, some fifty thousand years ago, and has since given rope, sailcloth and fabric, seeds to eat and press for oil, medicine, and a place in religious practice; Chinese medicine has used it for thousands of years. Kynes gathers its folklore: India counted it a protector, eastern Europe drew magic circles of hemp for healing, and in the Balkans a ring of hemp fibres was burned over a fresh grave so that the dead would not wander as vampires. Witches were thought to use it for harm, yet it was also turned against people suspected of witchcraft. Cunningham lists it in love spells and divinations and in incenses for visions, scrying and meditation, burned with mugwort before a magic mirror, and tells of hemp scourges beaten against sickbeds in China to drive out the demons of illness.
-
-#### Edit Notes for Claude
-
-Deity gap: Indra (Kynes, under "Hemp"), not in the vocabulary; link once M14.15 adds it.

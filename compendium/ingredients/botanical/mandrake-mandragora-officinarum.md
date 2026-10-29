@@ -48,6 +48,7 @@ deities:
   - Circe
   - Diana
   - Saturn
+  - Moirai
 categories:
   - Protection
   - Fertility
@@ -155,7 +156,3 @@ Does cunningham-herbs under "Mandrake", cited on the entry, the Root, describe M
 <!-- audit:kynes-plants:Mandrake -->
 
 Does kynes-plants under "Mandrake", cited on the entry, the Root, the Leaf, describe Mandragora officinarum? It may mean Podophyllum peltatum instead. The audit found: "Mandrake" is the folk name of ingredients/botanical/mayapple-podophyllum-peltatum.md (Podophyllum peltatum). "Mandrake" prints no formal name. Settle it as `stated` or `resolved` from the source, or replace the citation.
-
-#### Edit Notes for Claude
-
-- Deity gap: the Fates (Kynes's Plants, under "Mandrake"), not in the vocabulary; link once M14.15 adds it.

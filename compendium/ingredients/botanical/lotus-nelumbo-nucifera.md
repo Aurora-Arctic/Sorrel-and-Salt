@@ -39,6 +39,10 @@ deities:
   - Ra
   - Thoth
   - Vishnu
+  - Atum
+  - Brahma
+  - Buddha
+  - Nefertem
 categories:
   - Protection
   - Harmony
@@ -182,8 +186,4 @@ The sacred lotus is an aquatic perennial, one of just two living species in the 
 
 #### Edit Notes for Claude
 
-- Deity gap: Atum (Kynes's Plants, under "Lotus"), not in the vocabulary; link once M14.15 adds it.
-- Deity gap: Brahma (Kynes's Plants, under "Lotus"), not in the vocabulary; link once M14.15 adds it.
-- Deity gap: Buddha (Kynes's Plants, under "Lotus"), not in the vocabulary; link once M14.15 adds it.
-- Deity gap: Nefertum (Kynes's Plants, under "Lotus"), not in the vocabulary; link once M14.15 adds it.
-- Deity gap: Padma (Kynes's Plants, under "Lotus"), not in the vocabulary; link once M14.15 adds it.
+- Deity gap: Padma (Kynes's Plants, under "Lotus"), not in the vocabulary after M14.15: Padma is Sanskrit for lotus, or a river; no deity page was found.

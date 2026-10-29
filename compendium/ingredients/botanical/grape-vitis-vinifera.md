@@ -30,6 +30,8 @@ deities:
   - Saturn
   - Silvanus
   - Thor
+  - Ariadne
+  - Bona Dea
 categories:
   - Fertility
   - Abundance
@@ -127,9 +129,3 @@ The common grape vine is a long-lived climbing shrub native to the Mediterranean
 <!-- audit:kynes-plants:Grape -->
 
 Does kynes-plants under "Grape", cited on the entry, the Fruit, the Oil and the Stem, describe Vitis vinifera alone? Kynes heads the plant "Grape" and describes two species together, the common grape (Vitis vinifera) and the fox grape (V. labrusca), so its lore and powers may belong to either. Settle it as `stated` or `resolved` from the source, or replace the citation.
-
-#### Edit Notes for Claude
-
-Deity gap: Ariadne (Kynes, under "Grape"), not in the vocabulary; link once M14.15 adds it.
-
-Deity gap: Bona Dea (Kynes, under "Grape"), not in the vocabulary; link once M14.15 adds it.

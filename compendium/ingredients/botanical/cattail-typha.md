@@ -31,6 +31,7 @@ deities:
   - Morrigan
   - Pan
   - Rhiannon
+  - Coventina
 categories:
   - Lust
   - Abundance
@@ -113,7 +114,3 @@ Does cunningham-herbs under "Cat Tail", cited on the entry, describe Typha alone
 <!-- audit:kynes-plants:Cattail -->
 
 Does kynes-plants under "Cattail", cited on the entry, describe Typha alone? The heading names one species, the common cattail (Typha latifolia), while the entry is the genus. Settle it as `stated` or `resolved` from the source, or replace the citation.
-
-#### Edit Notes for Claude
-
-Deity gap: Coventina (Kynes, under "Cattail"), not in the vocabulary; link once M14.15 adds it.

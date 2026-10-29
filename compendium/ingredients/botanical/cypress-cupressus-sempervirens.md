@@ -35,6 +35,9 @@ deities:
   - Hecate
   - Saturn
   - Silvanus
+  - Hebe
+  - Zoroaster
+  - Moirai
 categories:
   - Longevity
   - Healing
@@ -121,7 +124,4 @@ The Mediterranean or Italian cypress is a long-lived conifer native to the easte
 
 #### Edit Notes for Claude
 
-- Deity gap: Hebe (Cunningham, under "Cypress"), not in the vocabulary; link once M14.15 adds it.
-- Deity gap: Zoroaster (Cunningham, under "Cypress"), not in the vocabulary; link once M14.15 adds it.
-- Deity gap: Fates (Kynes, under "Cypress"), not in the vocabulary; link once M14.15 adds it.
-- Deity gap: Furies (Kynes, under "Cypress"), not in the vocabulary; link once M14.15 adds it.
+- Deity gap: Furies (Kynes, under "Cypress"), not in the vocabulary after M14.15: Furies is the Roman name for the Erinyes; the Erinyes row names the Eumenides only, so the Furies are not linked.

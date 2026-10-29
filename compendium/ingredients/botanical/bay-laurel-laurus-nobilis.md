@@ -46,6 +46,7 @@ deities:
   - Mercury
   - Ra
   - Vesta
+  - Daphne
 categories:
   - Protection
   - Psychic Work
@@ -174,7 +175,3 @@ seedUpdate: 5fc41c5897b384ee544213429ae31cf742fd5a427151198cd80672f9fb84d00f
 # Bay Laurel
 
 Bay laurel is an aromatic evergreen shrub or tree of the laurel family, native to the Mediterranean. Its leathery, smooth-edged leaves come to a sharp point and are the bay leaves of the kitchen; male and female flowers, small and pale yellow-green, grow on separate plants, and the small berries ripen black. The Greeks called it daphne after the nymph who, in Ovid's version of the myth, was turned into a laurel to escape Apollo, and the tree became the god's own: victors at the Pythian Games won its wreaths, and his priestess at Delphi reputedly chewed the leaves before uttering prophecy. Rome made it a token of victory, and generals sent the Senate news of their triumphs wrapped in its leaves. People long believed lightning would spare the spot where a bay grew, yet in England a withering bay tree foretold a death, and bays were paired with rosemary at weddings and funerals alike. Culpeper placed it under the Sun and Leo as a tree that resists witchcraft. In magic it stands among the chief herbs of protection and purification: Cunningham has it worn against evil, burned at exorcisms, hung to stop poltergeists and set under the pillow for prophetic dreams, while wishes are written on its leaves and burned to bring them about.
-
-#### Edit Notes for Claude
-
-- Deity gap: Daphne (Kynes, under "Bay"), not in the vocabulary; link once M14.15 adds it.

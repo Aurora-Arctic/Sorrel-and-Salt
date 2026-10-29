@@ -154,4 +154,4 @@ Does wikipedia-incense under "Incense", cited on the entry, describe Commiphora 
 
 #### Edit Notes for Claude
 
-- Deity gap: Marian (Cunningham's Herbs, under "Myrrh"), not in the vocabulary; link once M14.15 adds it.
+- Deity gap: Marian (Cunningham's Herbs, under "Myrrh"), not in the vocabulary after M14.15: The source may mean the Virgin Mary, whom the vocabulary leaves out as a figure her tradition does not call a deity.

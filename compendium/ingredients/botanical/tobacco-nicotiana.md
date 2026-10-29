@@ -16,6 +16,8 @@ folkNames:
   - Tabacca
   - Tabak
   - Taaba
+deities:
+  - Yacatecuhtli
 categories:
   - Healing
   - Purification
@@ -47,6 +49,7 @@ references:
       - toxic
       - safetyNotes
       - description
+      - deities
   - source: wikipedia-nicotiana
     nameBasis: stated
     supports:
@@ -90,7 +93,3 @@ Does cunningham-herbs under "Nicotiana spp.", cited on the entry, describe the g
 <!-- audit:kynes-plants:Tobacco -->
 
 Does kynes-plants under "Tobacco", cited on the entry, describe the genus Nicotiana alone? Her heading covers common tobacco (Nicotiana tabacum) and wild tobacco (N. rustica), two species and not the genus alone. Settle it as `stated` or `resolved` from the source, or replace the citation.
-
-#### Edit Notes for Claude
-
-- Deity gap: Yacatecuhtli (Kynes, under "Tobacco"), not in the vocabulary; link once M14.15 adds it.

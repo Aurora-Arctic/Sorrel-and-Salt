@@ -25,6 +25,7 @@ deities:
   - Hecate
   - Shiva
   - Thor
+  - Medea
 categories:
   - Protection
   - Peace
@@ -111,7 +112,3 @@ Monkshood is a hairless herbaceous perennial of the family Ranunculaceae, native
 <!-- audit:cunningham-herbs:Wolf's Bane -->
 
 Does cunningham-herbs under "Wolf's Bane", cited on the entry, the Seed, describe Aconitum napellus? It may mean Arnica montana instead. The audit found: "Wolf's Bane" is the folk name of ingredients/botanical/arnica-arnica-montana.md (Arnica montana). "Wolf's Bane" prints no formal name. Settle it as `stated` or `resolved` from the source, or replace the citation.
-
-#### Edit Notes for Claude
-
-- Deity gap: Medea (Kynes's Plants, under "Aconite"), not in the vocabulary; link once M14.15 adds it.

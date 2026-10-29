@@ -142,4 +142,4 @@ Lemon balm is a bushy perennial of the mint family, Lamiaceae, growing up to a m
 
 #### Edit Notes for Claude
 
-- Deity gap: Kupala (Kynes's Plants, under "Lemon Balm"), not in the vocabulary; link once M14.15 adds it.
+- Deity gap: Kupala (Kynes's Plants, under "Lemon Balm"), not in the vocabulary after M14.15: Modern scholars deny that Kupala was an ancient Slavic deity, so it is left out.

@@ -21,6 +21,7 @@ deities:
   - Dionysus
   - Adonis
   - Odin
+  - Prometheus
 categories:
   - Protection
   - Healing
@@ -167,6 +168,4 @@ Fennel is a hardy perennial of the carrot family, native to the shores of the Me
 
 #### Edit Notes for Claude
 
-- Deity gap: Prometheus (Cunningham, under "Fennel"), not in the vocabulary; link once M14.15 adds it.
-- Deity gap: Kupala (Kynes, under "Fennel"), not in the vocabulary; link once M14.15 adds it.
-- Deity gap: Prometheus (Kynes, under "Fennel"), not in the vocabulary; link once M14.15 adds it.
+- Deity gap: Kupala (Kynes, under "Fennel"), not in the vocabulary after M14.15: Modern scholars deny that Kupala was an ancient Slavic deity, so it is left out.

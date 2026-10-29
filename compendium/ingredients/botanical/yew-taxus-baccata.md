@@ -29,6 +29,10 @@ deities:
   - Lugh
   - Odin
   - Saturn
+  - Badb
+  - Banba
+  - Cailleach
+  - Don
 categories:
   - Ancestor Work
   - Communication
@@ -115,8 +119,4 @@ Yew is an evergreen conifer of the family Taxaceae, native to much of Europe and
 
 #### Edit Notes for Claude
 
-- Deity gap: Badb (Kynes's Plants, under "Yew"), not in the vocabulary; link once M14.15 adds it.
-- Deity gap: Banba (Kynes's Plants, under "Yew"), not in the vocabulary; link once M14.15 adds it.
-- Deity gap: Cailleach Bheur (Kynes's Plants, under "Yew"), not in the vocabulary; link once M14.15 adds it.
-- Deity gap: Dôn (Kynes's Plants, under "Yew"), not in the vocabulary; link once M14.15 adds it.
-- Deity gap: the Furies (Kynes's Plants, under "Yew"), not in the vocabulary; link once M14.15 adds it.
+- Deity gap: the Furies (Kynes's Plants, under "Yew"), not in the vocabulary after M14.15: Furies is the Roman name for the Erinyes; the Erinyes row names the Eumenides only, so the Furies are not linked.

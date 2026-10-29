@@ -168,4 +168,4 @@ The common lime or European linden is a natural hybrid of the small-leaved and l
 
 #### Edit Notes for Claude
 
-- Deity gap: Philyra (Kynes's Plants, under "Linden"), not in the vocabulary; link once M14.15 adds it.
+- Deity gap: Philyra (Kynes's Plants, under "Linden"), not in the vocabulary after M14.15: Philyra has no page of her own, only a disambiguation page, so no source read fixes who she is.

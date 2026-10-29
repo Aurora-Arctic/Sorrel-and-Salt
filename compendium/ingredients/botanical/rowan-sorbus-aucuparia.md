@@ -52,6 +52,9 @@ deities:
   - Pan
   - Selene
   - Vulcan
+  - Brigantia
+  - Ran
+  - Luna
 categories:
   - Psychic Work
   - Healing
@@ -196,9 +199,3 @@ seedUpdate: b9320d30bc08fe915091cbe27c3999a28a84d2d6d0d734e7daf8088c9389b700
 # Rowan
 
 Rowan, or mountain ash, is a small tree or shrub of the rose family, native to most of Europe and to parts of Asia and northern Africa, its range running from Madeira, Iceland and the British Isles to Russia and northern China. Despite the name it is no relation of the true ashes, sharing only their pinnate leaves. In May and June it bears dense, upright heads of small creamy-white flowers, followed by clusters of orange to scarlet berries that many birds eat; its species name recalls the berries' old use as bait for catching birds. The bitter berries, which Kynes says are safe to eat only when cooked, are debittered and made into jelly, jam, syrup, wine and liqueurs, and Grieve records a gargle of the ripe berries for sore throats and a decoction of the bark for diarrhoea. Its tough, flexible wood was used for carving and turning. Across Europe and the British Isles rowan was a defence against witches: branches were hung in houses, stables and byres, twigs carried as amulets, and in Norse myth Thor saved himself from a raging river by grasping a rowan. Cunningham gives it to the Sun and fire, and to Thor, psychic powers, healing, success and protection, with the wood for wands and dowsing rods and a cross of twigs bound with red thread as an amulet. Kynes adds earth, the Moon, Saturn and Uranus, three signs, and powers that include divination, fertility, strength and wisdom.
-
-#### Edit Notes for Claude
-
-- Deity gap: Brigantia (Kynes's Plants, under "Rowan"), not in the vocabulary; link once M14.15 adds it.
-- Deity gap: Ran (Kynes's Plants, under "Rowan"), not in the vocabulary; link once M14.15 adds it.
-- Deity gap: Luna (Kynes's Plants, under "Rowan"), not in the vocabulary; link once M14.15 adds it.

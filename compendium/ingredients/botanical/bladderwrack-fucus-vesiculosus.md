@@ -32,6 +32,14 @@ deities:
   - Poseidon
   - Njord
   - Manannan mac Lir
+  - Aegir
+  - Amphitrite
+  - Lir
+  - Llyr
+  - Ran
+  - Sedna
+  - Seonaidh
+  - Varuna
 categories:
   - Protection
   - Psychic Work
@@ -100,13 +108,3 @@ variants:
 # Bladderwrack
 
 Bladderwrack is a brown seaweed of the North Sea, the western Baltic and the Atlantic coasts of Europe and North America. It is common around the British Isles and thrives on sheltered rocky shores between the tides. Its flat, forking fronds reach about a metre and a half, run with a strong midrib and cling to the rock by a disc-shaped holdfast; the almost round air bladders that name it usually sit in pairs either side of the midrib, and are often missing on shores battered by waves. Iodine was first obtained from it when the element was discovered in 1811, and it was long used against goitre. It can be cooked and eaten and is sold as a supplement. In Ireland and Scotland it fertilised the fields and fed cattle through the winter, and Hebridean islanders once poured ale into the sea at Samhain, asking the sea god Shony for a good harvest of weed; strands of seaweed were hung up to forecast the weather. In magical practice, seaweeds are carried to keep travellers safe at sea or flying over it, cast onto the waves to call the sea spirits, and steeped to wash the floors and doors of a shop to bring in custom, while bladderwrack goes into sachets to strengthen psychic powers.
-
-#### Edit Notes for Claude
-
-- Deity gap: Aegir (Kynes, under "Seaweed"), not in the vocabulary; link once M14.15 adds it.
-- Deity gap: Amphitrite (Kynes, under "Seaweed"), not in the vocabulary; link once M14.15 adds it.
-- Deity gap: Lir/Llyr (Kynes, under "Seaweed"), not in the vocabulary; link once M14.15 adds it.
-- Deity gap: Ran (Kynes, under "Seaweed"), not in the vocabulary; link once M14.15 adds it.
-- Deity gap: Sedna (Kynes, under "Seaweed"), not in the vocabulary; link once M14.15 adds it.
-- Deity gap: Shony (Kynes, under "Seaweed"), not in the vocabulary; link once M14.15 adds it.
-- Deity gap: Varuna (Kynes, under "Seaweed"), not in the vocabulary; link once M14.15 adds it.

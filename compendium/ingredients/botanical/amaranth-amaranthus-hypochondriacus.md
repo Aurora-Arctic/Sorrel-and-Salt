@@ -28,6 +28,9 @@ deities:
   - Artemis
   - Chalchiuhtlicue
   - Demeter
+  - Chicomecoatl
+  - Huitzilopochtli
+  - Xiuhtecuhtli
 categories:
   - Healing
   - Protection
@@ -113,9 +116,3 @@ variants:
 # Amaranth
 
 Amaranthus hypochondriacus, known as prince's feather or Prince-of-Wales feather, is a strong-growing, upright plant of the amaranth family, grown as an annual, that stands from 40 centimetres to two metres tall. In summer and autumn it carries dense, catkin-like flower spikes, usually a deep purplish red though sometimes yellow-green, followed by small fruits holding glossy seeds that range from whitish pink to almost black. It is one of the grain amaranths, native to Central America and elsewhere in North America, and in Africa and El Salvador its leaves and seeds are eaten. Its name comes from the Greek for unwithering, since the flowers keep their looks long after cutting, and so it became an emblem of immortality: in ancient Greece it was sacred to Artemis of Ephesus, adorned tombs and the images of gods, and was used in pagan burial rites. The Aztecs used amaranth in their own rituals, which led the Spanish colonial authorities in Mexico to outlaw it. Culpeper put it under Saturn and held that its flowers staunched bleeding. In magic a crown of its flowers is worn to speed healing, the dried flowers are carried to mend a broken heart and have been used to call up the dead, and its seeds are scattered round an altar candle to help reach the spirits.
-
-#### Edit Notes for Claude
-
-- Deity gap: Chicomecoatl (Kynes, under "Amaranth"), not in the vocabulary; link once M14.15 adds it.
-- Deity gap: Huitzilopochtli (Kynes, under "Amaranth"), not in the vocabulary; link once M14.15 adds it.
-- Deity gap: Xiuhtecutli (Kynes, under "Amaranth"), not in the vocabulary; link once M14.15 adds it.

@@ -25,6 +25,8 @@ folkNames:
 deities:
   - Lono
   - Kane
+  - Kanaloa
+  - Kanehekili
 categories:
   - Divination
   - Protection
@@ -107,9 +109,3 @@ variants:
 # Kava
 
 Kava, or kava kava, is a plant of the pepper family native to the Pacific Islands, whose name is Tongan and Marquesan for bitter. Wikipedia says the root is ground, mixed with water and strained to make a ceremonial and recreational drink in Polynesia, Micronesia and Melanesia, and that it gives a numbing sensation in the mouth. Kynes records that it was part of Hawaiian initiations, naming ceremonies and marriages, that priests divined by reading the bubbles on the drink, and that it was used to invoke ancestral spirits. Cunningham calls it feminine, ruled by Saturn and water, and says an infusion of the root is drunk against evil and for good luck, or left overnight to enhance psychic powers and induce visions. Kynes places kava roots on the altar at Samhain to commune with ancestors. Kynes advises that pregnant or breastfeeding women should not ingest it. The AHPA handbook (Safety Classes 2b and 2c) reports rare but severe liver injury linked to kava use.
-
-#### Edit Notes for Claude
-
-Deity gap: Kanaloa (Cunningham, under "Kava-Kava"), not in the vocabulary; link once M14.15 adds it.
-
-Deity gap: Kane-Hekili (Kynes, under "Kava"), not in the vocabulary; link once M14.15 adds it.

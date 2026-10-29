@@ -23,6 +23,8 @@ deities:
   - Rhiannon
   - Selene
   - Shiva
+  - Ariadne
+  - Luna
 categories:
   - Love
   - Banishing
@@ -88,6 +90,4 @@ Moonworts are the small ferns of the genus Botrychium, in the family Ophioglossa
 
 #### Edit Notes for Claude
 
-- Deity gap: Ariadne (Kynes's Plants, under "Moonwort"), not in the vocabulary; link once M14.15 adds it.
-- Deity gap: Nanna (Kynes's Plants, under "Moonwort"), not in the vocabulary; link once M14.15 adds it.
-- Deity gap: Luna (Kynes's Plants, under "Moonwort"), not in the vocabulary; link once M14.15 adds it.
+- Deity gap: Nanna (Kynes's Plants, under "Moonwort"), not in the vocabulary after M14.15: Nanna names more than one figure (Norse, Sumerian), and the source does not say which; left out until the owner chooses.

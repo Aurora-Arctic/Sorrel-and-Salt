@@ -28,6 +28,8 @@ deities:
   - Gaia
   - Juno
   - Loki
+  - Morpheus
+  - Ran
 categories:
   - Love
   - Divination
@@ -109,7 +111,5 @@ The wych elm, also called Scots elm, ranges more widely than any other European 
 
 #### Edit Notes for Claude
 
-- Deity gap: Hoenin (Cunningham, under "Elm"), not in the vocabulary; link once M14.15 adds it.
-- Deity gap: Lodr (Cunningham, under "Elm"), not in the vocabulary; link once M14.15 adds it.
-- Deity gap: Morpheus (Kynes, under "Elm"), not in the vocabulary; link once M14.15 adds it.
-- Deity gap: Ran (Kynes, under "Elm"), not in the vocabulary; link once M14.15 adds it.
+- Deity gap: Hoenin (Cunningham, under "Elm"), not in the vocabulary after M14.15: Reading Hoenin as the Norse Hoenir is an inference the source does not make.
+- Deity gap: Lodr (Cunningham, under "Elm"), not in the vocabulary after M14.15: Reading Lodr as the Norse Lodurr is an inference the source does not make.

@@ -121,4 +121,4 @@ Lesser galangal is a plant of the ginger family, known as a mild cousin of ginge
 
 #### Edit Notes for Claude
 
-- Deity gap: Kupala (Kynes, under "Galangal"), not in the vocabulary; link once M14.15 adds it.
+- Deity gap: Kupala (Kynes, under "Galangal"), not in the vocabulary after M14.15: Modern scholars deny that Kupala was an ancient Slavic deity, so it is left out.
