@@ -18,10 +18,40 @@
   }
 }
 
-.spell-preview__close {
+// Close and the wake-lock sign sit together at the top right, kept in view as the steps scroll.
+.spell-preview__bar {
   position: sticky;
   top: 0;
+  z-index: 1;
+  display: flex;
   float: right;
+  gap: space(2);
+}
+
+// A slow decorative glow behind the content: it drifts, and stands still under reduced motion.
+.spell-preview::before {
+  content: '';
+  position: fixed;
+  inset: 0;
+  z-index: -1;
+  pointer-events: none;
+  background: radial-gradient(circle at 30% 20%, currentcolor, transparent 60%);
+  opacity: 0.06;
+  animation: spell-preview-drift 40s ease-in-out infinite alternate;
+
+  @include reduced-motion {
+    animation: none;
+  }
+}
+
+@keyframes spell-preview-drift {
+  from {
+    transform: translate(-5%, -5%);
+  }
+
+  to {
+    transform: translate(5%, 5%);
+  }
 }
 
 .spell-preview__title {

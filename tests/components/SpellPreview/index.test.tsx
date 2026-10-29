@@ -1,4 +1,4 @@
-import { render, screen, within, fireEvent } from '@testing-library/react';
+import { act, render, screen, within, fireEvent } from '@testing-library/react';
 import { afterEach, describe, expect, it, vi } from 'vitest';
 import SpellPreview from '@/components/SpellPreview';
 import type { PreviewStep } from '@/components/SpellPreview/types';
@@ -34,7 +34,37 @@ afterEach(() => {
   Reflect.deleteProperty(HTMLElement.prototype, 'requestFullscreen');
   Reflect.deleteProperty(document, 'exitFullscreen');
   Reflect.deleteProperty(document, 'fullscreenElement');
+  Reflect.deleteProperty(navigator, 'wakeLock');
 });
+
+// A stand-in for the Screen Wake Lock API: each request hands back a lock that can be released.
+function fakeWakeLock(request?: () => Promise<unknown>) {
+  const locks: { released: boolean; release: () => Promise<void>; onrelease: () => void }[] = [];
+  const asked = vi.fn(
+    request ??
+      (() => {
+        const lock = {
+          released: false,
+          onrelease: (): void => undefined,
+          release: () => {
+            lock.released = true;
+            lock.onrelease();
+            return Promise.resolve();
+          },
+          addEventListener: (_type: string, fn: () => void) => {
+            lock.onrelease = fn;
+          },
+        };
+        locks.push(lock);
+        return Promise.resolve(lock);
+      }),
+  );
+  Object.defineProperty(navigator, 'wakeLock', { value: { request: asked }, configurable: true });
+  return { asked, locks };
+}
+
+const settle = () => act(async () => undefined);
+const sign = () => screen.queryByRole('button', { name: /screen awake/i });
 
 describe('SpellPreview', () => {
   it('shows nothing until Preview is pressed', () => {
@@ -107,5 +137,75 @@ describe('SpellPreview', () => {
     expect(pane()).toBeTruthy();
     press(within(pane()).getByRole('button', { name: 'Close' }));
     expect(screen.queryByRole('dialog')).toBeNull();
+  });
+
+  describe('keeping the screen awake', () => {
+    it('asks for a screen lock when the pane opens and releases it on Close', async () => {
+      const { asked, locks } = fakeWakeLock();
+      render(onPage());
+      expect(asked).not.toHaveBeenCalled();
+      press(opener());
+      await settle();
+      expect(asked).toHaveBeenCalledWith('screen');
+      expect(within(pane()).getByRole('button', { name: /screen awake/i })).toBeTruthy();
+      press(within(pane()).getByRole('button', { name: 'Close' }));
+      await settle();
+      expect(locks[0]?.released).toBe(true);
+    });
+
+    it('turns the lock off from the sign, and on again', async () => {
+      const { asked, locks } = fakeWakeLock();
+      render(onPage());
+      press(opener());
+      await settle();
+      expect(sign()?.getAttribute('aria-pressed')).toBe('true');
+      press(sign() as HTMLElement);
+      await settle();
+      expect(locks[0]?.released).toBe(true);
+      expect(sign()?.getAttribute('aria-pressed')).toBe('false');
+      press(sign() as HTMLElement);
+      await settle();
+      expect(asked).toHaveBeenCalledTimes(2);
+      expect(sign()?.getAttribute('aria-pressed')).toBe('true');
+    });
+
+    it('takes the lock again when the tab comes back, unless it was turned off', async () => {
+      const { asked, locks } = fakeWakeLock();
+      render(onPage());
+      press(opener());
+      await settle();
+      // The browser drops the lock when the tab is hidden.
+      await act(async () => {
+        await locks[0]?.release();
+      });
+      expect(sign()?.getAttribute('aria-pressed')).toBe('false');
+      fireEvent(document, new Event('visibilitychange'));
+      await settle();
+      expect(asked).toHaveBeenCalledTimes(2);
+      expect(sign()?.getAttribute('aria-pressed')).toBe('true');
+      press(sign() as HTMLElement);
+      await settle();
+      fireEvent(document, new Event('visibilitychange'));
+      await settle();
+      expect(asked).toHaveBeenCalledTimes(2);
+    });
+
+    it('shows no sign where the browser has no wake lock', async () => {
+      render(onPage());
+      press(opener());
+      await settle();
+      expect(sign()).toBeNull();
+      expect(pane()).toBeTruthy();
+    });
+
+    it('shows no sign and no error when the request is refused', async () => {
+      fakeWakeLock(() => Promise.reject(new Error('refused')));
+      render(onPage());
+      press(opener());
+      await settle();
+      expect(sign()).toBeNull();
+      expect(screen.queryByRole('alert')).toBeNull();
+      expect(pane()).toBeTruthy();
+    });
   });
 });

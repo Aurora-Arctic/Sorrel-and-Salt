@@ -3,6 +3,7 @@
 import { type ReactElement, useEffect, useRef, useState } from 'react';
 import StepRow from '../StepRow';
 import type { SpellPreviewProps } from './types';
+import { useWakeLock } from './use-wake-lock';
 import './index.scss';
 
 // Spell Preview (M13.12): a Preview button that opens the spell in a pane of its own, with
@@ -52,6 +53,7 @@ export default function SpellPreview({ title, steps }: SpellPreviewProps): React
     };
   }, [open]);
 
+  const wake = useWakeLock(open);
   const close = (): void => setOpen(false);
 
   return (
@@ -68,9 +70,21 @@ export default function SpellPreview({ title, steps }: SpellPreviewProps): React
           close();
         }}
       >
-        <button type="button" className="btn btn--quiet spell-preview__close" onClick={close}>
-          Close
-        </button>
+        <div className="spell-preview__bar">
+          {wake.shown && (
+            <button
+              type="button"
+              className="btn btn--quiet spell-preview__awake"
+              aria-pressed={wake.held}
+              onClick={wake.toggle}
+            >
+              Screen Awake
+            </button>
+          )}
+          <button type="button" className="btn btn--quiet spell-preview__close" onClick={close}>
+            Close
+          </button>
+        </div>
         <h2 id="spell-preview-title" className="spell-preview__title">
           {title}
         </h2>
