@@ -81,7 +81,7 @@ text does. `aside.tsx` (`SpellRecipeAside`, client) hands the panels their props
 builder's styles itself. The page reads them with `readRecipeAsideOf` (`[id]/recipe-aside.ts`):
 each linked step's categories (`categoriesOf`, then `categoriesOfVariants`, the union rule) and
 the coven's jars (`stockOf`), one batch each, made into the builder's `SpellStepValue` through
-its own `jarOf`, with the assigned categories as the intended set and the group colours from
+`jarRowsOf` (`[id]/recipe-supply.ts`, shared with the Quick Look's marks) and the builder's `jarOf`, with the assigned categories as the intended set and the group colours from
 `readCategories` as entries (a Map does not cross to a client component). A step the service
 withholds has no categories and no jar; no form icon or safety is read, since the column draws
 neither.
@@ -97,6 +97,10 @@ viewer gets the eye and no button; an ingredient or form deleted since gets neit
 button is the name stretched over the line, as the shelf's jar button is, with the eye and the
 verdict raised above it. The builder's own inventory carries no doors.
 
+A line's verdict is `VerdictMark` (`SpellBuilder/verdict-mark.tsx`): Out, Not Enough, Units Differ or
+Low as a symbol alone, in a button named by the verdict whose tip says why. One-Off and No Jar
+draw no mark; the line's words say them.
+
 ## Quick Look
 
 The body below the head is `SpellRecipeBody` (`body.tsx`), described above. The recipe page and
@@ -108,6 +112,13 @@ Page at its start and, only when given an `editHref`, Edit Spell (`btn--solid`) 
 Recipe Page alone stands centred. Edit Spell is a link to the `?edit=<id>` address, so one
 dialog shows at a time. `failed` draws a Notice that the spell could not be read. The page and the modal read through `readRecipeOf`
 (`grimoire/recipe-read.ts`).
+
+The modal has no side column, so each ingredient step carries its stock verdict in its own
+row instead (the owner, 2026-10-29): `readLookedSpell` reads it with `readStepSuppliesOf`
+(`[id]/recipe-supply.ts`), one `stockOf` call for the spell, judged by the same `supplyOf` as In
+Coven Inventory, and sets it as the step's `supply`; `Marks` draws it as a `VerdictMark` after the
+safety mark. The modal and the page's inventory therefore give a step the same verdict. The page
+sets no `supply`, since its column already says it.
 
 ## Decisions
 
