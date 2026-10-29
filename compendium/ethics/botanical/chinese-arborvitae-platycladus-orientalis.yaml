@@ -1,0 +1,11 @@
+# Gathered for M14.29; the seed never reads this folder.
+entry: botanical/chinese-arborvitae-platycladus-orientalis
+status: approved
+listings:
+  - list: iucn
+    name: IUCN Red List of Threatened Species
+    value: Near Threatened (IUCN 3.1)
+    listedAs: Platycladus orientalis
+    nameBasis: stated
+    source: wikipedia-platycladus
+    locator: Infobox, Conservation status (the article is on the monotypic genus Platycladus; the infobox shows Platycladus orientalis)
