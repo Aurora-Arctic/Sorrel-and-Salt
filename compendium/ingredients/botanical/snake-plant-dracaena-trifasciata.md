@@ -9,6 +9,12 @@ folkNames:
   - "Viper's Bowstring Hemp"
   - 'Espada de Sao Jorge'
   - 'Sansevieria trifasciata'
+categories:
+  - Hex-Breaking
+  - Luck
+  - Protection
+  - Purification
+  - Strength
 references:
   - source: wikipedia-dracaena-trifasciata
     nameBasis: stated
@@ -18,6 +24,11 @@ references:
       - description
       - folkNames
       - safetyNotes
+  - source: kynes-plants
+    locator: under "Snake Plant"
+    nameBasis: stated
+    supports:
+      - categories
 variants:
   - form: Leaf
     references:
@@ -25,6 +36,7 @@ variants:
         nameBasis: stated
         supports:
           - form
+seedUpdate: 2305e5ce47b626f1410e1baac07202fbe09106b7f4c3715f50dcd82d92812ceb
 ---
 
 # Snake Plant

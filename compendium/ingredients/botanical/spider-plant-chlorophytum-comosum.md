@@ -5,6 +5,14 @@ canonicalName: 'Chlorophytum comosum'
 folkNames:
   - 'Spider Ivy'
   - 'Airplane Plant'
+categories:
+  - Abundance
+  - Adaptability
+  - Fertility
+  - Negativity
+  - Prosperity
+  - Wealth
+  - Protection
 references:
   - source: wikipedia-chlorophytum-comosum
     nameBasis: stated
@@ -18,6 +26,11 @@ references:
     nameBasis: stated
     supports:
       - description
+  - source: kynes-plants
+    locator: under "Spider Plant"
+    nameBasis: stated
+    supports:
+      - categories
 variants:
   - form: Whole
     references:
@@ -25,6 +38,7 @@ variants:
         nameBasis: stated
         supports:
           - form
+seedUpdate: 69ed2356ac4f704c780a4b237ab8c7ea98af00dc60e97b3ab5a25b16818d112a
 ---
 
 # Spider Plant

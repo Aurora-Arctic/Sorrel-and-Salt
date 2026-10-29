@@ -12,6 +12,10 @@ folkNames:
   - Bouleau
   - Berke
   - Bereza
+categories:
+  - Protection
+  - Banishing
+  - Purification
 references:
   - source: grieve-birch-common
     nameBasis: resolved
@@ -38,6 +42,11 @@ references:
       - canonicalName
       - description
       - folkNames
+  - source: cunningham-herbs
+    locator: under "Birch"
+    nameBasis: stated
+    supports:
+      - categories
 variants:
   - form: Bark
     description: Grieve names the bark and leaves as the parts used. The white outer layer separates into thin sheets, and distilling it yields birch tar oil. AHPA gives bark and leaf as the parts.
