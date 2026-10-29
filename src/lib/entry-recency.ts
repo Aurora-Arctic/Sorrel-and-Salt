@@ -6,12 +6,8 @@ const WINDOW_MS = RECENT_DAYS * 24 * 60 * 60 * 1000;
 export type EntryRecency = 'new' | 'updated';
 
 /**
- * Whether a compendium entry is New (created inside the last 30 days) or
- * Updated (changed inside them), New winning when both hold. Worked out when
- * the page is read, from the two stamps the row already carries: no column
- * stores it and no job clears it, so the marker lapses by itself. A date
- * exactly 30 days old is outside the window. `updated_at` moves only on a real
- * change (migration 0079), so a save that changed nothing earns no marker.
+ * Whether a compendium entry is New (created in the last 30 days) or Updated (changed in them), New winning. Worked out at read from the two stamps the row
+ * carries, so no column stores it and the marker lapses by itself. Exactly 30 days old is outside; `updated_at` moves only on a real change, so a no-op save earns none.
  */
 export function entryRecency(
   createdAt: Date | string,

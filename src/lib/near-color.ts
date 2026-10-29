@@ -6,10 +6,8 @@ import { colordx } from '@colordx/core';
 // through it, nothing but zod (claude-docs/validation.md).
 
 /**
- * How far apart two colours look: the distance between them in OKLab, where a
- * step of the same size reads as the same change anywhere in the gamut. A
- * nudge of a few hex steps moves a colour about 0.01–0.03, and the seeded
- * groups sit further apart than NEAR_COLOR_DELTA within each theme.
+ * How far apart two colours look: the distance in OKLab, where equal steps read as equal changes anywhere in the gamut. A nudge of a few hex steps moves a
+ * colour about 0.01–0.03, and the seeded groups sit further apart than NEAR_COLOR_DELTA within each theme.
  */
 export function colorDistance(a: string, b: string): number {
   const x = colordx(a).toOklab();

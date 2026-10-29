@@ -28,11 +28,8 @@ export const requiredText = (message: string) =>
   z.string({ error: message }).trim().min(1, { error: message });
 
 /**
- * Optional text: tidied by `format`, trimmed unless it says otherwise, and a
- * blank is an absence rather than an error — '' is what a form sends for a
- * field nobody touched, so it becomes null, which a column's non-blank CHECK
- * accepts. A caller wanting no value as `undefined` instead, such as a filter,
- * maps null itself, so the difference stays at the call site.
+ * Optional text: tidied by `format`, trimmed unless it says otherwise, a blank an absence: '' is what a form sends for an untouched field, so it becomes null,
+ * which a non-blank CHECK accepts. A caller wanting `undefined`, such as a filter, maps null itself.
  */
 export const optionalText = (format: (text: string) => string = (text) => text.trim()) =>
   z
@@ -45,10 +42,8 @@ export const optionalText = (format: (text: string) => string = (text) => text.t
     });
 
 /**
- * An admin-curated value's own fields, a name and the description the table
- * requires non-blank, each refusal saying the vocabulary's noun — "Give the
- * sign a name". No slug: one is derived from the name by src/lib/slugify.ts,
- * never written beside it, so one in the input is dropped.
+ * An admin-curated value's own fields, a name and the non-blank description, each refusal saying the vocabulary's noun ("Give the sign a name"). No slug: it is
+ * derived by src/lib/slugify.ts, so one in the input is dropped.
  */
 export const curatedValueInput = (noun: string) =>
   z.object({

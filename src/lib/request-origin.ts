@@ -1,10 +1,6 @@
 /**
- * This request's own base URL under `path`, as Better Auth resolves it
- * against its allowed hosts, for a link a mail carries: a forged Host cannot
- * send someone a link to another site. `auth` is imported at call time: the
- * GraphQL route that hands the senders over is built under
- * NODE_ENV=production in its tests, where Better Auth refuses to start
- * without its secrets, and nothing there sends mail.
+ * This request's own base URL under `path`, as Better Auth resolves it against its allowed hosts, for a link a mail carries: a forged Host cannot send a link to
+ * another site. `auth` is imported at call time, as the GraphQL route's tests build under NODE_ENV=production, where Better Auth refuses to start without secrets.
  *
  * @throws {Error} where Better Auth resolves none, which its configured `baseURL` rules out.
  */

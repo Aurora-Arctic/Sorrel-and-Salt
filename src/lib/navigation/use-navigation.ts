@@ -31,12 +31,8 @@ export function useNavigationState(): NavigationState {
 }
 
 /**
- * The one way the site navigates. The router call runs inside a transition
- * the provider owns, which Next keeps pending until the new page has
- * rendered; that is the only signal available, because a `loading.tsx` or
- * route `<Suspense>` would turn the guards' 404, 403 and 308 responses into
- * 200s. `pending` is true for the caller whose navigation is showing, and the
- * site-wide state carries the same navigation for everything else.
+ * The one way the site navigates. The router call runs in a transition the provider owns, which Next keeps pending until the new page has rendered: the only
+ * signal, as a `loading.tsx` or route `<Suspense>` would turn the guards' 404, 403 and 308 into 200s. `pending` is true for the caller whose navigation is showing.
  */
 export function usePendingNavigation(): PendingNavigation {
   const actions = useContext(NavigationActionsContext);

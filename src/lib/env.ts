@@ -1,9 +1,6 @@
 /**
- * An environment variable every deploy must set, since every deploy runs at
- * NODE_ENV=production: unset or empty there it throws, and a caller reading
- * it at load fails the build rather than the first request. `next dev` and
- * Vitest have no use for it, and read it unset as `undefined`
- * (claude-docs/auth/config.md, "Config").
+ * An environment variable every deploy must set, as every deploy runs at NODE_ENV=production: unset or empty there it throws, so a caller reading it at
+ * load fails the build, not the first request. `next dev` and Vitest read it unset as `undefined` (claude-docs/auth/config.md, "Config").
  *
  * @throws {Error} unset at NODE_ENV=production.
  */

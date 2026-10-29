@@ -8,13 +8,8 @@ import { useNavigationState } from './use-navigation';
 type Phase = 'hidden' | 'shown' | 'leaving';
 
 /**
- * The page part of every wait: a thin bar that appears once a navigation has
- * lasted 100ms, so a quick one never flashes it, and fades when it settles.
- * It is only a visual cue, so it is `aria-hidden`. The delay is a timer
- * rather than a CSS `animation-delay` because a timer can be cancelled by a
- * navigation that settles first. While fading it carries `hidden` as well as
- * `data-leaving`: the stylesheet keeps it drawn for the fade, and anything
- * reading `hidden` sees a bar that is on its way out.
+ * The page part of every wait: a thin `aria-hidden` bar that appears once a navigation has lasted 100ms and fades when it settles. A timer, not a CSS
+ * `animation-delay`, so a navigation settling first cancels it. While fading it carries `hidden` and `data-leaving`: drawn for the fade, but on its way out to readers.
  */
 export function NavigationBar(): ReactElement {
   const { busy } = useNavigationState();

@@ -3,9 +3,7 @@
 import { requiredInProduction } from './env';
 
 /**
- * The variable's address, or `undefined` where unset. Required wherever BETTER_AUTH_SECRET is, as every deploy runs at
- * NODE_ENV=production; unset elsewhere it names nobody.
- *
+ * The variable's address, or `undefined` where unset. Required wherever BETTER_AUTH_SECRET is, as every deploy runs at NODE_ENV=production.
  * @throws {Error} unset at NODE_ENV=production.
  */
 export function primaryAdminEmail(): string | undefined {

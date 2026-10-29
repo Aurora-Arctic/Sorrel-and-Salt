@@ -2,11 +2,8 @@ import { userRole } from '@/modules/identity/schema/users';
 import type { UserRole } from './session';
 
 /**
- * A role Better Auth handed back, checked against the column's own enum.
- * Better Auth types the additional field as a plain string; reading an
- * unknown value as 'user' would hide whatever wrote it, so it throws. Its own
- * file rather than request-session.ts, which imports `auth` and so cannot be
- * imported back by it.
+ * A role Better Auth handed back, checked against the column's enum. Better Auth types the field as a plain string, and reading an unknown value as 'user'
+ * would hide whatever wrote it, so it throws. Its own file, as request-session.ts imports `auth` and cannot be imported back.
  *
  * @throws {Error} for a value the enum does not hold.
  */

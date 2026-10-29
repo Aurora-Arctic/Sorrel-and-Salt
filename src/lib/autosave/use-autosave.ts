@@ -6,11 +6,8 @@ import { useLeaveGuard } from '@/lib/navigation';
 import { clearMirror, writeMirror } from './mirror';
 import type { Autosave, AutosaveOptions, AutosaveView, SaveContext, SaveResult } from './types';
 
-// Saves a form while it is being edited: a timer per run of changes,
-// one save in flight, retries with backoff, and a pause on a lost race. It is
-// a plain closure held across renders rather than state and effects, because
-// timers and an in-flight promise must see one another's latest state, not a
-// render's snapshot. Why each number: claude-docs/components/autosave.md.
+// Saves a form while it is edited: a timer per run of changes, one save in flight, retries with backoff, and a pause on a lost race. A plain closure,
+// not state and effects, as timers and an in-flight promise must see each other's latest state. Why each number: claude-docs/components/autosave.md.
 
 /** The waits before each retry of a failed save, after which it stops at `failed`. */
 export const RETRY_DELAYS_MS = [2000, 5000, 15000] as const;
