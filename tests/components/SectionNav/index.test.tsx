@@ -14,7 +14,7 @@ vi.mock('next/navigation', () => ({
 
 const { default: SectionNav } = await import('@/components/SectionNav');
 
-// The section nav (MB.7; claude-docs/components/section-nav.md): a row of
+// The section nav (claude-docs/components/section-nav.md): a row of
 // tabs that is a bottom bar on a phone, with the sections past the fourth
 // behind a More button. Which tabs show at which width is the stylesheet's,
 // so a test sees every tab and, shut, no More list.

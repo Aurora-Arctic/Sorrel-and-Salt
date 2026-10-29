@@ -11,7 +11,7 @@ import {
 } from '@/modules/identity/schema/user-privilege-changes';
 import type { PrivilegeChangeRow } from './types';
 
-// MB.194: the one privilege ledger, one row per change to a privilege column
+// The one privilege ledger, one row per change to a privilege column
 // on `users`, which the two one-privilege ledgers MB.58 and MB.193 built
 // fold into. Append-only by
 // `forbid_rewrite()`; MB.195's trigger on `users` writes it (claude-docs/design-decisions/mb.194-privilege-ledger-by-trigger.md).

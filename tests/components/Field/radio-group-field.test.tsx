@@ -73,7 +73,7 @@ describe('RadioGroupField, strip', () => {
   });
 });
 
-// The text layout (M12.4): Match and Toxic on the compendium filter. The same
+// The text layout: Match and Toxic on the compendium filter. The same
 // native radios, each segment its name in text and, where the caller knows
 // it, how many entries choosing it would leave.
 describe('RadioGroupField, segmented', () => {

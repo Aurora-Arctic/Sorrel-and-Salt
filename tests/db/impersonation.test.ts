@@ -8,7 +8,7 @@ import { importAuth } from '../support/auth-module';
 import { asManualFix } from '../support/db/privileges';
 import type { AuthInstance } from '../support/types';
 
-// MB.53, through Better Auth's real endpoints with the plugin registered: an
+// Through Better Auth's real endpoints with the plugin registered: an
 // admin becomes the user they impersonate — that user's role, coven and
 // stamps — and Stop gives the admin their own session back
 // (claude-docs/auth/impersonation.md, "Impersonation").
@@ -95,7 +95,7 @@ describe('impersonating a user', () => {
     const target = await insertUser('user');
     expect((await impersonate(asE, target)).status).toBe(200);
 
-    // An admin holds the creation flag, which the users CHECK requires (MB.177).
+    // An admin holds the creation flag, which the users CHECK requires.
     await asManualFix(
       sql,
       (tx) => tx`update users set role = 'admin', can_create_workspace = true where id = ${target}`,
@@ -104,7 +104,7 @@ describe('impersonating a user', () => {
     expect((await impersonate(asE, target)).status).toBe(403);
   });
 
-  // M11.20: a curator holds no permission in the plugin, whose admin roles
+  // A curator holds no permission in the plugin, whose admin roles
   // stay `['admin']`, so it impersonates no one. F curates, so the refusal is
   // the people page's check, not a session without a site role.
   it('refuses a curator, who passes the curation check, where the same call answers an admin', async () => {
@@ -124,7 +124,7 @@ describe('impersonating a user', () => {
   });
 
   // The plugin shields only its admin roles, so a curator is handed over as
-  // any non-admin is (M11.20).
+  // any non-admin is.
   it('hands a curator over to an admin, as any non-admin is', async () => {
     const response = await impersonate(await signedInAs(E.id), F.id);
     expect(response.status).toBe(200);

@@ -104,7 +104,7 @@ describe('ReferenceInput', () => {
       }
     });
 
-    // MB.154: an address typed without its scheme is taken as https.
+    // An address typed without its scheme is taken as https.
     it('takes an address with no scheme as https', () => {
       expect(
         ReferenceInput.parse({ ...MINIMAL.web_page, url: 'www.example.org/testwort' }).url,
@@ -122,7 +122,7 @@ describe('ReferenceInput', () => {
     });
   });
 
-  // MB.154, the owner's calls: what is typed is tidied the way the citation
+  // The owner's calls: what is typed is tidied the way the citation
   // prints it, on the server as on the form (reference-format.ts).
   describe('formatting', () => {
     it('tidies spacing, drops quotes around a title, and dashes ranges', () => {
@@ -163,7 +163,7 @@ describe('ReferenceInput', () => {
     });
   });
 
-  // MB.154: the extra checks, each beside its field.
+  // The extra checks, each beside its field.
   describe('checks', () => {
     beforeEach(() => {
       vi.useFakeTimers({ now: new Date('2026-10-07T12:00:00Z'), toFake: ['Date'] });

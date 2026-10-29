@@ -16,7 +16,7 @@ import type { Message, ProviderId } from '@/lib/types';
 import { importAuth } from '../support/auth-module';
 import type { AuthInstance, Profile } from '../support/types';
 
-// Story 1, through Better Auth's real endpoints: a second provider is added
+// Through Better Auth's real endpoints: a second provider is added
 // from a signed-in session with /link-social, and from then on signs in by its
 // account id (claude-docs/auth/admin-bootstrap.md, "Linking a second provider").
 
@@ -278,7 +278,7 @@ describe('Story 1: removing a linked provider', () => {
   });
 });
 
-// MB.58: the seed's creator row is a plain user, and this is why it can stay
+// The seed's creator row is a plain user, and this is why it can stay
 // one — no provider's sign-in lands in it. Better Auth links a sign-in to an
 // existing row by address only if that row is verified, and the bootstrap row
 // never is; nor has it an `accounts` row to sign in through.

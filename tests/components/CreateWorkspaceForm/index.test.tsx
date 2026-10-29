@@ -13,7 +13,7 @@ vi.mock('next/navigation', () => ({ useRouter: () => ({ push, refresh }) }));
 const { default: CreateWorkspaceForm } = await import('@/components/CreateWorkspaceForm');
 const { NavigationProvider, usePendingNavigation } = await import('@/lib/navigation');
 
-// The create-workspace page's form (M9.16, Story 3). The mutation is answered
+// The create-workspace page's form. The mutation is answered
 // by MSW in the shape /api/graphql answers, so a refusal is read through the
 // route's own error mapping; that the service refuses a user without the
 // right is tests/modules/coven/services/workspace-creation.test.ts's.
@@ -45,7 +45,7 @@ beforeEach(() => {
 });
 
 describe('CreateWorkspaceForm', () => {
-  // Its label says it; a tip restating it went (the owner's call, 2026-10-20).
+  // Its label says it; a tip restating it went.
   it('gives the name field no tip, and describes it by nothing until it errs', () => {
     renderForm();
 
@@ -130,7 +130,7 @@ describe('CreateWorkspaceForm', () => {
     expect(push).not.toHaveBeenCalled();
   });
 
-  // Leaving with a name typed (M13.14): the page sits in the site's
+  // Leaving with a name typed: the page sits in the site's
   // NavigationProvider, as the providers put it.
   describe('guarding a typed name', () => {
     /** A link elsewhere on the page, as the site menu is. */

@@ -11,7 +11,7 @@ import { insertIngredient } from '../../../support/db/insert-ingredient';
 import { makeIngredient } from '../../../support/fixtures';
 import { clearDataCache } from '../../../support/next-data-cache';
 
-// M12.2: llms.txt and the catalog list the public compendium and nothing a
+// Llms.txt and the catalog list the public compendium and nothing a
 // coven owns, over the real cached read with no session.
 vi.mock('next/cache', () => import('../../../support/next-data-cache'));
 

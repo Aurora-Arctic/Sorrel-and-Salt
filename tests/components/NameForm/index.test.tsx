@@ -7,7 +7,7 @@ import type { SetNameMutation, SetNameMutationVariables } from '@/gql/graphql';
 import { makeQueryClient } from '@/lib/graphql-client';
 import { mockGraphQLError, mockGraphQLMutation } from '../../support/msw/graphql';
 
-// The account page's Name section (MB.88). The mutation is answered by MSW in
+// The account page's Name section. The mutation is answered by MSW in
 // the shape /api/graphql answers (tests/support/msw/graphql.ts), so a refusal
 // is read through the route's own error mapping (claude-docs/components/name-form.md).
 

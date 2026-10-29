@@ -79,7 +79,7 @@ describe('cursor', () => {
       forged({ k: ['Testwort'] }),
       forged({ k: ['Testwort'], i: 7 }),
       forged({ k: ['Testwort'], i: '' }),
-      // The single-part shape before MB.104, a key with no parts, and a part that is not text.
+      // A key with no parts (the single-part shape), and a part that is not text.
       forged({ k: 'Testwort', i: ID }),
       forged({ k: [], i: ID }),
       forged({ k: ['Testwort', 7], i: ID }),

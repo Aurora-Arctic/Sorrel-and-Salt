@@ -49,7 +49,7 @@ const countIngredients = async () => {
   return row.n as number;
 };
 
-// MB.219: an ingredient's forms are written inside its own save, each with its
+// An ingredient's forms are written inside its own save, each with its
 // own substitutes, references and categories (DESIGN.md §5, "Variants are
 // written inside the ingredient's save"). What the schema refuses is
 // `validation/ingredient.test.ts`'s; what is read back is MB.218's.
@@ -191,7 +191,7 @@ describe('its forms', () => {
     expect(await countIngredients()).toBe(3);
   });
 
-  // MB.115, the owner's call: a form stands in for a form, so a form's link
+  // The owner's call: a form stands in for a form, so a form's link
   // names one of what it links.
   it("refuses a form's link naming no form of what it links, at create and update, on that form, writing nothing", async () => {
     const testroot = await compendiumEntry('Testroot');
@@ -310,7 +310,7 @@ describe('its forms', () => {
     expect(await liveFormsOf(sql, created.id)).toEqual(['Testleaf', 'Testoil']);
   });
 
-  // A form's pair carries its ingredient too (MB.217), so a drop from the
+  // A form's pair carries its ingredient too, so a drop from the
   // ingredient's own list names the ingredient's pairs alone.
   it("drops a category from the ingredient's own list, leaving a form filed under it", async () => {
     const created = await createWorkspaceIngredient(asUser(B), WORKSPACE_W_ID, {
@@ -335,7 +335,7 @@ describe('its forms', () => {
   });
 
   it('writes no form and none of its children on a save that changes nothing', async () => {
-    // The coven's own source, which a form's links are read back beside (MB.218).
+    // The coven's own source, which a form's links are read back beside.
     const source = await insertReference(sql, { workspace_id: WORKSPACE_W_ID }, A.id);
     const input = (ids: string[] = []) =>
       withForms(

@@ -4,7 +4,7 @@ import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { makeQueryClient } from '@/lib/graphql-client';
 import type { Session } from '@/lib/session';
 
-// The create-workspace page, `/coven/new` (M9.16). The session and the row are
+// The create-workspace page, `/coven/new`. The session and the row are
 // mocked; what they are is tests/lib/request-session.test.ts's and the
 // identity service's, and the creation gate is the coven service's.
 

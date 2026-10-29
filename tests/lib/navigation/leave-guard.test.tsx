@@ -10,9 +10,8 @@ vi.mock('next/navigation', () => ({ useRouter: () => router, usePathname: () => 
 const { NavigationProvider, useLeaveGuard, usePendingNavigation } =
   await import('@/lib/navigation');
 
-// A form's unsaved changes, kept from leaving the page (M13.14): the browser's
-// own question on closing the tab or reloading, and the form's on an in-app
-// navigation.
+// A form's unsaved changes, kept from leaving the page: the browser's own question on closing
+// the tab or reloading, and the form's on an in-app navigation.
 
 /** A tab close or reload as the browser raises it: true when something cancelled it. */
 function unload(): boolean {

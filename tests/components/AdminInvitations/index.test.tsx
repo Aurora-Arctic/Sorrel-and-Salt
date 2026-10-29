@@ -16,7 +16,7 @@ import { Navigating } from '../../support/navigating';
 import { mockGraphQLError, mockGraphQLMutation } from '../../support/msw/graphql';
 import type { FilterFormSubject } from '../../support/types';
 
-// The Invitations tab (MB.70; MB.115): render-only, so the page owns the read
+// The Invitations tab: render-only, so the page owns the read
 // and this owns what an admin sees of it and sends, New Invitation beside the
 // heading included (claude-docs/components/admin-invitations.md).
 
@@ -97,7 +97,7 @@ describe('AdminInvitations', () => {
     expect(send()).toBeDisabled();
     expect(within(dialog()).getByRole('textbox', { name: 'Email Address' })).toBeRequired();
     expect(within(dialog()).getByRole('textbox', { name: 'Reason' })).not.toBeRequired();
-    // The lesser role is the one an admin has to choose against (M11.20).
+    // The lesser role is the one an admin has to choose against.
     expect(roleRadio('Curator')).toBeChecked();
     fireEvent.change(within(dialog()).getByRole('textbox', { name: 'Email Address' }), {
       target: { value: ' cass@example.test ' },
@@ -150,7 +150,7 @@ describe('AdminInvitations', () => {
     expect(calls).toEqual([{ email: 'cass@example.test', siteRole: 'admin' }]);
   });
 
-  // Every way out asks first while the form has anything typed (MB.115): the
+  // Every way out asks first while the form has anything typed: the
   // guard's shape is tests/components/Modal's, and this its wiring; the close
   // it makes is the modal's, back to the tab.
   it('asks before Cancel or Escape discards what was typed, and closes on Discard Changes', () => {
@@ -228,7 +228,7 @@ describe('AdminInvitations', () => {
     expect(router.refresh).not.toHaveBeenCalled();
   });
 
-  // In view but unusable while paused, as the role controls are (MB.63).
+  // In view but unusable while paused, as the role controls are.
   it('locks Invite and every Revoke with the pause as the reason', () => {
     render(
       <>
@@ -253,7 +253,7 @@ describe('AdminInvitations', () => {
   });
 });
 
-// The filter (MB.115): FilterForm's loading state and Clear are
+// The filter: FilterForm's loading state and Clear are
 // CompendiumList's to test; the shared rows assert the address this one
 // builds and which of its values count as a filter, and this that the switch
 // carries the email and the invite form keeps the filter and the page shown. Soft, from the first page, as every page under /admin runs its

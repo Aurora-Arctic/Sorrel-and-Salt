@@ -3,7 +3,7 @@ import { Forbidden } from '@/lib/errors';
 import type { PublicCupboardProps } from '@/components/IngredientEntry/types';
 import { entryDetail } from '../../../support/entry-detail';
 
-// The cupboard choices the public entry page hands the entry (M9.12): which of the viewer's
+// The cupboard choices the public entry page hands the entry: which of the viewer's
 // covens are offered, what each one's role permits, and which coven's Annotate dialog the
 // address opens. The entry component, the cached read and the viewer are mocked, since what
 // they do is their own tests' (tests/components/IngredientEntry/public-cupboard-actions.test.tsx
@@ -213,7 +213,7 @@ describe('the public entry page’s cupboard choices', () => {
   });
 });
 
-// The In Your Cupboard shelf before the name (M9.12): shown when any coven of the viewer's holds
+// The In Your Cupboard shelf before the name: shown when any coven of the viewer's holds
 // the entry, viewers' covens included, from the one held read that feeds the choices too.
 describe('the public entry page’s Edit Stock', () => {
   const STOCK = { forms: [{ variantId: 'v1', label: 'Leaf' }], jars: [] };

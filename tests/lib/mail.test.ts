@@ -80,9 +80,8 @@ afterEach(() => {
 });
 
 describe('send, per transport', () => {
-  // The placeholder a provider that shared no address is stored under
-  // (MB.54) lives under `.invalid`, which RFC 2606 reserves: nothing can
-  // receive it, so no transport is ever asked to try.
+  // The placeholder a provider that shared no address is stored under lives under `.invalid`,
+  // which RFC 2606 reserves: nothing can receive it, so no transport is ever asked to try.
   it('refuses a recipient under .invalid before choosing a transport', async () => {
     configure('resend');
 

@@ -25,7 +25,7 @@ vi.mock('@/lib/auth-client', () => ({
 }));
 const assignMock = vi.fn();
 
-// `/admin/users`' table, filter and pager (MB.52): render-only, so the page
+// `/admin/users`' table, filter and pager: render-only, so the page
 // owns the read and this owns what an admin sees of it
 // (claude-docs/components/user-list.md).
 
@@ -57,7 +57,7 @@ const BO = {
   heading: { eyebrow: 'User', title: 'Bo Fixturewort', qualifier: 'bo@users.test' },
 } as const;
 
-// A curator (M11.20): holds the creation flag, as the CHECK makes every
+// A curator: holds the creation flag, as the CHECK makes every
 // curator do, and an unverified address.
 const CY = {
   ...BO,
@@ -102,7 +102,7 @@ describe('UserList', () => {
     expect(within(within(bo).getAllByRole('cell')[3]).getByText('No')).toBeInTheDocument();
   });
 
-  // MB.200: each row opens the privilege ledger narrowed to its user, an
+  // Each row opens the privilege ledger narrowed to its user, an
   // admin's included, from an icon before the name.
   describe('the history link', () => {
     it('leads every name, to the ledger searched for that user’s address', () => {
@@ -131,7 +131,7 @@ describe('UserList', () => {
     });
   });
 
-  // M9.19: each name opens its user’s modal over the list, at once under
+  // Each name opens its user’s modal over the list, at once under
   // the page’s opener, and as a link still for a new tab or before the script.
   describe('the name link', () => {
     it('links each name to its user’s modal, in the name cell', () => {
@@ -155,7 +155,7 @@ describe('UserList', () => {
 
       fireEvent.click(screen.getByRole('link', { name: BO.name }));
 
-      // No place named: a row opens the page's one unnamed route modal (M12.5).
+      // No place named: a row opens the page's one unnamed route modal.
       expect(opener.open).toHaveBeenCalledExactlyOnceWith(BO.openHref, BO.heading, undefined);
     });
   });
@@ -173,7 +173,7 @@ describe('UserList', () => {
   });
 });
 
-// MB.53: where impersonation is registered, each non-admin row carries the
+// Where impersonation is registered, each non-admin row carries the
 // control; the endpoint is the guard, and these only put it where an admin looks.
 describe('UserList impersonation', () => {
   afterEach(() => {
@@ -237,7 +237,7 @@ describe('UserList impersonation', () => {
   });
 });
 
-// MB.115: the search applies from its magnifier or Enter, a role or Needs
+// The search applies from its magnifier or Enter, a role or Needs
 // Approval the moment it changes, each softly from the first page, with a
 // bare `awaiting`.
 describe('UserList filter', () => {
@@ -281,7 +281,7 @@ describe('UserList filter', () => {
 
   it.each(FILTER_ROWS)('%s', (_title, run) => run(SUBJECT));
 
-  // The owner's call (MB.115): a select-only box once hydrated, as every
+  // The owner's call: a select-only box once hydrated, as every
   // closed set in the row is, over the native select the server draws.
   it('narrows by role the moment one is picked, from a native select on the server that starts at the role shown', async () => {
     const { container, hydrate } = drawnOnServer(
@@ -343,7 +343,7 @@ describe('UserList filter', () => {
   });
 });
 
-// M5.8: a user who may not yet create a coven is approved from their row, and
+// A user who may not yet create a coven is approved from their row, and
 // one who may is revoked, each behind a confirmation naming them; an admin's
 // row offers neither. The service is the guard; these put the control where an
 // admin looks, and show what the mutation answers.
@@ -400,7 +400,7 @@ describe('UserList approval', () => {
     expect(calls).toEqual([]);
   });
 
-  // MB.205: an unverified address is said in the confirmation, read with its
+  // An unverified address is said in the confirmation, read with its
   // Approve, since the focus lands there; a warning, not a refusal.
 
   it('warns before approving a user whose email is unverified, and still approves', async () => {
@@ -516,7 +516,7 @@ describe('UserList approval', () => {
   });
 });
 
-// MB.59, M11.20: the role cell's Change Role, asking in a modal naming the
+// M11.20: the role cell's Change Role, asking in a modal naming the
 // user which role they move to, every role but the one held, with an
 // optional reason; the primary admin's in view but unusable, saying why. The
 // service is the guard, and refuses the same.
@@ -678,7 +678,7 @@ describe('UserList site role', () => {
   });
 });
 
-// MB.63: the primary admin's switch on admin changes, its state in words; to
+// The primary admin's switch on admin changes, its state in words; to
 // any other admin the control is in view but unusable, saying why.
 describe('UserList admin changes switch', () => {
   afterEach(() => {
@@ -687,7 +687,7 @@ describe('UserList admin changes switch', () => {
 
   // The paused notice is a plain paragraph before the switch, the state's one
   // rendering; while changes are on, the switch stands alone.
-  // MB.115, on the owner's call, reversing MB.63's: Pause asks first.
+  // On the owner's call, reversing MB.63's: Pause asks first.
   const confirming = () => screen.getByRole('dialog', { name: 'Pause Admin Changes' });
 
   it('lets the primary admin pause once confirmed, stating that changes are on, and says so', async () => {
@@ -770,7 +770,7 @@ describe('UserList admin changes switch', () => {
   });
 });
 
-// MB.63: while admin changes are paused, an admin the pause binds sees every
+// While admin changes are paused, an admin the pause binds sees every
 // Change Role in view but unusable, saying why; the primary admin, whom
 // the pause exempts, keeps them. The service refuses the same.
 describe('UserList admin role while admin changes are paused', () => {

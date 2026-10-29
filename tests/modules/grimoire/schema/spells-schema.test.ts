@@ -8,7 +8,7 @@ import { FIXTURE_USERS, WORKSPACE_W_ID, WORKSPACE_X_ID } from '@/db/seed/standar
 
 // §5's columns, `visibility` included as of M10.3 — claude-docs/db/grimoire.md,
 // "The grimoire".
-// `revision` is the counter a save names to detect a clash (M13.15).
+// `revision` is the counter a save names to detect a clash.
 const OWN_COLUMNS = [
   'id',
   'workspace_id',
@@ -27,7 +27,7 @@ const OWN_COLUMNS = [
 describe('spells schema', () => {
   const { byName } = tableFacts(spells);
 
-  // The full six: story 54's delete is recoverable. Only two join tables take four (MB.34).
+  // The full six: story 54's delete is recoverable. Only two join tables take four.
   it('has DESIGN.md §5 columns and nothing else', () => {
     expect(Object.keys(byName).sort()).toEqual([...OWN_COLUMNS, ...AUDIT_COLUMNS].sort());
   });
@@ -100,7 +100,7 @@ describe('spells table', () => {
     }
   });
 
-  // The single free-text note on a spell (story 80), beside its steps.
+  // The single free-text note on a spell, beside its steps.
   it('holds a note', async () => {
     const id = await record({ note: 'Keep by the hearth.' });
 
@@ -131,7 +131,7 @@ describe('spells table', () => {
 
   // In the column, so a spell written by any path — a seed, a fixture, a
   // service that never mentions visibility — joins the shared grimoire
-  // rather than disappearing into its author's (M10.3).
+  // rather than disappearing into its author's.
   it('defaults a new spell to workspace visibility', async () => {
     const id = await record();
 
@@ -162,7 +162,7 @@ describe('spells table', () => {
   });
 });
 
-// M13.15: autosave writes a draft on the first keystroke, before the member
+// Autosave writes a draft on the first keystroke, before the member
 // may have named it, so a title is required only to complete a spell
 // (claude-docs/db/grimoire.md, "The grimoire").
 describe('a spell with no title', () => {

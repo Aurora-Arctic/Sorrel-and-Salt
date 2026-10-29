@@ -48,7 +48,7 @@ describe('Notice', () => {
 });
 
 // The block form holds what a sentence cannot: a list and buttons beneath it,
-// for the duplicates warning (M12.48). A `<p>` cannot hold a list or a button,
+// for the duplicates warning. A `<p>` cannot hold a list or a button,
 // nor an `<output>` a list, so the block form keeps the kinds and their roles
 // on an element that can.
 describe('Notice, the block form', () => {

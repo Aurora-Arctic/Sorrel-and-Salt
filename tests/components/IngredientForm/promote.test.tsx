@@ -17,7 +17,7 @@ import { openSections } from '../../support/ingredient-sections';
 import { press, type } from '../../support/interact';
 import { ENTRY_ID, WORKSPACE_ID, offerNothing } from '../../support/msw/ingredient-lookups';
 
-// Promoting a folk name (M12.1): the control on a saved folk name's chip, the
+// Promoting a folk name: the control on a saved folk name's chip, the
 // question it always asks, and what the form is left holding, tried on the
 // compendium's edit; the coven tier is tried on the question and its hook,
 // and the control on a coven's edit is coven-edit.test.tsx's.

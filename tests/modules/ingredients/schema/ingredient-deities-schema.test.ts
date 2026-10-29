@@ -6,7 +6,7 @@ import { ingredientDeities } from '@/modules/ingredients/schema/ingredient-deiti
 import { FIXTURE_USERS } from '@/db/seed/standard';
 import type { DeityEntry } from './types';
 
-// DESIGN.md §5's `ingredient_deities` (MB.165): one row per deity an
+// DESIGN.md §5's `ingredient_deities`: one row per deity an
 // ingredient names, in the order entered, each a name and, when the member
 // picked a curated deity, a link to it.
 const OWN_COLUMNS = ['id', 'ingredient_id', 'deity_id', 'name', 'position'];
@@ -127,7 +127,7 @@ describe('ingredient_deities table', () => {
       }
     });
 
-    // A link reads as its name once its deity is soft-deleted (MB.165): the
+    // A link reads as its name once its deity is soft-deleted: the
     // key still holds, and the name is the row's own.
     it('keeps a link, and its name, when the deity is soft-deleted', async () => {
       const kept = await addDeity(UNCARIA, {

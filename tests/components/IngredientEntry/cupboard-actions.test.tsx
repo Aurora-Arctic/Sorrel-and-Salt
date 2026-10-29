@@ -19,12 +19,12 @@ import { server } from '../../support/msw/server';
 const router = vi.hoisted(() => ({ push: vi.fn(), replace: vi.fn(), refresh: vi.fn() }));
 vi.mock('next/navigation', () => ({ useRouter: () => router }));
 
-// Which cupboard choices a compendium entry offers (M12.17, M12.23;
+// Which cupboard choices a compendium entry offers (M12.23;
 // claude-docs/components/ingredient-entry.md): the page decides from the
 // member's permissions, the choices follow whether the coven holds the entry, and they are drawn
-// as the list cards draw them (the owner's call, 2026-10-20): a main icon (Annotate on a
+// as the list cards draw them: a main icon (Annotate on a
 // coven's page, Edit in Compendium on the compendium's) and the three dots for what is further,
-// Remove among it beside Make It Ours (the owner's call, 2026-10-20), the bin only where Remove is
+// Remove among it beside Make It Ours, the bin only where Remove is
 // the one choice left.
 
 const ANNOTATE = {
@@ -114,7 +114,7 @@ function choose(name: string): void {
 describe('CupboardActions', () => {
   beforeEach(() => router.push.mockClear());
 
-  // The icons at the end of the name's row (the owner's call, 2026-10-20), the cards' own: on a
+  // The icons at the end of the name's row, the cards' own: on a
   // coven's page the main one is Annotate, a link to the page's `?annotate`, named for the entry
   // (its tip is IconTip's to prove); then the three dots, a menu. No plain Annotate or Edit.
   it('draws Annotate as the main icon, a link named for the entry, then the three dots', async () => {
@@ -135,7 +135,7 @@ describe('CupboardActions', () => {
     expect(button('Remove Testwort')).not.toBeInTheDocument();
   });
 
-  // Adding is the plus's alone (the owner's call, 2026-10-20): the old Add to Cupboard is gone.
+  // Adding is the plus's alone: the old Add to Cupboard is gone.
   it('offers no Add without a plus while the coven lacks the entry, though its role may add', () => {
     // Why Add could have shown: the role may add (`canAdd`) and the coven lacks the entry.
     expect(BASE.canAdd && !BASE.held).toBe(true);
@@ -158,7 +158,7 @@ describe('CupboardActions', () => {
     expect(button('Remove Testwort')).not.toBeInTheDocument();
   });
 
-  // A lone choice is its own icon (the owner's call, 2026-10-20), so a member who may remove but
+  // A lone choice is its own icon, so a member who may remove but
   // not make it ours has the bin, and no menu of one.
   it('draws Remove as the bin, with no three dots, where it is the one choice left', () => {
     // Why the dots could have shown: with Make It Ours permitted too they do (the test above).
@@ -306,7 +306,7 @@ describe('CupboardActions', () => {
 
   // The entry's page heading takes the focus once the re-read says the coven no
   // longer holds it: Remove went with its menu, and the control left may be
-  // another element (M8.17, after M12.31's follow-up 5). Until then the
+  // another element (after M12.31's follow-up 5). Until then the
   // confirmation stays, busy, as ConfirmedAction's does.
   it("reads the page again once the entry is removed, and closes onto the page's heading when the re-read drops it", async () => {
     mockGraphQLMutation<RemoveCupboardEntryMutation, Record<string, unknown>>(
@@ -532,9 +532,9 @@ describe('CupboardActions', () => {
     );
   });
 
-  // The plus beside the pencil on a coven's page too (the owner's call, 2026-10-20): the page's
+  // The plus beside the pencil on a coven's page too: the page's
   // `plus` names every coven the viewer may add in and which of them hold the entry.
-  // Edit Stock on the coven's own page (M9.12; the owner's call, 2026-10-21): first in the dots,
+  // Edit Stock on the coven's own page: first in the dots,
   // this coven's dialog at once with no coven to choose, for a coven that holds the entry and
   // where the role may update stock. The page hands over the stock only then.
   describe('Edit Stock', () => {

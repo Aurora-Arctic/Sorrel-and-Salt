@@ -19,9 +19,9 @@ import { useTestDatabase } from '../../../support/db/database';
 import { insertIngredient } from '../../../support/db/insert-ingredient';
 import { makeIngredient } from '../../../support/fixtures';
 
-// Story 18's category-group half (M5.6b): the groups' writes, the site
+// Story 18's category-group half: the groups' writes, the site
 // admin's alone. Each colour is held to 4.5:1 against its own theme's harder
-// surface (MB.36). A group is deleted only once its live categories have
+// surface. A group is deleted only once its live categories have
 // somewhere to go: the admin names a group, and they move there in the same
 // write, their links untouched (claude-docs/design-decisions/m5.6b-admin-groups.md).
 // The seeded groups stay, so every group a test writes is `Fixture …` and
@@ -186,7 +186,7 @@ describe('createCategoryGroup', () => {
     },
   );
 
-  // An icon is a form group's (M12.6): a category group's input drops one,
+  // An icon is a form group's: a category group's input drops one,
   // even a value a form group would refuse, rather than reading it.
   it('takes no icon, writing the group as though none were given', async () => {
     const withIcon = { ...input(), icon: 'banana' } as CategoryGroupInput;
@@ -314,7 +314,7 @@ describe('updateCategoryGroup', () => {
     expect((await groupOf(id)).name).toBe('Fixture Wards');
   });
 
-  // So editing a seeded group never trips the check (MB.36).
+  // So editing a seeded group never trips the check.
   it('accepts every seeded group saved back as it is', async () => {
     const seeded = await sql<
       { id: string; name: string; description: string; color_dark: string; color_light: string }[]

@@ -2,7 +2,7 @@ import { fireEvent, render, screen, waitFor, within } from '@testing-library/rea
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 import LeaveWorkspaceButton from '@/components/LeaveWorkspaceButton';
 
-// The only owner's Leave (M6.16): the page hands the button the members who
+// The only owner's Leave: the page hands the button the members who
 // could take over, and pressing it asks what happens to the coven, a
 // hand-over or a deletion, never only one. The requests are mocked; what the
 // service decides is its own tests'.
@@ -174,7 +174,7 @@ describe('LeaveWorkspaceButton for the only owner', () => {
   });
 
   // A refusal asked over the dialog is said beside Delete, a plain notice
-  // inside the dialog, never a callout over it (the owner's call).
+  // inside the dialog, never a callout over it.
   it('says a refused deletion beside Delete, inside the dialog, which stays open', async () => {
     graphqlRequest.mockRejectedValue(new Error('Forbidden'));
     const dialog = await openDialog();

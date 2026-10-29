@@ -73,7 +73,7 @@ async function seed(name: string): Promise<string> {
 
 describe('categories', () => {
   it('answers a signed-out visitor the vocabulary by group then name, a page at a time, each with its group', async () => {
-    // The picker's order (MB.126): the group's name, then the category's.
+    // The picker's order: the group's name, then the category's.
     const expected = await sql<{ id: string }[]>`
       select c.id from categories c join category_groups g on g.id = c.group_id
       where c.deleted_at is null and g.deleted_at is null

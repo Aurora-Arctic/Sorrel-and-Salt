@@ -16,7 +16,7 @@ import {
 // standing, while each module schema test pins its table's exact column set on
 // the code side (claude-docs/testing/db-harness.md, "The db test harness").
 
-/** Hard-deleted, so four stamps and no tombstone (MB.34). */
+/** Hard-deleted, so four stamps and no tombstone. */
 const STAMPED = ['ingredient_categories', 'spell_categories'];
 
 const AUDIT_IDS = ['created_by', 'updated_by', 'deleted_by'];
@@ -94,7 +94,7 @@ describe('the audit columns', () => {
     // so its discriminator is proved on real tables carrying the `updated_at` a
     // careless sweep would have matched on, and no audit id. By name rather
     // than every `*_by`: `sessions.impersonated_by` is the `admin` plugin's
-    // column (MB.53), and no audit id.
+    // column, and no audit id.
     for (const table of UNAUDITED_TABLES) {
       const { columns: found, references: linked } = audit(table);
       expect(found, table).toHaveProperty('updated_at');

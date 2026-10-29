@@ -6,7 +6,7 @@ import { setName } from '@/modules/identity';
 import { A, B, E, asUser } from '../../../support/as-user';
 import type { NamedUserRow } from './types';
 
-// MB.88: the name the site shows, changed by its owner alone through the
+// The name the site shows, changed by its owner alone through the
 // audited write path. `setName` takes no id, so the only row a caller can
 // name is the session's own (claude-docs/auth/admin-bootstrap.md, "The
 // account page").

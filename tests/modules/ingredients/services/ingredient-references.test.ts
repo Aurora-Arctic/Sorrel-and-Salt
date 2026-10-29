@@ -25,7 +25,7 @@ import {
 } from '../../../support/db/insert-reference';
 import { type IngredientFixture, type Overrides, makeIngredient } from '../../../support/fixtures';
 
-// MB.153: an ingredient's references, each a link to a reference with an
+// An ingredient's references, each a link to a reference with an
 // optional locator, written in the ingredient's own transaction by either
 // tier's service, held to the tier rule, and read back alphabetically by
 // citation through `referencesOf`, the batch behind `Ingredient.references`
@@ -415,7 +415,7 @@ describe('the compendium without references', () => {
     expect((await countCompendium({ withoutReferences: true }, undefined)).totalCount).toBe(4);
   });
 
-  // The union rule (MB.215, MB.218): a source on one of an entry's forms
+  // The union rule: a source on one of an entry's forms
   // sources the entry, while that form is live.
   it('counts an entry sourced when one of its live variants cites, and only then', async () => {
     const book = await compendiumBook('Fixture Herbal');

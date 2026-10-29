@@ -2,7 +2,7 @@ import { describe, expect, it } from 'vitest';
 import { needOf, supplyOf } from '@/components/SpellBuilder/steps/supply';
 import type { StepJar } from '@/components/SpellBuilder/steps/types';
 
-// M10.19, story 54: what the cupboard says about a step. Every row of the rule, as a
+// Story 54: what the cupboard says about a step. Every row of the rule, as a
 // function; the builder test proves each is drawn, and that the draw follows the amount.
 
 const jar = (over: Partial<StepJar> = {}): StepJar => ({
@@ -73,7 +73,7 @@ describe('supplyOf', () => {
   });
 });
 
-// A form laid in several steps is judged on the sum of what they all need (owner, 2026-10-28).
+// A form laid in several steps is judged on the sum of what they all need.
 describe('supplyOf across the steps on one form', () => {
   const held = jar({ quantity: 50 });
   const a = step({ jar: held, quantity: '30', unit: 'g' });

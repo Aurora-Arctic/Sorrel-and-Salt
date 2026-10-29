@@ -5,10 +5,10 @@ import ChipColorField from '@/components/ChipColorField';
 import type { ChipColorFieldProps } from '@/components/ChipColorField/types';
 import { pairedColor } from '@/lib/group-colors';
 
-// One of a category group's two chip colours (M5.6b): Ark's picker and the
+// One of a category group's two chip colours: Ark's picker and the
 // hex it writes, kept in step; the channels of a format the admin chooses; a
 // veil over the colours that fall short of 4.5:1 on its ground; a Match button setting it from its partner; a
-// sample chip there with its ratio (MB.36); and a warning when another
+// sample chip there with its ratio; and a warning when another
 // group's colour in the theme stands too close (the owner's calls).
 
 function Controlled({

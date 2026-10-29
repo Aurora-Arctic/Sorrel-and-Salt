@@ -18,7 +18,7 @@ import {
   offerNothing,
 } from '../../support/msw/ingredient-lookups';
 
-// The form editing a coven's own entry (M8.17): what an edit changes on the
+// The form editing a coven's own entry: what an edit changes on the
 // coven tier, written once here. What an edit does in either tier — one save,
 // off until something changes, a rename's near match holding nothing — is
 // compendium.test.tsx's, and the form's every field index.test.tsx's.
@@ -108,7 +108,7 @@ describe("IngredientForm editing a coven's own entry", () => {
     );
   });
 
-  // Delete sits at the dialog's foot as the compendium's does (M8.17, moved
+  // Delete sits at the dialog's foot as the compendium's does (moved
   // from M9.10 by the owner, 2026-10-19), and deletes from this coven alone.
   it('deletes the entry from the coven once confirmed, naming it, and says why when refused', async () => {
     const onDeleted = vi.fn();

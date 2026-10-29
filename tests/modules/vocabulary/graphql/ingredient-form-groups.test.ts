@@ -93,7 +93,7 @@ describe('createIngredientFormGroup', () => {
   });
 });
 
-// The icon standing for the group (M12.6), an enum on the wire as in the
+// The icon standing for the group, an enum on the wire as in the
 // table. Which values the service takes, and that an absent one clears, are
 // the service test's; here, that the enum carries them both ways.
 describe('icon', () => {

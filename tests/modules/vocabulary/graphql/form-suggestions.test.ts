@@ -56,7 +56,7 @@ describe('formSuggestions', () => {
     expect(result.errors).toBeUndefined();
     expect(result.data?.formSuggestions.edges.map((edge) => edge.node)).toEqual([
       {
-        // MB.167: what a pick sends.
+        // What a pick sends.
         id: await curatedFormId(sql, 'Root'),
         value: 'Root',
         description: expect.any(String),
@@ -77,7 +77,7 @@ describe('formSuggestions', () => {
   });
 });
 
-// M5.5: the admin's compendium form has no coven to name, so a null
+// The admin's compendium form has no coven to name, so a null
 // workspaceId reads the compendium tier alone.
 describe('formSuggestions without a coven', () => {
   const runInCompendium = (session: Session | null, variables: Record<string, unknown>) =>

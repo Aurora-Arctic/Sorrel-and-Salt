@@ -2,7 +2,7 @@ import { describe, expect, it } from 'vitest';
 import { buildSearchSentence } from '@/components/IngredientSearch/sentence';
 import type { SearchSentenceFilter } from '@/components/IngredientSearch/types';
 
-// The one named exception to the copy rule (M12.4): this file asserts the
+// The one named exception to the copy rule: this file asserts the
 // sentence's strings, because the strings are what the function makes.
 
 const empty: SearchSentenceFilter = {};

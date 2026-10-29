@@ -135,7 +135,7 @@ describe('IconTip', () => {
 
 // A tip over a control that opens a menu: while the menu is open the menu says
 // what the control does, so the tip stays shut however the pointer or the
-// focus reaches the control (the owner's call, 2026-10-20), and is back for
+// focus reaches the control, and is back for
 // the next hover once the menu is closed.
 describe('IconTip around a menu button', () => {
   beforeEach(() => {

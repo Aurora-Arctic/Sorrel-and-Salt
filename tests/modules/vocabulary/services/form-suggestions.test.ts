@@ -235,7 +235,7 @@ describe('suggestForms', () => {
     });
   });
 
-  // MB.220: an entry's forms are its variants, so a form is in use, and
+  // An entry's forms are its variants, so a form is in use, and
   // claimed, while any live variant holds it, and not once it is dropped.
   describe('an entry with several forms', () => {
     it('offers and attributes each live form, and not a dropped one', async () => {

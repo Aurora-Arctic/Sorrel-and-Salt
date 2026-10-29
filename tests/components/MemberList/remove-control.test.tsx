@@ -49,7 +49,7 @@ describe('RemoveControl', () => {
   });
 
   // The service's sentence alone, with no prefix naming the member: the
-  // callout hangs from that member's row (the owner's call, 2026-10-20).
+  // callout hangs from that member's row.
   it("says the service's refusal under the control when the service refuses", async () => {
     graphqlRequest.mockRejectedValue(
       new GraphQLClientError({
@@ -70,7 +70,7 @@ describe('RemoveControl', () => {
 // The row's own Remove takes its row with it: the members page, the
 // invitations' Revoke and Remove, the account page's Decline and the admin
 // invitations' Revoke all ask through ConfirmedAction's modal, so one row
-// proves the landing for them all (M8.17, after M12.31's follow-up 5).
+// proves the landing for them all (after M12.31's follow-up 5).
 describe('RemoveControl, where the focus lands', () => {
   beforeEach(() => {
     refresh.mockReset();

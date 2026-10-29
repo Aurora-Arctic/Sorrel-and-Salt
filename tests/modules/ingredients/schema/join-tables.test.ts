@@ -11,10 +11,10 @@ import { withAudit } from '@/db/repository';
 import { FIXTURE_USERS } from '@/db/seed/standard';
 
 // The two category join tables, one template: a pair keyed on itself, four
-// stamps and no tombstone, hard-deleted (MB.34; claude-docs/db/hard-delete-join-tables.md,
+// stamps and no tombstone, hard-deleted (claude-docs/db/hard-delete-join-tables.md,
 // "Hard delete on two join tables"). Foreign keys, NOT NULL and index names
 // are the drift test's; the stamps are the audit-columns sweep's. An
-// ingredient's pair may also name one of its forms (MB.217), the rows below
+// ingredient's pair may also name one of its forms, the rows below
 // the template.
 
 const AUTHOR = FIXTURE_USERS.A.id;
@@ -23,7 +23,7 @@ const SECOND_AUTHOR = FIXTURE_USERS.B.id;
 let sql: ReturnType<typeof postgres>;
 useTestDatabase((client) => (sql = client));
 
-// Invented names (M1.25), numbered so two owners never share a slug or an identity.
+// Invented names, numbered so two owners never share a slug or an identity.
 const JOINS = [
   {
     name: 'ingredient_categories',
@@ -138,7 +138,7 @@ describe.each(JOINS)('$name', ({ name, table, owner, key, columns, pairKey, inse
   });
 });
 
-// MB.217: a pair naming a variant files that form, and still carries its
+// A pair naming a variant files that form, and still carries its
 // ingredient, so the compendium's category filter reads the union for free.
 describe('ingredient_categories, on a form', () => {
   let ingredientId: string;

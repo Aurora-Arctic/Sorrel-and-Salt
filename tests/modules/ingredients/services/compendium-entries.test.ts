@@ -349,7 +349,7 @@ describe('deleteCompendiumEntry', () => {
   });
 });
 
-// M12.25: the number the delete confirm shows. Only a curator or admin may ask,
+// The number the delete confirm shows. Only a curator or admin may ask,
 // and only of a compendium entry, because the count is a fact about covens.
 describe('countCompendiumEntryUsers', () => {
   it.each(CURATORS)('answers how many covens hold the entry for %s', async (_who, user) => {
@@ -474,7 +474,7 @@ describe('a deleted entry', () => {
         return Array.isArray(forms) && forms.length > 0;
       },
     ],
-    // A new link cannot reach a deleted ingredient, as a new spell layer cannot (M5.3).
+    // A new link cannot reach a deleted ingredient, as a new spell layer cannot.
     [
       "a coven's substitute picker",
       async (id) =>
@@ -604,7 +604,7 @@ describe('a deleted entry', () => {
     ]);
   });
 
-  // A layer is the spell's, and leaves it only when a member takes it out (MB.110).
+  // A layer is the spell's, and leaves it only when a member takes it out.
   it('leaves every layer holding it as it was', async () => {
     const id = await seed();
     const spellId = await insertSpell(sql, makeSpell({ steps: [{ ingredientId: id }] }), B.id);

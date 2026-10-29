@@ -15,8 +15,8 @@ import { useTestDatabase } from '../../../support/db/database';
 import { insertDeityLink, insertIngredient } from '../../../support/db/insert-ingredient';
 import { makeIngredient } from '../../../support/fixtures';
 
-// Story 18's tradition half (MB.132): the deity traditions' writes, the site
-// admin's alone. A deity's slug is its name and its tradition (MB.132), so a
+// Story 18's tradition half: the deity traditions' writes, the site
+// admin's alone. A deity's slug is its name and its tradition, so a
 // rename moves the slug of every deity under the tradition, and a delete first
 // moves its live deities to the tradition the admin names, each re-slugged
 // there — the deities stay curated, so neither a compendium entry's pick nor a

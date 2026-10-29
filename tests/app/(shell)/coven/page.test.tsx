@@ -2,7 +2,7 @@ import { fireEvent, render, screen, within } from '@testing-library/react';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 import type { WorkspaceRole } from '@/modules/coven';
 
-// The `/coven/[slug]` index page (M9.15): the page every coven opens on. It
+// The `/coven/[slug]` index page: the page every coven opens on. It
 // runs the coven guard on its own slug, since a layout does not re-run on
 // client-side navigation, and offers Leave, which every role sees, and
 // Delete, which only an owner does. What the guard decides is
@@ -74,7 +74,7 @@ describe('the /coven/[slug] page', () => {
     expect(screen.getByRole('button', { name: 'Delete Coven' })).toBeEnabled();
   });
 
-  // The guided exit (M6.16): the only owner is shown both ways out on click;
+  // The guided exit: the only owner is shown both ways out on click;
   // one of several owners, a member and a viewer leave as before.
   describe('the only owner', () => {
     // What the dialog does with the roster is LeaveWorkspaceButton's owner-exit tests'; the page
@@ -122,7 +122,7 @@ describe('the /coven/[slug] page', () => {
     expect(memberRoster).not.toHaveBeenCalled();
   });
 
-  // The sections (MB.119): Contents lists the pages the caller can reach,
+  // The sections: Contents lists the pages the caller can reach,
   // Your Membership holds Leave alone, and Delete has a section of its own
   // that only an owner is shown, so the two buttons that end a seat and end a
   // coven are never side by side.

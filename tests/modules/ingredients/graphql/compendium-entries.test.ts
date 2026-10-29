@@ -19,7 +19,7 @@ import {
 import { run } from '../../../support/graphql/run';
 import type { WorkspaceIngredientNode } from './types';
 
-// Story 18 over the wire (M5.5): the site admin's three compendium writes.
+// Story 18 over the wire: the site admin's three compendium writes.
 // This file holds the transport's half (claude-docs/testing/layer-ownership.md):
 // the SDL's own refusals, the loaders cleared between two writes in one
 // request, `endRedirect` reaching the service, and one refusal per error code
@@ -205,7 +205,7 @@ describe('createCompendiumIngredient', () => {
 
 describe('updateCompendiumIngredient', () => {
   // An update replaces the entry, so a field the input left out would be
-  // cleared: the categories above all, which no form field may show (MB.159).
+  // cleared: the categories above all, which no form field may show.
   it('refuses an input that leaves a field out, changing nothing', async () => {
     const id = await seed({ categories: ['Protection'] });
     // Why it could have cleared something: the entry is filed under a category.
@@ -293,7 +293,7 @@ describe('updateCompendiumIngredient', () => {
     expect(await rowOf(id)).toEqual(before);
   });
 
-  // MB.82: an address another entry moved off redirects to it for a window,
+  // An address another entry moved off redirects to it for a window,
   // and taking it is the admin's to confirm.
   describe('onto an address another entry moved off, inside its window', () => {
     let movedId: string;

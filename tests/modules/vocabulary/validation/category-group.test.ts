@@ -2,10 +2,10 @@ import { describe, expect, it } from 'vitest';
 import { CHIP_GROUNDS, contrastRatio } from '@/lib/contrast';
 import { CategoryGroupInput } from '@/modules/vocabulary/validation/category-group';
 
-// A category group as an admin writes one (M5.6b): its colours held to 4.5:1,
+// A category group as an admin writes one: its colours held to 4.5:1,
 // each against the harder of its own theme's surfaces — `colorDark` the dark
-// card, `colorLight` the light page (MB.36) — refused beside the picker that
-// chose it (MB.43), naming the column and the ratio missed. The name, the
+// card, `colorLight` the light page — refused beside the picker that
+// chose it, naming the column and the ratio missed. The name, the
 // description and the dropped slug are curatedValueInput's, and
 // tests/lib/validation.test.ts's.
 
@@ -30,7 +30,7 @@ function failedPaths(input: unknown) {
 }
 
 describe('CategoryGroupInput', () => {
-  // A form group's icon is its own (M12.6): a category group's chip colours
+  // A form group's icon is its own: a category group's chip colours
   // stand for it, so a stray `icon`, even one no form group would take, is dropped.
   it('drops an icon, whatever it holds', () => {
     for (const icon of ['curio', 'banana']) {
@@ -96,7 +96,7 @@ describe('CategoryGroupInput', () => {
       ]);
     });
 
-    // MB.36: clearing the dark page is not enough, since a chip sits on cards too.
+    // Clearing the dark page is not enough, since a chip sits on cards too.
     it('refuses a dark-theme colour that clears the dark page but not the dark card', () => {
       expect(contrastRatio('#7f7f7f', DARK_PAGE)).toBeGreaterThanOrEqual(4.5);
 

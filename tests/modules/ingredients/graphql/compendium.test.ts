@@ -8,7 +8,7 @@ import { run as runOperation } from '../../../support/graphql/run';
 import { makeIngredient } from '../../../support/fixtures';
 import type { CompendiumConnection, SubstituteNode } from './types';
 
-// The `compendium` query over the standard seed's 26 entries: public (MB.80),
+// The `compendium` query over the standard seed's 26 entries: public,
 // a page at a time, with folk names and categories batched. What each filter
 // matches is tests/db/repository/ingredients.test.ts's, and how the service
 // reads the filter services/compendium.test.ts's; this file holds the
@@ -205,7 +205,7 @@ describe('compendium', () => {
     ]);
   });
 
-  // M8.12: `all` is the default and no change, so only `any` reaches the read.
+  // `all` is the default and no change, so only `any` reaches the read.
   it('passes categoryMode any to the read, takes all as the default, and refuses another mode', async () => {
     const ids = [category('Protection'), category('Cleansing')];
     await nodesOf({ categoryIds: ids, categoryMode: 'any' });
@@ -223,7 +223,7 @@ describe('compendium', () => {
     expect(repository.findCompendiumPage).toHaveBeenCalledTimes(3);
   });
 
-  // M8.13: the element list is a typed enum list, and reaches the read as the service parses it.
+  // The element list is a typed enum list, and reaches the read as the service parses it.
   it('passes the elements argument to the read, and refuses a name that is no element', async () => {
     await nodesOf({ elements: ['fire', 'water'] });
     await nodesOf({ elements: [] });
@@ -238,7 +238,7 @@ describe('compendium', () => {
     expect(repository.findCompendiumPage).toHaveBeenCalledTimes(2);
   });
 
-  // MB.140: every entry on the page asks for its substitutes, and one read
+  // Every entry on the page asks for its substitutes, and one read
   // answers them all, the linked ingredients joined in.
   it('resolves the substitutes of a page, linked and typed, in one read', async () => {
     const [mugwort, wormwood, lavender] = await Promise.all(
@@ -284,7 +284,7 @@ describe('compendium', () => {
     expect(repository.findSubstitutesIncludingSoftDeleted).toHaveBeenCalledTimes(1);
   });
 
-  // MB.167: every entry on the page asks for its forms' picks and its deities,
+  // Every entry on the page asks for its forms' picks and its deities,
   // and one read answers each, the curated deities joined in.
   it('resolves the picked forms and the deities of a page in one read each', async () => {
     const result = await runOperation(

@@ -146,7 +146,7 @@ const variantOf = new Map<string, string>();
 
 /**
  * The key of the second form of `ref`'s ingredient, claiming `ref`'s tier: how
- * a variant's loaders are asked (MB.218), so a key that lies about its
+ * a variant's loaders are asked, so a key that lies about its
  * ingredient's tier lies about the variant's too.
  */
 const variantKey = (ref: IngredientKey): VariantKey => ({

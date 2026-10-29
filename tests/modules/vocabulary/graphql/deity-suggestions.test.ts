@@ -51,7 +51,7 @@ describe('deitySuggestions', () => {
     expect(result.errors).toBeUndefined();
     expect(result.data?.deitySuggestions.edges.map((edge) => edge.node)).toEqual([
       {
-        // MB.167: what a pick sends.
+        // What a pick sends.
         id: await curatedDeityId(sql, 'Hermes'),
         value: 'Hermes',
         description: expect.any(String),
@@ -70,7 +70,7 @@ describe('deitySuggestions', () => {
   });
 });
 
-// M5.5: the admin's compendium form has no coven to name, so a null
+// The admin's compendium form has no coven to name, so a null
 // workspaceId reads the compendium tier alone.
 describe('deitySuggestions without a coven', () => {
   const runInCompendium = (session: Session | null, variables: Record<string, unknown>) =>

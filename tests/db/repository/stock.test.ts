@@ -10,10 +10,9 @@ import { insertStock } from '../../support/db/insert-stock';
 import { variantIdOf } from '../../support/db/read-variants';
 import { makeIngredient, makeVariant } from '../../support/fixtures';
 
-// The batch read M9.4's `Ingredient.stock` loader calls: a coven's live jars
-// of a set of ingredients, under the coven's proof. The service's own tests
-// read one jar at a time; this is the many-ingredient shape, with the rows it
-// must leave out seeded beside the rows it must keep.
+// The batch read the `Ingredient.stock` loader calls: a coven's live jars of a set of ingredients,
+// under the coven's proof. The service's own tests read one jar at a time; this is the many-ingredient
+// shape, with the rows it must leave out seeded beside the rows it must keep.
 
 let sql: postgres.Sql;
 useTestDatabase((client) => {

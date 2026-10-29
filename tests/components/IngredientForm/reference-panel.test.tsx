@@ -22,7 +22,7 @@ import {
 } from '../../support/msw/ingredient-lookups';
 import { server } from '../../support/msw/server';
 
-// The new reference panel on its own (MB.182): `ReferencePanel`, the citation
+// The new reference panel on its own: `ReferencePanel`, the citation
 // sub-form MB.154 puts beneath the References field, saving through MSW as
 // /api/graphql answers. How the field opens it, lists what it saves and is
 // held while it is open is references.test.tsx's; what the schema refuses and
@@ -218,7 +218,7 @@ describe('ReferencePanel', () => {
   );
 
   // One tip for how to cite, read once on entering the panel, in place of a
-  // hint beside each field (the owner's call, 2026-10-20).
+  // hint beside each field.
   it('describes the panel by one How to Cite tip, and no field by a hint of its own', () => {
     renderPanel();
 
@@ -351,7 +351,7 @@ describe('ReferencePanel', () => {
     await waitFor(() => expect(onSaved).toHaveBeenCalledOnce());
   });
 
-  // MB.154, the owner's calls: each field is tidied as it is left, as the
+  // The owner's calls: each field is tidied as it is left, as the
   // server will store it, so what is seen is what is saved. Each format is
   // FORMAT_OF's (validation/reference-format.test.ts); here, that the panel
   // applies its field's.
@@ -426,7 +426,7 @@ describe('ReferencePanel', () => {
     expect(calls).toHaveLength(0);
   });
 
-  // MB.115: the edit saves through the same handling, so a refusal of the
+  // The edit saves through the same handling, so a refusal of the
   // edited source lands beside its field as a new one's does.
   it('puts a server field error on an edited source beside its field', async () => {
     offerReference({

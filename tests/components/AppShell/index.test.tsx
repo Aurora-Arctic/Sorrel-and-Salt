@@ -12,7 +12,7 @@ vi.mock('@/lib/auth-client', () => ({ signOut: vi.fn() }));
 
 const { default: AppShell } = await import('@/components/AppShell');
 
-// The shell around every signed-in page (MB.7): who sees which links, where
+// The shell around every signed-in page: who sees which links, where
 // the brand goes, and what an unverified account is left with.
 
 const MEMBER: ShellViewer = {
@@ -73,7 +73,7 @@ describe('AppShell', () => {
     expect(nav).toContainElement(screen.getByRole('link', { name: 'Compendium' }));
     expect(nav).toContainElement(screen.getByRole('link', { name: 'Your Covens' }));
     expect(screen.getByRole('link', { name: 'Admin' })).toHaveAttribute('href', '/admin');
-    // Into the first coven, not via the /coven landing's redirect (MB.257).
+    // Into the first coven, not via the /coven landing's redirect.
     expect(screen.getByRole('link', { name: 'Your Covens' })).toHaveAttribute(
       'href',
       '/coven/fixture-coven',
@@ -130,7 +130,7 @@ describe('AppShell', () => {
     const skip = screen.getByRole('link', { name: 'Skip to Content' });
     const target = document.getElementById(skip.getAttribute('href')?.slice(1) ?? '');
     // Focusable by script only, and wrapping nothing, so a click on the page
-    // never lands on it (M12.48).
+    // never lands on it.
     expect(target).toHaveAttribute('tabindex', '-1');
     expect(target).toBeEmptyDOMElement();
     expect(target!.compareDocumentPosition(screen.getByRole('main'))).toBe(

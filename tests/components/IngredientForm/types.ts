@@ -28,7 +28,7 @@ export type DeityNode = DeitySuggestionsQuery['deitySuggestions']['edges'][numbe
 
 /**
  * One row of an `IngredientSuggestions` answer: its node, and the group its
- * edge carries (M12.19). Both are optional here, so a test not about the
+ * edge carries. Both are optional here, so a test not about the
  * groups lists its rows as the compendium's, with no cupboard entry.
  */
 type SuggestedNode = IngredientSuggestionsQuery['ingredientSuggestions']['edges'][number]['node'];
@@ -39,7 +39,7 @@ export type IngredientNode = Omit<SuggestedNode, 'cupboardEntry'> & {
 
 /**
  * One row of a `PossibleDuplicates` answer. A coven's own entry unless said
- * otherwise: `isGlobal` and `inCupboard` default to false (M12.20), and
+ * otherwise: `isGlobal` and `inCupboard` default to false, and
  * `nomenclature` to `unknown`, which only the Quick Look heading reads.
  */
 export type DuplicateNode = Omit<

@@ -72,7 +72,7 @@ describe('Modal', () => {
     expect(screen.getByRole('textbox', { name: 'Name' })).toBeInTheDocument();
   });
 
-  // An edit dialog (MB.115): the eyebrow says what it does to what kind, the
+  // An edit dialog: the eyebrow says what it does to what kind, the
   // title which entry, and a screen reader hears both, the qualifier too.
   it('is named by its eyebrow, then its title and qualifier', () => {
     render(
@@ -91,7 +91,7 @@ describe('Modal', () => {
     ).toBeInTheDocument();
   });
 
-  // An add dialog (M8.16): where it lands over what it does, and a screen
+  // An add dialog: where it lands over what it does, and a screen
   // reader hears the action first, then the destination.
   it('is named by its title, then "to" its destination', () => {
     render(
@@ -246,7 +246,7 @@ describe('Modal', () => {
 
   // The focus goes back to what opened the dialog, however it closes, unless
   // that is gone: then to where the owner says (claude-docs/components/modal.md,
-  // "Giving the focus back"; the owner's call, 2026-10-19).
+  // "Giving the focus back").
   describe('giving the focus back', () => {
     /** A page with an opener button and the modal its state opens. */
     function Page({ returnTo }: { returnTo?: () => HTMLElement | null }): ReactElement {
@@ -360,7 +360,7 @@ describe('Modal', () => {
 
     // A row's own control removes the row: the opener goes with the modal, and
     // the owner's place with them, so the page's heading takes the focus
-    // rather than the page losing it (M8.17, after M12.31's follow-up 5).
+    // rather than the page losing it (after M12.31's follow-up 5).
     it("gives the focus to the page's heading when its opener goes with it and its owner names nowhere", async () => {
       function Row(): ReactElement {
         const [open, setOpen] = useState(false);
@@ -561,14 +561,14 @@ describe('Modal', () => {
     });
   });
 
-  // The guard over a form's unsaved changes (MB.115, the owner's call): every
+  // The guard over a form's unsaved changes: every
   // way out asks first while the form has changes. Its shape is asserted
   // here, on a form of the test's own; each admin form's test asserts only
   // its wiring.
   describe('guarding unsaved changes', () => {
     /**
      * A form as the admin forms are: a field, a save that closes, and Cancel,
-     * and the question drawn over it while asking (MB.115), its buttons
+     * and the question drawn over it while asking, its buttons
      * still beneath.
      */
     function GuardedForm({ close }: { close: () => void }): ReactElement {

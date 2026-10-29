@@ -16,7 +16,7 @@ import { mockGraphQLError, mockGraphQLMutation } from '../../support/msw/graphql
 const router = vi.hoisted(() => ({ push: vi.fn(), replace: vi.fn(), refresh: vi.fn() }));
 vi.mock('next/navigation', () => ({ useRouter: () => router }));
 
-// A coven card's More (M8.17): Delete on the coven's own entry, Make It Ours and
+// A coven card's More: Delete on the coven's own entry, Make It Ours and
 // Remove on a compendium entry, a lone Delete or Remove its own bin and two choices a menu;
 // Delete, Make It Ours and Remove ask in place (option A), and a write that takes the card away leaves the focus on the page's
 // heading, a refusal on More (claude-docs/components/coven-cards.md).

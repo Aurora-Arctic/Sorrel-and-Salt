@@ -2,7 +2,7 @@ import { describe, expect, it } from 'vitest';
 import { COMPENDIUM_PARAMS } from '@/components/CompendiumList/params';
 import { GRIMOIRE_PARAMS } from '@/components/GrimoireList/params';
 
-// The grimoire's search (M10.11, M13.22) is three of the compendium's entries, taken as they
+// The grimoire's search is three of the compendium's entries, taken as they
 // are (the search text and the category filter with its match mode), then four facets of its
 // own: moon phase, day of week, visibility and the member who made the spell. Status is the
 // tab's, Spells or Drafts, so the address carries none.

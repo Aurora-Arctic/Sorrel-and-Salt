@@ -16,7 +16,7 @@ import {
   twoForms,
 } from './variants-harness';
 
-// A variant's Copy From Ingredient buttons (MB.115, the owner's call): each
+// A variant's Copy From Ingredient buttons: each
 // of an open variant's fields but its form fills from the ingredient's own,
 // adding and never taking away. Rendered by ./variants-harness.tsx, the
 // ingredient's own fields held in the form's values and its Description a
@@ -72,7 +72,7 @@ describe('copying from the ingredient', () => {
     expect(copyOf(oil, 'Safety Notes')).toHaveFocus();
   });
 
-  // MB.115, the owner's calls: Oil for Oil, and an ingredient in no such
+  // The owner's calls: Oil for Oil, and an ingredient in no such
   // form skipped, since a variant's link names a form.
   it('links each substitute’s same form, skips one in no such form and says which, and keeps a name as a name', async () => {
     const onSubmit = renderVariants({ workspaceId: null, values: filled() });
@@ -86,7 +86,7 @@ describe('copying from the ingredient', () => {
     expect(notice).toHaveTextContent(/Tinctwort/);
     expect(notice).toHaveTextContent(/Plainwort/);
     expect(notice).not.toHaveTextContent(/Oilwort|Fixture moss/);
-    // Announced once, by the region (M12.48).
+    // Announced once, by the region.
     expect(within(notice).queryAllByRole('alert')).toEqual([]);
     expect(within(notice).queryAllByRole('status')).toEqual([]);
     expect(

@@ -13,7 +13,7 @@ import { mockGraphQLError, mockGraphQLMutation } from '../../support/msw/graphql
 const router = vi.hoisted(() => ({ push: vi.fn(), replace: vi.fn(), refresh: vi.fn() }));
 vi.mock('next/navigation', () => ({ useRouter: () => router }));
 
-// The admin's review mark on a compendium entry's details (M14.8): the switch that marks or
+// The admin's review mark on a compendium entry's details: the switch that marks or
 // clears it, in the details' foot; the badge is the entry's own mark (claude-docs/components/ingredient-entry.md).
 
 const ID = '00000000-0000-4000-8000-000000000002';

@@ -33,8 +33,7 @@ describe('adminInvitationMessage', () => {
     expect(text).toContain(INVITER);
   });
 
-  // M11.20: the role is the invitation's data, and the inbox shows it before
-  // the mail is opened, so the two subjects differ.
+  // The role is the invitation's data, and the inbox shows it before the mail is opened, so the two subjects differ.
   it('gives each site role its own subject', async () => {
     const curator = await message('curator');
     const admin = await message('admin');

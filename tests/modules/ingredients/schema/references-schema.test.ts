@@ -6,7 +6,7 @@ import { referenceKind, references } from '@/modules/ingredients/schema/referenc
 import { FIXTURE_USERS, WORKSPACE_W_ID } from '@/db/seed/standard';
 import type { ReferenceFields } from './types';
 
-// DESIGN.md §5's `references` (MB.151): one source per row, in Chicago
+// DESIGN.md §5's `references`: one source per row, in Chicago
 // bibliography form, two-tiered as ingredients are.
 const KINDS = ['book', 'chapter', 'article', 'entry', 'web_page'];
 
@@ -28,7 +28,7 @@ const OPTIONAL_TEXT = [
   'note',
 ];
 const DATES = ['modified', 'accessed'];
-// `seed_key` is the reference seed's own (MB.171), outside the blank CHECKs.
+// `seed_key` is the reference seed's own, outside the blank CHECKs.
 const OWN_COLUMNS = ['id', 'workspace_id', 'kind', 'title', ...OPTIONAL_TEXT, ...DATES, 'seed_key'];
 
 // `url` has no blank CHECK of its own: the http(s) CHECK already refuses one.

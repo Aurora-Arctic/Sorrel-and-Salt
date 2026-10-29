@@ -16,7 +16,7 @@ import { insertStock } from '../../../support/db/insert-stock';
 import { makeIngredient, makeVariant } from '../../../support/fixtures';
 import { run } from '../../../support/graphql/run';
 
-// M12.32: a compendium entry the curators retired (soft-deleted) stays on a
+// A compendium entry the curators retired (soft-deleted) stays on a
 // coven's Ingredients list, its count and its facet counts while that coven's
 // live cupboard row names it, by M12.24's rule
 // (claude-docs/db/workspace-compendium-entries.md, "When the compendium
@@ -181,7 +181,7 @@ describe('the coven whose live cupboard row names a retired entry', () => {
   });
 
   // The owner's decision at the build's start: the type-ahead reads the list's
-  // own reader (M9.6), so it offers exactly what the list shows.
+  // own reader, so it offers exactly what the list shows.
   it("suggests it in the coven's type-ahead", async () => {
     await expectPreconditions();
 

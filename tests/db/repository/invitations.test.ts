@@ -30,7 +30,7 @@ import type { InvitationOverrides } from './types';
 
 useRawClient();
 
-// MB.202: the invitation's named writes and finders, by tier
+// The invitation's named writes and finders, by tier
 // (claude-docs/db/invitations.md). A `Membership` writes and revokes in its
 // own workspace, a `SiteAdmin` on the site tier, where the workspace and the
 // role are both null; the accept and the token read take no proof, since the
@@ -510,7 +510,7 @@ describe('the pending lists', () => {
   });
 });
 
-// M10.32: the session's own received invitations. Every finder keeps the
+// The session's own received invitations. Every finder keeps the
 // workspace tier, the session's verified address, and a live coven in SQL; the
 // token-less accept by id says the same in the statement. Each exclusion is
 // shown to be the cause: remove that one fact and the same row appears.

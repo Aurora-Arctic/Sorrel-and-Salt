@@ -5,10 +5,9 @@ import { createBuilder } from '@/graphql/builder';
 import { maskedErrors } from '@/graphql/errors';
 import { Forbidden, NotFound, StaleWrite, ValidationError } from '@/lib/errors';
 
-// The route's mapping, run through a real Yoga instance so what is asserted is
-// the response body a browser receives. No production field throws each type
-// yet, so the schema is a throwaway; tests/app/api/graphql/route.test.ts
-// asserts the route itself carries the mapping.
+// The route's mapping, run through a real Yoga instance so what is asserted is the response
+// body a browser receives. The schema is a throwaway, since no production field throws each
+// type; tests/app/api/graphql/route.test.ts asserts the route itself carries the mapping.
 
 const ISSUES = [
   { path: ['canonicalName'], message: 'A botanical name is required' },

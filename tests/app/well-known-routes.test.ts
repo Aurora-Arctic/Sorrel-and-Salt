@@ -1,6 +1,6 @@
 import { afterEach, describe, expect, it, vi } from 'vitest';
 
-// M12.2: the three public file handlers. The compendium read is mocked here;
+// The three public file handlers. The compendium read is mocked here;
 // the db test beside the service runs them over real rows.
 const listCompendiumSlugs = vi.hoisted(() => vi.fn());
 vi.mock('@/modules/ingredients', () => ({ listCompendiumSlugs }));

@@ -10,7 +10,7 @@ import { makeIngredient } from '../../../support/fixtures';
 import { run } from '../../../support/graphql/run';
 import type { CupboardEntryNode } from './types';
 
-// `Ingredient.cupboardEntry(workspaceId)` over the wire (M12.14): a coven's
+// `Ingredient.cupboardEntry(workspaceId)` over the wire: a coven's
 // own say over a compendium entry, read beside the entry. This file holds the
 // transport's half: the answer and its `annotated`, a reader and a viewer
 // answered, a coven the caller is not in refused at the field as

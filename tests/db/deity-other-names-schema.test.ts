@@ -3,7 +3,7 @@ import postgres from 'postgres';
 import { failureOf, useTestDatabase } from '../support/db/database';
 import { FIXTURE_USERS } from '@/db/seed/standard';
 
-// What `deity_other_names` rows may hold (M14.22): a name that is not blank,
+// What `deity_other_names` rows may hold: a name that is not blank,
 // once per deity whatever its case. The catalogue sweep in
 // partial-unique-indexes.test.ts proves for every index alike that a
 // soft-deleted row reserves nothing; this file proves the index folds case and
@@ -15,7 +15,7 @@ const UNIQUE_INDEX = 'deity_other_names_unique';
 let sql: ReturnType<typeof postgres>;
 useTestDatabase((client) => (sql = client));
 
-// Two invented deities of one invented tradition (M1.25).
+// Two invented deities of one invented tradition.
 let TESTARA: string;
 let MOCKARA: string;
 

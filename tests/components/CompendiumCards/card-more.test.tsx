@@ -15,7 +15,7 @@ import { mockGraphQLError, mockGraphQLMutation } from '../../support/msw/graphql
 const router = vi.hoisted(() => ({ push: vi.fn(), replace: vi.fn(), refresh: vi.fn() }));
 vi.mock('next/navigation', () => ({ useRouter: () => router }));
 
-// The three dots on a compendium card (the owner's call, 2026-10-20): what a signed-in member may
+// The three dots on a compendium card: what a signed-in member may
 // do about an entry in the covens that hold it. Drawn only when it holds a choice, so a viewer
 // whose role permits nothing and a page that found no holding coven see no dots
 // (claude-docs/components/compendium-cards.md).

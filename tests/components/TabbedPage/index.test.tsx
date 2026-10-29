@@ -14,7 +14,7 @@ vi.mock('next/navigation', () => ({ usePathname: () => pathname(), useRouter: ()
 
 const { default: TabbedPage } = await import('@/components/TabbedPage');
 
-// A page in tabs (MB.115): its heading, a nav of links named for the page,
+// A page in tabs: its heading, a nav of links named for the page,
 // one per tab with the open one marked from the address, and the open tab's
 // content beneath (claude-docs/components/tabbed-page.md).
 

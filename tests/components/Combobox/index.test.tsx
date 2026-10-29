@@ -144,7 +144,7 @@ describe('Combobox', () => {
     expect(within(inUse).queryByRole('option', { name: /typed/ })).not.toBeInTheDocument();
   });
 
-  // M12.7: an option's icon is decoration, left out of the name a screen
+  // An option's icon is decoration, left out of the name a screen
   // reader gets. Where it sits beside the label is layout, which happy-dom does not draw.
   it('draws an option icon without adding it to the name', () => {
     const suggestions: Suggestions = {
@@ -173,7 +173,7 @@ describe('Combobox', () => {
     ]);
   });
 
-  // MB.126: a source that names its own buckets, a category under its group.
+  // A source that names its own buckets, a category under its group.
   describe('headed suggestions', () => {
     const HEADED: Suggestions = {
       options: [
@@ -417,7 +417,7 @@ describe('Combobox', () => {
     });
   });
 
-  // M10.12: a typed row that only repeats a suggestion is no choice of its own.
+  // A typed row that only repeats a suggestion is no choice of its own.
   describe('the typed row when a suggestion matches it', () => {
     const BANE: Suggestions = { options: [{ value: 'Fixture Bane' }], pending: false };
 
@@ -471,7 +471,7 @@ describe('Combobox', () => {
     });
   });
 
-  // MB.174: a list withholds the typed row for text it would refuse.
+  // A list withholds the typed row for text it would refuse.
   describe('the typed row withheld', () => {
     it('offers the suggestions without it', () => {
       render(<Harness suggestions={ONE_BUCKET} offerTyped={false} />);
@@ -644,7 +644,7 @@ describe('Combobox', () => {
     expect(status()).toBeEmptyDOMElement();
   });
 
-  // MB.169: what a pick leaves out of the text, a picked form's group, muted
+  // What a pick leaves out of the text, a picked form's group, muted
   // inside the control before the indicators, its detail in a tooltip.
   describe('a qualifier', () => {
     const DETAIL = 'Candle and poppet wax.';
@@ -705,7 +705,7 @@ describe('Combobox', () => {
       expect(tooltip()).not.toBeInTheDocument();
     });
 
-    // MB.115: the tip gets out of the way of typing, and comes back on focus
+    // The tip gets out of the way of typing, and comes back on focus
     // or a hover; the detail stays in the box's description throughout.
     it('closes its tooltip at the first printable key and when the list opens', async () => {
       render(
@@ -732,7 +732,7 @@ describe('Combobox', () => {
     });
   });
   // The entry a list draws inside the control: moved here from IngredientForm
-  // (MB.133), whose tests still cover it in the form.
+  // , whose tests still cover it in the form.
   describe('an entry', () => {
     const tooltip = () => screen.queryByRole('tooltip');
     const entryText = (value: string) =>
@@ -784,7 +784,7 @@ describe('Combobox', () => {
       expect(onRemove).toHaveBeenCalledTimes(1);
     });
 
-    // MB.115: a linked entry's text opens a panel beside the chip, which
+    // A linked entry's text opens a panel beside the chip, which
     // shuts on a second press, on Escape — cancelled, so a modal around the
     // form takes no cancel from it — on a press elsewhere and on the focus
     // leaving it; Escape hands the focus back to the text.
@@ -870,7 +870,7 @@ describe('Combobox', () => {
       expect(tooltip()).not.toBeInTheDocument();
     });
 
-    // MB.164: what a chip leaves out, such as a linked substitute's form and
+    // What a chip leaves out, such as a linked substitute's form and
     // tier. The test above is the precondition: the same text, with no
     // detail, opens nothing.
     describe('with a detail', () => {
@@ -932,7 +932,7 @@ describe('Combobox', () => {
     });
   });
 
-  // MB.170: a list whose order means something, its chips moved by a handle
+  // A list whose order means something, its chips moved by a handle
   // each, on dnd-kit's sortable preset, by keyboard or by pointer.
   describe('sortable entries', () => {
     const handle = (value: string) => screen.getByRole('button', { name: `Move ${value}` });
@@ -1097,7 +1097,7 @@ describe('Combobox', () => {
     });
   });
 
-  // The closed-set sibling (MB.131): the same control and list, nothing typed.
+  // The closed-set sibling: the same control and list, nothing typed.
   describe('the select-only box', () => {
     const ELEMENTS = [
       { value: '', label: 'None' },
@@ -1239,7 +1239,7 @@ describe('Combobox', () => {
       expect(element()).toHaveTextContent('Air');
     });
 
-    // In a modal, an Escape let through shuts the whole dialog (MB.115); a
+    // In a modal, an Escape let through shuts the whole dialog; a
     // `<dialog>` ignores one marked handled, which happy-dom cannot show, so the
     // mark is what is asserted here (the browser checks the dialog stays open).
     it('keeps Escape to itself while its list is open, and lets it through once shut', () => {
@@ -1254,7 +1254,7 @@ describe('Combobox', () => {
     });
   });
 
-  // A closed set holding several values (MB.159): the select-only box, its
+  // A closed set holding several values: the select-only box, its
   // choices drawn as chips inside the control, as a list's entries are.
   describe('the multi-select box', () => {
     const FIVE = [
@@ -1334,7 +1334,7 @@ describe('Combobox', () => {
 
     // The owner's call at MB.115's review: a placeholder that went with the
     // first chip left nothing prompting for the next.
-    // In a modal, an Escape let through shuts the whole dialog (MB.115), as
+    // In a modal, an Escape let through shuts the whole dialog, as
     // the select-only box's test says.
     it('keeps Escape to itself while its list is open, and lets it through once shut', () => {
       render(<MultiHarness />);
@@ -1444,7 +1444,7 @@ describe('Combobox', () => {
       fireEvent.click(screen.getByRole('button', { name: 'Clear Element' }));
       expect(chosen()).toBe('');
       expect(elements()).toHaveFocus();
-      // Nothing left to clear: kept in place for its room (MB.115), but out of
+      // Nothing left to clear: kept in place for its room, but out of
       // the tree and the tab order.
       expect(screen.queryByRole('button', { name: 'Clear Element' })).not.toBeInTheDocument();
       expect(
@@ -1495,7 +1495,7 @@ describe('Combobox', () => {
   });
 });
 
-// The empty message (M8.10): a settled lookup with no rows says so, outside the
+// The empty message: a settled lookup with no rows says so, outside the
 // listbox, and it is no option.
 describe('Combobox empty message', () => {
   const NONE: Suggestions = { options: [], pending: false };

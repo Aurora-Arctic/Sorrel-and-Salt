@@ -4,7 +4,7 @@ import { FormHistoryButtons } from '@/components/Field';
 import { HistoryProbe } from '../../support/form-history';
 import { byLabel, choose, press } from '../../support/interact';
 
-// The Undo and Redo buttons of a form with history (M12.9).
+// The Undo and Redo buttons of a form with history.
 
 const undoButton = () => screen.getByRole('button', { name: 'Undo' });
 const redoButton = () => screen.getByRole('button', { name: 'Redo' });

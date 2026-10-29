@@ -5,8 +5,7 @@ import { rules } from '../../lint/source-sweeps.js';
 
 // Each rule of lint/source-sweeps.js, once passing and once failing
 // (claude-docs/testing/layer-ownership.md, "What a test may assert", rule 8).
-// The rules replace seven Vitest guards (M14.27); the whole tree is their
-// real test, since `npm run lint` fails on any file that breaks one.
+// The whole tree is their real test: `npm run lint` fails on any file that breaks one.
 
 const at = (file: string) => file;
 const tester = new RuleTester();
@@ -55,7 +54,7 @@ tester.run('spell-visibility-read-in-one-place', rules['spell-visibility-read-in
       code: 'export function readableSpells() { return eq(spells.visibility, "workspace"); }',
     },
     {
-      // The Visibility facet's two helpers (M13.22), beside the rule.
+      // The Visibility facet's two helpers, beside the rule.
       filename: at('src/db/repository/spells.ts'),
       cwd: REPO_ROOT,
       code: 'export const visibilityIn = (values) => inArray(spells.visibility, values);',
@@ -122,8 +121,8 @@ tester.run('long-form-guards-leaving', rules['long-form-guards-leaving'], {
       code: 'export function SpellForm() { useDiscardGuard(dirty); return <form />; }',
     },
     {
-      // The spell builder saves on close rather than asking (M10.12); its
-      // hook calls useLeaveGuard for the tab close.
+      // The spell builder saves on close rather than asking; its hook calls
+      // useLeaveGuard for the tab close.
       filename: at('src/components/SpellForm/index.tsx'),
       cwd: REPO_ROOT,
       code: 'export function SpellForm() { useSaveOnClose(dirty, save); return <form />; }',

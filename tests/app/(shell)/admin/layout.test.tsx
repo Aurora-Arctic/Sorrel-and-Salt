@@ -6,7 +6,7 @@ import { beforeEach, describe, expect, it, vi } from 'vitest';
 // would render for whoever reached it that way (claude-docs/auth/admin-guard.md, "The
 // admin guard"). What the guard decides is tests/lib/request-session.test.ts's;
 // here it is mocked, to prove each route awaits it before rendering anything.
-// It is the curation guard, which a curator passes too (M11.20); the people
+// It is the curation guard, which a curator passes too; the people
 // pages beneath call the admin one.
 
 const requireCuratorSession = vi.fn();
@@ -73,7 +73,7 @@ describe('the /admin page', () => {
     expect(screen.getByRole('heading', { level: 1 })).toBeInTheDocument();
   });
 
-  // MB.115: the index is a table of contents read from the nav's own list,
+  // The index is a table of contents read from the nav's own list,
   // so the two name the same pages in the same order.
   it('links every page the admin nav does, in its order', async () => {
     requireCuratorSession.mockResolvedValue(ADMIN);

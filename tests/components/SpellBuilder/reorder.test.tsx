@@ -23,7 +23,7 @@ vi.mock('next/navigation', () => ({ useRouter: () => ({ push: vi.fn(), refresh: 
 
 const { default: SpellBuilder } = await import('@/components/SpellBuilder');
 
-// The spell builder's step order (M10.16, story 51): each step moved by its
+// The spell builder's step order: each step moved by its
 // handle, by keyboard or by pointer, each move said, and the order sent on
 // save. That the save moves the rows in place is tests/modules/grimoire/services/spells.test.ts's.
 
@@ -128,14 +128,14 @@ function acceptUpdateEchoingSteps() {
 }
 
 function renderBuilder(props: Partial<SpellBuilderProps> = {}) {
-  // The builder reads the coven's categories as it opens (M10.14).
+  // The builder reads the coven's categories as it opens.
   offerCategories([]);
   const view = render(
     <QueryClientProvider client={makeQueryClient()}>
       <SpellBuilder workspaceId="w1" spell={SPELL} {...props} />
     </QueryClientProvider>,
   );
-  // A saved spell opens with its sections shut (M10.12): Open All shows its jar.
+  // A saved spell opens with its sections shut: Open All shows its jar.
   fireEvent.click(screen.getByRole('button', { name: 'Open All' }));
   return view;
 }

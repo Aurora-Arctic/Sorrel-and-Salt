@@ -14,7 +14,7 @@ import { renderWithClient } from '../../support/ingredient-form';
 import { mockGraphQLError, mockGraphQLQuery } from '../../support/msw/graphql';
 import { WORKSPACE_ID } from '../../support/msw/ingredient-lookups';
 
-// A substitute list's chips (MB.115, the owner's ask): a linked ingredient's
+// A substitute list's chips (the owner's ask): a linked ingredient's
 // chip is a button that opens a summary of it, read through /api/graphql on
 // opening, and a typed name's is plain text that opens nothing. How the panel
 // opens and shuts — a second press, Escape, a press outside — is Combobox's
@@ -49,7 +49,7 @@ const MOCKWORT: IngredientSummaryQuery['ingredient'] = {
   celestialBodies: ['Moon'],
   zodiacSigns: null,
   colors: [],
-  // The form adds a celestial body of its own to the ingredient's (MB.215).
+  // The form adds a celestial body of its own to the ingredient's.
   variants: [
     {
       id: DRIED_LEAF_ID,

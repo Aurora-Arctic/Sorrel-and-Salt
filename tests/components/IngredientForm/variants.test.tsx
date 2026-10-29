@@ -45,7 +45,7 @@ import {
   variant,
 } from './variants-harness';
 
-// What the whole form adds around its Variants section (MB.221): the curated
+// What the whole form adds around its Variants section: the curated
 // pick and the typed form refused on the compendium, the unsaved-changes
 // question, each variant saved back by its id, a save opening the variant
 // and section a schema or server error is in, Close All and Open All, the
@@ -76,7 +76,7 @@ function renderForm(props: { workspaceId: string | null; values?: IngredientForm
       />
     );
   renderWithClient(form);
-  // An edit opens with every section closed (MB.115): its variants are what
+  // An edit opens with every section closed: its variants are what
   // these tests work in.
   if (props.values) openSections('Variants');
   return onSaved;
@@ -336,7 +336,7 @@ describe('IngredientForm’s variants', () => {
     });
   });
 
-  // MB.115, the owner's call: each of an open variant's fields but its form
+  // The owner's call: each of an open variant's fields but its form
   // fills from the ingredient's own, adding and never taking away.
   describe('copying from the ingredient', () => {
     it('adds the ingredient’s entries the variant lacks after its own, removing none, and sends them', async () => {
@@ -459,7 +459,7 @@ describe('IngredientForm’s variants', () => {
   });
 });
 
-// Where the focus lands after an undo (M12.10): the variant a restore
+// Where the focus lands after an undo: the variant a restore
 // returned, or the box of the list inside a variant that changed.
 describe('IngredientForm’s variants, undone', () => {
   const chord = (from: HTMLElement) => {

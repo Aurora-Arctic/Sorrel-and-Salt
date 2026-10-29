@@ -9,7 +9,7 @@ import type { PageRequest } from '@/lib/types';
 import type { Logged } from '../../support/db/types';
 
 // The plan the ranked compendium search runs, and the substitute picker's
-// search (MB.138) beside it: each statement is read off the connection's log
+// search beside it: each statement is read off the connection's log
 // and explained, so the plan is the one the finder really sends
 // (claude-docs/db/compendium-read.md, "The compendium read"). The 0.5 word
 // threshold's effect is ingredients.test.ts's to prove by the rows it finds.
@@ -65,10 +65,10 @@ describe('the ranked search plan over ~20,000 rows', () => {
   let pageTwo: Logged;
   let suggestions: Logged;
 
-  // Seeded once per file (MB.184): twenty thousand entries, as many folk
+  // Seeded once per file: twenty thousand entries, as many folk
   // names and as many variants that share no word with `mugwort`, and some
   // thirteen hundred that do — by label, by formal name, by folk name and by a
-  // variant's description (MB.218) — at several scores.
+  // variant's description — at several scores.
   beforeAll(async () => {
     await sql`
       insert into ingredients (name, slug, canonical_name, nomenclature, created_by, updated_by)
@@ -122,7 +122,7 @@ describe('the ranked search plan over ~20,000 rows', () => {
       expect(plan).toContain(`Index Scan on ${FOLK_NAMES_UNACCENT_INDEX}`);
       expect(plan).toContain(`Index Scan on ${VARIANTS_UNACCENT_INDEX}`);
       // A subplan that runs per row is the bug; the picker's one hashed set of
-      // the coven's cupboard rows (M12.19) is built once and probed.
+      // the coven's cupboard rows is built once and probed.
       const perRow = plan
         .split('\n')
         .filter((line) => /SubPlan/.test(line) && !/hashed SubPlan|^\s*SubPlan \d+\s*$/.test(line));

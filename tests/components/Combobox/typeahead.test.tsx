@@ -3,7 +3,7 @@ import { useState } from 'react';
 import { describe, expect, it, vi } from 'vitest';
 import { ComboboxTypeahead } from '@/components/Combobox/typeahead';
 
-// The type-ahead box (MB.115): a closed set chosen by typing, the list
+// The type-ahead box: a closed set chosen by typing, the list
 // narrowing to the choices whose label holds the text, and only a choice
 // ever the value (claude-docs/components/combobox.md, "The type-ahead box").
 
@@ -129,7 +129,7 @@ describe('ComboboxTypeahead', () => {
     expect(box()).toHaveValue('Old Testic');
   });
 
-  // The owner's call (MB.115): a press where the hidden clear sits lands on
+  // The owner's call: a press where the hidden clear sits lands on
   // the indicators' strip, `visibility` passing it through, and enters the
   // box as a press on the rest of the control does.
   it('enters the box from a press where its hidden clear sits', () => {
@@ -143,7 +143,7 @@ describe('ComboboxTypeahead', () => {
     expect(box()).toHaveFocus();
   });
 
-  // The owner's call (MB.115): an empty box keeps its clear's room, so the
+  // The owner's call: an empty box keeps its clear's room, so the
   // clear is drawn from the first render, hidden from the tree and the tab
   // order while there is nothing to clear, and offered once there is.
   it('clears to no choice from its clear, offered while it holds text or a choice and kept, hidden, while it does not', () => {
@@ -172,7 +172,7 @@ describe('ComboboxTypeahead', () => {
     expect(kept()).toHaveAttribute('tabindex', '-1');
   });
 
-  // A choice may say what it is besides its label (M6.16): a member's role.
+  // A choice may say what it is besides its label: a member's role.
   // The row reads it, the chosen box describes it, and typing never matches it.
   it('reads a qualified choice with its qualifier, describes the chosen one by it, and matches the label alone', () => {
     const [plain, ...rest] = TRADITIONS;
@@ -208,7 +208,7 @@ describe('ComboboxTypeahead', () => {
     expect(box()).not.toHaveAccessibleDescription(/Fixture Isle/);
   });
 
-  // M12.7: a form group's icon leads the chosen label, as the select-only
+  // A form group's icon leads the chosen label, as the select-only
   // box's closed value draws it; typed over, the box is being typed in.
   it('draws the chosen choice icon before the text once the box reads its label, never while typed', () => {
     const [marked, ...rest] = TRADITIONS;
@@ -242,7 +242,7 @@ describe('ComboboxTypeahead', () => {
     expect(control().querySelector('[aria-hidden="true"] [data-mark]')).toBeNull();
   });
 
-  // A filter applies a choice, not each letter typed (MB.115): it hears the
+  // A filter applies a choice, not each letter typed: it hears the
   // value once a pick, the clear or leaving the box settles it.
   it('settles on a pick, on its clear and on leaving the box, never while typed', () => {
     const onSettle = vi.fn();

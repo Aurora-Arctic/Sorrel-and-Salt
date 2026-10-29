@@ -147,7 +147,7 @@ describe('ingredient', () => {
     });
   });
 
-  // The transport's half of `variants` (MB.218): each field reaches the wire,
+  // The transport's half of `variants`: each field reaches the wire,
   // in form order, a form's own children through its loaders. Who may read
   // them is the loader matrix's
   // (tests/modules/ingredients/loaders/ingredient-children.test.ts).
@@ -239,7 +239,7 @@ describe('ingredient', () => {
   });
 
   // `Substitute.variant` is the resolver's own: the linked ingredient's form,
-  // found among that ingredient's variants (MB.218).
+  // found among that ingredient's variants.
   it("answers a substitute's form, null without one and once that form is deleted", async () => {
     const formed = await insertIngredient(
       sql,

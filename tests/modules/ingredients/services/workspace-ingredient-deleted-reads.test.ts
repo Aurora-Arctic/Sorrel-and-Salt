@@ -118,7 +118,7 @@ describe('a deleted coven ingredient', () => {
         return Array.isArray(cited) && cited.length > 0;
       },
     ],
-    // The fixture's own form, a variant since MB.216 (MB.218).
+    // The fixture's own form, a variant since MB.216.
     [
       'its variants',
       async (id) => {
@@ -126,7 +126,7 @@ describe('a deleted coven ingredient', () => {
         return Array.isArray(forms) && forms.length > 0;
       },
     ],
-    // A new link cannot reach a deleted ingredient, as a new spell layer cannot (M5.3).
+    // A new link cannot reach a deleted ingredient, as a new spell layer cannot.
     [
       'the substitute picker',
       async (id) =>
@@ -214,7 +214,7 @@ describe('a deleted coven ingredient', () => {
     ]);
   });
 
-  // A layer is the spell's, and leaves it only when a member takes it out (MB.110).
+  // A layer is the spell's, and leaves it only when a member takes it out.
   it('leaves every layer holding it as it was', async () => {
     const id = await seed(local());
     const spellId = await insertSpell(sql, makeSpell({ steps: [{ ingredientId: id }] }), A.id);

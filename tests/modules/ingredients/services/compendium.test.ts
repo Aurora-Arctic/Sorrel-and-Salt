@@ -184,7 +184,7 @@ describe('listCompendium', () => {
     expect(repository.findCompendiumPage).not.toHaveBeenCalled();
   });
 
-  // M8.12: `all` is the default, so it parses to no setting and only `any`
+  // `all` is the default, so it parses to no setting and only `any`
   // reaches the read; a mode that is neither is refused rather than read as all.
   it('hands the read only categoryMode any, and refuses a mode that is neither', async () => {
     const categoryIds = ['3d6b0d1a-0000-4000-8000-000000000001'];

@@ -43,7 +43,7 @@ describe('EmailForm', () => {
     expect(emailField()).toHaveValue('ada@example.test');
   });
 
-  // The account page's Email section (MB.88): the section heads it, and a
+  // The account page's Email section: the section heads it, and a
   // followed link's confirmed view stays the email page's.
   it('embedded, shows no heading of its own and never the confirmed view', () => {
     renderForm(<EmailForm embedded email="ada@example.test" verified confirmed landing="/coven" />);

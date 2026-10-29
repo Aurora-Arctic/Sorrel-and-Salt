@@ -17,7 +17,7 @@ import type { Message, ProviderId } from '@/lib/types';
 import { importAuth } from '../support/auth-module';
 import type { AuthInstance, Profile } from '../support/types';
 
-// Story 1, through Better Auth's real endpoints: the lastLoginMethod plugin
+// Through Better Auth's real endpoints: the lastLoginMethod plugin
 // writes a readable cookie naming the provider whenever a callback sets the
 // session, and at no other point (claude-docs/auth/plugins.md, "Plugins").
 
@@ -113,7 +113,7 @@ describe('Story 1: the browser remembers the provider it last signed in with', (
     expect(lastUsedOf(response)).toBe('microsoft');
   });
 
-  // The refusal MB.71's sentence answers: no session, so nothing to remember.
+  // The refusal the failure sentence answers: no session, so nothing to remember.
   it('marks nothing on a callback refused with account_not_linked', async () => {
     const first = await signIn('discord', { sub: '1001', email: OWNER, verified: true });
     expect(lastUsedOf(first)).toBe('discord');

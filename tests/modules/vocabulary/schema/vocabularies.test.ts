@@ -19,14 +19,14 @@ import type { Row } from './types';
 const AUTHOR = FIXTURE_USERS.A.id;
 const SHARED = ['id', 'name', 'slug', 'description', 'seed_key'];
 
-// One hex per theme on a category group: the chip colour is the group's pair (MB.35).
+// One hex per theme on a category group: the chip colour is the group's pair.
 const COLOURS = { color_dark: '#c9a66b', color_light: '#7a5a1f' };
 
 const nameOf = (table: PgTable) => getTableConfig(table).name;
 
 // What a group carries beside the shared columns, and what an insert of one
 // needs, which are not the same list: a category group's two colours are NOT
-// NULL, a form group's icon (M12.6) is nullable, so an insert needs no value.
+// NULL, a form group's icon is nullable, so an insert needs no value.
 const GROUP_EXTRAS = new Map<PgTable, { own: string[]; values: Row }>([
   [categoryGroups, { own: Object.keys(COLOURS), values: COLOURS }],
   [ingredientFormGroups, { own: ['icon'], values: {} }],
@@ -46,7 +46,7 @@ const TABLES = [
     { table: groups, own: groupOwn, parent: undefined },
     { table: items, own: [groupColumn], parent: { groups, groupColumn, groupExtra } },
   ]),
-  // The flat vocabularies, celestial bodies and zodiac signs, each carry a curated position (M12.52).
+  // The flat vocabularies, celestial bodies and zodiac signs, each carry a curated position.
   ...Object.values(FLAT).map((table) => ({
     table: nameOf(table),
     own: ['position'],
@@ -67,7 +67,7 @@ useTestDatabase((client) => (sql = client));
 /** A short token no seeded row and no other call holds. */
 const token = () => crypto.randomUUID().slice(0, 8);
 
-// Invented names throughout (M1.25), each carrying a fresh token.
+// Invented names throughout, each carrying a fresh token.
 function vocabularyRow(overrides: Row = {}): Row {
   const t = token();
   return {
@@ -139,7 +139,7 @@ describe.each(PAIRS)('$items under $groups', ({ items, groups, groupColumn, grou
   });
 });
 
-// The icon standing for a form group (M12.6): a closed list, so an enum, and
+// The icon standing for a form group: a closed list, so an enum, and
 // nullable, since NULL is the generic icon rather than a missing answer.
 describe('ingredient_form_groups.icon', () => {
   it('holds exactly the six icons, as the code declares them', async () => {

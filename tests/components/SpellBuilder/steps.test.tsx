@@ -21,7 +21,7 @@ vi.mock('next/navigation', () => ({ useRouter: () => ({ push: vi.fn(), refresh: 
 
 const { default: SpellBuilder } = await import('@/components/SpellBuilder');
 
-// The spell builder's Add to Jar (M10.15, stories 49, 50, 57 and 77): the
+// The spell builder's Add to Jar (stories 49, 50, 57 and 77): the
 // ingredient picker, a one-off ingredient, each step's quantity and unit, and
 // Remove. The picker's answers come from MSW in /api/graphql's shape. That a
 // save writes the ingredient and form ids and never a cupboard entry, and who
@@ -49,10 +49,10 @@ interface FormSpec {
   categories?: string[];
   /** The unit of the coven's jar of this form; left out, the coven holds none. */
   jar?: Unit;
-  /** How much that jar holds, and its low-stock threshold (M10.19); left out, it is held unweighed. */
+  /** How much that jar holds, and its low-stock threshold; left out, it is held unweighed. */
   held?: number | null;
   threshold?: number | null;
-  /** This form's own flag and notes (M10.18). */
+  /** This form's own flag and notes. */
   toxic?: boolean;
   safetyNotes?: string;
 }
@@ -170,7 +170,7 @@ function renderBuilder(
   props: Partial<SpellBuilderProps> = {},
   categories: Parameters<typeof offerCategories>[0] = [],
 ) {
-  // The builder reads the coven's categories as it opens (M10.14).
+  // The builder reads the coven's categories as it opens.
   offerCategories(categories);
   return render(
     <QueryClientProvider client={makeQueryClient()}>
@@ -187,7 +187,7 @@ const stepRow = (text: string) => {
   if (!row) throw new Error(`No step reads ${text}`);
   return row;
 };
-/** Opens a closed step's fields with its pencil (M10.16): one row is open at a time. */
+/** Opens a closed step's fields with its pencil: one row is open at a time. */
 const openRow = (name: string) =>
   fireEvent.click(screen.getByRole('button', { name: `Edit ${name}`, expanded: false }));
 const save = () => screen.getByRole('button', { name: /^Sav/ });
@@ -657,7 +657,7 @@ describe('the spell builder’s Add to Jar', () => {
         ],
       },
     });
-    // A saved spell opens shut (M10.12): the Jar's line counts the ingredients laid.
+    // A saved spell opens shut: the Jar's line counts the ingredients laid.
     const jar = screen.getByRole('button', { name: 'Jar' });
     expect(jar).toHaveAttribute('aria-expanded', 'false');
     expect(jar).toHaveAccessibleDescription('2 ingredients');
@@ -702,7 +702,7 @@ describe('the spell builder’s Add to Jar', () => {
   });
 });
 
-// M10.18, story 53: a warning on an ingredient that is toxic or needs care. The
+// Story 53: a warning on an ingredient that is toxic or needs care. The
 // mark and the note are SafetyNote's own (tests/components/SafetyNote); this is
 // only that the builder draws them for the right steps, and never blocks a save.
 describe('the spell builder’s safety warning', () => {

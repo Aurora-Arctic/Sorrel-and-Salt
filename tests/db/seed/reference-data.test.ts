@@ -19,7 +19,7 @@ import {
   parsed,
 } from './compendium/files-fixture';
 
-// M14.26: the six reference seeds in one transaction, which a dry run rolls
+// The six reference seeds in one transaction, which a dry run rolls
 // back once. Each seed's own shape (stamps, idempotence, nothing resurrected,
 // a dry run writing nothing) is index.test.ts's; force's per-refusal cases are
 // compendium.test.ts's. This file proves only what running them together adds,

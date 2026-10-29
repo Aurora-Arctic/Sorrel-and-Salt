@@ -42,9 +42,8 @@ describe('verifyEmailMessage', () => {
     expect(none.text).not.toMatch(/Facebook|Microsoft|Google|Discord/);
   });
 
-  // An existing account asking for this address (MB.54): the address is new to
-  // the account, so which provider it signs in with tells the reader nothing
-  // about whether the request was theirs.
+  // An existing account asking for this address: the address is new to the account, so which
+  // provider it signs in with tells the reader nothing about whether the request was theirs.
   it('names no provider when the purpose is a change of address', async () => {
     const { text } = await verifyEmailMessage({
       to: 'someone@verify-email.test',

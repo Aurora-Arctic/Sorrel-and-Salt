@@ -5,8 +5,8 @@ import { makeQueryClient } from '@/lib/graphql-client';
 import { encodeCursor } from '@/lib/pagination';
 import type { Session } from '@/lib/session';
 
-// The one account page (MB.88): the Name, Email, Sign-In Methods and
-// Invitations (M10.32) sections,
+// The one account page: the Name, Email, Sign-In Methods and
+// Invitations sections,
 // each linked from the page's own nav (claude-docs/auth/admin-bootstrap.md,
 // "The account page"). The session, the row and the linked accounts are mocked;
 // what they are is tests/lib/request-session.test.ts's and the identity

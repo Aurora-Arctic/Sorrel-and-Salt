@@ -11,7 +11,7 @@ import { useTestDatabase } from '../../../support/db/database';
 import { insertIngredient } from '../../../support/db/insert-ingredient';
 import { makeIngredient } from '../../../support/fixtures';
 
-// M8.7: an admin's compendium-tier write expires the `compendium` tag, with
+// An admin's compendium-tier write expires the `compendium` tag, with
 // `{ expire: 0 }` so the admin's next read is a miss rather than a stale
 // answer (DESIGN.md §7). Under Vitest `revalidateTag` is the recorder
 // tests/support/next-cache.ts aliases in, so a write's call is asserted here

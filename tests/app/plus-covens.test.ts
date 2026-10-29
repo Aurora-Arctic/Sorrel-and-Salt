@@ -1,7 +1,7 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { Forbidden } from '@/lib/errors';
 
-// The plus's covens beside an entry page's pencil (M9.12; the owner's call, 2026-10-20). The
+// The plus's covens beside an entry page's pencil. The
 // session, the shell's covens and the held read are mocked: what they return is their own tests'.
 // Here: which covens the plus offers, which it marks held, and which it adds to by default.
 

@@ -1,9 +1,8 @@
 import { describe, expect, it } from 'vitest';
 import { covenHome } from '@/lib/shell-home';
 
-// Where the Your Coven link goes: straight into the viewer's first
-// coven, never via the /coven landing's redirect (MB.257), and to the landing
-// (M2.8) only for someone in none.
+// Where the Your Coven link goes: straight into the viewer's first coven, never via the /coven
+// landing's redirect, and to the landing only for someone in none.
 
 const COVENS = [{ slug: 'fixture-coven' }, { slug: 'testwort-circle' }];
 

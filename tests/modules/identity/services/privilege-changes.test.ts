@@ -15,7 +15,7 @@ import { A, B, C, D, E, asUser } from '../../../support/as-user';
 import { useTestDatabase } from '../../../support/db/database';
 import type { LedgerRow } from './types';
 
-// MB.199: the read under `/admin/privilege-changes`, the one privilege ledger
+// The read under `/admin/privilege-changes`, the one privilege ledger
 // newest first, narrowed by subject and by privilege. A site admin's alone,
 // refused at the service by direct call (claude-docs/auth/admin-users.md,
 // "The privilege ledger").

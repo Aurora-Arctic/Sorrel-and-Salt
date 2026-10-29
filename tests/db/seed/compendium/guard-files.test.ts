@@ -18,7 +18,7 @@ import {
   type FixtureFolder,
 } from './files-fixture';
 
-// M14.6: the rules a folder of entry files must satisfy over and above the
+// The rules a folder of entry files must satisfy over and above the
 // entries' own (guard.test.ts). The fixture folder passes
 // whole; each case breaks one rule in one file and expects the one issue,
 // then shows the folder passes again with the condition removed, so a rule

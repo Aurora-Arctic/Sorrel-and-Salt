@@ -1,7 +1,7 @@
 import { describe, expect, it, vi } from 'vitest';
 import { Forbidden } from '@/lib/errors';
 
-// M13.21: the verdict the spell's Quick Look marks on each ingredient step, judged by the
+// The verdict the spell's Quick Look marks on each ingredient step, judged by the
 // builder's own `supplyOf` against the coven's jar of the step's form. The stock service is
 // mocked; what it refuses is its own tests'.
 

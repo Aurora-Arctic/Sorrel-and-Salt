@@ -25,7 +25,7 @@ import type { DuplicateNode } from './types';
 const router = vi.hoisted(() => ({ push: vi.fn(), replace: vi.fn(), refresh: vi.fn() }));
 vi.mock('next/navigation', () => ({ useRouter: () => router }));
 
-// Story 16's warning on its own (MB.181): `useDuplicateWarning` and the
+// Story 16's warning on its own: `useDuplicateWarning` and the
 // `NameField` that draws it, in a form whose save asks the warning's `check`
 // before it sends, as the form's does. What only the whole form does with it
 // — the focus on Create Anyway, Save busy while it checks, an error elsewhere
@@ -109,7 +109,7 @@ function renderName(
   };
   renderWithClient(
     routed ? (
-      // The admin page's: the details' own place beneath the form's modal (M12.5).
+      // The admin page's: the details' own place beneath the form's modal.
       <Navigating push={router.push}>
         <RouteModalProvider>
           <RouteModal
@@ -135,7 +135,7 @@ const quickLookOf = (match: { slug: string; name: string }) => ({
   heading: { title: match.name },
 });
 
-/** A compendium match's +, named as the card's plus is (M12.48). */
+/** A compendium match's +, named as the card's plus is. */
 const ADD = /^Add to My Ingredients: /;
 
 const name = () => screen.getByRole('textbox', { name: 'Name' });
@@ -228,7 +228,7 @@ describe('NameField, with useDuplicateWarning', () => {
     expect(calls[0]).toEqual({ workspaceId: WORKSPACE_ID, name: 'Ca', first: 3 });
   });
 
-  // MB.115, the owner's call: an edit that leaves the name alone asks nothing.
+  // The owner's call: an edit that leaves the name alone asks nothing.
   it('asks nothing about the name an edit opened with, and lets its save through', async () => {
     // Answered before the form renders: an edit that asked on opening would ask at once.
     const calls = offerDuplicates([TOMENTOSA]);
@@ -330,7 +330,7 @@ describe('NameField, with useDuplicateWarning', () => {
   });
 
   // The notice turns from ochre to red when a save is held, which colour alone
-  // does not tell (MB.120): the words say it too.
+  // does not tell: the words say it too.
   it('says in words that the save is on hold once it is, where a near match only asked a question', async () => {
     renderName();
     offerDuplicates([TOMENTOSA]);
@@ -352,7 +352,7 @@ describe('NameField, with useDuplicateWarning', () => {
 
   // The region is in the page before the warning, as a live region must be to
   // be heard, and announces it; the notice inside takes no role of its own,
-  // so it is not announced twice, held or not (M12.48).
+  // so it is not announced twice, held or not.
   it('announces the warning once, through a region in the page before it arrives', async () => {
     renderName();
     offerDuplicates([TOMENTOSA]);
@@ -467,7 +467,7 @@ describe('NameField, with useDuplicateWarning', () => {
     await emptied();
   });
 
-  // M12.20: an exact compendium name is a question, a near one a list, the + on both (M12.48).
+  // An exact compendium name is a question, a near one a list, the + on both.
   describe('a compendium entry of the very name typed', () => {
     const CLAW = { ...TOMENTOSA, isGlobal: true };
 
@@ -674,7 +674,7 @@ describe('NameField, with useDuplicateWarning', () => {
 
     // The owner's report: the form's eye opened its details without the loading state the
     // list's eye shows. A press opens them at once, over the form, under the entry's name and
-    // loading, as the list's does (M9.18), while the navigation is on its way.
+    // loading, as the list's does, while the navigation is on its way.
     it("opens the details at once over the form, loading, as the list's Quick Look does", async () => {
       router.push.mockReset();
       renderName(undefined, { cupboard: false, look: true, inModal: true, routed: true });
@@ -700,10 +700,10 @@ describe('NameField, with useDuplicateWarning', () => {
     });
   });
 
-  // The owner's call (M12.48): the eye on every row the coven holds opens
+  // The owner's call: the eye on every row the coven holds opens
   // the entry's details over the form, read in the page, so nothing the
   // form holds is lost to a navigation.
-  // M12.48: a compendium match's + once its add has worked: AddIcon's check, held
+  // A compendium match's + once its add has worked: AddIcon's check, held
   // ADDED_HOLD_MS, then the eye on the same button, then the row moving under In This
   // Coven. What the form sends, its status-region words and a refusal are
   // index.test.tsx's.
@@ -924,7 +924,7 @@ describe('NameField, with useDuplicateWarning', () => {
       expect(warning()).not.toContainElement(look());
     });
 
-    // The curators' review mark shows to everyone (M14.8; the owner's call, 2026-10-23).
+    // The curators' review mark shows to everyone.
     it('says in its head whether a curator has reviewed the entry, and when', async () => {
       mockGraphQLQuery<DuplicateQuickLookQuery, DuplicateQuickLookQueryVariables>(
         'DuplicateQuickLook',

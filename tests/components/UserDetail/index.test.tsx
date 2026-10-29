@@ -17,7 +17,7 @@ const assignMock = vi.fn();
 const router = { refresh: vi.fn(), push: vi.fn() };
 vi.mock('next/navigation', () => ({ useRouter: () => router }));
 
-// The body of the modal over `/admin/users` (M9.19): render-only, so the page
+// The body of the modal over `/admin/users`: render-only, so the page
 // owns the read and this owns what an admin sees of it
 // (claude-docs/components/user-detail.md).
 
@@ -56,7 +56,7 @@ const ADA: UserDetailUser = {
   email: 'ada@fixture.test',
   role: 'admin',
 };
-// A curator (M11.20), who holds the creation flag as every curator must.
+// A curator, who holds the creation flag as every curator must.
 const CY: UserDetailUser = {
   ...FACTS,
   id: '8b3c4d5e-6f7a-4b2c-8d9e-0f1a2b3c4d5e',

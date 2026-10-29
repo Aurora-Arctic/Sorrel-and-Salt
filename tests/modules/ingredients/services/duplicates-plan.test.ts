@@ -49,7 +49,7 @@ function match(statements: Logged[]): Logged {
 
 describe('the fuzzy duplicate query', () => {
   describe('EXPLAIN', () => {
-    // Seeded once per file (MB.184), inside the describe that plans.
+    // Seeded once per file, inside the describe that plans.
     // Sequential scans are disabled, as ingredients-trigram.test.ts does for
     // its negative control: a seq scan that survives `enable_seqscan = off`
     // is one with no alternative. That alone is not enough here. The

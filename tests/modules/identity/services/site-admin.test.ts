@@ -18,7 +18,7 @@ describe('assertSiteAdmin', () => {
     expect(() => assertSiteAdmin({ userId: USER_ID, role: 'user' })).toThrow(Forbidden);
   });
 
-  // M11.20: a curator curates and reaches no people page, so the admin check
+  // A curator curates and reaches no people page, so the admin check
   // refuses them; the curator check below admits the same session.
   it('refuses a curator', () => {
     expect(() => assertSiteAdmin({ userId: USER_ID, role: 'curator' })).toThrow(Forbidden);

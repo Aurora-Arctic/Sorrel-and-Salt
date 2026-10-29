@@ -6,11 +6,9 @@ import { type WorkspacePermission, assertMembership } from '@/modules/coven';
 import { A, asUser } from '../../../support/as-user';
 import type { Ask } from './types';
 
-// The server read path, observed from where it happens: React's `cache()`
-// memoises only while the Flight renderer is running, so the dedupe cannot be
-// seen from a plain call. A repository call is a Postgres round trip (CLAUDE.md
-// rule 2 — nothing else holds the client), so the repository is mocked and its
-// calls are what get counted.
+// The server read path, observed from where it happens: React's `cache()` memoises only while the
+// Flight renderer is running, so the dedupe cannot be seen from a plain call. A repository call is a
+// Postgres round trip (CLAUDE.md rule 2), so the repository is mocked and its calls are counted.
 
 const { findWorkspaceRole } = vi.hoisted(() => ({
   findWorkspaceRole: vi.fn(async () => 'owner' as const),
@@ -56,10 +54,9 @@ beforeEach(() => {
 });
 
 describe('assertMembership inside one server render', () => {
-  // Two renders of a layout and a page that each ask: four calls uncached,
-  // one if the cache outlived its request, two only when each render shares
-  // one lookup and the next starts from nothing. Two `asUser(A)` calls are two
-  // objects, so the key is the ids, not the session a caller happens to hold.
+  // Two renders of a layout and a page that each ask: four calls uncached, one if the cache outlived
+  // its request, two only when each render shares one lookup and the next starts from nothing. Two
+  // `asUser(A)` calls are two objects, so the key is the ids, not the session a caller happens to hold.
   it('asks once per render, and starts the next request from nothing', async () => {
     const same = () =>
       tree(

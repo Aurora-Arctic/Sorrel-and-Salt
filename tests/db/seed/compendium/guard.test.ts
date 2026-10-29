@@ -3,12 +3,12 @@ import { CURATED, checkCompendium } from '@/db/seed/compendium/guard';
 import { FIXTURE_SHARD, wordsOf } from '../compendium-fixture';
 import type { SeedCompendiumEntry, SeedCompendiumShard } from '@/db/seed/types';
 
-// MB.242: the compendium seed's guard, database-free. Each rule is broken
+// The compendium seed's guard, database-free. Each rule is broken
 // once on the invented fixture, which passes whole, so the issue a case
 // finds is the one its edit made. The rules are
 // claude-docs/db/compendium-seed/README.md's; what each says is the guard's.
 // The files' own rules are guard-files.test.ts's, and the real corpus is
-// checked in ../compendium-files.test.ts (M14.10).
+// checked in ../compendium-files.test.ts.
 
 /** The fixture with `edit` applied to a deep copy. */
 function edited(edit: (shard: SeedCompendiumShard) => void): SeedCompendiumShard[] {
@@ -135,7 +135,7 @@ describe('checkCompendium', () => {
     });
   });
 
-  // M14.23: an entry may name a deity by a spelling the deity seed gives it
+  // An entry may name a deity by a spelling the deity seed gives it
   // as an other name, as its source prints it: Kynes's Woden is Odin.
   describe('a deity named by one of its other names', () => {
     it('is admitted, though the name is no deity of its own', () => {
@@ -202,7 +202,7 @@ describe('checkCompendium', () => {
       expect(checkCompendium(shards)).toHaveLength(4);
     });
 
-    // M14.1: a flag on claims the plant is poisonous, so a citation must name it.
+    // A flag on claims the plant is poisonous, so a citation must name it.
     it('refuses a toxic flag on an entry that no citation supports', () => {
       const shards = edited((shard) => {
         const [citation] = testwort(shard).references;

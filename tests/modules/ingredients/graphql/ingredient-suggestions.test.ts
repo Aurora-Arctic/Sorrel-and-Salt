@@ -14,7 +14,7 @@ import {
 } from '../../../support/fixtures';
 import type { DuplicateNode, IngredientSuggestionConnection } from './types';
 
-// The transport half of the substitute picker's search (MB.138), which
+// The transport half of the substitute picker's search, which
 // MB.131's combobox calls: the nodes, a page at a time, and one refusal on the
 // wire. What it matches, its scope and who is refused are
 // services/ingredient-suggestions.test.ts's. The table is emptied per test, so

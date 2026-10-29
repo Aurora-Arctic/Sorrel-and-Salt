@@ -16,16 +16,16 @@ vi.mock('next/navigation', () => ({ useRouter: () => ({ push: vi.fn(), refresh: 
 
 const { default: SpellBuilder } = await import('@/components/SpellBuilder');
 
-// The builder's category picker (M10.14) reads the categories as it opens.
+// The builder's category picker reads the categories as it opens.
 beforeEach(() => offerCategories([]));
 
-// The spell builder's visibility control (M10.13): who can see the spell, its
+// The spell builder's visibility control: who can see the spell, its
 // author alone or the whole coven, set at creation, widened once with a
 // confirmation, and read-only once shared. That the service refuses a
-// narrowing is tests/modules/grimoire/services/spells.test.ts's (M10.6); here
+// narrowing is tests/modules/grimoire/services/spells.test.ts's; here
 // the builder shows that refusal's words in its notice.
 
-// A saved spell opens with its sections shut (M10.12), so each is opened
+// A saved spell opens with its sections shut, so each is opened
 // with Open All, as a person reaches the switch in Notes.
 function renderBuilder(props: Partial<SpellBuilderProps> = {}) {
   const view = render(
@@ -37,7 +37,7 @@ function renderBuilder(props: Partial<SpellBuilderProps> = {}) {
   return view;
 }
 
-// A switch (the owner's call, 2026-10-27): on is the coven, off is private.
+// A switch: on is the coven, off is private.
 const toggle = () => screen.getByRole('switch', { name: 'Share With the Coven' });
 const save = () => screen.getByRole('button', { name: /^Sav/ });
 const title = () => screen.getByRole('textbox', { name: 'Title' });
@@ -118,7 +118,7 @@ const NARROWING_REFUSED =
   'This spell has been shared with the coven and cannot be made private again. ' +
   'Delete it instead if it should not be there.';
 
-// The one-way rule binds a complete spell only (M10.20); SPELL, with no status, is a draft.
+// The one-way rule binds a complete spell only; SPELL, with no status, is a draft.
 const COMPLETE: SpellBuilderSpell = { ...SPELL, status: 'complete' };
 
 describe('SpellBuilder visibility', () => {
@@ -162,7 +162,7 @@ describe('SpellBuilder visibility', () => {
     expect(toggle()).toBeEnabled();
   });
 
-  // A choice of who can see it is something to save (the owner's call, 2026-10-27).
+  // A choice of who can see it is something to save.
   it('has something to save once only the choice has changed, and nothing once it is back', () => {
     renderBuilder();
     // Why Save could stay off: no field holds anything.
@@ -236,7 +236,7 @@ describe('SpellBuilder visibility', () => {
 
     // The spell was shared from elsewhere since this builder read it, so this
     // save, still saying private, would narrow it. The service refuses it
-    // (M10.6); the builder says why in the server's words.
+    // ; the builder says why in the server's words.
     it('shows a refused narrowing in the notice, in words that explain it', async () => {
       mockGraphQLError('UpdateSpell', { code: 'FORBIDDEN', message: NARROWING_REFUSED });
       renderBuilder({ spell: COMPLETE });

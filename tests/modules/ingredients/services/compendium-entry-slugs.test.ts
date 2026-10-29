@@ -76,7 +76,7 @@ describe('a collision with another compendium entry', () => {
     return (error as ValidationError).issues;
   }
 
-  // MB.220: one formal name is one entry, so an oil beside its form is a form
+  // One formal name is one entry, so an oil beside its form is a form
   // of it, not a second entry. Under the same label, the address index
   // breaks first, and the refusal is still the formal name's.
   it('refuses a second entry under a formal name the compendium holds, whatever its form, on `canonicalName`, naming the entry', async () => {
@@ -189,7 +189,7 @@ describe('a collision with another compendium entry', () => {
 });
 
 // MB.82's rule (claude-docs/db/ingredient-slugs.md, "Ingredient slugs"): the address follows the
-// label and the formal name, never the form (MB.220); the one it leaves redirects to the entry
+// label and the formal name, never the form; the one it leaves redirects to the entry
 // for 180 days; and a write that would take another entry's redirected address
 // ends that redirect only once the admin confirms it. The clock is pinned, so
 // every window below is exact.
@@ -260,7 +260,7 @@ describe('the slug', () => {
     expect(await retirements()).toEqual([]);
   });
 
-  // MB.220: no SQL rewrites a slug, so a row saved before keeps its form in
+  // No SQL rewrites a slug, so a row saved before keeps its form in
   // the address until its own next save, which moves it and retires the old.
   it('moves a form-bearing slug on the next save, the old one redirecting to the entry', async () => {
     const id = await seed();

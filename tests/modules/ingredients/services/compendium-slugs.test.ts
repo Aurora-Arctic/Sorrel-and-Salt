@@ -8,7 +8,7 @@ import { insertIngredient } from '../../../support/db/insert-ingredient';
 import { makeIngredient } from '../../../support/fixtures';
 import { clearDataCache } from '../../../support/next-data-cache';
 
-// MB.84: the sitemap's read of every current slug, held in the data cache like
+// The sitemap's read of every current slug, held in the data cache like
 // the list (claude-docs/db/compendium-cache.md).
 vi.mock('next/cache', () => import('../../../support/next-data-cache'));
 

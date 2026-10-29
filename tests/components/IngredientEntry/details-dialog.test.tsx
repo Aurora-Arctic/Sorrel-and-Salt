@@ -20,7 +20,7 @@ const { detailsHeading } = await import('@/components/IngredientEntry/details');
 const { editHeading } = await import('@/components/CompendiumList/heading');
 const { covenCardActions } = await import('@/components/CovenCards/actions');
 
-// The details modal over a list (M12.5): a summary of the entry, a way through
+// The details modal over a list: a summary of the entry, a way through
 // to its full page, and, for whoever may edit it, an Edit that opens the edit
 // modal over it (claude-docs/components/ingredient-entry.md, "The details
 // modal").
@@ -263,7 +263,7 @@ describe('DetailsDialog', () => {
 });
 
 // The plus beside the pencil, and the check once every coven the viewer may add in holds the
-// entry (M9.12; the owner's calls, 2026-10-20), as the entry page has them.
+// entry (the owner's calls, 2026-10-20), as the entry page has them.
 describe('DetailsDialog plus', () => {
   const ID = '00000000-0000-4000-8000-0000000000aa';
   const ONE = { id: '00000000-0000-4000-8000-000000000001', name: 'Fixture Coven One' };
@@ -319,7 +319,7 @@ describe('DetailsDialog plus', () => {
   });
 });
 
-// The window opened from a compendium card follows it (the owner's call, 2026-10-20): the pencil
+// The window opened from a compendium card follows it: the pencil
 // is Edit in Compendium, and the page's three dots come last, after the plus and the pencil.
 describe('DetailsDialog from a compendium card', () => {
   const show = (inCompendium: boolean) =>
@@ -358,7 +358,7 @@ describe('DetailsDialog from a compendium card', () => {
 });
 
 // The window's icons are the coven card's, drawn by the same `covenCardActions` the list's cards
-// use (the owner's call, 2026-10-20), so what the card shows for this entry and role is what the
+// use, so what the card shows for this entry and role is what the
 // window shows: Edit and the bin on the coven's own entry, Annotate and More on a compendium
 // entry the cupboard holds.
 describe('DetailsDialog coven card controls', () => {

@@ -100,7 +100,7 @@ describe('zodiacSuggestions', () => {
   });
 });
 
-// M5.5: the admin's compendium form has no coven to name, so a null
+// The admin's compendium form has no coven to name, so a null
 // workspaceId reads the compendium tier alone — the curated rows, and the
 // values written in the compendium, never a coven's.
 describe.each([

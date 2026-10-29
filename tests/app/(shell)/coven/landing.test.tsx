@@ -1,10 +1,10 @@
 import { render, screen, within } from '@testing-library/react';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 
-// The `/coven` landing (M2.8, Story 2): a member goes into their first coven,
+// The `/coven` landing: a member goes into their first coven,
 // anyone else is told what they can do next, and someone with coven
 // invitations waiting is told so, with a link to the account page's
-// Invitations section, where they are listed (M10.32). The viewer is mocked:
+// Invitations section, where they are listed. The viewer is mocked:
 // who is a member, who may create and how many invitations wait are
 // tests/lib/viewer's, and which invitations are theirs the identity service's.
 

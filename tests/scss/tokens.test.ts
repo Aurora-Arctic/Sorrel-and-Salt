@@ -4,16 +4,11 @@ import { describe, expect, it } from 'vitest';
 import { contrastRatio } from '@/lib/contrast';
 import { fromRoot } from '../support/paths';
 
-// The colours the sign-in and account pages depend on stay legible on the
-// page, in both themes (MB.116; claude-docs/styling.md, "Brand colours"): what
-// marks out a control at 3:1 (WCAG 1.4.11), and a button's label on its
-// ground at 4.5:1. The admin area's text and wax hold on the card surface
-// too (MB.115), the ground of a banded row, a stacked table's card and the
-// impersonation banner, the tab row's open tab holds on its track, and the
-// switch's track and thumb hold in either state, and a chip's text and a
-// linked chip's mark hold on the chip's wash. One assertion per theme,
-// the functional half of the tokens; how they look is the workshop's and the
-// axe scan's (claude-docs/testing/layer-ownership.md, "What a test may assert", rule 4).
+// The colours the sign-in, account and admin pages depend on stay legible in both themes
+// (claude-docs/styling.md, "Brand colours"): control marks at 3:1 (WCAG 1.4.11), button labels and
+// text at 4.5:1, on the page, the card, the tab track, the switch and the chip's wash. One assertion
+// per theme, the functional half of the tokens; how they look is the workshop's and the axe scan's
+// (claude-docs/testing/layer-ownership.md, "What a test may assert", rule 4).
 
 const SCSS_DIR = fromRoot('src/scss');
 
@@ -107,9 +102,8 @@ function brands(): Record<string, Record<string, string>> {
   return byBrand;
 }
 
-// MB.120 item 16: the recency mark is small bold text in a badge's colour with
-// no ground of its own, so it must clear the text floor on whatever it stands
-// on: the entry page, a card, and a card pointed at (claude-docs/components/entry-marks.md, "Styling").
+// The recency mark is small bold text in a badge's colour with no ground of its own, so it must
+// clear the text floor on the entry page, a card, and a card pointed at (claude-docs/components/entry-marks.md, "Styling").
 describe('MB.120: the recency mark clears the text floor on the page, the card and a card pointed at', () => {
   it.each(['dark', 'light'] as const)('in the %s theme', (theme) => {
     const tokens = surfaces(theme);
@@ -161,14 +155,11 @@ describe('MB.116, MB.115: the brand and text colours clear their floors on the p
     const wax = toHex(tokens['--secondary'], theme);
     row('--secondary on the Impersonate tint on the page', wax, mixed(wax, page, 0.06), 4.5);
     row('--secondary on the Impersonate tint on the card', wax, mixed(wax, card, 0.05), 4.5);
-    // The tab row's pills (TabbedPage/index.scss): the open tab's label on its
-    // pill, the accent 18% into the card, and the pill's accent edge against
-    // the track, a grey wash of the muted ink, fainter than `$fill-quiet`'s
-    // 18% so the green pill stands apart from it (the owner's call of
-    // 2026-10-20), over the page or a card: the edge is the line that marks
-    // which tab is open, since the fill alone sits under 3:1 against the
-    // track. The other labels are the muted ink on that track. The track's
-    // mix is the stylesheet's own `$segment-track`, read from it here.
+    // The tab row's pills (TabbedPage/index.scss): the open tab's label on its pill (the accent 18%
+    // into the card), and the pill's accent edge against the track (a grey wash of the muted ink,
+    // fainter than `$fill-quiet`'s 18%), over the page or a card. The edge marks which tab is open,
+    // since the fill alone sits under 3:1 against the track. The other labels are the muted ink on
+    // that track. The track's mix is the stylesheet's own `$segment-track`, read from it here.
     const accent = toHex(tokens['--accent'], theme);
     row('--text-primary on the open tab', tokens['--text-primary'], mixed(accent, card, 0.18), 4.5);
     const trackMix =
@@ -213,7 +204,7 @@ describe('MB.116, MB.115: the brand and text colours clear their floors on the p
 
     // A chip on its wash, the muted ink 18% into the card (Combobox/index.scss):
     // its text, the body ink, at 4.5:1; a linked substitute's link mark
-    // (MB.115), an icon in the accent, at the 3:1 a control's mark needs;
+    // , an icon in the accent, at the 3:1 a control's mark needs;
     // and the linked chip pointed at, its text and mark in the accent's
     // hover, at 4.5:1. The accent itself is held to 3:1 alone, so the text
     // keeps the body ink and its underline until pointed at.
@@ -231,11 +222,9 @@ describe('MB.116, MB.115: the brand and text colours clear their floors on the p
     row("a linked chip's mark on its wash", tokens['--accent'], wash, 3);
     row('a linked chip pointed at on its wash', tokens['--accent-hover'], wash, 4.5);
 
-    // A list's highlighted row and a quiet button pointed at (M8.17, the
-    // owner's call of 2026-10-20): the accent 12% into what is behind, the
-    // card a menu or a suggestion list sits on and the field a quiet button
-    // fills with. Text on it, the body ink and the muted ink a row's
-    // qualifier wears, holds 4.5:1. `$fill-highlight` and
+    // A list's highlighted row and a quiet button pointed at: the accent 12% into what is behind,
+    // the card a menu or a suggestion list sits on and the field a quiet button fills with. Text on
+    // it, the body ink and the muted ink a row's qualifier wears, holds 4.5:1. `$fill-highlight` and
     // `$fill-highlight-field` name the two mixes once; the weight is read from them.
     const highlight = declarations(
       compile(
@@ -255,8 +244,8 @@ describe('MB.116, MB.115: the brand and text colours clear their floors on the p
     const placeholder = mixed(toHex(tokens['--text-muted'], theme), card, 0.85);
     row('the placeholder on the field', placeholder, card, 4.5);
 
-    // The last-edit line (M6.18, `LastEdit/index.scss`), in `$last-edit-ink` (M12.56): the
-    // placeholder mix in dark, the muted ink in light, where the mix is 4.22:1 on the page.
+    // The last-edit line (`LastEdit/index.scss`), in `$last-edit-ink`: the placeholder mix in dark,
+    // the muted ink in light, where the mix is 4.22:1 on the page.
     const lastEdit = tokens['--last-edit-ink'].startsWith('color-mix')
       ? placeholder
       : toHex(
@@ -266,15 +255,12 @@ describe('MB.116, MB.115: the brand and text colours clear their floors on the p
     row('the last-edit line on the card', lastEdit, card, 4.5);
     row('the last-edit line on the page', lastEdit, page, 4.5);
 
-    // A notice (`.notice`, _primitives.scss): a bar down its start edge and a
-    // tint of the bar's colour, `--notice-tint` of it over whatever holds the
-    // notice, the page or a card. The bar and the warning's triangle are
-    // marks, so 3:1 against the ground and the tint; the text is text, so
-    // 4.5:1 on the tint: the error's and the success's in the hover shade of
-    // their own colour, over that colour's tint, and the body ink in the plain
-    // notice's accent, the warning's ochre and the caution's muted ink (the owner's look, and the hover
-    // shades and the tint the owner's pick, 2026-10-19). The error's triangle
-    // is drawn in its text colour, so its text row covers it.
+    // A notice (`.notice`, _primitives.scss): a bar down its start edge and a tint of the bar's colour,
+    // `--notice-tint` of it over whatever holds the notice, the page or a card. The bar and the
+    // warning's triangle are marks, so 3:1 against the ground and the tint; the text is text, so 4.5:1
+    // on the tint: the error's and the success's in the hover shade of their own colour, and the body
+    // ink in the plain notice's accent, the warning's ochre and the caution's muted ink. The error's
+    // triangle is drawn in its text colour, so its text row covers it.
     const tint = parseFloat(tokens['--notice-tint']) / 100;
     const warning = toHex(tokens['--warning'], theme);
     const ink = toHex(tokens['--text-primary'], theme);
@@ -314,8 +300,8 @@ describe('MB.116, MB.115: the brand and text colours clear their floors on the p
         4.5,
       );
       row(`an error's text on its tint on the ${ground}`, waxText, mixed(wax, under, tint), 4.5);
-      // A button inside a warning or an error (M12.56): `$notice-button-ink`, not the accent,
-      // which is 4.25:1 and 4.19:1 on the light tints on the page.
+      // A button inside a warning or an error: `$notice-button-ink`, not the accent, which is 4.25:1
+      // and 4.19:1 on the light tints on the page.
       row(
         `a button in a warning on its tint on the ${ground}`,
         buttonInk,
@@ -336,15 +322,12 @@ describe('MB.116, MB.115: the brand and text colours clear their floors on the p
       );
     }
 
-    // The focus ring (M12.45, the owner's call of 2026-10-20), which marks a
-    // control's state, so 3:1 (WCAG 1.4.11). Its colour is mixed towards
-    // transparent, so what shows is that colour laid over the ground behind
-    // it. The shared ring, in the body ink, against the page, a card, a card
-    // pointed at, and the three parts of the ingredient card's drawer that
-    // the ring round a card crosses; a link's ring, in the accent at its own
-    // per-theme strength, against the page and the cards a link sits on. The
-    // strengths are read from the compiled mixin and the link's rule, so it
-    // is the stylesheet that is checked.
+    // The focus ring, which marks a control's state, so 3:1 (WCAG 1.4.11). Its colour is mixed towards
+    // transparent, so what shows is that colour laid over the ground behind it. The shared ring, in the
+    // body ink, against the page, a card, a card pointed at, and the three parts of the ingredient
+    // card's drawer that the ring round a card crosses; a link's ring, in the accent at its own
+    // per-theme strength, against the page and the cards a link sits on. The strengths are read from
+    // the compiled mixin and the link's rule, so it is the stylesheet that is checked.
     const ring = (css: string, selector: string) => {
       const found =
         /color-mix\(in srgb, var\((--[\w-]+)\) (?:var\((--[\w-]+)\)|(\d+(?:\.\d+)?%)), transparent\)/.exec(

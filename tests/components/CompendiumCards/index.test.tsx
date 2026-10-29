@@ -17,7 +17,7 @@ import { ADD, HELD as HELD_TEXT } from '../../support/cupboard-wording';
 const router = vi.hoisted(() => ({ push: vi.fn(), refresh: vi.fn() }));
 vi.mock('next/navigation', () => ({ useRouter: () => router }));
 
-// The public compendium's cards (M8.18): a plain link per entry, the forms with their icons,
+// The public compendium's cards: a plain link per entry, the forms with their icons,
 // the foot each kind of visitor gets, and a filter that offers no Classification and no
 // No Refs (claude-docs/components/compendium-cards.md).
 
@@ -138,7 +138,7 @@ describe('CompendiumCards', () => {
     /** Any card's plus, and any card's check: each is named by its tip and then its entry. */
     const PLUS = { name: new RegExp(`^${ADD}: `) };
     const HELD = { name: new RegExp(`^${HELD_TEXT}: `) };
-    // MB.120: two cards' pluses read alike to a screen reader's list of buttons unless each
+    // Two cards' pluses read alike to a screen reader's list of buttons unless each
     // carries its entry, as the pencil beside it does; the two Testworts are told apart by their
     // formal names there too.
     it('holds a plus button on each card not yet held, named Add to My Ingredients and its entry', () => {
@@ -155,7 +155,7 @@ describe('CompendiumCards', () => {
 
     // The owner's calls, 2026-10-20: the check is a status mark, not a link, since the details
     // modal's In Your Cupboards list carries the links to each coven's copy; it is tipped and
-    // named In Every Cupboard and its entry (MB.120, the one noun for "you hold this"; the tip
+    // named In Every Cupboard and its entry (the one noun for "you hold this"; the tip
     // says the name too), a button only to carry its tip, as the entry page's shelf is.
     it('swaps the plus for a check named In Every Cupboard and its entry on a card every coven holds, and no link', () => {
       const held = ENTRIES.map((one, index) => (index === 0 ? { ...one, held: true } : one));
@@ -197,7 +197,7 @@ describe('CompendiumCards', () => {
     });
   });
 
-  // M8.17: a curator's Edit in Compendium, named for the entry, beside Add where the account can add too.
+  // A curator's Edit in Compendium, named for the entry, beside Add where the account can add too.
   it('draws Edit in Compendium, named for the entry, on each card the page gives an edit address', () => {
     const editable = ENTRIES.map((one) => ({
       ...one,
@@ -283,7 +283,7 @@ describe('CompendiumCards', () => {
     });
   });
 
-  // M12.5: the Quick Look eye, at each card's foot, for everyone, a visitor included.
+  // The Quick Look eye, at each card's foot, for everyone, a visitor included.
   it('draws Quick Look, named for the entry, on each card the page gives a details address', () => {
     const looked = ENTRIES.map((one) => ({
       ...one,
@@ -312,7 +312,7 @@ describe('CompendiumCards', () => {
     expect(new URLSearchParams(sent(form)).has('withoutReferences')).toBe(false);
   });
 
-  // M12.55: the viewer's covens, every role, for the In My Covens field, apart from the
+  // The viewer's covens, every role, for the In My Covens field, apart from the
   // writable ones the plus's menu lists; and each card's holding covens, counted on its mark.
   describe('the viewer’s covens (M12.55)', () => {
     const MINE = [

@@ -70,7 +70,7 @@ describe('the / page', () => {
     expect(screen.getByRole('link', { name: 'Continue' })).toHaveAttribute('href', '/admin');
   });
 
-  // Into the coven itself, never via the /coven landing's redirect (MB.257).
+  // Into the coven itself, never via the /coven landing's redirect.
   it('continues a signed-in member straight into their first coven', async () => {
     getSession.mockResolvedValue({ userId: USER_ID, role: 'user' });
     firstCovenSlugOf.mockResolvedValue('fixture-coven');

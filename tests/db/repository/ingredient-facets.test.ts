@@ -22,7 +22,7 @@ import type { Logged } from '../../support/db/types';
 import { type IngredientFixture, makeIngredient, makeVariant } from '../../support/fixtures';
 import type { Overrides } from '../../support/fixtures';
 
-// M12.3: how many compendium entries each facet value would list, read in one
+// How many compendium entries each facet value would list, read in one
 // grouped query per kind. Each count is checked against the list's own count
 // read under the filter the value stands for, so the facets cannot drift from
 // the arms that match. The ingredient tables are emptied per test, so every
@@ -103,7 +103,7 @@ function counts(facets: IngredientFacets, kind: Kind): Record<string, number> {
   return Object.fromEntries(facets[kind].map(({ value, count }) => [value, count]));
 }
 
-// M12.52: the order of each kind's values, the same on the compendium's read
+// The order of each kind's values, the same on the compendium's read
 // and a coven's. Every list of names sorts alphabetically in natural-language
 // order (case set aside, an accented letter beside its plain one), a category
 // under its group and a deity under its tradition; signs and bodies by their
@@ -237,7 +237,7 @@ describe("the order of each kind's values (M12.52)", () => {
     }
 
     // Both reads share one `orderBy` that takes no membership, so the order
-    // is proved on the compendium's read alone (M14.27). The coven's columns
+    // is proved on the compendium's read alone. The coven's columns
     // come from its membership, so the signs-and-bodies case runs on both.
     if (workspaceId === undefined) {
       it('orders forms by name, case set aside and an accent beside its plain letter, whatever the counts', async () => {
@@ -541,7 +541,7 @@ describe('findCompendiumFacets', () => {
 
     const facets = await findCompendiumFacets({});
 
-    // The order is the M12.52 block's subject; here only the membership.
+    // The order is another block's subject; here only the membership.
     expect(facets.zodiacSigns.map(({ value }) => value).sort()).toEqual(
       signs.map((row) => row.name as string).sort(),
     );
@@ -623,7 +623,7 @@ describe('findCompendiumFacets', () => {
 
       // Why the bound could have been missed: each kind is read, so a read per
       // value would send far more than nine. The ninth is the Reviewed counts
-      // (M14.8), read apart because their filter leaves out its own setting.
+      // , read apart because their filter leaves out its own setting.
       expect(compendium[0].length).toBeGreaterThan(0);
       for (const reads of compendium) expect(reads.length).toBeLessThanOrEqual(9);
       for (const reads of coven) expect(reads.length).toBeLessThanOrEqual(11);

@@ -30,7 +30,7 @@ import {
   makeVariant,
 } from '../../../support/fixtures';
 
-// M8.19: the page body's one read, `ingredientDetailOf`, and the public
+// The page body's one read, `ingredientDetailOf`, and the public
 // route's cached read of an address, `readCompendiumEntry`. The table is
 // emptied per test, so every row a result could come from is one this file
 // wrote. Setup goes through the raw client; only the rename and the create
@@ -107,7 +107,7 @@ beforeAll(async () => {
       tradition_id: tradition.id,
       ...stamps,
     })} returning id`;
-  // Its other names (M14.23): two live, read alphabetically, and one dropped.
+  // Its other names: two live, read alphabetically, and one dropped.
   await sql`
     insert into deity_other_names ${sql([
       { deity_id: deityId, name: 'Fixturion', deleted_at: null, deleted_by: null, ...stamps },

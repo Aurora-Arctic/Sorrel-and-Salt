@@ -13,7 +13,7 @@ import { graphqlLink, mockGraphQLError, mockGraphQLMutation } from '../../suppor
 import { server } from '../../support/msw/server';
 import { ADD, HELD_MARK } from '../../support/cupboard-wording';
 
-// The plus and the held check carry the entry's name in their accessible names (MB.120), so a
+// The plus and the held check carry the entry's name in their accessible names, so a
 // screen reader's list of buttons tells one card's plus from the next, as the pencil and the
 // three dots beside them already do. The tip a sighted viewer reads stays short, and begins the
 // name, so the words on screen are the words to say (WCAG 2.5.3, Label in Name).
@@ -80,7 +80,7 @@ describe('the held check names its entry', () => {
   });
 });
 
-// M12.55: the plus and the check say how many of the viewer's covens hold the entry, every
+// The plus and the check say how many of the viewer's covens hold the entry, every
 // membership counted, and name them in the tip; nothing at all where none does.
 describe('the holding covens (M12.55)', () => {
   /** The badge: the number drawn on the mark, kept from the accessibility tree as its name says it. */
@@ -124,7 +124,7 @@ describe('the holding covens (M12.55)', () => {
   });
 });
 
-// The plus of someone who may write in several covens asks which in a menu (M9.12, the owner's
+// The plus of someone who may write in several covens asks which in a menu (the owner's
 // call, 2026-10-20): its items are every coven, one holding the entry disabled, and choosing one
 // adds there at once. With one coven at all, the plus adds there with no menu. A success turns
 // the spinner into a check, which fades back to the plus after a hold unless every coven now
@@ -132,7 +132,7 @@ describe('the holding covens (M12.55)', () => {
 // the plus alone; the cards page's own choice between the plus and the held check is proved in
 // CompendiumCards/add-icon.test.tsx.
 
-/** The plus, named by its tip and then its entry (MB.120). */
+/** The plus, named by its tip and then its entry. */
 const PLUS = { name: `${ADD}: ${NAME}` };
 const COVENS = [ONE, TWO, THREE];
 
@@ -272,7 +272,7 @@ describe('the add icon among several covens', () => {
     const busy = await screen.findByRole('button', { name: 'Adding' });
     expect(busy).toHaveAttribute('aria-busy', 'true');
     expect(busy).toHaveAttribute('aria-disabled', 'true');
-    // Not `disabled`, which would drop the focus to the body (MB.120).
+    // Not `disabled`, which would drop the focus to the body.
     expect(busy).not.toHaveAttribute('disabled');
     expect(router.refresh).not.toHaveBeenCalled();
     await act(async () => answer());

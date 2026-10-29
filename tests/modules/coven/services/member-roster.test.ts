@@ -7,7 +7,7 @@ import { makeWorkspace, workspaceColumns } from '../../../support/fixtures';
 
 useRawClient();
 
-// The whole live roll of a coven (M6.16): what the coven page reads to tell
+// The whole live roll of a coven: what the coven page reads to tell
 // the only owner from one of several, and who they could hand it to. It is
 // `listMembers` read to the end, so the same check guards it.
 

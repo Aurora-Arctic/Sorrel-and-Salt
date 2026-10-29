@@ -53,14 +53,14 @@ describe('the /coven/[slug] layout', () => {
     );
 
     expect(requireCovenMembership).toHaveBeenCalledExactlyOnceWith('fixture-coven');
-    // The nav is the layout's, so every page beneath it has it without repeating it (M9.15).
+    // The nav is the layout's, so every page beneath it has it without repeating it.
     expect(screen.getByRole('navigation')).toBeInTheDocument();
     // The context row's lead: the switcher, on the coven the address names.
     expect(screen.getByRole('combobox', { name: 'Coven' })).toHaveTextContent('Fixture Coven');
     expect(screen.getByText('The page itself')).toBeInTheDocument();
   });
 
-  // M9.12: the switcher is the layout's and the page is its child, so the layout is what lets
+  // The switcher is the layout's and the page is its child, so the layout is what lets
   // the page tell the switcher where it also opens.
   it('lets a page beneath it tell the switcher which covens it opens in', async () => {
     requireCovenMembership.mockResolvedValue(ADMITTED);

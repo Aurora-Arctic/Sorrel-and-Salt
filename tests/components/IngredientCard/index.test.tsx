@@ -13,7 +13,7 @@ import { StockBadge } from '@/components/StockBadge';
 // notes are the test's own data. Marks are found by their exact text and
 // asserted by presence or absence, never by what the words say.
 
-// The name link navigates through the shared hook (M12.33), so the App Router is mocked.
+// The name link navigates through the shared hook, so the App Router is mocked.
 const router = vi.hoisted(() => ({ push: vi.fn(), replace: vi.fn(), refresh: vi.fn() }));
 vi.mock('next/navigation', () => ({ useRouter: () => router, usePathname: () => '/here' }));
 
@@ -181,7 +181,7 @@ describe('IngredientCard', () => {
     });
 
     // The safety badge sits beside the name and the rest under the formal name
-    // (the owner's call, 2026-10-20). It is read last, after the name, the formal
+    // . It is read last, after the name, the formal
     // name and the row beneath them: the row the badge joins when it wraps.
     it('reads the name, the formal name, the other marks, then the safety badge', () => {
       render(
@@ -266,7 +266,7 @@ describe('IngredientCard', () => {
   });
 });
 
-// M8.14: the foot's actions are the caller's own buttons, kept as controls beside
+// The foot's actions are the caller's own buttons, kept as controls beside
 // the card's one link.
 describe('IngredientCard actions', () => {
   it('draws the given buttons in the card, beside the name link', () => {
@@ -298,7 +298,7 @@ describe('IngredientCard actions', () => {
 });
 
 // The name link is the card's one way onward, and the page it leads to draws
-// its own frame while it loads (M12.33): the card names that page by the address.
+// its own frame while it loads: the card names that page by the address.
 describe('IngredientCard navigation', () => {
   let target: unknown;
   function Probe() {
@@ -361,7 +361,7 @@ describe('IngredientCard recency (MB.106)', () => {
   });
 
   // The safety badge is the card's top-right corner and the mark sits just left of it
-  // (the owner's call, 2026-10-20), so it is read after the name block and before it.
+  // , so it is read after the name block and before it.
   it('reads the mark after the name and the formal name, and before the safety badge', () => {
     render(
       <IngredientCard

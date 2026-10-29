@@ -5,7 +5,7 @@ import ListFrame from '@/components/ListFrame';
 
 vi.mock('next/navigation', () => ({ useRouter: () => ({ push: vi.fn() }) }));
 
-// The row's landmark (MB.120, review item 17): a named `<form>` inside a
+// The row's landmark (review item 17): a named `<form>` inside a
 // `<search>` is two landmarks for one control, so a screen reader lists the
 // row twice. The `<search>` carries the name and the form none
 // (claude-docs/components/filter-form.md).

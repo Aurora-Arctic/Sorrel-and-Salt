@@ -6,7 +6,7 @@ import { ingredientSlug } from '@/lib/slugify';
 
 // §9's one multicolumn gin index serves a predicate on either column alone.
 // That it is reached is proved on the SQL the services send, in
-// common-names-plan.test.ts and duplicates-plan.test.ts (MB.184); what stays
+// common-names-plan.test.ts and duplicates-plan.test.ts; what stays
 // here is the negative control that makes those plans meaningful — claude-docs/db/fuzzy-matching.md, "Fuzzy matching:
 // one index, and a rule every caller is bound by".
 const TRIGRAM_INDEX = 'ingredients_trgm';

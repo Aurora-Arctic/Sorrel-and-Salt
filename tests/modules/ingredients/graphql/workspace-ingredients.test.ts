@@ -146,7 +146,7 @@ describe('createWorkspaceIngredient', () => {
       { name: 'Mockleaf', ingredient: { id: mockleaf } },
       { name: 'Zest Root', ingredient: null },
     ]);
-    // MB.167: the picks read back as picks, the typed deity as its name, in order.
+    // The picks read back as picks, the typed deity as its name, in order.
     expect(answered.variants).toEqual([
       { form: 'Root', formChoice: { id: root, name: 'Root', group: { name: 'Botanical' } } },
     ]);

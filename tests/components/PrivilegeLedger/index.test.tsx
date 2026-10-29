@@ -8,7 +8,7 @@ import { FILTER_ROWS, drawnOnServer } from '../../support/filter-form';
 import { Navigating } from '../../support/navigating';
 import type { FilterFormSubject } from '../../support/types';
 
-// `/admin/privilege-changes`' filter, table and pager (MB.200): render-only,
+// `/admin/privilege-changes`' filter, table and pager: render-only,
 // so the page owns the read and this owns what an admin sees of it
 // (claude-docs/components/privilege-ledger.md).
 
@@ -112,7 +112,7 @@ describe('PrivilegeLedger', () => {
 
     it.each(FILTER_ROWS)('%s', (_title, run) => run(SUBJECT));
 
-    // The owner's call (MB.115): a select-only box once hydrated, as every
+    // The owner's call: a select-only box once hydrated, as every
     // closed set in the row is, over the native select the server draws.
     it('offers every privilege, after the option for all, as a native select on the server and a select-only box once hydrated', async () => {
       const { container, hydrate } = drawnOnServer(

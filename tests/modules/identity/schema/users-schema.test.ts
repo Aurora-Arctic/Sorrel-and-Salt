@@ -79,7 +79,7 @@ describe('users email case', () => {
   });
 });
 
-// MB.177: the flag is what lets anyone create a workspace, admins included, so
+// The flag is what lets anyone create a workspace, admins included, so
 // a CHECK holds every admin to it rather than the gate reading `role` beside
 // it (claude-docs/design-decisions/mb.177-admins-hold-workspace-creation.md).
 // M11.20 widens it to every role but `user`, curators included

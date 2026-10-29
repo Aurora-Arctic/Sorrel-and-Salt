@@ -5,7 +5,7 @@ import { createCategory, deleteIngredientFormGroup } from '@/modules/vocabulary'
 import { E, asUser } from '../../../support/as-user';
 import { useTestDatabase } from '../../../support/db/database';
 
-// The slug refusal every curated vocabulary's write shares (MB.210), on the
+// The slug refusal every curated vocabulary's write shares, on the
 // two arms its services' tests cannot reach without a race: an error that is
 // not the vocabulary's slug violation, and a violation whose holder is gone
 // by the time the refusal reads it. Reached through `createCategory`, whose

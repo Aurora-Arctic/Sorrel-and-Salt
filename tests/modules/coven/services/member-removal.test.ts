@@ -8,7 +8,7 @@ import { makeWorkspace, workspaceColumns } from '../../../support/fixtures';
 
 useRawClient();
 
-// Removing a member and leaving (M6.15): both soft-delete the membership row,
+// Removing a member and leaving: both soft-delete the membership row,
 // stamped from the session, and both run M6.8's last-owner guard. The revive
 // write is the way back for a person invited again.
 

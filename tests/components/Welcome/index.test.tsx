@@ -21,7 +21,7 @@ describe('Welcome', () => {
     expect(screen.queryByRole('link', { name: 'Sign In' })).not.toBeInTheDocument();
   });
 
-  // The compendium is the one public surface (MB.80), so the front door
+  // The compendium is the one public surface, so the front door
   // reaches it for everyone, whichever way in they are offered.
   it.each([['a signed-out visitor', undefined]])('links %s to the compendium', (_, landing) => {
     render(<Welcome landing={landing} />);

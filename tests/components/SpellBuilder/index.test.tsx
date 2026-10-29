@@ -17,7 +17,7 @@ vi.mock('next/navigation', () => ({ useRouter: () => ({ push, refresh: vi.fn() }
 
 const { default: SpellBuilder } = await import('@/components/SpellBuilder');
 
-// The spell builder's title, intent and jar fields (M10.12, story 47). The
+// The spell builder's title, intent and jar fields. The
 // saves are answered by MSW in the shape /api/graphql answers, so a refusal is
 // read through the route's own error mapping; that the service refuses a
 // viewer, and a complete spell with no title, is
@@ -338,7 +338,7 @@ describe('SpellBuilder', () => {
   });
 
   // Moon phase and day of the week suggest a fixed list and still take what is
-  // typed (the owner, 2026-10-27): the columns stay free text.
+  // typed: the columns stay free text.
   describe('the moon phase and day of the week suggestions', () => {
     const listed = () => screen.getAllByRole('option').map((option) => option.textContent);
 

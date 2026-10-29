@@ -13,16 +13,13 @@ import { makeIngredient, makeSpell, makeVariant } from '../../support/fixtures';
 import { BOOTSTRAP_USER_ID } from '@/db/bootstrap';
 import { WORKSPACE_W_ID } from '@/db/seed/standard';
 
-// A migration test, retired once `0090` is in production's journal. `0090`
-// retires the four compendium entries M14.29 ruled out as endangered, in every
-// database the seed already filled: the seed never deletes a row whose file is
-// gone. The test database is already migrated, and empty of compendium rows
-// when it starts, so the migration's statements are run again over rows each
-// case writes.
+// A migration test, retired once `0090` is in production's journal. `0090` retires the four compendium
+// entries ruled out as endangered, in every database the seed already filled: the seed never deletes a
+// row whose file is gone. The test database is already migrated, and empty of compendium rows when it
+// starts, so the migration's statements are run again over rows each case writes.
 //
-// The four seed keys are the real ones: the migration matches them, and a
-// fixture that did not carry them would prove nothing. Every other name here
-// is invented.
+// The four seed keys are the real ones: the migration matches them, and a fixture that did not carry
+// them would prove nothing. Every other name here is invented.
 
 const FILE = fromRoot('src/db/migrations/0090_retire-endangered-entries.sql');
 

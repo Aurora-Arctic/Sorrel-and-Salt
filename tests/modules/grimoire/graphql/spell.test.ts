@@ -8,7 +8,7 @@ import { insertSpell } from '../../../support/db/insert-spell';
 import { makeIngredient, makeSpell, makeVariant } from '../../../support/fixtures';
 import { run } from '../../../support/graphql/run';
 
-// The grimoire over the wire (M10.9): `grimoire`'s pages, `spell` and the
+// The grimoire over the wire: `grimoire`'s pages, `spell` and the
 // fields a spell resolves through its loaders, and one refusal per code. Who
 // may read which spell is services/spell-reads.test.ts's; this file holds what
 // the transport adds — the shape, the order, the gaps worked out from the two

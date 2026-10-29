@@ -7,12 +7,12 @@ import { makeQueryClient } from '@/lib/graphql-client';
 import { CARD_PAGE_SIZE } from '@/lib/pagination';
 import { entryDetail } from '../../../../../support/entry-detail';
 
-// A coven's Ingredients page (M9.6). The guard and the services are mocked, since what they
+// A coven's Ingredients page. The guard and the services are mocked, since what they
 // decide is their own tests'; the page's own reads run for real over them. Here: the guard on
 // the slug from the address, one page of 24 with one stock call for the whole page, the address
 // becoming the filter, what a card shows of the coven's label, kind and jars, and the edit
 // dialog `?edit=<id>` opens over the list on the coven's own entry, and the Annotate dialog `?annotate=<id>` over a compendium entry
-// the cupboard holds (M8.17).
+// the cupboard holds.
 
 const COVEN = {
   id: '5b8f4a10-2d6e-4c19-8a37-0e9d1c2b3a44',
@@ -31,7 +31,7 @@ vi.mock('@/lib/request-session', () => ({
   getSession: async () => session,
 }));
 
-// Which covens the viewer may add in, for the plus beside the details' pencil (M9.12); the rule
+// Which covens the viewer may add in, for the plus beside the details' pencil; the rule
 // itself is tests/app/plus-covens.test.ts's, so by default none, and the details draw no plus.
 const viewerIfSignedIn = vi.fn();
 const covenRolesIfSignedIn = vi.fn();
@@ -53,7 +53,7 @@ const workspaceIngredientFacets = vi.fn();
 const getIngredient = vi.fn();
 const heldCompendiumEntry = vi.fn();
 const ingredientDetailOf = vi.fn();
-// The viewer's own covens that hold the open entry, for the details' In Your Cupboards (M12.5).
+// The viewer's own covens that hold the open entry, for the details' In Your Cupboards.
 // Mocked so no real query runs here; which covens it admits is
 // tests/modules/ingredients/services/covens-holding.test.ts's.
 const covensHoldingEntry = vi.fn();
@@ -413,7 +413,7 @@ describe("the coven Ingredients page's details modal", () => {
   });
 
   it("gives a member Edit and the bin on the coven's own entry, Edit opening the edit modal over the details", async () => {
-    // The window carries its card's controls (the owner's call, 2026-10-20): the pencil, a link,
+    // The window carries its card's controls: the pencil, a link,
     // and the bin, a lone Delete, with no menu between them.
     await renderPage({ source: 'local', entry: 'a1' });
     const dialog = details('Testwort')!;
@@ -457,8 +457,8 @@ describe("the coven Ingredients page's details modal", () => {
   });
 
   it("draws neither the plus nor the check in the details of a held compendium entry, though another of the member's covens lacks it", async () => {
-    // The window carries its card's controls and a coven's card has no plus (the owner's call,
-    // 2026-10-20), so a coven's window has none; the compendium's and the admin's windows do.
+    // The window carries its card's controls and a coven's card has no plus, so a coven's window has
+    // none; the compendium's and the admin's windows do.
     const other = { id: 'w-other', slug: 'other-coven', name: 'Other Coven' };
     viewerIfSignedIn.mockResolvedValue({
       viewer: { name: 'Fixture Member', canCurate: false },

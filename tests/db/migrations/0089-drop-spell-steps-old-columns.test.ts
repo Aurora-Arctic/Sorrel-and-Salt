@@ -5,14 +5,12 @@ import { useTestDatabase } from '../../support/db/database';
 import { fromRoot } from '../../support/paths';
 import { FIXTURE_USERS } from '@/db/seed/standard';
 
-// A migration test, retired once `0089` is in production's journal. `0089` is
-// the contract half of M13.1's renames: it refills `position` from
-// `layer_order` on every step where they differ (the deploy before M13.1 kept
-// writing `layer_order` alone, a reorder included), sets `position` NOT NULL,
-// then drops the `spell_ingredients` view, `layer_order`, `instructions` and
-// the retired `note`. The test database is already migrated, so the columns
-// are gone; the refill is run on its own, over a scratch table built like the
-// old one, and the drops are proved by the catalogue.
+// A migration test, retired once `0089` is in production's journal. `0089` is the contract half of the
+// step column renames: it refills `position` from `layer_order` on every step where they differ (the
+// previous deploy kept writing `layer_order` alone, a reorder included), sets `position` NOT NULL, then
+// drops the `spell_ingredients` view, `layer_order`, `instructions` and the retired `note`. The test
+// database is already migrated, so the columns are gone; the refill is run on its own, over a scratch
+// table built like the old one, and the drops are proved by the catalogue.
 
 const FILE = fromRoot('src/db/migrations/0089_drop-spell-steps-old-columns.sql');
 

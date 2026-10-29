@@ -165,7 +165,7 @@ describe('suggestCelestialBodies', () => {
       ]);
     });
 
-    // MB.136: the scan reads entries, not lists, so a list's second entry is
+    // The scan reads entries, not lists, so a list's second entry is
     // as much in use as its first.
     it('reads every entry of a list, not only its first', async () => {
       await addIngredient({

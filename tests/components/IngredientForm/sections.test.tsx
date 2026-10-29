@@ -9,7 +9,7 @@ import { choose, press, type, typeIn } from '../../support/interact';
 import { mockGraphQLError } from '../../support/msw/graphql';
 import { ENTRY_ID, acceptUpdate, offerNothing } from '../../support/msw/ingredient-lookups';
 
-// The form's six sections as disclosures (MB.115, the owner's calls): a
+// The form's six sections as disclosures (the owner's calls): a
 // new entry opens with every one open, an edit with every one closed to its
 // summary line; each heading opens and closes its own; Open All / Close All
 // every one; and a save that finds an error in a closed section opens it so

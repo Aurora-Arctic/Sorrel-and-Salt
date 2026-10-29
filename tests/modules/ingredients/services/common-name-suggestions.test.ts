@@ -241,7 +241,7 @@ describe('suggestCommonNames', () => {
     });
   });
 
-  // M5.5: the admin's compendium form names no coven, so a null workspace
+  // The admin's compendium form names no coven, so a null workspace
   // offers the names in use in the compendium alone and asks for no membership.
   describe('without a coven', () => {
     it('offers the compendium’s names and no coven’s, to anyone signed in', async () => {

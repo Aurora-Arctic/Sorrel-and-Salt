@@ -18,7 +18,7 @@ import { mockGraphQLError, mockGraphQLMutation } from '../../support/msw/graphql
 const router = vi.hoisted(() => ({ push: vi.fn(), replace: vi.fn(), refresh: vi.fn() }));
 vi.mock('next/navigation', () => ({ useRouter: () => router }));
 
-// The override form of a compendium entry in a coven's cupboard (M12.17;
+// The override form of a compendium entry in a coven's cupboard (
 // claude-docs/components/cupboard-entry-form.md): a field is sent only when it
 // changed, null hands it back to the compendium, and an emptied list is sent as
 // an empty list, the coven having cleared it on purpose.
@@ -78,7 +78,7 @@ const save = () => screen.getByRole('button', { name: 'Save Annotation' });
 const label = () => screen.getByRole('textbox', { name: 'Label' });
 
 describe('CupboardEntryForm', () => {
-  // A tip only where it says a rule (the owner's call, 2026-10-20): the
+  // A tip only where it says a rule: the
   // label's uniqueness, and that an emptied list says the entry has none.
   it('gives Label and the four lists a tip, and Description and Safety Notes none', () => {
     renderForm();
