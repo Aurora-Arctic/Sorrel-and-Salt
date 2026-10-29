@@ -26,9 +26,17 @@ full screen, with nothing else on screen. `src/components/SpellPreview/`.
 - In full screen the browser takes the first Escape to leave full screen, so the pane closes on
   `fullscreenchange` once it has been in full screen and is no longer. Close leaves full screen
   and closes.
-- The pane is unmounted on close, so the browser's own focus return never runs: Preview takes the
-  focus back with `preventScroll`. The page never navigates, so it keeps its scroll position.
+- The `<dialog>` stays in the page and is closed with `close()`, so the browser gives the focus back to
+  Preview itself, without scrolling. The page never navigates, so it keeps its scroll position.
 
-## Not built here
+## Keeping the screen awake (M13.13)
 
-The screen wake lock and its indicator are M13.13's.
+`useWakeLock` (`use-wake-lock.ts`) asks for a screen wake lock while the pane is open and releases it on close.
+
+- The Screen Wake Lock API is past the browser floor on some engines, so it sits behind an `in` check. Where
+  the browser lacks it, or refuses the request, the pane works and no sign shows.
+- The browser drops the lock when the tab is hidden, so it is asked for again when the tab is visible,
+  unless the person turned it off.
+- The Screen Awake button beside Close is the sign. It is pressed while the lock is held, and pressing it
+  releases the lock or asks again. A pane that is closed and opened again asks afresh.
+- A slow glow drifts behind the content. It stands still under reduced motion (the `reduced-motion` mixin).
