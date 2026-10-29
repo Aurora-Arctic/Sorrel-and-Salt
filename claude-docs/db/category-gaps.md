@@ -25,7 +25,7 @@ These supersede the "Proposed decision" column in the table below wherever they 
 - New categories, with a one-line description written in step 2b for the owner to review: Prophetic Dreams, Awareness (Mind & Spirit); Youth, Energy (Wellbeing); Security, Snake Repelling (Protection & Defense); Relationships (Love & Connection).
 - Dream(s) maps to Dream Work. Wishes maps to Manifestation.
 - These mappings stand: Psychism, Centering, Eloquence, Travel, Anti-Confusion, Popularity, Defense, Happiness, Employment, Loss/Sorrow.
-- Left off, each with an Edit Notes line: Image Magic, Flying, Changing Sex (Persimmon).
+- Left off, each with an Edit Notes line: Image Magic, Flying, Changing Sex (Persimmon), Elemental Power(s).
 - Shadow Work: no change.
 
 Answers to the sweep, 2026-10-29:
@@ -38,6 +38,18 @@ Answers to the sweep, 2026-10-29:
 - Every other row in both sweep tables, and the single-word mappings, stand as proposed. Attraction maps to Attraction. Friendship, Business, Reconciliation and Hex-Breaking exist in the 63, so "if seeded" no longer applies.
 - The left-off rows stay off.
 - Potency (7 cunningham-herbs entries) maps to Sex. Marital Happiness (sardonyx) maps to Love, Harmony and Happiness; Happiness maps to Joy under the standing mapping, so the entry gets Love, Harmony and Joy.
+
+Cross-check corrections, 2026-10-29:
+
+- Aster (Callistephus chinensis): Hex-Breaking removed, since Kynes's "hexes" belongs to the Wood Avens row. Consecration, Blessing, Focus and Negativity added, from Kynes's Aster row ("consecrate/bless", "focus", "negativity").
+- Avens (Geum urbanum): Hex-Breaking added, from Kynes "Wood Avens (Geum urbanum)".
+- Sea holly (Eryngium): Luck added. Cunningham prints "Traveler's Luck", which maps to Safe Travel and Luck.
+- Lapis lazuli: Joy added, from the cunningham-crystals Powers line (p. 107).
+- Antimony: Strength removed. Its Powers line prints only Protection.
+- Devil's shoestring: Kynes's Yucca entry matched only by common name, so everything resting on it alone was removed (the Yucca part of the locator and the description sentence naming Adam's needle) and nothing was added from it, Awareness included. The file's status is unchanged. Its Edit Notes record this.
+- Crystal varieties get their family section's Powers words only when that section names the variety. Black Tourmaline is named in TOURMALINE, Blue Lace Agate and Moss Agate in AGATE, Rose, Rutilated and Smoky Quartz in CRYSTAL, QUARTZ, and Ammonite in FOSSILS, so nothing was removed. Tourmalinated quartz has no file.
+- Aspen (Populus tremuloides): Cunningham's "Poplar" heading prints Populus tremuloides, so Wealth was added (Poplar: "Money").
+- Quassia (Quassia amara): Wealth added. The Kynes appendix heading "Prosperity/Money" counts.
 
 ## The Gaps
 

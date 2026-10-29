@@ -13,7 +13,6 @@ colours:
   - grey
 categories:
   - Protection
-  - Strength
 references:
   - source: cunningham-crystals
     locator: p. 152

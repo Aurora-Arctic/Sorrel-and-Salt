@@ -16,6 +16,7 @@ categories:
   - Love
   - Prosperity
   - Release
+  - Wealth
 references:
   - source: cunningham-herbs
     locator: under "Quassia"

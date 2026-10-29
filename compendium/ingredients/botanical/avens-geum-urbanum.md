@@ -36,6 +36,7 @@ categories:
   - Abundance
   - Protection
   - Banishing
+  - Hex-Breaking
 references:
   - source: cunningham-herbs
     locator: under "Avens"; p. 266

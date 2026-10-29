@@ -18,6 +18,7 @@ folkNames:
   - Popple
 categories:
   - Communication
+  - Wealth
   - Prosperity
   - Protection
 references:

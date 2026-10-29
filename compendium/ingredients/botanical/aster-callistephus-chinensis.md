@@ -27,7 +27,10 @@ categories:
   - Protection
   - Psychic Work
   - Truth
-  - Hex-Breaking
+  - Consecration
+  - Blessing
+  - Focus
+  - Negativity
 references:
   - source: cunningham-herbs
     locator: under "Aster"; p. 266

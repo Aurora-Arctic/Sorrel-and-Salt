@@ -17,6 +17,7 @@ categories:
   - Lust
   - Peace
   - Safe Travel
+  - Luck
 references:
   - source: cunningham-herbs
     locator: under "Eryngo"; p. 266
