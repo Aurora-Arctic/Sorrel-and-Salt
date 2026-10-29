@@ -1,0 +1,11 @@
+# Gathered for M14.29; the seed never reads this folder.
+entry: botanical/black-cohosh-actaea-racemosa
+status: approved
+listings:
+  - list: other
+    name: United Plant Savers Species At-Risk List
+    value: At-Risk
+    listedAs: 'Actaea racemosa'
+    nameBasis: stated
+    source: ups-species-at-risk
+    locator: under the heading "At-Risk", entry for Black Cohosh

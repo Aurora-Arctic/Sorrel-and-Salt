@@ -1,0 +1,11 @@
+# Gathered for M14.29; the seed never reads this folder.
+entry: botanical/ladys-slipper-cypripedium-parviflorum
+status: approved
+listings:
+  - list: other
+    name: United Plant Savers Species At-Risk List
+    value: Critical
+    listedAs: 'Cypripedium spp.'
+    nameBasis: stated
+    source: ups-species-at-risk
+    locator: under the heading "Critical", entry for Lady’s Slipper Orchid
