@@ -115,3 +115,7 @@ seedUpdate: 6ed15aba8751c7b2ca00af586fa95b9f8fef2f2907a34b9d6f7f1e5091a0aaf5
 # Marjoram
 
 Marjoram is a perennial herb or low shrub that does not stand much cold, with small, smooth, oval leaves, white, pink or purplish flowers, and a sweet flavour with notes of pine and citrus. It is native to Cyprus and the Mediterranean, Turkey, western Asia, the Arabian Peninsula and the Levant, and may have reached the British Isles in the Middle Ages. Its leaves, fresh or dried, season soups, stews, sausages and blends such as herbes de Provence and za'atar, and the flowering tops are distilled for an essential oil. The Greeks believed Aphrodite created it, the Romans called it the herb of happiness, Greek brides wore garlands of it, and marjoram growing on a grave was taken as a sign that the dead had found happiness. Its scent was once highly valued: it was put in nosegays, sweet bags and washing waters and used as a strewing herb, and in Germany it was hung over the door to keep witchcraft, ghosts and goblins out of the house. In magical practice it is added to food to strengthen love, carried or set in every room for protection, grown in the garden against evil, and given to a downcast person to bring happiness, and the dried herb sprinkled at the corners of a house is said to bring security.
+
+#### Edit Notes for Claude
+
+- Deity gap: Kupala (Kynes's Plants, under "Oregano and Marjoram"), not in the vocabulary after M14.15: Modern scholars deny that Kupala was an ancient Slavic deity, so it is left out.

@@ -25,6 +25,7 @@ deities:
   - Hecate
   - Shiva
   - Thor
+  - Medea
 categories:
   - Protection
   - Peace

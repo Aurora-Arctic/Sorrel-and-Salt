@@ -12,6 +12,8 @@ deities:
   - Cernunnos
   - Osiris
   - Pan
+  - Wepwawet
+  - Yama
 categories:
   - Protection
   - Banishing
@@ -87,8 +89,4 @@ Does kynes-plants under "Tamarisk", cited on the entry, describe the genus Tamar
 
 #### Edit Notes for Claude
 
-- Deity gap: Anu (Cunningham, under "Tamarisk"; Kynes, under "Tamarisk"), not in the vocabulary; link once M14.15 adds it.
-
-- Deity gap: Wepwawet (Kynes, under "Tamarisk"), not in the vocabulary; link once M14.15 adds it.
-
-- Deity gap: Yama (Kynes, under "Tamarisk"), not in the vocabulary; link once M14.15 adds it.
+- Deity gap: Anu (Cunningham, under "Tamarisk"; Kynes, under "Tamarisk"), not in the vocabulary after M14.15: Anu is the Mesopotamian sky god, and is also given as another name of the Irish Danu; left out until the owner chooses.

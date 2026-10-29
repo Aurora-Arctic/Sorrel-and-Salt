@@ -17,6 +17,7 @@ deities:
   - Hina
   - Kuan Yin
   - Thoth
+  - Izanami
 categories:
   - Protection
   - Hex-Breaking
@@ -69,7 +70,7 @@ variants:
         nameBasis: unaudited
         supports:
           - form
-seedUpdate: c31459cc204baa0425b8667d50d994194c39b51a5511e95f4f556ab8e43798f5
+seedUpdate: 430a747e1cbe0fc5d51f1a4f4781998766b2628d3f98a975304d338c6fe68490
 ---
 
 # Bamboo

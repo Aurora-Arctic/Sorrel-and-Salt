@@ -31,6 +31,7 @@ deities:
   - Dionysus
   - Hades
   - Persephone
+  - Moirai
 categories:
   - Love
   - Fertility
@@ -127,7 +128,7 @@ variants:
           - form
           - safetyNotes
           - toxic
-seedUpdate: 716362fedfec5f73b481e528c9805fc03fd2a54a0b30bc4b02ad225edce546d9
+seedUpdate: 99c32d9ae31e3d640eaba6923fe5f92a99dc6c38fad43ca5b19cb0303f69efa9
 ---
 
 # Daffodil

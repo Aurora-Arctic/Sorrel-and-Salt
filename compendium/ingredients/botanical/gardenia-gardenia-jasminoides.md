@@ -17,6 +17,7 @@ deities:
   - Diana
   - Isis
   - Selene
+  - Luna
 categories:
   - Love
   - Peace
@@ -105,7 +106,7 @@ variants:
         nameBasis: unaudited
         supports:
           - form
-seedUpdate: 9e1d410327953359f46f0219051303a8e1feef52507910f61b147e0ef4df4894
+seedUpdate: 1cd7a377f1dd53846f19ca42f7560ea207031c21abf6ed25b0a5324b25ccaf08
 ---
 
 # Gardenia

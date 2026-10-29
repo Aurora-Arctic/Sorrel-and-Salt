@@ -23,6 +23,7 @@ deities:
   - Juno
   - Pluto
   - Poseidon
+  - Hercules
 categories:
   - Lust
   - Psychic Work
@@ -105,7 +106,3 @@ Celery is a plant of the carrot family grown as a vegetable, and its seeds are t
 <!-- audit:kynes-plants:Celery -->
 
 Does kynes-plants under "Celery", cited on the entry, describe Apium graveolens alone? The heading pools garden celery (A. graveolens var. dulce) with wild celery (A. graveolens, also marsh parsley and smallage), and the powers are not split between them. Settle it as `stated` or `resolved` from the source, or replace the citation.
-
-#### Edit Notes for Claude
-
-Deity gap: Hercules (Kynes, under "Celery"), not in the vocabulary; link once M14.15 adds it.

@@ -27,6 +27,9 @@ deities:
   - Brigid
   - Dagda
   - Loki
+  - Banba
+  - Macha
+  - Ran
 categories:
   - Protection
   - Banishing
@@ -176,7 +179,7 @@ variants:
         supports:
           - form
           - description
-seedUpdate: 89e95793aa50569be0a231d6d3e21cce5cc9c9650c2e5bd9132c9a7b12ccc2e2
+seedUpdate: a0d8df5f4494e12a5ccb1c38222ef8e1bc51fac8feb6040521fd989fa706cd0c
 ---
 
 # Blackthorn

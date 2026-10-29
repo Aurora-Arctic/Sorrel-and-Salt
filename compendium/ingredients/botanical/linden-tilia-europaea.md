@@ -165,3 +165,7 @@ seedUpdate: 37390a7efa4eb83081a17c0af7ed070c6e1cc1a5b685baceb979f363465b2135
 # Linden
 
 The common lime or European linden is a natural hybrid of the small-leaved and large-leaved limes, growing wild at scattered places in Europe wherever both parents are native. It is a big deciduous tree, fifteen to fifty metres tall, often with burrs and a thicket of shoots at its foot, heart-shaped leaves, and fragrant clusters of four to ten flowers in early summer, each cluster hung from a yellow-green leafy bract and worked by bees. Cheap to raise by layering, it is the commonest lime of town avenues and streets, though it drips aphid honeydew on whatever stands below. Its flowers make a mildly relaxing tea, and its leaves, stalks removed, can be eaten raw. It is no kin to the citrus lime. The Greeks and Romans held the linden sacred, Scythian soothsayers stood beneath it to prophesy, and in medieval France couples made their marriage vows under it. In Germany witches were said to meet beneath lindens on Walpurgis, yet linden branches were hung to keep them from houses, and in Poland a piece of the bark guarded against magic and witches. In magical practice branches are hung over the door for protection, the flowers and leaves go into love spells, and linden mixed with lavender fills pillows to bring sleep.
+
+#### Edit Notes for Claude
+
+- Deity gap: Philyra (Kynes's Plants, under "Linden"), not in the vocabulary after M14.15: Philyra has no page of her own, only a disambiguation page, so no source read fixes who she is.

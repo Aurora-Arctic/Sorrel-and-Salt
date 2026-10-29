@@ -512,3 +512,46 @@ Each name below is a slur. It was left out of the entry's `folkNames` on purpose
 - Pennyroyal: "Squaw Mint", printed by Cunningham under "Pennyroyal".
 - Spurge: "madwoman's milk", printed by Kynes under "Spurge" (as a folk name of sun spurge).
 - Wintergreen: "squaw vine", printed by the Wikipedia revision the entry cites (oldid 1376725677).
+
+## The deity and tradition vocabulary (M14.15)
+
+M14.15 widened `src/db/seed/deities.ts` from the M14.15 list in `claude-docs/db/compendium-seed/candidates.md` and from every "Deity gap" note in `compendium/ingredients/`. What it added is argued in `claude-docs/db/deity-vocabulary-seed.md`. This section is what it left out, with the reason. A note for a deity left out stays in its entry file under "Edit Notes for Claude", with the same reason.
+
+### Deities and figures left out of the vocabulary
+
+- Heme: a molecule, not a deity.
+- Rowen: a village, not a deity.
+- Dianus: a planthopper on Wikipedia; no deity page of the name was found.
+- Nanna: a disambiguation page (Norse and Sumerian figures); the note does not say which.
+- Carna: a Roman goddess some sources conflate with Cardea; the note does not say which it means.
+- Philyra: a disambiguation page; no source read fixes who she is.
+- Padma: Sanskrit for lotus, or a river; no deity page was found.
+- Anu: the Mesopotamian sky god, and also given as another name of the Irish Danu; the owner chooses.
+- Mara: a demon in Buddhism and a sea deity elsewhere; the note does not say which.
+- Marian: the note may mean the Virgin Mary, whom the vocabulary leaves out.
+- The Great Spirit: a term used across many peoples, so it belongs to no one tradition.
+- Erato, Phoebe, Althea: the note does not say which figure of the name it means.
+- Belinus and Bilé: legendary kings (of Britain, and in the Lebor Gabála), not deities.
+- Kupala: modern scholars deny that Kupala was an ancient Slavic deity.
+- Hoenin and Lodr: reading them as the Norse Hœnir and Lóðurr is an inference the notes do not make.
+- San Ku Fu Jen: no Wikipedia page or other open source was found.
+- The Furies: the Roman name of the Erinyes; the Erinyes row names the Eumenides only.
+- Irene: only a given name in the source read; the goddess is Eirene.
+
+### Traditions held for the owner
+
+These pairs name one tradition twice. Nothing is written for either name until the owner chooses (see the M14.15 report to the owner). Navajo and Diné, held here first, were merged on the owner's say-so on 2026-10-29 into one tradition, Navajo.
+
+- Traditional Korean medicine and Korean traditional medicine
+- Tibetan medicine, Tibetan folk medicine and Sowa-Rigpa
+- Traditional Chinese medicine and Chinese herbology
+
+These are also unwritten, for the reasons given:
+
+- Iroquois and Haudenosaunee; Dene and Athabaskan; Algonquian peoples; Anishinaabe: one name or a family of peoples, to be chosen by the owner.
+- Chinese, Palauan, Mouride brotherhood: Chinese is a nationality; Wikipedia has no page of its own for the Palauans; the Mouride brotherhood needs the owner's call.
+- Daoism, Chinese Buddhism, Japanese Buddhism, Shinto, Nahua and Mexica: the vocabulary already holds Taoist, Chinese Buddhist, Japanese and Aztec for them.
+
+### Traditions left out because they are not a people or a religion
+
+A tradition is a people or a religion. These are medical systems, practices, regions or nationalities: Ayurveda, Siddha, Unani, Sinhala folk medicine, Traditional Chinese medicine, Tibetan medicine, Traditional Mongolian medicine, Kampo, Traditional Korean medicine, Japanese incense, Chinese incense, African traditional medicine, Zimbabwean traditional medicine, West African and Central African traditional medicine, South African traditional medicine, Central African ordeal practice, East African animist practice, the Middle Eastern, Arabian, Arabic, Iranian, Iraqi, Jordanian, Lebanese, Moroccan, Saudi, Turkish, Yemeni, Omani and Emirati medicine and culinary entries, and the nationalities and regions Filipino, Vietnamese, Cambodian, Thai, Malaysian, Indonesian, Southeast Asian and Pacific Islander.

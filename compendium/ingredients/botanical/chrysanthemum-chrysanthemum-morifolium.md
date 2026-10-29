@@ -20,6 +20,7 @@ deities:
   - Apollo
   - Athena
   - Hecate
+  - Medea
 categories:
   - Protection
   - Home Blessing
@@ -110,7 +111,3 @@ Does cunningham-herbs under "Chrysanthemum", cited on the entry, describe Chrysa
 <!-- audit:kynes-plants:Chrysanthemum -->
 
 Does kynes-plants under "Chrysanthemum", cited on the entry, describe Chrysanthemum morifolium alone? The heading pools the common chrysanthemum (C. morifolium) with the garland chrysanthemum (Glebionis coronaria), and the powers and deities are not split between them. Settle it as `stated` or `resolved` from the source, or replace the citation.
-
-#### Edit Notes for Claude
-
-Deity gap: Medea (Kynes, under "Chrysanthemum"), not in the vocabulary; link once M14.15 adds it.

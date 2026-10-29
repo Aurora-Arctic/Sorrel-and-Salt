@@ -21,6 +21,9 @@ deities:
   - Pluto
   - Selene
   - Zeus
+  - Brahma
+  - Cronus
+  - Luna
 categories:
   - Ancestor Work
   - Divination
@@ -76,11 +79,3 @@ The black poplar is a large deciduous tree of the willow family, native to Europ
 <!-- audit:kynes-plants:Poplar -->
 
 Does kynes-plants under "Poplar", cited on the entry and the Bark and Bud, describe Populus nigra alone? Kynes heads black poplar (Populus nigra) and white poplar (P. alba) together, and labels a few powers and the Moon for one tree only, so her element, planets, deities, powers, lore and available forms may belong to either. Settle it as `stated` or `resolved` from the source, or replace the citation.
-
-#### Edit Notes for Claude
-
-Deity gap: Brahma (Kynes, under "Poplar"), not in the vocabulary; link once M14.15 adds it.
-
-Deity gap: Cronus (Kynes, under "Poplar"), not in the vocabulary; link once M14.15 adds it.
-
-Deity gap: Luna (Kynes, under "Poplar"), not in the vocabulary; link once M14.15 adds it.

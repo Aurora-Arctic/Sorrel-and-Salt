@@ -27,6 +27,7 @@ deities:
   - Minerva
   - Pan
   - Venus
+  - Cailleach
 categories:
   - Banishing
   - Clarity

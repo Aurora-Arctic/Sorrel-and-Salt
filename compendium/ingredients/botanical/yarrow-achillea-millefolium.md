@@ -54,6 +54,7 @@ folkNames:
   - Woundwort
 deities:
   - Cernunnos
+  - Achilles
 categories:
   - Courage
   - Love
@@ -138,7 +139,7 @@ variants:
         nameBasis: unaudited
         supports:
           - safetyNotes
-seedUpdate: 781addf03f74a0a273eb963762e6f7eabb6d11702fd8f2df8af8b843a0d2d565
+seedUpdate: df09e61e5bc8e403247ba180490f8fc0378eb4f0252b7d599344d08398a2c3fb
 ---
 
 # Yarrow

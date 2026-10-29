@@ -146,3 +146,7 @@ Marshmallow is a herbaceous perennial of the mallow family, native to Europe, we
 <!-- audit:kynes-plants:Mallow -->
 
 Does kynes-plants under "Mallow", cited on the entry, the Root, the Leaf, the Flower, describe Althaea officinalis? It may mean Malva sylvestris instead. The audit found: "Mallow" is the name of ingredients/botanical/mallow-malva-sylvestris.md (Malva sylvestris). "Mallow" prints no formal name. Settle it as `stated` or `resolved` from the source, or replace the citation.
+
+#### Edit Notes for Claude
+
+- Deity gap: Althea (Kynes's Plants, under "Mallow"), not in the vocabulary after M14.15: The source does not say which Althea it means.

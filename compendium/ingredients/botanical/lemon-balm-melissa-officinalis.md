@@ -139,3 +139,7 @@ seedUpdate: 53eb90bea6be73430da9a829ebe25859082693c724bb9594e6d8fb6967a1ce9f
 # Lemon Balm
 
 Lemon balm is a bushy perennial of the mint family, Lamiaceae, growing up to a metre tall, with soft, hairy, heart-shaped leaves that smell gently of lemon and small white or pale pink flowers in summer. It is native to south-central Europe, the Mediterranean, Central Asia and Iran, and has naturalised widely. Its genus name is the Greek word for honey bee, after the bees its flowers draw; Gerard held that balm rubbed over a hive keeps the bees there and brings others, and Cunningham repeats the advice. Pliny and Dioscorides both wrote of it as a medicine, the Tudors strewed its leaves over their floors, and it later went into Carmelite water and balm wine. Today it flavours herbal teas and ice cream. Kynes notes the tradition that it was among the mints taken by the oracle priestesses at Delphi, and that in medieval France and Germany it was worn as an amulet to make a person friendly. Aubrey’s tale, retold by Northcote, has the Wandering Jew curing a consumptive Staffordshire cottager with three balm leaves steeped in small beer. In magic it serves love, healing and success: Cunningham passes on an Arabian practice of steeping it in wine to share with a friend, carries it to find love, and adds it to healing incenses and sachets.
+
+#### Edit Notes for Claude
+
+- Deity gap: Kupala (Kynes's Plants, under "Lemon Balm"), not in the vocabulary after M14.15: Modern scholars deny that Kupala was an ancient Slavic deity, so it is left out.

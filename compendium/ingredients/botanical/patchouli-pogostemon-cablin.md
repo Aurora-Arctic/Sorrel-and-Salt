@@ -29,6 +29,8 @@ deities:
   - Pan
   - Shiva
   - Vishnu
+  - Buddha
+  - Modron
 categories:
   - Prosperity
   - Fertility
@@ -112,9 +114,3 @@ variants:
 # Patchouli
 
 Patchouli is a bushy perennial herb of the mint family, native to the island region of Southeast Asia, and grown for its fragrant essential oil. Wikipedia says over 90 per cent of the world's patchouli oil comes from Indonesia. Cunningham calls it feminine, with Saturn and earth, and gives the powers of money, fertility and lust. He says it is sprinkled on money, kept in purses and placed around green candles, and that it can stand in for graveyard dust. Kynes gives it air and earth, the deities Aphrodite, Athena, Buddha, Gaia, Modron, Pan, Shiva and Vishnu, and powers that include breaking hexes, banishing and spirit work. She notes that Buddhist monks used the leaves for a purifying bath and to wash statues of the Buddha. She cautions that patchouli can be toxic if ingested.
-
-#### Edit Notes for Claude
-
-Deity gap: Buddha (Kynes, under "Patchouli"), not in the vocabulary; link once M14.15 adds it.
-
-Deity gap: Modron (Kynes, under "Patchouli"), not in the vocabulary; link once M14.15 adds it.

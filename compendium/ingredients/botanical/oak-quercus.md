@@ -37,6 +37,7 @@ deities:
   - Thor
   - Zeus
   - Baldur
+  - Don
 categories:
   - Protection
   - Healing
@@ -131,12 +132,10 @@ Does ahpa-safety under "Quercus spp.", cited on the entry and the Bark, describe
 
 #### Edit Notes for Claude
 
-Deity gap: Dianus (Cunningham, under "Oak"), not in the vocabulary; link once M14.15 adds it.
+Deity gap: Dianus (Cunningham, under "Oak"), not in the vocabulary after M14.15: Dianus is a planthopper on Wikipedia; no deity page of this name was found.
 
-Deity gap: Heme (Cunningham, under "Oak"), not in the vocabulary; link once M14.15 adds it.
+Deity gap: Heme (Cunningham, under "Oak"), not in the vocabulary after M14.15: Heme is a molecule, not a deity; the note is kept so the entry can be re-read.
 
-Deity gap: Erato (Cunningham, under "Oak"), not in the vocabulary; link once M14.15 adds it.
+Deity gap: Erato (Cunningham, under "Oak"), not in the vocabulary after M14.15: The source does not say whether it means the Muse or another figure of that name.
 
-Deity gap: Bilé (Kynes, under "Oak"), not in the vocabulary; link once M14.15 adds it.
-
-Deity gap: Dôn (Kynes, under "Oak"), not in the vocabulary; link once M14.15 adds it.
+Deity gap: Bilé (Kynes, under "Oak"), not in the vocabulary after M14.15: Bile is a legendary king in the Lebor Gabala, not a deity.
