@@ -91,3 +91,24 @@ genuinely close, the group headers and the words themselves carry it.
 test that parsed DESIGN.md to compare them, since a test of a doc's wording
 proves no behaviour. `forms.test.ts` keeps what a re-run leaves of an admin's
 edits.
+
+## Form value service details
+
+`src/modules/vocabulary/services/ingredient-form-values.ts` holds the curated form vocabulary: public reads, and writes for a curator or an admin alone.
+
+- A compendium entry's forms are its variants, each a pick, so a form a live entry's variant picked holds: its delete is refused (the message names the entries) and its rename is carried onto every such variant's `form` text in the same write. A form is no part of an entry's identity or address, so a rename moves no slug and writes no retirement. A change of group alone rewrites no variant, since a variant holds the form's name and not its group.
+- A form's slug is its name and its group's, so a collision is cured by changing either. A rewrite leaves `seedKey` as it was, so a renamed seeded row is still the seed's.
+- A coven's ingredient never holds a form and is never rewritten: what it picked stays, and an admin writes nothing of a coven's. Deleting a form moves its text into that coven's in-use values.
+- The entries are read before the delete's transaction, so an entry picking the form in the instant between is left holding a deleted one, which reads as no pick.
+- A blank list query is no query, and a group id that is not a uuid names no group, so lists nothing. The finder decides what counts as curated: a live form under a live group. The input's group is checked live, since a foreign key admits a retired one.
+- A rename is refused, on `name`, when it would give a live compendium entry two forms of one name (`ingredient_variants_form_unique` would refuse it), naming each such entry. A change of case finds nothing, since the variant renamed is excepted. The check reads before the write and again after one the index refused, since two admins can race; then anything but the variant index passes through untouched, and a collision the second read cannot place is refused in general terms.
+
+## Form group service details
+
+`src/modules/vocabulary/services/ingredient-form-groups.ts` holds the ingredient form groups: public reads, and writes for a curator or an admin alone (claude-docs/design-decisions/m5.6b-admin-groups.md).
+
+- A form's slug is its name and its group's. A rename therefore moves every live form's slug under the group, and a delete first moves its live forms to the group the admin names (`moveTo`), each re-slugged there. A group with no live form needs no `moveTo`.
+- The forms stay curated either way, so no compendium entry's pick, nor a coven's, is orphaned, and no ingredient is rewritten: an ingredient holds a form's name, not its slug.
+- A rename or delete that would move a form onto another form's address is refused on `name` or `moveTo`, naming both. A rewrite leaves `seedKey` as it was, and clears the icon when the input carries none.
+- The forms are read before the transaction, so one added under the group in the instant between keeps the slug it was given (rename) or is left under a deleted group, which reads as uncurated (delete).
+- Written whole, an input without an icon clears the one held: GraphQL's `definedArgs` hands `icon: null` over as absent, and absent is how it clears.

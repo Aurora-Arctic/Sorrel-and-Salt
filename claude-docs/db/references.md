@@ -422,3 +422,13 @@ stored: a link says which work supports the row, and the entry file's
 fields each source gave. The links are written once, with the entry, as everything beneath an
 entry is ([`compendium-seed/README.md`](compendium-seed/README.md), "Write-once,
 and how a correction lands").
+
+## Reference service details
+
+`src/modules/ingredients/services/references.ts` writes and reads references, kept once in their tier and linked from every row they support.
+
+- Two tiers, as ingredients are: a null `workspaceId` is the compendium's, written under the `Curator` proof alone, and a coven's is written under its `Membership`, whoever links it. A member who cites a compendium reference reads it and cannot change it. Nothing deletes one in v1.
+- An update replaces the row rather than merging into it, so every optional field left out is cleared; the edit reaches every row citing the reference, which is the point of keeping a source once. A coven's reference is in no cached read; the compendium-tier write revalidates the `compendium` tag like every admin mutation.
+- Reading one by id returns the compendium's without a coven, and with one that coven's own or the compendium's, never another coven's, whose existence is private. The tiers are the picker's, read under the same `ingredient: ['read']`, so it returns no row the picker would not offer.
+- The picker matches authors, title and container, best match first. A blank query, or one under the compendium search's `MIN_QUERY_LENGTH`, offers all by title. Without a coven it offers the compendium's alone, which is all a compendium entry may cite.
+- An id that is not a uuid names nothing and would be a driver error at the comparison.

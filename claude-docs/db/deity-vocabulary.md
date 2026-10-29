@@ -183,3 +183,13 @@ same deity, such as Woden for Odin. They are rows of `deity_other_names`
 - The linking entries are read before the delete's transaction, so an entry linking the deity in the instant between is left holding a deleted one, which reads as its name.
 - The list reads treat a blank query as no query, and a tradition id that is not a uuid names no tradition, so lists nothing.
 - Other names: each is refused if the list repeats it or another live deity of the tradition holds it; the refusal sits on the name's row in the list sent, so a blank row still counts. Names are compared as written, so a change of case is a new name, and a dropped name is soft-deleted before a new one is written so the per-deity index never sees both.
+
+## Deity tradition service details
+
+`src/modules/vocabulary/services/deity-traditions.ts` holds the deity traditions, in the form groups' shape: public reads, and writes for a curator or an admin alone (claude-docs/design-decisions/mb.132-admin-deities.md).
+
+- A deity's slug is its name and its tradition's. A rename therefore moves every live deity's slug under the tradition, and a delete first moves its live deities to the tradition the admin names (`moveTo`), each re-slugged there. A tradition with no live deity needs no `moveTo`.
+- The deities stay curated either way, so neither a compendium entry's pick nor a coven's is orphaned, and no ingredient is rewritten: a link holds a deity's name and id, not its slug or its tradition.
+- A rename or delete that would move a deity onto another deity's address is refused on `name` or `moveTo`, naming both. A rewrite leaves `seedKey` as it was.
+- The deities are read before the transaction, so one added under the tradition in the instant between keeps the slug it was given (rename) or is left under a deleted tradition, which reads as uncurated (delete).
+- The admin's list narrows the traditions by a name fragment; every other reader passes no filter.
