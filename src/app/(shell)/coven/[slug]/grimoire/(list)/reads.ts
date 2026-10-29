@@ -19,6 +19,7 @@ import {
 import type { SpellStatus } from '@/modules/grimoire';
 import { displayNamesOf } from '@/modules/identity';
 import { readRecipeOf } from '../recipe-read';
+import { readStepSuppliesOf } from '../[id]/recipe-supply';
 import type { SpellDialogSpell } from '@/components/SpellBuilder/types';
 
 // The read a grimoire tab makes (M10.11), twin of the Ingredients page's `reads.ts`. The
@@ -191,7 +192,13 @@ export async function readLookedSpell(workspaceId: string, lookHref: Route, id: 
   const session = await requireSession();
   try {
     const spell = await readSpell(session, workspaceId, id);
-    return { spell, recipe: await readRecipeOf(session, spell, lookHref) };
+    const recipe = await readRecipeOf(session, spell, lookHref);
+    // The modal has no side column, so each ingredient step carries its stock verdict itself.
+    const supplies = await readStepSuppliesOf(session, workspaceId, recipe.views);
+    const steps = recipe.steps.map((step) =>
+      step.kind === 'ingredient' ? { ...step, supply: supplies.get(step.id) ?? null } : step,
+    );
+    return { spell, recipe: { ...recipe, steps } };
   } catch (error) {
     if (error instanceof NotFound || error instanceof Forbidden) return undefined;
     return { failed: true as const };

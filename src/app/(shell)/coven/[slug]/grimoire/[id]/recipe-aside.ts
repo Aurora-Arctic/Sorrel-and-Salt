@@ -11,6 +11,7 @@ import type { Session } from '@/lib/session';
 import type { SpellStepView } from '@/modules/grimoire';
 import { categoriesOf, categoriesOfVariants, stockOf, variantsOf } from '@/modules/ingredients';
 import { entryHrefOf } from './recipe-steps';
+import { jarRowsOf } from './recipe-supply';
 
 // What the recipe page's side column reads (M13.21; the owner, 2026-10-29): the spell's
 // steps as the builder's Jar aside holds them, so In Coven Inventory and Category Match draw
@@ -84,19 +85,7 @@ export async function readRecipeAsideOf(
   const categoriesByVariant = new Map(
     variantRefs.map(({ id }, i) => [id, answered(formCategories[i]) ?? []]),
   );
-  // The coven's jars of each ingredient, as `jarOf` reads them from the builder's query: a
-  // jar's amounts are numeric strings in the row and numbers on the screen.
-  const jarsByIngredient = new Map(
-    ingredientRefs.map(({ id }, i) => [
-      id,
-      (answered(stock[i]) ?? []).map((jar) => ({
-        unit: jar.unit,
-        quantityOnHand: jar.quantityOnHand === null ? null : Number(jar.quantityOnHand),
-        lowStockThreshold: jar.lowStockThreshold === null ? null : Number(jar.lowStockThreshold),
-        variant: { id: jar.variantId },
-      })),
-    ]),
-  );
+  const jarsByIngredient = new Map(ingredientRefs.map(({ id }, i) => [id, jarRowsOf(stock[i])]));
   const named = ({ id, name }: { id: string; name: string }) => ({ id, name });
   const formsByIngredient = new Map(
     // Unread for a role that may not update stock, and withheld by the service for an ingredient

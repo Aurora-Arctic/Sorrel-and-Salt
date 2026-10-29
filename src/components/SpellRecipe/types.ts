@@ -7,6 +7,7 @@ import type { GroupColors } from '../../lib/types';
 import type { StockDialogProps } from '../StockDialog/types';
 import type { SafetyMarkProps } from '../SafetyNote/types';
 import type { SpellStatus, SpellVisibility } from '@/modules/grimoire';
+import type { VerdictKind } from '../SpellBuilder/verdict-mark';
 import type { IngredientRow } from '@/modules/ingredients';
 
 /** A step that does something in words: "Stir three times", with no ingredient. */
@@ -43,6 +44,11 @@ export interface IngredientRecipeStep {
   look: IngredientLook | null;
   /** The ingredient's and the laid form's safety, for the Toxic and Caution marks; null for a one-off. */
   safety: Pick<SafetyMarkProps, 'toxic' | 'safetyNotes' | 'variants'> | null;
+  /**
+   * The coven’s stock verdict on the step, as In Coven Inventory gives it: drawn in the row only
+   * where the recipe has no side column (the Quick Look modal, M13.21). Left out on the page.
+   */
+  supply?: VerdictKind | null;
   oneOff: boolean;
   /** The ingredient or its form has been deleted since; the step still says what went in. */
   deleted: boolean;

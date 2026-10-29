@@ -75,6 +75,13 @@ vi.mock('@/modules/identity', async (importOriginal) => ({
   displayNamesOf,
 }));
 
+// The coven’s jars, which the Quick Look’s stock marks read (M13.21).
+const stockOf = vi.fn();
+vi.mock('@/modules/ingredients', async (importOriginal) => ({
+  ...(await importOriginal<typeof import('@/modules/ingredients')>()),
+  stockOf,
+}));
+
 const EDITED_AT = new Date('2026-09-01T12:00:00.000Z');
 
 const { default: SpellsPage } = await import('@/app/(shell)/coven/[slug]/grimoire/(list)/page');
@@ -533,6 +540,8 @@ describe('Quick Look over a Grimoire tab', () => {
 
   beforeEach(() => {
     readSpell.mockResolvedValue(SPELL);
+    // No jar of anything, unless a test says otherwise.
+    stockOf.mockImplementation(async (_session, refs: unknown[]) => refs.map(() => []));
     stepsOfSpells.mockResolvedValue([[STEP]]);
   });
 
@@ -574,6 +583,63 @@ describe('Quick Look over a Grimoire tab', () => {
     );
     // The page's side column (In Coven Inventory, Category Match) is the page's alone (the owner, 2026-10-29).
     expect(within(dialog).queryByRole('region', { name: /Inventory|Category Match/ })).toBeNull();
+  });
+
+  describe('the step’s stock mark', () => {
+    const TESTWORT_ROOT = {
+      ...STEP,
+      body: null,
+      quantity: '2.000',
+      unit: 'g',
+      ingredientId: 'ing-1',
+      ingredient: {
+        id: 'ing-1',
+        name: 'Testwort',
+        canonicalName: null,
+        nomenclature: 'none',
+        toxic: false,
+        safetyNotes: null,
+        deleted: false,
+      },
+      variant: { id: 'v-1', form: 'root', toxic: false, safetyNotes: null, deleted: false },
+    };
+    const jar = (quantityOnHand: string) => [
+      [{ variantId: 'v-1', unit: 'g', quantityOnHand, lowStockThreshold: null }],
+    ];
+
+    beforeEach(() => {
+      as('viewer');
+      stepsOfSpells.mockResolvedValue([[TESTWORT_ROOT]]);
+    });
+
+    it('marks an ingredient step Out where the coven’s jar of its form is empty, read in the coven', async () => {
+      stockOf.mockResolvedValue(jar('0'));
+      await renderTab(SpellsPage, { spell: SPELL_ID });
+
+      expect(stockOf).toHaveBeenCalledWith(session, [
+        { ingredientId: 'ing-1', workspaceId: COVEN.id },
+      ]);
+      const dialog = screen.getByRole('dialog', { name: 'Fixture Working' });
+      expect(within(dialog).getByRole('button', { name: 'Out' })).toBeInTheDocument();
+    });
+
+    it('marks it Not Enough where the jar holds less than the step needs', async () => {
+      stockOf.mockResolvedValue(jar('1'));
+      await renderTab(SpellsPage, { spell: SPELL_ID });
+
+      const dialog = screen.getByRole('dialog', { name: 'Fixture Working' });
+      expect(within(dialog).getByRole('button', { name: 'Not Enough' })).toBeInTheDocument();
+    });
+
+    it('draws no mark where the jar holds enough', async () => {
+      stockOf.mockResolvedValue(jar('50'));
+      await renderTab(SpellsPage, { spell: SPELL_ID });
+
+      const dialog = screen.getByRole('dialog', { name: 'Fixture Working' });
+      expect(
+        within(dialog).queryByRole('button', { name: /^(Out|Not Enough|Low|Units Differ)$/ }),
+      ).toBeNull();
+    });
   });
 
   it.each(['owner', 'member', 'viewer'] as const)(

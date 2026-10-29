@@ -8,6 +8,7 @@ import MoonPhaseIcon from '../MoonPhaseIcon';
 import { SafetyMark } from '../SafetyNote';
 import { formLabel } from '../../modules/ingredients/validation/form-label';
 import { UNTITLED_SPELL } from '../SpellCard';
+import { VerdictMark } from '../SpellBuilder/verdict-mark';
 import type { IngredientRecipeStep, RecipeStep, SpellRecipeBodyProps } from './types';
 import './index.scss';
 
@@ -43,11 +44,15 @@ const Name = ({ step }: { step: IngredientRecipeStep }): ReactElement => (
   </>
 );
 
-/** The step's marks, at the row's end: Toxic or Caution from the ingredient, and the builder's One-Off. */
+/**
+ * The step's marks, at the row's end: Toxic or Caution from the ingredient, the coven's stock
+ * verdict where the recipe carries one (the Quick Look), and the builder's One-Off.
+ */
 const Marks = ({ step }: { step: IngredientRecipeStep }): ReactElement | null =>
-  step.safety || step.oneOff ? (
+  step.safety || step.supply || step.oneOff ? (
     <span className="spell-recipe__marks">
       {step.safety && <SafetyMark {...step.safety} />}
+      {step.supply && <VerdictMark kind={step.supply} />}
       {/* The builder's One-Off badge, with its tip, so the two read alike. */}
       {step.oneOff && <OneOffBadge className="spell-recipe__one-off" />}
     </span>
