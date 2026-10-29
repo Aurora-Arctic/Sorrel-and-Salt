@@ -168,7 +168,7 @@ variants:
         nameBasis: unaudited
         supports:
           - safetyNotes
-seedUpdate: 95ae77234bd858b545505fa5a02581bc24467d10bf711ec005cc83aac3c6fff7
+seedUpdate: 6cb9338f85d11d7265267f4b961ed50362b23c15405132133a3da9e4cc942ad4
 ---
 
 # Fig

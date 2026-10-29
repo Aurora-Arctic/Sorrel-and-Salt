@@ -59,7 +59,7 @@ variants:
           - form
           - description
           - colours
-seedUpdate: 28130514ceb56bfc439aa50bb3909408d9659e2ce7d28d5eec8b4fd1f0acedbb
+seedUpdate: a66c35d43f46f5772baed5a8330753988559b65b44851715c2ac6c9ed9b4c569
 ---
 
 # Globeflower

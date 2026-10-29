@@ -146,7 +146,7 @@ variants:
         supports:
           - form
           - description
-seedUpdate: 9717e9d99aa5ead82a17e3a7f629e813ef2bb96bfc7900304462465134bb43c2
+seedUpdate: c162d30f65b70443056d36b1866ee4982a69e8149817878504452591fac7759f
 ---
 
 # Evening Primrose

@@ -80,7 +80,7 @@ variants:
         supports:
           - form
           - description
-seedUpdate: f1fd4ad7815f5c9263c306bf8efe9fa7319fadeb32d208d8ccdf7bdba1410f2f
+seedUpdate: 3df3f502ff4cb77c733c5639b470f13b6932f130b14040fb511aa7b75d8be36e
 ---
 
 # Fairy Wand

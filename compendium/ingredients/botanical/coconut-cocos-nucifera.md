@@ -117,7 +117,7 @@ variants:
         supports:
           - form
           - description
-seedUpdate: a5a0006f939b8d0accf5874b24b5d9e39fbfec619544a896f1ca7a086cf7f058
+seedUpdate: e0c2e3ad8b3683662e7a815c722ac2685ecd631ba6e16db5778789878485a471
 ---
 
 # Coconut

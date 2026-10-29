@@ -101,7 +101,7 @@ variants:
         nameBasis: stated
         supports:
           - form
-seedUpdate: 3999f3cde64ab914fe97796482574bbd37e2f92a7f2b0b86ef574e43aabbaddc
+seedUpdate: ce88f1e81c7de42bcae1244bf7cccf503b4373bcb826200fe5f29776fba78198
 ---
 
 # Snowdrop

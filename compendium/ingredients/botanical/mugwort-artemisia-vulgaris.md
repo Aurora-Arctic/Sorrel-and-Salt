@@ -137,7 +137,7 @@ variants:
         nameBasis: unaudited
         supports:
           - safetyNotes
-seedUpdate: 8a88772d219630c44182e82f4b9662529b08fa7caac1991d66ef02e56cd68cd8
+seedUpdate: d9b0c79a5b6a12bffbe0ee91054ae95d6db74032a43ad84f1b8adc8bfd059623
 ---
 
 # Mugwort

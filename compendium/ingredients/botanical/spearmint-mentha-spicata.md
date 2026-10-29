@@ -63,6 +63,7 @@ variants:
           - form
           - safetyNotes
           - description
+seedUpdate: 8c4366a04a11762880e6e4321371e8a35c5fe3a491fcc020ca9c68159dc4d024
 ---
 
 # Spearmint

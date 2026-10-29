@@ -129,7 +129,7 @@ variants:
         nameBasis: unaudited
         supports:
           - safetyNotes
-seedUpdate: d59518f003a1bf8c8a260cbf85887b1ed0c6939026e81eb39f81641a417d0312
+seedUpdate: e91ad833e6a943cdae2956ea14c5fba31f65bc896d44fd7abf10133058dd2913
 ---
 
 # Meadowsweet

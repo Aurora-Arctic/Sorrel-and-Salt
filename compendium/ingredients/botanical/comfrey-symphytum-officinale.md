@@ -147,6 +147,7 @@ variants:
         supports:
           - form
           - description
+seedUpdate: d19078e5112945b3e7108596d958e4948dc111d7a407cce58a34228a70f08b7c
 ---
 
 # Comfrey

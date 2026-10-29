@@ -92,6 +92,7 @@ variants:
         supports:
           - form
           - safetyNotes
+seedUpdate: 9e0a94aa353c6d3d5620b48795fc323de3c938c902bfbd2bc0d495fd31dae023
 ---
 
 # Sunflower

@@ -121,6 +121,7 @@ variants:
         resolvedBy: wikipedia-solidago
         supports:
           - colours
+seedUpdate: 2e7d2d92900b8e0300ad0330d64562ae4240faeb77647137d6cac41d6905c943
 ---
 
 # Goldenrod

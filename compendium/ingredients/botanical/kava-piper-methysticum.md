@@ -108,6 +108,7 @@ variants:
         supports:
           - form
           - description
+seedUpdate: 81b767380a1ff8ebf74de0677ccba1f144891d7e04adca113f04d8047b317f9d
 ---
 
 # Kava

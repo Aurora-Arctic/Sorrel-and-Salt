@@ -127,7 +127,7 @@ variants:
         supports:
           - form
           - description
-seedUpdate: 330433f1032bfeda7a3d30736cf61329d275821abd18e73e0f3e2bdf2aada1f1
+seedUpdate: 69dfee512a34175eea3aad311fc765646595a49de561db94a4e7f061f568a518
 ---
 
 # Bearberry

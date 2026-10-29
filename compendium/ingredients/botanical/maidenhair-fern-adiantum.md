@@ -105,6 +105,7 @@ variants:
         supports:
           - form
           - description
+seedUpdate: 799e1ac7dacc1c772ef15f6205e490c192fa53851a49260d75f65e7a48971ff8
 ---
 
 # Maidenhair Fern

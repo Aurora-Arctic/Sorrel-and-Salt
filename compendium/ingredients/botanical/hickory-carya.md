@@ -90,6 +90,7 @@ variants:
         supports:
           - form
           - description
+seedUpdate: c46e3192253c6619c25f371157a7548e0adcb0a8b33151e10f07734cf80213fa
 ---
 
 # Hickory

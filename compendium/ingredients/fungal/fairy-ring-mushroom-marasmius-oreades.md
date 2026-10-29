@@ -64,6 +64,7 @@ variants:
         supports:
           - form
           - description
+seedUpdate: 1ead60f43b284fc568a915b438aea40801fae946bd543c5a4429c802f21f6b93
 ---
 
 # Fairy Ring Mushroom

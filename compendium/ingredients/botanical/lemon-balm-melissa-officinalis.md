@@ -140,7 +140,7 @@ variants:
         supports:
           - form
           - description
-seedUpdate: 53eb90bea6be73430da9a829ebe25859082693c724bb9594e6d8fb6967a1ce9f
+seedUpdate: 3eb784d9f6540ee9b1f4841f7620248db5dad260f7d27bfbf39724adead82745
 ---
 
 # Lemon Balm

@@ -117,6 +117,7 @@ variants:
         supports:
           - form
           - description
+seedUpdate: 62c0d52c73cb822112aaf2292ec93b56eaf719f25202a347f99d257e1318a351
 ---
 
 # Goldenseal

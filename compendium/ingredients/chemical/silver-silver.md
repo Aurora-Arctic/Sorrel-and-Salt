@@ -80,7 +80,7 @@ variants:
         supports:
           - form
           - description
-seedUpdate: 5ad80e05241dfefb26864352feef6d8baf9720fa94f1b41f333c8d2e9e3a2336
+seedUpdate: 5bcf50c443b5814b79608af9942a9967c59c1b02bf82f09469d13eed8c71f140
 ---
 
 # Silver

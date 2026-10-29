@@ -145,7 +145,7 @@ variants:
         supports:
           - form
           - description
-seedUpdate: c72705fd588928b333442f9d57daf5b76b4a37143b9cd7bf4164c7f9a925d341
+seedUpdate: ad0d5161d4663553a4b9165ae6b3678de0c8005a2091e154aa26adcd98bd42d3
 ---
 
 # Bistort

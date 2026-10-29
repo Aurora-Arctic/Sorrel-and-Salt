@@ -135,7 +135,7 @@ variants:
         supports:
           - form
           - description
-seedUpdate: 3e661f52c263a7afe467dd94597d0d383575ccb3133192241421de9b4d87ae9b
+seedUpdate: c8a0cd2fbb621829b724e819a385bb556b72b65d42d99348953468b44ff513e4
 ---
 
 # Aloe

@@ -58,7 +58,7 @@ variants:
         supports:
           - form
           - description
-seedUpdate: c2e578a2a6c9d55596b1f185b68decbde96e6c9aef3a6724b6afda3130af0df5
+seedUpdate: 512fb9bb62e53c0c3107b90fc4d6e1bfde71c3b627aaa12130ec3d4a1b65271a
 ---
 
 # Gold

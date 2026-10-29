@@ -139,6 +139,7 @@ variants:
         nameBasis: unaudited
         supports:
           - description
+seedUpdate: 633acc6e334e0ca10b29ff95ca3f4938d54e047b3754e94d22ce1832ae1c4e62
 ---
 
 # Alder

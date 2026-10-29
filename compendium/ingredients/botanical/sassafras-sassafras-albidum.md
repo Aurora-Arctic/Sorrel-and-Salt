@@ -136,7 +136,7 @@ variants:
         supports:
           - form
           - description
-seedUpdate: 4af72b08ebde428f53299e80cd8927f91c5e137d672ca85926f0f15c8239ad3e
+seedUpdate: 2c300459e9200feb15a2a5f1ed829efc3189d77c845184809644a55a8794a69a
 ---
 
 # Sassafras

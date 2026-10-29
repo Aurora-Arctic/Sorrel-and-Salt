@@ -81,7 +81,7 @@ variants:
         supports:
           - form
           - description
-seedUpdate: 6b832c11afc3761dad39e0f51d81ebbdaceff62501b4ee822cfee9a8e04af009
+seedUpdate: 876079a369d305314690594645d096938fd2f58f6acdd6b7e7f19c5dc4b33a8c
 ---
 
 # Sapphire

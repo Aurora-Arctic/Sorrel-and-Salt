@@ -101,7 +101,7 @@ variants:
         nameBasis: unaudited
         supports:
           - form
-seedUpdate: dbd05997dc7870269a55c950bf51f68bb0cb7de6b7d8a7460abe88ba7e6550d2
+seedUpdate: e7d1cfd5f1b60946415fe77041242a42f46470f79b140d834fff3189b28900b1
 ---
 
 # Figwort

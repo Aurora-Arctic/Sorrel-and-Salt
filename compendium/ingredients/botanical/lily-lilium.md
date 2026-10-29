@@ -131,7 +131,7 @@ variants:
         nameBasis: stated
         supports:
           - colours
-seedUpdate: a8aeb6ef72d5a74aa775b1680efe77ba3e39111f09231b07d32663ed87a5afec
+seedUpdate: ae13dde01eae4d04c63944903ee363f9ca2a1dc5cd4e004bdc4b7c16e4dd20c2
 ---
 
 # Lily

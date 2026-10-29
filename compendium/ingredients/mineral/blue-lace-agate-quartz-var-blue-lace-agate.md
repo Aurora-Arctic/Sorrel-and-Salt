@@ -44,7 +44,7 @@ variants:
         supports:
           - form
           - description
-seedUpdate: da731f575ef59626bb7dce194567ae1a2a2b142e00c4c0b529e4aecbed38b19d
+seedUpdate: d9abd70ca81fe2eb06b2557f1c849d8c265439a9572f4c4a9f2bce2d035f8106
 ---
 
 # Blue Lace Agate

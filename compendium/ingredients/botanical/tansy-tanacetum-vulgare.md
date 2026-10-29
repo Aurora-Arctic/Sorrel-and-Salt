@@ -92,6 +92,7 @@ variants:
           - safetyNotes
           - toxic
           - description
+seedUpdate: 7266bd28b6c0fd99bad832911aecc9af82419a929a0579b1195cca10f03408cc
 ---
 
 # Tansy

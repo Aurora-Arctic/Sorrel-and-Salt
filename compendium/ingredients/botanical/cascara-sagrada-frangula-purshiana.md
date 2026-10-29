@@ -63,6 +63,7 @@ variants:
         supports:
           - form
           - safetyNotes
+seedUpdate: a4bc3fb82cdbc376ffe2cc99a83fa545fd3c1ae4e9a94d0639c998e97cf8d6a4
 ---
 
 # Cascara Sagrada

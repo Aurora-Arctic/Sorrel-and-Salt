@@ -185,6 +185,7 @@ variants:
         supports:
           - form
           - description
+seedUpdate: dbd2c79ceb02ae6f946da3de8506fc460d5a1b77324ec1dede056cc27e7ae1c1
 ---
 
 # Lotus

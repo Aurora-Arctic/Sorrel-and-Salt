@@ -103,7 +103,7 @@ variants:
         supports:
           - form
           - description
-seedUpdate: 27683184fa14fbfd2592ce52342290059eb504c9dccbe708750f3880ac28c9f1
+seedUpdate: 0548f072799b82bb4ece213340f26e84050b5b92d25da8941e932dd3a33c7d58
 ---
 
 # Ague Root

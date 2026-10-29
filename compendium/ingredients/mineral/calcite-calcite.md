@@ -54,6 +54,7 @@ variants:
         nameBasis: stated
         supports:
           - form
+seedUpdate: 98e2689e8dc3840bd8aaef39200b283ccbdd20e2a17c75a3d51bb9fca46948bb
 ---
 
 # Calcite

@@ -199,6 +199,7 @@ variants:
           - form
           - description
           - categories
+seedUpdate: 5b87b90c5cc4e81ecbb70b3b4ad2fb182cc478c0bf6dbde4425ef261078238b9
 ---
 
 # Basil

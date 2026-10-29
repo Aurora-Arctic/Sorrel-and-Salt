@@ -127,7 +127,7 @@ variants:
         nameBasis: stated
         supports:
           - description
-seedUpdate: b9cba5d87d702a98f05e270d7a1033d4899a92a9862c3bddd306369b8cd15d49
+seedUpdate: d5de063cb5497eda6de1cb3af7da60e6ef1a6e68c8a419a2956480e0608bb534
 ---
 
 # Maize

@@ -118,6 +118,7 @@ variants:
         supports:
           - form
           - description
+seedUpdate: 9dc7091f9fbdf028f6ca8d91670f66b2eb31514284fff5603f053dde93ec8d43
 ---
 
 # Amaranth

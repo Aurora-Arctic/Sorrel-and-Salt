@@ -124,6 +124,7 @@ variants:
         nameBasis: stated
         supports:
           - description
+seedUpdate: 935142ee2c9ab05ea3f812800dde5fa315588ffe15f8f5466f78e432e726fa6a
 ---
 
 # Avens

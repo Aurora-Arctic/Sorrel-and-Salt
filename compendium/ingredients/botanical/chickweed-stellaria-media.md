@@ -101,6 +101,7 @@ variants:
         supports:
           - form
           - description
+seedUpdate: 6070fcdaa295eebd1ff91ebf1c91cd68be7b4e095262fae566b2c7425a7e67b2
 ---
 
 # Chickweed

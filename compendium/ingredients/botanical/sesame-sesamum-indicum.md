@@ -185,7 +185,7 @@ variants:
         supports:
           - form
           - description
-seedUpdate: 86717b578c1db6cfc9331804c5fe02522a0e94742394b2e46a64c250b0c19c5f
+seedUpdate: ed2b36e8f6b8c19537c48a368f324165a457646ad74559a24c865caffdf847a0
 ---
 
 # Sesame

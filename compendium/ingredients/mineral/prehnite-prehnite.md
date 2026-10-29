@@ -44,6 +44,7 @@ variants:
         nameBasis: stated
         supports:
           - form
+seedUpdate: f89b1e53e9e0984ebf51c51832d203a6869136d950967dbce5a8c94f293f8947
 ---
 
 # Prehnite

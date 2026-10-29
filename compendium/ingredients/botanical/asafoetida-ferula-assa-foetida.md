@@ -128,6 +128,7 @@ variants:
         supports:
           - form
           - description
+seedUpdate: 3abcb1518d5c7aefe0e90b87fbd2d1e229524d86cd670d4fed76fdfe2646cb81
 ---
 
 # Asafoetida

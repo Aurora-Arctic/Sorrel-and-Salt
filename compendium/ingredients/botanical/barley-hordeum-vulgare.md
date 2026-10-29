@@ -154,7 +154,7 @@ variants:
         supports:
           - form
           - description
-seedUpdate: bd2c6575cec1ed55b84d525130c6f73901ff35f0202227248f4336ee3ce1e421
+seedUpdate: 08a3322f2cfdc5a4540a22ea96f197ebe16edce95fd2dd13f4ffe8eb5f211816
 ---
 
 # Barley

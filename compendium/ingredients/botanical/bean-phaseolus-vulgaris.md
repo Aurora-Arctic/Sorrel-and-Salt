@@ -111,6 +111,7 @@ variants:
         nameBasis: stated
         supports:
           - form
+seedUpdate: 1f856cead6da24123d4049cde32a007ecc3c090a62f6e07bf3eec7b6f0bc20f8
 ---
 
 # Bean

@@ -98,6 +98,7 @@ variants:
         supports:
           - form
           - description
+seedUpdate: ffd987f521a78891b975fcab186277e1652d23d84b8995cd937aace75c46eab4
 ---
 
 # Edelweiss

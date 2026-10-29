@@ -107,6 +107,7 @@ variants:
         supports:
           - form
           - description
+seedUpdate: 075db17e105a9578b74e3fe849b1986ed93f3a39d413eef36cc1763a0ba0eaa0
 ---
 
 # Chicory

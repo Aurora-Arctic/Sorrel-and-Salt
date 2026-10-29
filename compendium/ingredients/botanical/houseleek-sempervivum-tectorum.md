@@ -81,6 +81,7 @@ variants:
         supports:
           - form
           - description
+seedUpdate: f9141c5a12fabafb84d90ac252ec090da1764636e73e2dc66e0921d3c373f7fb
 ---
 
 # Houseleek

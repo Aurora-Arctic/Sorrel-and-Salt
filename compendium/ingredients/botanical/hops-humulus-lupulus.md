@@ -86,6 +86,7 @@ variants:
         supports:
           - form
           - description
+seedUpdate: c14fbd602a34de2016c2fac9c439430940d7c1150af775184badbb338f3a143d
 ---
 
 # Hops

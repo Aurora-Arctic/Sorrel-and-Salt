@@ -112,7 +112,7 @@ variants:
           - form
           - description
           - categories
-seedUpdate: 2fb273ff9a7bffb41d384bf938606ea87c97cfb31a8317452d055e51b50767f7
+seedUpdate: 6b40de58e6c041c54bc1e2cadfc8c412c517d1ad061b05a3062db705ffcc874a
 ---
 
 # Yucca

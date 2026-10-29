@@ -50,6 +50,7 @@ variants:
         supports:
           - form
           - description
+seedUpdate: 9dd6ad0a19ff096c3b43656fbe7a3c5d2b718762d9b88cf30769312c73a66f1a
 ---
 
 # Irish Moss

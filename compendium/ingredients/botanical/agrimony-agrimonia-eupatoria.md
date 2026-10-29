@@ -126,7 +126,7 @@ variants:
           - form
           - description
           - categories
-seedUpdate: 38c79b7e9c600cc42ff68b94df8f60297efe691c328705c3cdb2e926b6c5ac03
+seedUpdate: 6aea69b51ab8f8300b37462b808dc5c035c692a762acb1923c51c08e669e30df
 ---
 
 # Agrimony

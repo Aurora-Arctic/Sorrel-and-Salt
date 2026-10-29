@@ -78,6 +78,7 @@ variants:
         supports:
           - form
           - description
+seedUpdate: 58396f17ad598dc7b20e365b9ca6091f7daddb87384521629e5ffe989c676d68
 ---
 
 # Dittany of Crete

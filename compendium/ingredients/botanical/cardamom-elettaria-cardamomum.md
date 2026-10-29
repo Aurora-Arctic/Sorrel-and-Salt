@@ -100,6 +100,7 @@ variants:
         supports:
           - form
           - description
+seedUpdate: cc62142e5da6433ce51d594c6002f0af9383c582601e42a5140275d2b0269276
 ---
 
 # Cardamom

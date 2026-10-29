@@ -78,7 +78,7 @@ variants:
         supports:
           - form
           - colours
-seedUpdate: 0ee649dc1fac8061ba8bee23e118014dc34d53bd82cb83dea636342ce0927022
+seedUpdate: e23f96479c33b4f50081035fa3f7bbba3b559e0b0ff1269bf9773ce2a964dc8a
 ---
 
 # Aster

@@ -131,6 +131,7 @@ variants:
           - form
           - description
           - safetyNotes
+seedUpdate: 8a18abd6cf45a3e60a71e4c6dfeb5fdcab5f397420d396bbe4fddd06e0af86a9
 ---
 
 # Coltsfoot

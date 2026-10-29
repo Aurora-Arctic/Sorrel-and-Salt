@@ -152,7 +152,7 @@ variants:
         supports:
           - form
           - description
-seedUpdate: f9885e8a3905c1ba77c4a912c47f6c0453ec9ff25893fcc2f98ea100690ffb59
+seedUpdate: 1677e801ab50ea89eb2d398a7075ffee84b5fba6b1ca0eda5b509bae2986d54e
 ---
 
 # Flax

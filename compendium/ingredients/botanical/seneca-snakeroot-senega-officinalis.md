@@ -66,7 +66,7 @@ variants:
         supports:
           - form
           - description
-seedUpdate: 403426c03042c84e94db88145fdd6c0e938b33285b0ed1d3fa1f94d70b55b9ea
+seedUpdate: 53f693cddd1612a11e48f964a4ff6add00b39446727f822e440fe41245b567dd
 ---
 
 # Seneca Snakeroot

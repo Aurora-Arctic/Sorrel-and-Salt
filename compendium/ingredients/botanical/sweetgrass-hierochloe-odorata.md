@@ -69,6 +69,7 @@ variants:
         supports:
           - form
           - description
+seedUpdate: 0f741ec81f741063b82fc194f5e7fc157ec31938d9cea7082160c2fcbf7364d6
 ---
 
 # Sweetgrass

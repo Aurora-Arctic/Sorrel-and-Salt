@@ -82,7 +82,7 @@ variants:
         supports:
           - form
           - description
-seedUpdate: 3addc98d3e8b9c261d8c3a10ba4c7d90352bd10f8fada6ff965b73a5a91f9ce6
+seedUpdate: c5525caa16bf284948007c77c5890292170418622e4891f4e105e61e8cfe69fe
 ---
 
 # Amethyst

@@ -76,6 +76,7 @@ variants:
         nameBasis: stated
         supports:
           - form
+seedUpdate: 3d38096e337107f976c03023ff81fb67426c46afdc7b6406480f6b958377b949
 ---
 
 # Turquoise

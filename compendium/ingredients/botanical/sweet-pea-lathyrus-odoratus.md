@@ -41,6 +41,7 @@ variants:
         supports:
           - form
           - description
+seedUpdate: a88888bd539f8cca9c5e4cc10ec71e07c290ec3b8abc1b17dbc783afcb61c260
 ---
 
 # Sweet Pea

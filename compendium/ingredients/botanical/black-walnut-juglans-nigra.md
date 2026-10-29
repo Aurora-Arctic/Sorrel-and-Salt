@@ -65,6 +65,7 @@ variants:
         nameBasis: stated
         supports:
           - form
+seedUpdate: a72f40319e5a0079f4446eecba79f9d29925867e538b4fcf22ac720e3c3c7d9c
 ---
 
 # Black Walnut

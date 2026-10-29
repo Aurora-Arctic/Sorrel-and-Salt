@@ -104,6 +104,7 @@ variants:
         supports:
           - form
           - description
+seedUpdate: aa8620580814b057e82c5782be20500f6133ce2e809fcb28ab8de996bcf51d7d
 ---
 
 # Corn Poppy

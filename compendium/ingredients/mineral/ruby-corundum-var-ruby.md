@@ -74,7 +74,7 @@ variants:
         nameBasis: unaudited
         supports:
           - description
-seedUpdate: 9a320585c54b7fb9f3a54eb9318c93330d3daaf895598dd9d1802219c67c5197
+seedUpdate: 3cca00647b17d201f85f38bec5226fb2814e9f7d5c2b9ff14877c8e426e24709
 ---
 
 # Ruby

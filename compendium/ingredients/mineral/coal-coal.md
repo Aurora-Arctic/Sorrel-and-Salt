@@ -41,6 +41,7 @@ variants:
         nameBasis: stated
         supports:
           - form
+seedUpdate: 68124c22ffa041eb491d6c20b72e3323a4e7d3d540e1aea8092d216959908f69
 ---
 
 # Coal

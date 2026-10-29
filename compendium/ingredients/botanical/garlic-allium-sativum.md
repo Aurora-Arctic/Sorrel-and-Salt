@@ -149,7 +149,7 @@ variants:
         nameBasis: stated
         supports:
           - form
-seedUpdate: d8b58852633097c8e8ec65bf97488275ec316fdcd3c9751063b98234aef9c7d3
+seedUpdate: 7012ad03ae10a65cd7f91f43adb2244727b0859495b9c07366248ceb0ec9cb31
 ---
 
 # Garlic

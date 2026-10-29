@@ -94,6 +94,7 @@ variants:
         supports:
           - form
           - description
+seedUpdate: 951cfe0d2c5beb62ad30cd18f16492f135200a9fa86ddb44113ef517b966ee10
 ---
 
 # Hyssop

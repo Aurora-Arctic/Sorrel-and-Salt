@@ -68,6 +68,7 @@ variants:
         supports:
           - form
           - description
+seedUpdate: dcc3f68049f6022f2468893233001ffd8585e6c8d6ed410b2cfac19f76c1a7b3
 ---
 
 # Hollyhock

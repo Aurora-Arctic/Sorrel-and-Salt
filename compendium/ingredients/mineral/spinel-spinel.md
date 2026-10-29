@@ -75,7 +75,7 @@ variants:
         supports:
           - form
           - description
-seedUpdate: e57437f49540b5a08497c2b18f2e7cba4736dc3a93a6b473d92f2aabc6ce24ac
+seedUpdate: 4d2b2709016ff743b964f010f79eec1fabf9adc26507b0eaffe43e58cb782e0a
 ---
 
 # Spinel

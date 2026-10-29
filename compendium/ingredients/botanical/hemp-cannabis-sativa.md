@@ -133,6 +133,7 @@ variants:
         supports:
           - form
           - description
+seedUpdate: 696de8e0c13ebec2248bebe878f38e50a1a55ea945149fac356de47b536e5bf8
 ---
 
 # Hemp

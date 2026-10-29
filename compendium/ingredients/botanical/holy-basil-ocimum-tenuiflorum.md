@@ -58,6 +58,7 @@ variants:
         supports:
           - form
           - description
+seedUpdate: 0a5f68c516fd0c0bbb8e059723c78cabed57ed423c44bc63b0de077d3e80531e
 ---
 
 # Holy Basil

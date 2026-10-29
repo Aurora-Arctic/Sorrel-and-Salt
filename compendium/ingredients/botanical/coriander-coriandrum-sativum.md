@@ -128,7 +128,7 @@ variants:
         supports:
           - form
           - description
-seedUpdate: cceeb3d6989182e29113e69c36429476489eef832619aa56309f3706d1b547ac
+seedUpdate: dc68a89000db1cc132ae32859d8a7849df0cdc557b4e665ffdb44061740a4fb4
 ---
 
 # Coriander

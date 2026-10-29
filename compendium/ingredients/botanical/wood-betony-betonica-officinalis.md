@@ -98,6 +98,7 @@ variants:
         supports:
           - form
           - description
+seedUpdate: bc7690b7656b743c574c8b1794f13e4a877ce0fe06bd2b8a25dbfb811baf8472
 ---
 
 # Wood Betony

@@ -117,7 +117,7 @@ variants:
         supports:
           - form
           - description
-seedUpdate: 1a0890fbb19089df6c78a7c90101c0e2914b880066f3c128146c41163439e98e
+seedUpdate: aaa86c495ef751fc7a494e3f490e4d37f605be1c9d70e7c0f1da4c4b3ac9a0fe
 ---
 
 # Bitter Orange

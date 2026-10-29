@@ -60,6 +60,7 @@ variants:
         supports:
           - form
           - description
+seedUpdate: 70e82d6ff22908a69ed06206b15f931d054fbf7062a8491fce645591e7ea73c3
 ---
 
 # Jojoba

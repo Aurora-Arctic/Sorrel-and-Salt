@@ -141,7 +141,7 @@ variants:
         supports:
           - form
           - description
-seedUpdate: b732b893f13802caf910cb42e4ddfcce2a9f30f0da9c1c1d43d7cc560a4bdaff
+seedUpdate: b1b022dc7a12268cf5fe7f27084091e4c175e99fb96439f5d6e782c22cb17f49
 ---
 
 # Elecampane

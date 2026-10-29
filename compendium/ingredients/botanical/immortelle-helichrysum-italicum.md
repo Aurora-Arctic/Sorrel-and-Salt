@@ -50,6 +50,7 @@ variants:
         supports:
           - form
           - description
+seedUpdate: 62700a8cc2d9b76061469ce18884a9f9d0e4ad356f2f9d8d4ded436f103919dc
 ---
 
 # Immortelle

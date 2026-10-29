@@ -125,7 +125,7 @@ variants:
           - form
           - description
           - colours
-seedUpdate: e6df8c9be972d4682b0cff3647236d4c5940eda8291e533d448ebb634c3b89b0
+seedUpdate: a0f1087e4af5cdf0ef6a9ca67a7859a981ddef955c1883207fd797f659fdff8d
 ---
 
 # Dragon's Blood

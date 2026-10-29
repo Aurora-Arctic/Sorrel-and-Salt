@@ -41,6 +41,7 @@ variants:
         supports:
           - form
           - description
+seedUpdate: 196fb15aac15db73864d7d02a3c576b60ad35fc7164220742debadde8302acd4
 ---
 
 # Persimmon

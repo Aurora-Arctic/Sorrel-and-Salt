@@ -49,7 +49,7 @@ variants:
         nameBasis: stated
         supports:
           - form
-seedUpdate: cc518dd9e2d8beeddc1e7f32631ce5863389fb856526098d134a1b50cb67a63b
+seedUpdate: d943f7789c884ea549962a62ea89c46d0da3f4c226de4c8fd774dbfb9b2950bf
 ---
 
 # Banyan

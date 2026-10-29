@@ -88,7 +88,7 @@ variants:
         nameBasis: unaudited
         supports:
           - form
-seedUpdate: e28ed4de13a535f88e6fb58168897782e03999188837a03fe73860ab167ed906
+seedUpdate: 7ebec6b02d185b80399cb5cc1a1a7dad94238ab7e12c0fe5d28c907b410e7e14
 ---
 
 # American Ginseng

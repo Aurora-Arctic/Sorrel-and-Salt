@@ -57,7 +57,7 @@ variants:
         nameBasis: unaudited
         supports:
           - form
-seedUpdate: 4414a2fe3f7a21a0344b4a81ce41244672d8a8d711db8d1102d15d84bd8da82e
+seedUpdate: 0d9dc38a7a9316dd9d32c470a799bcd9db3e484ef7d4ed089aa6183ecaeaa804
 ---
 
 # African Violet

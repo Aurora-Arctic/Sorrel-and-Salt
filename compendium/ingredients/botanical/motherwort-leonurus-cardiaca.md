@@ -66,6 +66,7 @@ variants:
         supports:
           - form
           - description
+seedUpdate: 4746aaf9f8fd95acc7033d445b9e206c9f7c6000dfb552325483332d1f23125e
 ---
 
 # Motherwort

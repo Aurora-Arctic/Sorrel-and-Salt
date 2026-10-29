@@ -127,7 +127,7 @@ variants:
         supports:
           - form
           - description
-seedUpdate: 9fbf603585734516259c73dd8522f6ef99810952cae0de284db3a67794a0be41
+seedUpdate: 2004ea7040e046ee1fb179ba06146c483c95e047d888f10765529c42db5f0590
 ---
 
 # Rice

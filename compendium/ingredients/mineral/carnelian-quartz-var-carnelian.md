@@ -106,7 +106,7 @@ variants:
         supports:
           - form
           - description
-seedUpdate: acd9b595c9a32869d7c15935541133af66e12d2b2e9c61c662d14c18b1bf27be
+seedUpdate: 52236fa92f51e0dcfb7efeb642b2333238f7bebe94e34e784954251381062877
 ---
 
 # Carnelian

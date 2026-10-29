@@ -83,6 +83,7 @@ variants:
           - form
           - description
           - colours
+seedUpdate: 3ce78f227cc0f6c0c0f9c52fb521194f5381b9735dc1154cf51fc4290fae49c3
 ---
 
 # Mimosa

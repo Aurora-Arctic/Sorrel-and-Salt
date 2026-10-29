@@ -94,6 +94,7 @@ variants:
         supports:
           - form
           - description
+seedUpdate: 9c498756c0fadf98593e03eeef0210d09715af763955f4e673b709baaadebd05
 ---
 
 # Crab Apple

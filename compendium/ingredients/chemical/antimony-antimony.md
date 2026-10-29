@@ -45,7 +45,7 @@ variants:
         nameBasis: stated
         supports:
           - form
-seedUpdate: 68722169b8cd8f63106548d0f9253f0cecd320fe2e02288202732e769b12cf8b
+seedUpdate: b16e39af108dfd8c7af8281627dfb62d59ba71fa99cca7e10b4a1aa50376ab02
 ---
 
 # Antimony

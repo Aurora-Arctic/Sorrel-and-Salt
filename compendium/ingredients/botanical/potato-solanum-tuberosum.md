@@ -62,6 +62,7 @@ variants:
           - toxic
           - safetyNotes
           - description
+seedUpdate: d97a43b9e53a470f72db17647235407108a205962f1931ebfffd18effd849b48
 ---
 
 # Potato

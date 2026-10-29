@@ -55,7 +55,7 @@ variants:
         nameBasis: unaudited
         supports:
           - form
-seedUpdate: 457de7d8f1afb118d1106efcc82e4753c399aa8512906b9f20bc4ee3647cb025
+seedUpdate: bfce49e72b9e87c5b8ebc37028787a1a51f0cf34f1495230723ffa3f681c8211
 ---
 
 # Gentian

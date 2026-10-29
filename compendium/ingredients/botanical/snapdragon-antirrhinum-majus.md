@@ -145,6 +145,7 @@ variants:
         supports:
           - form
           - description
+seedUpdate: cbf0ac12ed5ab6de562553f5368dda639c851735d113113300ef1a15e3f26617
 ---
 
 # Snapdragon

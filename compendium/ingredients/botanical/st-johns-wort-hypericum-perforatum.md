@@ -142,6 +142,7 @@ variants:
         supports:
           - form
           - description
+seedUpdate: 63f4fd5f71a525c78be2aacafe163491d988e7bc2810c4524bd3967aac3bd7ae
 ---
 
 # St John's Wort

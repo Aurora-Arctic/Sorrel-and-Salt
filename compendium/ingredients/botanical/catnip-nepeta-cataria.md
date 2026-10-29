@@ -123,6 +123,7 @@ variants:
         supports:
           - form
           - description
+seedUpdate: 0be01e2bc22fbf57ff769b23f43dc2cfd37871da1195c4a774c63eb949809e5f
 ---
 
 # Catnip

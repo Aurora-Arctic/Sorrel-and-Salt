@@ -70,6 +70,7 @@ variants:
         supports:
           - form
           - description
+seedUpdate: 5f07353e535b1c3030befcf6b6cfe55a79ff42683826988e1c972b839a24a7bd
 ---
 
 # Red Coral

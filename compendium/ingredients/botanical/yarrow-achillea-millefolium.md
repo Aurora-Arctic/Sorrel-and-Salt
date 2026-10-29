@@ -147,7 +147,7 @@ variants:
         nameBasis: unaudited
         supports:
           - safetyNotes
-seedUpdate: df09e61e5bc8e403247ba180490f8fc0378eb4f0252b7d599344d08398a2c3fb
+seedUpdate: 9e78910df9f2509e30a49de9372377794591c488dcafb9e933568619b34e6375
 ---
 
 # Yarrow

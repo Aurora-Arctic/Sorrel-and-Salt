@@ -119,7 +119,7 @@ variants:
           - form
           - safetyNotes
           - toxic
-seedUpdate: 092d090ab23dea860b40453d18e22bc5c74401a3975e0c0528c33f6e9510f604
+seedUpdate: c7854c16a27337e4921ba8f5754b314fbf28bd8b779e74b17ab33b309e1b5a34
 ---
 
 # Marsh Marigold

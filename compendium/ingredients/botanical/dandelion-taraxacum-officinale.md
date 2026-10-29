@@ -202,7 +202,7 @@ variants:
         supports:
           - form
           - description
-seedUpdate: 6b6afeb67cdd4008ee4af0b1bad07fc00d7991e59d348e14682db31db863cfe6
+seedUpdate: 948e929ba55da628b23614202547acac4a16ba05dfd8a63ab2c8b49518794440
 ---
 
 # Dandelion

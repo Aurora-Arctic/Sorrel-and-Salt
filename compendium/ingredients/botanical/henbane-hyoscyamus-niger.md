@@ -114,6 +114,7 @@ variants:
         nameBasis: stated
         supports:
           - form
+seedUpdate: 9c310390f2f91cc426007ca798ceb724e548dabe23983c01fcb46011142b2b7b
 ---
 
 # Henbane

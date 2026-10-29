@@ -76,7 +76,7 @@ variants:
         nameBasis: unaudited
         supports:
           - form
-seedUpdate: 6249018e7ed7289ceab1ba40634cabc7f18b03861f6ef9b7f513ccebac15b0f6
+seedUpdate: efc3ed4dfd33bda732002a961bc71eb5388eaf8b9c888e7c9d68c55292c77d21
 ---
 
 # Rye

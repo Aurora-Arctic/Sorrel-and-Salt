@@ -278,7 +278,7 @@ variants:
           - form
           - description
           - colours
-seedUpdate: a9cf16c11f59d5abc5a821652f30d0bc395a633df2a2f592e99a0a05787bdb64
+seedUpdate: 79592549ba56f262bdd6b3488e40ea1004e2d4cb5757275e804a85e5cd03a74a
 ---
 
 # Rose

@@ -124,6 +124,7 @@ variants:
         nameBasis: unaudited
         supports:
           - safetyNotes
+seedUpdate: 202c89abc99be2c24ea17cd6060cf55037f4d55b8d71f13604a66855adcd3dfa
 ---
 
 # Cinnamon

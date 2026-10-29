@@ -117,7 +117,7 @@ variants:
         nameBasis: stated
         supports:
           - colours
-seedUpdate: 15c93d38bdfd4ee91c4aee127abb4ca73682efdb1eb08941d12e5297b7d56a15
+seedUpdate: c110421b3a98f12235e8e579eb454f88ca0a0c6683a5143cb3db9bf42142a072
 ---
 
 # Cyclamen

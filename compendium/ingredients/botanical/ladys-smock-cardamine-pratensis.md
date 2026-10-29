@@ -91,6 +91,7 @@ variants:
         supports:
           - form
           - description
+seedUpdate: 6a8ad872f39cfd0546ebc33f6f67c6e28db348505e137982c5c813a95c068c1c
 ---
 
 # Lady's Smock

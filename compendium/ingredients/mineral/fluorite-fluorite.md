@@ -55,6 +55,7 @@ variants:
         supports:
           - form
           - description
+seedUpdate: 622fc7c118ce55b2271ad0f9b074c72e5a4e71b98fba841b08725fea2d9bd0db
 ---
 
 # Fluorite

@@ -180,7 +180,7 @@ variants:
         supports:
           - form
           - description
-seedUpdate: 138c626e50ec6de9326d5ae99fb93e53ef80087219658ec7b76d88349e49991a
+seedUpdate: 83f9e337c2fb9338dae76a95bb624b0feb25e4c713eeae04014afb0e8c090a68
 ---
 
 # Birch

@@ -150,7 +150,7 @@ variants:
           - form
           - description
           - colours
-seedUpdate: 6d0ca83a5f18af3dcf34b2a078a8a814542fc6fba19d514f16453748be287fb4
+seedUpdate: ca78e778ec3e54e0f31f3a354510260b1bab59c38b63059ac21caaa9dafbf3a5
 ---
 
 # Mallow

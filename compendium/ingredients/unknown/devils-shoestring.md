@@ -55,6 +55,7 @@ variants:
         supports:
           - form
           - description
+seedUpdate: 11826e41a6958c0dbe4fddffa3a7bc7058037d1bc29807901bd23e720e49ce52
 ---
 
 # Devil's Shoestring

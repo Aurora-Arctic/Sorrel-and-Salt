@@ -96,7 +96,7 @@ variants:
         supports:
           - form
           - description
-seedUpdate: 11af8be364d4e7c3be94336f3ee874ae16420233ed751afe0319c9781cf0170f
+seedUpdate: a9758019606d5e2f550cccaace9557b4c5cf156f6046be872dfcfa2421171928
 ---
 
 # Diamond

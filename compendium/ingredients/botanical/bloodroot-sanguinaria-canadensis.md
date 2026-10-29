@@ -112,6 +112,7 @@ variants:
         supports:
           - form
           - description
+seedUpdate: 74a2247b596ae9cc38dfa436bbd69135655348749695b55ece0fb84368e6bc1d
 ---
 
 # Bloodroot

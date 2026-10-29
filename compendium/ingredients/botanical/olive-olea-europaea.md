@@ -125,6 +125,7 @@ variants:
         supports:
           - form
           - description
+seedUpdate: 6ff250c47d140feb9f7eebf0eca1144e4d2f2bc195824dd8dd9d962347414fc5
 ---
 
 # Olive

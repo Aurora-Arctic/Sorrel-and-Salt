@@ -82,6 +82,7 @@ variants:
         supports:
           - form
           - description
+seedUpdate: d49751646e918218de32a59283c1fcc9eba65db8b547f21a7cbebc26b7bafdf7
 ---
 
 # Purple Loosestrife
