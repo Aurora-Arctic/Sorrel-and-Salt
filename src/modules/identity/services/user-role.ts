@@ -11,7 +11,7 @@ import { isPrimaryAdmin } from './primary-admin';
 import type { SiteAdmin } from './site-admin';
 import type { UserRow } from '../types';
 
-// MB.59, M11.20: an admin sets a user's site role, `user`, `curator` or
+// An admin sets a user's site role, `user`, `curator` or
 // `admin`, from `/admin/users`. Each change is declared `via: 'admin'` and
 // the trigger on `users` records it in the privilege ledger; the
 // service writes no ledger row. Why each rule is what it is:

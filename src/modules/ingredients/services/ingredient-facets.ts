@@ -16,7 +16,7 @@ import {
 } from '../validation/compendium-filter';
 import { assertMembership } from '@/modules/coven';
 
-// M12.3: how many entries each filter value would list, beside the list it
+// How many entries each filter value would list, beside the list it
 // narrows. The compendium's is public and held in the data cache under the
 // `compendium` tag, keyed by the parsed filter, as its page and count are; a
 // coven's is never cached (CLAUDE.md rule 6; claude-docs/db/compendium-cache.md).

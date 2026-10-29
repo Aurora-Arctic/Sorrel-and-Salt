@@ -29,7 +29,7 @@ export const UNSETTLED_KIND = 'unknown' satisfies NomenclatureKind;
 /**
  * The kinds whose formal name is a binomial, printed in italics; a mineral's
  * or a chemical's is set upright, and so is an unsettled kind's, since the
- * italics follow a settled classification (MB.161; claude-docs/styling.md, "Type").
+ * italics follow a settled classification (claude-docs/styling.md, "Type").
  */
 export const BINOMIAL_KINDS: ReadonlySet<string> = new Set<NomenclatureKind>([
   'botanical',

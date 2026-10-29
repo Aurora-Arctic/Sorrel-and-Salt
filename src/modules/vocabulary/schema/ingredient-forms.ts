@@ -12,8 +12,8 @@ export const formGroupIcon = pgEnum('form_group_icon', FORM_GROUP_ICONS);
 // category group carries its chip colours, and every form filed under it
 // shows that icon. A NULL `icon` is the generic icon, not a missing answer.
 // An enum rather than a CHECK, because adding an icon is then `ALTER TYPE …
-// ADD VALUE`, expand-only, where a CHECK would be dropped and re-added (M12.6,
-// claude-docs/design-decisions/m12.6-form-icons.md). No order column, groups
+// ADD VALUE`, expand-only, where a CHECK would be dropped and re-added
+// (claude-docs/design-decisions/m12.6-form-icons.md). No order column, groups
 // list alphabetically.
 export const ingredientFormGroups = pgTable(
   'ingredient_form_groups',

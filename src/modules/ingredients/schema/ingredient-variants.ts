@@ -21,8 +21,8 @@ export const ingredientVariants = pgTable(
     // Free text over the curated vocabulary, not a foreign key: an uncurated
     // value stays writable.
     form: text('form').notNull(),
-    // The curated row a member picked, beside the text and never instead of it
-    //: two live forms may share a name, and only the link says which.
+    // The curated row a member picked, beside the text and never instead of it:
+    // two live forms may share a name, and only the link says which.
     formId: uuid('form_id').references(() => ingredientForms.id),
     description: text('description'),
     safetyNotes: text('safety_notes'),
@@ -50,8 +50,8 @@ export const ingredientVariants = pgTable(
     ),
     // Not partial, the one named exception to CLAUDE.md rule 4: it is the
     // target of the composite foreign keys that tie a stock row, a layer, a
-    // category pair or a substitute to a variant of its own ingredient
-    //, which a partial index cannot be. It reserves nothing the
+    // category pair or a substitute to a variant of its own ingredient,
+    // which a partial index cannot be. It reserves nothing the
     // primary key does not, since `id` alone is already unique.
     uniqueIndex('ingredient_variants_id_ingredient_id_unique').on(table.id, table.ingredientId),
     // The pick read backwards, for the vocabulary's in-use reads.

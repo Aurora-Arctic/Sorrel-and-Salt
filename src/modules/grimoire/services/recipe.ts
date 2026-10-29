@@ -102,7 +102,7 @@ export async function checkRecipe(
 }
 
 /**
- * Story 77: a step laying a form the coven holds a jar of, in a unit
+ * A step laying a form the coven holds a jar of, in a unit
  * that jar cannot be measured in, so a working could not take it out of stock.
  * One read for every step's jar, under the caller's proof, so only this
  * coven's live jars count. A custom step, a step with no unit, a form with no

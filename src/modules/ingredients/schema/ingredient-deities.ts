@@ -5,12 +5,10 @@ import { deities } from '../../vocabulary/schema/deities';
 import { ingredients } from './ingredients';
 import { idColumn, liveUnique } from '../../../db/schema-parts';
 
-// The deities an ingredient names, one row per entry in the order entered
-//: a name, and beside it a link to the curated deity the member
+// The deities an ingredient names, one row per entry in the order entered:
+// a name, and beside it a link to the curated deity the member
 // picked, so Greek and Roman Hecate stay told apart after a save. A child
-// table rather than `ingredients.deities text[]`, which a link cannot live in;
-// MB.166 filled it from that list, MB.167 switched to it and MB.168 dropped
-// the list. Full `auditColumns`, as substitutes: an entry is content, not a pairing
+// table rather than `ingredients.deities text[]`, which a link cannot live in. Full `auditColumns`, as substitutes: an entry is content, not a pairing
 // of two curated rows (DESIGN.md §5, `ingredient_deities`).
 export const ingredientDeities = pgTable(
   'ingredient_deities',
@@ -25,7 +23,7 @@ export const ingredientDeities = pgTable(
     // still reads as its name, with no finder reaching the deleted row.
     name: text('name').notNull(),
     // Stored, never inferred from insertion order: the list keeps the order
-    // entered, as celestial bodies, signs and colours do (MB.165, "The order rule").
+    // entered, as celestial bodies, signs and colours do (claude-docs/design-decisions/mb.165-record-the-picked-vocabulary-row.md, "The order rule").
     position: integer('position').notNull(),
     ...auditColumns,
   },

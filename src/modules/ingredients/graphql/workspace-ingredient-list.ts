@@ -7,7 +7,7 @@ import { categoryArgs, facetArgs } from './compendium';
 import { IngredientRef, IngredientSourceEnum } from './ingredient';
 import { IngredientFacetsRef } from './ingredient-facets';
 
-// Story 14's list: a coven's own entries and the compendium entries its
+// The list: a coven's own entries and the compendium entries its
 // cupboard holds, a page at a time, each entry's jars read through
 // `Ingredient.stock` and its cupboard row primed from the page;
 // and beside it how many entries each filter value would list. The

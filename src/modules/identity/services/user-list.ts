@@ -7,7 +7,7 @@ import type { Session } from '../../../lib/session';
 import type { Cursor, PageCount, PageEntry, PageRequest } from '../../../lib/types';
 import type { UserFilter, UserRow } from '../types';
 
-// The admin user list's reads, and its count. A read, so M5.7's mutation sweep
+// The admin user list's reads, and its count. A read, so the mutation sweep
 // does not reach it: the check is here, by direct call, and the page confers
 // no workspace access (claude-docs/auth/admin-users.md, "The user list").
 

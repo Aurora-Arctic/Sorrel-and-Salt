@@ -39,7 +39,7 @@ const IngredientDeityInput = builder.inputType('IngredientDeityInput', {
 
 /**
  * One form of the ingredient, and what it adds (DESIGN.md §5,
- * `ingredient_variants`; MB.219): written inside the ingredient's own save,
+ * `ingredient_variants`): written inside the ingredient's own save,
  * never by a mutation of its own. Every field but `id` is non-null, since an
  * entry replaces the form it names in a create and an update alike, so
  * leaving one out is a schema error rather than a silent clear.

@@ -8,8 +8,8 @@ import { idColumn } from '../../../db/schema-parts';
 // pause rather than a flag on a one-row settings table: a pause is opened by
 // an insert, so no migration has to seed a row before any user exists to
 // stamp it, and each pause keeps who began it (`created_by`) and who ended it
-// (claude-docs/design-decisions/mb.62-pause-ledger.md). Marked `namedWrites`
-//: reached only through the writer's pause and resume and the
+// (claude-docs/design-decisions/mb.62-pause-ledger.md). Marked `namedWrites`:
+// reached only through the writer's pause and resume and the
 // open-pause finder.
 export const adminRoleChangePauses = namedWrites(
   pgTable(

@@ -75,7 +75,7 @@ export const inventoryItems = pgTable(
   },
   (table) => [
     check('inventory_items_unit_matches_dimension', UNIT_MATCHES_DIMENSION),
-    // What "already added" means, per form since MB.217. Partial per CLAUDE.md
+    // What "already added" means, per form. Partial per CLAUDE.md
     // rule 4: throwing a jar out is recoverable, so it must not reserve the form.
     liveUnique(
       'inventory_items_workspace_id_variant_id_unique',

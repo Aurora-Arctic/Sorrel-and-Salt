@@ -14,7 +14,7 @@ import type { HeldWording } from '../types';
 // delete refused while live entries hold the row — a category's, a
 // form's, a deity's, a celestial body's or a sign's — and a slug a
 // compendium write would take from another entry's running redirect;
-// a form's rename moves no slug since MB.220. The index exports
+// a form's rename moves no slug. The index exports
 // `describeEntry` and `redirectRefusal` for the ingredient services, and no
 // other part of it.
 
@@ -48,8 +48,8 @@ export async function refuseWhileHeld(
 /**
  * An entry as a person tells it apart, as every refusal naming one does: its
  * label, then its formal name, which is its identity — two entries may share
- * a label, never a formal name. No form: an entry may have several
- *. The label unquoted, so a list of entries reads as one:
+ * a label, never a formal name. No form: an entry may have several.
+ * The label unquoted, so a list of entries reads as one:
  * `Rose (Rosa gallica)`.
  */
 export function describeEntry(entry: { name: string; canonicalName: string | null }): string {

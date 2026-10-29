@@ -7,9 +7,8 @@ import { idColumn } from '../../../db/schema-parts';
 
 // What an ingredient may be replaced with, one row per entry: a link
 // to another ingredient, or a name typed for one that is not entered — the
-// shape MB.40 gave a spell's layers. A child table rather than
-// `ingredients.substitutes text[]`, which a link cannot live in; MB.139 fills
-// it from that list, MB.140 switches to it and MB.141 drops the list. Full
+// shape a spell's layers have. A child table rather than
+// `ingredients.substitutes text[]`, which a link cannot live in. Full
 // `auditColumns`, as folk names: a substitute is content, not a pairing of two
 // curated rows (DESIGN.md §5, `ingredient_substitutes`).
 export const ingredientSubstitutes = pgTable(
@@ -34,7 +33,7 @@ export const ingredientSubstitutes = pgTable(
     // The read by parent, which takes links and names alike and so
     // implies neither unique index's predicate. Nothing reads back from a
     // linked ingredient to its linkers, so no index leads on `substitute_id`
-    // (MB.138, "The deletion rule").
+    // (claude-docs/design-decisions/mb.138-substitute-links.md, "The deletion rule").
     index('ingredient_substitutes_ingredient_id')
       .on(table.ingredientId)
       .where(sql`${table.deletedAt} is null`),

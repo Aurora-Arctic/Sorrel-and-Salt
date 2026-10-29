@@ -15,8 +15,8 @@ import type { Decimal, UnitConversion } from './types';
 type Convertible = Exclude<UnitDimension, 'count'>;
 
 // Each unit's size in its dimension's base unit, milligrams for weight and
-// millilitres for volume, as the owner chose them on 2026-10-13: metric
-// spoons and cups, as a British kitchen measures them, and both fluid ounces.
+// millilitres for volume. Spoons and cups are metric,
+// as a British kitchen measures them, and both fluid ounces are listed.
 // Decimal text rather than numbers, so 29.5735295625 is held exactly and not
 // as the nearest double. Keyed by dimension, so no factor joins two: count has
 // none, and there is no density table. `satisfies` makes a unit added to the

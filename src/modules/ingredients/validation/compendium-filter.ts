@@ -71,13 +71,13 @@ export const CompendiumFilter = z.object({
     .enum(CATEGORY_MODES)
     .nullish()
     .transform((mode) => (mode === 'any' ? mode : undefined)),
-  // M11.22's facets: within each list any value matches, and the lists AND.
+  // The facets: within each list any value matches, and the lists AND.
   // Text is folded by the read, so `Oil` and ` oil ` are one form.
   forms: filterTexts,
   deityIds: filterIds,
   zodiacSigns: filterTexts,
   celestialBodies: filterTexts,
-  // M8.13: an entry whose own `elements` holds any one listed.
+  // An entry whose own `elements` holds any one listed.
   elements: filterElements,
   // `any`, like null or missing, is no filter.
   toxic: z
@@ -126,17 +126,17 @@ export const WorkspaceIngredientFilter = CompendiumFilter.pick({
   elements: true,
   toxic: true,
 }).extend({
-  // M9.7: where an entry came from; null or missing keeps both.
+  // Where an entry came from; null or missing keeps both.
   source: z
     .enum(INGREDIENT_SOURCES)
     .nullish()
     .transform((source) => source ?? undefined),
-  // M9.7: entries with a jar not at 0. False is no filter.
+  // Entries with a jar not at 0. False is no filter.
   inStock: z
     .boolean()
     .nullish()
     .transform((only) => (only === true ? true : undefined)),
-  // M9.8: entries with a jar badged Low Stock or Out of Stock. False is no filter.
+  // Entries with a jar badged Low Stock or Out of Stock. False is no filter.
   lowStockOnly: z
     .boolean()
     .nullish()

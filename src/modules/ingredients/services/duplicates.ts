@@ -6,7 +6,7 @@ import { readersOf } from '@/modules/coven';
 import type { PageEntry, PageRequest } from '../../../lib/types';
 
 /**
- * Story 16's "did you mean": one page of the compendium entries and this
+ * "did you mean": one page of the compendium entries and this
  * workspace's own whose display name, formal name or a folk name is close to
  * `name`, best first, each with its score. Each row carries `canonicalName`,
  * which is what tells five Cat's Claws apart. A warning, never a refusal —

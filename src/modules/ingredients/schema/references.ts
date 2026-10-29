@@ -65,7 +65,7 @@ export const references = pgTable(
   (table) => [
     seedKeyUnique('references_seed_key_unique', table),
     // Required *and non-empty*: NOT NULL alone accepts ''. One CHECK per
-    // column, so MB.153 paths the refusal to its field.
+    // column, so the service paths the refusal to its field.
     check('references_title_not_blank', sql`btrim(title) <> ''`),
     ...OPTIONAL_NOT_BLANK.map((column) =>
       check(
@@ -75,7 +75,7 @@ export const references = pgTable(
     ),
 
     // The four that make the renderer total: every row admitted renders
-    // without a branch for a missing required field (MB.151, decision 3).
+    // without a branch for a missing required field (claude-docs/design-decisions/mb.151-plan.md, "3. CHECKs").
     check('references_url_absolute', sql`url is null or url ~ '^https?://'`),
     check('references_accessed_needs_url', sql`accessed is null or url is not null`),
     check(

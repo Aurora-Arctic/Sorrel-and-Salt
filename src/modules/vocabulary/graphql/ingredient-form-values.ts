@@ -28,7 +28,7 @@ export const IngredientFormValueRef = curatedVocabularyWrites({
     loader: (loaders) => loaders.ingredientFormGroupsById,
   },
   // The slug follows the name and the group. No `endRedirect`: a rename moves
-  // no compendium entry's address since MB.220, so ends no redirect.
+  // no compendium entry's address, so ends no redirect.
   services: {
     create: createIngredientFormValue,
     update: updateIngredientFormValue,

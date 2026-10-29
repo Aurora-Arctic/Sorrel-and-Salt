@@ -9,12 +9,12 @@ import {
   declineInvitationById,
 } from '../services/invitation-acceptance';
 
-// MB.70's admin invitation and the one accept. No field carries the
+// The admin invitation and the one accept. No field carries the
 // token or a link: the token exists only in the mail, and the row holds its
 // hash, which is not exposed either (claude-docs/auth/admin-users.md,
 // "Inviting an admin"). The workspace tier's `workspace` and `role` are added
 // from `coven`, since `identity` cannot name a `Workspace`. The names
-// still say "admin invitation" for the site tier, which since M11.20 may
+// still say "admin invitation" for the site tier, which may
 // invite a curator as well: `siteRole` says which.
 
 const INVITABLE_SITE_ROLES = ['curator', 'admin'] as const satisfies readonly InvitableSiteRole[];

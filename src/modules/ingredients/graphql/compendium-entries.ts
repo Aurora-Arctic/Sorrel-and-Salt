@@ -12,7 +12,7 @@ import { IngredientRef } from './ingredient';
 import { ingredientInputFields } from './ingredient-input';
 
 // The compendium's writes, a curator's or an admin's: scoped here
-// and refused again by the service, which is the real gate, as M5.6's
+// and refused again by the service, which is the real gate, as the
 // category writes are. Neither input names a tier or a stamp — the
 // compendium is the mutation, and the stamps are the session's.
 

@@ -10,7 +10,7 @@ const SuggestionGroupEnum = builder.enumType('SuggestionGroup', {
     "Where the substitute picker lists an entry: the coven's own cupboard (yours), or the rest of the compendium.",
 });
 
-// The substitute picker's search, which MB.131's combobox reads. The
+// The substitute picker's search, which the substitute combobox reads. The
 // resolver refuses only a missing session; which covens a caller may ask about
 // is the service's check (claude-docs/graphql/schema.md, "ingredientSuggestions").
 

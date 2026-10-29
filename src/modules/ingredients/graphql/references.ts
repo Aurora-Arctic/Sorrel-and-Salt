@@ -16,7 +16,7 @@ import type { CitedReference, ReferenceRow } from '../types';
 import { REFERENCE_TEXT_FIELDS } from '../validation/reference-format';
 import type { ReferenceTextField } from '../validation/types';
 
-// A reference as DESIGN.md §7 sketches it (MB.151, built by MB.153): its
+// A reference as DESIGN.md §7 sketches it its
 // fields, the tier as `isGlobal`, and the citation rendered on the server by
 // the one renderer, plain. Its two writes and the picker's search are here;
 // `Ingredient.references` reads through the request's loader in
@@ -168,5 +168,5 @@ builder.queryField('reference', (t) =>
   }),
 );
 
-// The reference picker's search (MB.154 reads it).
+// The reference picker's search.
 suggestionConnection('referenceSuggestions', ReferenceRef, suggestReferences);

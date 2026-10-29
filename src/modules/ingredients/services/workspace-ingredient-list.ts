@@ -15,7 +15,7 @@ import type { IngredientRow } from '../types';
 import { assertMembership } from '@/modules/coven';
 
 /**
- * One page of a coven's ingredients (story 14, M9.4, M12.18): its own entries,
+ * One page of a coven's ingredients: its own entries,
  * and every compendium entry its cupboard holds, filtered by search, category
  * and the five facets as the compendium is, over the coven's
  * overrides. Each entry carries its cupboard row, null for the coven's own

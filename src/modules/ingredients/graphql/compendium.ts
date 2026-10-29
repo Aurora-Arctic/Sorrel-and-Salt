@@ -19,7 +19,7 @@ import { CompendiumFacetsRef } from './ingredient-facets';
 
 /**
  * The six facet arguments the compendium and a coven's ingredient list share
- * (M11.22, M8.13, claude-docs/design-decisions/m11.22-search-facets.md): within each
+ * (claude-docs/design-decisions/m11.22-search-facets.md): within each
  * list any value matches, and every argument given must match.
  */
 export const facetArgs = builder.args((t) => ({
@@ -124,7 +124,7 @@ builder.queryField('compendiumFacets', (t) =>
         description:
           'Keeps the entries a curator has marked reviewed, or with false the ones needing review. A curator or admin alone may set it.',
       }),
-      // M12.55: the In My Covens filter, the viewer's own; signed out, or naming a coven
+      // The In My Covens filter, the viewer's own; signed out, or naming a coven
       // they are not in, it filters nothing and the counts are the cached public ones.
       covenIds: t.arg.idList({
         required: false,

@@ -71,8 +71,8 @@ builder.objectField(WorkspaceRef, 'members', (t) =>
 );
 
 // On `User` from here rather than in identity, which may import no module.
-// A caller reads their own; a site admin reads anyone's, by name and role only
-//, and the service answers a `Forbidden` for the rest.
+// A caller reads their own; a site admin reads anyone's, by name and role only,
+// and the service answers a `Forbidden` for the rest.
 builder.objectField(UserRef, 'memberships', (t) =>
   t.field({
     type: [WorkspaceMemberRef],

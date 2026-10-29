@@ -4,7 +4,7 @@ import { Forbidden } from '../../../lib/errors';
 import type { WorkspaceRole } from '../types';
 import type { Membership } from './membership';
 
-// M6.8: a workspace never loses its last owner. Called by every write that can
+// A workspace never loses its last owner. Called by every write that can
 // take the owner role from someone — a demotion, a removal and a
 // voluntary leave — inside the transaction that writes, so the count
 // it reads is the one the write lands on.
@@ -15,7 +15,7 @@ export type LastOwnerRemedy = 'promote' | 'delete';
 /**
  * Refusal of a change that would leave a workspace with no owner. A
  * `Forbidden`, so it reaches the browser as one, but carrying the way out so
- * M6.16 can offer it: `promote` when other members exist (`promotable` lists
+ * the members page can offer it: `promote` when other members exist (`promotable` lists
  * their user ids), `delete` when the owner is the only member.
  */
 export class LastOwner extends Forbidden {

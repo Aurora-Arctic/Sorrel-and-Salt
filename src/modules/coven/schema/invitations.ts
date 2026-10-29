@@ -12,8 +12,8 @@ const DEFAULT_LIFETIME = sql`now() + interval '7 days'`;
 
 // Every invitation, in two tiers as `ingredients` is: a row naming a
 // workspace and a role invites into that coven, and a row with neither is a
-// site-tier invitation, which grants the site role it names, curator or admin
-//, as a null workspace is a compendium entry. In `coven` with the workspace it mostly names; the admin
+// site-tier invitation, which grants the site role it names, curator or admin,
+// as a null workspace is a compendium entry. In `coven` with the workspace it mostly names; the admin
 // tier reaches it as admin curation reaches `ingredients`
 // (claude-docs/design-decisions/mb.201-two-tier-invitations.md). Only the
 // token's hash is stored, and there must never be a plaintext column. Marked
@@ -42,8 +42,8 @@ export const invitations = namedWrites(
       declinedAt: timestamp('declined_at'),
       // Why the person is being invited; optional, and either tier may carry one.
       note: text('note'),
-      // The site role a site-tier invitation grants, `curator` or `admin`
-      //; null on a coven invitation, which grants `role` instead.
+      // The site role a site-tier invitation grants, `curator` or `admin`;
+      // null on a coven invitation, which grants `role` instead.
       siteRole: userRole('site_role'),
       ...auditColumns,
     },

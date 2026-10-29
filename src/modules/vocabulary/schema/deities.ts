@@ -22,7 +22,7 @@ export const deityTraditions = pgTable(
 // The slug is unique globally rather than per tradition, and the display name
 // is deliberately unindexed: one god honoured under two traditions is two
 // rows, and the autofill tells them apart by tradition. The description is
-// search surface, and so, since M14.23, are the deity's other names in
+// search surface, and so are the deity's other names in
 // `deity_other_names`: the spellings a reader types (_Hekate_, _Woden_).
 export const deities = pgTable(
   'deities',

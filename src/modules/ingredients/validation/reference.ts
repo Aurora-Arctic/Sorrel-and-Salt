@@ -13,12 +13,12 @@ import {
 import type { ReferenceTextField } from './types';
 
 // One reference as the form submits it and the service parses it:
-// the CHECKs MB.152 put on `references`, each refusal pathed to the field it
+// the database CHECKs on `references`, each refusal pathed to the field it
 // is about rather than surfacing as a constraint name, plus the form's own
 // rule that a book needs a date (claude-docs/db/references.md). Each field is
 // tidied as it is parsed — spacing, a title's wrapping quotes, a range's
-// dash, an address's scheme, an edition's form — and held to MB.154's
-// checks, the owner's calls: a day not yet come, a page that is not a number
+// dash, an address's scheme, an edition's form — and held to
+// checks: a day not yet come, a page that is not a number
 // (reference-format.ts; the same doc, "Formatting and checks").
 
 /**

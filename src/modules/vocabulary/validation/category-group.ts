@@ -34,7 +34,7 @@ const color = (column: GroupColorColumn) =>
       });
     });
 
-// The pair is one family, the owner's call: one hue to within
+// The pair is one family: one hue to within
 // MAX_HUE_DISTANCE, as every seeded pair keeps to within a degree, or two
 // greys. Read only once both colours have passed their own checks, and
 // refused beside the second picker, under the pair.

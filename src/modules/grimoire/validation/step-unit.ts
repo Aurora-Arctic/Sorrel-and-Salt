@@ -1,6 +1,6 @@
 import { type Unit, dimensionOf } from '../../ingredients/schema/units';
 
-// Story 77's unit rule, shared by the builder, which shows it on the
+// The unit rule, shared by the builder, which shows it on the
 // step's Unit field as the member picks, and the service, which refuses a save
 // that breaks it. Built on the unit dimensions alone, not on `unitConvert`,
 // because a validation file imports only dependency-free files

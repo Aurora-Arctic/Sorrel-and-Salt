@@ -52,7 +52,7 @@ export const IngredientRef = builder.objectRef<IngredientRow>('Ingredient');
 export const IngredientVariantRef = builder.objectRef<IngredientVariantRow>('IngredientVariant');
 
 /**
- * A link or a typed name (DESIGN.md §7, MB.138). No `audit`, as `folkNames`
+ * A link or a typed name (DESIGN.md §7). No `audit`, as `folkNames`
  * carries none.
  */
 export const SubstituteRef = builder.objectRef<SubstituteRow>('Substitute').implement({
@@ -101,7 +101,7 @@ export const FolkNameRef = builder.objectRef<FolkNameRow>('FolkName').implement(
 });
 
 /**
- * A deity picked or typed (DESIGN.md §7, MB.167). No `audit`, as `folkNames`
+ * A deity picked or typed (DESIGN.md §7). No `audit`, as `folkNames`
  * carries none.
  */
 export const IngredientDeityRef = builder
@@ -124,7 +124,7 @@ export const IngredientDeityRef = builder
   });
 
 /**
- * One form of an ingredient (DESIGN.md §7, MB.215): what it adds to its
+ * One form of an ingredient (DESIGN.md §7): what it adds to its
  * ingredient, never what it overrides, so a client shows both. `ingredientId`
  * and `workspaceId` stay off the wire: a variant is read beneath its
  * ingredient, whose tier it takes.
