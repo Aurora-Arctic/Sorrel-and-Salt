@@ -201,11 +201,28 @@ $spell-columns-switch: $spell-main-min + $spell-columns-gap + $spell-side;
   white-space: nowrap;
 }
 
+// The picker row's chips are the compact size Category Match uses (the owner's call, 2026-10-29),
+// still in their group colours.
+.combobox__list .combobox__note--meta .chip {
+  @include chip($size: compact);
+}
+
 // The Add to Jar picker's folded categories: a neutral "+N" in place of an ellipsis. It sits in
 // the combobox, which owns the row, so the rule is scoped to the list.
-.combobox__list .chip--more {
+.combobox__list .combobox__note--meta .chip--more {
   @include chip($dark: $text-primary, $light: $text-primary, $state: quiet, $size: compact);
   border-color: $hairline;
+}
+
+// A row's category chips may wrap onto a second line rather than be clipped (the owner's call,
+// 2026-10-29): the one-line clip would cut the pills' tops. The line height gives wrapped lines
+// the room the chips have side to side, and the block padding keeps the first line clear of the
+// name above. Only a note holding chips, so a plain-text note keeps its single ellipsised line.
+.combobox__list .combobox__note--meta:has(.chip) {
+  padding-block: space(1);
+  line-height: 2;
+  overflow: visible;
+  white-space: normal;
 }
 
 // The picker's category filter, above the box: the spell's assigned categories as toggles. Off
