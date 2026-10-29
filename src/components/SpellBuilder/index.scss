@@ -376,20 +376,24 @@ body .spell-builder .collapsible-section__fields > section {
   margin-block: 0;
 }
 
-// The jar details above the step list: the jar at the left, Seal Wax and Jar Description
-// stacked to its right (the owner's call, 2026-10-29).
+// The jar details above the step list: Seal Wax with the jar at its right, then Jar
+// Description on its own line (the owner's call, 2026-10-29).
 .jar-details {
   display: flex;
-  // The jar is centred on the two fields together.
-  align-items: center;
+  flex-direction: column;
+  gap: space(5);
+}
+
+// Seal Wax takes the width the jar leaves. The jar is the input box's height and sits at the
+// row's end, so it is level with the input and not the label above it.
+.jar-details__wax {
+  display: flex;
+  align-items: flex-end;
   gap: space(3);
 }
 
-.jar-details__fields {
-  display: flex;
+.jar-details__wax-field {
   flex: 1 1 auto;
-  flex-direction: column;
-  gap: space(3);
   min-width: 0;
 }
 
