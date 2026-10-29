@@ -60,7 +60,7 @@ describe('the proxy matcher', () => {
 
   // Imported assets ship under /_next/static/media, so the backdrop's images are imported
   // rather than dropped into public/. Nothing in public/ is exempt: a file placed there is a
-  // protected page to the matcher (redirected to /sign-in) until its own entry is added.
+  // protected page to the matcher (redirected to /sign-in, HTML where the browser asked for an image) until its own entry is added.
   it.each(['/favicon.ico', '/robots.txt', '/images/anything.webp'])(
     'still runs on a public-file path with no entry, %s',
     (path) => {
