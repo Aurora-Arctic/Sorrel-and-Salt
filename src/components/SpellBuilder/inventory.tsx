@@ -12,12 +12,13 @@ import { stockState } from '../StockBadge/stock-state';
 import { amountText } from '../StockBadge/stock-words';
 import { type QuickLookCoven, StepQuickLook } from './step-quick-look';
 import { UnitsDifferIcon, NotEnoughIcon } from './supply-icon';
-import { type StepSupply, supplyOf } from './steps/supply';
+import { needOf, type StepSupply, supplyOf } from './steps/supply';
 import type { SpellStepValue, SpellStepsValues } from './steps/types';
 import { isInstruction, stepNameOf } from './steps/values';
 
-// In Coven Inventory (the Jar's aside): one line for each ingredient step, in step order, saying
-// what the step needs against what the coven's jar holds, as `supplyOf` judges it. All four
+// In Coven Inventory (the Jar's aside): one line for each form, at its first step's place,
+// saying what all its steps need together (`needOf`) against what the coven's jar holds, as
+// `supplyOf` judges it; a one-off keeps a line for each step. All four
 // verdicts stand at the right end of the name's line, so the name is cut short before they are.
 // Every verdict is a symbol alone (StockBadge's for Out and Low, supply-icon.tsx's for Not Enough
 // and Units Differ): the words are the button's name and the reason is its IconTip (the owner's
@@ -75,9 +76,10 @@ export function holdWords(
 ): { parts: string[]; verdict: Verdict | null } {
   const supply = supplyOf(step, steps);
   if (step.ingredientId === null) return { parts: ['one-off', 'not kept'], verdict: null };
-  const typed = step.quantity.trim();
-  const need = typed === '' ? null : `need ${[typed, step.unit].filter(Boolean).join(' ')}`;
   const jar = step.jar;
+  const sameForm = steps.filter((other) => other.variantId === step.variantId);
+  const needed = needOf(step.variantId === null ? [step] : sameForm, jar?.unit ?? null);
+  const need = needed === null ? null : `need ${needed}`;
   const hold =
     jar === null
       ? 'have no jar'
@@ -180,7 +182,14 @@ export function InCovenInventory({
   /** The builder's Quick Look: the coven to look in; left out, a line has no eye of its own. */
   look?: QuickLookCoven;
 }): ReactElement {
-  const lines = steps.filter((step) => !isInstruction(step));
+  const ingredients = steps.filter((step) => !isInstruction(step));
+  // A form laid in several steps is one line, at its first step's place (One Line Per Form).
+  const lines = ingredients.filter(
+    (step, index) =>
+      step.ingredientId === null ||
+      step.variantId === null ||
+      ingredients.findIndex((other) => other.variantId === step.variantId) === index,
+  );
   return (
     <section className="spell-inventory" aria-labelledby="spell-inventory-heading">
       <Heading id="spell-inventory-heading">In Coven Inventory</Heading>
@@ -192,7 +201,7 @@ export function InCovenInventory({
             <HoldLine
               key={`${index}-${step.variantId ?? step.name}`}
               step={step}
-              steps={lines}
+              steps={ingredients}
               seed={step.ingredientId ?? step.name ?? ''}
               doors={doorsOf?.(step)}
               look={look}

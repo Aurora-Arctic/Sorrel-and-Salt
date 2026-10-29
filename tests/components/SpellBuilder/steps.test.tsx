@@ -892,7 +892,7 @@ describe('the spell builder’s In Coven Inventory', () => {
     expect(line('Fixture Rosewort')).toHaveTextContent('need 4 g · have 5 g');
   });
 
-  it('judges a form laid in two steps on the sum, and shows one line for each step', async () => {
+  it('judges a form laid in two steps on the sum, and shows it as one line needing the sum', async () => {
     suggest(HELD);
     renderBuilder();
     await add('Rose', /Fixture Rosewort/);
@@ -915,8 +915,9 @@ describe('the spell builder’s In Coven Inventory', () => {
     }
 
     // 3 g and 3 g each fit the 5 g held; together they do not.
-    await waitFor(() => expect(lines().map(notEnough).filter(Boolean)).toHaveLength(2));
-    expect(lines()).toHaveLength(2);
+    await waitFor(() => expect(lines().map(notEnough).filter(Boolean)).toHaveLength(1));
+    expect(lines()).toHaveLength(1);
+    expect(lines()[0]).toHaveTextContent('need 6 g · have 5 g');
   });
 
   it('says Units Differ where the unit cannot be set against the jar’s', async () => {
