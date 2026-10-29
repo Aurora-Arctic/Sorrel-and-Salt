@@ -32,7 +32,7 @@ the name in weight 500 with the name in 400, and an instruction-only step's text
 the number's line. The steps are an `ol` named Steps with no visible heading, in `position`
 order, the position column 1.5rem and right-aligned (room for a two-digit number; wider read as an indent, the owner, 2026-10-29); an ingredient step draws its note, or its `body` where
 it has no note (the note column is retired into `body` by PR #1308's migration 0088, and `note`
-is read only until M13.9 drops it), indented to the name, and an instruction step is its text, at the ingredients' size and
+is read only until M13.9 drops it), indented to the name and ending where the name ends, so it never runs under the marks (an ingredient step is a grid: the position, the amount, the name and the marks across, and the note beneath in the amount's and name's columns; the owner, 2026-10-29), and an instruction step is its text, at the ingredients' size and
 colour (the owner, 2026-10-28). A unit with no quantity reads "— tsp", the dash muted (`StepRow`);
 the form icon `StepRow` draws is hidden here, as the mock-up's steps carry none. The marks sit
 right-aligned at the row's end: Toxic or Caution (`SafetyMark`, from the ingredient and the form

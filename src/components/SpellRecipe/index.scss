@@ -205,6 +205,41 @@ $recipe-column: 48rem;
   font-size: type-size('body');
 }
 
+// An ingredient step on a grid rather than the flex row, so its note stops at the name's end
+// and never runs under the badges (the owner, 2026-10-29): the position, the amount, the name and
+// the marks across the first line, and the note beneath in the amount's and name's columns, the
+// marks' column left empty. With no amount the name takes the amount's column too.
+.spell-recipe__steps .step-row:not(.spell-recipe__instruction) {
+  display: grid;
+  grid-template-columns: 1.5rem auto minmax(0, 1fr) auto;
+
+  .step-row__position {
+    grid-area: 1 / 1;
+  }
+
+  .step-row__amount {
+    grid-area: 1 / 2;
+  }
+
+  .step-row__name {
+    grid-area: 1 / 3;
+  }
+
+  .step-row__marks {
+    grid-area: 1 / 4;
+  }
+
+  &:not(:has(.step-row__amount)) .step-row__name {
+    grid-column: 2 / 4;
+  }
+
+  .step-row__body,
+  .step-row__note {
+    grid-column: 2 / 4;
+    margin-inline-start: 0;
+  }
+}
+
 // The one-off mark at the size the builder's supply marks take.
 // The marks sit at the row's end, right-aligned (the owner, 2026-10-28), One-Off at the
 // compact default badge size.
