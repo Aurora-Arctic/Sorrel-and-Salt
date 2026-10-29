@@ -1492,7 +1492,7 @@ Stories 35–46 covered the three-tier experience-notes system. They move to v2 
 51. Reorder ingredients, so layering sequence is recorded.
 52. Compare assigned intent categories against the union derived from ingredients, and see gaps in both directions.
 53. Get warned when an ingredient is flagged toxic or unsafe to burn.
-54. See when I'm adding something I have none of.
+54. See when I'm adding something I have none of. Met on the spell's page, its Quick Look and in workings, not while building: the builder shows no stock (the owner, 2026-10-29).
 55. Save as draft.
 56. As any workspace member including viewers, read every workspace-visible spell in the grimoire (a private spell stays with its author).
 57. Add a one-off ingredient by name and form, so a spell can call for something I will never stock — it goes in the jar and nowhere else.

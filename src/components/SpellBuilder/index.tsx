@@ -688,7 +688,6 @@ const SpellBuilder = ({
                   </div>
                   <JarAside
                     ready={jarReady}
-                    look={look}
                     descriptionField={
                       <TextField<SpellBuilderValues>
                         name="jarDescription"

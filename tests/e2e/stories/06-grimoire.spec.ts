@@ -326,26 +326,6 @@ test(
   },
 );
 
-test(
-  'a member sees when they are adding something the coven has none of',
-  { tag: '@story-54' },
-  async ({ page }) => {
-    const coven = await seedCoven(page, 'Fixture Coven Fifty-Four', 'story-54.test', {
-      A: 'owner',
-      B: 'member',
-    });
-    await signInAgainAs(page, coven.users.B);
-    await openBuilder(page, coven.slug);
-    // Rosemary is in the compendium and not in this coven's cupboard.
-    await addIngredientStep(page, 'Rosemary (Herb)');
-    // In Coven Inventory says so in words, beside the step's name.
-    const hold = page.getByRole('region', { name: 'In Coven Inventory' });
-    const rosemary = hold.getByRole('listitem').filter({ hasText: 'Rosemary' });
-    await expect(rosemary).toContainText('hold none');
-    await expect(rosemary.getByRole('button', { name: 'Out' })).toBeVisible();
-  },
-);
-
 test('a member saves a spell as a draft', { tag: '@story-55' }, async ({ page }) => {
   const coven = await seedCoven(page, 'Fixture Coven Fifty-Five', 'story-55.test', {
     A: 'owner',
