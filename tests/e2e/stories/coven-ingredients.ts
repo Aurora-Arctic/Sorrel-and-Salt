@@ -8,11 +8,9 @@ import type { IngredientFixture, Overrides } from '../../support/fixtures/types'
 import { e2eDatabaseUrl } from '../database';
 import { signInAs } from '../session';
 
-// What the coven's ingredient stories share: the rows each sets up, and the
-// locators of the pages they walk. The rows go in through the raw
-// client, as tests/e2e/coven.spec.ts writes its coven, because setup must not
-// depend on the code a story is proving (CLAUDE.md, Testing). The locators are
-// here once rather than in each spec, so a changed name is corrected in one place.
+// What the coven's ingredient stories share: the rows each sets up and the locators of the pages they walk. Rows
+// go in through the raw client, as tests/e2e/coven.spec.ts writes its coven, so setup does not depend on the
+// code a story proves (CLAUDE.md, Testing); the locators are here once so a changed name is corrected in one place.
 
 export type Role = 'owner' | 'member' | 'viewer';
 
@@ -34,12 +32,9 @@ export interface Coven {
 }
 
 /**
- * A coven named `name`, with a user signed in for each of `roles` at
- * `<key>@<domain>` and made a member in that role. The first owner listed
- * creates it. Each user is signed in on `page` in turn, so `page` ends signed
- * in as the last; `signInAgainAs` switches between them. The users are
- * renamed after their key, "Fixture A", because `signInAs` names every user
- * the same and a story naming an editor needs to tell them apart.
+ * A coven named `name` with a user signed in for each of `roles` at `<key>@<domain>` and made a member in that
+ * role; the first owner creates it. `page` ends signed in as the last; `signInAgainAs` switches. Users are
+ * renamed after their key, "Fixture A", since `signInAs` names every user alike.
  */
 export async function seedCoven(
   page: Page,
@@ -83,10 +78,7 @@ export interface Held {
   variantId: string;
 }
 
-/**
- * A seeded compendium entry's variant of `form`, by the entry's label and,
- * where the label is shared (five Cat's Claws), its formal name.
- */
+/** A seeded compendium entry's variant of `form`, by the entry's label and, where the label is shared (five Cat's Claws), its formal name. */
 export async function compendiumVariant(
   sql: postgres.Sql,
   name: string,
@@ -106,11 +98,7 @@ export async function compendiumVariant(
   return { ingredientId: rows[0].ingredient_id, variantId: rows[0].id };
 }
 
-/**
- * A coven's own ingredient, written by `author`, with one variant: the
- * fixture's invented Testwort unless `overrides` says otherwise. Its one
- * form is what a stock row names.
- */
+/** A coven's own ingredient written by `author` with one variant, the invented Testwort unless `overrides` says otherwise; its form is what a stock row names. */
 export async function localIngredient(
   sql: postgres.Sql,
   covenId: string,
@@ -144,11 +132,9 @@ export interface Stock {
 }
 
 /**
- * A stock row, the coven's jar of `held`, written by `author` as
- * `createStock` would write it: the threshold stated on the row, never left to
- * a constant read later, and a jar of a compendium entry putting the
- * entry in the coven's cupboard first when it is not there already,
- * since the coven's list holds only what its cupboard names.
+ * A stock row, the coven's jar of `held`, written by `author` as `createStock` would: the threshold stated on
+ * the row, and a compendium entry's jar putting the entry in the coven's cupboard first, since the list holds
+ * only what its cupboard names.
  */
 export async function insertStock(
   sql: postgres.Sql,
@@ -186,11 +172,7 @@ export async function insertStock(
   });
 }
 
-/**
- * A spell in the coven's grimoire, as raw SQL: the spell factory imports the whole seed. A
- * draft unless `status` says otherwise, as the table's default is; the Grimoire lists a
- * complete spell on its Spells tab and a draft on its Drafts tab.
- */
+/** A spell in the coven's grimoire as raw SQL (the spell factory imports the whole seed): a draft unless `status` says otherwise. */
 export async function insertSpell(
   sql: postgres.Sql,
   covenId: string,
@@ -209,10 +191,7 @@ export async function insertSpell(
   });
 }
 
-/**
- * A step on `spellId` laying `held`, `quantity` `unit` of it, at `position`, written by
- * `author`.
- */
+/** A step on `spellId` laying `quantity` `unit` of `held` at `position`, written by `author`. */
 export async function insertStep(
   sql: postgres.Sql,
   spellId: string,
@@ -242,11 +221,9 @@ interface GraphqlAnswer {
 }
 
 /**
- * Sends `query` to /api/graphql from inside the page, as the app's own client
- * sends it, so the request carries the page's session. `page.request` would
- * not: the session reaches Chromium as an extra header on the page
- * (tests/e2e/session.ts, `holdSession`), which the context's request client
- * never sees. The page must be open on the app's origin.
+ * Sends `query` to /api/graphql from inside the page, as the app's own client does, so the request carries the
+ * page's session. `page.request` would not: the session reaches Chromium as an extra header on the page
+ * (tests/e2e/session.ts, `holdSession`), which the context's request client never sees.
  */
 export async function graphqlFromPage(
   page: Page,
@@ -269,10 +246,7 @@ export async function graphqlFromPage(
   );
 }
 
-/**
- * Marks the document so a later `expectSameDocument` proves no full reload
- * came between: a reload starts a new document, which has lost the mark.
- */
+/** Marks the document so a later `expectSameDocument` proves no full reload came between: a reload starts a document without the mark. */
 export async function markDocument(page: Page): Promise<void> {
   await page.evaluate(() => {
     (window as unknown as { storyMark?: boolean }).storyMark = true;
@@ -283,59 +257,41 @@ export async function stillSameDocument(page: Page): Promise<boolean> {
   return page.evaluate(() => (window as unknown as { storyMark?: boolean }).storyMark === true);
 }
 
-// The locators of the pages the stories walk. Each name is the one the task
-// entry or a component doc gives where there is one; where neither names it,
-// the choice is made here and says so, for the building task to confirm or
-// correct. The coven's list and the compendium's are built.
+// The locators of the pages the stories walk, named as a task entry or component doc names them, or as chosen
+// here where neither does.
 
-/**
- * The coven's ingredient list: CovenCards' `IngredientCardList`,
- * named after its page, "Ingredients" (claude-docs/components/coven-cards.md).
- */
+/** The coven's ingredient list: CovenCards' `IngredientCardList`, named after its page (claude-docs/components/coven-cards.md). */
 export function ingredientList(page: Page): Locator {
   return page.getByRole('list', { name: 'Ingredients' });
 }
 
-/**
- * The cards of a card list: its direct items only, since a card holds lists
- * of its own (its category chips, and on the coven's list its jar lines).
- */
+/** The cards of a card list: its direct items only, since a card holds lists of its own (category chips, jar lines). */
 export function cardsIn(list: Locator): Locator {
   return list.locator(':scope > li');
 }
 
-/**
- * The compendium's list, named after its page, as the coven's list
- * is. The name is this file's choice.
- */
+/** The compendium's list, named after its page as the coven's list is. */
 export function compendiumList(page: Page): Locator {
   return page.getByRole('list', { name: 'Compendium' });
 }
 
 /**
- * One card in `list`, by the label it shows and, where the label is shared,
- * the formal name its secondary line carries. Found by what the row
- * says about itself, as a table row is found by its cells: these are data,
- * not copy.
+ * One card in `list`, by the label it shows and, where the label is shared, the formal name on its secondary
+ * line: found by what the row says about itself, as a table row is by its cells.
  */
 export function rowOf(list: Locator, name: string, canonicalName?: string): Locator {
   const row = cardsIn(list).filter({ hasText: name });
   return canonicalName ? row.filter({ hasText: canonicalName }) : row;
 }
 
-/**
- * The badge marking a coven's own entry ("Local entries are badged"
- * in every state). Found by its word, as a button is by its name;
- * "Local" is this file's choice, after the "local only" filter.
- */
+/** The badge marking a coven's own entry, found by its word "Local", as a button is by its name. */
 export function localBadge(row: Locator): Locator {
   return row.getByText('Local', { exact: true });
 }
 
 /**
- * The two stock badges. Each is a button, drawn as an icon alone, named "Low Stock" or "Out of Stock"; its tip opens from it.
- * "Low Stock" and "Out of Stock" are this file's choice, after the entry's "low
- * and out-of-stock badges", in title case as every label is.
+ * The two stock badges, each a button drawn as an icon alone and named "Low Stock" or "Out of Stock"; its tip
+ * opens from it.
  */
 export function lowBadge(row: Locator): Locator {
   return row.getByRole('button', { name: /^Low Stock/ });
@@ -346,10 +302,8 @@ export function outBadge(row: Locator): Locator {
 }
 
 /**
- * The filter above a list: FilterForm's `<search>` landmark
- * (claude-docs/components/filter-form.md), the search row. It holds the
- * type-ahead named "Name", the Filters button that opens the facet panel,
- * and on the coven's list the Compact switch.
+ * The filter above a list: FilterForm's `<search>` landmark (claude-docs/components/filter-form.md). It holds
+ * the type-ahead named "Name", the Filters button, and on the coven's list the Compact switch.
  */
 export function filterOf(page: Page): Locator {
   return page.getByRole('search');
@@ -361,10 +315,8 @@ export function nameSearch(page: Page): Locator {
 }
 
 /**
- * Searches the coven's list for `text`: Enter applies the typed text to the
- * paged list rather than picking a suggestion. Waits for the address
- * to carry the text, so the list asserted next is the searched one and not
- * the one before it.
+ * Searches the coven's list for `text`: Enter applies the typed text to the paged list rather than picking a
+ * suggestion, and the helper waits for the address to carry it so the list asserted next is the searched one.
  */
 export async function searchCovenList(page: Page, text: string): Promise<void> {
   await nameSearch(page).fill(text);
@@ -373,9 +325,8 @@ export async function searchCovenList(page: Page, text: string): Promise<void> {
 }
 
 /**
- * Opens the Filters panel and returns it (claude-docs/components/facet-panel.md).
- * The button only exists once the page has hydrated (before it, Filters is a
- * link to the open panel), so waiting for it waits for the script.
+ * Opens the Filters panel and returns it (claude-docs/components/facet-panel.md). The button exists only once
+ * the page has hydrated (before that Filters is a link), so waiting for it waits for the script.
  */
 export async function openFilters(page: Page): Promise<Locator> {
   const button = page.getByRole('button', { name: /^Filters/ });
@@ -387,9 +338,8 @@ export async function openFilters(page: Page): Promise<Locator> {
 }
 
 /**
- * Applies what the panel holds: a change in it is held, not applied, until
- * Apply Filters (claude-docs/components/facet-panel.md). Waits for the address
- * to change, so the list asserted next is the filtered one.
+ * Applies what the panel holds: a change is held until Apply Filters (claude-docs/components/facet-panel.md).
+ * Waits for the address to change, so the list asserted next is the filtered one.
  */
 export async function applyFilters(page: Page, panel: Locator): Promise<void> {
   const before = page.url();
@@ -398,8 +348,7 @@ export async function applyFilters(page: Page, panel: Locator): Promise<void> {
 }
 
 /**
- * Picks a category in the panel's CategoryPicker, the box named "Category"
- * with its options under their groups (claude-docs/components/category-picker.md).
+ * Picks a category in the panel's CategoryPicker, the box named "Category" (claude-docs/components/category-picker.md).
  * An option's name starts with the category's and carries its count.
  */
 export async function pickCategory(panel: Locator, name: string): Promise<void> {
@@ -411,11 +360,8 @@ export async function pickCategory(panel: Locator, name: string): Promise<void> 
 }
 
 /**
- * Picks a choice in one of the panel's choice chips (Toxic, Source): opens its
- * menu, then clicks the option's label, since the native radio under it is
- * drawn invisible and a click on the input finds the label in the way. Shut,
- * the menu's radios are out of the accessibility tree, so the option is found
- * only once the summary has opened it.
+ * Picks a choice in one of the panel's choice chips (Toxic, Source): opens its menu, then clicks the option's
+ * label, since the native radio is drawn invisible and, while the menu is shut, out of the accessibility tree.
  */
 export async function chooseChip(group: Locator, name: string | RegExp): Promise<void> {
   await group.locator('summary').click();
@@ -431,24 +377,17 @@ export function chipChoice(group: Locator, name: string | RegExp): Locator {
 }
 
 /**
- * A stock field's name, its label and then its form, which follows the label out of sight
- * ("Quantity, Root"). The browser reads the hidden span after the label as a space and a
- * comma, so the name is matched on both.
+ * A stock field's name: its label, then its form out of sight ("Quantity, Root"). The browser reads the hidden
+ * span after the label as a space and a comma, so the name is matched on both.
  */
 const fieldName = (label: string, form: string): RegExp => new RegExp(`^${label}\\s*, ${form}$`);
 
 /**
- * The Edit Stock dialog, opened from the stock button in a coven card's foot (or the
- * one in its Quick Look). The button is named "Edit Stock, <name>" (the formal name
- * follows when the label is shared, as the admin lists' "Edit Ingredient, <name>" does)
- * and opens a dialog of the same name: a list of the jars held, one button per form, and
- * beside it the chosen jar's fields, in a group named for its form. Only the chosen jar's
- * fields are drawn, so `choose(form)` presses its list button before `jar(form)` can
- * reach them; the dialog opens on the first jar, and Add chooses the form it adds. A
- * field carries its form after the label out of sight: "Quantity, Root". Add Form picks a
- * form not held and Add puts it in the list; Remove stages a held jar's removal until
- * Undo or Save. Save closes the dialog once the batch has been answered. A unit is a
- * combobox, picked with `pickUnit` by its label as the dialog shows it.
+ * The Edit Stock dialog, opened from the stock button in a coven card's foot or its Quick Look, named "Edit
+ * Stock, <name>" (with the formal name when the label is shared). It lists the jars held, one button per form,
+ * with the chosen jar's fields in a group named for its form: `choose(form)` presses its button before
+ * `jar(form)` can reach them. Add Form picks a form not held and Add lists it; Remove stages a removal until
+ * Undo or Save; Save closes the dialog once the batch is answered. A unit is a combobox, picked with `pickUnit`.
  */
 export function stockEditor(row: Locator, name: string, coven?: string) {
   const page = row.page();
@@ -459,18 +398,16 @@ export function stockEditor(row: Locator, name: string, coven?: string) {
     name: coven ? `Edit Stock for ${coven}, ${name}` : title,
   });
   return {
-    // The button is named for the entry as the card is: the name, then the formal name when it
-    // has one ("Edit Stock, Rosemary, Salvia rosmarinus"). On an entry page the shelf's jar
-    // buttons add the form after that ("..., Salvia rosmarinus, Oil"), so the name is matched
-    // whole: the title, then at most one more part. (An entry with no formal name would
-    // match a jar button too; none of these specs walks one.)
+    // The button is named for the entry as the card is: the name, then the formal name when it has one. On an
+    // entry page the shelf's jar buttons add the form after that, so the name is matched whole: the title,
+    // then at most one more part. An entry with no formal name would match a jar button too.
     open: row.getByRole('button', {
       name: new RegExp(`^${title.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}(, [^,]+)?$`),
     }),
     dialog,
     /**
-     * Chooses a jar from the list, by its form. The button's name starts with the form and
-     * goes on to its amount and any mark ("Oil 30 ml Edited"), so it is matched on the start.
+     * Chooses a jar from the list, by its form. The button's name starts with the form and goes on to its
+     * amount and any mark ("Oil 30 ml Edited"), so it is matched on the start.
      */
     async choose(form: string) {
       await dialog.getByRole('button', { name: new RegExp(`^${form}\\b`) }).click();
@@ -504,11 +441,7 @@ export function stockEditor(row: Locator, name: string, coven?: string) {
   };
 }
 
-/**
- * When the row was last edited: a `<time>`, whose `datetime` holds
- * the absolute moment the relative text stands for. Found by the element
- * rather than a role because the moment is an attribute, not a name.
- */
+/** When the row was last edited: a `<time>`, found by the element since the moment is its `datetime` attribute, not a name. */
 export function editedAt(row: Locator): Locator {
   return row.locator('time');
 }

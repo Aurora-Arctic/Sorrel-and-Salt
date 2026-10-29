@@ -4,10 +4,8 @@ import { recreateE2eDatabase } from './database';
 import { signInAgainAs } from './session';
 import { insertSpell, localIngredient, seedCoven, withSql } from './stories/coven-ingredients';
 
-// Quick Look a spell from the grimoire list. Story 83 walks the eye, the search
-// pick, Escape's return of focus, Edit and a viewer's missing Edit. What it does not walk:
-// the filter kept in the address beside ?spell=<id>, an ingredient step's eye opening the
-// ingredient's details over the modal at &entry=<id>, another
+// Quick Look a spell from the grimoire list, for what the story does not walk: the filter kept in the address
+// beside ?spell=<id>, an ingredient step's eye opening its details over the modal at &entry=<id>, another
 // member's private spell and another coven's spell opening nothing, axe, and 375px.
 
 test.beforeAll(async () => {

@@ -11,10 +11,8 @@ import { e2eDatabaseUrl, recreateE2eDatabase } from './database';
 import { signInAs } from './session';
 import { deitySlug, ingredientSlug } from '@/lib/slugify';
 
-// The admin's compendium form's presentation — IngredientForm on
-// the compendium, which carries the form's first axe scans in a browser,
-// the Combobox's among them (claude-docs/components/ingredient-form.md,
-// "Testing").
+// The admin compendium form in a browser: the first axe scans of IngredientForm and its Combobox
+// (claude-docs/components/ingredient-form.md, "Testing").
 test.beforeAll(async () => {
   await recreateE2eDatabase();
 });
@@ -34,8 +32,8 @@ async function applyFilters(page: Page) {
 }
 
 /**
- * Opens the Filters panel and returns it. The button only exists once the page has hydrated
- * (before it, Filters is a link to the open panel), so waiting for it waits for the script.
+ * Opens the Filters panel and returns it. The button exists only once the page has hydrated (before that
+ * Filters is a link), so waiting for it waits for the script.
  */
 async function openFilters(page: Page): Promise<Locator> {
   const button = page.getByRole('button', { name: /^Filters/ });
@@ -101,8 +99,8 @@ test('the compendium form stands inside the viewport on a phone', async ({ page 
   await assertNoAccessibilityViolations(page);
 });
 
-// The compendium form's pickers in the app, which no story checks: the add,
-// edit and delete themselves are story 18's (tests/e2e/stories/07-admin.spec.ts).
+// The compendium form's pickers in the app, which no story checks: the add, edit and delete are in
+// stories/07-admin.spec.ts.
 test('the compendium form stands inside the viewport and keeps its pickers inside the dialog', async ({
   page,
 }) => {
@@ -241,9 +239,8 @@ test('the edit source panel leaves the dialog in place and closes from its top b
   await expect(adding.getByRole('button', { name: 'Edit Source Mockleaf Herbal' })).toBeFocused();
 });
 
-// The ingredient's toxic toggle, which no story walks: it starts off,
-// is reached by Tab and turned by Space, and reopening reads it back from the
-// server. The forms' toggles and the two kept apart are the service's to prove
+// The ingredient's toxic toggle, which no story walks: it starts off, is reached by Tab and turned by
+// Space, and reopening reads it back from the server. The forms' toggles are the service's to prove
 // (tests/modules/ingredients/services/toxic-flags.test.ts).
 test('the toxic toggle starts off, saves, and reads back on reopening', async ({ page }) => {
   await signInAs(page, 'toxic-admin@admin-compendium.test', ['discord'], 'admin');
@@ -275,10 +272,9 @@ test('the toxic toggle starts off, saves, and reads back on reopening', async ({
   await expect(editing.getByRole('switch', { name: 'Toxic', exact: true })).toBeChecked();
 });
 
-// The Name box is IngredientSearch's type-ahead. Its matching is the
-// repository's and its states are the component test's; these walk it in a
-// browser, where the dropdown, the modal it opens and the form before
-// JavaScript are real (claude-docs/components/ingredient-search.md).
+// The Name box is IngredientSearch's type-ahead. Matching is the repository's and its states the
+// component test's; these walk the dropdown, the modal it opens and the form before JavaScript
+// (claude-docs/components/ingredient-search.md).
 const CATS_CLAW = /^Cat's Claw \(Uncaria/;
 
 test('a name typed shows matching rows, and a pick opens its Quick Look over the list as it was shown', async ({
@@ -417,10 +413,9 @@ test('the filter form works with JavaScript off: a name and the Search button se
   }
 });
 
-// The elements filter is in the address, as repeated parameters, and
-// the address is the whole state: loaded directly (no control draws it), it lists the entries holding any element named, the pager keeps it,
-// another control's change keeps it and opens the first page, and a reload
-// and Back show the same list.
+// The elements filter is in the address as repeated parameters, and the address is the whole state: loaded
+// directly, it lists the entries holding any element named, the pager keeps it, another control's change
+// keeps it and opens the first page, and a reload and Back show the same list.
 test('?elements= in the address filters the list, survives the pager and another filter, and drops the page', async ({
   page,
 }) => {
@@ -659,11 +654,9 @@ test('the match mode widens two categories to Any, is kept in the address, and g
   await expect(edit('Modewort One')).toHaveCount(0);
 });
 
-// A curator makes a folk name the display name. The question always
-// asks; once answered the list shows the folk name as the entry's name, and
-// the question holds at 375px without an accessibility violation. The entry
-// is held by two covens first, so the delete confirm's coven count
-// is walked here too: nothing else opens it in a browser.
+// A curator makes a folk name the display name. The question always asks; once answered the list shows
+// the folk name, and the question holds at 375px without an axe violation. Two covens hold the entry first,
+// so the delete confirm's coven count is walked here too: nothing else opens it in a browser.
 test('a curator sees the covens holding an entry, then promotes a folk name and the list shows it as the name', async ({
   page,
 }) => {
@@ -735,10 +728,9 @@ test('a curator sees the covens holding an entry, then promotes a folk name and 
   await expect(page.getByRole('link', { name: /^Edit Fixture Promotewort/ })).toHaveCount(0);
 });
 
-// The Filters panel and the sentence above the results, walked in a browser. Five
-// entries named Facetwort A to E: A holds the form Alpha, B the form Beta, C the form Gamma
-// and the Greek deity, D Alpha and the Greek deity and is toxic, E Alpha and the Roman deity.
-// The deity is one name under two traditions, so the address has to tell them apart.
+// The Filters panel and the sentence above the results. Five entries, Facetwort A to E, hold forms
+// Alpha, Beta and Gamma and a Greek or Roman deity (one name under two traditions, so the address
+// tells them apart); D is toxic.
 const FACET_DEITY = 'Facetdeity';
 const GREEK_SLUG = deitySlug(FACET_DEITY, 'Greek');
 const ROMAN_SLUG = deitySlug(FACET_DEITY, 'Roman');
@@ -785,10 +777,8 @@ async function seedFacetworts(userId: string) {
 }
 
 /**
- * Picks a choice in a choice chip: opens its menu, then clicks the option's label, since the
- * native radio under it is drawn invisible and a click on the input finds the label in the way.
- * Shut, the menu's radios are out of the accessibility tree, so the option is found only once
- * the summary has opened it.
+ * Picks a choice in a choice chip: opens its menu, then clicks the option's label, since the native radio
+ * is drawn invisible and, while the menu is shut, out of the accessibility tree.
  */
 async function choose(group: Locator, name: string | RegExp): Promise<void> {
   await group.locator('summary').click();
@@ -1087,11 +1077,9 @@ for (const [label, width, height] of [
   });
 }
 
-// The Categories column draws the card's chips: the first two and a +N button, whose panel
-// floats over the rows beneath. A component test cannot measure where it opens, or that the
-// table frame does not clip it or the row grow. No seeded entry has more than three
-// categories, so the test seeds its own with four, named to sort first, and leaves the
-// seeded entries as every other test on the worker reads them.
+// The Categories column draws the first two chips and a +N button whose panel floats over the rows below;
+// only a browser shows where it opens and that the table frame does not clip it. No seeded entry has more
+// than three categories, so the test seeds its own with four, named to sort first.
 const CHIPWORT = 'Aaa Chipwort';
 
 async function seedChipwort(userId: string) {

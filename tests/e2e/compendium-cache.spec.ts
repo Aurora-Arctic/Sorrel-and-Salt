@@ -4,15 +4,10 @@ import { test, expect } from './fixtures';
 import { COMPENDIUM_CACHE_DATABASE, e2eDatabaseUrl } from './database';
 import { signInAs } from './session';
 
-// The compendium read answered from Next's data cache rather
-// than Postgres, until an admin's write expires it. Runs only in the `chromium-compendium-cache` project, against the
-// one e2e server that keeps its data cache, over a database no spec reseeds
-// (claude-docs/db/compendium-cache.md, "In tests"). Nothing here assumes the
-// cache starts empty: a local run may reuse a server an earlier run warmed, and
-// each run's names are its own.
-// Serial, because the tests chain: the second reads the cache the first
-// warmed and renamed beneath, and both share the one cache server, which
-// another worker's test would be warming at the same time.
+// The compendium read answered from Next's data cache rather than Postgres, until an admin's write expires
+// it. Runs only in the `chromium-compendium-cache` project, against the one e2e server that keeps its data
+// cache, over a database no spec reseeds (claude-docs/db/compendium-cache.md, "In tests"). Nothing assumes
+// the cache starts empty. Serial, because the second test reads what the first warmed and renamed.
 test.describe.configure({ mode: 'serial' });
 
 async function inDatabase<T>(work: (sql: postgres.Sql) => Promise<T>): Promise<T> {
@@ -35,10 +30,8 @@ test('a repeat read of the compendium is answered from the cache, not Postgres',
   const add = page.getByRole('link', { name: 'Add Ingredient' });
   await expect(add).toBeVisible();
 
-  // Renamed underneath the cache to a name that sorts first, so a read of
-  // Postgres would put it on the first page. A row is found by its name link:
-  // its cell also holds the Quick Look eye, so the cell reads as more
-  // than the name.
+  // Renamed underneath the cache to a name that sorts first, so a read of Postgres would put it on the
+  // first page. A row is found by its name link, since its cell also holds the Quick Look eye.
   const renamed = `Aaa Fixture Cached ${run}`;
   await inDatabase(
     (sql) => sql`

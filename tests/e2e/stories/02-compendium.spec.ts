@@ -29,11 +29,9 @@ import {
 import { makeIngredient, makeVariant } from '../../support/fixtures/ingredient';
 import { slugify } from '@/lib/slugify';
 
-// Stories 14, 15 and 16: the compendium as anyone browses it, an entry added
-// from it to a coven, a coven's own ingredient, and the warning that a new
-// name resembles one already there. /compendium, the add modal
-// and the entry pages are built, so 15 and 16 run; the scaffold still
-// marked `fixme` waits on the task its annotation names.
+// The compendium as anyone browses it, an entry added from it to a coven, a coven's own ingredient, and the
+// warning that a new name resembles one already there. The flow still marked `fixme` waits on the task its
+// annotation names.
 
 test.beforeAll(async () => {
   await recreateE2eDatabase();
@@ -44,11 +42,7 @@ function compendiumSearch(page: Page) {
   return filterOf(page).getByRole('combobox', { name: 'Name' });
 }
 
-/**
- * The action slot on a card. Matched without regard to case because the
- * entry spells it "Add to my ingredients" and every label is title case,
- * "Add to My Ingredients".
- */
+/** The action slot on a card, matched without regard to case: the entry spells it "Add to my ingredients", the label is title case. */
 const ADD_TO_MY_INGREDIENTS = /^add to my ingredients/i;
 
 /** The cards page by `CARD_PAGE_SIZE`, 24, so the grid ends on a full row. */
@@ -351,7 +345,7 @@ test(
           select id, workspace_id from ingredients
           where lower(name) = lower(${NAME}) and deleted_at is null`,
       );
-    // Why this is story 15's case: nothing by this name exists in any tier.
+    // Nothing by this name exists in any tier.
     expect(await tiersHolding()).toEqual([]);
 
     let createdId = '';

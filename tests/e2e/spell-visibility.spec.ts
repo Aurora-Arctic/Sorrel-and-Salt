@@ -3,12 +3,9 @@ import { recreateE2eDatabase } from './database';
 import { signInAgainAs } from './session';
 import { seedCoven, withSql } from './stories/coven-ingredients';
 
-// The spell builder's Visibility control, which no numbered story
-// walks: DESIGN.md §5 governs visibility by its one-way rule rather than a
-// story. A draft is shared and made private again freely, with no question;
-// once the spell is marked complete the control shuts with its reason. What was
-// stored is read from the database. Story 56 walks the Private badge, and the
-// service's refusal of a narrowing is tests/modules/grimoire/services's.
+// The spell builder's Visibility control (DESIGN.md §5): a draft is shared and made private again freely,
+// and once the spell is marked complete the control shuts with its reason. What was stored is read from the
+// database; the service's refusal is tests/modules/grimoire/services's.
 
 test.beforeAll(async () => {
   await recreateE2eDatabase();

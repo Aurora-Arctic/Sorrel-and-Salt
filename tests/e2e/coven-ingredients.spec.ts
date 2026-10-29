@@ -19,22 +19,11 @@ import {
   withSql,
 } from './stories/coven-ingredients';
 
-// The coven's Ingredients page, against the built server. Stories 20–27
-// (tests/e2e/stories/03-ingredients) walk a member through the list and its
-// filters; this proves what no story walks: a non-member reads no such page,
-// the pager holds its place and its filter, the Compact switch is the default
-// and its opposite is in place before the page is drawn, the type-ahead offers
-// this coven's cupboard and nothing else, a held compendium entry's card
-// opens Annotate over the list and closes back to its search, a
-// card's More near the window's foot opens above it inside the window,
-// a pager end lands on the new page's first entries, and the page
-// passes axe at both densities and at a phone's width. The jar lines' icons
-// and badges are JarLines', StockBadge's and FormIcon's component tests, with
-// the form-to-group read in
-// tests/modules/ingredients/services/workspace-ingredient-list-form-groups.test.ts;
-// a retired entry's card, writes and removal are IngredientCard's,
-// cupboard-actions' and the retired-entry service tests'; the own entry's
-// delete is story 25's.
+// The coven's Ingredients page against the built server, for what no story walks: a non-member reads no
+// such page, the pager holds its place and filter, the Compact switch is set before the page is drawn, the
+// type-ahead offers this coven's cupboard alone, Annotate opens over the list and closes back to its search,
+// and the page passes axe at both densities and at a phone's width. Jar icons, badges and a retired entry
+// are component and service tests' (JarLines, StockBadge, FormIcon, IngredientCard).
 
 // The cards page by 24 (`CARD_PAGE_SIZE`), so 26 entries make two pages.
 const PAGE_SIZE = 24;
@@ -318,12 +307,9 @@ test('the page passes axe at both densities and holds at a phone width', async (
   await assertNoSidewaysScroll(page);
 });
 
-// Annotate on the card of a compendium entry the coven holds opens the
-// entry page's dialog over the list, and a close or a save comes back to the
-// list as it was, its search kept and the focus on the card's Annotate. The
-// dialog's More menu, opening upward inside it, removes the entry from the
-// cupboard behind the confirmation dialog, back onto the same search without
-// its card.
+// Annotate on a held compendium entry's card opens the entry page's dialog over the list; a close or save
+// comes back to the list as it was, search kept and focus on the card's Annotate. The dialog's More menu,
+// opening upward inside it, removes the entry from the cupboard behind a confirmation, back to the same search.
 test("a held compendium entry's card opens Annotate over the list, and closes back to its search", async ({
   page,
 }) => {
@@ -509,12 +495,9 @@ test("a card's More opened near the window's foot opens above it, inside the win
   }
 });
 
-// ListFrame: a pager end keeps the reader at the list rather than
-// Next's jump to the page top, and once the new page renders brings the
-// list's start to the line the stuck search row leaves (the root's
-// scroll-padding-top). A filter's page is Next's own scroll, to the top of the
-// page, with no pull to the list. Measured here because happy-dom draws no
-// layout to scroll.
+// ListFrame: a pager end keeps the reader at the list rather than Next's jump to the page top, then brings
+// the list's start to the line the stuck search row leaves (the root's scroll-padding-top). A filter's page
+// is Next's own scroll, to the top. Measured here because happy-dom draws no layout to scroll.
 test("a pager end lands on the new page's first entries", async ({ page }) => {
   const coven = await seedCoven(page, 'Fixture Coven Pager Scroll', 'pager-scroll.test', {
     A: 'owner',

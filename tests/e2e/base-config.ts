@@ -1,21 +1,18 @@
 import type { PlaywrightTestConfig } from '@playwright/test';
 import { E2E_SLOTS, wsEndpoint } from './slots';
 
-// What the three Playwright configs share, in a module that builds nothing as
-// it is imported: playwright.config.ts imports tests/e2e/servers.ts, which
-// builds every slot server's environment, `DATABASE_URL` included, as it
-// loads, and the workshop config (playwright.workshop.config.ts) must load
-// with no database setting at all, as on CI's `workshop` job.
+// What the three Playwright configs share, in a module that builds nothing on import: playwright.config.ts
+// imports tests/e2e/servers.ts, which builds every slot server's `DATABASE_URL` as it loads, and the
+// workshop config must load with no database setting at all, as on CI's `workshop` job.
 
 // Every output under .reports/ with the rest of the generated files. The
 // reporter list lives in each config rather than on CI's command line because
 // a CLI `--reporter` replaces it and with it the html report's folder.
 export const HTML_REPORT = { outputFolder: '.reports/playwright-report', open: 'never' } as const;
 
-// What the e2e config and the story config (playwright.stories.config.ts) share:
-// where output goes, how many workers, the setup and teardown that reseed the
-// slot databases, and the browser options. The workshop config takes its
-// output folder, `forbidOnly` and browser options alone.
+// What the e2e and story configs share: where output goes, the worker count, the setup and teardown that
+// reseed the slot databases, and the browser options. The workshop config takes only the output folder,
+// `forbidOnly` and browser options.
 export const baseConfig = {
   outputDir: '.reports/test-results',
   fullyParallel: true,

@@ -15,13 +15,10 @@ import { insertCupboardEntry } from '../support/db/insert-cupboard-entry';
 import { insertIngredient } from '../support/db/insert-ingredient';
 import { makeIngredient } from '../support/fixtures/ingredient';
 
-// The public compendium's In My Covens filter, a gate spec with no story behind it: the
-// panel lists the viewer's covens by name, a pick narrows the list to the entries those covens
-// hold and is kept in the address, Not In lists the entries none of them holds, a foreign
-// coven's id in the address narrows nothing, under In or Not In, and a visitor signed out is
-// offered no such filter. A viewer's coven counts as the viewer's. Picking several covens, and
-// the plus's count of the covens holding an entry, are the held-in service's
-// (tests/modules/ingredients/services/compendium-held-in.test.ts) and the compendium page test's.
+// The public compendium's In My Covens filter, a gate spec with no story behind it: the panel lists the
+// viewer's covens, a pick narrows the list to the entries those covens hold and is kept in the address, Not In
+// lists the entries none holds, a foreign coven's id narrows nothing, and a signed-out visitor is offered no
+// filter. Several covens and the plus's count are tests/modules/ingredients/services/compendium-held-in.test.ts's.
 
 test.beforeAll(async () => {
   await recreateE2eDatabase();

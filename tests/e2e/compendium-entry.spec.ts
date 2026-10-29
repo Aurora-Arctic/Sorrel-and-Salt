@@ -8,13 +8,10 @@ import { insertReference, insertReferenceLink } from '../support/db/insert-refer
 import { makeIngredient, makeVariant } from '../support/fixtures/ingredient';
 import { slugify } from '@/lib/slugify';
 
-// The public compendium entry page: what it answers a visitor
-// with no account. Each test here proves what no story walks. Story 14 reads
-// the page signed out and answers a coven's own slug with a 404; story 17
-// shows a non-admin its content with no Edit. What a story does not reach: the
-// 308 for a slug that has moved, and the page at a phone's width. Every test
-// reads as the signed-out visitor, which is the `page`; the rows are written
-// by a user made on a page of its own.
+// The public compendium entry page as a signed-out visitor sees it (the `page`; rows are written by a user
+// made on a page of its own). Each test proves what no story walks: the 308 for a moved slug and the page
+// at a phone's width. The stories read the page signed out, answer a coven's own slug with a 404 and show a
+// non-admin its content with no Edit.
 
 test.beforeAll(async () => {
   await recreateE2eDatabase();
@@ -77,10 +74,8 @@ test('a slug an entry has moved off answers 308 to its current address', async (
   expect(headers['last-modified']).toBeUndefined();
 });
 
-// A citation prints its url as plain text, Chicago's form, and a url with no
-// hyphen or space is one long word with nowhere a line may break: unbroken, a
-// long one ran past a phone's column. The bibliography lets it break
-// anywhere instead.
+// A citation prints its url as plain text, and a url with no hyphen or space is one long word that ran
+// past a phone's column, so the bibliography lets it break anywhere.
 test('a visitor reads an entry with its details and each form on a phone, a long source url wrapping inside the column', async ({
   page,
   browser,

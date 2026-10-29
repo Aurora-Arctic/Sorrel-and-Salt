@@ -29,10 +29,9 @@ const PROVIDER_ENV_VARS = [
   'MICROSOFT_CLIENT_SECRET',
 ];
 
-// Blank rather than absent: Next never lets `.env.local` override a variable
-// that is already set, even to '', and clientCredentials() treats '' as
-// unset. Without this, a developer's real credentials would silently turn the
-// default server into the configured one.
+// Blank rather than absent: Next never lets `.env.local` override a variable that is already set, and
+// clientCredentials() treats '' as unset, so a developer's real credentials cannot turn this server into
+// the configured one.
 const UNCONFIGURED_PROVIDERS = Object.fromEntries(PROVIDER_ENV_VARS.map((name) => [name, '']));
 // Enough for a provider to count as configured, and useless to any real
 // authorization endpoint — which is why no test may click a provider button
@@ -57,10 +56,8 @@ const serverEnv = (
   // Under the audit alone, plain cookie names, so WebKit sends the session cookie `signInAs` puts in
   // its jar over the plain-http origin a remote browser uses (src/lib/e2e-session-cookie.ts).
   ...(plainSessionCookie && { E2E_PLAIN_SESSION_COOKIE: 'true' }),
-  // Off, set rather than left absent: Next never lets `.env.local` override a
-  // variable that is already set, and a developer's `ENABLE_IMPERSONATION=true`
-  // would add an Impersonate button and a table column the specs do not expect
-  // (tests/e2e/admin.spec.ts; claude-docs/auth/impersonation.md).
+  // Off, set rather than left absent: Next never lets `.env.local` override a set variable, and a developer's
+  // `ENABLE_IMPERSONATION=true` would add an Impersonate button the specs do not expect (claude-docs/auth/impersonation.md).
   ENABLE_IMPERSONATION: 'false',
   // CI's placeholder, here too, so a developer's own address in `.env.local` never names the primary
   // admin a spec signs in as.
@@ -82,10 +79,8 @@ export const slotServers = Array.from({ length: E2E_SLOTS }, (_, slot) => ({
   env: serverEnv(slotPort(slot), slotDatabase(slot), UNCONFIGURED_PROVIDERS),
 }));
 
-// One more `next start` over the same build, differing only in having every
-// OAuth provider configured — the sign-in page reads credentials per request,
-// so its two availability states need two servers — and in a database of its
-// own, since whichever slot ran beside it would otherwise reseed it.
+// One more `next start` over the same build with every OAuth provider configured (the sign-in page reads
+// credentials per request) and a database of its own, so no slot reseeds it.
 // claude-docs/components/sign-in-panel.md, "Testing".
 const configuredProvidersServer = {
   command: 'npm run start',

@@ -5,21 +5,17 @@ import { signInAgainAs } from '../session';
 import type { Locator, Page } from '@playwright/test';
 import { makeCoven, makeUser, seatsOf, withSql } from './accounts-setup';
 
-// Stories 1, 2, 3 and 8, walked in the browser against the built server:
-// signing in, the landing an account with no coven meets, creating a coven,
-// and moving between covens. The people and covens each story starts from
-// are written by SQL (accounts-setup.ts); the step the story is about goes
-// through the page.
+// Signing in, the landing an account with no coven meets, creating a coven and moving between covens, walked
+// against the built server. People and covens are written by SQL (accounts-setup.ts); each flow's own step
+// goes through the page.
 
 test.beforeAll(async () => {
   await recreateE2eDatabase();
 });
 
-// The slot servers blank every provider's credentials (playwright.config.ts),
-// so each button is drawn greyed with aria-disabled, the state checked here
-// with or without a developer's .env.local. A live OAuth round trip is
-// run by hand against real credentials: CI cannot finish one, so
-// Story 1 is walked up to the provider's door.
+// The slot servers blank every provider's credentials (playwright.config.ts), so each button is drawn greyed
+// with aria-disabled, with or without a developer's .env.local. CI cannot finish a live OAuth round trip, so
+// the sign-in is walked up to the provider's door.
 const PROVIDER_NAMES = ['Discord', 'Google', 'Facebook', 'Microsoft'];
 
 /** Scans `page` in each theme in turn: a Playwright page is light unless told. */

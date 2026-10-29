@@ -7,10 +7,9 @@ import { ADD, HELD } from '../support/cupboard-wording';
 import { insertIngredient } from '../support/db/insert-ingredient';
 import { makeIngredient } from '../support/fixtures/ingredient';
 
-// The three cupboard screens on a compendium entry seen from a coven:
-// the plus beside the pencil (Add), then Annotate, and Remove from the three dots. One walk:
-// the owner adds the entry, annotates its label, hands the label back to the
-// Compendium, and removes the entry.
+// The three cupboard screens on a compendium entry seen from a coven: the plus beside the pencil (Add),
+// Annotate, and Remove from the three dots. One walk: the owner adds the entry, annotates its label, hands
+// the label back to the Compendium, and removes the entry.
 
 test.beforeAll(async () => {
   await recreateE2eDatabase();

@@ -1,12 +1,10 @@
 import AxeBuilder from '@axe-core/playwright';
 import { expect, type Page } from '@playwright/test';
 
-// Settles first: a spec that switches the theme and scans straight after would otherwise read a
-// colour part-way along its ease. The title is waited for too: a soft navigation (a filter, a router
-// refresh) swaps the metadata, and for a few milliseconds, hundreds under load, the document has no
-// <title> while the new rows are in, so axe's document-title rule fails a page about to have one.
-// `skipRules` is for the component workshop, whose story page is one component and not a whole page:
-// it has no level-one heading unless the story draws one.
+// Settles first: a spec that switches the theme and scans straight after would read a colour part-way
+// along its ease. The title is waited for too: a soft navigation (a filter, a router refresh) leaves the
+// document with no <title> for a few milliseconds, hundreds under load, so axe's document-title rule fails.
+// `skipRules` is for the component workshop, whose story page is one component with no level-one heading.
 export async function assertNoAccessibilityViolations(
   page: Page,
   { skipRules = [] }: { skipRules?: string[] } = {},
@@ -20,12 +18,9 @@ export async function assertNoAccessibilityViolations(
   expect(violations, summary).toEqual([]);
 }
 
-// A page holds at a phone's width when nothing pushes it sideways: the
-// document is no wider than the window. Measured in the real browser, since
-// happy-dom lays nothing out; 375px is the narrowest width a section signs off at
-// (claude-docs/styling.md, "Designing a section"). With `restore`, the
-// window goes back to its width afterwards, for a walk that goes on past the
-// measurement at the width it had.
+// A page holds at a phone's width when the document is no wider than the window. Measured in a real
+// browser, since happy-dom lays nothing out; 375px is the narrowest width a section signs off at
+// (claude-docs/styling.md, "Designing a section"). `restore` puts the window back to its width afterwards.
 export async function assertNoSidewaysScroll(page: Page, { restore = false } = {}) {
   const size = restore ? page.viewportSize() : null;
   await page.setViewportSize({ width: 375, height: 812 });

@@ -3,14 +3,10 @@ import { test, expect } from './fixtures';
 import { recreateE2eDatabase } from './database';
 import { signInAs } from './session';
 
-// Where the keyboard goes after a click, and where the skip link sends it, in
-// both page frames: the signed-in AppShell and the signed-out PublicFrame,
-// each on /compendium, which the (public) layout draws in either. The skip
-// link's target is an empty `span#main` before the page, focusable by script
-// only. Before it, the target was a `tabindex="-1"` wrapper round the page, so
-// a click on plain text inside the page focused the wrapper, and the next Tab
-// went back to the first control on the page instead of the one after the
-// click. A regression test: that bug reached a PR.
+// Where the keyboard goes after a click, and where the skip link sends it, in both page frames (the signed-in
+// AppShell and the signed-out PublicFrame, each on /compendium). The skip target is an empty `span#main`,
+// focusable by script only: a `tabindex="-1"` wrapper once took the focus on a click on plain text, so the
+// next Tab went back to the page's first control.
 
 test.beforeAll(async () => {
   await recreateE2eDatabase();
@@ -22,10 +18,8 @@ const TABBABLE =
 type Probe = { tabbableBefore: number; tabbableAfter: number; x: number; y: number } | null;
 
 /**
- * Picks a piece of plain text in the page with a control before it and a
- * control after it, scrolls it to the middle of the window, and keeps the
- * text, the page's first control and the control after the text on `window`
- * for the assertions. Returns the point to click, or null when there is none.
+ * Picks plain text with a control before and after it, scrolls it to the window's middle and keeps the
+ * text and both controls on `window` for the assertions. Returns the point to click, or null.
  */
 async function probe(page: Page): Promise<Probe> {
   return page.evaluate((selector) => {

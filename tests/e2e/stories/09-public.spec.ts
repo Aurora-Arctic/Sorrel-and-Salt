@@ -2,11 +2,9 @@ import { test, expect } from '../fixtures';
 import { recreateE2eDatabase } from '../database';
 import { compendiumList, withSql } from './coven-ingredients';
 
-// Story 63: a visitor with no account opens the compendium from the front door, is not
-// turned away to sign in, and reads an entry from a card. The pages are public;
-// the chrome round them carries the way in, and following it reaches the sign-in page.
-// Both pages' axe scans,
-// signed out, are tests/e2e/public-compendium.spec.ts's and compendium-entry.spec.ts's.
+// A visitor with no account opens the compendium from the front door, is not turned away to sign in, and
+// reads an entry from a card; the chrome carries the way in, and following it reaches Sign In. Both pages'
+// signed-out axe scans are public-compendium.spec.ts's and compendium-entry.spec.ts's.
 
 test.beforeAll(async () => {
   await recreateE2eDatabase();

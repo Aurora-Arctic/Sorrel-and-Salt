@@ -7,14 +7,10 @@ import { e2eDatabaseUrl, recreateE2eDatabase } from '../database';
 import { latestMessageTo } from '../mailpit';
 import { PRIMARY_ADMIN_EMAIL, signInAgainAs, signInAs } from '../session';
 
-// Stories 58–62 walked in the browser, as a user and an admin would walk
-// them: proving an address, changing it, granting and revoking admin, reading
-// the privilege ledger, and inviting an admin by email
-// (claude-docs/auth/admin-bootstrap.md, "The email page";
-// claude-docs/design-decisions/mb.61-email-verification-and-delivery.md).
-// Accounts are made by `signInAs` and rows a flow needs in place by raw SQL;
-// the story's own step goes through the page, and a mailed link is
-// read from Mailpit and followed.
+// Proving an address, changing it, granting and revoking admin, reading the privilege ledger and inviting an
+// admin by email, walked in the browser (claude-docs/auth/admin-bootstrap.md, "The email page";
+// claude-docs/design-decisions/mb.61-email-verification-and-delivery.md). Accounts come from `signInAs`, rows
+// by raw SQL, and a mailed link is read from Mailpit and followed.
 test.beforeAll(async () => {
   await recreateE2eDatabase();
 });
@@ -37,11 +33,8 @@ async function rename(userId: string, name: string): Promise<void> {
 }
 
 /**
- * Opens `path` in this page, following each redirect itself. The session
- * rides as an extra request header (tests/e2e/session.ts), which the browser
- * drops on a redirect it follows, so a followed hop would arrive signed out.
- * Here each hop the server answers with a redirect is read and opened afresh,
- * session and all, as a browser holding the cookie would arrive there.
+ * Opens `path` in this page, following each redirect itself. The session rides as an extra request header
+ * (tests/e2e/session.ts), which the browser drops on a followed redirect, so each hop is read and opened afresh.
  */
 async function visit(page: Page, path: string): Promise<Response> {
   let target = path;
@@ -62,10 +55,8 @@ const VERIFY_LINK = /https?:\/\/[^\s\])>"]+\/verify-email\?[^\s\])>"]+/;
 const INVITE_LINK = /https?:\/\/[^\s\])>"]+\/invite\/[A-Za-z0-9_-]+/;
 
 /**
- * The path of the link in the newest mail to `to` matching `pattern`, waiting
- * for one not in `seen`, and checking the mail went to that address alone.
- * The path rather than the URL: the build's origin is the link's fallback,
- * not this slot's server.
+ * The path of the link in the newest mail to `to` matching `pattern`, waiting for one not in `seen` and
+ * checking the mail went to that address alone. The path, not the URL: the link's origin is the build's, not this slot's.
  */
 async function mailedPath(
   to: string,
@@ -96,9 +87,8 @@ async function signedOutPage(browser: Browser, baseURL: string | undefined): Pro
 }
 
 /**
- * Sends a GraphQL operation from the page, as anyone could from the
- * browser's console: the direct action behind a control the page withholds.
- * A refusal must come from the server, not only from the page.
+ * Sends a GraphQL operation from the page, as anyone could from the console: the direct action behind a
+ * control the page withholds, so a refusal must come from the server.
  */
 async function sendFromPage(
   page: Page,
@@ -145,10 +135,7 @@ async function expectAdminArea(page: Page, reached: boolean): Promise<void> {
   }
 }
 
-/**
- * The primary admin's id: the account an earlier test signed in at the
- * address, or one made now, since the email index admits the address once.
- */
+/** The primary admin's id: the account an earlier test signed in at the address, or one made now (the email index admits it once). */
 async function primaryAdminId(page: Page): Promise<string> {
   const [row] = await withSql(
     (sql) => sql`select id from users where email = ${PRIMARY_ADMIN_EMAIL}`,
@@ -167,10 +154,7 @@ async function userRow(page: Page, email: string) {
 /** The role cell, the third: its text opens with the role. */
 const roleCell = (row: ReturnType<Page['getByRole']>) => row.getByRole('cell').nth(2);
 
-/**
- * Opens `name`'s Change Role dialog from `row` and picks `role` in it,
- * answering the dialog for the caller to confirm.
- */
+/** Opens `name`'s Change Role dialog from `row`, picks `role` and answers the dialog for the caller to confirm. */
 async function chooseRole(
   page: Page,
   row: ReturnType<Page['getByRole']>,
@@ -184,10 +168,7 @@ async function chooseRole(
   return dialog;
 }
 
-/**
- * Invites `email` from /admin/invitations as the signed-in admin, to the
- * admin role unless told otherwise, and answers the mailed link's path.
- */
+/** Invites `email` from /admin/invitations as the signed-in admin, to the admin role unless told otherwise, and answers the mailed link's path. */
 async function inviteAdmin(
   page: Page,
   email: string,
@@ -382,10 +363,9 @@ test(
   },
 );
 
-// Story 60's three tests on the primary admin share one worker, in this order,
-// because the last demotes every other admin in the worker's database, the
-// primary included, which the two before it need in place. Serial inside this
-// block alone: the tests after it make their own admins.
+// The three tests on the primary admin share one worker, in this order, because the last demotes every other
+// admin in the worker's database, the primary included, which the two before need in place. Serial in this
+// block alone.
 test.describe('the primary admin', () => {
   test.describe.configure({ mode: 'serial' });
 

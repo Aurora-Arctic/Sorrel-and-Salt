@@ -12,9 +12,8 @@ const CACHE_OFFSET = 100;
 const WORKSHOP_OFFSET = CACHE_OFFSET + 1;
 
 /**
- * The first slot's port: 8001, so `npm run dev` on 8000 and an e2e run sit side by side.
- * `E2E_PORT_BASE` moves the whole block. Playwright reuses a server it finds on a slot's
- * port off CI, so a stray dev server there would answer in place of the production build.
+ * The first slot's port, 8001, so `npm run dev` on 8000 and an e2e run sit side by side; `E2E_PORT_BASE`
+ * moves the block. Playwright reuses a server it finds on a port off CI, so a stray dev server would answer.
  */
 function portBase(env: SlotEnv = process.env): number {
   const raw = env.E2E_PORT_BASE;
@@ -32,8 +31,8 @@ const FIRST_SLOT_PORT = portBase();
 /** Above every slot's port, so no slot can reach or reuse it. */
 export const CONFIGURED_PROVIDERS_PORT = FIRST_SLOT_PORT + 99;
 /**
- * The one server that keeps its data cache; the slots' servers turn it off because a reseed
- * would leave it answering stale rows (claude-docs/db/compendium-cache.md, "In tests").
+ * The one server that keeps its data cache; the slots turn it off because a reseed would leave it
+ * answering stale rows (claude-docs/db/compendium-cache.md, "In tests").
  */
 export const COMPENDIUM_CACHE_PORT = FIRST_SLOT_PORT + CACHE_OFFSET;
 /** The workshop server, for playwright.workshop.config.ts alone. */
@@ -41,9 +40,8 @@ export const WORKSHOP_PORT = FIRST_SLOT_PORT + WORKSHOP_OFFSET;
 const MAX_SLOTS = CONFIGURED_PROVIDERS_PORT - FIRST_SLOT_PORT;
 
 /**
- * `E2E_WORKERS`, else half the CPUs floored at one (Playwright's own default). More workers
- * were slower and timed out stories (claude-docs/testing/e2e.md, "Where a run's time goes").
- * Local default only; CI sets `E2E_WORKERS` itself.
+ * `E2E_WORKERS`, else half the CPUs floored at one. More workers were slower and timed out stories
+ * (claude-docs/testing/e2e.md, "Where a run's time goes"). CI sets `E2E_WORKERS` itself.
  */
 function slotCount(env: SlotEnv = process.env, cpus = os.cpus().length): number {
   const raw = env.E2E_WORKERS;
@@ -63,8 +61,8 @@ export function slotPort(slot: number): number {
 }
 
 /**
- * This worker's slot: Playwright's `parallelIndex`, kept by a replacement worker after a
- * failure. A `--workers` above `E2E_WORKERS` lands past the last server and fails on a refused connection.
+ * This worker's slot: Playwright's `parallelIndex`. A `--workers` above `E2E_WORKERS` lands past the
+ * last server and fails on a refused connection.
  */
 export function currentSlot(env: SlotEnv = process.env, slots = E2E_SLOTS): number {
   const raw = env.TEST_PARALLEL_INDEX;
@@ -86,17 +84,15 @@ export function currentSlot(env: SlotEnv = process.env, slots = E2E_SLOTS): numb
 export const wsEndpoint = process.env.PLAYWRIGHT_WS_ENDPOINT;
 
 /**
- * The audit's own server: WebKit, Firefox and Chromium on the `playwright-audit` compose
- * service. `E2E_AUDIT=1` is the one switch, so the variable in the devcontainer's environment
- * changes nothing for `npm run e2e` (claude-docs/testing/e2e.md, "The audit").
+ * The audit's own server: WebKit, Firefox and Chromium on the `playwright-audit` compose service. `E2E_AUDIT=1`
+ * is the one switch (claude-docs/testing/e2e.md, "The audit").
  */
 export const auditWsEndpoint =
   process.env.E2E_AUDIT === '1' ? process.env.PLAYWRIGHT_AUDIT_WS_ENDPOINT : undefined;
 
 /**
- * Whether the e2e servers drop `__Secure-` from Better Auth's cookie names and `signInAs`
- * puts the session cookie in the browser's jar. On under the audit alone, because WebKit
- * sends neither a `__Secure-` cookie nor a hand-added header to a plain-http origin
+ * Whether the servers drop `__Secure-` from Better Auth's cookie names and `signInAs` puts the cookie in the
+ * jar: on under the audit alone, since WebKit sends neither to a plain-http origin
  * (claude-docs/testing/e2e.md, "A signed-in browser without a provider").
  */
 export const plainSessionCookie = process.env.E2E_AUDIT === '1';
@@ -104,14 +100,14 @@ export const plainSessionCookie = process.env.E2E_AUDIT === '1';
 export const serverUrl = (port: number) => `http://localhost:${port}`;
 
 /**
- * A remote browser cannot resolve the runner's `localhost`; `start` binds
- * 0.0.0.0, so the compose service name reaches it. Either server is remote.
+ * A remote browser cannot resolve the runner's `localhost`; `start` binds 0.0.0.0, so the compose
+ * service name reaches it.
  */
 export const browserUrl = (port: number) =>
   wsEndpoint || auditWsEndpoint ? `http://devcontainer:${port}` : serverUrl(port);
 
 /**
- * A slot server's address for the browser: what the `baseURL` fixture hands a test
- * (tests/e2e/fixtures.ts), and what a `beforeAll`, which has no `baseURL`, sets its page up with.
+ * A slot server's address for the browser: the `baseURL` fixture's value (tests/e2e/fixtures.ts), and what
+ * a `beforeAll`, which has no `baseURL`, sets its page up with.
  */
 export const slotUrl = (slot: number) => browserUrl(slotPort(slot));

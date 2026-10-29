@@ -15,13 +15,11 @@ import {
   withSql,
 } from './stories/coven-ingredients';
 
-// An entry's "Back to …" link returns to the search, filters and page the entry was
-// opened from, with the opened card where it was. The link reads the tab's history through
-// the Navigation API, an enhancement past the browser floor, so where the browser has none it
-// is the bare list, as it is opened directly. The `chromium` project runs this, and Chromium
-// has had the API since 102. web-features dates it to Firefox 147 and Safari 26.2; under
-// `npm run e2e:audit` the Firefox and WebKit projects pass the history checks only where the
-// build Playwright drives is that new or newer.
+// An entry's "Back to …" link returns to the search, filters and page the entry was opened from, with the
+// card where it was. It reads the tab's history through the Navigation API, an enhancement past the browser
+// floor, so without the API it is the bare list. Chromium has had the API since 102; web-features dates it
+// to Firefox 147 and Safari 26.2, so under `npm run e2e:audit` those projects pass the history checks only
+// on a build that new.
 
 test.beforeAll(async () => {
   await recreateE2eDatabase();

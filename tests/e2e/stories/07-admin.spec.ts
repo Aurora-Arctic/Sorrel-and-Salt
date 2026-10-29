@@ -8,10 +8,8 @@ import { e2eDatabaseUrl, recreateE2eDatabase } from '../database';
 import { test, expect } from '../fixtures';
 import { signInAgainAs, signInAs } from '../session';
 
-// Stories 17, 18 and 19, walked in the browser: what a site admin curates and
-// how, what everyone else is refused, and what an admin does not reach — a
-// coven's own pages. Setup goes straight to the database; each
-// story's own step goes through the pages a person would use.
+// What a site admin curates and how, what everyone else is refused, and what an admin does not reach (a
+// coven's own pages). Setup goes straight to the database; each flow's own step goes through the pages.
 
 test.beforeAll(async () => {
   await recreateE2eDatabase();
@@ -30,9 +28,8 @@ async function withSql<T>(fn: (sql: postgres.Sql) => Promise<T>): Promise<T> {
 }
 
 /**
- * A coven named `name`, holding each user at the role given, the first its
- * creator, by the raw client rather than the coven service: the coven is the
- * setting here, not what is under test. Returns its slug.
+ * A coven named `name` holding each user at the role given, the first its creator, by the raw client rather
+ * than the coven service. Returns its slug.
  */
 async function makeCoven(name: string, members: [userId: string, role: Role][]): Promise<string> {
   const slug = slugify(name);
@@ -124,7 +121,7 @@ test.describe('story 17: everyone but an admin is kept from editing the compendi
         ['discord'],
         'admin',
       );
-      // Unlike every name story 18 adds, so its own adds meet no possible-duplicate prompt.
+      // Unlike every name this flow adds, so its own adds meet no possible-duplicate prompt.
       const name = 'Fixture Bramble Guarded';
       const slug = slugify(name);
       await withSql((sql) =>
@@ -261,10 +258,9 @@ test.describe('story 19: an admin sees a user’s covens but reaches none of the
 });
 
 /**
- * Holds every request for `path` whose address carries `param` — the press's
- * navigation and any prefetch of it — until `release` is called, which lets
- * them through and resolves once the last is answered: how a test sees a
- * modal open on the press, before the page that fills it arrives (claude-docs/components/modal.md, "Opening at once").
+ * Holds every request for `path` whose address carries `param` (the press's navigation and any prefetch)
+ * until `release` is called, which resolves once the last is answered: how a test sees a modal open on the
+ * press, before its page arrives (claude-docs/components/modal.md, "Opening at once").
  */
 async function holdModalRequests(page: Page, path: string, param: string) {
   const held: PlaywrightRoute[] = [];
@@ -289,9 +285,8 @@ async function holdModalRequests(page: Page, path: string, param: string) {
 const busy = (dialog: Locator) => dialog.locator('[aria-busy="true"]');
 
 /**
- * The row naming `name`, in the list named `table` or the page's one list: a cell that is
- * exactly the name, or a link that is. An entry's name cell also holds its Quick Look link,
- * so that cell's whole name is longer than the entry's and only its link matches.
+ * The row naming `name`, in the list named `table` or the page's one list: a cell that is exactly the name,
+ * or a link that is. An entry's name cell also holds its Quick Look link, so only its link matches.
  */
 const rowOf = (page: Page, table: string | null, name: string) =>
   (table ? page.getByRole('table', { name: table, exact: true }) : page.getByRole('table'))
@@ -310,11 +305,7 @@ async function deleteFrom(dialog: Locator, noun: string) {
   await confirm.click();
 }
 
-/**
- * A group's delete that moves what it holds to `destination` first: the
- * question names how many, the picker is inside it, and the move is
- * confirmed before it is made.
- */
+/** A group's delete that first moves what it holds to `destination`: the question names how many, and the move is confirmed. */
 async function moveAndDelete(page: Page, dialog: Locator, picker: string, destination: string) {
   await dialog.getByRole('button', { name: /^Delete (Group|Tradition)$/ }).click();
   await dialog.getByRole('combobox', { name: picker }).click();
@@ -331,11 +322,9 @@ test.describe('story 18: an admin adds, edits and soft-deletes what the compendi
     'an admin adds a compendium entry, edits it, and deletes it, the list following each',
     { tag: '@story-18' },
     async ({ page }) => {
-      // A longer limit for this story alone, which is long: eight axe scans, two saves, a reload
-      // and a delete. In CI, beside the other stories, it took 29.7s to 31.1s, the scans alone
-      // 12s of that, and the default 30s ran out at the reloaded dialog's Close. The trace shows
-      // the app quick throughout: that dialog was gone 0.4s after Close was pressed, and every
-      // request answered in under 0.15s, so the time is the story's own work.
+      // A longer limit for this flow, which is long: eight axe scans, two saves, a reload and a delete took
+      // 29.7s to 31.1s in CI (12s of it the scans) and the default 30s ran out at the reloaded dialog's Close.
+      // The trace shows the app quick throughout, so the time is the flow's own work.
       test.setTimeout(60_000);
       await signInAs(page, 'compendium@story-18.test', ['discord'], 'admin');
       expect((await page.goto('/admin/compendium'))?.status()).toBe(200);

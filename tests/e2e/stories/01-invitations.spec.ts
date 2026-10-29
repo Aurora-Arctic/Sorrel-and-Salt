@@ -8,23 +8,17 @@ import { latestMessageTo } from '../mailpit';
 import { signInAgainAs, signInAs } from '../session';
 import { slugify } from '@/lib/slugify';
 
-// Stories 4 to 7, walked in a browser: an owner invites by mail from the
-// coven's Invitations page, only the verified holder of the address gets in,
-// a pending invitation can be revoked, and a dead link — expired, revoked or
-// already used — is refused with a reason of its own, naming no coven and
-// making no seat. The link is read from the mail, the only place its token
-// ever is. Users, the coven and its seats are set up by SQL and `signInAs`;
-// each story's own step goes through the page.
+// Inviting by mail, accepting, revoking and the dead-link refusals, walked in a browser: only the verified
+// holder of the address gets in, and a dead link is refused with a reason of its own, naming no coven and
+// making no seat. The link is read from the mail, the only place its token is. Users, the coven and its seats
+// are set up by SQL and `signInAs`.
 //
-// A refusal is proved twice: the control is absent, and the request it would
-// have sent, made from the same browser by hand, is refused too — then the
-// state a user can see (the pending list, the roll, the 404) shows nothing
-// changed. That request is the browser's own `/api/graphql` call, the one
-// path a page's controls have to the server (CLAUDE.md rule 1).
+// A refusal is proved twice: the control is absent, and the request it would have sent, made by hand from the
+// same browser to `/api/graphql` (CLAUDE.md rule 1), is refused too, with the pending list, roll or 404
+// showing nothing changed.
 //
-// Serial is the choice for a file whose tests chain: one test's mailed link
-// (invitedPath) and refusals (usedRefusal, revokedRefusal) are read by later
-// ones, and the roll counts assume each earlier acceptance has happened.
+// Serial, because tests chain: later ones read the mailed link (invitedPath) and refusals, and the roll counts
+// assume each earlier acceptance has happened.
 test.describe.configure({ mode: 'serial' });
 
 const COVEN_NAME = 'Fixture Invitation Coven';
@@ -60,8 +54,8 @@ async function withSql<T>(work: (sql: postgres.Sql) => Promise<T>): Promise<T> {
 }
 
 /**
- * A verified account at `email` signed in on `page`, named so its row on the
- * members roll can be told from the rest: `signInAs` names everyone alike.
+ * A verified account at `email` signed in on `page`, named so its row on the members roll can be told from
+ * the rest: `signInAs` names everyone alike.
  */
 async function signInNamed(page: Page, email: string, name: string): Promise<Person> {
   const { userId } = await signInAs(page, email);
@@ -90,10 +84,8 @@ async function messagesTo(to: string): Promise<number> {
 }
 
 /**
- * Sends a GraphQL operation from the page, as the browser's own client does,
- * so the request carries this browser's session and nothing else: what a
- * user with the address bar and the developer tools could send. Answers the
- * response body.
+ * Sends a GraphQL operation from the page as the browser's own client does, carrying this browser's session
+ * and nothing else. Answers the response body.
  */
 async function sendFromPage(
   page: Page,
@@ -146,10 +138,7 @@ async function invitationIdFor(email: string): Promise<string> {
 /** The token a mailed path carries. */
 const tokenOf = (path: string) => path.slice('/invite/'.length);
 
-/**
- * The owner sends an invitation from the coven's Invitations page, through
- * Invite and its dialog, and the new row is listed pending.
- */
+/** The owner sends an invitation from the coven's Invitations page through Invite and its dialog; the row lists pending. */
 async function ownerInvites(page: Page, email: string, role: 'Viewer' | 'Member'): Promise<void> {
   await signInAgainAs(page, people.owner.id);
   await page.goto(`/coven/${COVEN_SLUG}/invitations`);
@@ -169,10 +158,7 @@ const pendingRow = (page: Page, email: string) =>
     .getByRole('row')
     .filter({ hasText: email });
 
-/**
- * Waits for the Invitations tab to be the open one: with nothing pending
- * there is no table to wait for, only the empty state.
- */
+/** Waits for the Invitations tab to be open: with nothing pending there is only the empty state to wait for. */
 const expectInvitationsTab = (page: Page) =>
   expect(
     page.getByRole('navigation', { name: 'Members' }).getByRole('link', { name: 'Invitations' }),
@@ -181,10 +167,7 @@ const expectInvitationsTab = (page: Page) =>
 const rollRow = (page: Page, name: string) =>
   page.getByRole('table', { name: 'Members' }).getByRole('row').filter({ hasText: name });
 
-/**
- * The owner's roll: its rows, and none for `absent`. The roll is what a seat
- * is to a user, so "no seat was made" is read here.
- */
+/** The owner's roll: its rows, and none for `absent`, so "no seat was made" is read here. */
 async function ownerReadsRoll(page: Page, absent?: string): Promise<number> {
   await signInAgainAs(page, people.owner.id);
   await page.goto(`/coven/${COVEN_SLUG}/members`);
@@ -196,9 +179,8 @@ async function ownerReadsRoll(page: Page, absent?: string): Promise<number> {
 }
 
 /**
- * A dead link, opened by a signed-in reader: the refusal is shown, there is
- * no Accept, and the coven is not named. Answers the refusal's words, so a
- * caller can tell one reason from another without asserting any of them.
+ * A dead link opened by a signed-in reader: the refusal shows, there is no Accept, and the coven is not named.
+ * Answers the refusal's words so a caller can tell one reason from another.
  */
 async function refusalAt(page: Page, path: string): Promise<string> {
   await page.goto(path);
@@ -209,10 +191,7 @@ async function refusalAt(page: Page, path: string): Promise<string> {
   return (await refusal.textContent()) ?? '';
 }
 
-/**
- * A holder whose link is dead tries Accept's own request by hand: refused,
- * and still no seat — the coven is a 404 to them, as to any stranger.
- */
+/** A holder with a dead link tries Accept's request by hand: refused, no seat, and the coven is a 404 to them. */
 async function directAcceptRefused(page: Page, path: string): Promise<void> {
   const answer = await sendFromPage(page, ACCEPT_INVITATION, { token: tokenOf(path) });
   expect(answer.errors?.length).toBeGreaterThan(0);
@@ -220,10 +199,8 @@ async function directAcceptRefused(page: Page, path: string): Promise<void> {
 }
 
 /**
- * Where `/coven`, the landing, sends this browser, read from its redirect.
- * Only the navigation's own response counts: the shell's brand links to the
- * landing, so Next prefetches it from every page as a 200 (an RSC fetch),
- * and one still in flight would answer here instead of the 307.
+ * Where `/coven`, the landing, sends this browser, read from its redirect. Only the navigation's own response
+ * counts: the shell's brand link makes Next prefetch the landing as a 200, which could answer instead of the 307.
  */
 async function landingRedirect(page: Page): Promise<string | undefined> {
   const redirected = page.waitForResponse(
@@ -468,10 +445,9 @@ test(
       rollRow(page, invited.name).getByRole('cell', { name: 'Member', exact: true }),
     ).toBeVisible();
 
-    // The landing now goes straight into the coven. The redirect is read
-    // rather than followed: the session rides as an extra request header
-    // (tests/e2e/session.ts), which the browser drops from a redirect it
-    // follows, so the followed request would arrive signed out.
+    // The landing now goes straight into the coven. The redirect is read rather than followed: the session
+    // rides as an extra request header (tests/e2e/session.ts), which the browser drops from a followed
+    // redirect.
     expect(await landingRedirect(page)).toBe(`/coven/${COVEN_SLUG}`);
 
     // The creation right came with it: the switcher offers Create Coven, and

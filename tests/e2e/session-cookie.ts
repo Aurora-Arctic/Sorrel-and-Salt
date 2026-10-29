@@ -5,10 +5,8 @@ import { plainSessionCookie } from './slots';
 // database.ts can build one without importing session.ts, which imports
 // database.ts.
 
-// A production build's base URL forces https (src/lib/auth.ts, "baseURL"), so
-// Better Auth names the cookie with the `__Secure-` prefix. Under the audit the
-// servers are started without it (E2E_PLAIN_SESSION_COOKIE, set by
-// playwright.config.ts; src/lib/e2e-session-cookie.ts).
+// A production build's base URL forces https (src/lib/auth.ts, "baseURL"), so Better Auth names the cookie
+// with `__Secure-`; the audit starts its servers without it (E2E_PLAIN_SESSION_COOKIE, playwright.config.ts).
 export const SESSION_COOKIE = plainSessionCookie
   ? 'better-auth.session_token'
   : '__Secure-better-auth.session_token';

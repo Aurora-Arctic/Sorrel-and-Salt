@@ -2,10 +2,9 @@ import { cloneDatabase, databaseUrl, dropDatabase, seedTemplate } from '../suppo
 import { SESSION_COOKIE, signed } from './session-cookie';
 import { E2E_SLOTS, currentSlot, serverUrl, slotPort } from './slots';
 
-// One database per worker slot, which that slot's server reads: global-setup.ts
-// builds the seeded template once per run and clones every slot's database
-// from it, each db-touching spec file recreates its own slot's in its
-// `beforeAll`, and global-teardown.ts drops the template.
+// One database per worker slot, which that slot's server reads: global-setup.ts builds the seeded template
+// once per run and clones every slot's database from it, each db-touching spec file recreates its own
+// slot's in `beforeAll`, and global-teardown.ts drops the template.
 const E2E_TEMPLATE = 'sorrel_e2e_template';
 /** The configured-providers server's, which no spec reseeds. */
 export const CONFIGURED_PROVIDERS_DATABASE = 'sorrel_e2e_providers';

@@ -17,12 +17,10 @@ import { insertIngredient } from '../support/db/insert-ingredient';
 import { makeIngredient, makeVariant } from '../support/fixtures/ingredient';
 import { ingredientSlug } from '@/lib/slugify';
 
-// A click anywhere on an ingredient card opens its entry, as a click on its name does,
-// on the public compendium (CompendiumCards) and on a coven's Ingredients page (CovenCards),
-// while each control on the card keeps its own action and navigates nowhere. The card is one
-// stretched link (claude-docs/components/ingredient-card.md, "The whole card is the link"),
-// which only a browser can prove: jsdom does no hit-testing, so a component test cannot tell
-// whether a click on the card's empty space reaches the name's overlay.
+// A click anywhere on an ingredient card opens its entry, on the public compendium and on a coven's
+// Ingredients page, while each control keeps its own action. The card is one stretched link
+// (claude-docs/components/ingredient-card.md, "The whole card is the link"); jsdom does no hit-testing,
+// so only a browser shows whether a click on empty space reaches the name's overlay.
 
 test.beforeAll(async () => {
   await recreateE2eDatabase();

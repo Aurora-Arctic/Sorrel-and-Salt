@@ -18,20 +18,17 @@ import {
 import { categoryChip, pickCategoryIn } from './ingredient-dialogs';
 import { makeVariant } from '../../support/fixtures/ingredient';
 
-// Stories 47 to 57, 76 to 80, 83 and 84: the grimoire, from naming a spell to the
-// workings recorded against it. A story left as `test.fixme` is a scaffold: the page it
-// walks does not exist, and its annotation names the task that turns it into `test`. Each body is
-// the flow as the finished page will allow it, so that task edits locators rather than inventing a
-// flow. Stories 76 to 80 are not in DESIGN.md §10, so the reporter prints "Not a v1 story" for them.
+// The grimoire in the browser, from naming a spell to the workings recorded against it. A `test.fixme` is a
+// flow whose annotation names its task; stories 76 to 80 are not in DESIGN.md §10, so the reporter prints
+// "Not a v1 story" for them.
 
 test.beforeAll(async () => {
   await recreateE2eDatabase();
 });
 
 /**
- * The spell builder, reached as a member reaches it: from the Grimoire, through the
- * New Spell at its heading, which only a role that may create a spell is shown. It opens as a
- * dialog over the grimoire under `?new=spell-<slug>`, and the dialog is what it returns.
+ * The spell builder, reached from the Grimoire through the New Spell at its heading, shown only to a role that
+ * may create a spell. It opens as a dialog over the grimoire under `?new=spell-<slug>` and returns the dialog.
  */
 async function openBuilder(page: Page, slug: string): Promise<Locator> {
   await page.goto(`/coven/${slug}/grimoire`);
@@ -53,8 +50,8 @@ function grimoireList(page: Page): Locator {
 }
 
 /**
- * Adds a step through the type-ahead picker, which offers one row per form,
- * "Rosemary (Herb)", and returns the step's row in the list.
+ * Adds a step through the type-ahead picker, which offers one row per form, "Rosemary (Herb)", and returns
+ * the step's row in the list.
  */
 async function addIngredientStep(page: Page, name: string): Promise<Locator> {
   await page.getByRole('combobox', { name: 'Add to Jar' }).fill(name);
@@ -197,10 +194,10 @@ test(
     await pickUnit(step, 'g');
     const save = page.getByRole('button', { name: 'Save' });
     await save.click();
-    // Saved: nothing left to save.
+    // After the save the Save button is disabled and no longer busy.
     await expect(save).toBeDisabled();
     await expect(save).not.toHaveAttribute('aria-busy', 'true');
-    // The step is read in SQL, where the save left it.
+    // The saved step's quantity, unit and name, read back from the database.
     const rows = await withSql(
       (sql) => sql<{ quantity: string; unit: string; name: string | null }[]>`
         select st.quantity, st.unit, st.name from spell_steps st
@@ -251,7 +248,7 @@ test(
     await save.click();
     await expect(save).toBeDisabled();
     await expect(save).not.toHaveAttribute('aria-busy', 'true');
-    // The order is read in SQL, where the save left it: the position.
+    // The saved steps' names in position order, read back from the database.
     const rows = await withSql(
       (sql) => sql<{ name: string; position: number }[]>`
         select i.name, st.position from spell_steps st

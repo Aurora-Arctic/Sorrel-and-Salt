@@ -7,9 +7,8 @@ import { insertCupboardEntry } from '../support/db/insert-cupboard-entry';
 import { insertIngredient } from '../support/db/insert-ingredient';
 import { makeIngredient } from '../support/fixtures/ingredient';
 
-// A compendium entry in a coven's cupboard: the coven's page shows
-// the coven's label and changes with the marks, and the public page of the
-// same entry shows neither, and a coven's own entry with no formal name passes
+// A compendium entry in a coven's cupboard: the coven's page shows the coven's label and changes with the
+// marks, the public page of the entry shows neither, and a coven's own entry with no formal name passes
 // the scan with its list of the compendium entries it might be.
 
 test.beforeAll(async () => {

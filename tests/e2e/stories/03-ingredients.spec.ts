@@ -318,11 +318,9 @@ test(
         await expect(lowBadge(rowOf(list, name))).toHaveCount(0);
         await expect(outBadge(rowOf(list, name))).toHaveCount(0);
       }
-      // Each badge is a drawing alone, named in full for a screen reader, and its
-      // tip says the state in words: not a colour alone. The tip is an icon tip, kept out
-      // of the accessibility tree, so it is found with `includeHidden`, in its badge's row
-      // (the page's hidden info tips, and a card's last-edit tip, are tooltips too, so the
-      // query names the stock tip by its words). Axe holds their contrast.
+      // Each badge is a drawing alone, named in full for a screen reader, and its tip says the state in words,
+      // not a colour alone. The tip is an icon tip, hidden from the accessibility tree, so it is found with
+      // `includeHidden` in its badge's row, by its words. Axe holds their contrast.
       const tipIn = (row: Locator, words: string) =>
         row.getByRole('tooltip', { includeHidden: true }).filter({ hasText: words });
       await outBadge(rowOf(list, 'Rosemary')).focus();
@@ -873,11 +871,9 @@ test(
     const cards = cardsIn(list);
     await expect(cards).toHaveCount(4);
 
-    // The three states as a choice chip in the Filters panel, a `group` by
-    // role (All, Local and Compendium), and in-stock-only as a switch, as the
-    // admin's No Refs is (claude-docs/components/facet-panel.md). A change in
-    // the panel is held until Apply Filters. Found whether the panel is open or
-    // shut, so what it holds can be read after a reload without opening it.
+    // The three states are a choice chip in the Filters panel, a `group` by role (All, Local and Compendium),
+    // and in-stock-only is a switch (claude-docs/components/facet-panel.md). A change is held until Apply
+    // Filters. They are found whether the panel is open or shut, so a reload can read them.
     const panel = page.getByRole('dialog', { name: 'Filters', includeHidden: true });
     const source = panel.getByRole('group', { name: 'Source', includeHidden: true });
     const inStock = panel.getByRole('switch', { name: /^In Stock/, includeHidden: true });

@@ -2,12 +2,9 @@ import { test, expect } from './fixtures';
 import { recreateE2eDatabase } from './database';
 import { signInAs } from './session';
 
-// Where the focus goes as a dialog opened by the page's address closes,
-// for the two closes no story walks (claude-docs/components/modal.md, "Giving
-// the focus back"). Back leaves the address the press wrote, and the focus
-// goes back to the link pressed; a pasted address has no opener, and the focus
-// goes to the page's heading rather than being lost to the page. The standard
-// seed's Protection category is the entry both open.
+// Where the focus goes as a route-opened dialog closes (claude-docs/components/modal.md, "Giving the focus
+// back"): Back returns it to the link pressed, and a pasted address, with no opener, puts it on the page's
+// heading. The standard seed's Protection category is the entry both open.
 test.beforeAll(async () => {
   await recreateE2eDatabase();
 });

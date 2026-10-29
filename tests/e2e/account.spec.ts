@@ -5,11 +5,9 @@ import { assertNoAccessibilityViolations, assertNoSidewaysScroll, settleTransiti
 import { e2eDatabaseUrl, recreateE2eDatabase } from './database';
 import { signInAs } from './session';
 
-// The one account page, signed in: its Name, Email and
-// Sign-In Methods sections. The default server configures no provider, so
-// every Add is greyed; linking itself is asserted through Better Auth's
-// endpoints in tests/db/account-linking.test.ts, and a rename through
-// tests/components/NameForm and the set-name service.
+// The account page, signed in: its Name, Email and Sign-In Methods sections. The default server
+// configures no provider, so every Add is greyed; linking is asserted in tests/db/account-linking.test.ts
+// and a rename in tests/components/NameForm and the set-name service.
 test.beforeAll(async () => {
   await recreateE2eDatabase();
 });

@@ -4,11 +4,9 @@ import { recreateE2eDatabase } from './database';
 import { signInAgainAs } from './session';
 import { seedCoven } from './stories/coven-ingredients';
 
-// Gate spec for a bug found in review: New Spell opened as the heading's
-// skeleton, which the server's form then replaced, so the centred dialog grew and jumped up
-// under the pointer (518px to 720px at 1280 by 800). Its press now writes the address in the
-// browser and the dialog draws the form there, as Add Ingredient's does. Proved by state: from
-// the first frame the dialog is open, it already holds the form, and its height never changes.
+// New Spell opens the dialog already holding the form, so the centred dialog does not grow and jump under the
+// pointer (it was 518px then 720px at 1280 by 800). Proved by state: the form is there from the first frame
+// and the dialog's height never changes.
 test.use({ reducedMotion: 'no-preference' });
 test.beforeAll(async () => {
   await recreateE2eDatabase();

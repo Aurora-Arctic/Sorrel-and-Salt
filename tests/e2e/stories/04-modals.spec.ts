@@ -32,11 +32,9 @@ import {
   shellEditControls,
 } from './ingredient-dialogs';
 
-// Stories 28–34: the add and edit dialogs of a coven's ingredient. Stories 28–32 open the
-// dialog from the coven's home, its members page and /account, and read each save back
-// in SQL. Each story writes its own coven, and its ingredients' invented
-// names share no word, so the form's duplicate warning never holds a save
-// meant to go through.
+// The add and edit dialogs of a coven's ingredient: the add opens from the coven's home, its members page and
+// /account, and each save is read back in SQL. Each flow writes its own coven, and its ingredients' invented
+// names share no word, so the duplicate warning never holds a save meant to go through.
 
 test.beforeAll(async () => {
   await recreateE2eDatabase();
@@ -51,10 +49,7 @@ function saveIngredient(dialog: Locator): Locator {
   return dialog.getByRole('button', { name: 'Save Ingredient', exact: true });
 }
 
-/**
- * The save's announcement ("announces the save in the status region"),
- * found by the name it carries: the saved entry's own name is data, not copy.
- */
+/** The save's announcement, found by the name it carries: the saved entry's own name is data, not copy. */
 function savedStatus(page: Page, name: string): Locator {
   return page.getByRole('status').filter({ hasText: name });
 }
@@ -91,9 +86,8 @@ async function holdsFocus(scope: Locator): Promise<boolean> {
 }
 
 /**
- * Makes `userId` a member of `coven` in `role`, stamped by its owner, as
- * `seedCoven` writes its own members: a user `seedCoven` made for one coven
- * joins another without signing in again under a second address.
+ * Makes `userId` a member of `coven` in `role`, stamped by its owner as `seedCoven` writes its members, so a
+ * user made for one coven joins another without signing in again.
  */
 async function joinCoven(coven: Coven, userId: string, role: Role): Promise<void> {
   const owner = Object.values(coven.users)[0];
@@ -111,15 +105,12 @@ const CREATE = `mutation ($w: ID!, $name: String!) {
   createWorkspaceIngredient(workspaceId: $w, input: { name: $name, variants: [] }) { id }
 }`;
 
-// Story 28's covens: B writes to the first two and only views the third.
+// The covens of the first flow: B writes to the first two and only views the third.
 const FIRST = 'Fixture Coven Story 28';
 const SECOND = 'Fixture Second Coven Story 28';
 const VIEWED = 'Fixture Viewed Coven Story 28';
 
-/**
- * An add dialog's accessible name for `coven`: the whole phrase, "Add
- * Ingredient to <coven>". The coven's name is data, so it is escaped.
- */
+/** An add dialog's accessible name for `coven`: "Add Ingredient to <coven>", with the coven's name escaped as data. */
 function namesCoven(coven: string): RegExp {
   return new RegExp(`^Add Ingredient to ${coven.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}$`);
 }
@@ -151,10 +142,8 @@ test(
         await expect(nameField(dialog)).toBeVisible();
         if (path === '/account') await assertNoAccessibilityViolations(page);
 
-        // The page behind is inert while the dialog is open: walking back
-        // past the dialog's first control never reaches the bar's own. The
-        // dialog is drawn inside the bar, beside its button, so the bar's
-        // controls are what the banner holds outside the dialog.
+        // The page behind is inert while the dialog is open: walking back past the dialog's first control
+        // never reaches the bar's own, which the banner holds outside the dialog.
         for (let press = 0; press < 8; press += 1) {
           await page.keyboard.press('Shift+Tab');
           const onBar = (await holdsFocus(page.getByRole('banner'))) && !(await holdsFocus(dialog));

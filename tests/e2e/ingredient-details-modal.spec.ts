@@ -16,17 +16,10 @@ import {
 } from './stories/coven-ingredients';
 import { editIngredientDialog } from './stories/ingredient-dialogs';
 
-// An entry's details in a modal over its list, opened by the Quick Look
-// eye, left of the name on the admin Compendium list and at the card's foot on
-// a coven's Ingredients and the public compendium (claude-docs/components/ingredient-entry.md, "The details modal"). This
-// proves what no story walks: the eye opens the details and every close gives
-// it the focus back, the details show the entry's sections on every list, the name itself still reaches the entry's page, Edit
-// opens the edit modal over the details and closes back to them, a coven's
-// save there shows in the details and the list, and the open details pass axe
-// and hold at a phone's width. Who gets a coven's Edit, and an unsaved close's
-// question, are details-dialog's component test's and story 33's; a delete
-// from the details is that component test's and story 25's. On the public compendium a visitor with no
-// account opens them too, and reads the entry's sections there.
+// An entry's details in a modal over its list, opened by the Quick Look eye (claude-docs/components/
+// ingredient-entry.md, "The details modal"), for what no story walks: every close returns focus, the details
+// show the entry's sections on every list, Edit opens over the details and closes back, a coven's save shows
+// in both, and the open details pass axe at a phone's width.
 
 test.beforeAll(async () => {
   await recreateE2eDatabase();
@@ -330,8 +323,8 @@ test.describe('on the admin Compendium list', () => {
 });
 
 test.describe("on a coven's Ingredients", () => {
-  // Who gets Edit, and the unsaved close's question, are details-dialog's component test's and
-  // Story 33's (tests/e2e/stories/04-modals.spec.ts); this is the real save behind the details.
+  // Who gets Edit and the unsaved close's question are the details-dialog component test's and
+  // stories/04-modals.spec.ts's; this is the real save behind the details.
   test('a save from the details goes back to them, renamed there and on the list', async ({
     page,
   }) => {
