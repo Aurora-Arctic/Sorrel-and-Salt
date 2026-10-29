@@ -8,7 +8,7 @@ import type { ComboboxChoice, ComboboxOption } from '../Combobox/types';
 
 // The typing form of the facet box: the typed Combobox with the chosen values as chips, for a set long
 // enough to narrow or sorted under headings. It offers only what is not chosen, leaves a zero out, and a
-// pick leaves the list open (claude-docs/components/facet-combobox.md, "Typeahead").
+// pick leaves the list open (claude-docs/components/facet-combobox.md, "Contracts").
 
 export function FacetTypeahead({
   id,

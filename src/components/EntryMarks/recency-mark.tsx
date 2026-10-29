@@ -3,7 +3,7 @@ import type { RecencyMarkProps } from './types';
 
 // The marker saying a compendium entry is New or Updated: not a badge, so it reads apart from the stock,
 // source and safety badges. It carries the words and a small icon hidden from assistive technology
-// (claude-docs/components/entry-marks.md, "New and Updated").
+// (claude-docs/components/entry-marks.md, "New and Updated (MB.106)").
 
 const Svg = ({ children }: { children: ReactNode }): ReactElement => (
   <svg

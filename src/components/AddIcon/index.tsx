@@ -66,7 +66,7 @@ const Glyph = ({
 /**
  * The plus: with one writable coven it adds there directly, with no quantity, and the page reads
  * again; with two or more it opens a menu of every coven, never adding at once. A refusal is a
- * callout under the plus (claude-docs/components/add-icon.md, "Source notes").
+ * callout under the plus (claude-docs/components/add-icon.md, "What the plus is").
  */
 const AddIcon = ({
   name: entry,

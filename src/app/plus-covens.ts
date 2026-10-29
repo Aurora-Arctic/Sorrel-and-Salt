@@ -6,11 +6,11 @@ import { covenRolesIfSignedIn, viewerIfSignedIn } from '@/lib/viewer';
 import { rolePermits } from '@/modules/coven';
 import { covensHoldingEntry, type HoldingCoven } from '@/modules/ingredients';
 
-// The plus beside an entry page's pencil (M9.12; the owner's call, 2026-10-20), on the public
+// The plus beside an entry page's pencil on the public
 // page and a coven's alike: the viewer's covens, and which of them hold the entry. Per viewer,
 // so read per request through the services and never cached (CLAUDE.md rule 6); the held covens
 // are the one `covensHoldingEntry` read, which filters to the viewer's memberships in SQL.
-// claude-docs/components/ingredient-entry.md, "The plus".
+// claude-docs/components/add-icon.md, "Adding".
 
 /**
  * The viewer's covens that hold the entry, viewers' included: none signed out. The one held read

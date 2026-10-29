@@ -108,6 +108,6 @@ and `role-control.test.tsx` hold each control's refusal, said under the button
 as the service's sentence alone and the focus on the button, the badge bringing it back,
 and its success said in the status region.
 
-## Notes from code comments: the columns
+## Columns
 
-The columns: the name, then where the page asks, the address; then the role with its change beside it, then the facts no control changes: when they joined, who invited them, and who last changed the membership and when, in one Updated column. Remove is last, in a column ruled in red as Impersonate is, since it is the table's one destructive row action, and only when the page passes it.
+The roll reads left to right as who, what they may do, and what has happened to the membership. The name comes first and the address only where the page asks for it. Next is the role with its change control beside it. Then come the facts no control changes: when the person joined, who invited them, and who last changed the membership and when, folded into one Updated column. Remove is last, and only when the page passes it. It is the table's one destructive row action, so its column is ruled in red, as the Impersonate column is.

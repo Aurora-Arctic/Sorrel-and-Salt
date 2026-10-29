@@ -9,7 +9,7 @@ import './index.scss';
 
 // A jar's Low Stock or Out of Stock badge, per jar, so a card holding two forms can flag one and
 // not the other; it renders nothing when there is nothing to flag
-// (claude-docs/components/stock-badge.md, "Component notes").
+// (claude-docs/components/stock-badge.md, "Words, names and tips").
 
 /** The drawing that tells Low (double chevron) from Out (slashed ring) without colour; shared with the entry page's shelf. */
 export const StockIcon = ({

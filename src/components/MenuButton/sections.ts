@@ -5,7 +5,7 @@ export type Viewing = 'compendium' | 'coven';
 
 /**
  * The compendium and coven sections of a menu, the viewer's own side first (the caller gives `viewing`); an empty side is left out. Generic over the item.
- * (claude-docs/components/menu-button.md, "Notes from code comments: menu sections").
+ * (claude-docs/components/menu-button.md, "Menu sections").
  */
 export function sectionsFor<Item>(
   choices: { compendium: readonly Item[]; coven: readonly Item[] },
@@ -20,7 +20,7 @@ export function sectionsFor<Item>(
 
 /**
  * What a More menu is given: always the labelled sections, the viewer's side first, with an empty side left out; not for the bar's Add Ingredient menu
- * (claude-docs/components/menu-button.md, "Notes from code comments: More menu sections").
+ * (claude-docs/components/menu-button.md, "Menu sections").
  */
 export function choicesFor(
   choices: { compendium: readonly MenuButtonItem[]; coven: readonly MenuButtonItem[] },

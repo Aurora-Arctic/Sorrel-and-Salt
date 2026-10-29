@@ -13,7 +13,7 @@ import { verdictOf, type VerdictKind, VerdictMark } from './verdict-mark';
 import { isInstruction, stepNameOf } from './steps/values';
 
 // In Coven Inventory: one line per form, at its first step's place, setting `needOf` against the jar's `supplyOf`, with a `VerdictMark` and `doorsOf` doors; used by the recipe page alone
-// (claude-docs/components/spell-recipe.md, "The side column" and "Notes from code comments: the inventory panel").
+// (claude-docs/components/spell-recipe.md, "The side column" and "The inventory panel").
 
 // A one-off holds no stock, but its jar is drawn with something in it, as a stocked jar is: an
 // unmeasured jar stands at the middling level, in muted ink (index.scss). The One-Off badge says

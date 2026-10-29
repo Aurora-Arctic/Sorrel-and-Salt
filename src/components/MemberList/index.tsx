@@ -12,7 +12,7 @@ import './index.scss';
 
 /**
  * The columns: name, address where asked, role with its change, then joined, invited by and Updated; Remove is last, ruled in red, and only when the page passes it.
- * (claude-docs/components/member-list.md, "Notes from code comments: the columns").
+ * (claude-docs/components/member-list.md, "Columns").
  */
 const columns = (
   currentUserId: string,

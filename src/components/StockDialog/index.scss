@@ -113,7 +113,7 @@
 }
 
 // The chosen form's accent ink is the same green a step further from the ground per theme, clearing 6.39:1 in every state
-// (claude-docs/components/stock-dialog.md, "Edited").
+// (claude-docs/components/stock-dialog.md, "Layout: a list and the chosen jar").
 .stock-dialog__choose[aria-current='true'] .stock-dialog__edited {
   color: $accent-hover;
 }

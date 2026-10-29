@@ -19,7 +19,7 @@ import type { CompendiumCardMoreProps, CompendiumCardPlace } from './types';
 
 // The three dots on a compendium card: Edit Stock, Annotate, Make It Ours and Remove, in the dialogs
 // the entry page shares. Drawn only when it holds a choice; Quick Look carries `leaveHref`, where a
-// remove leads (claude-docs/components/compendium-cards.md, "Source notes").
+// remove leads (claude-docs/components/compendium-cards.md, "The More menu on a card").
 
 type Asking = 'stock' | 'annotate' | 'own' | 'remove';
 type Can = 'canAnnotate' | 'canMakeOurs' | 'canRemove';

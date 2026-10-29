@@ -64,7 +64,7 @@
 }
 
 // The card: the ingredient form's variant card look, one row of handle, number, icon, name, amount and Remove, with the marks, instruction and safety note beneath
-// (claude-docs/components/step-row.md, "Notes from code comments: the card").
+// (claude-docs/components/step-row.md, "The card").
 .step-row.step-row--card {
   display: grid;
   grid-template-areas: 'handle position name amount remove';

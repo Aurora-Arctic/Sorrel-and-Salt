@@ -132,7 +132,7 @@ const SpellCard = ({
 /**
  * The filter that tears the smouldering edge ragged, referenced by id from index.scss and rendered once per page (an id must be unique).
  * Coarse and still noise displaces the hole and its ember and char bands; without it the burn front is a smooth curve.
- * (claude-docs/components/spell-card.md, "Notes from code comments: the burn filter").
+ * (claude-docs/components/spell-card.md, "The burn filter").
  */
 export const SpellCardFilters = (): ReactElement => (
   <svg className="spell-card-filters" aria-hidden="true" focusable="false" width="0" height="0">

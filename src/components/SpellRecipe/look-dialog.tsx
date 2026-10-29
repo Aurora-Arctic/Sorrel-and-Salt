@@ -11,7 +11,7 @@ import type { SpellLookDialogProps } from './types';
 import './index.scss';
 
 // The Quick Look modal a grimoire card's eye opens: the spell body, last edit, a link to the recipe page and Edit Spell (`?edit=<id>`); a client part for RouteModal
-// (claude-docs/components/spell-recipe.md, "Notes from code comments: the Quick Look dialog").
+// (claude-docs/components/spell-recipe.md, "The Quick Look component").
 
 export default function SpellLookDialog({
   closeHref,

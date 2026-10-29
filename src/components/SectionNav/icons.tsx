@@ -7,7 +7,7 @@ import type { SectionIconName } from './types';
 // the bottom bar's. Inline rather than an icon package: nine shapes, each used here and
 // nowhere else, and the forms mark is FormIcon's generic salt spoon, so one mark means "a
 // form" everywhere. Hidden from assistive technology, since the label beside each names the
-// section (claude-docs/components/section-nav.md, "Icons").
+// section (claude-docs/components/section-nav.md, "Contracts").
 const SHAPES: Record<SectionIconName | 'more', ReactElement> = {
   overview: (
     <>

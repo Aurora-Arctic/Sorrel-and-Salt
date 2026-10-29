@@ -20,7 +20,7 @@ export const ListNavigationContext = createContext<ListNavigation | null>(null);
 
 /**
  * Holds the navigation the filter, pager and body share; `pending` stays true until Next has rendered the new page
- * (claude-docs/components/list-frame.md, "Notes from code comments: the navigation provider").
+ * (claude-docs/components/list-frame.md, "The navigation provider").
  */
 const ListFrame = ({ className, children }: ListFrameProps): ReactElement => {
   const outer = useContext(ListNavigationContext);

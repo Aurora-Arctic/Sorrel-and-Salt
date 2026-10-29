@@ -213,8 +213,8 @@ The workshop's States story (`Feedback / Save Status`) renders every state,
 and the workshop's every-story check (`npm run workshop:check`) scans it with
 axe.
 
-## Source notes
+## Where the status shows
 
-Comments in the source that point here; each is the detail behind a one-line comment.
+An autosaving form reports how its saves are going inline beside its primary action, never as a toast, because the status describes this form and stays until the next save. The conflict notice alone may go elsewhere (`conflictInto`): under a dialog's title, where a long form's footer is out of view, since it asks for a decision rather than reporting.
 
-- `index.tsx`: Where an autosaving form says how its saves are going: inline beside the form's primary action, never a toast, because it describes this form and stays until the next save. The conflict notice alone may go elsewhere (`conflictInto`): under a dialog's title, where a long form's footer is out of view, since it asks for a decision rather than reporting. The visible line updates on every change; screen readers hear only the first save of a burst, from a live region of its own, since a save every few seconds read out each time would drown what the person is typing. claude-docs/components/autosave.md.
+The visible line updates on every change. Screen readers hear only the first save of a burst, from a live region of its own, because a save every few seconds read out each time would drown what the person is typing.

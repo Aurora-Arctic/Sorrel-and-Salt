@@ -76,6 +76,8 @@ well would be a second copy to keep equal.
 | `parts.ts`  | Cuts the fragments into the lead, the term and the clauses                     |
 | `typing.ts` | The editing: one character an edit towards a goal, and the animation's timings |
 
-## Notes from code comments: the sentence
+## The sentence and its loading animation
 
-The sentence above a list that says what it is searching for. Settled, it is one closed line, "12 ingredients matching rue", that opens to the clauses beneath. While a search is on its way the whole sentence is typed out in its place as the loading animation: the count is "Searching for ingredients" until it comes back, then backspaced to the real one, and the clauses finish typing, are held for a moment and slide up into the closed line. The typed line is hidden from assistive technology; a status region is given the finished sentence once, when the search returns (claude-docs/components/search-sentence.md).
+The sentence above a list says what the list is searching for. Settled, it is one closed line such as "12 ingredients matching rue", which opens to the clauses beneath it.
+
+While a search is on its way, the whole sentence is typed out in place as the loading animation. The count reads "Searching for ingredients" until the result returns, then is backspaced to the real count. The clauses finish typing, are held for a moment, and slide up into the closed line. The typed line is hidden from assistive technology, and a status region is given the finished sentence once, when the search returns.

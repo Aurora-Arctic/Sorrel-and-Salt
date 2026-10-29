@@ -5,7 +5,7 @@ import type { SafetyMarkProps } from './types';
 
 // A badge row's one safety badge: Toxic when the ingredient or a shown form is flagged, else
 // Caution when any has notes, else nothing. Toxic says more than Caution, so it stands alone
-// when both apply. claude-docs/components/safety-note.md, "SafetyMark".
+// when both apply. claude-docs/components/safety-note.md, "Contracts".
 export const SafetyMark = ({
   toxic,
   safetyNotes,

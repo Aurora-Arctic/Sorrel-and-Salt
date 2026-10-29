@@ -177,7 +177,7 @@ $skeleton-fade: 300ms;
 
     // In a coven's form, the Quick Look eye of a held match (a + turned eye included) is in the add's green
     // ($accent), not the cards' ink, in every state; the hover and focus wash is icon-button-edit's. At
-    // least 3.9:1 on either notice's tint and the wash (claude-docs/components/ingredient-form.md, "The + in the duplicate warning").
+    // least 3.9:1 on either notice's tint and the wash (claude-docs/components/ingredient-form.md, "The duplicate warning").
     .ingredient-form__group .icon-tip__look {
       &,
       &:hover,

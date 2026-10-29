@@ -101,17 +101,20 @@ leaves or on Escape, and that the bubble is kept from a screen reader. The `lowS
 on the same jar states, one entry each, in `tests/modules/ingredients/services/workspace-ingredient-list.test.ts`
 and its count in `tests/modules/ingredients/services/ingredient-facets.test.ts`.
 
-## Component notes
+## Where the badge sits and what it draws
 
-Facts moved out of the code comments of the stock badge.
+The badge sits in the jar-line slot the ingredient card leaves. A consumer renders it every time and checks nothing: with nothing to flag it renders nothing. Each state is its drawing alone in a small square, so neither rests on colour. Low is a double chevron and Out of Stock is a slashed ring. Neither is boxed. The drawing takes the colour of the matching jar on the entry's shelf: the warning amber for Low and Out of Stock's red. Safety stays the only boxed, alarming badge (`styling.md`). The drawing is exported so the shelf puts the same symbol beside a Low or Out amount and the two places never draw the states differently.
 
-- The badge sits in the jar-line slot the ingredient card leaves. A consumer renders it every time and checks nothing; with nothing to flag it renders nothing.
-- Each state is its drawing alone in a small square, so neither can rest on colour: Low is a double chevron and Out of Stock a slashed ring. Neither is boxed: the drawing is in the colour of the matching jar on the entry's shelf, the warning amber for Low and Out of Stock's red. Safety stays the only boxed, alarming badge (styling.md).
-- The words live in a button name and a tip. Both states are buttons whose only job is to open that tip, and the tips are `IconTip`'s: they open after a rest of the pointer or at once on focus, fade, close the moment the pointer leaves or on Escape, and cannot be hovered.
-- Low's tip is one statement of the level, "Low Stock at 10 g or less", without the jar's amount, which the jar line already shows. Out of Stock's is its name.
-- The name is an `aria-label` ("Low Stock" / "Out of Stock") so a screen reader has the words without opening the tip. `IconTip`'s bubble is decoration, hidden from a screen reader and mounted only while open, so Low's statement is also written once, out of sight, as the button's description. Out's description would only repeat the name.
-- The words are `stock-words.ts`, shared with the entry page's jar shelf, which tells Low and Out by the jar and a button on its amount. That button is `StockTip`, exported from `index.tsx` so the badge and the shelf draw one button with one name and one description.
-- The drawing is exported so the shelf puts the same symbol beside a Low or Out amount and the two places never draw the states differently.
-- The amount writer is shared by the card's jar line, the Edit Stock dialog's list and the entry page's shelf, so the three never drift.
-- Styling: no border, tint or padding. The two states differ by drawing as well as colour. Both inks reach 4.5:1 on the card and the page in both themes. The square is 24px, so the jar lines keep the inset that centres it on the actions' icon below.
-- `stockState`: a held jar with no quantity is `ok` (nothing to compare); a quantity of 0 is `out` whatever the threshold; a threshold of 0 or none switches the Low Stock warning off and never means always low. `tests/support/jar-states.ts` holds the shared list of jar states that both copies are tested against; the function is pure so a test can walk every row.
+Styling adds no border, tint or padding. Both inks reach 4.5:1 on the card and the page in both themes. The square is 24px, so the jar lines keep the inset that centres it on the actions' icon below.
+
+## Words, names and tips
+
+The words live in a button name and a tip. Both states are buttons whose only job is to open that tip, and the tips are `IconTip`'s: they open after a rest of the pointer or at once on focus, fade, close the moment the pointer leaves or on Escape, and cannot be hovered. Low's tip is one statement of the level, "Low Stock at 10 g or less", without the jar's amount, which the jar line already shows. Out of Stock's tip is its name.
+
+The name is an `aria-label` ("Low Stock" or "Out of Stock") so a screen reader has the words without opening the tip. `IconTip`'s bubble is decoration, hidden from a screen reader and mounted only while open, so Low's statement is also written once, out of sight, as the button's description. Out's description would only repeat the name.
+
+The words are in `stock-words.ts`, shared with the entry page's jar shelf, which tells Low and Out by the jar and a button on its amount. That button is `StockTip`, exported from `index.tsx` so the badge and the shelf draw one button with one name and one description. The amount writer is shared by the card's jar line, the Edit Stock dialog's list and the entry page's shelf, so the three never drift.
+
+## `stockState`
+
+A held jar with no quantity is `ok`, since there is nothing to compare. A quantity of 0 is `out` whatever the threshold. A threshold of 0 or none switches the Low Stock warning off and never means always low. The function is pure so a test can walk every row, and `tests/support/jar-states.ts` holds the shared list of jar states that both copies are tested against.

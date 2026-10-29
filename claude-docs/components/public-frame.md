@@ -82,8 +82,8 @@ chrome each kind of visitor gets. `tests/e2e/public-frame.spec.ts` proves the
 chrome with script off (the page's `main` inside `.app-shell__main`, after the `span#main` target), the current-page mark signed out and in, the `X-Robots-Tag` header and axe at 375px; story 63
 walks the visitor in. `tests/e2e/navigation-wait.spec.ts` ("signed out") proves the wait in a browser: the Compendium link from an entry and a card from the list each draw one wait under held answers, reduced motion leaves only the pulse with axe passing, and a direct request for an unknown entry still answers 404.
 
-## Source notes
+## What the frame holds
 
-Comments in the source that point here; each is the detail behind a one-line comment.
+The frame surrounds a public page for a visitor who is not signed in: a skip link, the site name, a nav holding the Compendium and the way in, and the page in a wrapper after the skip link's target. Nothing in it is workspace-shaped. A signed-in visitor gets `AppShell` from the same layout instead (`src/app/(public)/layout.tsx`). `.skip-link` and `.skip-target` are drawn by AppShell's stylesheet, which the layout always loads with it.
 
-- `index.tsx`: The frame round a public page for a visitor who is not signed in: a skip link, the site name, a nav holding the Compendium and the way in, and the page in a wrapper after the skip link's target. Nothing workspace-shaped. A signed-in visitor gets `AppShell` from the same layout instead (`src/app/(public)/layout.tsx`). `.skip-link` and `.skip-target` are drawn by AppShell's stylesheet, which the layout always loads with it. A server component; its nav is the shell's `SiteNav`, the one client part (it marks the current page), and renders on the server too, so the chrome is in the HTML a crawler or a script-less browser receives. The body is the shell's `MainBody`, so a move between public pages draws the destination's skeleton under the bar as the shell does. See claude-docs/components/public-frame.md.
+It is a server component. Its nav is the shell's `SiteNav`, the one client part (it marks the current page), and it renders on the server too, so the chrome is in the HTML a crawler or a script-less browser receives. The body is the shell's `MainBody`, so a move between public pages draws the destination's skeleton under the bar as the shell does.

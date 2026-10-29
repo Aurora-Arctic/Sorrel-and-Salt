@@ -153,33 +153,20 @@ and 7.99:1 (dark), the title 15.56:1 and 12.20:1.
 
 The Workshop's `Hover` story holds the effect lit on one card and leaves a second to hover.
 
-## Notes from code comments: the smouldering edge
+## How the burn is built
 
-What burns is gone: a hole in the card's foot corner, through the card's face and its
-shadow both, so the page shows through and no edge of the whole card is left. The face
-and its shadow are a layer of their own (`.spell-card__face`): the face is the spread
-shadow of a hole-shaped box, so it is everything but the hole, and the shadow is a
-`drop-shadow()` of that, so it follows the burnt edge, not the rectangle. Over the content,
-a thin bright ember line and a thin dark char rim run round the burn front, and one SVG
-filter (`#spell-card-burn`, from `SpellCardFilters`) tears the hole and the rim alike,
-so their edges meet. Faint embers glow in the burnt part itself, brightest along the
-ember line and fading towards the corner; a little warmth spills onto the table below
-the card, behind it, and shows through the hole.
-The burn creeps along the bottom edge for 1.3s, then holds while the ember glows
-unevenly. On leaving, the burn fades while the hole and the spill shrink back to the
-corner, so a quick return burns on from where they have shrunk to.
+What burns is gone. The hole in the card's foot corner goes through the card's face and its shadow, so the page shows through and no edge of the whole card is left. The face and its shadow are one layer (`.spell-card__face`). The face is the spread shadow of a hole-shaped box, so it covers everything but the hole. The shadow is a `drop-shadow()` of that, so it follows the burnt edge, not the rectangle.
 
-Nothing warm sits under text: the hole is under 1rem deep, half of it past the card's
-edge, so with its rim and the tearing it stays inside the card's padding. Only at the
-corner does it climb higher, about 1.25rem up the right edge, where no text runs. The card's
-face takes IngredientCard's hover tint and lifted shadow and nothing else.
+Over the content, a thin bright ember line and a thin dark char rim run round the burn front. One SVG filter, `#spell-card-burn` from `SpellCardFilters`, tears the hole and the rim alike so their edges meet. Faint embers glow in the burnt part, brightest along the ember line and fading towards the corner. A little warmth spills onto the table below the card, behind it, and shows through the hole.
 
-## Notes from code comments: the smoulder stylesheet
+The layers stack by markup order with no `z-index`. Nothing transforms the card or any ancestor of it, because a transformed ancestor becomes the containing block of the category chips' `position: fixed` tip bubbles.
 
-The spell card's hover: the parchment smouldering from its bottom-right corner. What burns is gone: a hole in the card's foot corner, through the face and its shadow, drawn as one layer (`.spell-card__face`) torn by one SVG filter (`#spell-card-burn`). Nothing warm sits under text (claude-docs/components/spell-card.md, "Notes from code comments: the smouldering edge").
+## Timing and the text clearance
 
-The layers stack by the order of the markup, with no z-index (index.scss says why). Nothing transforms the card or any ancestor of it: a transformed ancestor becomes the containing block of the category chips' `position: fixed` tip bubbles.
+The burn creeps along the bottom edge for 1.3s, then holds while the ember glows unevenly. On leaving, the burn fades while the hole and the spill shrink back to the corner, so a quick return burns on from where they have shrunk to.
 
-## Notes from code comments: the burn filter
+Nothing warm sits under text. The hole is under 1rem deep, half of it past the card's edge, so with its rim and the tearing it stays inside the card's padding. Only at the corner does it climb higher, about 1.25rem up the right edge, where no text runs. The card's face takes `IngredientCard`'s hover tint and lifted shadow and nothing else.
 
-The filter that tears the smouldering edge ragged, referenced by id from index.scss. Rendered once per page beside the list of cards (GrimoireList), not per card: an id must be unique, and one filter serves every card. Without it the burn front is a smooth curve. Coarse noise displacing the hole and its ember and char bands; still, since a burn line does not wriggle.
+## The burn filter
+
+`SpellCardFilters` renders the filter once per page beside the list of cards (`GrimoireList`), not once per card: an id must be unique and one filter serves every card. Without it the burn front is a smooth curve. The filter uses coarse noise to displace the hole and its ember and char bands. The noise is still, since a burn line does not wriggle.

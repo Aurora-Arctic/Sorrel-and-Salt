@@ -5,7 +5,7 @@ import type { GroupChipProps } from './types';
 
 /**
  * A group's name in a chip where it has both colours, plain text otherwise; a form group's name leads with its icon
- * (claude-docs/components/data-table.md, "Notes from code comments: the group chip").
+ * (claude-docs/components/data-table.md, "The group chip").
  */
 const GroupChip = ({ name, colors, icon }: GroupChipProps): ReactElement => {
   const label =

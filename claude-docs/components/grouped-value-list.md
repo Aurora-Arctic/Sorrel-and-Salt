@@ -240,8 +240,8 @@ pager, each Edit, Add and the modal's way back; and the modal the address
 opens. How the list shows what it is given is this component's test's alone. `tests/e2e/admin.spec.ts` lists the
 seeded forms' first page and the celestial bodies', and filters the signs by part of a name.
 
-## Source notes
+## The filter
 
-Comments in the source that point here; each is the detail behind a one-line comment.
+A curated vocabulary's filter is a name search and, for a grouped kind, its group, each applying as it changes. The group applies once a choice settles (a pick, its clear or leaving the box), never while typed, carrying the name typed but not yet searched. The name applies on the magnifier or Enter. `FilterForm` holds the form, Clear and the soft navigation; the filter holds what the fields say.
 
-- `filter.tsx`: A curated vocabulary's filter: a name search, and for a grouped kind its group, each applying as it changes. The group applies once a choice settles (a pick, its clear or leaving the box), never while typed, carrying the name typed but not yet searched; the name on the magnifier or Enter. `FilterForm` holds the form, Clear and the soft navigation; this holds what the fields say. The group is typed into once hydrated, but the server draws a native `<select>` (`FilterSelectField`), so before hydration a press on the magnifier submits natively as `query=&group=`. The list keys this by the filter shown, so a page showing another, Back say, draws it afresh from that one.
+The group is typed into once the page is hydrated, but the server draws a native `<select>` (`FilterSelectField`), so before hydration a press on the magnifier submits natively as `query=&group=`. The list keys the filter by the filter shown, so a page showing another, after Back for instance, draws it afresh from that one.

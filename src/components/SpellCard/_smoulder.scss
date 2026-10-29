@@ -3,7 +3,7 @@
 
 // The spell card's hover: parchment smouldering from the bottom-right, one layer (`.spell-card__face`) torn by one SVG filter; layers stack by markup order, no z-index
 // Nothing transforms the card or an ancestor, which would contain the category chips' `position: fixed` tips
-// (claude-docs/components/spell-card.md, "Notes from code comments: the smoulder stylesheet").
+// (claude-docs/components/spell-card.md, "How the burn is built").
 //
 // Baseline: CSS `filter: url()` on an HTML element, `drop-shadow()` and SVG filters are
 // Widely Available. Where the filter does not apply, the burn front is a smooth curve.
