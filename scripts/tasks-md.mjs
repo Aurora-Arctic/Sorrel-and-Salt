@@ -8,10 +8,7 @@ import { readFileSync } from 'node:fs';
 import { fileURLToPath } from 'node:url';
 
 /**
- * The breakdown's files, repo-relative and in reading order: TASKS.md, whose
- * table names the waves, then the milestone sections. Declared rather than
- * listed from the directory because the order is what a range is expanded
- * by, so a new file in claude-docs/tasks/ is added here.
+ * The breakdown's files in reading order: TASKS.md, whose table names the waves, then the milestone sections. Declared, not listed, as the order expands a range.
  */
 export const TASKS_FILES = [
   'claude-docs/TASKS.md',
@@ -98,23 +95,14 @@ export function readTasksMd(text) {
 }
 
 /**
- * A retired heading's title, `<id> — ~~Title~~`, as the board's title rule
- * has its issue's: `<id> — [RETIRED] Title` (.claude/rules/task-tracking.md,
- * "Board layout"). The strike-through is markdown, which an issue title shows
- * as literal tildes.
+ * A retired heading's title, `<id> — ~~Title~~`, as its issue's is `<id> — [RETIRED] Title` (.claude/rules/task-tracking.md, "Board layout"); tildes show literally in an issue title.
  */
 const retiredTitle = (title) =>
   title.replace(new RegExp(String.raw`^(${ID}) — ~~(.*)~~$`), '$1 — [RETIRED] $2');
 
 /**
- * One task's entry: the title its heading carries, which is its issue's
- * title (a retired one's as `retiredTitle` marks it), the hours, and the text
- * from the heading to the next task or section heading, which is its issue's
- * body (claude-docs/task-tracking.md, "Sync"). Null when no heading carries
- * the id; a short id never reads a longer one's. Matched
- * whatever its case, as `find` matches a title, since `sync` upper-cases what
- * it is given and a lettered heading (a trailing letter) is not; the answer carries the
- * heading's own.
+ * One task's entry: its heading's title (a retired one's as `retiredTitle` marks it), the hours, and the text to the next heading, which is its issue's body
+ * (claude-docs/task-tracking.md, "Sync"). Null when no heading carries the id. Matched whatever its case, as `find` matches a title, and the answer carries the heading's own.
  */
 export function readEntry(text, id) {
   const lines = text.split('\n');

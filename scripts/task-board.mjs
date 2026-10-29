@@ -98,12 +98,8 @@ export function findIssue(id, issues = listTracked()) {
   );
 }
 
-// ---------------------------------------------------------------------------
-// Project — one query for the issue's own item, never a listing of every
-// item. It answers the item id, its Status and Estimate, and the Project's
-// field and option ids, read on each run rather than hardcoded: an option
-// recreated in the Project's settings gets a new id, and a stale constant
-// would set nothing while reporting success.
+// Project — one query for the issue's own item, never a listing. Field and option ids are read on each run, not hardcoded: a recreated option gets a new id,
+// and a stale constant would set nothing while reporting success.
 
 const ITEM_QUERY = `
   query ($owner: String!, $name: String!, $number: Int!) {
@@ -180,10 +176,7 @@ function editItem(item, field, valueArgs) {
 }
 
 /**
- * Moves Status forward. `Done` is the merge's — the Action closes the issue
- * and the Project's Item-closed workflow sets it — so it is refused unless
- * `force`, the migration's flag for tasks that were already done on Asana.
- * `item` is read unless given, so a refusal costs no query.
+ * Moves Status forward. `Done` is the merge's, so it is refused unless `force`, the migration's flag for tasks already done on Asana. `item` is read unless given.
  */
 export function setStatus(issue, target, { force = false, item } = {}) {
   if (!STATUSES.includes(target)) {
@@ -223,10 +216,7 @@ export function setEstimate(issue, hours, { item } = {}) {
   return { from, to: value, changed: true };
 }
 
-// ---------------------------------------------------------------------------
-// Order — the Project's manual item order is execution order: TASKS.md's wave
-// table, wave by wave. `reorder` reads the order with the leanest requests
-// there are, plans the fewest moves that restore it, and makes them one paced
+// Order — the Project's manual item order is execution order: TASKS.md's wave table, wave by wave. `reorder` plans the fewest moves and makes them one paced
 // mutation at a time (claude-docs/task-tracking.md, "Order").
 
 /** The id off `<id> — Title`, or null for a title that does not open with an id. */
@@ -248,11 +238,8 @@ export function listMilestones() {
   return ghJson(['api', '--paginate', '--slurp', endpoint]).flat().map(shapeMilestone);
 }
 
-// Position is observable only as listing order, so this is the one listing
-// the script makes. It asks each item for its id and its issue number and
-// nests no connection, which the cost formula prices at a page's minimum;
-// the listing that tripped the secondary limit (`gh project item-list`)
-// asked every item for every field value.
+// Position is observable only as listing order, so this is the one listing the script makes. It asks each item for its id and issue number and nests no connection,
+// as `gh project item-list`, which asked for every field value, tripped the secondary limit.
 const ITEMS_QUERY = `
   query ($owner: String!, $number: Int!, $endCursor: String) {
     organization(login: $owner) {
@@ -308,12 +295,8 @@ function longestIncreasing(values) {
 }
 
 /**
- * The fewest moves that put `target` (in target order, each with its current
- * position) into that order. The first entry is the anchor and never moves;
- * behind it the longest run already in order stays, and each other entry is
- * moved after its predecessor. Processing in target order makes a predecessor
- * final before its follower is placed, and no move is ever "to the top", so
- * nothing climbs above the items the plan leaves alone.
+ * The fewest moves that put `target` into order: the first entry is the anchor, the longest run already in order stays, and each other entry moves after its predecessor.
+ * Target order makes a predecessor final before its follower is placed, so nothing climbs above the items left alone.
  */
 export function planMoves(target) {
   if (target.length < 2) return [];
@@ -334,11 +317,8 @@ export function planMoves(target) {
 const waveTitle = (number) => `Wave ${String(number).padStart(2, '0')}`;
 
 /**
- * The plan: the waves left where they sit, every way the rows and the board
- * disagree, the target order of the waves still open, and the moves. A wave
- * whose milestone has no open issue is done whatever the milestone's state;
- * an issue on a wave's milestone that its row does not name is appended to
- * the wave, in heading order, and reported.
+ * The plan: the waves left where they sit, every disagreement between rows and board, the target order of the open waves, and the moves. A wave whose milestone has no open issue is done;
+ * an issue on a wave's milestone that its row does not name is appended to the wave and reported.
  */
 export function planReorder({ issues, milestones, listing, tasks }) {
   const byId = new Map();
@@ -524,11 +504,8 @@ export const SECRET_PATTERNS = [
   { name: 'bearer token', pattern: /\bBearer\s+[A-Za-z0-9._+/=-]{16,}/ },
   {
     name: 'token-like run',
-    // No '/', '_' or '-', and both a digit and a letter: a file path, a URL
-    // path, a branch name or a SCREAMING_CASE constant is the long run a comment
-    // actually cites, and a token has none of those. A github.com or
-    // app.asana.com link is blanked first; a bare git SHA is exactly 40 hex
-    // characters and is what a PR body cites.
+    // No '/', '_' or '-', and both a digit and a letter: a path, URL, branch name or SCREAMING_CASE constant is what a comment cites, and a token has none of those.
+    // A github.com or app.asana.com link is blanked first; a bare git SHA is exactly 40 hex characters.
     pattern: /(?=[A-Za-z0-9+=]*\d)(?=[A-Za-z0-9+=]*[A-Za-z])[A-Za-z0-9+=]{40,}/,
     prepare: (text) => text.replace(KNOWN_URLS, ' '),
     reject: (match) => GIT_SHA.test(match),
@@ -567,11 +544,7 @@ export function postComment(issue, text) {
   });
 }
 
-// ---------------------------------------------------------------------------
-// Sync — an issue's title and body are its entry's heading and text, and its
-// Estimate the heading's hours. An entry corrected in a PR is synced in the
-// same pass, so the board never says one thing and the breakdown another
-// (claude-docs/task-tracking.md, "Sync").
+// Sync — an issue's title and body are its entry's heading and text, and its Estimate the heading's hours (claude-docs/task-tracking.md, "Sync").
 
 /** Where an entry's relative links resolve: its own directory, on staging. */
 const ENTRY_BASE = `https://github.com/${REPO}/blob/staging/claude-docs/tasks/`;
@@ -595,10 +568,7 @@ export function issueBodyOf(body) {
 }
 
 /**
- * The edits that bring `issue` to `entry`: a title and a body, each only
- * where it differs. GitHub keeps a trailing newline, which is no difference.
- * A title that would not open with the id is refused: `find` could no longer
- * reach the issue.
+ * The edits that bring `issue` to `entry`: a title and a body, each only where it differs. A title that would not open with the id is refused, as `find` could not reach it.
  */
 export function planSync(issue, entry) {
   if (!matchesId(entry.title, entry.id)) {
