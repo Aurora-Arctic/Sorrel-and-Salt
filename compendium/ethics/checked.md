@@ -627,6 +627,19 @@ One line per entry: `<nomenclature>/<entry-file-slug>`. An entry with an ethics 
 - mineral/ochre-ochre
 - mineral/palygorskite-palygorskite
 - none/alaea-salt
+- botanical/pericon-tagetes-lucida
+- botanical/plao-yai-croton-persimilis
+- botanical/prairie-sage-artemisia-ludoviciana
+- botanical/prickly-pear-opuntia
+- botanical/sacred-datura-toloache-datura-innoxia
+- botanical/salvia-divinorum-salvia-divinorum
+- botanical/sambong-blumea-balsamifera
+- botanical/sola-pith-aeschynomene-aspera
+- botanical/white-champaca-magnolia-alba
+- botanical/wild-rice-zizania-palustris
+- botanical/zacatechichi-calea-ternifolia
+- fungal/psilocybe-mushrooms-psilocybe
+- zoological/spondylus-spondylus
 
 ## M14.16
 

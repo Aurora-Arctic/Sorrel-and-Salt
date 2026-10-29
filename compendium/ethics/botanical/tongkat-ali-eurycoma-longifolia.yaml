@@ -1,0 +1,20 @@
+# Gathered for M14.29; the seed never reads this folder.
+entry: botanical/tongkat-ali-eurycoma-longifolia
+status: approved
+listings:
+  - list: iucn
+    name: IUCN Red List
+    value: Least Concern (IUCN 3.1)
+    listedAs: Eurycoma longifolia
+    scope: global
+    nameBasis: stated
+    source: wikipedia-eurycoma-longifolia
+    locator: taxobox, conservation status (status = LC, IUCN3.1)
+  - list: other
+    name: Priority species for conservation; wild harvest restricted
+    value: Raw plant banned from export; harvesting of wild trees restricted under Act 686
+    listedAs: Eurycoma longifolia
+    scope: Malaysia
+    nameBasis: stated
+    source: wikipedia-eurycoma-longifolia
+    locator: Commercialization, Conservation and sustainability

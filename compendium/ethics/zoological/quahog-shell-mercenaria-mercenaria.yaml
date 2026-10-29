@@ -1,0 +1,12 @@
+# Gathered for M14.29; the seed never reads this folder.
+entry: zoological/quahog-shell-mercenaria-mercenaria
+status: approved
+listings:
+  - list: other
+    name: NatureServe (TNC)
+    value: G5 (TNC status in taxobox)
+    listedAs: Mercenaria mercenaria
+    scope: global
+    nameBasis: stated
+    source: wikipedia-hard-clam
+    locator: taxobox, status = G5, status_system = TNC

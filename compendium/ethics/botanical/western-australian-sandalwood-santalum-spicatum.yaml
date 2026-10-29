@@ -1,0 +1,20 @@
+# Gathered for M14.29; the seed never reads this folder.
+entry: botanical/western-australian-sandalwood-santalum-spicatum
+status: approved
+listings:
+  - list: iucn
+    name: IUCN Red List
+    value: Vulnerable (IUCN 3.1)
+    listedAs: Santalum spicatum
+    scope: global
+    nameBasis: stated
+    source: wikipedia-santalum-spicatum
+    locator: taxobox, conservation status (status = VU, IUCN3.1; Gowland 2021)
+  - list: other
+    name: Vulnerable threatened species
+    value: Vulnerable
+    listedAs: Santalum spicatum
+    scope: South Australia
+    nameBasis: stated
+    source: wikipedia-santalum-spicatum
+    locator: Conservation status

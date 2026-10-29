@@ -1,0 +1,12 @@
+# Gathered for M14.29; the seed never reads this folder.
+entry: botanical/shampoo-ginger-zingiber-zerumbet
+status: approved
+listings:
+  - list: iucn
+    name: IUCN Red List
+    value: Data Deficient (IUCN 3.1)
+    listedAs: Zingiber zerumbet
+    scope: global
+    nameBasis: stated
+    source: wikipedia-zingiber-zerumbet
+    locator: taxobox, conservation status (status = DD, IUCN3.1)
