@@ -9,10 +9,17 @@ $recipe-column: 48rem;
 .spell-recipe {
   display: flex;
   flex-direction: column;
-  gap: space(4);
+  // The Edited line close over the title, and the title close over the body: the title's line
+  // box carries its own air, so a wider gap read as a gulf (the owner, 2026-10-29).
+  gap: space(2);
   max-width: $recipe-column;
   margin-inline: auto;
   padding: space(4);
+}
+
+// The way back stands a clear step off the Edited line and the title.
+.spell-recipe__back {
+  margin-block-end: space(2);
 }
 
 // The body and, on the page, the side column (M13.21): a stack on a phone, the column beside
