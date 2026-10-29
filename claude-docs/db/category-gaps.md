@@ -28,6 +28,17 @@ These supersede the "Proposed decision" column in the table below wherever they 
 - Left off, each with an Edit Notes line: Image Magic, Flying, Changing Sex (Persimmon).
 - Shadow Work: no change.
 
+Answers to the sweep, 2026-10-29:
+
+- New categories: Negativity (Cleansing & Release); Challenges (Prosperity & Work), named "Challenges" and not "Challenges/Obstacles"; Sex, Sexuality and Family (Love & Connection); and, each in the group the sweep table proposes, Emotions, Secrets, Growth, Faerie Sight, Skill, Adaptability, Leadership, Beauty, Invisibility, Astral Projection and Garden Magic.
+- Kynes "Hexes (Break, Protect From)" maps to Hex-Breaking: the heading in Section0032.xhtml shows it means breaking hexes, not casting them.
+- Kynes "Negativity" maps to Negativity. "Challenges/Obstacles" maps to Challenges. "Family and Home" maps to Family and Home Blessing. "Sex/Sexuality" maps to both Sex and Sexuality, on all 82 entries.
+- Crystals "Male Sexual Dysfunction; Sexual Dysfunction; Sexual Energy; Sexual" map to Sex, not Lust.
+- Love Divination maps to Love and Divination. Breaking Love Spells maps to Love and Hex-Breaking. Removing Obstacles maps to Challenges, not Success.
+- Every other row in both sweep tables, and the single-word mappings, stand as proposed. Attraction maps to Attraction. Friendship, Business, Reconciliation and Hex-Breaking exist in the 63, so "if seeded" no longer applies.
+- The left-off rows stay off.
+- Held for the owner: Potency (7 cunningham-herbs entries; proposed Sex) and Marital Happiness on sardonyx (proposed Love, Harmony and Joy, Joy being where Happiness maps).
+
 ## The Gaps
 
 38 gaps, plus Shadow Work, which was reported but is already seeded. 22 propose a mapping, 16 propose a new category, and 13 are marked unsure.

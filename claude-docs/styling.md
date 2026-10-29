@@ -200,7 +200,7 @@ punched in parchment, so light mode gets a much softer one.
 
 ## Category-group colours
 
-§6's eight groups, which exist so the chip selector can collapse 63 categories
+§6's eight groups, which exist so the chip selector can collapse 101 categories
 into sections rather than a flat wall. Each group needs a colour distinguishable
 from the other seven at chip size.
 
