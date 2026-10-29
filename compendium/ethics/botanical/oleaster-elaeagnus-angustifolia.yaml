@@ -1,0 +1,11 @@
+# Gathered for M14.29; the seed never reads this folder.
+entry: botanical/oleaster-elaeagnus-angustifolia
+status: needs-review
+listings:
+  - list: iucn
+    name: IUCN Red List of Threatened Species, as printed by Wikipedia
+    value: Least Concern
+    listedAs: Elaeagnus angustifolia
+    nameBasis: stated
+    source: wikipedia-elaeagnus-angustifolia
+    locator: 'taxobox status LC (IUCN3.1); reference printed: Barstow, M. 2017, Elaeagnus angustifolia, e.T62002626A62002628'

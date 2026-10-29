@@ -1,0 +1,11 @@
+# Gathered for M14.29; the seed never reads this folder.
+entry: botanical/typha-domingensis-typha-domingensis
+status: approved
+listings:
+  - list: iucn
+    name: IUCN Red List of Threatened Species, as printed by Wikipedia
+    value: Least Concern
+    listedAs: Typha domingensis
+    nameBasis: stated
+    source: wikipedia-typha-domingensis
+    locator: 'taxobox status LC (IUCN3.1); reference printed: Lansdown, R.V. 2019, Typha domingensis, e.T164208A120229199'

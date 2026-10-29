@@ -1,0 +1,11 @@
+# Gathered for M14.29; the seed never reads this folder.
+entry: botanical/coffee-coffea-arabica
+status: needs-review
+listings:
+  - list: iucn
+    name: IUCN Red List of Threatened Species, as printed by Wikipedia
+    value: Endangered
+    listedAs: Coffea arabica
+    nameBasis: stated
+    source: wikipedia-coffea-arabica
+    locator: 'taxobox status EN (IUCN3.1); reference printed: Moat, J. et al. 2020, Coffea arabica, e.T18289789A174149937'
