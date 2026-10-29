@@ -1,16 +1,13 @@
 @use '../../scss/variables' as *;
 @use '../../scss/mixins' as *;
 
-// A form's section as a disclosure (MB.115, the owner's calls): flush, parted
-// by hairlines rather than set on the card ground, since what sits inside may
-// already be on it and a card in a card reads as nesting the form does not
-// have. The ingredient form's sections and the spell builder's share it; a
-// variant's sections tighten it in IngredientForm's own sheet.
+// A form's section as a disclosure: flush, parted by hairlines, as a card in a card would read as
+// nesting the form does not have. The ingredient form's and the spell builder's sections share it;
+// a variant's tighten it in IngredientForm's sheet.
 
-// A form's run of sections: flush, one hairline between each, so the fields
-// inside keep the form's gap and the sections none. Nested, as below, so it
-// outweighs a form's own gap rules. Above the first, outside a modal, Open All
-// / Close All at the line's end (./fold-all.tsx); in a modal it is in the head.
+// A form's run of sections: one hairline between each, the fields keeping the form's gap. Nested, to
+// outweigh a form's own gap rules. Open All / Close All sits above the first outside a modal
+// (./fold-all.tsx), in the head inside one.
 body .collapsible-sections {
   display: flex;
   flex-direction: column;
@@ -44,10 +41,8 @@ body .collapsible-section {
   }
 }
 
-// The heading, its summary and its flag: the whole block one target, the
-// toggle's `::after` stretched over it, so a press on the summary or the
-// chevron opens the section too, while the button alone is what a keyboard
-// reaches and what is announced.
+// The heading, summary and flag are one target, the toggle's `::after` stretched over them, so a press
+// anywhere opens the section while only the button is what a keyboard reaches and what is announced.
 .collapsible-section__head {
   position: relative;
   display: flex;
@@ -91,8 +86,8 @@ body .collapsible-section {
 // The chevron at the line's end, down while closed and turned over while
 // open, as the admin menu's is: at once, so there is no motion to reduce.
 .collapsible-section__chevron {
-  // Pointed at, the chevron darkens and grows a quarter (the owner's call),
-  // eased with the flip; `scale` composes with the open state's `transform`.
+  // Pointed at, the chevron darkens and grows a quarter, eased with the flip;
+  // `scale` composes with the open state's `transform`.
   @include disclosure-chevron('.is-open > .collapsible-section__head', color, scale);
 
   margin-inline-start: auto;
@@ -139,10 +134,9 @@ body .collapsible-section__fields {
   }
 }
 
-// The section's heading, at a size off the type scale as a heading's may be:
-// the display face, a step under h4, so it heads its fields without
-// outweighing the dialog's title. Nested, to outweigh typography-base's
-// `body h3` and `body h4`, whose margins would add to the line's padding.
+// The section's heading, off the type scale: the display face a step under h4, so it heads its fields
+// without outweighing the dialog's title. Nested, to outweigh typography-base's `body h3` and `body h4`
+// margins.
 body .collapsible-section__title {
   margin: 0;
   font-size: 1.25rem;

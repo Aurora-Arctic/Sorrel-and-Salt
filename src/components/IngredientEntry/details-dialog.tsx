@@ -13,25 +13,11 @@ import PlusMark from './plus-mark';
 import { DETAILS_PLACE } from './details';
 import type { IngredientDetailsDialogProps, IngredientDetailsOpened } from './types';
 
-// The details modal an ingredient's name opens over a list (M12.5), in the
-// list's details place, so an Edit pressed inside it opens the edit modal in
-// the list's other place, over it. A client part because RouteModal takes its
-// body as a function, which a server page cannot hand down; the summary
-// arrives as the page's rendered children. Its New or Updated marker and safety badge stand on
-// the top line beside Close, through the modal's `topEnd`, its Edit pencil and plus end the
-// formal name's line through `formalActions` (claude-docs/components/modal.md, "A title with its own
-// end"), and the link to the entry's page is a bar at its foot.
+// The details modal an ingredient's name opens over a list, so an Edit inside opens the edit modal over
+// it. A client part since RouteModal takes its body as a function (claude-docs/components/ingredient-entry.md,
+// "The details modal").
 
-/**
- * The head's marks and actions (the owner's calls, 2026-10-20). On the top line beside Close, as the
- * entry page's top bar has them: New or Updated, then the one safety badge, Toxic over Caution.
- * At the end of the formal name's line, over the name: the controls of the card the window was
- * opened from (the owner's call, 2026-10-20), made by the same components, so the two cannot
- * differ. On a compendium list, the card's Edit pencil (a press opening the edit modal at once
- * under its head, M9.18) with the plus, or the check once every coven the viewer may add in holds
- * the entry, left of it; on a coven's list, the coven card's Edit or Annotate and its More or
- * bin (`actions`). Under the formal name: the other badges.
- */
+/** The head's marks and actions: the top line's beside Close, and the end of the formal name's line holds the controls of the card the window opened from (claude-docs/components/ingredient-entry.md, "The details modal"). */
 export function headingOf({
   lastEdit,
   heading,
@@ -43,9 +29,8 @@ export function headingOf({
   ingredientId,
   reviewLine,
 }: IngredientDetailsOpened): ModalHeading {
-  // The top line's, beside Close, as the entry page's own top bar has them: New or Updated, then
-  // the one safety badge. The line is there for every entry, empty or not, so Close has it to
-  // itself and the head's other lines are clear of it.
+  // The top line beside Close, as the entry page's top bar has it: New or Updated, then the one
+  // safety badge; present for every entry so Close has it to itself.
   const top = (
     <>
       {marks && <RecencyMark recency={marks.recency} />}
@@ -59,8 +44,8 @@ export function headingOf({
   // The coven card's own controls where the page gave them; else the compendium card's Edit,
   // named as the card names the entry.
   const edit = controls ?? (editAction && <EditAction {...editAction} name={name} />);
-  // The plus, or the check once every coven the viewer may add in holds the entry, stands left of
-  // the pencil, the entry page's own pair (PlusMark; the owner's call, 2026-10-20).
+  // The plus, or the check once every coven the viewer may add in holds the entry, left of the
+  // pencil, as on the entry page (PlusMark).
   const add = plus && ingredientId && (
     <PlusMark plus={plus} ingredientId={ingredientId} name={name} />
   );
@@ -104,16 +89,10 @@ const EditAction = ({
 }: NonNullable<IngredientDetailsOpened['editAction']> & { name: string }): ReactElement =>
   inCompendium ? <CompendiumEditLink {...link} /> : <EditLink {...link} />;
 
-/**
- * The link to the entry's page: a bar at the foot of the modal, in its `foot` slot outside the scrolling body
- * (the owner's calls, 2026-10-20), holding the one green outline button, the
- * site's plain `.btn` at its normal size, centred and two thirds of the bar. Still a link, to the entry's page,
- * with the loading standard's target.
- */
+/** The link to the entry's page: a bar in the modal's `foot` slot, outside the scrolling body (claude-docs/components/ingredient-entry.md, "The details modal"). */
 function PageLinkBar({ pageHref }: IngredientDetailsOpened): ReactElement {
-  // Named by where it goes, not by who is looking (the owner's call, 2026-10-20): the
-  // public compendium's page, or a coven's own page for an entry the coven holds, whether
-  // it made the entry or annotated the compendium's.
+  // Named by where it goes, not by who is looking: the public compendium's page, or the coven's own
+  // page for an entry it holds.
   const label = pageHref.startsWith('/compendium/') ? 'See in Compendium' : 'See in Your Cupboard';
   return (
     <div className="ingredient-details-foot">

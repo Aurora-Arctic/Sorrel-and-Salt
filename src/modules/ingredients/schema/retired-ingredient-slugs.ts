@@ -11,11 +11,8 @@ import { idColumn } from '../../../db/schema-parts';
 // which a stored generated column requires; on `timestamptz` both are STABLE.
 const EXPIRES_AT = sql`date_trunc('day', retired_at) + interval '180 days'`;
 
-// A slug a compendium entry has moved off. While unexpired, and while no
-// entry holds the slug, it answers a 308 to the entry's current slug; an entry
-// that takes the slug ends that, once the admin confirms it. Expiry is a
-// predicate on `expires_at`, so nothing runs on a schedule
-// (claude-docs/db/ingredient-slugs.md, "Ingredient slugs").
+// A slug a compendium entry has moved off. While unexpired and unheld, it answers a 308 to the entry's current slug; an entry that
+// takes the slug ends that once the admin confirms. Expiry is a predicate on `expires_at` (claude-docs/db/ingredient-slugs.md, "Ingredient slugs").
 export const retiredIngredientSlugs = pgTable(
   'retired_ingredient_slugs',
   {

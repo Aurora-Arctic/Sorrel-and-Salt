@@ -25,24 +25,17 @@ import type {
 } from './types';
 import './index.scss';
 
-// The People page's Invitations tab, `/admin/invitations` (MB.70; a tab of
-// its own since MB.115): a filter by address and by expiry within 24 hours,
-// a page of the pending invitations it leaves, each with its address, the
-// site role it grants (M11.20), reason and expiry, and Revoke, the pager beneath them, and the invite form
-// `?invite` opens over them. New Invitation is the tab's action, beside the page's heading. While
-// admin changes are paused both are in view but locked for any admin but the
-// primary one, with the pause as the reason, as the role controls are. The
-// confirmation and the locked control are the user list's own, so the page
-// asks one way, and each brings its own rules with it
-// (claude-docs/components/admin-invitations.md).
+// The People page's Invitations tab, `/admin/invitations`: a filter, a page of pending invitations
+// (address, site role, reason, expiry, Revoke), the pager, and the invite form `?invite` opens. While
+// admin changes are paused both are locked for any admin but the primary (claude-docs/components/admin-invitations.md).
 
 /** No filter: the whole pending list. */
 const NO_FILTER: Filter = { email: '', expiringSoon: false };
 
 /**
- * The empty list, naming the filters in use as the other admin lists do
- * (MB.115), so an admin sees what to change: "No invitations match “fern”
- * and Expires in 24 Hrs. Change or clear the filter to see more."
+ * The empty list, naming the filters in use as the other admin lists do, so an
+ * admin sees what to change: "No invitations match “fern” and Expires in 24 Hrs.
+ * Change or clear the filter to see more."
  */
 function emptyText({ email, expiringSoon }: Filter): string {
   const filters = [email && `“${email}”`, expiringSoon && 'Expires in 24 Hrs'].filter(
@@ -92,12 +85,9 @@ const Revoke = ({ invitation, locked }: RevokeInvitationProps): ReactElement => 
 };
 
 /**
- * New Invitation, the Invitations tab's action beside the page's heading: a
- * link to `?invite`, which opens the form over the list, or locked with the
- * pause as its reason. A link rather than a button holding the form, since
- * the heading line and the list are rendered apart (MB.115). It keeps the
- * tab's filter and page, as a value page's Add does, and opens the modal at
- * once as Add does (M9.18), the form arriving with the navigation.
+ * New Invitation, the tab's action beside the heading: a link to `?invite`, which opens the form over the
+ * list, or locked with the pause as its reason. A link rather than a button since the heading and the list
+ * render apart; it keeps the filter and page.
  */
 export const InviteAdmin = ({
   locked,
@@ -115,11 +105,9 @@ export const InviteAdmin = ({
   );
 };
 
-// A region named as a heading would name it, though it shows none: the page's
-// heading and its open tab already say what it holds, and the name keeps the
-// sent notice and the rows findable as one. The sent notice is this
-// component's state, set by the form before it closes, so it outlasts the
-// form's `?invite` and names the address without carrying it in one.
+// A region named as a heading would name it, though it shows none: the page's heading and open tab say what
+// it holds, and the name keeps the sent notice and rows findable as one. The sent notice is this component's
+// state, set before the form closes, so it outlasts `?invite`.
 const AdminInvitations = ({
   invitations,
   filter = NO_FILTER,
@@ -183,7 +171,7 @@ const AdminInvitations = ({
           <Pager previousHref={previousHref} nextHref={nextHref} position={position} />
         </ListBody>
       </ListFrame>
-      {/* Rendered whatever the address opens, so a press opens it at once (M9.18). */}
+      {/* Rendered whatever the address opens, so a press opens it at once. */}
       <InviteForm
         open={inviting && !locked}
         onSent={setSent}

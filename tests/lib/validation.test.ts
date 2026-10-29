@@ -37,7 +37,7 @@ describe('parseInput', () => {
     });
   });
 
-  it('throws ValidationError, the type MB.43 maps, rather than a ZodError', () => {
+  it('throws ValidationError rather than a ZodError', () => {
     const error = thrown(() => parseInput(Layer, { name: '', tags: [] }));
 
     expect(error).toBeInstanceOf(ValidationError);
@@ -66,8 +66,7 @@ describe('parseInput', () => {
   });
 });
 
-// The shapes every module's schemas share (MB.209); each schema's own test
-// holds it to its messages.
+// The shapes every module's schemas share; each schema's own test holds it to its messages.
 describe('requiredText', () => {
   it('trims, and refuses blank and missing alike with the one message', () => {
     const Text = requiredText('Name it');

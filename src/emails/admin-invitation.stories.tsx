@@ -10,7 +10,6 @@ const meta = {
   title: 'Emails / Admin Invitation',
 } satisfies Meta;
 export default meta;
-// The dropdown story's `state` arg is the node it draws (see its argTypes mapping).
 type Story = StoryObj<{ state?: import('react').ReactNode }>;
 
 const URL = 'https://sorrelandsalt.com/invite/workshop-preview-token';
@@ -37,11 +36,9 @@ const curatorMessage = () =>
 // Follows the toolbar's theme control, as the mail follows a reader's setting.
 const defaultNode = <EmailPreview message={message} />;
 
-// The same mail inviting to the curator role (M11.20).
+// The same mail inviting to the curator role.
 const curatorNode = <EmailPreview message={curatorMessage} />;
 
-// One story with a control to choose the state: each is a whole page or list,
-// too big to sit beside the others (claude-docs/workshop.md, rule 5).
 const STATES_STATES: Record<string, ReactNode> = {
   Default: defaultNode,
   Curator: curatorNode,

@@ -4,15 +4,12 @@ import { usePressOnMount } from '../../../.storybook/press';
 import InfoTip from '.';
 
 // Render-only; behaviour is asserted in tests/components/InfoTip. Each story
-// opens its tip itself, as a tap on the ⓘ would; hover, focus or a tap opens it
-// again once it closes. The tip places itself above its nearest positioned
-// ancestor, a form field's `.field__label-row`, so the story gives it one,
-// with room above for the tip to open into.
+// opens its tip itself. The tip places itself above its nearest positioned
+// ancestor (a field's `.field__label-row`), so the story gives it one, with room.
 const meta = {
   title: 'Forms / Info Tip',
 } satisfies Meta;
 export default meta;
-// The dropdown story's `state` arg is the node it draws (see its argTypes mapping).
 type Story = StoryObj<{ state?: import('react').ReactNode }>;
 
 const HINT =

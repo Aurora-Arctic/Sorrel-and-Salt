@@ -3,10 +3,8 @@ import { buildAiCatalog, buildLlmsTxt } from '@/app/ai-discovery';
 import { describe as cut } from '@/lib/page-metadata';
 import { SITE_NAME, SITE_ORIGIN } from '@/lib/site';
 
-// M12.2: the two public files that describe the compendium to a crawler or an
-// AI agent. llms.txt follows https://llmstxt.org/; the catalog follows the AI
-// Catalog draft (https://ai-catalog.io/spec/) and ARD v0.91
-// (https://agenticresourcediscovery.org/spec) together.
+// The two public files that describe the compendium to a crawler or an AI agent: llms.txt follows https://llmstxt.org/;
+// the catalog follows the AI Catalog draft (https://ai-catalog.io/spec/) and ARD v0.91 (https://agenticresourcediscovery.org/spec) together.
 
 const entry = (
   name: string,
@@ -21,7 +19,7 @@ const entry = (
   lastModified: new Date('2026-03-01T00:00:00Z'),
 });
 
-describe('M12.2: buildLlmsTxt', () => {
+describe('buildLlmsTxt', () => {
   const entries = [
     entry('Fixture Alpha', 'fixture-alpha', 'Fixtura alpha'),
     entry('Fixture Beta', 'fixture-beta'),
@@ -98,7 +96,7 @@ describe('M12.2: buildLlmsTxt', () => {
   });
 });
 
-describe('M12.2: buildAiCatalog', () => {
+describe('buildAiCatalog', () => {
   it('carries the required fields of the AI Catalog draft and of ARD', () => {
     const catalog = buildAiCatalog([entry('Fixture Alpha', 'fixture-alpha')]);
 

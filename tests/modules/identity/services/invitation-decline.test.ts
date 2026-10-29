@@ -19,17 +19,15 @@ import {
   setUpInvitationAcceptance,
 } from '../../../support/db/invitation-acceptance';
 
-// M10.34: the account page's Decline. The same checks as the accept by id,
-// over the session's own read, so each refusal sits beside the call that
-// succeeds once its refusing fact is gone. A decline seats no one and grants
-// nothing; it kills the invitation, which its link and both accepts then refuse.
+// The account page's Decline. The same checks as the accept by id, over the session's own read, so each refusal sits beside the call that succeeds once its refusing fact is gone.
+// A decline seats no one and grants nothing; it kills the invitation, which its link and both accepts then refuse.
 
 let sql: postgres.Sql;
 const { invite, roleOf, ledger } = setUpInvitationAcceptance((client) => {
   sql = client;
 });
 
-describe('declineInvitationById (M10.34)', () => {
+describe('declineInvitationById', () => {
   const memberRows = (userId: string) =>
     sql`select role::text from workspace_members
       where workspace_id = ${WORKSPACE_W_ID} and user_id = ${userId}`;

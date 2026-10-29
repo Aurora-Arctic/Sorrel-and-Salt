@@ -4,10 +4,8 @@ import { useTestDatabase } from '../support/db/database';
 import { FIXTURE_USERS, WORKSPACE_W_ID } from '@/db/seed/standard';
 import type { PartialIndexRow, PartialUniqueIndex, Row } from './types';
 
-// Rule 4's other half, once for every table: a unique index carries
-// `deleted_at IS NULL`, so a second live row is refused and a soft delete
-// frees the slot. A catalogue sweep rather than a pair per schema test, so a
-// new partial unique index fails here until it is classified below
+// Every unique index carries `deleted_at IS NULL`: a second live row is refused and a soft delete frees the slot.
+// A catalogue sweep, so a new partial unique index fails here until classified below
 // (claude-docs/testing/db-harness.md, "The db test harness").
 
 const AUTHOR = FIXTURE_USERS.A.id;
@@ -27,7 +25,7 @@ async function insert(table: string, row: Row): Promise<Row> {
 
 const idOf = async (table: string, row: Row) => (await insert(table, row)).id as string;
 
-// Invented names throughout (M1.25), each carrying a fresh token.
+// Invented names throughout, each carrying a fresh token.
 
 /** A vocabulary row: name, slug, description and a seed key, so both its indexes apply. */
 function vocabulary(label: string, extra: Row = {}): Row {
@@ -73,13 +71,13 @@ function ingredient(workspaceId: string | null): () => Promise<Row> {
 }
 const workspaceIngredient = ingredient(WORKSPACE_W_ID);
 const compendiumIngredient = ingredient(null);
-/** A compendium entry as the compendium seed writes it, under the key it gave (MB.241). */
+/** A compendium entry as the compendium seed writes it, under the key it gave. */
 const seededIngredient = async () => ({
   ...(await compendiumIngredient()),
   seed_key: `fixture-${token()}`,
 });
 
-/** A variant of a fresh ingredient (MB.216), under a form no other row holds. */
+/** A variant of a fresh ingredient, under a form no other row holds. */
 async function variant(): Promise<Row> {
   return stamped({
     ingredient_id: await idOf('ingredients', await workspaceIngredient()),
@@ -97,7 +95,7 @@ async function ingredientDeity(linked: boolean): Promise<Row> {
   });
 }
 
-/** A fresh coven ingredient and a form of it (MB.217), for a row keyed on the variant. */
+/** A fresh coven ingredient and a form of it, for a row keyed on the variant. */
 async function formed(): Promise<{ ingredient_id: string; variant_id: string }> {
   const ingredientId = await idOf('ingredients', await workspaceIngredient());
   const variantId = await idOf(
@@ -107,7 +105,7 @@ async function formed(): Promise<{ ingredient_id: string; variant_id: string }> 
   return { ingredient_id: ingredientId, variant_id: variantId };
 }
 
-/** A category pair, on the parent or on one of its forms (MB.217). */
+/** A category pair, on the parent or on one of its forms. */
 async function categoryPair(onForm: boolean): Promise<Row> {
   const { ingredient_id, variant_id } = await formed();
   return stamped({
@@ -117,7 +115,7 @@ async function categoryPair(onForm: boolean): Promise<Row> {
   });
 }
 
-/** A substitute row standing in for one form of its ingredient (MB.217). */
+/** A substitute row standing in for one form of its ingredient. */
 async function formSubstitute(linked: boolean): Promise<Row> {
   return stamped({
     ...(await formed()),
@@ -189,7 +187,7 @@ const ROWS: Record<string, PartialIndexRow> = {
   ingredient_deities_name_unique: { row: () => ingredientDeity(false) },
   ingredient_deities_position_unique: { row: () => ingredientDeity(false) },
   // The pair, on the parent or on a form: hard-deleted, so partial on the
-  // variant rather than a tombstone (MB.217).
+  // variant rather than a tombstone.
   ingredient_categories_ingredient_category_unique: {
     row: () => categoryPair(false),
     hardDeleted: true,
@@ -212,7 +210,7 @@ const ROWS: Record<string, PartialIndexRow> = {
   ingredient_forms_slug_unique: { row: form },
   ingredient_substitutes_link_unique: { row: () => substitute(true) },
   ingredient_substitutes_name_unique: { row: () => substitute(false) },
-  // A form's own list (MB.217): the clash carries the ingredient, which the
+  // A form's own list: the clash carries the ingredient, which the
   // composite key would otherwise refuse first.
   ingredient_substitutes_variant_link_unique: {
     row: () => formSubstitute(true),
@@ -241,7 +239,7 @@ const ROWS: Record<string, PartialIndexRow> = {
     row: async () => stamped({ workspace_id: WORKSPACE_W_ID, ...(await formed()) }),
     clash: ['workspace_id', 'ingredient_id', 'variant_id'],
   },
-  // The site tier, a null pair: the index spans both tiers alike (MB.201).
+  // The site tier, a null pair: the index spans both tiers alike.
   invitations_token_hash_unique: {
     row: async () => stamped({ email: address(), token_hash: token(), site_role: 'admin' }),
   },
@@ -285,8 +283,8 @@ const ROWS: Record<string, PartialIndexRow> = {
 // The unique indexes a soft-deleted table may carry without the predicate,
 // each named with why: rule 4's exceptions are decided here, never found.
 const NOT_PARTIAL: Record<string, string> = {
-  // The target of MB.217's composite foreign keys, which a partial index
-  // cannot be; it reserves nothing the primary key on `id` does not (MB.216).
+  // The target of the composite foreign keys, which a partial index cannot be; it reserves nothing the
+  // primary key on `id` does not.
   ingredient_variants_id_ingredient_id_unique: 'ingredient_variants',
 };
 
@@ -370,12 +368,12 @@ describe('every partial unique index', () => {
 });
 
 describe('every seed-key index', () => {
-  it('leaves the rows no seed wrote unconstrained, however many there are (MB.171)', async () => {
+  it('leaves the rows no seed wrote unconstrained, however many there are', async () => {
     const indexes = (await partialUniqueIndexes()).filter(({ index }) =>
       index.endsWith('_seed_key_unique'),
     );
 
-    // Precondition: the nine vocabulary and reference tables, and the compendium (MB.241).
+    // Precondition: the nine vocabulary and reference tables, and the compendium.
     expect(indexes.map(({ table }) => table)).toContain('ingredients');
 
     const outcomes = [];

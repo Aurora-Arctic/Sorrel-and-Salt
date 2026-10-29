@@ -4,12 +4,9 @@ import { type ReactElement, useEffect, useId, useState } from 'react';
 import type { PageNavEntry, PageNavItem, PageNavProps } from './types';
 import './index.scss';
 
-// A menu of jump links to a page's own sections, marking the one in view
-// (claude-docs/components/page-nav.md). The anchors do the jumping, so the
-// menu works before the script loads; the script only moves `aria-current`.
-// The server render marks the first entry. A group is set apart when its
-// first entry is: the entries are one flat array, so the group has no field
-// of its own to carry it.
+// A menu of jump links to a page's sections (claude-docs/components/page-nav.md). The anchors jump,
+// so it works before the script loads; the script only moves `aria-current`. A group is set apart
+// when its first entry is, as the entries are one flat array.
 
 function itemsOf(entries: readonly PageNavEntry[]): PageNavItem[] {
   const items: PageNavItem[] = [];

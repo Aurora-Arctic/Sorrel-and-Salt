@@ -19,10 +19,8 @@ import { insertIngredient, insertVariant } from '../../../support/db/insert-ingr
 import { insertSpell } from '../../../support/db/insert-spell';
 import { makeIngredient, makeSpell, makeVariant } from '../../../support/fixtures';
 
-// The grimoire's reads for the API (M10.9): the paged list, one spell, and the
-// batches the spell's fields load through — its steps, its assigned
-// categories and the categories its ingredients carry. Every row a result
-// could come from is one this file wrote, through the raw client.
+// The grimoire's reads for the API: the paged list, one spell, and the batches the spell's fields load through (its steps, assigned categories and its ingredients' categories).
+// Every row a result could come from is one this file wrote, through the raw client.
 
 let sql: postgres.Sql;
 useTestDatabase((client) => {

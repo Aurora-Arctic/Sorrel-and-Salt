@@ -3,11 +3,8 @@ import { describe, expect, it } from 'vitest';
 import { StockBadge, stockState } from '@/components/StockBadge';
 import { JAR_STATES } from '../../support/jar-states';
 
-// M9.8, story 23 (claude-docs/components/stock-badge.md): the shared jar
-// states (tests/support/jar-states.ts) give their badge, proven by the badge's presence or absence per
-// state. Each badge is an icon alone, so it is found by its name as a screen
-// reader hears it; what is asserted is which of the two shows, never copy
-// around them.
+// (claude-docs/components/stock-badge.md): the shared jar states (tests/support/jar-states.ts) give their badge, proven by the badge's presence or absence per state.
+// Each badge is an icon alone, so it is found by its name as a screen reader hears it; what is asserted is which of the two shows, never copy around them.
 
 const out = () => screen.queryByRole('button', { name: 'Out of Stock' });
 // An icon tip's bubble is decoration, kept out of the accessibility tree, so it is found with `hidden`.

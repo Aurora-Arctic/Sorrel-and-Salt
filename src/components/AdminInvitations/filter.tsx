@@ -6,16 +6,9 @@ import FilterForm, { useApplyFilter } from '../FilterForm';
 import { INVITATIONS_PATH, invitationsHref } from './href';
 import type { AdminInvitationsFilterProps } from './types';
 
-// The Invitations tab's filter (MB.115, on the owner's ask: "search the
-// Invitations by email and expires in 24 hrs"), on the shared FilterForm as
-// the user list's is. Only the email text is held here, until the magnifier
-// or Enter sends it; the Expires in 24 Hrs switch is uncontrolled and applies
-// the moment it changes, carrying the email along. Both open the first page
-// softly, since the admin layout's guard runs on every page under /admin, and
-// there is no Filter button. Before hydration the form submits natively, the
-// email as `email=` and the switch, a native checkbox, as `expiring=`, which
-// the page reads the same as the bare flag. The list keys this by the filter
-// shown, so a page showing another starts it again from that one.
+// The Invitations tab's filter, on the shared FilterForm as the user list's is: the email is held until
+// the magnifier or Enter sends it, the Expires in 24 Hrs switch applies as it changes, both opening the
+// first page softly. Before hydration the form submits natively (`email=`, `expiring=`); the list keys this by the filter shown.
 const AdminInvitationsFilter = ({ filter }: AdminInvitationsFilterProps): ReactElement => {
   const [draftEmail, setDraftEmail] = useState(filter.email);
   const apply = useApplyFilter();

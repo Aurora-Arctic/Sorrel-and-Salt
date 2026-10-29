@@ -1,17 +1,13 @@
 @use '../../scss/variables' as *;
 @use '../../scss/mixins' as *;
 
-// The shared loading skeleton (M12.33), of the shapes the site waits on:
-// `table`, `cards`, `form` and `page`. It was the tab panel's skeleton
-// (MB.115) and the route modal's (M9.18); both now draw it. Each shape is
-// the shared `skeleton-shape` (_mixins.scss), a quiet fill with a lighter
-// band passing across it, and a single slow pulse where motion is reduced.
+// The shared loading skeleton: `table`, `cards`, `form` and `page`, drawn by the tab panel and the
+// route modal. Each shape is the shared `skeleton-shape` (_mixins.scss), a quiet fill with a
+// lighter band, and a single slow pulse under reduced motion.
 
-// Shown at once, with a short
-// fade: the press has already taken the old content away, so holding the
-// skeleton back would leave the panel blank, which is the snap it is there
-// to avoid. A size container, so its rows turn to cards under the width the
-// real table stacks at.
+// Shown at once with a short fade: the press has taken the old content away, so holding the
+// skeleton back would leave the panel blank. A size container, so its rows turn to cards under the
+// width the real table stacks at.
 .skeleton {
   container: skeleton / inline-size;
   @include arrived($motion-short);
@@ -71,7 +67,7 @@
 
 // The filter row: the search box and a narrower select, a control's height
 // each, wrapping as `.filter-row` does, edge to edge. No button: the real row has
-// none, its search submitting from the magnifier inside its box (MB.115).
+// none, its search submitting from the magnifier inside its box.
 .skeleton__filter {
   display: flex;
   flex-wrap: wrap;
@@ -339,12 +335,9 @@
   margin-block: calc((#{$icon-size} - type-size('overline')) / 2);
 }
 
-// A page with a side menu (the account's jump menu, the coven home's
-// contents) is laid out by the page's own `.page-with-nav` and `.page-nav`
-// (_primitives.scss): the menu beside the sections from a tablet up, held
-// under the bar, and stacked after the head at a phone's width. Only its
-// bars are drawn here. The real menu's entries are set to the end of its
-// column from a tablet up.
+// A page with a side menu is laid out by its own `.page-with-nav` and `.page-nav`
+// (_primitives.scss); only the menu's bars are drawn here. The real menu's entries sit at the end
+// of its column from a tablet up.
 .skeleton__menu {
   @include stack(3);
 
@@ -362,11 +355,9 @@
   }
 }
 
-// An ingredient's entry fills the wide column beside its menu, not the coven
-// home's narrow one: the entry's own grid (the mixin both share), so the wait
-// is as wide as the page. Written here as well as in IngredientEntry's
-// stylesheet, since a route loads a component's stylesheet only when it draws
-// the component.
+// An ingredient's entry fills the wide column, using the entry's own grid mixin. Written here as
+// well as in IngredientEntry's stylesheet, since a route loads a component's stylesheet only when
+// it draws the component.
 .skeleton__shapes .ingredient-entry--with-nav {
   @include stack(6);
   @include entry-nav-grid;

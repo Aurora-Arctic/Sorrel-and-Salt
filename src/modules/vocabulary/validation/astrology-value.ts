@@ -1,7 +1,7 @@
 import { z } from 'zod';
 import { curatedValueInput } from '../../../lib/validation';
 
-// A celestial body or a zodiac sign as an admin writes one (MB.95): a curated value's
+// A celestial body or a zodiac sign as an admin writes one: a curated value's
 // name and description, and nothing else. One shape for both, each schema
 // saying its own noun.
 

@@ -8,9 +8,8 @@ import type { TextFieldProps } from './types';
 import { useField } from './use-field';
 
 /**
- * A text input or textarea in whichever react-hook-form form provides it,
- * reading and showing its own error. Lifted from IngredientForm (MB.115) so
- * every react-hook-form form draws its text fields through one.
+ * A text input or textarea in whichever react-hook-form form provides it, reading and showing its
+ * own error, so every react-hook-form form draws its text fields through one.
  */
 export function TextField<V extends FieldValues = FieldValues>({
   name,
@@ -35,8 +34,8 @@ export function TextField<V extends FieldValues = FieldValues>({
 }: TextFieldProps<V>): ReactElement {
   const { register, setValue, getFieldState } = useFormContext<V>();
   const { aria, ...field } = useField<V>(name, hint, note, describedBy, invalid);
-  // Tidied as it is left, the way the server will store it (MB.154); an
-  // error it was showing is judged again on the tidied text.
+  // Tidied as it is left, the way the server will store it; an error it was
+  // showing is judged again on the tidied text.
   const tidy = (event: FocusEvent<HTMLInputElement | HTMLTextAreaElement>) => {
     const text = event.target.value;
     const formatted = format?.(text) ?? text;
@@ -46,10 +45,8 @@ export function TextField<V extends FieldValues = FieldValues>({
       shouldValidate: getFieldState(name).invalid,
     });
   };
-  // The attribute, not register's `disabled`, which would also drop the value
-  // from what is validated and sent: the form decides that itself. And
-  // `aria-required` rather than `required`, whose `:invalid` would mark an
-  // empty field before anyone has tried to save.
+  // The attribute, not register's `disabled`, which would drop the value from validation and sending. And
+  // `aria-required`, not `required`, whose `:invalid` would mark an empty field before a save is tried.
   const control = {
     id: field.controlId,
     disabled,
@@ -77,11 +74,8 @@ export function TextField<V extends FieldValues = FieldValues>({
       ) : busy === undefined ? (
         <input className="input" type={type} {...control} />
       ) : (
-        // A field that looks its text up (the name's duplicate check) says so
-        // in the box itself, the owner's call (2026-10-18): the spinner at
-        // the input's right end, the input busy, and nothing else drawn until
-        // the answer has something to show. Wrapped only when the caller
-        // says, so every other text field keeps its bare input.
+        // A field that looks its text up (the name's duplicate check) shows a spinner at the input's right end
+        // and marks the input busy; wrapped only when the caller says, so other fields keep a bare input.
         <span className="field__control">
           <input className="input" type={type} aria-busy={busy || undefined} {...control} />
           {busy && <Spinner className="field__busy" />}

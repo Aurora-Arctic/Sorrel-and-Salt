@@ -50,10 +50,8 @@ function thrownFor({ code, fieldErrors = [], currentRevision = 1, message }: Moc
 }
 
 /**
- * Answers the named query or mutation the way /api/graphql answers a service
- * that threw: the body is built by the route's own mapping, so it cannot drift
- * from it. No `path` or `locations` — the helper answers for the operation,
- * not for one field in it.
+ * Answers the named operation as /api/graphql answers a service that threw, the body built by the route's
+ * own mapping. No `path` or `locations`: it answers for the operation, not one field.
  */
 export function mockGraphQLError(operationName: string, error: MockedError) {
   const body: GraphQLResponseBody<GraphQLQuery> = {

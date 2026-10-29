@@ -9,7 +9,6 @@ const meta = {
   title: 'Ingredients / Stock Fields',
 } satisfies Meta;
 export default meta;
-// The dropdown story's `state` arg is the node it draws (see its argTypes mapping).
 type Story = StoryObj<{ state?: import('react').ReactNode }>;
 
 const Form = ({ start }: { start: StockFormValues }): ReactElement => {
@@ -58,8 +57,6 @@ const RowsForm = (): ReactElement => {
 /** Two jars in one form, each field named for its form. */
 export const Rows: Story = { render: () => <RowsForm /> };
 
-// One story with a control to choose the state: each is a whole page or list,
-// too big to sit beside the others (claude-docs/workshop.md, rule 5).
 const STATES_STATES: Record<string, ReactNode> = {
   Default: defaultNode,
   Unmeasured: unmeasuredNode,

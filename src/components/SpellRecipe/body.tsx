@@ -12,7 +12,7 @@ import { VerdictMark } from '../SpellBuilder/verdict-mark';
 import type { IngredientRecipeStep, RecipeStep, SpellRecipeBodyProps } from './types';
 import './index.scss';
 
-// What a saved spell says, below its head (MB.6, M13.21): its intent, categories, a strip of
+// What a saved spell says, below its head: its intent, categories, a strip of
 // its four facts, its steps in order and its note. The recipe page and the grimoire's Quick
 // Look modal both draw it, so the two cannot drift. A fragment, so the page's own column
 // (or the modal's) lays its sections out. claude-docs/components/spell-recipe.md.
@@ -22,7 +22,7 @@ const labelOf = ({ name, form }: IngredientRecipeStep): string =>
   form ? `${name} (${formLabel(form)})` : name;
 
 /**
- * The ingredient's name as plain text, not a link (the owner, 2026-10-28): the Quick Look eye
+ * The ingredient's name as plain text, not a link: the Quick Look eye
  * beside it opens the ingredient's details modal. The formal name follows where two share a label.
  */
 const Name = ({ step }: { step: IngredientRecipeStep }): ReactElement => (
@@ -86,7 +86,7 @@ const SpellRecipeBody = ({
   return (
     <>
       {/* Two boxes, so the recipe page can stand its side column level with the facts strip,
-          beside the second box and not the first (the owner, 2026-10-29). The lead is left out
+          beside the second box and not the first. The lead is left out
           when it holds nothing, so the column then starts at the top. */}
       {(purpose !== '' || categories.length > 0) && (
         <div className="spell-recipe__lead">
@@ -134,8 +134,8 @@ const SpellRecipeBody = ({
                   marks={<Marks step={step} />}
                   quantity={step.quantity}
                   unit={step.unit}
-                  // An ingredient step's line is its body, drawn muted under the name (the owner,
-                  // 2026-10-28). An instruction step is its text.
+                  // An ingredient step's line is its body, drawn muted under the name. An
+                  // instruction step is its text.
                   note={step.body && <p className="meta">{step.body}</p>}
                 />
               ),

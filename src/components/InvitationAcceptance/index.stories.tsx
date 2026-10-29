@@ -14,7 +14,6 @@ const meta = {
   title: 'Pages / Invitation Acceptance',
 } satisfies Meta;
 export default meta;
-// The dropdown story's `state` arg is the node it draws (see its argTypes mapping).
 type Story = StoryObj<{ state?: import('react').ReactNode }>;
 
 // Inside the page's own frame, so the workshop shows what the page shows.
@@ -102,7 +101,7 @@ const expiredNode = <Page status="refused" message={EXPIRED} />;
 
 const declinedNode = <Page status="refused" message={DECLINED} />;
 
-// A link into a deleted coven (MB.119 decision f): its own reason, `closed`.
+// A link into a deleted coven: its own reason, `closed`.
 const DeletedCovenView = () => <Page status="refused" message={CLOSED} />;
 
 const deletedCovenNode = <DeletedCovenView />;
@@ -111,8 +110,6 @@ const differentAddressNode = <Page status="refused" message={DIFFERENT_ADDRESS} 
 
 const pausedNode = <Page status="refused" message={PAUSED} />;
 
-// One story with a control to choose the state: each is a whole page or list,
-// too big to sit beside the others (claude-docs/workshop.md, rule 5).
 const STATES_STATES: Record<string, ReactNode> = {
   'Signed Out': <SignedOutView />,
   Default: defaultNode,

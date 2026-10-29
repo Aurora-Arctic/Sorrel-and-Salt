@@ -3,16 +3,15 @@ import FormIcon from '../FormIcon';
 import './index.scss';
 import type { StepRowProps } from './types';
 
-// One step of a spell (M13.3): its position, its ingredient with the quantity
+// One step of a spell: its position, its ingredient with the quantity
 // and unit if it has them, and its text. Presentational: the spell builder
-// hands it editing controls, the recipe page (MB.6) none, and a working's
-// deduction lines (M13.8) draw theirs with it. See claude-docs/components/step-row.md.
+// hands it editing controls, the recipe page none, and a working's
+// deduction lines draw theirs with it. See claude-docs/components/step-row.md.
 
 /**
- * The quantity as the person typed it rather than as the column stores it: "1.000" is
- * "1" and "2.500" is "2.5", so only the decimals that carry information show (the owner,
- * 2026-10-28). A plain string edit, not a Number round trip, which would lose a quantity
- * past 15 digits.
+ * The quantity as the person typed it rather than as the column stores it: "1.000" is "1" and
+ * "2.500" is "2.5", so only the decimals that carry information show. A plain string edit, not a
+ * Number round trip, which would lose a quantity past 15 digits.
  */
 const plainQuantity = (quantity: string): string =>
   quantity.includes('.') ? quantity.replace(/0+$/, '').replace(/\.$/, '') : quantity;
@@ -20,7 +19,7 @@ const plainQuantity = (quantity: string): string =>
 /**
  * The amount and unit as one phrase, "2 tsp", or null where there is neither. A unit with no
  * quantity reads "— tsp", an en dash where the number would be: a missing amount, not an
- * amount of nothing, which "0 tsp" would claim (the owner, 2026-10-28).
+ * amount of nothing, which "0 tsp" would claim.
  */
 const amountOf = (quantity?: string | null, unit?: string | null): ReactNode => {
   if (!quantity && !unit) return null;
@@ -36,12 +35,14 @@ const amountOf = (quantity?: string | null, unit?: string | null): ReactNode => 
 
 /**
  * A click on the card's plain face toggles it, as a mouse shortcut for the pencil (which stays the
- * keyboard and screen-reader control, so the row gets no role or tab stop). Clicks on a control, or
- * anywhere in the open fields, are left to themselves; an open card closes only from its header text.
+ * keyboard and screen-reader control, so the row gets no role or tab stop). Clicks on a control,
+ * or anywhere in the open fields, are left to themselves; an open card closes only from its header
+ * text.
  */
 function toggleFromFace(event: MouseEvent<HTMLLIElement>, open: boolean, toggle: () => void): void {
   const target = event.target as Element;
-  // React bubbles a portal's clicks (a Unit listbox) to the row though the DOM does not: not the face.
+  // React bubbles a portal's clicks (a Unit listbox) to the row though the DOM does not: not the
+  // face.
   if (!event.currentTarget.contains(target)) return;
   // A target a click just removed (a picked list row) is no longer anywhere in the card.
   if (!target.isConnected) return;

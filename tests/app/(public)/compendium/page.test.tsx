@@ -7,10 +7,8 @@ import { EMPTY_VALUES } from '@/components/IngredientForm/values';
 import { NotFound } from '@/lib/errors';
 import { entryDetail } from '../../../support/entry-detail';
 
-// The public compendium page (M8.18; MB.80). The reads and the viewer are mocked, since what
-// they decide is their own tests' (the admin page's test runs the reads). Here: what the
-// address becomes in the read, which foot each kind of visitor gets, and when the page asks
-// to be kept out of search results.
+// The public compendium page, with the reads and the viewer mocked (the admin page's test runs the reads). It proves what the address becomes in the read,
+// which foot each kind of visitor gets, and when the page asks to be kept out of search results.
 
 const router = { push: vi.fn(), replace: vi.fn(), refresh: vi.fn() };
 const redirect = vi.fn((_to: string) => {
@@ -25,10 +23,10 @@ vi.mock('@/lib/viewer', () => ({ viewerIfSignedIn, covenRolesIfSignedIn }));
 
 const readCompendium = vi.fn();
 const readFacets = vi.fn();
-// The details a Quick Look opens (M12.5), by id with no session: what it admits is its own
+// The details a Quick Look opens, by id with no session: what it admits is its own
 // test's (tests/app/compendium-reads.test.ts); here, what the page does with its answer.
 const readCompendiumDetails = vi.fn();
-// The reads narrowed to the viewer's picked covens (M12.55): uncached, with the session.
+// The reads narrowed to the viewer's picked covens: uncached, with the session.
 const readCompendiumHeldIn = vi.fn();
 const readFacetsHeldIn = vi.fn();
 vi.mock('@/app/compendium-reads', () => ({
@@ -43,16 +41,16 @@ vi.mock('@/app/compendium-reads', () => ({
   readCardCategories: async (ids: readonly string[]) => ids.map(() => []),
 }));
 
-// What a curator's ?edit=<slug> reads (M8.17): the entry at the slug, then its form's values.
+// What a curator's ?edit=<slug> reads: the entry at the slug, then its form's values.
 const resolveCompendiumSlug = vi.fn();
 // The held read is `held.test.tsx`'s; here the coven holds nothing.
 const SESSION = { userId: 'user-fixture' };
 const getSession = vi.fn();
 vi.mock('@/lib/request-session', () => ({ getSession }));
-// The viewer's own covens that hold the open entry, for the details' In Your Cupboards (M12.5).
+// The viewer's own covens that hold the open entry, for the details' In Your Cupboards.
 // Which covens it admits is tests/modules/ingredients/services/covens-holding.test.ts's.
 const covensHoldingEntry = vi.fn();
-// The review switch's read (M14.8), per viewer, made for a curator or admin only.
+// The review switch's read, per viewer, made for a curator or admin only.
 const readCompendiumReview = vi.fn();
 vi.mock('@/modules/ingredients', () => ({
   readCompendiumReview,
@@ -198,7 +196,7 @@ describe('the public compendium page', () => {
     expect(variablesRead()).not.toHaveProperty('withoutForms');
   });
 
-  // M14.8: the review filter is the admin list's; the services refuse it to anyone else.
+  // The review filter is the admin list's; the services refuse it to anyone else.
   it('reads the same list with ?reviewed=1 as without it, for a curator too', async () => {
     await renderPage();
     const unfiltered = readCompendium.mock.lastCall![0];
@@ -235,7 +233,7 @@ describe('the public compendium page', () => {
   );
 });
 
-// M12.55: In My Covens. A pick reads the uncached reads with the session; none, and a visitor
+// In My Covens. A pick reads the uncached reads with the session; none, and a visitor
 // whatever the address says, read the cached ones. Which ids those reads admit is
 // tests/modules/ingredients/services/compendium-held-in.test.ts's.
 describe('the public compendium page, narrowed to the viewer’s covens', () => {
@@ -293,7 +291,7 @@ describe('the public compendium page, narrowed to the viewer’s covens', () => 
   });
 });
 
-// M8.17: a curator edits an entry from the search, in the compendium's edit dialog over the
+// A curator edits an entry from the search, in the compendium's edit dialog over the
 // results, as the admin Compendium does; anyone else reads the page as ever.
 describe('the public compendium page, for a curator', () => {
   const curator = (canCurate = true) => ({ ...shellOf(), viewer: { name: 'Fixture', canCurate } });
@@ -387,7 +385,7 @@ describe('the public compendium page, for a curator', () => {
   });
 });
 
-// M12.5: each card's Quick Look opens the entry's details over the search, `?entry=<id>`, for
+// Each card's Quick Look opens the entry's details over the search, `?entry=<id>`, for
 // anyone, a visitor included: the compendium as the compendium has it, read with no session.
 describe("the public compendium page, with an entry's details open", () => {
   const SEARCH = { query: 'Test' };
@@ -452,7 +450,7 @@ describe("the public compendium page, with an entry's details open", () => {
     );
   });
 
-  // The window mirrors the card it was opened from (the owner's call, 2026-10-20): the three dots
+  // The window mirrors the card it was opened from: the three dots
   // for a member of a coven that holds the entry, and none for anyone else.
   describe('the three dots in the details', () => {
     const member = () => ({
@@ -605,7 +603,7 @@ describe('the public compendium page metadata', () => {
 
   it.each<Record<string, string>>([
     { query: 'wort' },
-    // M12.55: a view narrowed to the viewer's covens is filtered too, whoever asks.
+    // A view narrowed to the viewer's covens is filtered too, whoever asks.
     { covens: 'w0' },
   ])(
     'keeps a filtered view (%o) out of search results, canonical to the unfiltered page',
@@ -617,7 +615,7 @@ describe('the public compendium page metadata', () => {
   );
 });
 
-// M14.8: the Reviewed switch in the Quick Look and the edit dialog, for a curator or
+// The Reviewed switch in the Quick Look and the edit dialog, for a curator or
 // admin. The review read is per viewer and made only for them, never inside the cached reads.
 describe('the public compendium page, with the review switch', () => {
   const DETAIL = entryDetail({ id: NODE.id, slug: NODE.slug, name: NODE.name });

@@ -2,14 +2,9 @@ import { test, expect } from './fixtures';
 import { recreateE2eDatabase } from './database';
 import { signInAs } from './session';
 
-// The chrome round the public compendium (MB.83), against the built server.
-// Story 63 walks a visitor in and on to Sign In; this proves what no story
-// walks: the chrome is in the HTML with no script, a signed-in request gets
-// the shell from the same layout, and the sticky bar leaves a scrolled-to
-// control in view. The Compendium link's current-page mark is PublicFrame's
-// and AppShell's component tests', the noindex mark seo.spec.ts's, a
-// signed-out visitor's redirect route-protection.spec.ts's, and the page at a
-// phone's width public-compendium.spec.ts's.
+// The chrome round the public compendium, for what no story walks: it is in the HTML with no script, a
+// signed-in request gets the shell from the same layout, and the sticky bar leaves a scrolled-to control in
+// view. The current-page mark, noindex, the signed-out redirect and the phone width are other specs'.
 
 test.beforeAll(async () => {
   await recreateE2eDatabase();

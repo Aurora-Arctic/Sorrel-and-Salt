@@ -13,11 +13,8 @@ import { useTestDatabase } from '../../../support/db/database';
 import { makeWorkspace, workspaceColumns } from '../../../support/fixtures';
 import type { CovenInvitationStateRow } from './types';
 
-// M7.6: an owner withdraws a pending invitation and reads the pending list.
-// Both check `member: invite`, which only owners hold; `member: read` is the
-// roll's, and members hold it. The row is stamped and kept. An accepted
-// invitation is a member to remove, so it is refused in words that say so
-// (claude-docs/db/invitations.md).
+// An owner withdraws a pending invitation and reads the pending list. Both check `member: invite`, which only owners hold; `member: read` is the roll's, and members hold it.
+// The row is stamped and kept. An accepted invitation is a member to remove, so it is refused in words that say so (claude-docs/db/invitations.md).
 
 let sql: postgres.Sql;
 useTestDatabase((client) => {
@@ -27,7 +24,7 @@ useTestDatabase((client) => {
 const DOMAIN = '@coven-invitation-revocation.test';
 const FIRST_PAGE = { limit: 26, inverted: false };
 
-/** A coven of A (owner), B (member) and C (viewer), through the raw client (MB.101). */
+/** A coven of A, B (member) and C (viewer), through the raw client. */
 async function insertCoven(name: string): Promise<string> {
   const [row] = await sql`
     insert into workspaces ${sql({ ...workspaceColumns(makeWorkspace({ name })), created_by: A.id, updated_by: A.id })}
@@ -135,10 +132,10 @@ describe('revokeWorkspaceInvitation', () => {
   });
 });
 
-// M10.34: a declined invitation is the invitee's answer, not a lapse. It stays on
+// A declined invitation is the invitee's answer, not a lapse. It stays on
 // the owner's list, whatever its expiry, until the owner removes it, and Remove
 // is the revoke.
-describe('a declined invitation (M10.34)', () => {
+describe('a declined invitation', () => {
   it('is listed and counted for the owner beside a pending one, and carries when it was declined', async () => {
     const pending = await insertInvitation(coven, 'pending', 'pending', A.id, 2);
     const declined = await insertInvitation(coven, 'declined', 'declined', A.id, 1);

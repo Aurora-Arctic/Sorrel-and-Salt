@@ -8,10 +8,7 @@ import { readFileSync } from 'node:fs';
 import { fileURLToPath } from 'node:url';
 
 /**
- * The breakdown's files, repo-relative and in reading order: TASKS.md, whose
- * table names the waves, then the milestone sections. Declared rather than
- * listed from the directory because the order is what a range is expanded
- * by, so a new file in claude-docs/tasks/ is added here.
+ * The breakdown's files in reading order: TASKS.md, whose table names the waves, then the milestone sections. Declared, not listed, as the order expands a range.
  */
 export const TASKS_FILES = [
   'claude-docs/TASKS.md',
@@ -43,9 +40,9 @@ const fromRepo = (path) => fileURLToPath(new URL(`../${path}`, import.meta.url))
 // `ID` and `HEADING` are what the project-progress tally imports, so the skill
 // reads the same headings the same way.
 export const ID = String.raw`[A-Z]+[0-9]*(?:\.[A-Z0-9]+)*[a-z]?`;
-// `**M2.6 — Title** · 2h …` or `**M6.4 — ~~Title~~** · **RETIRED …**`
+// `**<id> — Title** · 2h …` or `**<id> — ~~Title~~** · **RETIRED …**`
 export const HEADING = new RegExp(String.raw`^\*\*(${ID}) — .*?\*\* · (?:([0-9.]+)h|\*\*RETIRED)`);
-// `| **7 — GraphQL** | M3.1 → M3.2 · MB.73 · … |` in the execution-order table.
+// `| **7 — GraphQL** | <id> → <id> · <id> · … |` in the execution-order table.
 export const WAVE_ROW = /^\| \*\*(\d+) — ([^|*]+?)\*\*\s*\|([^|]*)\|/;
 export const ID_ONLY = new RegExp(String.raw`^(${ID})$`);
 export const ID_RANGE = new RegExp(String.raw`^(${ID})\s*→\s*(${ID})$`);
@@ -98,23 +95,14 @@ export function readTasksMd(text) {
 }
 
 /**
- * A retired heading's title, `M6.4 — ~~Title~~`, as the board's title rule
- * has its issue's: `M6.4 — [RETIRED] Title` (.claude/rules/task-tracking.md,
- * "Board layout"). The strike-through is markdown, which an issue title shows
- * as literal tildes.
+ * A retired heading's title, `<id> — ~~Title~~`, as its issue's is `<id> — [RETIRED] Title` (.claude/rules/task-tracking.md, "Board layout"); tildes show literally in an issue title.
  */
 const retiredTitle = (title) =>
   title.replace(new RegExp(String.raw`^(${ID}) — ~~(.*)~~$`), '$1 — [RETIRED] $2');
 
 /**
- * One task's entry: the title its heading carries, which is its issue's
- * title (a retired one's as `retiredTitle` marks it), the hours, and the text
- * from the heading to the next task or section heading, which is its issue's
- * body (claude-docs/task-tracking.md, "Sync"). Null when no heading carries
- * the id; `MB.12` never reads `MB.127`'s. Matched
- * whatever its case, as `find` matches a title, since `sync` upper-cases what
- * it is given and a lettered heading (`M5.6a`) is not; the answer carries the
- * heading's own.
+ * One task's entry: its heading's title (a retired one's as `retiredTitle` marks it), the hours, and the text to the next heading, which is its issue's body
+ * (claude-docs/task-tracking.md, "Sync"). Null when no heading carries the id. Matched whatever its case, as `find` matches a title, and the answer carries the heading's own.
  */
 export function readEntry(text, id) {
   const lines = text.split('\n');

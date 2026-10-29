@@ -3,8 +3,7 @@ import { dirname } from 'node:path';
 import { wikiKey } from './audit';
 import type { PageInfo, PageLookup } from './audit-resolve';
 
-// Wikipedia's answer to "what page does this title land on?" (M14.11,
-// `--resolve`): the MediaWiki API follows redirects and flags disambiguation
+// Wikipedia's answer to "what page does this title land on?" (`--resolve`): the MediaWiki API follows redirects and flags disambiguation
 // pages, which a title alone cannot show. Answers are cached in one JSON file
 // outside git, so the resolving run itself reads only local data and a second
 // run asks nothing; only `--fetch` goes to the network.

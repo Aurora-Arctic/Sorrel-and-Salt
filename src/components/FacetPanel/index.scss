@@ -20,10 +20,9 @@
   white-space: nowrap;
 }
 
-// The dialog is an overlay that slides down over the results, so they never move. It is
-// opened by script: show() from the tablet width up (no scrim, no inert page), showModal()
-// below it. The slide is grid rows 0fr to 1fr on the clip inside it; the dialog stays open
-// until the transition ends, so the content is whole, never faded, until it is gone.
+// The dialog is an overlay that slides down over the results, so they never move: `show()` from
+// the tablet width up, `showModal()` below it. The slide is grid rows 0fr to 1fr on the clip
+// inside, and the dialog stays open until it ends.
 .facet-panel {
   box-sizing: border-box;
   position: absolute;
@@ -79,10 +78,9 @@
 .facet-panel__inner {
   min-height: 0;
   overflow: hidden;
-  // Clip, where it is known, rather than hide: a hidden box can still be scrolled by the
-  // browser's focus step, which moves a dialog's first control into view as it opens and
-  // slid the content up inside a still-short panel, so its top rose and then fell back.
-  // A clipped box cannot scroll at all. `hidden` above is the older browsers' fallback.
+  // Clip where known, not hide: a hidden box can still be scrolled by the browser's focus step,
+  // which slid the content up inside a still-short panel as it opened. `hidden` above is the
+  // older browsers' fallback (claude-docs/components/facet-panel.md, "Opening and clipping").
   overflow: clip;
   border-radius: radius('surface');
 }
@@ -134,10 +132,8 @@
 }
 
 // Each half of the public compendium's Forms line (`halves` in index.tsx), for a viewer with
-// covens, is a line of its own inside the outer one: Forms growing beside Toxic in the left half,
-// In My Covens growing beside its In / Not In choice in the right (the owner's call, 2026-10-23).
-// Both halves grow alike, so each takes half, and they stack below the tablet width as every line
-// does. They need no rule of their own here.
+// covens, is a line of its own inside the outer one; both halves grow alike
+// (claude-docs/components/facet-panel.md, "Layout of the Forms line").
 
 // The chips and switches of a row, side by side and wrapping on a phone. Each stands where a
 // labelled field would, tops level: the chip's spacer is the height of a label.
@@ -171,9 +167,8 @@
   color: inherit;
 }
 
-// A choice chip (ChoiceChip): "Match: All" and a caret, opening a menu of radios. A
-// `<details>`, so it opens before the script runs; once the script has run the menu fades as
-// other dropdowns do, and stays in the page until the fade ends.
+// A choice chip (ChoiceChip): "Match: All" and a caret opening a menu of radios. A `<details>`,
+// so it opens before the script runs; once run, the menu fades and stays until the fade ends.
 .facet-chip__bar {
   // The chip and its icon: what a chip's tip is placed against.
   display: flex;
@@ -272,10 +267,9 @@
   white-space: nowrap;
 }
 
-// A chip at the end of a row would open a menu wider than itself past the panel's right edge,
-// where the slide's clip cuts it. choice-chip.tsx measures on open and adds this class when
-// that would happen; the menu then hangs from the chip's right edge and opens leftward. Which
-// chip ends a row varies (Match, Toxic, No Refs, Source), so the CSS alone cannot say.
+// A chip at the end of a row opens its menu leftward, from its right edge, so the slide's clip does
+// not cut it; choice-chip.tsx measures on open and adds this class
+// (claude-docs/components/facet-panel.md, "Menus and tips inside the panel").
 .facet-chip__menu--end {
   inset-inline: auto 0;
 }
@@ -327,12 +321,9 @@
       display: none;
     }
 
-    // The search row sticks (IngredientSearch), so the tray opens under a row that may be at
-    // the window's top: taller than the room below it, it scrolls inside itself rather than
-    // running off the window. Only once open: the class arrives as the slide starts, and a
-    // short box with `auto` shows a scrollbar for the whole opening, so the animation holds
-    // the clip for the slide's length and the scroll comes after it (a browser that cannot
-    // animate `overflow` shows the bar through the slide, as it did).
+    // Taller than the room below it, the tray scrolls inside itself, only once open, and the
+    // animation holds the clip for the slide's length so no scrollbar shows through it
+    // (claude-docs/components/facet-panel.md, "Opening and clipping").
     .facet-panel__clip--open > .facet-panel__inner {
       max-height: calc(100dvh - var(--sticky-top, 0px) - #{$control-height} - #{space(6)});
       overflow: auto;
@@ -353,16 +344,15 @@
   display: none;
 }
 
-// How long the phone sheet takes to slide in or out: longer than a dialog's fade, since it
-// travels its own width. index.tsx waits up to LEAVE_LIMIT_MS for it, which must stay longer.
+// How long the phone sheet takes to slide: longer than a dialog's fade. shell.tsx waits up to
+// LEAVE_LIMIT_MS, which must stay longer.
 $sheet-slide: 250ms ease-out;
 
-// The modal sheet below the tablet width: a full-height drawer from the right. Its foot
-// sticks to the bottom, and the sheet scrolls with room kept above it so that a focused
-// control is never hidden behind it (WCAG 2.4.11).
+// The modal sheet below the tablet width: a full-height drawer from the right, its foot stuck to
+// the bottom, with room kept above it so a focused control is not hidden behind it (WCAG 2.4.11).
 .facet-panel:modal {
-  // Fixed, as a modal dialog is by default, not the overlay's absolute: an absolute box
-  // translated past the right edge widens the page, which then scrolled sideways after it.
+  // Fixed, as a modal dialog is by default: an absolute box translated past the right edge widens
+  // the page.
   position: fixed;
   inset: 0;
   display: flex;
@@ -375,14 +365,14 @@ $sheet-slide: 250ms ease-out;
   overflow-y: auto;
   scroll-padding-block-end: calc(2 * #{space(7)});
 
-  // It slides in from the right edge and back out to it, while the backdrop fades as a
-  // Modal's does (M5.5): in is CSS alone, from `@starting-style` as `showModal()` shows it;
-  // out is `.is-closing`, which the component sets and waits on (the sheet's `transform`)
-  // before it closes the dialog. A slide rather than a fade: a drawer comes from its edge.
+  // It slides in from and back out to the right edge while the backdrop fades. In is CSS alone,
+  // from `@starting-style`; out is `.is-closing`, which the component sets and waits on
+  // (claude-docs/components/facet-panel.md, "The modal sheet").
   transform: none;
   transition: transform $sheet-slide;
 
-  // stylelint-disable-next-line plugin/use-baseline -- enhancement: the sheet appears without sliding in
+  // stylelint-disable-next-line plugin/use-baseline -- enhancement: the sheet appears without
+  // sliding in
   @starting-style {
     transform: translateX(100%);
   }
@@ -392,7 +382,8 @@ $sheet-slide: 250ms ease-out;
     opacity: 1;
     transition: opacity $modal-fade;
 
-    // stylelint-disable-next-line plugin/use-baseline -- enhancement: the backdrop appears without fading in
+    // stylelint-disable-next-line plugin/use-baseline -- enhancement: the backdrop appears without
+    // fading in
     @starting-style {
       opacity: 0;
     }
@@ -456,21 +447,15 @@ $sheet-slide: 250ms ease-out;
   }
 }
 
-// A tip in the panel opens below its label, not above it as everywhere else (`--tip-placement`,
-// read by `useTip`, and inherited by every tip in the panel). The panel's clip ends at the first
-// row's top edge, and although a placed tip is fixed and so never clipped, one above Match would
-// cover the panel's own header. Where there is no room below, it flips; where it would run past a
-// side of the screen, it shifts back, so a chip at a row's end needs no rule of its own.
+// A tip in the panel opens below its label (`--tip-placement`, read by `useTip`), because one above
+// Match would cover the panel's own header (claude-docs/components/facet-panel.md, "Styling").
 .facet-panel {
   --tip-placement: bottom;
 }
 
-// The compact scale (M9.7): every input in the panel is a step shorter than the app's forms
-// (`$control-height`), so the panel takes less room. Scoped here: the primitives, Field and
-// Combobox stay as the ingredient form draws them. Only heights and the strip's side padding
-// change; type stays at the body and small sizes, and colours and focus rings are the
-// primitives' own. The height is a custom property so the workshop can compare scales.
-// Chips are left at their own size: they already fit inside a box this tall.
+// The compact scale: every input in the panel is a step shorter than the app's forms (`$control-height`).
+// Scoped here, so the primitives are unchanged; the height is a custom property so the workshop can
+// compare scales (claude-docs/components/facet-panel.md, "Compact scale").
 $compact-control: 2.5rem;
 
 .facet-panel--compact {

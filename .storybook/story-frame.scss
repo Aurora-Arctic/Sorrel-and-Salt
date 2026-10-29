@@ -10,7 +10,7 @@
   // The preview page's body has no height of its own, so a percentage cannot
   // fill the window; the ground shows through wherever the frame stops.
   min-height: 100vh;
-  // The story's gutter; a phone's own at phone width, where 3rem a side would leave a 375px story 279px to render in.
+  // The story's gutter, a phone's own at phone width (3rem a side would leave a 375px story 279px).
   padding: 3rem;
 
   @media (max-width: 30rem) {

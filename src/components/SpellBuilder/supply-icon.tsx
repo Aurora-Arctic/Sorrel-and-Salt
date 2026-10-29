@@ -1,11 +1,8 @@
 import type { ReactElement } from 'react';
 
-// The two In Coven Inventory verdicts StockBadge has no symbol for, drawn exactly as its
-// `StockIcon` is (16 box, 1.6 round stroke, currentColor, hidden from a screen reader), so
-// the four sit side by side as one set. Spell-builder-only, so they live here, not beside
-// StockIcon. Every stroke stays inside the box (half a stroke, 0.8, clear of the edge).
-// Not Enough: a jar outline with its level part-way up. Units Differ: an equals sign
-// struck through. The word beside each stays visible, so neither rests on the symbol.
+// The two verdicts StockBadge has no symbol for, drawn as its `StockIcon` is (16 box, 1.6 round
+// stroke, currentColor, hidden from screen readers) so the four match. Strokes stay half a stroke
+// (0.8) inside the box. The word beside each stays visible.
 
 const Icon = ({ className, children }: { className: string; children: ReactElement }) => (
   <svg

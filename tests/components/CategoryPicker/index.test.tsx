@@ -8,10 +8,8 @@ import type {
   PickerGroup,
 } from '@/components/CategoryPicker/types';
 
-// The categories picked from one box, as a list field's entries are, the
-// rows under their groups and each pick a chip in its group's colour: the
-// form's category field and, in M8.11, the ingredients filter
-// (claude-docs/components/category-picker.md).
+// The categories picked from one box, as a list field's entries are: the rows under their groups and each pick a chip in its group's colour.
+// It serves the form's category field and the ingredients filter (claude-docs/components/category-picker.md).
 
 const fixtureWard: PickerGroup = {
   id: 'g-ward',
@@ -41,7 +39,7 @@ const category = (
 ): PickerCategory => ({ id, name, group, description });
 
 // In the order the vocabulary read gives them, groups and names alphabetical
-// (M12.52): the picker keeps the order it is given.
+// : the picker keeps the order it is given.
 const CATEGORIES: PickerCategory[] = [
   category('c-cn', 'Cinderfix', ashen),
   category('c-tc', 'Testcraft', fixtureWard),
@@ -91,7 +89,7 @@ describe('CategoryPicker', () => {
     expect(box()).toHaveAccessibleDescription('What it is used for.');
   });
 
-  // M12.52: the order is the read's, sorted in SQL, so the picker sorts
+  // The order is the read's, sorted in SQL, so the picker sorts
   // nothing. Groups and names here run against the alphabet, so a re-sort
   // would read differently.
   it('lists every category under its group in the order given, a novel group included', () => {
@@ -158,7 +156,7 @@ describe('CategoryPicker', () => {
     expect(screen.queryByRole('option', { name: /^Zestwort/ })).not.toBeInTheDocument();
   });
 
-  // M12.54: each pick adds a chip, so the list stays open for the next, in the facet and a form alike.
+  // Each pick adds a chip, so the list stays open for the next, in the facet and a form alike.
   it('keeps the list open after a pick, with the focus in the box, for the next', () => {
     renderControlled();
 
@@ -267,7 +265,7 @@ describe('CategoryPicker', () => {
     expect(removeButton('c-gone')).toBeInTheDocument();
   });
 
-  // The filter reads the picker with counts (M12.4): how many entries each
+  // The filter reads the picker with counts: how many entries each
   // category would leave.
   describe('with counts', () => {
     const counted = (): PickerCategory[] =>

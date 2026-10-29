@@ -15,23 +15,9 @@ import { publicCupboardOf } from './cupboard';
 import { covensHolding } from '@/app/plus-covens';
 import type { CompendiumEntryParams } from './types';
 
-// One compendium entry, at its public address (M8.19; MB.80): readable by
-// anyone, signed out included, and the address the coven's copy of the page
-// names as canonical. The (public) layout owns `<main>`, so this renders
-// none.
-//
-// The entry comes from `readCompendiumEntry`, a cached read that takes no
-// session, so nothing private can reach it. The page itself is drawn per
-// request: it asks `viewerIfSignedIn()`, which never redirects, to decide
-// whether to offer a curator Edit, and a signed-in person's cupboard choices
-// across the covens they may write in (M9.12, `cupboard.ts`). A visitor with
-// no session reads the page the same as ever. A member whose covens hold the
-// entry sees the In Your Cupboard shelf before its name, read once with the
-// choices (`covensHolding`); the choices change none of the page's other marks.
-//
-// An unknown slug and a coven entry's slug both answer 404, since the read
-// refuses them alike. A slug the entry has moved off answers 308 to its
-// current address; MB.84 pins that response's headers.
+// One compendium entry at its public address, readable signed out. The read is cached and sessionless,
+// but the page is drawn per request for a signed-in viewer's Edit and cupboard choices. An unknown or
+// coven slug answers 404; a moved slug answers 308.
 
 const addressOf = (slug: string) => `/compendium/ingredients/${slug}` as Route;
 
@@ -85,9 +71,8 @@ export default async function CompendiumEntryPage({ params, searchParams }: Comp
   const { detail, movedAway } = found;
   const entry = detail.entry;
 
-  // Edit opens the compendium's edit modal over this page (M8.19), so the
-  // address carries a bare `?edit`. The form's values are read only for a
-  // curator who asks for them, since they are the longest read the page makes.
+  // A bare `?edit` opens the compendium's edit modal over this page. The form's values are read
+  // only for a curator who asks, as they are the longest read the page makes.
   const canEdit = shell?.viewer.canCurate === true;
   const own = addressOf(entry.slug);
   const search = await searchParams;
@@ -99,9 +84,8 @@ export default async function CompendiumEntryPage({ params, searchParams }: Comp
   // name says any does, and the cupboard choices say which. Someone in no coven has none to ask.
   const holding = shell?.workspaces.length ? await covensHolding(entry.id) : [];
   const covens = shell ? await publicCupboardOf(entry, own, search, holding) : undefined;
-  // The review switch (M14.8), for a curator or admin only: a per-viewer read with their session,
-  // never in the cached read above and not made at all for anyone else, so a visitor's page is
-  // the same as ever. One read serves the side column's switch and the edit form's field.
+  // The review switch's read, for a curator or admin only: per viewer, never in the cached read
+  // above, so a visitor's page is unchanged. One read serves the head's switch and the form's field.
   const review = canEdit ? await reviewOf(entry.id) : undefined;
 
   return (

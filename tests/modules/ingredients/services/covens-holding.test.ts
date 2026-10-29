@@ -9,7 +9,7 @@ import { insertIngredient } from '../../../support/db/insert-ingredient';
 import { makeIngredient } from '../../../support/fixtures';
 
 // Which of the viewer's own covens hold a compendium entry: the details modal's In Your Cupboards
-// links (M12.5, the owner's call of 2026-10-20). Per viewer and never cached (rule 6), and
+// links. Per viewer and never cached (rule 6), and
 // only covens the viewer belongs to, each read under its own Membership proof (rule 5).
 
 let sql: postgres.Sql;
@@ -66,7 +66,7 @@ describe('covensHoldingEntry', () => {
     expect(await covensHoldingEntry(asUser(C), both)).toEqual([await coven(WORKSPACE_W_ID)]);
   });
 
-  it('gives an admin or a curator in no coven nothing, though covens hold the entry (M6.6)', async () => {
+  it('gives an admin or a curator in no coven nothing, though covens hold the entry', async () => {
     // Why they could be listed: W holds it, and A reads it.
     expect(await covensHoldingEntry(asUser(A), both)).toHaveLength(1);
 

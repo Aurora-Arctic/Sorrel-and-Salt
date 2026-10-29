@@ -4,14 +4,12 @@ import ReceivedInvitations from '.';
 import type { ReceivedInvitationEntry, ReceivedInvitationsProps } from './types';
 
 // Render-only; behaviour is asserted in tests/components/ReceivedInvitations.
-// Each story sits in the account page's Invitations section as the page writes
-// it, a panel in the narrow frame under its head: the list's stacked rows
-// depend on the panel's width.
+// Each story sits in the account page's Invitations section, a panel in the narrow
+// frame, because the list's stacked rows depend on the panel's width.
 const meta = {
   title: 'Account / Invitations Received',
 } satisfies Meta;
 export default meta;
-// The dropdown story's `state` arg is the node it draws (see its argTypes mapping).
 type Story = StoryObj<{ state?: import('react').ReactNode }>;
 
 const ONE: ReceivedInvitationEntry = {
@@ -69,8 +67,6 @@ const lastPageNode = (
   <Page invitations={SEVERAL} previousHref="/account?before=a" position={{ page: 2, pages: 2 }} />
 );
 
-// One story with a control to choose the state: each is a whole page or list,
-// too big to sit beside the others (claude-docs/workshop.md, rule 5).
 const STATES_STATES: Record<string, ReactNode> = {
   Default: defaultNode,
   'One Invitation': oneInvitationNode,

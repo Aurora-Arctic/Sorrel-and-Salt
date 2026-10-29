@@ -14,14 +14,7 @@ export interface AdminCompendiumPageProps {
   searchParams: Promise<CompendiumSearchParams>;
 }
 
-/**
- * The page's address: every list page's name query, cursor and modal
- * (`list-page.ts`), and the compendium's own filters (the table in
- * CompendiumList/params.ts): the forms by their text, the deities by slug, the
- * zodiac signs and celestial bodies by name, the entries citing nothing, the elements
- * an entry holds, toxic or not, and the categories with how they combine.
- * Every one repeats for a list.
- */
+/** The page's address: the list pages' query, cursor and modal, and the compendium's own filters. */
 export interface CompendiumSearchParams extends ListSearchParams {
   forms?: string | string[];
   withoutReferences?: string | string[];
@@ -33,9 +26,9 @@ export interface CompendiumSearchParams extends ListSearchParams {
   zodiac?: string | string[];
   celestialBodies?: string | string[];
   toxic?: string | string[];
-  /** Reviewed by a curator, `1`, or not, `0` (M14.8); the public page drops it. */
+  /** Reviewed by a curator, `1`, or not, `0`; the public page drops it. */
   reviewed?: string | string[];
-  /** The entry whose details modal is open over the list, by slug (M12.5). */
+  /** The entry whose details modal is open over the list, by slug. */
   entry?: string | string[];
 }
 
@@ -47,13 +40,13 @@ export interface EditedEntry {
 
 /** What the page's address opens: an add, or the entry it edits. */
 export interface OpenedEntry {
-  /** "Add Ingredient", or the edited entry's eyebrow, name and formal name (MB.115). */
+  /** "Add Ingredient", or the edited entry's eyebrow, name and formal name. */
   heading: ModalHeading;
   /** The entry edited; none for an add. */
   entry?: EditedEntry;
   /**
-   * The Reviewed switch (M14.8) as a field of the form, on an add and an edit: the page
-   * gives it, from the uncached review read, to a curator or admin, and leaves it out for anyone else.
+   * The Reviewed switch as a field of the form, on an add and an edit: built from the uncached
+   * review read for a curator or admin, left out for anyone else.
    */
   review?: ReviewOffer;
 }
@@ -61,17 +54,10 @@ export interface OpenedEntry {
 export interface CompendiumDialogProps {
   /** The list the modal opened over, which closing it returns to and a save reopens from. */
   place: CompendiumPlace;
-  /** What the address opens; none when it opens nothing, or while a press's is on its way (M9.18). */
+  /** What the address opens; none when it opens nothing, or while a press's is on its way. */
   opened?: OpenedEntry;
-  /**
-   * The list's own address: the admin Compendium's, or the public search's, which opens the
-   * same dialog for a curator (M8.17). The admin's when left out.
-   */
+  /** The list's own address: the admin Compendium's by default, or the public search's. */
   path?: Route;
-  /**
-   * The modal the address opens, kept beneath a near match's Quick Look, which then opens that
-   * match's details over the form (the owner's call). Left out where the list opens no details by
-   * slug, the public search's, whose duplicate warning offers no Quick Look.
-   */
+  /** The modal the address opens, kept beneath a near match's Quick Look; left out where the list has none. */
   lookUnder?: ListDialog;
 }

@@ -3,7 +3,7 @@ import { describe, expect, it } from 'vitest';
 import { recipeStepsOf } from '@/app/(shell)/coven/[slug]/grimoire/[id]/recipe-steps';
 import type { SpellStepView } from '@/modules/grimoire';
 
-// MB.6: the service's step views as the recipe draws them. Invented names throughout.
+// The service's step views as the recipe draws them. Invented names throughout.
 
 /** The page the steps are drawn on, which the Quick Look eye adds `?entry=` to. */
 const HERE = '/coven/c1/grimoire/sp' as Route;

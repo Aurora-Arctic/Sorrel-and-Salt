@@ -3,7 +3,7 @@ import { resolveNumberedPage } from './pagination';
 import { readableCursor, single } from './search-params';
 import type { Cursor, Page, PageCount, PageEntry, PagePosition, PageRequest } from './types';
 
-// Shared by the admin tabs and the members page's pending list (M7.6): each
+// Shared by the admin tabs and the members page's pending list: each
 // reads its cursors off its own query keys, since the members page already
 // spends `?after` and `?before` on its roll.
 
@@ -13,10 +13,8 @@ export type PageKeys = { after: string; before: string };
 export const DEFAULT_PAGE_KEYS: PageKeys = { after: 'after', before: 'before' };
 
 /**
- * One numbered page of a list, through `resolveNumberedPage`, or its first
- * page again for a cursor that names no row of it: one the codec reads but
- * this list's key will not cast, as a cursor copied from another list is.
- * Any other failure is still thrown.
+ * One numbered page of a list through `resolveNumberedPage`, or its first page again for a cursor the codec reads but this list's key will not cast (one
+ * copied from another list). Any other failure is thrown.
  */
 export async function readNumberedPage<T, Edge extends object = {}>(
   { after, before }: { after?: string; before?: string },

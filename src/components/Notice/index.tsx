@@ -1,11 +1,9 @@
 import type { ReactElement } from 'react';
 import type { NoticeKind, NoticeProps } from './types';
 
-// The `.notice` primitive with the role its kind implies, in one place: a
-// message that arrives after the page did is announced only because of its
-// role, so the role travels with the look rather than being remembered at
-// each of the twenty-odd call sites that wrote the markup by hand.
-// claude-docs/components/notice.md.
+// The `.notice` primitive with the role its kind implies: a message arriving after the page is
+// announced only through its role, so the role travels with the look
+// (claude-docs/components/notice.md).
 
 const MODIFIER: Record<NoticeKind, string> = {
   error: 'notice notice--error',

@@ -252,3 +252,31 @@ So a last pick deleted is live again after the reseed, under a new id at the
 same position; a first pick removed through the service, once the pick below
 has taken its position, is live again at the end of the list, the pick below
 unmoved.
+
+The pick's position is chosen so that a second run moves nothing. `insertMissingDeities`
+matches a pick on the case-folded name the row holds, not on the deity picked,
+over the live rows: a database that ran the earlier fill already holds these
+deities as typed names at these positions, and a pick beside each would take a
+position its typed twin holds. With `restoreDeleted` off it reads every row, so a
+deleted pick counts as present. A missing pick goes after every live pick of its
+entry, in the literal's order, not at its literal index, because the service
+renumbers the picks it keeps and a pick removed from anywhere but the end leaves
+its index held by the pick below. On an entry with no live pick that is the
+literal index.
+
+### Slug backfill
+
+`reslugIngredients` runs on every seed over its own entries. Each live entry's slug
+is re-derived and written where it differs, so a reseed with nothing to change
+writes nothing. A compendium entry's old slug is retired for the 180-day redirect.
+A slug another live row holds is left alone, so a reseed never fails on an
+admin's row.
+
+### Retired slugs
+
+`insertMissingRetiredSlugs` writes the two retired slugs described under "The
+compendium is awkward on purpose": Rosemary's old slug, which answers a 308, and
+Hidcote Lavender's, which shows Lavender with a notice that Hidcote Lavender moved
+away. Both are keyed on the entry and slug, so a reseed writes nothing. The rows'
+`retired_at` defaults to the run's instant, so the 180-day window runs from the
+last write.

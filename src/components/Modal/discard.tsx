@@ -9,33 +9,19 @@ import Modal from './modal';
 import type { DiscardGuard, DiscardQuestionProps } from './types';
 import './index.scss';
 
-// A form's unsaved changes, kept from every way out of its modal: Cancel, the
-// Close button, Escape and a click outside each ask "Discard them?" first
-// while the form has changes, the owner's call during MB.115. One guard for
-// every admin form rather than a copy in each; the form says whether it has
-// changes and where Cancel goes, and draws the question over itself, as its
-// Delete question is (claude-docs/components/modal.md, "Unsaved changes").
-// Saving and deleting close through the modal's own close, which nothing
-// guards. Leaving the page is guarded too, through useLeaveGuard (M13.14):
-// closing the tab or reloading asks the browser's question, and on a page an
-// in-app navigation asks this one. In a modal navigations go unheld: the page
-// behind is inert, and what navigates from there is the form itself, after a
-// save, or the modal's close after Discard Changes, while the form still reads
-// as changed. On a page there is no modal to ask over, so the question opens
-// as a dialog of its own (the owner's call during M13.14) rather than in the
-// form's card, where it read as part of the form.
+// A form's unsaved changes, kept from every way out of its modal: Cancel, Close, Escape and a click
+// outside ask "Discard them?" while the form has changes. It also guards leaving the page
+// (claude-docs/components/modal.md, "Unsaved changes").
 
 /**
- * Guards a form's way out while `dirty`, its own `formState.isDirty`, the
- * flag that enables its Save. Inside a `Modal` it also guards the modal's
- * Close button, Escape and backdrop; outside one, an in-app navigation. A
- * tab close or reload asks the browser's question either way.
+ * Guards a form's way out while `dirty` (its `formState.isDirty`): inside a `Modal` the Close
+ * button, Escape and backdrop, outside one an in-app navigation; a tab close or reload asks the
+ * browser's question either way.
  */
 export function useDiscardGuard(dirty: boolean): DiscardGuard {
   const slot = useContext(CloseGuardContext);
   const [asking, setAsking] = useState(false);
-  // How many times a way out was tried again while asking: each flashes the
-  // question, so the person sees why nothing closed (MB.115, the owner's call).
+  // How many times a way out was tried again while asking; each flashes the question.
   const [flashes, setFlashes] = useState(0);
   // The close the question holds back, made by Discard Changes.
   const held = useRef<(() => void) | null>(null);
@@ -91,10 +77,8 @@ export function DiscardQuestion({ guard }: DiscardQuestionProps): ReactElement {
 }
 
 /**
- * The question as a dialog, for a form on a page. Escape, Close and a click
- * outside are Keep Editing; the modal gives the focus back to what had it,
- * the link that was followed. Nothing flashes: the page behind is inert while
- * it is open, so no other way out can be tried.
+ * The question as a dialog, for a form on a page: Escape, Close and a click outside are Keep
+ * Editing. Nothing flashes, since the page behind is inert while it is open.
  */
 function OnPage({ guard }: DiscardQuestionProps): ReactElement {
   const { discard, keepEditing, keepEditingRef } = guard;

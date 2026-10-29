@@ -9,10 +9,8 @@ import CovenChoice from './coven-choice';
 import type { CupboardPlace } from './types';
 
 // Which coven's annotations to edit, asked on the public entry page where two or more of the
-// viewer's covens hold the entry and permit annotating it (M9.12): the dropdown Add's picker
-// asks with, then on into the coven's Annotate dialog at its own `?annotate=<covenSlug>`,
-// opened at once under a provider as the one-coven link opens it. The picker closes as the
-// dialog opens, since the dialog takes the page's modal place.
+// viewer's covens hold the entry and permit annotating it; it then opens that coven's Annotate
+// dialog at `?annotate=<covenSlug>` and closes as it opens.
 
 export default function AnnotatePicker({
   places,

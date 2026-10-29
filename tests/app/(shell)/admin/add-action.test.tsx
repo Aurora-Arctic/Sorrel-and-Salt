@@ -21,7 +21,7 @@ describe('AddAction', () => {
     expect(link).toContainElement(icon as SVGElement);
   });
 
-  // A dialog the browser draws itself, New Spell's (M10.12): the press writes the address with
+  // A dialog the browser draws itself, New Spell's: the press writes the address with
   // pushState, as Add Ingredient's does, so its form shows at once with no skeleton before it.
   describe('with a dialog the client draws', () => {
     it('writes its address with pushState on a plain press, with no navigation', () => {

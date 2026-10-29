@@ -11,7 +11,7 @@ vi.mock('next/navigation', () => ({
 
 const { default: CovenNav } = await import('@/components/CovenNav');
 
-// The nav the `/coven/[slug]` layout carries (M9.15;
+// The nav the `/coven/[slug]` layout carries (
 // claude-docs/components/coven-nav.md).
 const SLUG = 'fixture-coven';
 

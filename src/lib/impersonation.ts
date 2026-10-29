@@ -1,6 +1,6 @@
 import { admin } from 'better-auth/plugins';
 
-// MB.53: an admin signs in as a specific user, outside production, through
+// An admin signs in as a specific user, outside production, through
 // Better Auth's `admin` plugin with every endpoint but its two impersonation
 // ones removed. See claude-docs/auth/impersonation.md, "Impersonation".
 
@@ -22,11 +22,8 @@ export function impersonationEnabled(
 }
 
 /**
- * The `admin` plugin narrowed to impersonation. Every other endpoint would
- * write through the adapter, outside `withAudit`: `set-role` would grant admin
- * past M2.9's ledger, and `remove-user` could hard-delete the primary admin.
- * The schema keeps `sessions.impersonatedBy` and declines the three ban columns,
- * since nothing here bans. `allowImpersonatingAdmins` stays at its default, off.
+ * The `admin` plugin narrowed to impersonation: every other endpoint would write through the adapter outside `withAudit` (`set-role` past the privilege
+ * ledger, `remove-user` hard-deleting the primary admin). The schema keeps `sessions.impersonatedBy` and no ban columns; `allowImpersonatingAdmins` stays off.
  */
 export function impersonation() {
   const plugin = admin();

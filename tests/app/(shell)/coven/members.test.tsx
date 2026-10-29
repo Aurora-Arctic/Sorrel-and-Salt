@@ -3,10 +3,8 @@ import { beforeEach, describe, expect, it, vi } from 'vitest';
 import type { WorkspaceRole } from '@/modules/coven';
 import { Forbidden } from '@/lib/errors';
 
-// The members page (story 9; M6.13). The guard and the services are mocked,
-// since what they decide is their own tests'; the role check is the real one,
-// read off the access-control statements. Here: who gets role controls, and
-// that a refusal from the service is a 404.
+// The members page, with the guard and the services mocked and the role check real, read off the access-control statements.
+// It proves who gets role controls and that a refusal from the service is a 404.
 
 const notFound = vi.fn(() => {
   throw new Error('not-found');
@@ -133,7 +131,7 @@ describe('the /coven/[slug]/members page', () => {
     expect(notFound).toHaveBeenCalled();
   });
 
-  // M6.16: the quiet note, raised before it is urgent.
+  // The quiet note, raised before it is urgent.
   it('notes it when the coven has exactly one owner, to an owner and a member alike', async () => {
     await render_('owner');
     expect(screen.getByRole('status')).toBeInTheDocument();
@@ -153,7 +151,7 @@ describe('the /coven/[slug]/members page', () => {
     expect(screen.queryByRole('status')).not.toBeInTheDocument();
   });
 
-  // M11.19: the addresses are the owner's, asked for this page's members.
+  // The addresses are the owner's, asked for this page's members.
   it("shows an owner each member's address, read for this page's members", async () => {
     await render_('owner');
 

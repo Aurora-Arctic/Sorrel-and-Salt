@@ -229,3 +229,17 @@ titled "Sign In / Sign-In Methods".
   whose alert is in Microsoft's row.
 - The link and unlink flows themselves are asserted against Better Auth's
   endpoints in `tests/db/account-linking.test.ts`.
+
+## The list of ways in
+
+The account page lists every roster provider as linked or addable, and a linked one can be removed while another remains. Adding is Better Auth's `/link-social`, which leaves for the provider and lands back on the account page. Removing is `/unlink-account`, answered in place. A session too old for Better Auth to remove a method is offered a fresh sign-in in place of every Remove, rather than a press it would refuse. The section's heading and intro belong to the page, so the section is a named region like the other two.
+
+## A provider row
+
+A row is in one of three states, told apart by its control and its words rather than by hue.
+
+- Linked has Remove. Remove is greyed for the only method left, with a line saying why. From a stale session there is no Remove at all, since the list says why once.
+- Addable has Add.
+- Unavailable has a greyed Add with a note saying why.
+
+A press's failure is a callout under the control pressed. A failed link's callback error, which no press here raised, sits in the row beneath the controls as a `Notice`.

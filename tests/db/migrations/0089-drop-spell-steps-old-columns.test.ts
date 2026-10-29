@@ -5,14 +5,8 @@ import { useTestDatabase } from '../../support/db/database';
 import { fromRoot } from '../../support/paths';
 import { FIXTURE_USERS } from '@/db/seed/standard';
 
-// A migration test, retired once `0089` is in production's journal. `0089` is
-// the contract half of M13.1's renames: it refills `position` from
-// `layer_order` on every step where they differ (the deploy before M13.1 kept
-// writing `layer_order` alone, a reorder included), sets `position` NOT NULL,
-// then drops the `spell_ingredients` view, `layer_order`, `instructions` and
-// the retired `note`. The test database is already migrated, so the columns
-// are gone; the refill is run on its own, over a scratch table built like the
-// old one, and the drops are proved by the catalogue.
+// A migration test, retired once `0089` is in production's journal. `0089` is the contract half of the step column renames: it refills `position` from `layer_order` where they differ (the previous deploy kept writing `layer_order` alone),
+// sets `position` NOT NULL, then drops the `spell_ingredients` view, `layer_order`, `instructions` and the retired `note`. The columns are already gone, so the refill runs over a scratch table built like the old one and the drops are proved by the catalogue.
 
 const FILE = fromRoot('src/db/migrations/0089_drop-spell-steps-old-columns.sql');
 
@@ -34,10 +28,7 @@ beforeEach(async () => {
   await sql`drop table if exists scratch_steps`;
 });
 
-/**
- * A table shaped like `spell_steps` before the drops: both columns, and the
- * live-only unique index on each, so the refill meets the clash it must avoid.
- */
+/** A table shaped like `spell_steps` before the drops: both columns and a live-only unique index on each, so the refill meets the clash it must avoid. */
 async function oldShape(rows: [string, number | null, number, boolean][]) {
   await sql`create table scratch_steps (
     id serial primary key, spell_id uuid not null, name text not null,

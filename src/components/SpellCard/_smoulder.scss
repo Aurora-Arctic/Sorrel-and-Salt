@@ -1,32 +1,9 @@
 @use '../../scss/variables' as *;
 @use '../../scss/mixins' as *;
 
-// The spell card's hover: the parchment smouldering from its bottom-right corner (the
-// owner's pick from the hover options, in the review of M10.11).
-// claude-docs/components/spell-card.md, "The smouldering edge".
-//
-// What burns is gone: a hole in the card's foot corner, through the card's face and its
-// shadow both, so the page shows through and no edge of the whole card is left. The face
-// and its shadow are a layer of their own (`.spell-card__face`): the face is the spread
-// shadow of a hole-shaped box, so it is everything but the hole, and the shadow is a
-// `drop-shadow()` of that, so it follows the burnt edge, not the rectangle. Over the content,
-// a thin bright ember line and a thin dark char rim run round the burn front, and one SVG
-// filter (`#spell-card-burn`, from `SpellCardFilters`) tears the hole and the rim alike,
-// so their edges meet. Faint embers glow in the burnt part itself, brightest along the
-// ember line and fading towards the corner; a little warmth spills onto the table below
-// the card, behind it, and shows through the hole.
-// The burn creeps along the bottom edge for 1.3s, then holds while the ember glows
-// unevenly. On leaving, the burn fades while the hole and the spill shrink back to the
-// corner, so a quick return burns on from where they have shrunk to.
-//
-// Nothing warm sits under text: the hole is under 1rem deep, half of it past the card's
-// edge, so with its rim and the tearing it stays inside the card's padding. Only at the
-// corner does it climb higher, about 1.25rem up the right edge, where no text runs. The card's
-// face takes IngredientCard's hover tint and lifted shadow and nothing else.
-//
-// The layers stack by the order of the markup, with no z-index (index.scss says why).
-// Nothing transforms the card or any ancestor of it: a transformed ancestor becomes the
-// containing block of the category chips' `position: fixed` tip bubbles.
+// The spell card's hover: parchment smouldering from the bottom-right, one layer (`.spell-card__face`) torn by one SVG filter; layers stack by markup order, no z-index
+// Nothing transforms the card or an ancestor, which would contain the category chips' `position: fixed` tips
+// (claude-docs/components/spell-card.md, "How the burn is built").
 //
 // Baseline: CSS `filter: url()` on an HTML element, `drop-shadow()` and SVG filters are
 // Widely Available. Where the filter does not apply, the burn front is a smooth curve.
@@ -254,10 +231,8 @@ $burn-glow-blur: 1.25rem;
   }
 
   // The same rim, inward, round the burnt corner's curve. Inside the hole the curve would be a
-  // stray line across the burnt part, so everything below the hole's top (its overhang plus
-  // its depth) is clipped off, and 0.1rem more, so the curve's rim starts inside the hole's rim
-  // rather than poking past it. The curve meets the card's bottom inside the hole's straight
-  // stretch, where that cut is level with the hole's top.
+  // stray line, so everything below the hole's top is clipped, plus 0.1rem so the rim starts inside
+  // the hole's rim.
   .spell-card__burn-curve {
     box-shadow: ember-rim(true, 0, 1.5px, 0.95, 3px, 0.85, 3.5px);
     clip-path: inset(0 0 0.6rem 0);
@@ -266,12 +241,9 @@ $burn-glow-blur: 1.25rem;
       clip-path $burn-leave-duration ease-in;
   }
 
-  // The embers in the burnt part, over the page: brightest along the ember line (the top
-  // edge, against the card) and at the advancing front (the left end), fading towards the
-  // corner. Sized to the hole, so it grows and shrinks with it. The mask fades them out
-  // well above the card's bottom edge, where the layer is clipped, so the clip draws no line
-  // of the card's old edge across the hole. Without mask support the embers stop at that
-  // edge in a faint straight line.
+  // The embers in the burnt part, brightest along the top edge and at the advancing front, fading
+  // towards the corner. The mask fades them out above the card's bottom edge so the clip draws no
+  // line; without mask support they stop at that edge in a faint straight line.
   .spell-card__burn-hole::before {
     content: '';
     position: absolute;

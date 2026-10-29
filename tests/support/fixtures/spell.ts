@@ -37,10 +37,8 @@ const DEFAULTS: SpellFixture = {
   moonPhase: null,
   dayOfWeek: null,
   note: null,
-  // Both restated rather than left to the column: a fixture arriving
-  // `complete` would be a finished spell in every test that never mentioned
-  // status, and one arriving `private` would be a spell only its author can
-  // read in every test that never mentioned visibility.
+  // Both restated rather than left to the column, so a fixture is not a finished or shared spell in every
+  // test that never mentioned status or visibility.
   status: 'draft',
   visibility: 'workspace',
   categories: [],
@@ -57,14 +55,9 @@ function defaultLayerName(position: number): string {
 }
 
 /**
- * One step, at the place its index gives it. Naming an ingredient makes it a
- * linked layer, which clears the default name and form —
- * `spell_steps_one_identity` admits one of the two, and
- * `spell_steps_form_only_on_custom` refuses a form beside an id. Stating a
- * `body` and no identity makes it an instruction alone, which clears the
- * default name, form and amount — `spell_steps_amount_on_ingredient` refuses
- * an amount with no ingredient. Either is undone by stating the field, which
- * is how a test writes the row a check exists to reject.
+ * One step, at the place its index gives it. Naming an ingredient makes it a linked layer and clears the
+ * default name and form; a `body` and no identity makes it an instruction and clears name, form and amount.
+ * Stating the field undoes either, so a test can write the row a check rejects.
  */
 function makeStep(overrides: SpellStepOverrides, index: number): SpellStepFixture {
   const position = index + 1;
@@ -98,14 +91,7 @@ function makeStep(overrides: SpellStepOverrides, index: number): SpellStepFixtur
 }
 
 /**
- * One spell.
- *
- * ```ts
- * makeSpell()                                     // a draft in W, one custom layer
- * makeSpell({ categories: ['Warding'] })          // intending warding and nothing else
- * makeSpell({ steps: [{ ingredientId: mugwort }] }) // one linked layer
- * makeSpell({ steps: [{ body: 'Stir.' }] })         // one instruction
- * ```
+ * One spell, as in `makeSpell({ steps: [{ body: 'Stir.' }] })`, one instruction.
  */
 export function makeSpell(overrides: SpellOverrides = {}): SpellFixture {
   const { steps, ...rest } = overrides;

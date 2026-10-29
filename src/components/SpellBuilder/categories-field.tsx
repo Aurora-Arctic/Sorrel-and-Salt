@@ -10,12 +10,9 @@ import { FieldError } from '../Field';
 import { CategoriesDocument } from '../IngredientForm/categories';
 import type { SpellBuilderValues } from './types';
 
-// The categories a spell is assigned (M10.14, story 48): what it intends,
-// picked from every live category, under their groups, each pick a chip in
-// its group's colour. Never the categories its ingredients bring, which are
-// read from them and shown apart (claude-docs/components/spell-builder.md,
-// "Categories"). The same picker and the same query as the ingredient form's
-// field (../IngredientForm/categories.tsx), on the builder's own values.
+// The categories a spell is assigned (what it intends), picked from every live category as chips in
+// their group's colour; never those its ingredients bring (claude-docs/components/spell-builder.md,
+// "The fields"). The same picker as ../IngredientForm/categories.tsx.
 
 /** Whether two lists of category ids hold the same categories, in any order, a repeat once. */
 export function sameCategories(

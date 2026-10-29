@@ -9,11 +9,8 @@ import { insertIngredient } from '../../../support/db/insert-ingredient';
 import { insertReference, insertReferenceLink } from '../../../support/db/insert-reference';
 import { makeIngredient } from '../../../support/fixtures';
 
-// `Ingredient.references`' loader (MB.153): a page of ingredients answered in
-// one read, the citations in the order a bibliography files them, and refused
-// per key as the other children's loaders are. The query count is observed at
-// the repository, wrapped so the test counts calls without changing what they
-// answer; a role lookup is `assertMembership`'s one query.
+// `Ingredient.references`' loader: a page of ingredients answered in one read, the citations in the order a bibliography files them, and refused per key as the other children's loaders are.
+// The query count is observed at the repository, wrapped so the test counts calls without changing what they answer; a role lookup is `assertMembership`'s one query.
 const repository = vi.hoisted(() => ({
   findReferencesOf: vi.fn(),
   findWorkspaceRole: vi.fn(),

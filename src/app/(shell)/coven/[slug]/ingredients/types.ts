@@ -8,10 +8,7 @@ export interface CovenListEdge {
   cupboardEntry: CupboardEntryRow | null;
 }
 
-/**
- * One numbered page of the coven's ingredients with everything its cards draw,
- * each list in the order of `edges`.
- */
+/** One numbered page of the coven's ingredients with everything its cards draw, in `edges` order. */
 export interface CovenIngredientPage extends Page<IngredientRow, CovenListEdge> {
   position: PagePosition;
   totalCount: number;
@@ -25,7 +22,7 @@ export interface CovenIngredientPage extends Page<IngredientRow, CovenListEdge> 
   formOf: ReadonlyMap<string, string>;
   /** Each entry's live jars in this coven, one per form held. */
   jars: StockRow[][];
-  /** Each entry's latest edit across the coven's jars of it and, for its own entry, the row (M6.18); null for none. */
+  /** Each entry's latest edit across the coven's jars of it and, for its own entry, the row; null for none. */
   lastEdits: (LastEdit | null)[];
 }
 

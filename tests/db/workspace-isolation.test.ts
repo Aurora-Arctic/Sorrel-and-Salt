@@ -21,28 +21,9 @@ import { insertStock } from '../support/db/insert-stock';
 import { variantIdOf } from '../support/db/read-variants';
 import { makeIngredient, makeSpell, variantInput } from '../support/fixtures';
 
-// Story 19 — an outsider and a site admin both refused a coven's ingredients
-// and grimoire, by direct id and on every write, with a refusal that hands
-// neither of them the one bit rule 4 already withholds: whether the row is
-// even there. `tests/acceptance/README.md` names this file rather than a
-// `describe('Story 19: …')` block, that naming convention being
-// `tests/acceptance/`'s own.
-//
-// This is the per-entity sweep: every entity a coven holds, reached the way a
-// caller reaches it — an ingredient through the ingredients service
-// (getWorkspaceIngredient, updateWorkspaceIngredient), a jar of stock through
-// the stock service (getStock, updateStock), a spell's one write
-// through setSpellVisibility, and the grimoire's reads, which have no service
-// yet, through the repository's finders under a real Membership. The rule
-// behind each refusal is its service's, proved there by direct id for every
-// role (tests/modules/*/services/), and the Membership mechanism is
-// tests/db/repository/finders.test.ts's, once per finder family; what only
-// this file holds is the sweep itself, and the refusal that is the same for a
-// real id and a made-up one.
-//
-// Every actor below reaches for **W**, owned by A and worked in by B and C.
-// **D**'s own workspace is X — a real membership, just the wrong one — and
-// **E** is a site admin who belongs to none; neither buys a byte of W.
+// An outsider and a site admin are both refused a coven's ingredients and grimoire, by direct id and on every write, without learning whether the row exists (rule 4).
+// This is the per-entity sweep; each rule behind a refusal is its service's, and the Membership mechanism is tests/db/repository/finders.test.ts's.
+// Actors reach for **W** (owned by A, worked in by B and C); **D**'s own workspace is X and **E** is a site admin in none: neither buys a byte of W.
 
 let sql: ReturnType<typeof postgres>;
 
@@ -295,13 +276,8 @@ describe('Grimoire — the spell and what it is made of', () => {
   });
 });
 
-// The compendium's writes check the site role alone (`assertSiteAdmin`), so
-// what has to hold beside them is that `assertMembership` neither
-// special-cases nor penalizes the admin role (membership.ts, "A site admin
-// gets no bypass"): E's refusal of each entity is the ordinary stranger's
-// refusal, and nothing about it can regress a capability checked on
-// `session.role`. Each service proves E's refusal once too; this is the sweep.
-// F, the curator (M11.20), is held to the same: curating buys no coven either.
+// The compendium's writes check the site role alone, so `assertMembership` must neither special-case nor penalize the admin role (membership.ts, "A site admin gets no bypass").
+// E's refusal of each entity is the ordinary stranger's, and F, the curator, is held to the same: curating buys no coven.
 describe('E’s and F’s site roles carry no bypass and no penalty from the membership check', () => {
   const stranger = asUser({ id: '00000000-0000-0000-0000-0000000000fe', role: 'user' });
 
@@ -373,9 +349,8 @@ describe('E’s and F’s site roles carry no bypass and no penalty from the mem
     },
   );
 
-  // Both halves of story 19 as narrowed in M9.19 sit in one test, so it fails
-  // if either changes: the admin may read which covens a user is in, and may
-  // still not read what those covens hold.
+  // Both halves sit in one test, so it fails if either changes: the admin may read which covens a user
+  // is in, and may still not read what those covens hold.
   it('lets E list D’s covens by name and role while refusing X’s ingredients by direct id', async () => {
     const ingredientId = await insertIngredient(
       sql,

@@ -24,21 +24,8 @@ import { liveRow, refuseSlugCollision } from './curated-writes';
 import { refuseWhileHeld } from './held-entries';
 import type { AstrologyValueFilter, AstrologyValueRow, CuratedField } from '../types';
 
-// The two curated astrology vocabularies: their reads, public reference data
-// like every curated vocabulary (MB.80), and their writes, a curator's or an
-// admin's alone (MB.95, M11.20). One code path for both, keyed by the
-// ingredient list each curates. A compendium entry's celestial bodies and
-// signs are spellings the vocabulary curates (MB.162), so a value a live
-// entry's list holds is held:
-// its delete is refused, and its rename is carried onto the list in the same
-// write. A coven's ingredient never holds a value and is never rewritten: its
-// spelling moves into the coven's in-use values, and an admin writes nothing
-// of a coven's (M6.6).
-//
-// MB.95's rules apply "while the row is the last live spelling of its value",
-// which every live row is: a value folds as a slug does, trimmed and
-// lower-cased, so two live rows of one fold would share a slug, which the
-// partial unique index refuses.
+// The two curated astrology vocabularies, one code path keyed by the ingredient list each curates. Reads are public; writes are
+// for a curator or an admin alone (claude-docs/db/astrology-vocabularies.md, "Astrology service details").
 
 /** What each vocabulary is called, read and checked by. */
 const VOCABULARY = {
@@ -63,9 +50,7 @@ const VOCABULARY = {
 /** Either vocabulary's table, so a shared step reads whichever `field` names. */
 type AstrologyTable = (typeof VOCABULARY)[CuratedField]['table'];
 
-// The list and its count, held in the data cache under the `compendium` tag
-// (claude-docs/db/compendium-cache.md). Keyed by the field's name rather than
-// handed its table, since the arguments are the cache key.
+// The list and its count, held in the data cache under the `compendium` tag (claude-docs/db/compendium-cache.md); keyed by the field's name since the arguments are the cache key.
 const cachedPage = cachedCompendiumRead(
   'astrology-page',
   (field: CuratedField, filter: AstrologyValueFilter, page: PageRequest) =>
@@ -77,11 +62,7 @@ const cachedCount = cachedCompendiumRead(
     findAstrologyValueCount(VOCABULARY[field].table, filter, start),
 );
 
-/**
- * One page of `field`'s vocabulary under `filter`, alphabetical by name, for
- * `celestialBodies`, `zodiacSigns` and the admin pages' lists: a public read (MB.80),
- * so no session. A blank query is no query.
- */
+/** One page of `field`'s vocabulary under `filter`, alphabetical by name: a public read, so no session. A blank query is no query. */
 export function listAstrologyValues(
   field: CuratedField,
   filter: AstrologyValueFilter,
@@ -90,10 +71,7 @@ export function listAstrologyValues(
   return cachedPage(field, readableFilter(filter), page);
 }
 
-/**
- * How many rows `listAstrologyValues` pages under `filter`, and how many come
- * before `start` — a page's first row, none on an empty page: "Page X of Y".
- */
+/** How many rows `listAstrologyValues` pages under `filter`, and how many come before `start`: "Page X of Y". */
 export function countAstrologyValues(
   field: CuratedField,
   filter: AstrologyValueFilter,
@@ -103,8 +81,7 @@ export function countAstrologyValues(
 }
 
 /**
- * The live row of `field`'s vocabulary at this address — how an admin page
- * opens one to edit.
+ * The live row of `field`'s vocabulary at this address, for an admin page to edit.
  *
  * @throws {NotFound} no live row holds the slug.
  */
@@ -120,10 +97,8 @@ export async function getAstrologyValueBySlug(
 /**
  * Adds a celestial body or a sign, its slug derived from the name.
  *
- * @throws {Forbidden} the caller is neither a curator nor an admin — checked before the
- * input is read.
- * @throws {ValidationError} the input breaks the vocabulary's schema, or its
- * slug is a live row's.
+ * @throws {Forbidden} the caller is neither a curator nor an admin.
+ * @throws {ValidationError} the input breaks the vocabulary's schema, or its slug is a live row's.
  */
 export async function createAstrologyValue(
   session: Session,
@@ -144,18 +119,11 @@ export async function createAstrologyValue(
 }
 
 /**
- * Rewrites a celestial body or a sign whole, its slug following the name. Its
- * `seedKey` is left as it was, so a renamed seeded row is still the seed's
- * (MB.171).
- *
- * A rename — a change of case included — carries the new name onto every live
- * compendium entry whose list holds the old one, in place and in the same
- * transaction; no slug moves, since a celestial body or a sign is no part of an
- * entry's identity or slug. A soft-deleted entry keeps the old spelling.
+ * Rewrites a celestial body or a sign whole, its slug following the name, and carries a rename onto every live compendium entry's
+ * list (claude-docs/db/astrology-vocabularies.md, "Astrology service details"). Its `seedKey` is left as it was.
  *
  * @throws {Forbidden} the caller is neither a curator nor an admin.
- * @throws {ValidationError} as `createAstrologyValue` throws it, the row's
- * own slug excepted.
+ * @throws {ValidationError} as `createAstrologyValue` throws it, the row's own slug excepted.
  * @throws {NotFound} no live row of the vocabulary has this id.
  */
 export async function updateAstrologyValue(
@@ -183,15 +151,9 @@ export async function updateAstrologyValue(
 }
 
 /**
- * Soft-deletes a celestial body or a sign no live compendium entry's list holds. A
- * coven's ingredient keeps what it wrote, which moves into that coven's
- * in-use values.
+ * Soft-deletes a celestial body or a sign no live compendium entry's list holds (claude-docs/db/astrology-vocabularies.md, "Astrology service details").
  *
- * The entries are read before the transaction, so an entry saved with the
- * value in the instant between is left holding a retired spelling.
- *
- * @throws {Forbidden} the caller is neither a curator nor an admin, or a live compendium
- * entry holds the value — the message names the entries.
+ * @throws {Forbidden} the caller is neither a curator nor an admin, or a live entry holds the value.
  * @throws {NotFound} no live row of the vocabulary has this id.
  */
 export async function deleteAstrologyValue(

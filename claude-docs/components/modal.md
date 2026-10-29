@@ -968,3 +968,87 @@ close href, and the e2e specs open and close the modals in a real browser.
 from its button, then closes it by Close, by Escape and by the contents'
 own close, and finds each time no dialog and the focus on the button. A
 click outside reaches the same `onClose` as Escape, so it is not repeated.
+
+## Focus and the fade
+
+### The first field's focus
+
+`showModal()` puts the focus on Close, the first thing that takes it, but the person opened the dialog to fill it in, so the focus goes to the body's first field, or with none to the dialog itself, whose name is read and from which Tab reaches Close. It is set after `showModal()` because React's `autoFocus` runs before it and is overridden. In development React unmounts and remounts, and closing the dialog blurs a field already focused, which a form reads as touched, so its required error showed on a direct load; a blur cannot be undone, so the focus waits for a microtask that the cleanup cancels.
+
+### A modal replaced by another
+
+Strict Mode's rehearsal leaves the dialog in the page, and only a real unmount takes it out and gives the focus back. A modal unmounted while still open (`shutting` not set) was replaced, or left behind by a navigation, so its time is noted in `handedAt` and a modal that opens within `HANDOVER_MS` shows its backdrop at once, with only the box fading in. Without it the page shows undimmed for a frame between the one going and the other fading in.
+
+### The fade's limit
+
+The owner is asked to close once the transition ends, or at `FADE_LIMIT_MS` if the browser never reports its end.
+
+## The confirm overlay
+
+### The overlay's focus
+
+A layout effect holds the form inert and takes the focus on the safe answer as the card comes, so a question that gives way to another hands the focus over in one commit; Strict Mode's second run takes and gives it back the same. It runs again in an animation frame, since the event that opened the question (a pointer press on the backdrop or Close, Escape's close request) may still move the focus once its handler returns, after the commit.
+
+### The overlay waits for the modal's layer
+
+The modal draws its layer before its contents can ask, but not before their first render; showing nothing is better than a card in place that then moves.
+
+### `ConfirmQuestion`
+
+`ConfirmQuestion` is the one written-once form of the yes-or-no question, for example "Delete "Fixture Healing"? …": Delete is destructive and busy ("Deleting") until answered, Keep It is the safe answer. With a discard guard it shows the unsaved changes' question while that one asks, and its own only while `asked`. On a rejection it reads the server's first sentence and hands it to `onRefused` for the form's alert: a refusal naming its remedy, not a bad value in a box (DESIGN.md §7). Its second answer's action cannot be taken back, so Delete is shut while it runs.
+
+## Naming, cancelling and closing
+
+### A nested dialog's cancel
+
+React carries it up its tree, and the browser sends Escape to the topmost dialog alone, so the outer modal acts only when the event's target is itself.
+
+### The dialog's name
+
+The dialog's name is the eyebrow and the heading together ("Edit Ingredient, Mugwort"), or the heading then where it lands ("Add Ingredient to Whitethorn Coven"), or the heading alone with a formal name over it.
+
+### A route modal's close
+
+`RouteModal` replaces the modal's history entry so Back does not open it again, and refreshes so the list re-reads after a save or a delete. Its contents close through `done`, the Modal's own close, so a save fades out as Close does; a wrapper that passed the navigation straight to its form skipped the fade.
+
+## The dialog frame
+
+### Clipped, not hidden
+
+`overflow: hidden` still lets a script or a focus scroll an element, and a field's `scrollIntoView` did: it lifted the header out of view and left blank space beneath the body. Clipping makes the dialog no scroll container at all. It is border-box, so the primitive's padding sits inside the limits (the long form overran the screen by it), a column with the header over the body, which scrolls beneath it while the dialog holds still, and styled when open only, since the closed element's `display: none` is the browser's.
+
+### The fade's colour transitions
+
+The dialog is compounded with `.modal`, whose primitive sets its own `transition` as `body .modal`, so the theme's colour transitions are restated beside the fade for both to run. A modal that replaces another (`data-handover`) starts its backdrop dimmed, so the page never shows between the two; it still fades out at its own close.
+
+## The modal's head
+
+### The × and the toolbar row
+
+The × is out of the header's flow, at the dialog's top right, so the head's first line is level with it and a name that wraps cannot leave it adrift; the gap beneath it is padding, not margin, so it belongs to the header. A control the contents put in the header goes in a row of its own under the heading at every width: between the title and the × it squeezed a phone's heading until a name broke mid-word. The × is a 2rem icon in a 2rem `$close-target` square, which is the × drawn at the size of its target and not a length of the layout.
+
+### The top line
+
+A head with a top line (`topEnd`) stands `space(5)` above what follows it, in place of `space(4)`, so the description is set off from the name and its badges. The line is the × 's own band, the rest of the head has the whole width, and what stands at its end (a formal name's pencil) is clear of the ×. The top line is the entry page's top bar, as tall as the ×, so each mark is centred on the × 's middle; it stands 16px (the head's 8px gap and `space(2)` more) from the line under it, so the pencil clears the × and the line reads as a bar of its own. Its margin is set through the heading's own class, since `.header > *` (layout) zeroes a child's margin at the same weight as a single class and a margin on the top line alone is lost to it.
+
+### The naming grid
+
+The formal name, the title and `formalActions` are laid out as the entry page lays its own. The controls come after the title in the markup, as the page's do, and are placed in the grid at the end of the formal name's line, over the title, which takes the whole width beneath. The formal name wraps short of them. Each control is as tall as the pencil, which is taller than the formal name's line, so the controls' margin takes half the difference off each side and their middle stands on the line's. With no formal name the title stands in the first row and the controls beside it. The controls have no margin of their own, as an entry page's controls row has one under it; a dialog is excepted, since a control that opens one (Edit Stock, by `ModalButton`) leaves its `<dialog>` there beside the button, and a modal dialog is centred by the browser's own `margin: auto`.
+
+### The header note
+
+The sentence under the title (the compendium edit's notice) stands as far below the title as the row stands from it without one; the row then sits a step further from the sentence and a step closer to the body, so it reads with the form it works.
+
+### The toolbar goes dim like the form
+
+While a question is asked the row's buttons take the disabled look, so a control that cannot be used reads as one, as Undo and Redo do when off. A fade doubled on a button already off, and a scrim over the row darkened the gaps between the controls into a strip under the undimmed title.
+
+### The × beside an eyebrow
+
+A head with an eyebrow and no top line has the eyebrow for its first line, so the × is raised from the padding's inset by half the difference between the two lines. A head with a top line keeps the inset, as does a dialog with no eyebrow, its title being the first line.
+
+## The overlay's card
+
+### The scrim and the card
+
+The scrim scrolls only if the card is taller than the tallest dialog, the card centred with auto margins so its top is never cut off. The card is at the floating elevation since it sits on a surface itself. The warning in a question (Make It Ours's, that unsaved changes are lost) has `space(5)` (1.5rem) above, where the paragraph before it leaves `space(2)`, and 1.75rem below, where the answers stand `space(4)` off, margins that collapse with theirs; 1.75rem is off the spacing scale, between `space(5)` and `space(6)`. It carries both classes to outrank `.notice`'s zero margin.

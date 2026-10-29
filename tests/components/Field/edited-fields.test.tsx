@@ -3,10 +3,8 @@ import { FormProvider, useForm, type Resolver } from 'react-hook-form';
 import { describe, expect, it } from 'vitest';
 import { EditedFieldsContext, TextField, useEditedFields } from '@/components/Field';
 
-// A field's error is drawn once the form is submitted, or once the field has
-// been left AND edited by the person at some point since the form started.
-// "Edited" survives the value returning to empty, which react-hook-form's
-// dirtyFields does not.
+// A field's error is drawn once the form is submitted, or once the field has been left and edited by the person at some point since the form started.
+// "Edited" survives the value returning to empty, which react-hook-form's dirtyFields does not.
 
 type Values = { name: string };
 

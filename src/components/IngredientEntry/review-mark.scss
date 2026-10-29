@@ -1,7 +1,6 @@
 @use '../../scss/variables' as *;
 
-// The curator's Reviewed switch (M14.8), on one line: the label beside a smaller track, with no
-// padding of its own, so it fits in a head's row and in the form's first row without making either taller. Tokens only, before the section's design review.
+// The Reviewed switch on one line: the label beside a smaller track, with no padding of its own, so it fits a head's row and the form's first row. Tokens only, before the section's design review.
 // Under `body`, as the primitives are, so it outweighs the `.switch` rules it adjusts.
 body .review-mark {
   display: flex;
@@ -34,7 +33,7 @@ body .review-mark {
 
 // The review row (review-row.tsx): the standing badge and the day in muted caption text at the start, the switch at
 // the end. One hairline above it; the one below is the first section's own top border. Its block
-// padding is space(4), one step past a section head's space(3) (the owner's call), and its sides are the modal body's, so it adds none.
+// padding is space(4), one step past a section head's space(3), and its sides are the modal body's, so it adds none.
 body .review-row {
   inline-size: 100%;
   padding-block: space(4);

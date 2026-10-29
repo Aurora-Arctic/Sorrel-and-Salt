@@ -13,12 +13,9 @@ import {
   withSql,
 } from './stories/coven-ingredients';
 
-// The entry page's Stock section (M12.29). Story 24 walks Edit Stock from the card and
-// Quick Look; no story walks it from the entry's own page, so this gate does: a shelf of
-// jars, one per form, with each held jar's amount (a low or empty one's a tip button), Edit Stock in
-// the heading and on a jar by keyboard, and nothing of another coven's jars. An own entry's
-// jar, a viewer's page without Edit Stock, and an unheld entry with no Stock section are the
-// entry page test's (tests/app/(shell)/coven/ingredient.test.tsx).
+// The entry page's Stock section, which no story walks: a shelf of jars, one per form, each with its amount (a
+// low or empty one's a tip button), Edit Stock in the heading and on a jar by keyboard, and nothing of another
+// coven's jars.
 
 test.beforeAll(async () => {
   await recreateE2eDatabase();

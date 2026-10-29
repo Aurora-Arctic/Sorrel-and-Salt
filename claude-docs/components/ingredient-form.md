@@ -2259,3 +2259,133 @@ the buckets' `group` role on an `li`, fixed in the Combobox, and passes. Axe cou
 decide the contrast of the selects, whose chevron is a gradient, or of a
 field an open tip overlaps. Those were measured instead: the placeholder
 4.70:1 light and 6.69:1 dark, and an open tip 5.6:1 and 6.59:1.
+
+## Submitting and focusing the first error
+
+`useOnEachSubmit` runs while rendering, once for each new `submitCount`, which is React's pattern for state that follows a value. A save's last update carries its count together with every error it found, whether the schema's or the server's. A fold opened there is therefore open in the same commit that draws the error, so the form never paints a closed fold with its error inside.
+
+`useFocusFirstInvalid` is a layout effect, so the focus moves in the commit that draws the error. A passive effect would leave a gap in which the error shows and the focus has not moved. It stands in place of react-hook-form's `shouldFocusError`, which focuses in registration order and only a registered field, and a list's entry is not one.
+
+An issue naming a picked category lands on the picker's one error element, named by the pick, the way a list entry's does.
+
+## Questions the form asks over itself
+
+**Remove.** A variant's × had read as closing its card, and a reference row takes more typing than a chip to put back, so both ask before removing. The form's own question card (Remove and Keep It) is the one way of asking. `RemoveQuestion` runs `onRemove`, which removes the row and stops asking, then `afterRemove` once the card has gone and handed the focus back. The pressed × went with its row, so the focus goes where the list says, not to the form's first field. `flushSync(onRemove)` commits at once, the card's cleanup with it, so the focus that cleanup gives back is moved on after it, not before.
+
+**Promote.** `promote.tsx` is written for either tier, a compendium entry (a null `workspaceId`) or a coven's ingredient. The question always comes first. With unsaved changes it offers Save & Promote, which runs the form's own save first and promotes only if that landed, and Discard & Promote, which puts the form back to its saved values. Cancel sends nothing. The question steps aside while the unsaved-changes question asks, as a removal's does. Its four tiers are told apart by type as well as by space: the question as the card's heading, naming no name because the panel beneath names both; the swap on a tinted panel; the compendium's reach as a muted aside; and, ruled off above the buttons, the question they answer. The promote question's term overline takes the `.eyebrow` look, so the names carry the weight.
+
+**Delete users count.** The count of users is not kept after the question closes, so the next one asks again. A failed read leaves the question unadorned, since the delete itself needs no count.
+
+**Panel changes.** `panel-changes.ts` reports a panel's typed edits to the unsaved-changes guard. Without it the guard would let the modal close over them.
+
+## Reading another entry in the form
+
+The substitute summary and the Quick Look both make one read of the `ingredient` query through `/api/graphql`. The query already serves an entry by id in the compendium's tier or a coven's own and the compendium's, and never another coven's, under the service's own check. Nothing is new on the server.
+
+The Quick Look is not the list's `DetailsDialog`, which is a route modal its server page fills. This one has no route to change. Its answer is cast to the entry page's shape, so the modal's head and body are the details modal's own components. The summary and its marks read only the fields asked for, and the rest of each row (its audit ids, its slugs) is nothing they draw. Substitutes and references are the page's alone.
+
+The head before the entry arrives is the details' own head with the formal name known. With the formal name unknown, a line skeleton stands where it goes while the read is out, or nothing does after a failed read. It never reads "Not yet looked up", which would say the entry has none.
+
+## Section summaries
+
+An empty section and a variant carrying nothing read the same way, "Nothing yet". A variant's section line reads its Identity as its Form, "Dried leaf (Plant part)", and the rest as the ingredient's sections of the same name do. Each section's summary watches only its own fields, so a keystroke re-renders one line.
+
+## Suggestion lists and fields
+
+The form and folk-name lookups, and the celestial-body, sign, deity and substitute ones, each wait for the typing to settle, ask `/api/graphql` for a page, and shape the answer into the combobox's rows.
+
+- Celestial bodies, signs and deities suggest from their curated vocabularies and the values in use. A pick adds the text, and a curated deity's pick is also a link to it. Substitutes suggest from the compendium and this coven, and a pick adds a link to the ingredient.
+- On the compendium, celestial bodies, signs and deities are picks of the curated rows alone, and the substitutes are its other entries. A pick-only box lists its rows flat, because with every row the compendium's a From Compendium heading would tell the admin nothing.
+- Celestial bodies, signs, colours and deities keep the order entered, so their entries move. Folk names and substitutes read alphabetically, so theirs do not.
+- The Form field's box shows a curated form's group, which the text alone cannot: Wax under _Animal_ and under _Substance_ both read "Wax". A pick of a curated form links it. The text stays the member's to edit, and an edit away from the picked name drops the link, leaving typed text. On the compendium the field must be a pick, with no typed row.
+- A pick an admin has since renamed asks the member, beneath the box, to use the new name or keep the text, which unlinks the pick. The resolver holds the save until one is pressed. Only a coven's variant can hold a stale pick, because an admin renaming a curated form rewrites the compendium's own rows.
+
+`SuggestField`, `ToggleField`, `MultiSelectField` and `ListField` stayed in the ingredient form, where it grew them, rather than moving to `../Field` as generic fields. `CupboardEntryForm` imports `ListField` and `MultiSelectField`. A multi-select's chips sit inside the control, as a list's entries do.
+
+## Variant fields and their folds
+
+A form is added from the New Form box as a list's entry is, refused there when the ingredient already comes in it, and taken out by its own Remove. Each variant's fields stay in the page while closed, hidden, so nothing typed in them, an open reference panel included, is lost by closing it. They are the ingredient's own field components at the variant's place in the values (`variants.1.celestialBodies`), so they validate, err and focus as the ingredient's do.
+
+The open state of each variant's sections is a list beside the variants, by place. It is kept in step as the box adds one first and a Remove takes one out. The form holds it, as it does its own sections' state, so that a save opens the section holding an error and Open All / Close All reaches each variant's. A variant added here opens with every section open, as a new entry does. A variant an edit opened with, past the list's end, opens with every section closed, as an edit does.
+
+When a restored list comes back, the folds follow the rows: a row kept keeps its folds, one that returns opens with every section open and takes the card, one gone is dropped. Rows match by `variantId`, else by form.
+
+## The reference panel
+
+The citation sub-form cannot be a `<form>` of its own, nested in the ingredient's. It is a fieldset running its own react-hook-form, with the ingredient form's own fields, and Enter in one of them saves the source rather than the ingredient. Opened on a source already recorded, it edits that one, prefilled with every field it has, and the change reaches every row citing it.
+
+- **Head.** It holds the panel's Undo and Redo, any tip it carries, and a × that closes it as Cancel does, so a long panel can be left without scrolling to its foot. The × stays last, is the one stop before the first field, is named for the panel (the modal around it has a Close of its own) and is held while a save is in flight, as Cancel is. The head's layout is under "Panel head layout" below.
+- **Cite-how text.** It is said once for the whole panel, named by `aria-describedby` so it is read on entering. A title inside a title, the one format a placeholder cannot show, is in it. The rules are one to a line, as a list of spans given the list roles, because the bubble is a `span`, which may not hold a `ul`. Each rule is a sentence with its full stop, with an example in brackets before it, since the typed value has no stop.
+- **Focus.** On opening to be filled in, the kind box, the panel's one combobox, takes the focus. It is found in the page at once, as the ingredient form finds Name, because `setFocus` waits a tick and would take the focus back from whatever a quick save had focused meanwhile. Asked for again while open, New Reference or "Add a reference" does the same.
+
+## Copy From Ingredient
+
+Copy From Ingredient brings the ingredient's own value for a field into the variant's, so a form that shares most of what its ingredient says need not have it typed twice. It adds and never takes away: a list gains the ingredient's entries it lacks, after its own, and a text gains the ingredient's after a blank line. It is shut while the ingredient's field, as the form holds it now, is empty.
+
+A linked substitute is copied as "the same form": the linked ingredient's form that folds alike to the variant's (Oil for Oil). Where the ingredient comes in no such form there is none, since a variant's link names a form, never the whole ingredient. A typed name stays a name. The substitutes skipped are listed in the notice beneath the list, with Copy Anyway, which adds them as names only. Either control takes the focus back to Copy From Ingredient, since the pressed button goes with the notice. The notice's region is always in the page, as a live region must be to be heard, as the duplicate warning's is. The notice clears as it renders, not in an effect, so a stale notice never paints.
+
+## How values become the mutation
+
+`values.ts` builds the values as the mutation takes them.
+
+- An unanswered closed set is null. Elements go as chosen, with `[]` for none, which the update input needs to clear them.
+- A list entry is its text. A substitute or a deity is its link's id, or else its text as a name. Categories are their ids. The form is its text and its pick's id (null for typed text). A reference is its source's id and its locator as typed, never its citation.
+- The boxes are left behind, since the resolver has refused a save while one holds text.
+- Nothing is trimmed or dropped, as the schema does that on both sides, so an entry's index in an issue's path is its index here.
+- A variant's issues also include the stale pair `MB.167` refuses at `form`.
+
+**Pills.** A pill reads its text beside what tells it from a same-named one: a linked substitute's formal name, a picked deity's tradition ("Hecate (Greek)"), and for a substitute naming one form of what it links, that form after a dot ("Rosemary · Dried leaf"). A pill's tooltip leaves out what the chip's summary shows: a substitute's "Dried leaf · Compendium entry" (the form linked, or "Any form", and its tier) and a deity's description.
+
+**A variant's substitute rows.** There is one row per form each found ingredient comes in ("Rosemary · Dried leaf (Plant part)"), since a variant's link names a form, never the whole ingredient. An ingredient in no form, which only a coven's information-only entry can be, is not offered. Typed text is the box's own row, a name only. The variant's own saved row is never its own substitute, as `ingredient_substitutes_not_itself` holds. Ranking puts forms folding alike first, then those in the curated group, then the rest.
+
+**Duplicate checks.** The check reads the schema's keys: a link by its id, and typed text folded, among the typed entries alone, so a name beside a link is no repeat, as at save. The ingredient's `name` counts for a folk name. Folk names and colours have no curated list, so on a compendium entry the lists a pick is required of are the others.
+
+**Default values.** The edit's default values give each linked substitute a `variantId` ("" for Any Form), because its Form of X box registers that key as it mounts. react-hook-form counts a key it adds against defaults that lack it as a change, and React's development double mount re-checks, so an untouched entry would have been asked about unsaved changes.
+
+**Types.** A save answers the ingredient and, for a coven's new one, the jars it holds. A save moves no jar now, so the list comes back empty and the field is a leftover. A match's Quick Look is the details its list opens over the form. The admin's form has none to open, every match being the compendium's, so `quickLookOf` is left out there.
+
+## Save & Add Another and the toolbar
+
+Save & Add Another leaves the form ready for the next ingredient once the save has landed: every field and list empties and the name takes the focus. The reset is in an effect rather than in `save`, so it comes after react-hook-form's own end-of-submit update. The saves are counted rather than read off `isSubmitSuccessful`, which a save held on the duplicate warning sets too. The name is found in the page, as the error focus finds its field, because `setFocus` reads a ref the reset has just dropped and the field registers again only on the next render. Of the two saves, the one pressed says so while it is held.
+
+Open All / Close All reads Close All while any section is open, so a press from any mix folds the form to its summary lines, the view the sections are for, and a new entry, all open, offers it at once. It reaches every variant's sections too. A variant's are in view only while Variants is open, which already reads Close All. It is off while the form asks a question over itself, as Undo and Redo are then, so a control that cannot be used reads as one. Undo and redo are off while a save is in flight, as its success handler resets over the values.
+
+A deleted coven entry is deleted from this coven alone, and a spell holding it still reaches it. The update takes the whole entry and reads back what the create does but the jars, which a save has not moved.
+
+## How the duplicate list behaves
+
+This extends "The duplicate warning".
+
+**Asking.** The "did you mean" list asks on the debounce the other lookups wait on. `opened` is the name the form opened with. Until the name has been typed in, nothing is asked or held, so an edit that leaves the name alone never warns. Once typed in, it asks as any name does, back at the opened name too. A near match not yet dismissed holds a save, which asks about the name being sent rather than waiting out the debounce. An edit's warning only names matches: renaming makes nothing new, so its save is never held and it offers no Create Anyway.
+
+**What a match offers.** Each match is listed by its label and formal name, linked to its entry in a new tab (plain anchors, not `<Link>`, since the caller hands back a plain string), so unsaved changes stay. At the right:
+
+- Where the page under the form has details to open, the Quick Look. The admin's form has none, every match being the compendium's.
+- For a match the coven holds, its own or a compendium entry it has used, the eye, which opens the entry's details over the form. It is read in the page so nothing typed is lost.
+- For a compendium match it does not hold, the +, which adds it to the coven the form is adding to, with no menu of covens.
+- Nothing where none applies.
+
+A compendium match's + sends the entry under its own name, with what else was typed as the coven's overrides. The typed name is never sent as a label: it was a search that found the entry, and as a label it could clash with one the coven already gives another entry, which refused the add. The entry can be relabelled on its page. The form stays open with what was typed, reported as Save & Add Another's save is (`another`).
+
+**The + button.** The + is one button throughout, so the focus stays on it: a spinner while the add is sent, AddIcon's check held `ADDED_HOLD_MS`, then the check fades into the eye, the stack AddIcon draws when its check fades back to the plus. Under reduced motion the eye takes the check's place. Once the eye is in, `onShown` asks for the row to move under In This Coven, so the move never starts under the check. After an add, the cached answers would say the coven lacks the entry for their stale time, so every lookup of both kinds is asked again, since another name typed in this form may find it too. The held save's exact matches are state, not cache, so the entry is marked held there.
+
+**Create Anyway.** There is one under either list, in the accent outline at the medium size. It is described by the warning: a save that stops here moves the focus to it, and the focus should say why.
+
+**Sliding rows.** One list of the warning's matches slides between answers on its own (`useSlidingRows`), and is drawn while it has a row, the leaving ones too. Both lists stay mounted for the fade. A `heading` names the list, an `h4` beneath the form's Identity `h3`. The group opens by height round its first rows and closes round its last, as the region does round the whole notice, so a group arriving or leaving never jumps. The region opens by height round its notice, which fades in, as the first warning landed too abruptly.
+
+- Rows are slots by place. A dropped row fades out whole while the list's bottom slides up over it, and a new row fades in as the bottom slides down, so the box never jumps. A row leaving is out of the accessibility tree at once.
+- The height slides from the last measured height to the settled one, set on the list itself, the way a height otherwise `auto` can be moved. Rows settle by the slide's end or by the net. The list's height is let go only once the rows it slid for are settled. Let go as the leaving rows are asked out, the list stood a frame at its auto height with them still in the flow, a jump at the very end.
+- The list is measured from the edges as drawn, with the row's own end margin (typography-base's `li`), which the list's resting height holds. A target short of that slid the list up a little and let it back down at the end.
+- Shapes are tracked by their own transition events (`fading` in, `in`, or off). An answer back while they fade in waits under them and is shown once they are in. One back with them in changes the rows under them. One back before they began shows through the rows' own cross-fade. An answer landing mid-fade once showed the old rows a moment, then the new outright.
+- Under reduced motion no transition runs, so every answer shows at once.
+
+## Duplicate list styling
+
+- **While an answer is on its way.** Each row the answer will replace cross-fades to the skeleton's shapes (`skeleton-shape`, `_mixins.scss`), laid over the row: a bar where the title was and, where the row had a control, its shape. That is a bar in the small button's own padding, border and type, or an icon's box for a + or a Quick Look. The row keeps its height and nothing jumps when the answer lands. The fade in waits `$skeleton-delay`, so an answer back sooner never shows the shapes at all, and the fade out is as slow, so a late one never flashes. Under reduced motion the swap is instant but still waits.
+- **Height.** Between answers the list's own height slides, and the list clips meanwhile. A row the answer dropped stays whole and fades while the list's bottom slides up over it. The alternative, each row shrinking on its own, ended in a jump.
+- **Own layer.** The list is on its own layer: text below a moving edge snapped to whole pixels, which jittered, and composited it glides. The button under the list goes the same way.
+- **A place showing another entry.** The new row fades in while the last entry's text lies over it fading out, as text alone, until the slide settles. Both fades are linear, so between them the place is always just covered. Eased, both sit half-faded together in the middle and the text dims and brightens. The fade in is only for a row over a fading one, so a list's first rows fade in once, as their places do. It is filled backwards only. Filled forwards too, the fade's end would hold the row opaque over the cross-fade to the shapes above.
+
+## Panel head layout
+
+The reference panel's head holds the note if there is one, the panel's Undo and Redo, the How to Cite tip and the ×. The tip and the × abut, each its full `$icon-size` target. Narrow, they are one line with the group at the end. Where the note would be squeezed under 14rem the group drops to a line of its own straight beneath it, still at the right. Wide enough for the legend and the group side by side, the group goes up onto the top border at its right end, level with the legend and, like it, on the card's surface so the line stops either side of it. The note is then the first line inside. It is a container query, since it is the panel's width that decides, not the window's.

@@ -8,7 +8,7 @@ import type { CategoryGroupRow } from '../types';
 import { curatedVocabularyWrites } from './curated';
 
 // A category's group, whose two stored colours are what a category chip
-// wears (MB.36), and M5.6b's writes. Each colour is held to 4.5:1 against its
+// wears, and its writes. Each colour is held to 4.5:1 against its
 // own theme's harder surface, the refusal pathed to the column; a delete
 // moves the group's categories to `moveTo` first.
 

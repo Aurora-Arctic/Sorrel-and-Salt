@@ -11,10 +11,8 @@ import { insertStock } from '../../../support/db/insert-stock';
 import { variantIdOf } from '../../../support/db/read-variants';
 import { makeIngredient, makeVariant } from '../../../support/fixtures';
 
-// M6.18: the latest edit a coven's card shows. The newest of the coven's live jars of the
-// entry and, for the coven's own entry, the entry's row; a compendium entry's own editor, an
-// admin, is never shown. The database stamps `updated_at` itself (a trigger), so each row's
-// time is its write order, and every case writes in the order it names.
+// The latest edit a coven's card shows: the newest of the coven's live jars of the entry and, for the coven's own entry, the entry's row. A compendium entry's own editor, an admin, is never shown.
+// The database stamps `updated_at` itself (a trigger), so each row's time is its write order, and every case writes in the order it names.
 
 // The query count, observed at the repository: the names are one read whatever the page holds.
 const repository = vi.hoisted(() => ({ findCoMemberNamesIncludingSoftDeleted: vi.fn() }));

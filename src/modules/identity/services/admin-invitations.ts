@@ -24,33 +24,17 @@ import { adminDeclaration } from './admin-changes';
 import { assertAdminChangesOpen } from './admin-role-pause';
 import type { AdminInvitationFilter, InvitationSender } from '../types';
 
-// MB.70: an admin invites an address to become an admin, M2.9's option B on
-// MB.201's site tier of `invitations`, or since M11.20 a curator; the names
-// still say "admin invitation", since an admin is who sends one. Who may
-// invite, the role ladder and the pause are this service's; the token's
-// hash, the expiry and the pending predicate are the
-// repository's named writes'. Accepting is invitation-acceptance.ts's
-// (claude-docs/auth/admin-users.md, "Inviting an admin").
+// An admin invites an address to become an admin or a curator: the site tier of `invitations`. Accepting is invitation-acceptance.ts's
+// (claude-docs/auth/admin-users.md, "Admin invitation service details").
 
 const REFUSAL = 'Only a site admin may invite or withdraw an admin invitation';
 
 /**
- * Invites `input` to `siteRole`, curator or admin: a pending site-tier invitation, stamped
- * as the admin, whose token is mailed to the address through `sender` and
- * stored as its hash alone. `note` is the optional reason, a blank one stored
- * as none, which accepting records on the ledger row. Answers the row, which
- * carries no token. A failed send is the transport's to log: the invitation
- * stays pending and can be withdrawn and sent again.
+ * Invites `input` to `siteRole`, curator or admin: a pending site-tier invitation whose token is mailed through `sender` and
+ * stored as its hash alone (claude-docs/auth/admin-users.md, "Admin invitation service details").
  *
- * A second invitation to an address already invited replaces the pending
- * site-tier one (MB.269): that one is stamped revoked by the admin in the same
- * write. A coven's invitation to the address is left alone.
- *
- * @throws {Forbidden} the session's role is not `admin`, or the primary admin
- * has paused admin changes and the caller is another admin (MB.63).
- * @throws {ValidationError} on `email`: malformed, unmailable, or a live
- * account's that holds `siteRole` or a role above it, which accepting would
- * leave as it is.
+ * @throws {Forbidden} the session's role is not `admin`, or admin changes are paused and the caller is not the primary admin.
+ * @throws {ValidationError} on `email`: malformed, unmailable, or a live account's that holds `siteRole` or above.
  */
 export async function createAdminInvitation(
   session: Session,
@@ -71,8 +55,7 @@ export async function createAdminInvitation(
   }
 
   const token = newToken();
-  // The waiting site-tier invitation to this address is withdrawn in the same
-  // write, so a failed insert leaves it pending.
+  // The waiting site-tier invitation to this address is withdrawn in the same write.
   const [row] = await withAudit(session, async (write) => {
     await write.revokePendingInvitationsTo(admin, email);
     return write.insertInvitation(admin, {
@@ -82,8 +65,7 @@ export async function createAdminInvitation(
       note: adminDeclaration(note).note ?? null,
     });
   });
-  // After the commit, so a mailed link always names a row.
-  // The mail names who sent it; the session holds the id alone, so the name is read here.
+  // After the commit, so a mailed link always names a row. The session holds the id alone, so the sender's name is read here.
   const inviter = await findOneById(users, session.userId);
   await sender.siteInvitation(email, token, { siteRole, inviterName: inviter?.name ?? '' });
   return row;
@@ -93,8 +75,7 @@ export async function createAdminInvitation(
 const withArticle = (role: UserRole): string => (role === 'admin' ? 'an admin' : `a ${role}`);
 
 /**
- * Withdraws a pending admin invitation, stamped as the admin: its link is
- * dead from now on, and says so.
+ * Withdraws a pending admin invitation, stamped as the admin: its link is dead from now on, and says so.
  *
  * @throws {Forbidden} as `createAdminInvitation` does.
  * @throws {NotFound} no pending site-tier invitation has this id.
@@ -106,17 +87,13 @@ export async function revokeAdminInvitation(session: Session, id: string): Promi
   return row;
 }
 
-/** How soon an invitation lapses for Expires in 24 Hrs to list it (MB.115). */
+/** How soon an invitation lapses for Expires in 24 Hrs to list it. */
 const EXPIRING_SOON_HOURS = 24;
 
 const LIST_REFUSAL = 'Only a site admin may see admin invitations';
 
 /**
- * One page of the pending admin invitations under `filter`, newest first,
- * for `/admin/invitations`. To every admin, paused or not: the list is where
- * an invitation is seen. Narrowed by `filter` in the finder's SQL: `email` a
- * fragment of the address, trimmed, and `expiringSoon` only those lapsing
- * within `EXPIRING_SOON_HOURS`.
+ * One page of the pending admin invitations under `filter`, newest first. Open to every admin, paused or not, as the list is where an invitation is seen.
  *
  * @throws {Forbidden} the session's role is not `admin`.
  */
@@ -130,9 +107,7 @@ export async function listPendingAdminInvitations(
 }
 
 /**
- * How many invitations `listPendingAdminInvitations` pages under `filter`,
- * and how many come before `start`, a page's first row, none on an empty
- * page: the Invitations tab's "Page X of Y" (MB.115).
+ * How many invitations `listPendingAdminInvitations` pages under `filter`, and how many come before `start`: "Page X of Y".
  *
  * @throws {Forbidden} the session's role is not `admin`.
  */

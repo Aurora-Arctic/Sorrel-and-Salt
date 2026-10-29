@@ -2,9 +2,8 @@
 @use '../../scss/mixins' as *;
 @use '../../scss/frame-bar' as *;
 
-// A bar with the same measurements as the application shell's (MB.7), so a
-// visitor who signs in meets the same bar; tokens only (signed off in MB.120,
-// 2026-10-20). claude-docs/components/public-frame.md.
+// A bar with the same measurements as the application shell's, so a visitor who signs in
+// meets the same bar; tokens only. claude-docs/components/public-frame.md.
 
 // The bar and its inner row, brand, nav and end group, shared with AppShell (_frame-bar.scss).
 @include frame-bar(public-frame);

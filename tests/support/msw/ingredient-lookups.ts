@@ -42,13 +42,9 @@ import type {
 } from '../../components/IngredientForm/types';
 import { mockGraphQLError, mockGraphQLMutation, mockGraphQLQuery } from './graphql';
 
-// The ingredient form's lookups answered as /api/graphql answers them, each
-// recording the variables it was asked with: shared by the form's test and
-// the tests of the fields that ask them (MB.181), with the reference panel's
-// `CreateReference` beside them (MB.182), and the edit's `Reference` and
-// `UpdateReference`, and the saves the form sends, each test file had its
-// own copy of (MB.115). A later answer wins, so a test answers a lookup after
-// whatever answered it empty: `offerNothing` answers every one.
+// The ingredient form's lookups answered as /api/graphql answers them, each recording the variables it was
+// asked with, with the reference panel's and the form's saves beside them. A later answer wins, so a test
+// answers a lookup after whatever answered it empty: `offerNothing` answers every one.
 
 /** The coven the form's tests act in. */
 export const WORKSPACE_ID = '7b0c1c3e-5f4a-4d8e-9a51-3c2f0e6d9b17';
@@ -98,7 +94,7 @@ export function offerDuplicates(nodes: DuplicateNode[]) {
       };
     },
   );
-  // A save also asks which compendium entries bear the name exactly (M12.20):
+  // A save also asks which compendium entries bear the name exactly:
   // none, until a test says otherwise with `offerCompendiumMatches`.
   offerCompendiumMatches([]);
   return calls;
@@ -146,7 +142,7 @@ export const offerSigns = (nodes: CorrespondenceNode[]) =>
   offerList('ZodiacSuggestions', 'zodiacSuggestions', nodes);
 export const offerDeities = (nodes: DeityNode[]) =>
   offerList('DeitySuggestions', 'deitySuggestions', nodes);
-/** Answers `IngredientSuggestions`, each row's group on its edge (M12.19), recording each ask. */
+/** Answers `IngredientSuggestions`, each row's group on its edge, recording each ask. */
 export function offerIngredients(nodes: IngredientNode[]) {
   const calls: IngredientSuggestionsQueryVariables[] = [];
   mockGraphQLQuery<Record<string, unknown>, IngredientSuggestionsQueryVariables>(
@@ -365,8 +361,8 @@ export function acceptUpdate() {
 }
 
 /**
- * Answers `UpdateWorkspaceIngredient`, a coven's own entry saved over
- * (M8.17), with the entry it was sent, recording each ask.
+ * Answers `UpdateWorkspaceIngredient`, a coven's own entry saved over, with the entry it was sent,
+ * recording each ask.
  */
 export function acceptCovenUpdate() {
   const calls: UpdateWorkspaceIngredientMutationVariables[] = [];

@@ -6,7 +6,7 @@ import { referenceLinks } from '@/modules/ingredients/schema/reference-links';
 import { FIXTURE_USERS } from '@/db/seed/standard';
 import type { LinkFields } from './types';
 
-// DESIGN.md §5's `reference_links` (MB.151): one row per reference a sourced
+// DESIGN.md §5's `reference_links`: one row per reference a sourced
 // row cites, naming exactly one row, with the locator the citation leaves
 // out.
 
@@ -118,7 +118,7 @@ describe('reference_links table', () => {
       expect(error.constraint_name).toBe(CHECK_ONE_ROW);
     });
 
-    // MB.217: a form's own source sits on the form, never on the form and its ingredient at once.
+    // A form's own source sits on the form, never on the form and its ingredient at once.
     it('refuses a link naming an ingredient and one of its forms', async () => {
       const error = await failureOf(
         addLink(SIMEK, {
@@ -150,7 +150,7 @@ describe('reference_links table', () => {
     });
   });
 
-  // One link per reference per row (MB.151). MB.153's service refuses a
+  // One link per reference per row. The service refuses a
   // repeat first, so these indexes are the floor beneath it.
   describe('a row cites a reference once', () => {
     it('refuses a second live link of one reference to it, whatever its locator', async () => {

@@ -10,10 +10,11 @@ export interface MemberListEntry extends UpdatedStamp {
   name: string;
   role: WorkspaceRole;
   joinedAt: Date;
-  // `updatedBy` is who last changed the membership, `updatedAt` when: a role change moves it, the joining date does not.
+  // `updatedBy` is who last changed the membership, `updatedAt` when: a role change moves it, the
+  // joining date does not.
   /** Who invited them, by display name; null for a coven's creator, or when the name is withheld. */
   invitedBy: string | null;
-  /** Their address, which the page reads for an owner alone (M11.19). */
+  /** Their address, which the page reads for an owner alone. */
   email?: string | null;
 }
 
@@ -23,9 +24,8 @@ export interface MemberListProps {
   /** The signed-in user, whose own row is marked "You". */
   currentUserId: string;
   /**
-   * Whether to draw the Email column, which the page sets for an owner alone
-   * (M11.19). When absent, the list
-   * has no such column.
+   * Whether to draw the Email column, which the page sets for an owner alone. When absent,
+   * the list has no such column.
    */
   showEmail?: boolean;
   /**
@@ -42,7 +42,7 @@ export interface MemberListProps {
   removeAction?: (member: MemberListEntry) => ReactNode;
 }
 
-/** The role change a member's row offers an owner (M6.13). */
+/** The role change a member's row offers an owner. */
 export interface RoleControlProps {
   workspaceId: string;
   /** The member the change is for. */
@@ -52,7 +52,7 @@ export interface RoleControlProps {
   currentRole: WorkspaceRole;
 }
 
-/** The removal a member's row offers an owner (M6.15). */
+/** The removal a member's row offers an owner. */
 export interface RemoveControlProps {
   workspaceId: string;
   /** The member to remove. */

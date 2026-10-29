@@ -9,8 +9,8 @@ import { FieldShell } from '../Field/shell';
 import { ChoiceChip } from './choice-chip';
 import type { CategoryLineChoice, CategoryLineProps } from './types';
 
-// The Categories line, shared by the ingredient lists' panel (./index.tsx) and the grimoire's
-// (M10.11), so both pick categories and set Match the same way.
+// The Categories line, shared by the ingredient lists' panel (./index.tsx) and the grimoire's, so
+// both pick categories and set Match the same way.
 
 const MATCH_OPTIONS: ReadonlyArray<{ value: CategoryMode; label: string }> = [
   { value: 'all', label: 'All' },
@@ -18,10 +18,9 @@ const MATCH_OPTIONS: ReadonlyArray<{ value: CategoryMode; label: string }> = [
 ];
 
 /**
- * The categories before hydration: a native multiple select, as the other facets draw, whose
- * options sit under their group's name with their counts, so the GET form sends the choice
- * (CategoryPicker has no native control). A category with nothing behind it is left out
- * unless it is chosen; one with no count read is always offered.
+ * The categories before hydration: a native multiple select whose options sit under their group's
+ * name with their counts, so the GET form sends the choice. A category with nothing behind it is
+ * left out unless chosen; one with no count read is always offered.
  */
 function NativeCategories({
   categories,

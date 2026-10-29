@@ -10,13 +10,8 @@ vi.mock('next/navigation', () => ({ useRouter: () => router, usePathname: () => 
 const { default: Modal, DiscardQuestion, useDiscardGuard } = await import('@/components/Modal');
 const { NavigationProvider, usePendingNavigation } = await import('@/lib/navigation');
 
-// useDiscardGuard's hold on leaving the page (M13.14), through useLeaveGuard:
-// a tab close or reload asks the browser's question wherever the form is, and
-// an in-app navigation asks Discard or Keep Editing from a form on a page. In
-// a modal the page behind is inert, and the navigations that start there are
-// the form's own, after a save or a discard, so they go unheld
-// (claude-docs/components/modal.md, "Unsaved changes"). On a page the
-// question opens as a dialog of its own; in a modal it is drawn over the form.
+// useDiscardGuard's hold on leaving the page, through useLeaveGuard: a tab close or reload asks the browser's question wherever the form is, and an in-app navigation asks Discard or Keep Editing from a form on a page.
+// In a modal the page behind is inert and the navigations that start there are the form's own, after a save or discard, so they go unheld (claude-docs/components/modal.md, "Unsaved changes"). On a page the question opens as its own dialog; in a modal it is drawn over the form.
 
 /** A form with one field, guarded, drawing the question over itself while asking. */
 function GuardedForm({ close = () => {} }: { close?: () => void }): ReactElement {

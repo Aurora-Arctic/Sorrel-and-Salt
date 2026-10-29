@@ -8,17 +8,9 @@ import { signInAgainAs, signInAs } from './session';
 import { slotUrl } from './slots';
 import type { Page } from '@playwright/test';
 
-// The parts of a coven invitation no v1 story walks, against the built
-// server (M7.7): the /coven notice and the account menu's count of waiting
-// invitations, the shell's redraw after an accept, declining, and a link to a
-// coven since deleted. The send, the accept from the link and from the
-// account page, the seat it gives, and the used, revoked and expired refusals
-// are the story suite's (tests/e2e/stories/01-invitations.spec.ts, stories 4
-// to 7, M9.1). The
-// accept service's checks are the unit tests'; this walks them in a browser.
-// Each worker builds the owner and the coven in its own database before its
-// first test, and every walk invites a new address, so the walks are
-// independent and spread across workers.
+// The parts of a coven invitation no story walks: the /coven notice and the account menu's count of waiting
+// invitations, the shell's redraw after an accept, declining, and a link to a coven since deleted. Each worker
+// builds the owner and coven first, and every walk invites a new address.
 
 const COVEN_NAME = 'Fixture Invite Coven';
 const DOMAIN = '@workspace-invitation.test';
@@ -83,8 +75,8 @@ async function ownerInvites(page: Page, email: string): Promise<void> {
 }
 
 /**
- * What the invite page says to a signed-in reader whose link is dead, each
- * refusal also measured at a phone's width.
+ * What the invite page says to a signed-in reader whose link is dead, each refusal also measured at a
+ * phone's width.
  */
 async function refusalAt(page: Page, path: string): Promise<string> {
   await page.goto(path);

@@ -35,9 +35,8 @@ import type {
   VariantSectionKey,
 } from './types';
 
-// The form's values against the shape the schema and the mutation take, and
-// the one mapping from an issue's path back to a field, which the resolver's
-// issues and the server's `fieldErrors` both go through
+// The form's values against the shape the schema and the mutation take, and the one mapping from
+// an issue's path back to a field, which the resolver's issues and the server's `fieldErrors` use
 // (claude-docs/components/ingredient-form.md).
 
 // The arrays below are `as const`, and `types.ts` derives its unions from
@@ -58,10 +57,8 @@ export const LIST_FIELDS = [
 export const VARIANT_LISTS = ['celestialBodies', 'zodiacSigns', 'colors', 'substitutes'] as const;
 
 /**
- * What each field is called where the form counts or names its entries: the
- * variant's Copy From Ingredient ("Copy From Ingredient: Celestial Bodies", "Copied 2
- * celestial bodies"), a folded section's line ("2 colours") and a variant's card ("1
- * celestial body"). One table, so each says a field alike.
+ * What each field is called where the form counts or names its entries: a variant's Copy From
+ * Ingredient, a folded section's line and a variant's card. One table, so each says it alike.
  */
 export const FIELD_NOUNS: Readonly<Record<NounedField, FieldNoun>> = {
   folkNames: { label: 'Folk Names', one: 'folk name', many: 'folk names' },
@@ -147,28 +144,22 @@ export function draftOf(list: ListFieldName | 'references' | `variants.${number}
  */
 const WHOLE_LIST = 'elements';
 
-/** The categories picked: ids, not entries, so an issue names one by its index alone (MB.126). */
+/** The categories picked: ids, not entries, so an issue names one by its index alone. */
 const PICKED_CATEGORIES = 'categoryIds';
 
 /** A variant's pick, which the input carries beside its text and the form draws in the Form box. */
 const PICKED_FORM = 'formId';
 
-/** The row a variant keeps, whose repeat is refused as its form's (MB.219). */
+/** The row a variant keeps, whose repeat is refused as its form's. */
 const KEPT_ROW = 'id';
 
-/** The form of a linked ingredient a substitute names (MB.215). */
+/** The form of a linked ingredient a substitute names. */
 const PICKED_SUBSTITUTE_FORM = 'substituteVariantId';
 
 /**
- * The values as the mutation takes them: an unanswered closed set is null, the
- * elements go as chosen — `[]` for none, which the update input needs to
- * clear them — a list entry is its text — a substitute or a deity its link's
- * id, or else its text as a name — the categories their ids, `[]` for none
- * (MB.126) — the form its text and its pick's id, null for typed text (MB.169) — a reference its source's id and its locator as
- * typed, never its citation (MB.154) — and the boxes are left behind — the
- * resolver has refused a save while one holds text. Nothing is trimmed or dropped — the
- * schema does that on both sides — so an entry's index in an issue's path is
- * its index here.
+ * The values as the mutation takes them: closed sets and lists as chosen, links by id, the boxes
+ * left behind, nothing trimmed or dropped, so an issue's index is its index here
+ * (claude-docs/components/ingredient-form.md, "How values become the mutation").
  */
 export function toInput(values: IngredientFormValues): IngredientFormInput {
   const {
@@ -195,7 +186,7 @@ export function toInput(values: IngredientFormValues): IngredientFormInput {
     deities: deities.map(({ value, link }) => (link ? { deityId: link.id } : { name: value })),
     substitutes: substituteInputs(substitutes),
     references: referenceInputs(references),
-    // The forms, each with what it adds (MB.215).
+    // The forms, each with what it adds.
     variants: variants.map(variantInput),
   };
 }
@@ -216,10 +207,8 @@ const referenceInputs = (rows: ReferenceListEntry[]) =>
   rows.map(({ link, locator }) => ({ referenceId: link.id, locator }));
 
 /**
- * A variant as the input takes it: every field but `id` sent, `""` or `[]`
- * for none, since an entry replaces the form it names and a field left out
- * would be a schema error rather than a clear (MB.159, MB.219). Its pick is
- * `""` when the form was typed.
+ * A variant as the input takes it: every field but `id` sent, `""` or `[]` for none, since an
+ * entry replaces the form it names and a field left out would be a schema error, not a clear.
  */
 function variantInput(variant: VariantFormValues) {
   const {
@@ -256,12 +245,8 @@ const linkOf = (entry: AnyListEntry): SubstituteLink | DeityLink | undefined =>
 const isDeityLink = (link: SubstituteLink | DeityLink): link is DeityLink => 'tradition' in link;
 
 /**
- * What an entry's pill reads: its text, beside what tells it from a
- * same-named one — a linked substitute's formal name, so two ingredients
- * sharing a label are told apart, and a picked deity's tradition, "Hecate
- * (Greek)", as its lookup row reads (MB.169) — and, for a substitute naming
- * one form of what it links, that form after a dot, "Rosemary · Dried leaf",
- * as a variant's substitute row reads (MB.115).
+ * What an entry's pill reads: its text, beside what tells it from a same-named one, and for a
+ * substitute naming one form, that form after a dot (claude-docs/components/ingredient-form.md, "How values become the mutation").
  */
 export function entryText(entry: AnyListEntry): string {
   const link = linkOf(entry);
@@ -277,7 +262,7 @@ export function entryText(entry: AnyListEntry): string {
 /**
  * Whether a list is the ingredient's substitutes or a variant's: the lists
  * whose entries may link an ingredient, and whose typed ones are told apart
- * as names only (MB.115).
+ * as names only.
  */
 export const holdsSubstitutes = (list: ListFieldName): boolean =>
   list === 'substitutes' || list.endsWith('.substitutes');
@@ -290,18 +275,14 @@ export const tierOf = ({ isGlobal }: Pick<SubstituteLink, 'isGlobal'>): string =
   isGlobal ? 'Compendium entry' : 'This coven’s entry';
 
 /**
- * What a linked entry's pill leaves out, for its tooltip. A substitute's is
- * "Dried leaf · Compendium entry": the form of it linked, or "Any form",
- * and its tier. Kept to that one short line, the owner's call (MB.115): the
- * rest is the chip's summary, a press away. A deity's
- * is its description (MB.169). Undefined for a typed entry, which has
- * nothing more to tell.
+ * What a linked entry's pill leaves out, for its tooltip: a substitute's form and tier on one
+ * short line, a deity's description; undefined for a typed entry.
  */
 export function entryDetail(entry: AnyListEntry): string | undefined {
   const link = linkOf(entry);
   if (!link) return undefined;
   if (isDeityLink(link)) return link.description ?? undefined;
-  // The form of it linked, when one is (MB.215).
+  // The form of it linked, when one is.
   const picked = 'variantId' in entry ? formNamed(link, entry.variantId) : undefined;
   return `${picked ?? 'Any form'} · ${tierOf(link)}`;
 }
@@ -313,19 +294,16 @@ const formDisplay = (form: string | undefined): string | undefined =>
 const formNamed = (link: SubstituteLink, id: string | undefined): string | undefined =>
   formDisplay(link.variants?.find((variant) => variant.id === id)?.form);
 
-/** The substitute picker's two headings (M12.19), in the order they list. */
+/** The substitute picker's two headings, in the order they list. */
 export const YOUR_INGREDIENTS = 'Your Ingredients';
 export const COMPENDIUM_HEADING = 'Compendium';
 
-/** The picker's own cupboard group lists first and stays first, whatever a form ranks (M12.19). */
+/** The picker's own cupboard group lists first and stays first, whatever a form ranks. */
 const groupOf = ({ heading }: ListOption): number => (heading === YOUR_INGREDIENTS ? 0 : 1);
 
 /**
- * A variant's substitute suggestions, ranked for `form` (MB.215): the
- * ingredients that come in a form folding alike first, then those with a
- * form in its curated `group`, then the rest, each tier in the order the
- * search ranked it. Every row is kept, since a form of any ingredient may
- * stand in for any form; this only puts the likeliest first.
+ * A variant's substitute suggestions, ranked for `form`: ingredients folding alike first, then
+ * those with a form in its curated `group`, then the rest, each in search order. Every row is kept.
  */
 export function rankForForm(
   options: readonly ListOption[],
@@ -347,16 +325,9 @@ export function rankForForm(
 }
 
 /**
- * A variant's substitute rows (MB.115, the owner's call): each ingredient
- * the lookup found, in its order, as one row per form it comes in, "Rosemary
- * · Dried leaf (Plant part)", which links that form. A variant's link names a
- * form, never the whole ingredient, so there is no row for any form of it,
- * and an ingredient in no form at all, which only a coven's
- * information-only entry can be, is not offered: there is nothing to link.
- * Typed text is the box's own row, a name only, and is untouched here. Its
- * forms run the likeliest first, as `rankForForm` ranks ingredients for
- * `form` and `group`; `own`, the variant's saved row, is never its own
- * substitute, as the database's `ingredient_substitutes_not_itself` holds.
+ * A variant's substitute rows: each ingredient the lookup found as one row per form it comes in,
+ * likeliest first, never the whole ingredient and never `own`, the variant's saved row
+ * (claude-docs/components/ingredient-form.md, "How values become the mutation").
  */
 export function formRows(
   options: readonly ListOption[],
@@ -423,12 +394,12 @@ function placeIn(
   const [field, index, ...rest] = path;
   const fields = holder as unknown as Record<string, unknown>;
   // A variant's pick, and the row it keeps, are its Form field's: its box is
-  // what made them (MB.169, MB.215).
+  // what made them.
   if ((field === PICKED_FORM || field === KEPT_ROW) && 'formLink' in holder) {
     return index === undefined ? 'form' : undefined;
   }
   // A reference's source is its row's, and so is its id; its locator is the
-  // row's locator (MB.154).
+  // row's locator.
   if (field === 'references') {
     if (typeof index !== 'number' || index >= holder.references.length) return undefined;
     const [part, ...beyond] = rest;
@@ -471,22 +442,15 @@ function placeIn(
 export const fold = (text: string): string => text.trim().toLowerCase();
 
 /**
- * The name a variant's picked form now goes by, when an admin has renamed it
- * since the coven picked it: the text no longer folds to the pick's name
- * (M5.6a). Undefined for a pick still named as typed, and for typed text.
- * Only a coven's variant can hold one, since a rename rewrites the
- * compendium's own (MB.162); the member settles it (M8.17).
+ * The name a variant's picked form now goes by, when an admin has renamed it since the pick;
+ * undefined for a pick still named as typed, and for typed text. Only a coven's variant holds one.
  */
 export const renamedTo = ({ form, formLink }: RenamedFormHolder): string | undefined =>
   formLink && fold(formLink.name) !== fold(form) ? formLink.name : undefined;
 
 /**
- * Why `text` cannot be a list's next entry, or undefined when it can: a
- * suggestion's, with what it links, or what the box holds. On the schema's
- * keys, so the box refuses what a save would (MB.174): a link by its id, and
- * text folded, among the typed entries alone — a name beside a link is no
- * repeat, as at save. `name` is the ingredient's, which a folk name may not
- * repeat either.
+ * Why `text` cannot be a list's next entry, or undefined when it can. It reads the schema's keys,
+ * so the box refuses what a save would: links by id, typed text folded, `name` counted too.
  */
 export function repeatOf(
   listed: readonly AnyListEntry[],
@@ -506,12 +470,8 @@ export function repeatOf(
 }
 
 /**
- * The values an edit opens on, each linked substitute of the ingredient's own
- * list holding a `variantId`, "" for Any Form, where the readback leaves
- * the key out. Its Form of X box registers that key as it mounts, and
- * react-hook-form counts a key it adds against defaults that lack it as a
- * change: React's development double mount re-checks, and an untouched entry
- * asked about unsaved changes (MB.115). "" sends no form (`toInput`).
+ * The values an edit opens on, each linked substitute holding a `variantId` ("" for Any Form) so
+ * the Form of X box adding the key as it mounts is no change (claude-docs/components/ingredient-form.md, "How values become the mutation").
  */
 export function openingValues(values: IngredientFormValues): IngredientFormValues {
   return {
@@ -523,11 +483,8 @@ export function openingValues(values: IngredientFormValues): IngredientFormValue
 }
 
 /**
- * Adds `text` as the list's last entry, trimmed, and empties the box: a
- * suggestion picked from it, with the ingredient or the curated deity it
- * links when it is a substitute's or a deity's, and the form of that
- * ingredient a variant's substitute row names. Returns what the entry reads
- * as, or undefined when the text was blank.
+ * Adds `text` as the list's last entry, trimmed, and empties the box: with the link a pick names,
+ * and a substitute row's form. Returns what the entry reads as, or undefined when blank.
  */
 export function addEntry(
   { getValues, setValue }: Pick<UseFormReturn<IngredientFormValues>, 'getValues' | 'setValue'>,
@@ -558,10 +515,8 @@ export function commitDraft(
 }
 
 /**
- * Why `text` cannot be the next variant's form, or undefined when it can: a
- * form the ingredient already comes in, folded as
- * `ingredient_variants_form_unique` folds it, trimmed and its case set
- * aside, so the New Form box refuses what a save would (MB.215).
+ * Why `text` cannot be the next variant's form, or undefined when it can: a form the ingredient
+ * already comes in, folded as `ingredient_variants_form_unique` folds it.
  */
 export function repeatedForm(
   variants: readonly Pick<VariantFormValues, 'form'>[],
@@ -573,10 +528,8 @@ export function repeatedForm(
 }
 
 /**
- * The lists whose entries a compendium entry may only pick from the curated
- * rows (MB.162): folk names and colours have no curated list, and a
- * substitute is picked from the compendium already. A variant's celestial bodies and
- * signs are picks as the ingredient's are.
+ * The lists a compendium entry may only pick from the curated rows. Folk names and colours have
+ * none, a substitute is picked from the compendium already; a variant's lists are picks too.
  */
 export const PICK_ONLY_LISTS: readonly IngredientListName[] = [
   'celestialBodies',
@@ -588,11 +541,8 @@ export const PICK_ONLY_LISTS: readonly IngredientListName[] = [
 type Issues = Record<string, unknown>;
 
 /**
- * The schema's issues among `lists` and the references, moved to where the
- * form draws them: an element's onto the control — the first, as the field
- * has one error element — a pick's onto the Form field whose box made it,
- * a list entry's onto its `value`, and a reference's id onto its row's
- * `value` — where `fieldNameOf` puts a server's.
+ * The schema's issues among `lists` and the references, moved to where the form draws them, as
+ * `fieldNameOf` puts a server's (claude-docs/components/ingredient-form.md, "How values become the mutation").
  */
 function placeIssues(raw: Issues, lists: readonly string[]): Issues {
   const errors = { ...raw };
@@ -629,10 +579,8 @@ function placeIssues(raw: Issues, lists: readonly string[]): Issues {
 }
 
 /**
- * A box still holding text, which the schema never sees, so the form refuses
- * it here rather than send a list the user thinks holds it: each of
- * `lists`', and the references' search, which is never an entry, beside a
- * source half written in the panel, which is not one yet either (MB.154).
+ * A box still holding text, which the schema never sees, so the form refuses it here: each list's,
+ * the references' search, and a source half written in the panel.
  */
 function boxIssues(
   drafts: Partial<Record<string, string>>,
@@ -662,10 +610,8 @@ function boxIssues(
 }
 
 /**
- * One variant's issues: the schema's, placed; its boxes'; on the compendium,
- * a form typed rather than picked, which the compendium refuses, a curated
- * pick being all it holds (MB.162); and a pick an admin has since renamed,
- * until the member settles it (M8.17).
+ * One variant's issues: the schema's, placed; its boxes'; on the compendium a typed form; and a
+ * pick an admin has since renamed, until the member settles it.
  */
 function variantIssues(
   raw: Issues | undefined,
@@ -678,7 +624,7 @@ function variantIssues(
   if (pickOnly && !errors.form && variant.form.trim() !== '' && variant.formLink === null) {
     errors.form = { type: 'unpicked', message: 'Pick a form from the list' };
   }
-  // The stale pair is never sent: MB.167 would refuse it at `form` anyway.
+  // The stale pair is never sent; it would be refused at `form` anyway.
   const renamed = renamedTo(variant);
   if (!errors.form && renamed !== undefined) {
     errors.form = {
@@ -690,13 +636,9 @@ function variantIssues(
 }
 
 /**
- * A tier's schema as the form's resolver. It validates the values as
- * `toInput` sends them and hands back that input unparsed, so the service
- * parses what the resolver did. Each issue is moved to the field that draws
- * it, the ingredient's or a variant's, and a box still holding text is
- * refused. On the compendium, where a form and the vocabulary lists are
- * picks, text left typed is refused here, beside its box, before the service
- * would.
+ * A tier's schema as the form's resolver. It validates the values as `toInput` sends them, hands
+ * back that input unparsed so the service parses it, moves each issue to its field, and refuses
+ * a box still holding text, on the compendium a typed pick too.
  */
 function resolverFor(
   schema: typeof LocalIngredientInput | typeof CompendiumIngredientInput,
@@ -738,7 +680,7 @@ export const ingredientResolver = resolverFor(LocalIngredientInput, 'coven');
 /** A compendium entry: the classification is required, and the vocabulary boxes take picks. */
 export const compendiumResolver = resolverFor(CompendiumIngredientInput, 'compendium');
 
-/** A variant's sections, in page order, each folding as the ingredient's do (MB.115). */
+/** A variant's sections, in page order, each folding as the ingredient's do. */
 export const VARIANT_SECTION_KEYS = [
   'identity',
   'details',
@@ -747,7 +689,7 @@ export const VARIANT_SECTION_KEYS = [
   'sources',
 ] as const;
 
-/** The ingredient's sections, in page order: each folds to a summary line (MB.115). */
+/** The ingredient's sections, in page order: each folds to a summary line. */
 export const SECTION_KEYS = [...VARIANT_SECTION_KEYS, 'variants'] as const;
 
 /**
@@ -879,11 +821,8 @@ const BOXED_LISTS = new Set<string>([
 ]);
 
 /**
- * The box to focus after a restore wrote the list `name`, or undefined when
- * `name` is not a whole list (or one entry's place in it). A list's entries
- * are not inputs, only its typing box is, named by `draftOf` — `drafts.colors`,
- * `variants.1.drafts.colors`; the category picker's box is named
- * `drafts.categoryIds` the same way, though that draft holds no value.
+ * The box to focus after a restore wrote the list `name`, or undefined when `name` is not a whole
+ * list. A list's typing box is named by `draftOf`, e.g. `variants.1.drafts.colors`.
  */
 export function listBoxOf(name: string): string | undefined {
   const keys = name.replace(/\.\d+$/, '').split('.');
@@ -894,11 +833,8 @@ export function listBoxOf(name: string): string | undefined {
 }
 
 /**
- * The sections holding the fields a restore wrote, from their form paths, as
- * `sectionsWithErrors` reads an error's. A box's draft is its list's
- * (`drafts.colors`, `variants.1.drafts.colors`); a variant's value opens the
- * Variants section and, inside it, the variant's own section; the variants
- * list itself opens Variants alone.
+ * The sections holding the fields a restore wrote, from their form paths, as `sectionsWithErrors`
+ * reads an error's; a variant's value opens Variants and the variant's own section.
  */
 export function sectionsRestored(names: readonly string[]): RestoredSections {
   const found: RestoredSections = { sections: new Set(), variants: new Map() };

@@ -1,20 +1,13 @@
 @use '../../scss/variables' as *;
 @use '../../scss/mixins' as *;
 
-// The Edit Stock dialog (M9.9), option E: the coven's jars listed down the
-// left, the chosen jar's fields at full size on the right. A container of its
-// own, so it is the dialog's width and not the screen's that stacks the list
-// above the fields: below 30rem, two thirds is too narrow for the fields.
+// The Edit Stock dialog: the coven's jars listed on the left, the chosen jar's fields at full size on the right,
+// in a container of its own so the dialog's width stacks them (claude-docs/components/stock-dialog.md, "Layout and states").
 .stock-dialog {
   container: stock-dialog / inline-size;
 }
 
-// A container query styles what is inside the container, never the container
-// itself, so the grid is the box within. Its cells stretch to the row, so the
-// list's rule runs the height of the taller column: down past a short list
-// beside the fields, and down the fields' side of a long list. The dialog is
-// the `listed` size (Modal). A third of the body to the list and two to the
-// fields (the owner's call, 2026-10-20), so a long form name has room.
+// A container query styles what is inside the container, never the container itself, so the grid is the box within.
 .stock-dialog__columns {
   display: grid;
   grid-template-columns: minmax(0, 1fr) minmax(0, 2fr);
@@ -39,9 +32,7 @@
   gap: space(1);
 }
 
-// A form in the list. Positioned for its badge, which sits beside the button
-// (a button of its own) at the end of the name's line, the top right (the
-// owner's call, 2026-10-20).
+// A form in the list, positioned for its badge, which sits at the top right of the name's line.
 .stock-dialog__pick {
   position: relative;
 
@@ -66,11 +57,7 @@
   // The pointer's answer at its own pace, not the theme's 400ms fade.
   transition: background-color $motion-short ease-out;
 
-  // Every state in the accent's green, a step apart: a hovered form halfway
-  // to the chosen look, the chosen one a touch stronger under the pointer
-  // (the owner's call, 2026-10-20). Each hover names whether it is chosen,
-  // so neither rests on the other's order in the sheet; the grey
-  // `$fill-quiet` hover is gone.
+  // Every state in the accent's green, a step apart: a hovered form halfway to the chosen look, the chosen one a touch stronger under the pointer.
   &:hover:not([aria-current='true']) {
     background-color: color-mix(in srgb, $accent 6%, transparent);
   }
@@ -83,7 +70,7 @@
     }
   }
 
-  // The shared ring, inside, since the button fills its row (MB.121: it drew the browser's own).
+  // The shared ring, inside, since the button fills its row (it drew the browser's own).
   &:focus-visible {
     @include focus-ring($placement: inset);
   }
@@ -101,9 +88,7 @@
   font-weight: 600;
 }
 
-// The space before a mark is its own margin rather than a column gap: the
-// spoken commas between the parts are flex items of no size, and a gap would
-// stand either side of each.
+// The space before a mark is its own margin rather than a column gap, as the spoken commas between the parts are flex items of no size.
 .stock-dialog__edited,
 .stock-dialog__flag {
   margin-inline-start: space(2);
@@ -122,17 +107,13 @@
   font-style: italic;
 }
 
-// Edited in the edit pencil's green (`icon-button-edit`), so the mark reads
-// as the edit it records (the owner's call, 2026-10-20).
+// Edited in the edit pencil's green (`icon-button-edit`), so the mark reads as the edit it records.
 .stock-dialog__edited {
   color: $accent;
 }
 
-// On the chosen form the accent is also its wash, and light-theme `$accent`
-// fell below 4.5:1 against it. The accent's hover ink is the same green a
-// step further from the ground in each theme (darker in light, lighter in
-// dark) and clears 6.39:1 in every state, so no new token (the owner's call,
-// 2026-10-20; claude-docs/components/stock-dialog.md, "Edited").
+// The chosen form's accent ink is the same green a step further from the ground per theme, clearing 6.39:1 in every state
+// (claude-docs/components/stock-dialog.md, "Layout: a list and the chosen jar").
 .stock-dialog__choose[aria-current='true'] .stock-dialog__edited {
   color: $accent-hover;
 }
@@ -199,15 +180,13 @@
   margin: 0;
 }
 
-// Quantity, Unit and Low Stock At one under another, each the column's full
-// width (the owner's call, 2026-10-20).
+// Quantity, Unit and Low Stock At one under another, each the column's full width.
 .stock-dialog__fields {
   display: flex;
   flex-direction: column;
   gap: space(3);
 
-  // As tall as a hint’s ⓘ whether or not the field has one, so Quantity,
-  // which has none, stands as far below the heading as the others below it.
+  // As tall as a hint’s ⓘ whether or not the field has one, so the fields stand evenly below the heading.
   .field__label-row {
     min-height: $icon-size;
   }
@@ -218,15 +197,12 @@
   color: $text-muted;
 }
 
-// No form yet: the heading's line held, so the shut fields stand where a jar's will. Its
-// height is the h3's own line box (a jar's too, which Remove's 32px button does not exceed),
-// so the minimum below never binds; it only keeps the line from collapsing.
+// No form yet: the heading's line held so the shut fields stand where a jar's will; the minimum only keeps the line from collapsing.
 .stock-dialog__head.is-blank {
   min-height: $icon-size;
 }
 
-// The word "Form" in that line (the owner's call, 2026-10-21): plain text at the heading's own
-// size and weight, in the ink an input's placeholder wears, so it reads as not yet an answer.
+// The word "Form" in that line: plain text at the heading's size and weight in a placeholder's ink, so it reads as not yet an answer.
 .stock-dialog__placeholder {
   color: $text-placeholder;
 }

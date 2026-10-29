@@ -17,11 +17,8 @@ import { insertIngredient } from '../../../support/db/insert-ingredient';
 import { makeIngredient } from '../../../support/fixtures';
 import { clearDataCache, declared } from '../../../support/next-data-cache';
 
-// M8.6: the compendium's page and MB.105's count held in the data cache under
-// the `compendium` tag, each keyed by its arguments (DESIGN.md §7). A data
-// cache that holds, as Next's does (tests/support/next-data-cache.ts), so a
-// row written underneath a read shows whether the repeat read reached
-// Postgres (claude-docs/db/compendium-cache.md).
+// The compendium's page and its count held in the data cache under the `compendium` tag, each keyed by its arguments (DESIGN.md §7).
+// The data cache holds as Next's does (tests/support/next-data-cache.ts), so a row written underneath a read shows whether the repeat read reached Postgres (claude-docs/db/compendium-cache.md).
 vi.mock('next/cache', () => import('../../../support/next-data-cache'));
 
 let sql: postgres.Sql;
@@ -41,7 +38,7 @@ const PAGE: PageRequest = { limit: 26, inverted: false };
 const names = async (filter = {}) =>
   (await listCompendium(filter, PAGE)).map((entry) => entry.node.name);
 
-describe('M8.6: the compendium read is cached under the compendium tag', () => {
+describe('the compendium read is cached under the compendium tag', () => {
   it('answers a repeat read of the page and its count from the cache', async () => {
     await seed('Fixture Alpha');
     expect(await names()).toEqual(['Fixture Alpha']);
@@ -84,7 +81,7 @@ describe('M8.6: the compendium read is cached under the compendium tag', () => {
   });
 });
 
-describe('M12.3: the compendium facets are cached under the compendium tag', () => {
+describe('the compendium facets are cached under the compendium tag', () => {
   const forms = async () => (await compendiumFacets({})).forms;
 
   it('answers a repeat read from the cache, and reads Postgres again after an admin delete', async () => {
@@ -103,7 +100,7 @@ describe('M12.3: the compendium facets are cached under the compendium tag', () 
   });
 });
 
-describe('M8.19: the public entry read is cached under the compendium tag', () => {
+describe('the public entry read is cached under the compendium tag', () => {
   const nameAt = async (slug: string) => {
     const page = await readCompendiumEntry(slug);
     if (page.kind !== 'entry') throw new Error('Expected an entry');

@@ -5,14 +5,12 @@ import CategoryPicker from '.';
 import type { CategoryPickerProps, PickerCategory } from './types';
 
 // Render-only; behaviour is asserted in tests/components/CategoryPicker. Four
-// of the seed's groups with their colour pairs, copied from
-// src/db/seed/category-groups.ts, which a component may not import (CLAUDE.md
-// rule 1); the categories under them are invented, two or three to a group.
+// seed groups with their colour pairs, copied from src/db/seed/category-groups.ts
+// (a component may not import it, CLAUDE.md rule 1). The categories are invented.
 const meta = {
   title: 'Ingredients / Category Picker',
 } satisfies Meta;
 export default meta;
-// The dropdown story's `state` arg is the node it draws (see its argTypes mapping).
 type Story = StoryObj<{ state?: import('react').ReactNode }>;
 
 const INVENTED = ['Testward', 'Fixture Mending', 'Testcraft'];
@@ -84,7 +82,7 @@ const loadingNode = <Stateful categories={[]} pending />;
 
 const failedNode = <Stateful categories={[]} status="The categories could not be loaded." />;
 
-// The filter's reading (M12.4): each row and chip carries how many entries it
+// The filter's reading: each row and chip carries how many entries it
 // would leave, a zero row is left out, and a chip whose count is
 // still on its way holds a placeholder.
 const counted = CATEGORIES.map((category, index) => ({
@@ -117,8 +115,6 @@ const withActionAndNoHintNode = (
   />
 );
 
-// One story with a control to choose the state: each is a whole page or list,
-// too big to sit beside the others (claude-docs/workshop.md, rule 5).
 const STATES: Record<string, ReactNode> = {
   Default: defaultNode,
   'Some Picked': somePickedNode,

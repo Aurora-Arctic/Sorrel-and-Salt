@@ -1,13 +1,6 @@
-// The addresses that open and close a coven's Add Ingredient dialog (M8.16), and read a
-// grimoire's New Spell (M10.12). `?new=ingredient-coven-<slug>` opens that coven's Add
-// Ingredient on every page in the shell, admin pages included; `?new=ingredient` opens the
-// default coven's, and so does a bare `?new` off the admin pages, where a bare `?new` is the
-// page's own dialog. `?new=ingredient-compendium` is the compendium's New Entry on
-// `/admin/compendium`. `?new=spell-<slug>` is that coven's New Spell and `?new=spell` the
-// current grimoire's. A value naming a coven is a fixed prefix and then the whole slug, so a
-// slug's own hyphens read one way. Apart from the button so that another control can open the
-// same dialog by the same address (the empty list's first add, M9.11) without a second dialog.
-// claude-docs/components/modal.md, "Add Ingredient".
+// The addresses that open and close a coven's Add Ingredient dialog and read a grimoire's New Spell:
+// `?new=ingredient-coven-<slug>`, `?new=ingredient`, `?new=spell-<slug>`. Apart from the button so another
+// control can open the same dialog (claude-docs/components/modal.md, "Add Ingredient").
 
 import {
   NEW_COMPENDIUM_ENTRY,

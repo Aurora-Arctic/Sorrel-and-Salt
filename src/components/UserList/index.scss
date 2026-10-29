@@ -2,31 +2,19 @@
 @use '../../scss/mixins' as *;
 @use 'layers' as *;
 
-// The user list's own rules: its cells' alignment, the marks and logos with
-// their tips, the history link, the role and creation cells, the sticky
-// Impersonate column and how it gives way when the table stacks into cards,
-// and the pause beside the page's heading. The column, filter, table and pager
-// are primitives (`.list-frame`, `.filter-row`, `.data-table` with
-// `--stack`, `.pager`). Above the stacking width the seven columns keep
-// their order, restyled on the owner's call at MB.115's sign-off: rows a
-// step taller, the read-only facts muted at the caption size, every control
-// at the end of its cell.
+// The user list's own rules: cell alignment, marks and tips, the sticky Impersonate column and its stacked-card fallback; the layout primitives are shared
+// (claude-docs/components/user-list.md, "The list's stylesheet").
 
 // Every cell centred on its row rather than on the text's baseline, which
 // the primitive uses: these rows mix text with logo circles, marks and
 // buttons, whose boxes put their baselines at different heights, so on the
-// baseline a row's contents sat unevenly (the owner's review).
+// baseline a row's contents sat unevenly.
 .user-list .data-table td {
   vertical-align: middle;
 }
 
-// No cell wraps, heading or body, since the table scrolls inside its frame
-// (the owner's call, during MB.59): a row stays one line however narrow the
-// screen, and its rows are a step taller (`.data-table--nowrap` and
-// `--roomy`, through DataTable). Separate borders, not the primitive's collapsed ones, so each rule
-// belongs to its own cell: a collapsed rule belongs to the table's grid, and
-// the headings' muted hairline was drawn across the sticky Impersonate
-// heading's red one as the columns scrolled beneath it.
+// No cell wraps (`.data-table--nowrap`, `--roomy`); borders are separate so each rule belongs to its own cell, not the grid
+// (claude-docs/components/user-list.md, "The list's stylesheet").
 .user-list .data-table {
   border-collapse: separate;
   border-spacing: 0;
@@ -68,7 +56,7 @@
 }
 
 // The linked providers' marks in a row, each on its brand's circle, the
-// `.provider-mark` primitive (claude-docs/styling.md, "Link rows and provider
+// `.provider-mark` primitive (claude-docs/styling.md, "Provider
 // marks").
 .user-list__providers {
   display: inline-flex;
@@ -94,11 +82,9 @@
   @include tip-anchor;
 }
 
-// An `$icon-size` box, WCAG 2.2's 24px minimum, in the muted ink as InfoTip's ⓘ
-// is. Its hit area reaches `$control-height`, WCAG 2.5.5's 44px, through a
-// pseudo-element, so the row is no taller for it. Compounded with
-// `.user-list`: the typography's `body a` colours would outrank a lone
-// class in the app, though not in the workshop.
+// An `$icon-size` box (WCAG 2.2's 24px minimum) in the muted ink as InfoTip's ⓘ. Its hit area
+// reaches `$control-height` (WCAG 2.5.5's 44px) through a pseudo-element, so the row is no taller.
+// Compounded with `.user-list`, as `body a` would outrank a lone class in the app.
 .user-list .user-list__history-link {
   @include icon-button($icon-size, $glyph-size, radius('pill'));
 
@@ -132,11 +118,9 @@
   gap: space(2);
 }
 
-// The table above the stacking width (MB.115, the owner's call): each row a
-// step taller than the primitive's, since a row holds buttons as well as
-// text, and the facts no control changes, Sign-In Methods and Signed Up,
-// muted at the caption size, so the eye goes to what can be acted on. Scoped
-// to this width because a card already leads each fact with its muted label.
+// The table above the stacking width: rows a step taller than the primitive's, since a row holds
+// buttons, and the facts no control changes (Sign-In Methods, Signed Up) muted at caption size.
+// Scoped here because a card already labels each fact.
 @container data-table (width > #{$table-stack-width}) {
   .user-list .user-list__fact {
     color: $text-muted;
@@ -144,26 +128,21 @@
   }
 }
 
-// The Impersonate column, heading and cells: the shared dangerous-action
-// column (`row-action-column`, kept at MB.115 on the owner's call), red since
-// it is the one control in the table that acts as someone else. Still sticky
-// with the admin column at 80rem: the frame stops scrolling only from about
-// 77rem of table, so any window narrower than that, above the stacking width,
-// scrolls it still.
+// The Impersonate column: the shared dangerous-action column (`row-action-column`), red since it
+// acts as someone else. Still sticky with the admin column at 80rem, since the frame scrolls only
+// from about 77rem of table.
 .user-list__impersonate {
   @include row-action-column($sticky-column-layer);
 }
 
 // The creation cell: the Yes or No on the left, the control that changes it
-// on the right, centred on one line, as the role cell holds its own (the
-// owner's call).
+// on the right, centred on one line, as the role cell holds its own.
 .user-list__creation {
   @include value-and-control;
 }
 
 // The role cell: the role and the primary admin's crown on the left, the
-// control that changes it on the right, centred on one line (the owner's
-// call).
+// control that changes it on the right, centred on one line.
 .user-list__role {
   @include value-and-control;
 }
@@ -191,7 +170,7 @@
 }
 
 // The pause on admin changes, beside the page's heading as its `.page-header`
-// child: the warning while paused and the button on one line (MB.63). At a
+// child: the warning while paused and the button on one line. At a
 // phone's width the page header spans them across the line, a line each.
 .user-list__pause {
   display: flex;

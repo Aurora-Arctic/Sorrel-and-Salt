@@ -16,11 +16,9 @@ import { importAuth } from '../support/auth-module';
 import type { AuthInstance, Profile } from '../support/types';
 import type { UserRow } from './types';
 
-// Story 59, through Better Auth's real endpoints: an address becomes the
-// account's when the mailed change link is followed from a session holding
-// the row, and never before — so an established account never re-enters the
-// provisional sweep (claude-docs/auth/admin-bootstrap.md, "The email page"). Also where an
-// unverified sign-in lands, and what a provider that shares no address gets.
+// Through Better Auth's real endpoints: an address becomes the account's only when the mailed change link is followed from a session holding the row,
+// so an established account never re-enters the provisional sweep (claude-docs/auth/admin-bootstrap.md, "The email page").
+// Also covers where an unverified sign-in lands and what a provider that shares no address gets.
 
 const send = vi.hoisted(() => vi.fn<(message: Message) => Promise<void>>());
 vi.mock('@/lib/mail', () => ({ send }));

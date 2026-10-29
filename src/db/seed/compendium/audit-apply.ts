@@ -1,13 +1,8 @@
 import type { AuditCandidate } from '../types';
 import { parseEntryFile, SECTION_HEADINGS } from './parse-entry';
 
-// The attribution audit's `--apply` (M14.11) on one file's text: the file goes
-// to `needs-review`, and each flagged citation gains one block in its
-// `#### Questions for the Curator`, opening with a marker so a second run
-// finds it and adds nothing. A text edit rather than parse-and-render, like
-// `seed:mark`, so the owner's comments, key order and prose survive byte for
-// byte; neither the status nor the sections are hashed, so a `seedUpdate`
-// mark stays valid.
+// The attribution audit's `--apply` on one file's text: the file goes to `needs-review` and each flagged citation gains one block in its
+// `#### Questions for the Curator`, opening with a marker so a second run adds nothing. A text edit, so the curator's comments and prose survive; neither is hashed.
 
 export type ApplyResult = { text: string; added: number } | { issue: string };
 
@@ -18,7 +13,7 @@ export function auditMarker(candidate: Pick<AuditCandidate, 'source' | 'headedAs
   return `<!-- audit:${candidate.source}:${candidate.headedAs ?? ''} -->`;
 }
 
-/** The question a candidate puts to the owner, after its marker. */
+/** The question a candidate puts to the curator, after its marker. */
 function blockOf(candidate: AuditCandidate): string {
   const where = candidate.citedOn
     .map((on) => (on === 'entry' ? 'the entry' : `the ${on}`))
@@ -35,10 +30,8 @@ function blockOf(candidate: AuditCandidate): string {
 }
 
 /**
- * `text` with `candidates` applied: `status: needs-review` unless the file is
- * already there or a `draft`, which stays unfinished, and one block per
- * candidate whose marker the file does not hold yet, at the end of the
- * Questions section, which is made before the Edit Notes when absent.
+ * `text` with `candidates` applied: `status: needs-review` unless already there or a `draft`, and one block per candidate whose marker is absent,
+ * at the end of the Questions section (made before Edit Notes when absent).
  */
 export function applyAudit(
   path: string,

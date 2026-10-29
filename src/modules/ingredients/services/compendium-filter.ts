@@ -6,11 +6,8 @@ import { parseInput } from '../../../lib/validation';
 import { CompendiumFilter, type CompendiumFilterInput } from '../validation/compendium-filter';
 import { assertCurator } from '@/modules/identity';
 
-// The compendium list's filter as its three reads take it: the page, the
-// count and the facets. Each parses it the same way, and each refuses the
-// Reviewed setting (M14.8) to anyone but a curator, since the review mark is
-// the curators' alone and the compendium is otherwise public. Not exported
-// from the module: the reads are its API.
+// The compendium list's filter as its three reads (page, count, facets) take it. Each refuses the Reviewed setting to anyone but a curator.
+// Not exported from the module: the reads are its API.
 
 /** What a curator who never set it is refused with. */
 const REVIEW_REFUSAL = 'Only a curator may filter the compendium by its review mark';

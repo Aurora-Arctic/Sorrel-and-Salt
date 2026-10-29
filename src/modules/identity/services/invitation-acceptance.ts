@@ -24,13 +24,8 @@ import type {
   WorkspaceInvitationRow,
 } from '../types';
 
-// The one accept service for both tiers of `invitations` (MB.202), built by
-// MB.70 with the site tier's branch, and M7.5 the workspace's. Holding the token names the invitation,
-// and the session's verified address is what admits. The dead-link checks run
-// first, so they hold on both tiers, and report one reason per link (M7.7).
-// No message names a workspace: the reader is not yet a member of it
-// (claude-docs/auth/admin-users.md, "Inviting an admin";
-// claude-docs/db/invitations.md).
+// The one accept service for both tiers of `invitations`: the token names the invitation, the session's verified address admits
+// (claude-docs/db/invitations.md, "Invitation acceptance details"). No message names a workspace, as the reader is not yet a member.
 
 const MESSAGES: Record<InvitationRefusal, string> = {
   invalid: "This invitation link isn't valid. Check that you opened the whole link from the email.",
@@ -52,14 +47,7 @@ function refused(reason: InvitationRefusal): InvitationStanding {
   return { acceptable: false, reason, message: MESSAGES[reason] };
 }
 
-/**
- * Why a link is dead, or `undefined` while it is live: accepted before
- * declined before revoked before expired, so a link in two states reports one
- * reason, and always the same one. An act beats the clock, and the invitee's
- * answer beats the owner's Remove that may follow a decline (M10.34);
- * accepted and declined cannot coexist, the writers matching a pending row
- * only and a CHECK holding it.
- */
+/** Why a link is dead, or `undefined` while live: accepted, declined, revoked, expired in that order, so a link in two states reports one reason. */
 function deadLink(invitation: InvitationRow): InvitationRefusal | undefined {
   if (invitation.acceptedAt) return 'accepted';
   if (invitation.declinedAt) return 'declined';
@@ -77,23 +65,14 @@ function isWorkspaceTier(invitation: InvitationRow): invitation is WorkspaceInvi
   return invitation.workspaceId !== null && invitation.role !== null;
 }
 
-/**
- * Whether MB.63's pause holds this invitation: while admin changes are
- * paused, an invitation is accepted only if the primary admin sent it, as the
- * primary admin's own grant goes through. Another admin's waits for the
- * resume, so one that a rogue admin sent cannot be redeemed meanwhile.
- */
+/** Whether the admin-change pause holds this invitation: while paused, only one the primary admin sent is accepted. */
 async function heldByPause(invitation: SiteInvitationRow): Promise<boolean> {
   if (!(await findOpenAdminRoleChangePause(invitation))) return false;
   const inviter = await findOneById(users, invitation.createdBy);
   return inviter === undefined || !isPrimaryAdmin(inviter);
 }
 
-/**
- * What the checks make of a found invitation, or of none: the dead-link
- * checks, then the address, then the tier's own. One body for both ways in,
- * the link's token and the account page's id, so they cannot drift.
- */
+/** What the checks make of a found invitation, or of none: dead-link checks, then the address, then the tier's own. One body for both ways in. */
 async function checkInvitation(
   session: Session,
   invitation: InvitationRow | undefined,
@@ -111,14 +90,8 @@ async function checkInvitation(
     return { tier: 'site', invitation, user };
   }
   if (!isWorkspaceTier(invitation)) return { refusal: 'invalid' };
-  // A deleted coven is refused here as `closed`, after the dead-link and
-  // address checks: a link in two states reports the earlier (an accepted
-  // invitation into a coven since deleted still says accepted), and a
-  // stranger learns nothing of the coven. The person never sees an Accept that
-  // fails on click. The repository write's own live-workspace check is the
-  // backstop. The invitation's workspace row always exists (workspaces are
-  // only soft-deleted), so no live coven means a deleted one, and no finder of
-  // deleted rows is needed.
+  // A deleted coven is refused as `closed` after the dead-link and address checks, so an earlier reason wins
+  // and a stranger learns nothing (claude-docs/db/invitations.md, "Invitation acceptance details").
   const coven = await findInvitedCoven(invitation.workspaceId);
   if (!coven) return { refusal: 'closed' };
   return { tier: 'workspace', invitation, user, coven };
@@ -128,24 +101,15 @@ async function standingOf(session: Session, token: string): Promise<InvitationCh
   return checkInvitation(session, await findInvitationByToken(token));
 }
 
-/**
- * The same checks over an id the account page listed. The read is the session's own
- * (a coven invitation to its verified address, in SQL), so another address's
- * id, a site-tier id, a deleted row and a malformed id all read as none.
- */
+/** The same checks over an id the account page listed; the read is the session's own, so any id that is not its own reads as none. */
 async function standingById(session: Session, id: string): Promise<InvitationCheck> {
   if (!RowId.safeParse(id).success) return { refusal: 'invalid' };
   const standing = await checkInvitation(session, await findReceivedInvitation(session, id));
-  // The account page lists live covens only, so an id into a deleted one reads
-  // as none, as it did before `closed` existed; only the link names the reason.
+  // The account page lists live covens only, so an id into a deleted one reads as none; only the link names the reason.
   return standing.refusal === 'closed' ? { refusal: 'invalid' } : standing;
 }
 
-/**
- * Whether the signed-in session may accept the invitation `token` names, and
- * if not, why: what `/invite/[token]` shows before offering Accept. The same
- * checks `acceptInvitation` makes, which is what decides.
- */
+/** Whether the signed-in session may accept the invitation `token` names, and if not why: what `/invite/[token]` shows before Accept. */
 export async function invitationStanding(
   session: Session,
   token: string,
@@ -166,27 +130,11 @@ function refusalError(reason: InvitationRefusal, byId = false): Error {
 }
 
 /**
- * Accepts the invitation `token` names as the session's user, and answers
- * it as stamped; `/invite/[token]` lands by its tier. On the site tier it
- * grants the site role the invitation names, curator or admin (M11.20), with
- * the creation flag the users CHECK holds both to, declared
- * `via: 'invitation'` with the invitation's note so the trigger on `users`
- * records it as the accepting user's act; the invitation is stamped
- * `acceptedAt` and `acceptedBy` in the same transaction. An account already
- * holding that role or a higher one has the invitation stamped and nothing
- * granted, so nothing is recorded: an invitation never lowers a role.
- *
- * On the workspace tier it seats the person at the invited role: a removed
- * member's row is revived, since the pair `(workspace_id, user_id)` is the
- * key and a second insert would collide, and a live member is seated again
- * nowhere, the invitation only stamped. It also sets `canCreateWorkspace`,
- * declared the same way, which re-grants it to a person an admin revoked
- * (M5.8's recorded default); one who holds it gets no ledger row.
+ * Accepts the invitation `token` names as the session's user, answering it as stamped (claude-docs/db/invitations.md,
+ * "Invitation acceptance details"). An invitation never lowers a role.
  *
  * @throws {NotFound} the token names no invitation.
- * @throws {Forbidden} the invitation is already accepted, withdrawn or
- * expired, or was for a coven since deleted; it was sent to another address; the address is not yet verified;
- * or admin changes are paused and another admin than the primary one sent it.
+ * @throws {Forbidden} the invitation is dead, closed, for another address, unverified, or held by the admin pause.
  */
 export async function acceptInvitation(session: Session, token: string): Promise<InvitationRow> {
   return acceptChecked(
@@ -199,15 +147,9 @@ export async function acceptInvitation(session: Session, token: string): Promise
 }
 
 /**
- * Accepts the coven invitation `id` names, as `/coven` lists it, as the
- * session's user: `acceptInvitation` for a person who never opened the mailed
- * link. The same checks and the same acceptance, and the address match is the
- * session's own, in SQL, so an id sent to another account is as good as none.
- * Coven invitations only: an admin invitation is accepted by its link alone.
+ * Accepts the coven invitation `id` names, as `acceptInvitationById` for a person who never opened the mailed link; coven invitations only.
  *
- * @throws {NotFound} the id names no coven invitation to this account: a
- * malformed one, another address's, an unverified account's, an admin
- * invitation's, a deleted row's or one into a deleted coven.
+ * @throws {NotFound} the id names no coven invitation to this account.
  * @throws {Forbidden} the invitation is already accepted, withdrawn or expired.
  */
 export async function acceptInvitationById(session: Session, id: string): Promise<InvitationRow> {
@@ -221,17 +163,10 @@ export async function acceptInvitationById(session: Session, id: string): Promis
 }
 
 /**
- * Declines the coven invitation `id` names, as the account page lists it, as
- * the session's user (M10.34): the invitation is dead from now on, its link
- * reports it declined, and the coven's owner sees it marked declined until
- * they remove it. The same checks as `acceptInvitationById`, the address
- * match the session's own, in SQL, and nothing is granted or seated.
+ * Declines the coven invitation `id` names as the session's user: the link reports declined and nothing is granted or seated.
  *
- * @throws {NotFound} the id names no coven invitation to this account: a
- * malformed one, another address's, an unverified account's, an admin
- * invitation's, a deleted row's or one into a deleted coven.
- * @throws {Forbidden} the invitation is already accepted, declined, withdrawn
- * or expired.
+ * @throws {NotFound} the id names no coven invitation to this account.
+ * @throws {Forbidden} the invitation is already accepted, declined, withdrawn or expired.
  */
 export async function declineInvitationById(session: Session, id: string): Promise<InvitationRow> {
   const standing = await standingById(session, id);
@@ -239,8 +174,7 @@ export async function declineInvitationById(session: Session, id: string): Promi
   // The received read never reaches the site tier; this only narrows the type.
   if (standing.tier !== 'workspace') throw refusalError('invalid', true);
 
-  // The writer's own match is the last word: an accept, a revoke or a second
-  // decline that committed since the checks leaves nothing to stamp.
+  // The writer's own match is the last word: a change that committed since the checks leaves nothing to stamp.
   const [declined] = await withAudit(session, (write) => write.declineReceivedInvitation(id));
   if (!declined) {
     const again = await standingById(session, id);
@@ -249,11 +183,7 @@ export async function declineInvitationById(session: Session, id: string): Promi
   return declined;
 }
 
-/**
- * The acceptance both ways in share, given the checks' answer: seat or revive,
- * stamp `invited_by`, grant the creation flag, all in one transaction, then
- * re-check if the writer's own match found the row gone since.
- */
+/** The acceptance both ways in share: seat or revive, stamp `invited_by`, grant the creation flag, then re-check if the row went. */
 async function acceptChecked(
   session: Session,
   standing: InvitationCheck,
@@ -271,13 +201,11 @@ async function acceptChecked(
   const accepted = await withAudit(
     session,
     async (write) => {
-      // The writer's own match is the last word: a revoke or a second accept
-      // that committed since the checks above leaves nothing to stamp.
+      // The writer's own match is the last word: a change committed since the checks leaves nothing to stamp.
       const [stamped] = await stamp(write);
       if (!stamped) return undefined;
       if (standing.tier === 'site') {
-        // Only upwards: an account holding the role, or one above it, is
-        // stamped alone, so an invitation never lowers a role (M11.20).
+        // Only upwards: an account holding the role or above is stamped alone.
         const { siteRole } = standing.invitation;
         if (outranks(siteRole, user.role)) {
           const [granted] = await writeSiteRoleGrant(write, user.id, siteRole);

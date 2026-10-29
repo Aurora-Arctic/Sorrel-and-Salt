@@ -12,18 +12,18 @@ import type { SpellStatus, SpellVisibility } from '@/modules/grimoire';
  */
 export type SpellBuilderStep = SpellBuilderStepsQuery['spell']['steps'][number];
 
-/** The builder's fields, M10.12's: what the spell is called, what it is for, and its jar. */
+/** The builder's fields: what the spell is called, what it is for, and its jar. */
 export type SpellBuilderField =
   'title' | 'intent' | 'jarDescription' | 'sealWaxColor' | 'moonPhase' | 'dayOfWeek' | 'note';
 
 /**
  * The form's values: each field as typed, blank for none, who can see the
- * spell (M10.13), the ids of the categories it is assigned (M10.14), none for
- * none, and the jar's steps (M10.15).
+ * spell, the ids of the categories it is assigned, none for
+ * none, and the jar's steps.
  */
 export type SpellBuilderValues = Record<SpellBuilderField, string> & {
   visibility: SpellVisibility;
-  /** Draft or complete (M10.20): the saved spell's, changed only by the status control. */
+  /** Draft or complete: the saved spell's, changed only by the status control. */
   status: SpellStatus;
   categoryIds: string[];
   steps: SpellStepValue[];
@@ -32,7 +32,7 @@ export type SpellBuilderValues = Record<SpellBuilderField, string> & {
 /**
  * The form's values as a save sends them: trimmed, and null for blank, as the
  * schema reads them; each step as its input; and the categories only when
- * they changed (M10.14).
+ * they changed.
  */
 export type SpellBuilderInput = Record<SpellBuilderField, string | null> & {
   visibility: SpellVisibility;
@@ -41,21 +41,21 @@ export type SpellBuilderInput = Record<SpellBuilderField, string | null> & {
   steps: SpellStepSend[];
 };
 
-/** A saved spell the builder opens, as the `spell` query answers it (M13.10). */
+/** A saved spell the builder opens, as the `spell` query answers it. */
 export type SpellBuilderSpell = {
   id: string;
   /** The revision it was read at, sent back with the next save as `expectedRevision`. */
   revision: number;
-  /** When the row was last saved, as an ISO time: a browser copy newer than this holds unsaved changes (M13.17). */
+  /** When the row was last saved, as an ISO time: a browser copy newer than this holds unsaved changes. */
   updatedAt?: string;
-  /** Who can see it: its author alone, or the whole coven, which is for good (M10.13). */
+  /** Who can see it: its author alone, or the whole coven, which is for good. */
   visibility: SpellVisibility;
-  /** Draft or complete (M10.20); left out, a draft. */
+  /** Draft or complete; left out, a draft. */
   status?: SpellStatus;
-  /** Its recipe in order (M10.15): required, so a page opening a saved spell must read them. */
+  /** Its recipe in order: required, so a page opening a saved spell must read them. */
   steps: SpellBuilderStep[];
 } & Record<SpellBuilderField, string | null> & {
-    /** The categories it is assigned (M10.14); left out, none. */
+    /** The categories it is assigned; left out, none. */
     categoryIds?: readonly string[];
   };
 

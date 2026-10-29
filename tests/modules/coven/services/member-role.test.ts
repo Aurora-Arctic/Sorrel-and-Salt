@@ -7,7 +7,7 @@ import { makeWorkspace, workspaceColumns } from '../../../support/fixtures';
 
 useRawClient();
 
-// Changing a member's role (M9.14): owners only, any move between the three
+// Changing a member's role: owners only, any move between the three
 // roles, an existing member's row and nothing else.
 
 type Role = 'owner' | 'member' | 'viewer';

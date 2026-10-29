@@ -11,18 +11,9 @@ import { editEyebrow } from './edit-heading';
 import { ANNOTATE_HEADING } from './annotate-heading';
 import type { EditableEntry, IngredientEntryEdit } from './types';
 
-// The compendium edit modal over an entry's own page (M8.19), the shape the
-// admin compendium page's dialog takes (`compendium-dialog.tsx`) with the page
-// the modal opened over being the entry's, not the list. A client part because
-// the form's handlers are functions, which a server page cannot hand down.
-// Rendered whether or not the address asks for the modal, so a press's
-// skeleton and the form that replaces it are one dialog (M9.18).
-//
-// A coven's own entry (M8.17) takes the same dialog with the coven's form: a
-// save closes it, back on the page fetched again; Delete leaves for
-// `deletedHref` (M8.17); near matches open in the coven; and Delete is the
-// form's own, apart at the foot. The coven's list renders the same dialog over
-// its rows, with no entry until `?edit=<id>` names one.
+// The edit modal over an entry's own page, shaped like `compendium-dialog.tsx`; a client part as the
+// form's handlers are functions. Always rendered, so a press's skeleton and the form are one dialog
+// (claude-docs/components/ingredient-entry.md, "The entry dialog").
 
 /** A compendium entry's public page: also where a near match or a linked substitute is opened. */
 const publicAddress = (slug: string): Route => `/compendium/ingredients/${slug}` as Route;
@@ -56,16 +47,14 @@ export default function EntryDialog({
                 workspaceId={coven.workspaceId}
                 mayPromote={coven.mayPromote}
                 entry={opened}
-                // A save closes the dialog: back to the page, fetched again
-                // so it shows what was saved.
+                // A save closes the dialog: back to the page, fetched again so it shows what was
+                // saved.
                 onSaved={() => {
                   navigate(savedHref ?? closeHref, { replace: true });
                   refresh();
                 }}
-                // A delete (M8.17) leaves for `deletedHref`, fetched again: the
-                // list without the row, or the coven's Ingredients from the
-                // entry's page, which is gone. The focus goes back to the page's
-                // heading, the opener having gone with the row (RouteModal).
+                // A delete leaves for `deletedHref`, fetched again; the focus goes to the page's
+                // heading, the opener having gone (RouteModal).
                 onDeleted={() => {
                   navigate(deletedHref, { replace: true });
                   refresh();
@@ -83,10 +72,9 @@ export default function EntryDialog({
                 mayPromote
                 review={review}
                 entry={opened}
-                // An edit has Save Ingredient alone, so a save is always 'open':
-                // the modal stays, the form keeping what it saved. A rename moves
-                // the public address, so the page follows it, `?edit` kept; the
-                // coven's address names the id, which a save leaves be.
+                // An edit has Save Ingredient alone, so a save is always 'open': the modal stays. A
+                // rename moves the public address, so the page follows it, `?edit` kept; the
+                // coven's address names the id.
                 onSaved={(saved) => {
                   navigate(savedHref ?? (`${publicAddress(saved.slug)}?edit` as Route), {
                     replace: true,
@@ -97,8 +85,8 @@ export default function EntryDialog({
                 onDeleted={() => navigate(deletedHref, { replace: true })}
                 onCancel={done}
                 duplicateHref={({ slug }) => publicAddress(slug)}
-                // A linked substitute's summary opens its entry in a new tab, every
-                // substitute here being a compendium entry (MB.115).
+                // A linked substitute's summary opens its entry in a new tab, every substitute here
+                // being a compendium entry.
                 entryHref={({ slug }) => publicAddress(slug)}
               />
             ),

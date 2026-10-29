@@ -5,10 +5,9 @@ import { Navigating } from './navigating';
 import { route } from './route';
 import { ShellFrame } from './shell-frame';
 
-// The shell's body (src/components/AppShell/main-body.tsx), drawn by the shell
-// itself: a page, and the one `page` skeleton that takes its place while a
-// navigation aimed at the `main` region is on its way. A navigation here never
-// arrives (./navigating.tsx), so the wait stays; "Start Over" ends it.
+// The shell's body (src/components/AppShell/main-body.tsx): a page, and the `page` skeleton that
+// replaces it while a navigation aimed at `main` is on its way. The navigation never arrives
+// (./navigating.tsx), so the wait stays; "Start Over" ends it.
 const meta = {
   title: 'Feedback / Main Body',
 } satisfies Meta;
@@ -108,14 +107,9 @@ const Page = (): ReactElement => (
   </main>
 );
 
-// Each state is the same page; all but the first are opened with one link
-// already pressed, so the page has gone and the skeleton stands in a `main`
-// of its own, under the page bar, in the frame that link's destination sits in
-// (top-aligned, never centred down the window): the standard frame, the wide
-// column of the Compendium's cards, the forms' column of the coven index, the
-// account's jump menu beside its sections, Create Coven's form on its panel, an
-// ingredient's page with its menu, a table with tabs and an action, and the two
-// heads. Resting is the page at rest: press a link to see it swap.
+// Each state is the same page. All but the first open with one link already pressed, so the
+// skeleton stands in a `main` of that link's destination's frame (top-aligned), under the page
+// bar. Resting is the page at rest: press a link to see it swap.
 const waiting = (press?: string): ReactElement => (
   <Navigating bar press={press}>
     <ShellFrame area="none">

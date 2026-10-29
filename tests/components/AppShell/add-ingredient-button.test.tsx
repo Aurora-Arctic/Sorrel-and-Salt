@@ -77,7 +77,7 @@ vi.mock('@/components/IngredientForm', () => ({
 const { default: AddIngredientButton } =
   await import('@/components/AppShell/add-ingredient-button');
 
-// The shell's one global action (MB.7, M8.16): where it leads follows the
+// The shell's one global action: where it leads follows the
 // area the viewer is in.
 
 const MEMBER: ShellViewer = {
@@ -232,7 +232,7 @@ describe('AddIngredientButton', () => {
     });
 
     // Where the viewer may add to the compendium and to a coven the places are two named groups,
-    // the side they are on first (the owner's call, 2026-10-20).
+    // the side they are on first.
     const groups = () =>
       within(menuOf())
         .getAllByRole('group')

@@ -115,7 +115,7 @@ describe('MemberList', () => {
     expect(within(rowOf(VIEWER.name)).queryByText('You')).toBeNull();
   });
 
-  // M11.19: the page passes `showEmail` to owners alone.
+  // The page passes `showEmail` to owners alone.
   it("shows each member's address, where the page asks", () => {
     render(
       <MemberList

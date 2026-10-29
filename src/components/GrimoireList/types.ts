@@ -19,7 +19,7 @@ export interface GrimoireFacetChoice {
   count: number;
 }
 
-/** The four facets' choices (M13.22): every value on offer, picked or not, in the order shown. */
+/** The four facets' choices: every value on offer, picked or not, in the order shown. */
 export interface GrimoireFacets {
   moonPhases: readonly GrimoireFacetChoice[];
   daysOfWeek: readonly GrimoireFacetChoice[];

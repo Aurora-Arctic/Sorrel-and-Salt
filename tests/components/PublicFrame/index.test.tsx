@@ -7,10 +7,8 @@ const pathname = vi.fn<() => string>();
 const router = vi.hoisted(() => ({ push: vi.fn(), replace: vi.fn(), refresh: vi.fn() }));
 vi.mock('next/navigation', () => ({ usePathname: () => pathname(), useRouter: () => router }));
 
-// The frame round a public page for a signed-out visitor (MB.83): the
-// landmarks, the skip link that reaches the page, the way in, and the wait a
-// move between public pages draws (M12.47). The page brings its own `main`,
-// as the (public) layout gives it one.
+// The frame round a public page for a signed-out visitor: the landmarks, the skip link that reaches the page, the way in, and the wait a move between public pages draws.
+// The page brings its own `main`, as the (public) layout gives it one.
 
 const frame = () =>
   render(
@@ -39,7 +37,7 @@ describe('PublicFrame', () => {
     const skip = screen.getByRole('link', { name: 'Skip to Content' });
     const target = document.getElementById(skip.getAttribute('href')?.slice(1) ?? '');
     // Focusable by script only, and wrapping nothing, so a click on the page
-    // never lands on it (M12.48).
+    // never lands on it.
     expect(target).toHaveAttribute('tabindex', '-1');
     expect(target).toBeEmptyDOMElement();
     expect(target!.nextElementSibling).toContainElement(screen.getByRole('main'));

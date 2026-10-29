@@ -9,7 +9,6 @@ const meta = {
   title: 'Coven / Delete Coven Button',
 } satisfies Meta;
 export default meta;
-// The dropdown story's `state` arg is the node it draws (see its argTypes mapping).
 type Story = StoryObj<{ state?: import('react').ReactNode }>;
 
 const ID = '00000000-0000-0000-0000-000000000001';

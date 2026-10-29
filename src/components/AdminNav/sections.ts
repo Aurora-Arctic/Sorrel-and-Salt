@@ -19,15 +19,9 @@ const groupTab = (kind: GroupKind): PageTab => ({
   label: capitalise(GROUP_KINDS[kind].plural),
 });
 
-// Every admin page, its tabs and its section: the one list the nav, the
-// `/admin` index and each tabbed page's layout read, so the three cannot
-// drift (MB.115; claude-docs/components/admin-nav.md). A list shares its page
-// with the group list that organises it, a tab each, as Category Groups
-// organise Categories (M5.6b, MB.132), on the owner's call after the design
-// review. A vocabulary's tab is built from its kind table (`GroupList/kinds.ts`,
-// `GroupedValueList/kinds.ts`), which holds its address; the others are checked
-// against the built routes (typedRoutes). A tab marked `filtered` opens with a
-// filter, which its loading skeleton draws.
+// Every admin page, its tabs and section: the one list the nav, the `/admin` index and each tabbed layout
+// read. A vocabulary's tab is built from its kind table (`GroupList/kinds.ts`, `GroupedValueList/kinds.ts`);
+// the others are checked against built routes (typedRoutes). A `filtered` tab's loading skeleton draws a filter.
 export const ADMIN_PAGES = {
   compendium: {
     label: 'Compendium',
@@ -68,7 +62,7 @@ export const ADMIN_PAGES = {
     tabs: [
       { href: '/admin/users', label: 'Users', filtered: true },
       { href: '/admin/invitations', label: 'Invitations' },
-      // Who holds which privilege, and who changed it (MB.200).
+      // Who holds which privilege, and who changed it.
       { href: '/admin/privilege-changes', label: 'Privilege Changes', filtered: true },
     ],
   },
@@ -90,8 +84,8 @@ export const ADMIN_SECTIONS: readonly AdminSection[] = [
 
 /**
  * The sections a viewer is shown: every one to an admin, and a curator all but
- * People (M11.20). Only what the nav lists; each people page refuses a
- * curator itself (claude-docs/auth/admin-guard.md, "The curator guard").
+ * People. Only what the nav lists; each people page refuses a curator itself
+ * (claude-docs/auth/admin-guard.md, "The curator guard").
  */
 export const adminSections = (managesPeople: boolean): readonly AdminSection[] =>
   ADMIN_SECTIONS.filter(({ adminOnly }) => managesPeople || !adminOnly);

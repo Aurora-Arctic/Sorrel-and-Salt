@@ -34,7 +34,7 @@ const SpellFields = z.object({
   note: optionalText(),
   // The recipe, in order: a step's place is its index.
   steps: z.array(SpellStepInput).default([]),
-  // The categories the spell is assigned, what it intends (M10.14), never the
+  // The categories the spell is assigned, what it intends, never the
   // ones derived from its ingredients. The whole set when given, so an id left
   // out is unassigned; left out altogether, they are unchanged on update and
   // none on create.
@@ -87,7 +87,7 @@ function distinctSteps(spell: { steps?: StepIdentity[] }, context: z.RefinementC
 /** Said on the title when a spell with none is marked complete: the schema's and the builder's alike. */
 export const COMPLETE_NEEDS_TITLE = 'Give the spell a title before marking it complete';
 
-// Mirrors M13.15's CHECK, `status <> 'complete' OR title IS NOT NULL`, so the
+// Mirrors the database CHECK `status <> 'complete' OR title IS NOT NULL`, so the
 // database never refuses what validation passed. A draft saved as the member
 // types may have no title yet.
 function titleRule(
@@ -107,15 +107,8 @@ export const SpellInput = SpellFields.superRefine(titleRule)
   .superRefine(distinctSteps)
   .superRefine(categoryRule);
 
-// An update also says which revision of the spell it was written against, so
-// a save over someone else's change is caught (claude-docs/design-decisions/
-// m13.14-plan.md, "Server contract"). Null overwrites without checking: the
-// "Keep My Version" path. Required, never left out by accident. Revisions
-// count from 1.
-//
-// An update is partial: a field left out is unchanged and a null clears it.
-// The steps are the whole recipe when given, so a step left out of them is
-// removed, and left out altogether they are unchanged.
+// An update names the revision it was written against so a save over someone else's change is caught; null overwrites.
+// A field left out is unchanged and a null clears it; steps are the whole recipe when given (claude-docs/db/grimoire.md, "Grimoire service and schema details").
 export const UpdateSpellInput = SpellFields.extend({
   steps: z.array(SpellStepInput).optional(),
   expectedRevision: z

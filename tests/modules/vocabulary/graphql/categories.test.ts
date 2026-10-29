@@ -8,13 +8,9 @@ import { makeIngredient } from '../../../support/fixtures';
 import { run } from '../../../support/graphql/run';
 import type { CategoryConnection, CategoryNode, FilteredCategories } from './types';
 
-// M5.6 over the wire: the public `categories` list and the admin's three
-// writes. This file holds the transport's half (claude-docs/testing/layer-ownership.md):
-// a page, its groups in one read, its count, the filters reaching the read,
-// and per write one refusal per error code, read as the browser reads it.
-// Which roles are refused, what a filter matches and every collision are
-// services/categories.test.ts's; a signed-out caller refused at every field,
-// and a non-admin at the `admin` scope, are tests/db/graphql-query-scopes.test.ts's.
+// Over the wire: the public `categories` list and the admin's three writes (the transport's half, claude-docs/testing/layer-ownership.md).
+// That is a page, its groups in one read, its count, the filters reaching the read, and per write one refusal per error code.
+// Roles, filter matching and collisions are services/categories.test.ts's; signed-out and non-admin scope refusals are tests/db/graphql-query-scopes.test.ts's.
 
 // The group reads a page makes, counted at the repository.
 const repository = vi.hoisted(() => ({ findManyByIds: vi.fn() }));
@@ -73,7 +69,7 @@ async function seed(name: string): Promise<string> {
 
 describe('categories', () => {
   it('answers a signed-out visitor the vocabulary by group then name, a page at a time, each with its group', async () => {
-    // The picker's order (MB.126): the group's name, then the category's.
+    // The picker's order: the group's name, then the category's.
     const expected = await sql<{ id: string }[]>`
       select c.id from categories c join category_groups g on g.id = c.group_id
       where c.deleted_at is null and g.deleted_at is null

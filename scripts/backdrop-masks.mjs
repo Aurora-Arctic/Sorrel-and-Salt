@@ -1,28 +1,9 @@
-// Builds the images beside `Backdrop` (claude-docs/components/backdrop.md, "The
-// image is tone and shape, not a picture") from a source photograph, which is
-// not committed:
+// Builds the images beside `Backdrop` from a source photograph, which is not committed (claude-docs/components/backdrop.md, "The image is tone and shape, not a picture"):
 //
 //   node scripts/backdrop-masks.mjs <name> <source image> [preview dir]
 //
-// A photograph of a subject on a dark, plain ground becomes a WebP whose RGB is
-// the subject's levelled luminance — grey, no colour — and whose alpha is its
-// presence, so the ground is transparent. The page then blends it: `screen` on
-// the dark theme lifts the bright parts, `multiply` on the light theme sinks the
-// dark parts, and the photograph's own tones survive both ways. The tone curve
-// clips no highlights and lifts the mid-tones with a gamma below one, where
-// grain and leaf texture live. Levelling alone still loses a subject only a
-// little brighter than the ground (wood, leaves), so chroma — the one thing a
-// plain ground lacks — is screened under the luminance: a floor the subject
-// cannot fade below, with the luminance still varying above it, and low
-// enough that a lifted leaf still sits darker than the shadow it casts.
-//
-// Presence is spatial, not tonal. Levelling makes the ground transparent, but
-// it would also make every shadow inside the subject transparent — the pocket
-// under the salt, the gaps between leaves — and on parchment transparent is the
-// lightest thing on the page, so those shadows came out inverted. The ground
-// is therefore the region of empty pixels connected to the image border, and
-// an empty pocket enclosed by the subject keeps full presence and renders as
-// the dark shadow it is.
+// RGB is the subject's levelled luminance with a chroma floor under it; alpha is presence, spatial and not tonal: the ground is the empty region connected
+// to the border, so a shadow enclosed by the subject keeps full presence instead of reading as the lightest thing on parchment.
 import { mkdirSync, writeFileSync } from 'node:fs';
 import { join } from 'node:path';
 import sharp from 'sharp';
@@ -38,11 +19,8 @@ const CONFIGS = {
     // across the whole bowl into one flat tone.
     chroma: { floor: 18, range: 90, gain: 0.3 },
   },
-  // Sorrel leaves on a plate on dark boards; sits top-left. No feather: the
-  // levelled ground is already transparent, and every edge the subject has is
-  // its own. The chroma floor sits above the boards' own warmth and below a
-  // shadowed leaf's green, so the leaf stays solid on its dark side and the
-  // wood stays out.
+  // Sorrel leaves on a plate on dark boards; top-left. No feather, as the levelled ground is already transparent. The chroma floor sits above the boards' warmth
+  // and below a shadowed leaf's green, so the leaf stays solid and the wood stays out.
   'sorrel-plate': {
     ground: { left: 720, top: 450, width: 280, height: 290 },
     feather: {},
@@ -157,11 +135,8 @@ for (let head = 0; head < queue.length; head++) {
   if (i >= W) seed(i - W);
   if (i < W * (H - 1)) seed(i + W);
 }
-// Everything that is not ground is wholly present. A tonal presence would
-// leave a shadow pixel just over the empty cut at a tenth of an alpha while
-// its neighbour just under it was filled to one — a shadow speckled with the
-// page. Only the one-pixel band against the ground keeps its partial
-// presence, so the outline stays anti-aliased.
+// Everything that is not ground is wholly present, so a shadow pixel beside the empty cut is not speckled with the page; only the one-pixel band against the ground
+// keeps partial presence, so the outline stays anti-aliased.
 for (let i = 0; i < W * H; i++) {
   if (exterior[i]) continue;
   const x = i % W;

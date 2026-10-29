@@ -23,11 +23,8 @@ import { insertSpell } from '../../support/db/insert-spell';
 import { makeSpell } from '../../support/fixtures';
 import type { Cursor, PageRequest } from '@/lib/types';
 
-// M10.9: the cursor-page reader for spells and the tables hung off a spell,
-// `findPageInReadableSpells`. It ANDs `readableSpells` (M10.6) itself, so a
-// page can only ever hold what the direct-id read would return: the coven's
-// shared spells and this reader's own private ones (DESIGN.md §5, CLAUDE.md
-// rule 7). Every refusal first proves the row is there and its author pages it.
+// The cursor-page reader for spells and the tables hung off a spell, `findPageInReadableSpells`. It ANDs `readableSpells` itself, so a page holds only what the direct-id read would return:
+// the coven's shared spells and this reader's own private ones (DESIGN.md §5, CLAUDE.md rule 7). Every refusal first proves the row is there and its author pages it.
 
 let sql: postgres.Sql;
 useTestDatabase((client) => {
@@ -40,7 +37,7 @@ beforeEach(async () => {
 
 type User = typeof A;
 
-/** By title. A draft may go untitled (M13.15), and a sort key must be NOT NULL. */
+/** By title. A draft may go untitled, and a sort key must be NOT NULL. */
 const byTitle: SortPart = {
   expression: sqlExpression`coalesce(${spells.title}, '')`,
   type: 'text',
@@ -137,10 +134,7 @@ describe('findPageInReadableSpells', () => {
 });
 
 describe('findGrimoirePage', () => {
-  /**
-   * Sets spells' stamps, the `updated_at` trigger off so the value holds. One
-   * statement, so spells stamped together share `now()` to the microsecond.
-   */
+  /** Sets spells' stamps with the `updated_at` trigger off so the value holds; one statement, so spells stamped together share `now()` to the microsecond. */
   const stamp = (ids: string | string[], created: string, updated: string) =>
     sql.begin(async (tx) => {
       await tx`alter table spells disable trigger set_updated_at`;
@@ -263,7 +257,7 @@ describe('findManyInSpells', () => {
   });
 });
 
-describe('the grimoire search and category filter (M10.11)', () => {
+describe('the grimoire search and category filter', () => {
   /** A spell with an intent and assigned categories, by name. */
   const spellWith = (
     author: User,
@@ -475,7 +469,7 @@ describe('the grimoire search and category filter (M10.11)', () => {
   });
 });
 
-describe('the grimoire facets (M13.22)', () => {
+describe('the grimoire facets', () => {
   /** A spell of W by `author`, with the facet fields written as given. */
   const made = (
     author: User,

@@ -16,12 +16,8 @@ import {
 import type { DeityRow, DeityTraditionRow } from '../types';
 import { curatedVocabularyWrites } from './curated';
 
-// A curated deity and its tradition, as an ingredient's picked deity reads
-// them (MB.167): the shape `IngredientFormValue` and its group have, since a
-// tradition tells two same-named deities apart as a group does two forms.
-// Public reference data (MB.80), so no scope and no session in the readers;
-// tests/db/graphql-query-scopes.test.ts holds every other query to its
-// refusal. The writes are the site admin's (MB.132).
+// A curated deity and its tradition, as an ingredient's picked deity reads them: the shape `IngredientFormValue` and its group have, since a tradition
+// tells two same-named deities apart as a group does two forms. Public, so no scope in the readers; tests/db/graphql-query-scopes.test.ts holds every other query to its refusal.
 
 export const DeityTraditionRef = curatedVocabularyWrites({
   ref: builder.objectRef<DeityTraditionRow>('DeityTradition'),
@@ -44,7 +40,7 @@ export const DeityTraditionRef = curatedVocabularyWrites({
 
 /**
  * `DeityInput` is the admin's, rather than the ingredient's pick, which is
- * `IngredientDeityInput` (MB.167).
+ * `IngredientDeityInput`.
  */
 export const DeityRef = curatedVocabularyWrites({
   ref: builder.objectRef<DeityRow>('Deity'),
@@ -55,7 +51,7 @@ export const DeityRef = curatedVocabularyWrites({
     type: DeityTraditionRef,
     loader: (loaders) => loaders.deityTraditionsById,
   },
-  // The names a source may call the deity by (M14.23), written whole with it:
+  // The names a source may call the deity by, written whole with it:
   // a save brings the stored names to the list sent, an absent list clearing them.
   fields: (t) => ({
     otherNames: t.stringList({

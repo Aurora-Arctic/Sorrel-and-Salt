@@ -21,12 +21,9 @@ import { useTestDatabase } from '../../../support/db/database';
 import { insertDeityLink, insertIngredient } from '../../../support/db/insert-ingredient';
 import { makeIngredient } from '../../../support/fixtures';
 
-// Story 18's deity half (MB.132): the curated deity vocabulary's writes, the
-// site admin's alone, and the reads the admin page lists them by. A
-// compendium entry's deities are picks (MB.167), so a deity a live entry
-// links is held: its delete is refused, and its rename is carried onto the
-// entry's link, in place. A coven's link is neither. The seeded vocabulary
-// stays, so every deity a test writes is named `Fixture …`.
+// The deity writes, the site admin's alone, and the reads the admin page lists them by.
+// A compendium entry's deities are picks, so a deity a live entry links is held: its delete is refused and its rename is carried onto the entry's link in place. A coven's link is neither.
+// The seeded vocabulary stays, so every deity a test writes is named `Fixture …`.
 
 // The page finder wrapped, passing through to the real one, to see what the
 // list hands it.
@@ -270,7 +267,7 @@ describe('createDeity', () => {
     },
   );
 
-  // MB.132, as M5.6a for forms: two live deities may share a name, told apart by the tradition.
+  // As for forms: two live deities may share a name, told apart by the tradition.
   it('holds two deities of one name under two traditions', async () => {
     const greek = await createDeity(admin, input({ name: 'Fixture Hekate' }));
     const roman = await createDeity(
@@ -558,7 +555,7 @@ describe('deleteDeity', () => {
     });
   });
 
-  // MB.167: the pick holds a deity, so of two live deities called "Hecate"
+  // The pick holds a deity, so of two live deities called "Hecate"
   // only the one an entry picked is held.
   it('deletes the same-named deity that no entry picked', async () => {
     const picked = await seed('Fixture Hekate', 'Greek');

@@ -15,10 +15,9 @@ vi.mock('@/lib/request-session', () => ({ sessionFromHeaders }));
 
 const { config, proxy } = await import('@/proxy');
 
-// Route protection is deny-by-default: the proxy names what is public, so a
-// route nobody thought about is protected rather than open. The proxy's check is
-// optimistic — a cookie is present — and the page's requireSession() is the one
-// that asks the database (claude-docs/auth/route-protection.md, "Route protection").
+// Route protection is deny-by-default: the proxy names what is public, so a route nobody thought
+// about is protected rather than open. The proxy's check is optimistic (a cookie is present);
+// the page's requireSession() asks the database (claude-docs/auth/route-protection.md, "Route protection").
 
 const ORIGIN = 'http://localhost:8000';
 const USER_ID = '6f1c2d4e-9b8a-4c3d-8e7f-0a1b2c3d4e5f';
@@ -59,12 +58,9 @@ describe('the proxy matcher', () => {
     expect(matches(path)).toBe(true);
   });
 
-  // Imported assets ship under /_next/static/media, which is why the backdrop's
-  // images are imported rather than dropped into public/.
-  // Nothing in public/ is exempt: a file placed there is a protected page to
-  // the matcher — redirected to /sign-in, HTML where the browser asked for an
-  // image — until the PR that adds it also adds its entry. Pinned so a file
-  // with none is noticed; the crawler files and the favicon have theirs now.
+  // Imported assets ship under /_next/static/media, so the backdrop's images are imported
+  // rather than dropped into public/. Nothing in public/ is exempt: a file placed there is a
+  // protected page to the matcher (redirected to /sign-in, HTML where the browser asked for an image) until its own entry is added.
   it.each(['/favicon.ico', '/robots.txt', '/images/anything.webp'])(
     'still runs on a public-file path with no entry, %s',
     (path) => {
@@ -93,7 +89,7 @@ describe('public routes', () => {
     // A mail client fetches the mail's images and fonts with no cookie.
     '/email/images/salt-dark.png',
     '/email/fonts/lexend-latin.woff2',
-    // The one public surface (MB.80), and the files a crawler or browser asks for.
+    // The one public surface, and the files a crawler or browser asks for.
     '/compendium',
     '/compendium?category=herbs',
     '/compendium/ingredients/x',
@@ -138,8 +134,8 @@ describe('public routes', () => {
   });
 });
 
-// Staging is a public URL, so off production every response asks search
-// engines to index nothing (MB.83). The test is VERCEL_ENV, as impersonation's is.
+// Staging is a public URL, so off production every response asks search engines to index
+// nothing. The test is VERCEL_ENV, as impersonation's is.
 describe('X-Robots-Tag', () => {
   afterEach(() => {
     vi.unstubAllEnvs();
@@ -218,10 +214,9 @@ describe('proxy', () => {
   });
 });
 
-// The staging workshop (claude-docs/workshop.md, "On staging"): Storybook's
-// static build under public/workshop/, and the one path where the proxy asks
-// the database, because those files have no page of their own to call
-// requireSession().
+// The staging workshop (claude-docs/workshop.md, "On staging"): Storybook's static build under
+// public/workshop/, and the one path where the proxy asks the database, because those files
+// have no page of their own to call requireSession().
 describe('the workshop', () => {
   const signedIn = (path: string) => request(path, `${SESSION_COOKIE}=t.s`);
   const actAs = (role: Session['role']) =>
@@ -236,10 +231,8 @@ describe('the workshop', () => {
   }
 
   /**
-   * What every refusal below rests on: the proxy runs on the path, and the same
-   * request with an admin's live session reaches the files. So the refusal is
-   * the gate reading who is asking, not a path the proxy never sees or a
-   * response that would have failed anyway.
+   * Each refusal below is the gate reading who is asking, not a path the proxy never sees or a response that would have failed anyway:
+   * the same request with an admin's live session reaches the files.
    */
   async function expectAnAdminReaches(path: string) {
     expect(matches(path)).toBe(true);
@@ -312,10 +305,9 @@ describe('the workshop', () => {
     expect(reachesTheWorkshop(await proxy(request(path)))).toBe(false);
   });
 
-  // Storybook's build links its files relative to the page, so a page served
-  // at /workshop would ask for /iframe.html; Next serves no directory index, and
-  // its own trailing-slash redirect sends /workshop/ back to /workshop. So the
-  // bare path is sent to the manager's file, where relative paths resolve.
+  // Storybook's build links its files relative to the page, so a page at /workshop would ask for
+  // /iframe.html; Next serves no directory index and its trailing-slash redirect sends /workshop/
+  // back to /workshop. So the bare path goes to the manager's file, where relative paths resolve.
   it('sends an admin at the bare path to the manager page, query kept', async () => {
     actAs('admin');
 
@@ -328,15 +320,8 @@ describe('the workshop', () => {
   });
 
   /**
-   * Whether `policy`, on a page at `page`, lets its scripts request `url`
-   * (fetch, XHR, WebSocket): CSP Level 3's `connect-src`, falling back to
-   * `default-src`. No CSP matcher ships in the dependencies, so this follows
-   * the spec's host-source rule for the kind of source the proxy writes: a
-   * source with no scheme takes the page's, scheme, host and port match the
-   * request's, and a path ending `/` matches every path beneath it while one
-   * without matches only itself ("path-part matching"). It leaves out the
-   * spec's http-to-https allowance, which only makes it stricter. A keyword it
-   * does not know throws, so a policy it cannot read fails loudly.
+   * Whether `policy`, on a page at `page`, lets scripts request `url`: CSP Level 3's `connect-src`, falling back to `default-src`.
+   * A scheme-less source takes the page's; a source ending `/` matches every path beneath it; an unknown keyword throws.
    */
   function connectAllows(
     policy: string | null,
@@ -365,10 +350,9 @@ describe('the workshop', () => {
     });
   }
 
-  // The proxy may see an address other than the one in the browser's bar:
-  // `next start` bound to 0.0.0.0, a Docker port mapping, or a host that ends
-  // TLS and forwards plain http. The policy must name the browser's address,
-  // or Storybook's own fetches are refused (seen on the owner's dev server).
+  // The proxy may see an address other than the one in the browser's bar: `next start` bound to
+  // 0.0.0.0, a Docker port mapping, or a host that ends TLS and forwards plain http. The policy
+  // must name the browser's address, or Storybook's own fetches are refused.
   it.each<{ seen: string; headers: Record<string, string>; page: string }>([
     {
       seen: 'http://0.0.0.0:8200/workshop/index.html',

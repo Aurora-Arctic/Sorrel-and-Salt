@@ -5,10 +5,8 @@ import { recreateE2eDatabase } from './database';
 import { signInAgainAs } from './session';
 import { insertSpell, seedCoven, withSql } from './stories/coven-ingredients';
 
-// Editing a saved spell (M13.10), from its card's pencil and from its recipe page. Story 55 holds
-// the same flow after Mark Complete (M10.20); this walks it now, and what no story walks: a
-// viewer has no pencil and no dialog, and the dialog opened over the recipe page passes axe and
-// closes back to the recipe page.
+// Editing a saved spell from its card's pencil and from its recipe page. A viewer has no pencil and no dialog,
+// and the dialog over the recipe page passes axe and closes back to it.
 
 test.beforeAll(async () => {
   await recreateE2eDatabase();

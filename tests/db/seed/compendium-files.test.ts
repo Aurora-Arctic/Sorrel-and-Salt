@@ -10,11 +10,8 @@ import { loadCompendium, pathList } from '@/db/seed/compendium/load';
 import { SOURCES } from '@/db/seed/sources';
 import { fromRoot } from '../../support/paths';
 
-// M14.10: the guard over the real compendium, database-free. The markdown
-// files under `compendium/` are the seed's only source, so this is the check
-// a lane's file meets before it merges, on the branch it merges into. The
-// rules themselves, the status gate among them, are broken one at a time on
-// invented entries in compendium/guard.test.ts and compendium/guard-files.test.ts.
+// The guard over the real compendium, database-free: the markdown files under `compendium/` are the seed's only source, so a lane's file meets this check before it merges.
+// The rules themselves, the status gate among them, are broken one at a time on invented entries in compendium/guard.test.ts and compendium/guard-files.test.ts.
 
 const loaded = loadCompendium(fromRoot('compendium'));
 const approved = loaded.files.filter((file) => file.status === 'approved');
@@ -52,7 +49,7 @@ describe('the compendium files', () => {
     expect(locators.filter((locator) => /\bs\.\s*v\./i.test(locator))).toEqual([]);
   });
 
-  // The ratchet (M14.11): the legacy list of unaudited files only shrinks.
+  // The ratchet: the legacy list of unaudited files only shrinks.
   // The baseline beside this test is the list as last committed; a line
   // leaves both together, and none joins either.
   describe('the unaudited list', () => {

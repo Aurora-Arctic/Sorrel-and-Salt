@@ -3,10 +3,8 @@
 @use '../src/scss/variables' as *;
 @use '../src/scss/variables' as tokens;
 
-// Page chrome for ./foundations.tsx, and only that: prose, primitives and
-// every colour come from the app's partials, and each printed value is read
-// from the partial's own map rather than typed here. Nested under `.fd` to
-// keep it off every other story.
+// Page chrome for ./foundations.tsx only: prose, primitives and colours come from the app's
+// partials, and each printed value is read from the partial's own map. Nested under `.fd`.
 
 $raw-palette: (soot, soot-raised, parchment, parchment-raised, chalk, iron-gall, sorrel, wax);
 

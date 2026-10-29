@@ -4,13 +4,9 @@ import { usePressOnMount } from '../../../.storybook/press';
 import { ShellFrame } from '../../../.storybook/shell-frame';
 import ImpersonationBanner from '.';
 
-// Render-only; behaviour is asserted in tests/components/ImpersonationBanner.
-// Stop is answered by the workshop's fake sign-in service (.storybook/mock-api.ts):
-// refused in Stop Failed, never answered in Stopping. A success would leave the
-// page for the admin's own, so no story shows it. Where
-// the browser can hover, the banner tucks itself above the page until a
-// pointer nears the top; on a touch screen, which the review screenshots
-// emulate, it sits in the page's flow at the top, shown in full.
+// Render-only; behaviour is asserted in tests/components/ImpersonationBanner. Stop
+// is answered by the fake sign-in service (.storybook/mock-api.ts): refused in Stop
+// Failed, never answered in Stopping. Where the browser can hover the banner tucks.
 const meta = {
   title: 'Layout / Impersonation Banner',
 } satisfies Meta;
@@ -22,10 +18,9 @@ export const Default: Story = {
   beforeEach: ({ msw }) => msw.use(hangAuth()),
   render: () => <ImpersonationBanner name="Bo Fixturewort" email="bo@users.test" />,
 };
-// Above the shell, where the app puts it: the first thing in the body, over
-// everything, the shell's bar included (src/app/layout.tsx). On a touch screen
-// (`hover: none`) the banner is in the flow and the bar starts below it; a
-// desktop browser shows it tucked.
+// Above the shell, as src/app/layout.tsx puts it: first in the body, over the
+// shell's bar. On a touch screen (`hover: none`) the banner is in the flow and the
+// bar starts below it; a desktop browser shows it tucked.
 const OverTheShellView = () => (
   <>
     <ImpersonationBanner name="Bo Fixturewort" email="bo-fixturewort@users.test" />

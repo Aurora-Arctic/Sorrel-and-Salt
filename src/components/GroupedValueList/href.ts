@@ -5,12 +5,9 @@ import type { GroupedValueKind } from '../GroupedValueForm/types';
 import { KINDS } from './kinds';
 import type { GroupedValuesPlace } from './types';
 
-// The address of a curated vocabulary's admin page under a filter, at a
-// page, with a modal open over it or not: the list's links, the pager, the
-// filter's submit and the modal's way back all build it. The page's own
-// filter and cursor stay, so closing the modal lands where it was opened. A
-// blank filter is written as none, and the group under the kind's own
-// parameter. `new` is a bare flag, read by its presence (src/lib/list-href.ts).
+// The address of a curated vocabulary's admin page under a filter, at a page, with a modal open or not.
+// Filter and cursor stay, so closing the modal lands where it was opened; a blank filter is written as
+// none. `new` is a bare flag, read by its presence (src/lib/list-href.ts).
 
 export function groupedValuesHref(
   kind: GroupedValueKind,

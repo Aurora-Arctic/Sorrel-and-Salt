@@ -32,7 +32,7 @@ its box unticked: `FLAKY (failed, then passed on retry)`.
 
 ## Red scaffolds
 
-A story whose page is not built yet is a `test.fixme` whose body is the flow
+A story whose page does not exist is a `test.fixme` whose body is the flow
 as the finished page will allow it. The annotation names the task that builds
 the page; that task unskips the story in its own pull request.
 

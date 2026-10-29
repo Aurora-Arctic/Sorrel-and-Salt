@@ -1,20 +1,13 @@
 @use '../../scss/variables' as *;
 @use '../../scss/mixins' as *;
 
-// The sorrel's shape and place, written once for the two things that draw it:
-// the real corner ornament (`.backdrop--sorrel`, index.scss) and the copy the
-// sticky search row draws inside itself so the sorrel shows through the row's
-// page-coloured fill (IngredientSearch/index.scss). Both are `position: fixed`
-// at the same offset, so the copy lines up with the real one and the row's
-// clip decides what is seen. The `sorrel-follow` keyframes stay in
-// index.scss, which every page loads; the name is all this reads
+// The sorrel's shape and place, shared by the corner ornament (index.scss) and the copy the sticky search row draws; both are `position: fixed` at one offset.
+// The `sorrel-follow` keyframes stay in index.scss, which every page loads
 // (claude-docs/components/backdrop.md, "The copy in the search row").
 
-// A scrolling bar or row above the sorrel: it starts beneath it, and as the page scrolls
-// the thing leaves while the sorrel is fixed, so a fixed offset would open a gap between
-// them. Over that thing's own height of scroll (`--sorrel-lift`) the sorrel climbs to
-// where it then rests (`--sorrel-rest`) and stays there. A browser with no scroll-driven
-// animations keeps the lower, fixed offset.
+// Over the height of a scrolling bar above the sorrel (`--sorrel-lift`) the sorrel climbs to
+// `--sorrel-rest`, so no gap opens as the bar leaves. A browser without scroll-driven animations
+// keeps the lower, fixed offset.
 @mixin sorrel-follows-scroll {
   top: calc(var(--sorrel-rest) + var(--sorrel-lift));
 

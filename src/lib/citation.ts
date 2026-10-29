@@ -1,11 +1,7 @@
 import type { CitationFields, CitationPart } from './types';
 
-// The one Chicago renderer (MB.151; DESIGN.md §5, "The citation is rendered,
-// never stored"): a reference's fields to its bibliography entry, as parts
-// in italic or roman. Pure and client-safe, beside `slugify`, because the
-// page, the picker, the service's sort and the seed's test all call it. The
-// rules per kind, and why italics are marks in three fields rather than a
-// Markdown library, are claude-docs/db/references.md, "The renderer".
+// The one Chicago renderer (DESIGN.md §5): a reference's fields to its bibliography entry as italic or roman parts. Pure and
+// client-safe, as the page, picker, sort and seed test all call it (claude-docs/db/references.md, "The renderer").
 
 /**
  * A day as a date input and a `date` column write it, `YYYY-MM-DD`, its year,
@@ -52,10 +48,8 @@ const MONTHS = [
 ];
 
 /**
- * `fields` in Chicago bibliography form, one sentence per element the kind
- * prints, each closed by a period it does not already carry. A field the
- * kind does not print is not rendered, and a blank one is absent. Neighbouring
- * runs of one style are merged, so the parts alternate.
+ * `fields` in Chicago bibliography form, one sentence per element the kind prints, each closed by a period. A field the kind does
+ * not print is not rendered; neighbouring runs of one style merge, so the parts alternate.
  */
 export function renderCitation(fields: CitationFields): CitationPart[] {
   const sentences = sentencesOf(fields).filter((sentence) => sentence.length > 0);
@@ -222,7 +216,7 @@ function closed(runs: CitationPart[]): CitationPart[] {
   return /[.?!]["”]?$/.test(text) ? runs : [...runs, roman('.')];
 }
 
-/** A date as Chicago prints it: `2026-10-06` → `October 6, 2026`. */
+/** A date as Chicago prints it: `<year>-<month>-<day>` → `October 6, 2026`. */
 function day(iso: string): string {
   const match = ISO_DAY.exec(iso);
   const month = match ? MONTHS[Number(match[2]) - 1] : undefined;
@@ -233,11 +227,8 @@ function day(iso: string): string {
 const roman = (text: string): CitationPart => ({ text, italic: false });
 
 /**
- * A field that may carry `_…_` marks, in the style `italic` the kind gives
- * it, each marked span in the other style. CommonMark's rule for `_`: a mark
- * opens where no letter or digit precedes it and no space follows, and closes
- * where no space precedes it and no letter or digit follows, so an underscore
- * inside a word is text. An unclosed or empty mark is text.
+ * A field that may carry `_…_` marks, in the kind's style `italic` with each marked span in the other. CommonMark's rule for `_`: a
+ * mark opens where no letter or digit precedes and no space follows, and closes the other way round; an unclosed or empty mark is text.
  */
 export function marked(text: string, italic: boolean): CitationPart[] {
   const runs: CitationPart[] = [];

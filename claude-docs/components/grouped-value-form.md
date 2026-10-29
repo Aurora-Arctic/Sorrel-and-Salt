@@ -286,3 +286,9 @@ modal shows once open is this file's. `tests/e2e/admin.spec.ts`
 adds, renames and deletes a category, a form and a celestial body through the real server, adds
 a deity under a new tradition and moves it when the tradition goes, and is
 refused deleting Protection, which seeded compendium entries are filed under.
+
+## What the form edits
+
+The admin's form for a curated value covers grouped kinds (a category, an ingredient form or a deity) and flat ones where the kind has no group (a celestial body or a zodiac sign). It is one form for every such vocabulary, as GroupForm is for their groups, so a new vocabulary is a `KINDS` entry. A value has a name, a description and, for a grouped kind, the group it is filed under. The shared schema validates it before the mutation and the service validates it again, and on an existing value a delete sits behind a confirmation.
+
+A kind whose rename reaches further than its row says so. No rename moves a compendium entry's address, so none asks to end a redirect. The form holds no modal of its own; the page puts it in one.

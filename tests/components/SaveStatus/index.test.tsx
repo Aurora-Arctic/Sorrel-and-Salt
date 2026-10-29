@@ -3,10 +3,8 @@ import { describe, expect, it, vi } from 'vitest';
 import SaveStatus from '@/components/SaveStatus';
 import type { SaveStatusProps } from '@/components/SaveStatus/types';
 
-// An autosaving form's status line (M13.16): inline, a line that always
-// shows the latest, a live region that announces a burst of saves once, an
-// alert with Retry that stays until a save succeeds, and a warning notice for
-// a conflict.
+// An autosaving form's status line: inline, a line that always shows the latest, a live region that announces a burst of saves once,
+// an alert with Retry that stays until a save succeeds, and a warning notice for a conflict.
 
 /** 2:02 pm and some seconds on the reader's clock. */
 const at = (minute: number, second = 0) => new Date(2026, 9, 27, 14, minute, second);

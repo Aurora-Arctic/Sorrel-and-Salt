@@ -11,9 +11,8 @@ vi.mock('next/navigation', () => ({ useRouter: () => router, usePathname: () => 
 const { PendingLink, useNavigationState } = await import('@/lib/navigation');
 const { default: LinkHint } = await import('@/components/LinkHint');
 
-// The one link the site draws (M12.33): a plain press navigates through the
-// shared hook, so the bar and the destination's skeleton follow; a press the
-// browser means for a new tab or window is left to the browser.
+// The one link the site draws: a plain press navigates through the shared hook, so the bar and
+// the destination's skeleton follow; a press the browser means for a new tab or window is left to it.
 
 const MEMBERS = '/coven/fixture-coven/members' as Route;
 const COVEN_TABLE = { region: 'coven', shape: 'table' } as const;

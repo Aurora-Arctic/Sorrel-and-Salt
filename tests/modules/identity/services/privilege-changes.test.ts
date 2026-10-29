@@ -15,10 +15,8 @@ import { A, B, C, D, E, asUser } from '../../../support/as-user';
 import { useTestDatabase } from '../../../support/db/database';
 import type { LedgerRow } from './types';
 
-// MB.199: the read under `/admin/privilege-changes`, the one privilege ledger
-// newest first, narrowed by subject and by privilege. A site admin's alone,
-// refused at the service by direct call (claude-docs/auth/admin-users.md,
-// "The privilege ledger").
+// The read under `/admin/privilege-changes`, the one privilege ledger newest first, narrowed by subject and by privilege.
+// A site admin's alone, refused at the service by direct call (claude-docs/auth/admin-users.md, "The privilege ledger").
 
 let sql: postgres.Sql;
 useTestDatabase((client) => {
@@ -27,11 +25,8 @@ useTestDatabase((client) => {
 
 const PAGE: PageRequest = { limit: 101, inverted: false };
 
-// The ledger as this file writes it, straight into the table: nothing in the
-// application inserts a row, and the trigger would stamp every row of one
-// transaction with one instant. Two pairs share an instant, as a role grant
-// and the creation flag it sets do, and two rows sit a microsecond apart,
-// which a cursor read back through a `Date` would merge.
+// The ledger as this file writes it, straight into the table: nothing in the application inserts a row, and the trigger would stamp every row of one transaction with one instant.
+// Two pairs share an instant, as a role grant and the creation flag it sets do, and two rows sit a microsecond apart, which a cursor read back through a `Date` would merge.
 const LEDGER = [
   {
     user: A,

@@ -1,8 +1,8 @@
 import { render, screen } from '@testing-library/react';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
-// The root layout's slot for MB.53's banner: mounted only where impersonation
-// is registered, and showing the banner only while the session is one.
+// The root layout's slot for the impersonation banner: mounted only where impersonation is registered,
+// and showing the banner only while the session is one.
 
 const useSessionMock = vi.fn();
 vi.mock('@/lib/auth-client', () => ({

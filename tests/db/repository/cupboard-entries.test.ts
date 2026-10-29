@@ -18,10 +18,9 @@ import { insertIngredient } from '../../support/db/insert-ingredient';
 import { makeIngredient } from '../../support/fixtures';
 import { ingredientFolkNames } from '@/modules/ingredients/schema/ingredient-folk-names';
 
-// The reads over M12.13's table (M12.14): a coven's cupboard entry for a
-// compendium entry, one or a batch under the coven's proof, and the
-// compendium entries a typed name names exactly. Each case seeds the rows the
-// read must leave out beside the row it must keep.
+// The reads over the cupboard-entries table: a coven's entry for a compendium entry, one or a batch
+// under the coven's proof, and the compendium entries a typed name names exactly. Each case seeds the
+// rows the read must leave out beside the row it must keep.
 
 let sql: postgres.Sql;
 useTestDatabase((client) => {
@@ -129,7 +128,7 @@ async function softDelete(id: string) {
   await sql`update ingredients set deleted_at = now(), deleted_by = ${E.id} where id = ${id}`;
 }
 
-describe('findCupboardEntryIncludingSoftDeleted (M12.24)', () => {
+describe('findCupboardEntryIncludingSoftDeleted', () => {
   it('reads a retired compendium entry beside the live cupboard entry naming it', async () => {
     const entry = await compendiumEntry('Testwort', 'Fixtura testalis');
     const id = await insertCupboardEntry(
@@ -226,7 +225,7 @@ describe('findCompendiumMatchesByName', () => {
   });
 });
 
-describe('countCovensUsing (M12.25)', () => {
+describe('countCovensUsing', () => {
   const curator = () => assertCurator(asUser(E));
 
   it('counts the covens with a live row naming the entry, and no other row', async () => {

@@ -3,11 +3,8 @@ import { test, expect } from './fixtures';
 import { e2eDatabaseUrl } from './database';
 import { signInAs } from './session';
 
-// M2.7 against the built server: the proxy's redirect (claude-docs/auth/route-protection.md,
-// "Route protection"). What stays public is proved elsewhere: `/` rendered
-// signed out by smoke.spec.ts, and `/invite/[token]` left open by
-// tests/proxy.test.ts and rendered by the invitation stories in
-// stories/01-invitations.spec.ts.
+// The proxy's redirect against the built server (claude-docs/auth/route-protection.md, "Route protection").
+// What stays public is proved by smoke.spec.ts (`/`), tests/proxy.test.ts and stories/01-invitations.spec.ts.
 
 // A route whose page does not exist yet: the proxy answers before routing does,
 // so a missing page cannot be what redirected it.
@@ -24,7 +21,7 @@ test('a signed-out visit to a protected route lands on /sign-in, keeping its pat
 
 // The second layer, by client-side navigation: a cookie the proxy still lets
 // through, for a session revoked since the page loaded, is sent to sign in
-// by the shell layout as a link into it is followed (MB.256).
+// by the shell layout as a link into it is followed.
 test('a revoked session following a link into the shell lands on /sign-in', async ({ page }) => {
   const { userId } = await signInAs(page, 'revoked-link@route-protection.test');
   await page.goto('/');

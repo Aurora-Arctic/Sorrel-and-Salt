@@ -3,10 +3,8 @@ import { describe, expect, it } from 'vitest';
 import FormIcon from '@/components/FormIcon';
 import { FORM_GROUP_ICONS, type FormGroupIcon } from '@/modules/vocabulary/schema/form-group-icons';
 
-// The mark beside a form (M12.7; claude-docs/components/form-icon.md): one
-// icon per form-group icon name, and the generic salt spoon where a form has
-// none — a group without an icon, an uncurated form, or a name the component
-// does not know. Decorative, since the form's name always stands beside it.
+// The mark beside a form (claude-docs/components/form-icon.md): one icon per form-group icon name, and the generic salt spoon where a form has none
+// (a group without an icon, an uncurated form, or a name the component does not know). It is decorative, since the form's name always stands beside it.
 
 /** What one render draws: the SVG's markup, which is the one thing an icon can be told apart by. */
 const drawing = (name: Parameters<typeof FormIcon>[0]['name']): string => {

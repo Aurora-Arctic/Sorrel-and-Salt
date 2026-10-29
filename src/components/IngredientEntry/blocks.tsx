@@ -5,10 +5,9 @@ import type { CategoryDetail, DeityDetail, IngredientRow } from '@/modules/ingre
 // Holds `.ingredient-entry__empty`, which these blocks say "None recorded" in.
 import './index.scss';
 
-// The entry page's blocks, which its Details section, its form sections and
-// the details modal's summary (M12.5) all draw: a headed list, the
-// correspondences, the category chips, and the ids that tie each heading to its
-// content. Server-renderable, with no hook. claude-docs/components/ingredient-entry.md.
+// The entry page's blocks, drawn by its Details, its form sections and the details modal's summary:
+// a headed list, the correspondences, the category chips, and the ids tying each heading to its
+// content. Server-renderable, with no hook.
 
 /** Blank counts as nothing said, as `SafetyNote` counts it. */
 export const said = (text: string | null | undefined): text is string => (text ?? '').trim() !== '';
@@ -43,12 +42,7 @@ export function correspondences(source: Correspondences, deities?: readonly Deit
   return rows;
 }
 
-/**
- * A deity as the Deities row names it: its tradition, then its other names
- * (M14.23), in brackets after the name, so a reader who knows it by another
- * name finds it. A semicolon parts the two because the row joins its values
- * with commas.
- */
+/** A deity as the Deities row names it: its tradition and other names in brackets, parted by a semicolon because the row joins its values with commas. */
 function deityMention({ name, tradition, otherNames }: DeityDetail): string {
   const parts = [
     tradition ?? [],

@@ -1,11 +1,9 @@
 import type { ReactElement } from 'react';
 import type { PageHeaderProps } from './types';
 
-// A page's heading with its one primary action on the same line, the action
-// at the end (the owner's call, M5.6; claude-docs/styling.md, "Buttons"). The
-// `.page-header` row and its `h1` were written by hand on nine admin pages
-// until MB.115. No client directive and no hook, so a server page renders it
-// directly; an action that needs the browser is a client component of its own.
+// A page's heading with its one primary action on the same line, the action at the end
+// (claude-docs/styling.md, "Buttons"). No client directive and no hook, so a server page
+// renders it directly; an action that needs the browser is a client component of its own.
 const PageHeader = ({ title, lead, action }: PageHeaderProps): ReactElement => (
   <div className="page-header">
     {lead ? (

@@ -1,10 +1,9 @@
 import type { SectionIconName } from '../SectionNav/types';
 import type { PageTab } from '../TabbedPage/types';
 
-// One admin page: what it is called, the one line the `/admin` index says
-// about it, and its tabs, each at its own address. A page of one tab, the
-// compendium, draws no tab row; the nav and the index link a page at its
-// first tab.
+// One admin page: what it is called, the one line the `/admin` index says about
+// it, and its tabs, each at its own address. A page of one tab, the compendium,
+// draws no tab row; the nav and the index link a page at its first tab.
 export interface AdminPage {
   label: string;
   /** The icon the nav draws beside the label (`SectionNav/icons.tsx`). */
@@ -18,7 +17,7 @@ export interface AdminPage {
 export interface AdminSection {
   name: string;
   pages: readonly AdminPage[];
-  /** Shown to an admin alone: a curator manages no one (M11.20). */
+  /** Shown to an admin alone: a curator manages no one. */
   adminOnly?: true;
 }
 

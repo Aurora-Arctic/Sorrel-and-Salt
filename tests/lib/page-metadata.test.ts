@@ -6,7 +6,7 @@ import {
   publicPageMetadata,
 } from '@/lib/page-metadata';
 
-describe('MB.84: page metadata', () => {
+describe('page metadata', () => {
   it('keeps a short description whole, on one line', () => {
     expect(describeText('A  plant\nof testing.')).toBe('A plant of testing.');
   });

@@ -3,15 +3,13 @@ import type { ReactElement, ReactNode } from 'react';
 import Backdrop from '../Backdrop';
 import Welcome from '.';
 
-// Render-only; behaviour is asserted in tests/components/Welcome. The page
-// decides `landing` from the session; a story fixes it by hand. Every story
-// sits in the page's real frame, `main.page-frame.welcome-page`, so the
-// column it shows is the one `/` draws (claude-docs/workshop.md).
+// Render-only; behaviour is asserted in tests/components/Welcome. The page decides
+// `landing` from the session; a story fixes it. Each sits in the page's real frame,
+// `main.page-frame.welcome-page` (claude-docs/workshop.md).
 const meta = {
   title: 'Pages / Welcome',
 } satisfies Meta;
 export default meta;
-// The dropdown story's `state` arg is the node it draws (see its argTypes mapping).
 type Story = StoryObj<{ state?: import('react').ReactNode }>;
 
 const Page = ({ children }: { children: ReactNode }) => (
@@ -38,8 +36,6 @@ const signedInNode = (
   </Page>
 );
 
-// One story with a control to choose the state: each is a whole page or list,
-// too big to sit beside the others (claude-docs/workshop.md, rule 5).
 const STATES_STATES: Record<string, ReactNode> = {
   Default: defaultNode,
   'Signed In': signedInNode,

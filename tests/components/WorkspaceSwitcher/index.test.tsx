@@ -13,8 +13,8 @@ const { default: WorkspaceSwitcher } = await import('@/components/WorkspaceSwitc
 const { default: CovenSwitchTargets } = await import('@/components/CovenSwitchTargets');
 const { CovenSwitchProvider } = await import('@/components/CovenSwitchTargets/context');
 
-// Story 8 (M6.9): the viewer's workspaces, the current one read off the
-// address, a choice going to the same section in the other. Story 3 (M9.16):
+// The viewer's workspaces, the current one read off the
+// address, a choice going to the same section in the other, and
 // the way to the create page, offered only to a viewer holding the right.
 
 const WORKSPACES = [
@@ -77,7 +77,7 @@ describe('WorkspaceSwitcher', () => {
     expect(push).toHaveBeenCalledExactlyOnceWith('/coven/testwort-circle/members');
   });
 
-  describe('from a page that says which covens it opens in (M9.12)', () => {
+  describe('from a page that says which covens it opens in', () => {
     const ENTRY = '/coven/fixture-coven/ingredients/some-id';
     const switchTo = (name: string) => {
       fireEvent.click(box());
@@ -120,7 +120,7 @@ describe('WorkspaceSwitcher', () => {
     expect(box()).toHaveTextContent('Testwort Circle');
   });
 
-  describe('the create entry (M9.16)', () => {
+  describe('the create entry', () => {
     it('is offered after the workspaces only to a viewer holding creation rights', () => {
       const { unmount } = render(<WorkspaceSwitcher workspaces={WORKSPACES} canCreate />);
       fireEvent.click(box());
@@ -153,7 +153,7 @@ describe('WorkspaceSwitcher', () => {
     });
   });
 
-  describe('while the switch is on its way (M12.33)', () => {
+  describe('while the switch is on its way', () => {
     let arrive = () => {};
     afterEach(async () => {
       await act(async () => arrive());

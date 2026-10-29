@@ -16,7 +16,7 @@ import {
 } from '../validation/compendium-filter';
 import { assertMembership } from '@/modules/coven';
 
-// M12.3: how many entries each filter value would list, beside the list it
+// How many entries each filter value would list, beside the list it
 // narrows. The compendium's is public and held in the data cache under the
 // `compendium` tag, keyed by the parsed filter, as its page and count are; a
 // coven's is never cached (CLAUDE.md rule 6; claude-docs/db/compendium-cache.md).
@@ -28,9 +28,9 @@ const cachedFacets = cachedCompendiumRead('compendium-facets', findCompendiumFac
  * chosen one, most entries first and then by value; every live zodiac sign
  * and celestial body by name, every element and both toxic settings, zeros
  * included; and how many entries cite no live reference, the No Refs
- * switch's count, the same with the switch on or off. Needs no session: the compendium is the public surface (MB.80).
+ * switch's count, the same with the switch on or off. Needs no session: the compendium is the public surface.
  * Parsed as `listCompendium` parses, so it counts the rows that list holds.
- * The Reviewed counts (M14.8) are a curator's alone: `viewer` must curate to
+ * The Reviewed counts are a curator's alone: `viewer` must curate to
  * set the filter, and for anyone else the counts are not read at all and the
  * answer is null.
  *
@@ -42,7 +42,7 @@ export async function compendiumFacets(
   filter: CompendiumFilterInput,
   viewer: Session | null = null,
 ): Promise<CompendiumFacets> {
-  // The Reviewed counts are read only for a viewer who sees them (M14.8); the
+  // The Reviewed counts are read only for a viewer who sees them; the
   // flag is part of the cache key, so the two answers are held apart.
   return cachedFacets(compendiumFilterFor(filter, viewer), seesReview(viewer));
 }
@@ -52,7 +52,7 @@ export async function compendiumFacets(
  * `compendiumFacets` counts, over the rows `listWorkspaceIngredients` reads:
  * the coven's own entries and the compendium entries it holds. Never cached,
  * since what it counts is the coven's. Beside the seven kinds it counts the
- * Source strip's two values and the In Stock switch (M9.7), each under
+ * Source strip's two values and the In Stock switch, each under
  * the rest of the filter, its own setting left out.
  *
  * @throws {Forbidden} the caller may not read this coven's ingredients.

@@ -7,10 +7,9 @@ vi.mock('next/navigation', () => ({ useRouter: () => router, usePathname: () => 
 
 const { NavigationBar, reportLeaving, usePendingNavigation } = await import('@/lib/navigation');
 
-// The page part of every wait (M12.33): a bar that shows once a navigation
-// has lasted 100ms, so a fast one never flashes it, and goes when the
-// navigation settles. It only adds a visual cue, so it is hidden from
-// assistive technology, and having no role it is found by that.
+// The page part of every wait: a bar that shows once a navigation has lasted 100ms, so a fast
+// one never flashes it, and goes when the navigation settles. It only adds a visual cue, so it
+// is hidden from assistive technology, and having no role it is found by that.
 
 const DELAY = 100;
 

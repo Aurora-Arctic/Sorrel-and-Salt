@@ -1,19 +1,6 @@
-// The workshop's fake API: what a story's requests to the app's own endpoints
-// get back, answered in the browser by Mock Service Worker (MSW), so a real
-// Save or Sign In button works without a server.
-//
-// The app's clients ask for `/workshop/api/...` here, not `/api/...`
-// (`WORKSHOP_API_PREFIX`, set in main.ts; src/lib/api-path.ts), because
-// staging's Content Security Policy lets a workshop page reach only addresses
-// under /workshop/, and it refuses the real ones before a service worker can
-// answer. claude-docs/workshop.md, "On staging".
-//
-// A story says what its requests get with `beforeEach`:
-//
-//   beforeEach: ({ msw }) => msw.use(answerMutation(SaveIngredientDocument, () => ({ ... })))
-//
-// The handlers set here are the defaults every story starts from; the
-// addon puts the worker back to them after each story.
+// The workshop's fake API: what a story's requests get back, answered in the browser by Mock
+// Service Worker (MSW), so a real Save or Sign In button works without a server. Requests go to
+// `/workshop/api/...` (claude-docs/workshop.md, "Notes the `.storybook/` files cite").
 
 import { type TypedDocumentNode } from '@graphql-typed-document-node/core';
 import { type DocumentNode, getOperationAST } from 'graphql';
@@ -103,10 +90,8 @@ export function answerMutation<Result, Variables extends object>(
 }
 
 /**
- * Answers every operation from one function, for a story with many lookups
- * (the Ingredient Form's). The function returns a result, a {@link refusal}, or
- * undefined for an operation it has no answer to; that one goes on to the next
- * handler, the default 501 that names it.
+ * Answers every operation from one function, for a story with many lookups. It returns a result,
+ * a {@link refusal}, or undefined for an operation it has no answer to, which goes on to the next handler.
  */
 export function answerOperations(
   resolver: (info: {
@@ -142,7 +127,7 @@ export function hangAuth(): RequestHandler {
   return http.all(apiPath('/api/auth/*'), () => delay('infinite'));
 }
 
-/** Refuses a sign-in service call as it would an account it cannot reach: HTTP 403 with Better Auth's error shape. */
+/** Refuses a sign-in service call as for an unreachable account: HTTP 403, Better Auth's error shape. */
 export function refuseAuth(message = 'The sign-in service refused the request'): RequestHandler {
   return http.post(apiPath('/api/auth/*'), () =>
     HttpResponse.json({ message }, { status: 403, statusText: 'Forbidden' }),
@@ -150,9 +135,8 @@ export function refuseAuth(message = 'The sign-in service refused the request'):
 }
 
 /**
- * What every story starts with: a signed-out session, and a plain refusal for
- * any other request to the app's endpoints, so a story that needs an answer
- * fails with its name in the console, not as an unexplained 404.
+ * What every story starts with: a signed-out session, and a plain refusal for any other request,
+ * so a story that needs an answer fails with its name in the console, not as a 404.
  */
 export const defaultHandlers: RequestHandler[] = [
   http.get(apiPath('/api/auth/get-session'), () => HttpResponse.json(null)),
@@ -174,13 +158,9 @@ let runningWorker: SetupWorker | undefined;
 const mounted = new Set<readonly RequestHandler[]>();
 
 /**
- * Answers for as long as the calling component is mounted, for a state that a
- * story's `args` or a state control picks, which `beforeEach` cannot follow:
- * it runs once, when the story loads. The handlers come off on unmount, so
- * the next state does not inherit them. Pass a list that keeps its identity
- * (a module constant, or `useMemo`). A story uses this or `beforeEach`'s
- * `msw.use`, not both, because taking handlers off puts the worker back to
- * its defaults and re-adds only these.
+ * Answers while the calling component is mounted, for a state an arg or control picks, which
+ * `beforeEach` cannot follow. Use it or `msw.use`, not both (claude-docs/workshop.md, "Notes the
+ * `.storybook/` files cite"). Pass a list that keeps its identity.
  */
 export function useMockHandlers(handlers: readonly RequestHandler[]): void {
   useLayoutEffect(() => {
@@ -200,11 +180,8 @@ export function useMockHandlers(handlers: readonly RequestHandler[]): void {
 }
 
 /**
- * Starts the worker for `mswLoader` (msw-storybook-addon/csf3). The worker file
- * is looked up beside the page, `./mockServiceWorker.js`, so it is found under
- * /workshop/ on staging as well as at the root of the dev server; the addon's
- * own default is the root alone. Requests nothing handles (the page's own
- * files) go to the network as they would.
+ * Starts the worker for `mswLoader` (msw-storybook-addon/csf3). The worker file is looked up
+ * beside the page (claude-docs/workshop.md, "Notes the `.storybook/` files cite").
  */
 export async function startMockWorker(): Promise<SetupWorker> {
   const { setupWorker } = await import('msw/browser');

@@ -14,13 +14,8 @@ import { summarizeSpellCategories } from '@/modules/grimoire/validation/categori
 import type { SpellStepValue, StepCategory } from './steps/types';
 import { stepNameOf } from './steps/values';
 
-// Category Match (M10.17, story 52), in the Jar's aside: the categories the
-// author assigned set beside the ones the jar's ingredients carry, in three rows. Carried
-// is intended and present, Missing intended and absent from the jar, Extra present but not
-// intended. A row with nothing in it is
-// left out. The words lead each row and carry it alone.
-// It reads what the builder holds now, saved or not, through M10.8's pure comparison.
-// See claude-docs/components/spell-builder.md, "The comparison panel".
+// Category Match: the assigned categories set against the jar's, as Carried, Missing and Extra rows (empty rows left out), read from the builder's current state
+// (claude-docs/components/spell-builder.md, "The comparison panel").
 
 export interface ComparisonPanelProps {
   /** The categories the spell is assigned, named. */
@@ -28,7 +23,7 @@ export interface ComparisonPanelProps {
   steps: readonly SpellStepValue[];
   /** Each category's group colours by id, so a chip is drawn as the site draws one; a category not in it is left out. */
   groups: ReadonlyMap<string, GroupColors>;
-  /** The heading's level: h5 under the builder's Jar heading, h2 on the recipe page (M13.21). */
+  /** The heading's level: h5 under the builder's Jar heading, h2 on the recipe page. */
   heading?: 'h2' | 'h5';
 }
 
@@ -94,7 +89,8 @@ export function ComparisonPanel({
       const group = groups.get(id);
       return group ? [{ category: { id, name }, group }] : [];
     });
-  // The ingredients carrying a category, in the jar's order: what a Carried or Extra chip's tip names.
+  // The ingredients carrying a category, in the jar's order: what a Carried or Extra chip's tip
+  // names.
   const fromTip = ({ id }: { id: string }): string =>
     `From ${ingredientSteps
       .filter((step) => step.categories.some((c) => c.id === id))

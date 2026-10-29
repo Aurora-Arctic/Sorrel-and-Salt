@@ -22,11 +22,9 @@ import {
 } from '../../../support/fixtures';
 import { inputOf, local } from '../../../support/workspace-ingredient-input';
 
-// Story 15's service: a coven's own ingredients, written by its owners and
-// members and read by its members, never by anyone else. The table is emptied
-// per test, so every row a result could come from is one this file wrote. What a
-// deleted row leaves in each read is workspace-ingredient-deleted-reads.test.ts's,
-// and the forms written inside the save are workspace-ingredient-forms.test.ts's.
+// A coven's own ingredients, written by its owners and members and read by its members, never by anyone else.
+// The table is emptied per test, so every row a result could come from is one this file wrote.
+// Deleted rows are workspace-ingredient-deleted-reads.test.ts's, and the forms written inside the save are workspace-ingredient-forms.test.ts's.
 
 // The identity holder lookup, wrapped so one test can have the holder gone by
 // the time it is read without changing what it answers for the rest.
@@ -99,7 +97,7 @@ describe('createWorkspaceIngredient', () => {
     expect(created.slug).toBe(ingredientSlug('Testwort', null));
   });
 
-  // DESIGN.md §5 (MB.134): as many of each as the practice gives it, in the
+  // DESIGN.md §5: as many of each as the practice gives it, in the
   // member's order, and never into `element`, the single its list replaced.
   it('saves several elements, celestial bodies, signs and colours, each in the order entered', async () => {
     const created = await createWorkspaceIngredient(asUser(B), WORKSPACE_W_ID, {
@@ -220,7 +218,7 @@ describe('a collision with another of the coven’s ingredients', () => {
     expect(await countIngredients()).toBe(1);
   });
 
-  // MB.220: one formal name is one ingredient, so an oil beside the herb is a
+  // One formal name is one ingredient, so an oil beside the herb is a
   // form of it. Under the herb's own label the label index breaks first, and
   // the refusal is still the formal name's, naming the ingredient holding it.
   it('refuses a formal name already in the coven whatever its form, on `canonicalName`, naming the ingredient', async () => {

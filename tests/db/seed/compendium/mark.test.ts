@@ -4,9 +4,8 @@ import { entryFilePath, parseEntryFile } from '@/db/seed/compendium/parse-entry'
 import { renderEntryFile } from '@/db/seed/compendium/render-entry';
 import { fileOf, TESTWORT } from './files-fixture';
 
-// M14.7: `seed:mark` is the owner's one move to let the seed update a present
-// entry. It writes the file's own hash into `seedUpdate`, and nothing else
-// about the file may move.
+// `seed:mark` is the one move that lets the seed update a present entry. It writes the file's own hash
+// into `seedUpdate`, and nothing else about the file may move.
 
 const PATH = entryFilePath(TESTWORT);
 const STALE = 'a'.repeat(64);

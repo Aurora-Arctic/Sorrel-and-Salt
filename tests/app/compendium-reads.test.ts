@@ -2,15 +2,12 @@ import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { Forbidden, NotFound } from '@/lib/errors';
 import { entryDetail } from '../support/entry-detail';
 
-// The details a Quick Look opens over the public cards (M12.5): an entry by id, read with no
-// session, through the cached public entry read. The services are mocked: that a coven's own
-// id answers `NotFound` with no session is getIngredient's test
-// (tests/modules/ingredients/services/compendium.test.ts); here, that the read asks it with
-// none, and turns its refusal into nothing for the page to open.
+// The details a Quick Look opens over the public cards: an entry by id, read with no session, through the cached public entry read. The services are mocked.
+// That a coven's own id answers `NotFound` with no session is getIngredient's test (tests/modules/ingredients/services/compendium.test.ts); here, the read asks it with none and turns the refusal into nothing for the page to open.
 
 const getIngredient = vi.fn();
 const readCompendiumEntry = vi.fn();
-// The reads narrowed to the viewer’s covens (M12.55): which ids they admit is
+// The reads narrowed to the viewer’s covens: which ids they admit is
 // tests/modules/ingredients/services/compendium-held-in.test.ts’s; here, that each takes the
 // session and the picked ids from the page’s variables, apart from the rest of the filter.
 const listCompendiumHeldIn = vi.fn();
@@ -65,7 +62,7 @@ describe('readCompendiumDetails', () => {
   });
 });
 
-describe('readCompendiumHeldIn and readFacetsHeldIn (M12.55)', () => {
+describe('readCompendiumHeldIn and readFacetsHeldIn', () => {
   const SESSION = { userId: 'user-fixture' } as never;
   const VARIABLES = JSON.stringify({ query: 'wort', covenIds: ['w-1', 'w-2'] });
 

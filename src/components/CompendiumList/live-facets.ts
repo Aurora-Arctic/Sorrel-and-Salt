@@ -18,12 +18,9 @@ import type {
   CompendiumListFilterProps,
 } from './types';
 
-// The counts the open filter panel keeps current (M12.4). Changes in the panel are held, not
-// applied, so the list and the address stay as they were; but what each choice would now list
-// is `compendiumFacets` for the filter as held, a plain public query, so the panel asks for it
-// after each change and shows the answer. The ask waits for the clicking to settle, and
-// TanStack Query keys it by the filter, so an answer for a filter since replaced is never the
-// one shown. claude-docs/components/compendium-list.md, "The panel's counts".
+// The counts the open filter panel keeps current: `compendiumFacets` is asked for the held filter once
+// the clicking settles, and TanStack Query keys it by filter, so a replaced filter's answer is never
+// shown (claude-docs/components/compendium-list.md, "The panel's counts").
 
 const CompendiumFacetCountsDocument = graphql(`
   query CompendiumFacetCounts(
@@ -96,7 +93,7 @@ const CompendiumFacetCountsDocument = graphql(`
   }
 `);
 
-// The coven's twin (M9.6): the same counts over the coven's cupboard, with the Source strip and the
+// The coven's twin: the same counts over the coven's cupboard, with the Source strip and the
 // two stock switches beside them, which `covenFacetCounts` maps.
 const CovenFacetCountsDocument = graphql(`
   query CovenFacetCounts(
@@ -183,7 +180,7 @@ export function useLiveFacets({
   enabled: boolean;
   categories: readonly CompendiumCategoryChoice[];
   vocabulary: CompendiumFacetVocabulary;
-  /** A coven's id: given, the counts are the coven cupboard's (M9.6) and carry its Source and stock counts. */
+  /** A coven's id: given, the counts are the coven cupboard's and carry its Source and stock counts. */
   workspaceId?: string;
 }): { facets: CompendiumFacetCounts | undefined; loading: boolean } {
   const lookups = {
@@ -194,7 +191,8 @@ export function useLiveFacets({
     workspaceId === undefined
       ? COMPENDIUM_PARAMS.variables({ reviewed: '', ...held }, lookups)
       : {
-          // The coven table needs the three choices only a coven has; a panel that left them out holds none.
+          // The coven table needs the three choices only a coven has; a panel that left them out
+          // holds none.
           ...COVEN_PARAMS.variables(
             { source: '', inStock: false, lowStockOnly: false, ...held },
             lookups,
@@ -238,7 +236,8 @@ export function useLiveFacets({
     }
     if (compendium.data) {
       const answer = compendium.data.compendiumFacets;
-      // The review counts come back keyed by the filter's own Boolean; null for anyone who does not curate.
+      // The review counts come back keyed by the filter's own Boolean; null for anyone who does not
+      // curate.
       const reviewed =
         answer.reviewed?.map(({ value, count }) => ({
           value: value ? ('reviewed' as const) : ('needs_review' as const),

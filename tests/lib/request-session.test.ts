@@ -1,10 +1,9 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { RETURN_PATH_HEADER } from '@/lib/sign-in';
 
-// The helper turns Better Auth's session into the service-level `Session` and
-// nothing more. Better Auth itself is mocked: whether a cookie is a real
-// session is its job, and tests/e2e/route-protection.spec.ts proves it end to end
-// against the built server.
+// The helper turns Better Auth's session into the service-level `Session` and nothing more.
+// Better Auth is mocked: whether a cookie is a real session is its job, and
+// tests/e2e/route-protection.spec.ts proves it end to end against the built server.
 
 const getSessionMock = vi.fn();
 const listUserAccountsMock = vi.fn();
@@ -104,9 +103,8 @@ describe('sessionFromHeaders', () => {
   });
 });
 
-// The shell's half of `requireSession()` (MB.256): a layout that throws the
-// email redirect while the browser navigates into it never settles, so this
-// one sends only a signed-out visitor away.
+// The shell's half of `requireSession()`: a layout that throws the email redirect while the
+// browser navigates into it never settles, so this one sends only a signed-out visitor away.
 describe('requireSignedIn', () => {
   it('returns an unverified account’s session on a page that is not the email page', async () => {
     getSessionMock.mockResolvedValue(betterAuthSession('user', false));
@@ -148,9 +146,8 @@ describe('requireSession', () => {
     await expect(requireSession()).rejects.toThrow(/^redirect:\/sign-in$/);
   });
 
-  // An unverified account is provisional and can do nothing else (MB.54), so
-  // every page but the email page sends it there, with its own path to come
-  // back to once the address is proved.
+  // An unverified account is provisional and can do nothing else, so every page but the email
+  // page sends it there, with its own path to come back to once the address is proved.
   describe('an unverified account', () => {
     beforeEach(() => {
       getSessionMock.mockResolvedValue(betterAuthSession('user', false));
@@ -172,9 +169,8 @@ describe('requireSession', () => {
   });
 });
 
-// The `/admin` guard (M5.4): a signed-in non-admin is answered with Next's 403
-// page rather than a redirect or a 404, since everyone knows the path exists
-// (claude-docs/auth/admin-guard.md, "The admin guard").
+// The `/admin` guard: a signed-in non-admin is answered with Next's 403 page rather than a
+// redirect or a 404, since everyone knows the path exists (claude-docs/auth/admin-guard.md, "The admin guard").
 describe('requireAdminSession', () => {
   it('returns the session of an admin, without redirecting or refusing', async () => {
     getSessionMock.mockResolvedValue(betterAuthSession('admin'));
@@ -192,7 +188,7 @@ describe('requireAdminSession', () => {
     await expect(requireAdminSession()).rejects.toThrow('forbidden');
   });
 
-  // M11.20: the people pages keep this guard, so a curator is refused there.
+  // The people pages keep this guard, so a curator is refused there.
   it('answers a curator with the forbidden page, whom the curation guard admits', async () => {
     getSessionMock.mockResolvedValue(betterAuthSession('curator'));
 
@@ -201,9 +197,9 @@ describe('requireAdminSession', () => {
   });
 });
 
-// M11.20: the guard on `/admin` and every curation page under it, the
-// people pages excepted. A curator or an admin passes; anyone else gets the
-// forbidden page, as at requireAdminSession (claude-docs/auth/admin-guard.md).
+// The guard on `/admin` and every curation page under it, the people pages excepted. A curator
+// or an admin passes; anyone else gets the forbidden page, as at requireAdminSession
+// (claude-docs/auth/admin-guard.md).
 describe('requireCuratorSession', () => {
   it.each([
     ['a curator', 'curator'],
@@ -254,9 +250,8 @@ describe('linkedAccounts', () => {
   });
 });
 
-// The account page withholds Remove on a session older than Better Auth's
-// freshness window, which /unlink-account would refuse anyway (MB.116): the
-// same check, made before the button is offered.
+// The account page withholds Remove on a session older than Better Auth's freshness window,
+// which /unlink-account would refuse anyway: the same check, made before the button is offered.
 describe('sessionIsFresh', () => {
   const TWO_DAYS_AGO = new Date(Date.now() - 2 * 24 * 60 * 60 * 1000);
 
@@ -285,9 +280,9 @@ describe('sessionIsFresh', () => {
   });
 });
 
-// The `/coven/[slug]` guard (M6.10): a slug that names no coven the user is in
-// is a 404, not a 403 — a slug is a guess at someone's private data, so the
-// answer must not confirm it exists (claude-docs/auth/coven-guard.md).
+// The `/coven/[slug]` guard: a slug that names no coven the user is in is a 404, not a 403. A slug
+// is a guess at someone's private data, so the answer must not confirm it exists
+// (claude-docs/auth/coven-guard.md).
 describe('requireCovenMembership', () => {
   beforeEach(() => {
     membershipBySlugMock.mockReset();

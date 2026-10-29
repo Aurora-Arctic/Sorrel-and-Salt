@@ -139,7 +139,7 @@ interface StatesArgs {
   shape: 'Table' | 'Cards';
   /** Type in the box to see the dropdown; "Many" ends in See All Results. */
   matches: keyof typeof ROWS;
-  /** None: empty box; Testwort: a search shown, so Clear is drawn; W: under the search floor, so the box says to keep typing. */
+  /** None: empty box. Testwort: a search shown, so Clear is drawn. W: under the search floor. */
   query: 'None' | 'Testwort' | 'W';
   filterFields: boolean;
   pickHeading: boolean;

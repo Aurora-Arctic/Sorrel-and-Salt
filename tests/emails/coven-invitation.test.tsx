@@ -14,7 +14,7 @@ const INPUT = {
 } as const;
 
 describe('covenInvitationMessage', () => {
-  // Story 4's acceptance test reads the token from the text part with this pattern.
+  // The invitation's acceptance test reads the token from the text part with this pattern.
   it('puts a token the acceptance pattern reads in the text part, once, and addresses the mail', async () => {
     const message = await covenInvitationMessage(INPUT);
 

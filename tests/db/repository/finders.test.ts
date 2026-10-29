@@ -35,7 +35,7 @@ import {
 
 useProbeTables();
 
-describe('soft-delete filtering (M1.20)', () => {
+describe('soft-delete filtering', () => {
   it('findMany excludes a soft-deleted row', async () => {
     const [kept] = await withAudit(session, (write) => write.insert(herbs, { name: 'Comfrey' }));
     const [gone] = await withAudit(session, (write) => write.insert(herbs, { name: 'Foxglove' }));
@@ -117,7 +117,7 @@ describe('soft-delete filtering (M1.20)', () => {
 // CLAUDE.md rule 5's second layer. The proofs below are real ones, minted by
 // `assertMembership` against the seeded cast: there is no other way to get one,
 // which is the property under test.
-describe('the Membership proof (M6.3)', () => {
+describe('the Membership proof', () => {
   let inW: Membership;
   let inX: Membership;
 
@@ -234,14 +234,9 @@ describe('the Membership proof (M6.3)', () => {
     });
   });
 
-  // The writers' half of the mechanism, once per family: the writes by
-  // condition, which AND the proof's workspace onto the caller's `where`
-  // (updateInWorkspace here, softDeleteInWorkspace the same `and`), and the
-  // writes by id, which share `inWorkspaceById` (softDeleteByIdInWorkspace
-  // here, updateByIdInWorkspace the same predicate). The readers' half is
-  // findOneByIdInWorkspace's above: findOneInWorkspace is the same
-  // findManyInWorkspace. Who may hold a proof of which workspace is each
-  // service's to prove, by direct id, in tests/modules/*/services/.
+  // The writers' half of the mechanism, once per family: the writes by condition AND the proof's workspace onto the caller's `where` (updateInWorkspace here, softDeleteInWorkspace the same `and`),
+  // and the writes by id share `inWorkspaceById` (softDeleteByIdInWorkspace here, updateByIdInWorkspace the same predicate). The readers' half is findOneByIdInWorkspace's above.
+  // Who may hold a proof of which workspace is each service's, by direct id, in tests/modules/*/services/.
   describe('a direct id belonging to another workspace', () => {
     it('is not updatable, and the row is left as it was', async () => {
       const [row] = await insertJar(inX, 'Nettle');
@@ -320,10 +315,9 @@ describe('the Membership proof (M6.3)', () => {
     expect(deleteAnUnscopedTableById).toBeInstanceOf(Function);
   });
 
-  // The same shape for M10.3's two extra scopes. A private spell excluded by a
-  // predicate the caller could simply not have written is absent; a private
-  // spell the generic finders will not compile against is impossible, and only
-  // the second survives the next service that forgets.
+  // The same shape for the two extra spell scopes. A private spell excluded by a predicate the caller
+  // could simply not have written is absent; a private spell the generic finders will not compile against
+  // is impossible, and only the second survives the next service that forgets.
   it('refuses the generic finders a spell and its contents at compile time', () => {
     const readSpellsWithoutTheVisibilityRule = (membership: Membership) =>
       // @ts-expect-error — `spells` carries `visibility`, so the generic scoped
@@ -396,7 +390,7 @@ describe('the Membership proof (M6.3)', () => {
 
     const readVariantsUnscoped = () =>
       // @ts-expect-error — `ingredient_variants` is an ingredient's child too
-      // (MB.216): a form of a coven's entry is that coven's, so it is read
+      // : a form of a coven's entry is that coven's, so it is read
       // under its parent's tier or not at all.
       findMany(ingredientVariants);
 

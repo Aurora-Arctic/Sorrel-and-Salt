@@ -7,14 +7,9 @@ import { slotUrl } from './slots';
 import type { Page } from '@playwright/test';
 import { slugify } from '@/lib/slugify';
 
-// The coven page and its section nav against the built server (M9.15): a
-// viewer opens the page with Leave and without Delete, the keyboard reaches
-// the nav, and the only owner's exit keeps its refusal inside the dialog.
-// Story 9 opens the page as an owner and a member (stories/01-members.spec.ts),
-// and a stranger's 404 (claude-docs/auth/coven-guard.md, "The coven guard") is
-// coven-ingredients.spec.ts's and stories 9 and 17's. Each worker builds the
-// coven in its own database before its first test, so the tests are
-// independent and spread across workers.
+// The coven page and its section nav against the built server: a viewer opens the page with Leave and without
+// Delete, the keyboard reaches the nav, and the only owner's exit keeps its refusal inside the dialog. A
+// stranger's 404 (claude-docs/auth/coven-guard.md, "The coven guard") is coven-ingredients.spec.ts's.
 
 const COVEN_NAME = 'Fixture Coven';
 const COVEN_SLUG = slugify(COVEN_NAME);
@@ -109,10 +104,8 @@ test('real Tab presses reach the Overview link, and the page passes the scans', 
   await assertNoSidewaysScroll(page);
 });
 
-// A refusal said inside the only owner's exit dialog, at a phone's width,
-// where the notice once pushed Cancel past the dialog's edge (M12.31). The
-// page offers this owner the exit dialog because the fixture's owner is its
-// only one.
+// A refusal said inside the only owner's exit dialog, at a phone's width, where the notice once pushed
+// Cancel past the dialog's edge. The fixture's owner is its only one, so the page offers the exit dialog.
 test("a refused deletion in the only owner's exit keeps Cancel inside the dialog at 375px", async ({
   page,
 }) => {

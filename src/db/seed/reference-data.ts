@@ -13,13 +13,8 @@ import { beginSeedTransaction } from './idempotent';
 import { seedVocabularySources } from './sources';
 import type { SeedDatabase } from './types';
 
-// M14.26: the six reference seeds — categories, forms, astrology, deities,
-// sources, compendium, in migrate.yml's order — in one transaction, for the
-// hand-started seed workflow (seed-environment.yml). One transaction rather
-// than six because a dry run rolls back: run apart, each seed's dry run would
-// read the database without what the seeds before it would have written, so
-// a source naming a tradition added in the same release would stop the run.
-// migrate.yml still runs the six apart, each committing on its own.
+// The six reference seeds in migrate.yml's order in one transaction, for the hand-started seed workflow: a dry run rolls back, so run apart each would read the
+// database without what the earlier seeds would write. migrate.yml still runs the six apart, each committing alone.
 
 export interface SeedReferenceDataOptions extends Pick<
   SeedCompendiumOptions,

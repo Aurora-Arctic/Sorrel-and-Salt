@@ -1,22 +1,9 @@
 import AxeBuilder from '@axe-core/playwright';
 import { chromium, expect, test, type Browser } from '@playwright/test';
 
-// The every-story check (M12.53): opens each story of a running Storybook and
-// fails on a page error, a console error, a failed request or an accessibility
-// violation. A MANUAL check. It is named `.check.ts`, not `.spec.ts`, so no
-// config's default match finds it (`npm run e2e`, `e2e:workshop`, `test:stories`
-// and Vitest all skip it), and only playwright.workshop-check.config.ts, run
-// by `npm run workshop:check`, names it. No workflow runs that script.
-// claude-docs/workshop.md, "The every-story check".
-//
-// It runs the page at `localhost`, which a browser treats as a secure origin:
-// the fake API (.storybook/mock-api.ts) is a service worker, and a service
-// worker registers only there. The browser server runs in another container,
-// so `exposeNetwork` lets it reach this container's loopback. A story tagged
-// `expects-failed-request` shows a refusal on purpose and is exempt from the
-// request and console-error checks, never from the page-error or axe ones. A story
-// tagged `shows-low-contrast` shows a failing colour pair on purpose and is exempt from the
-// `color-contrast` axe rule only.
+// Opens each story of a running Storybook and fails on a page error, a console error, a failed request or an
+// axe violation. Manual: only `npm run workshop:check` runs it (claude-docs/workshop.md, "The every-story check").
+// It runs at `localhost` because the fake API is a service worker; tags `expects-failed-request` and `shows-low-contrast` exempt checks.
 
 const BASE = process.env.WORKSHOP_CHECK_URL ?? 'http://localhost:61104';
 const THEMES = (process.env.WORKSHOP_CHECK_THEMES ?? 'light,dark').split(',');

@@ -9,15 +9,14 @@ import DeleteSpellAction from '../SpellRecipe/delete-spell';
 import type { SpellCardProps } from './types';
 import './index.scss';
 
-// One spell in the grimoire's list (M10.11): its title, its intent, a Draft badge on
-// a draft, a Private badge on a private spell (M10.13), the categories its author assigned it, and who last edited it. Presentational, in IngredientCard's
-// pattern: the Foundations specimen for the layout and the card's surface, with no
-// drawer. The title links to the spell's recipe page (MB.6) where the caller gives `href`. claude-docs/components/spell-card.md.
+// One spell in the grimoire's list: title, intent, Draft and Private badges, assigned categories,
+// last editor. Presentational, in IngredientCard's pattern, with no drawer; the title links where
+// `href` is given (claude-docs/components/spell-card.md).
 
 /** What a spell with no title is called, here and wherever it is listed. */
 export const UNTITLED_SPELL = 'Untitled Spell';
 
-/** The modal place the Quick Look shows in, apart from the spell builder's (M13.21). */
+/** The modal place the Quick Look shows in, apart from the spell builder's. */
 export const SPELL_LOOK_PLACE = 'look';
 
 /** The id of a spell's title heading, which the list item names itself by. */
@@ -62,7 +61,7 @@ const SpellCard = ({
                 against the article, and unpositioned words would paint under the smouldering
                 face (index.scss). */}
             {href ? (
-              // The recipe page draws its own frame while it loads, so the link names it (MB.6).
+              // The recipe page draws its own frame while it loads, so the link names it.
               // The link stretches over the whole card, as an ingredient card's name does.
               <PendingLink href={href} navigationTarget={ingredientLinkTarget(href)}>
                 <span className="spell-card__title-text">
@@ -74,9 +73,9 @@ const SpellCard = ({
             )}
           </Heading>
           {/* Only a draft is marked: complete is the default, so a Complete badge would
-              say nothing (the owner, 2026-10-27). Likewise only a private spell: the
+              say nothing. Likewise only a private spell: the
               coven is the default, and a private one lists to its author alone, so
-              the badge tells them no one else sees it (M10.13). Under the title, as the
+              the badge tells them no one else sees it. Under the title, as the
               marks sit under an ingredient card's name. */}
           {(status === 'draft' || visibility === 'private') && (
             <div className="specimen__badges">
@@ -91,7 +90,7 @@ const SpellCard = ({
       {/* In the foot, as IngredientCard's, so cards in one grid row end on the same line. */}
       {(lastEdit != null || lookHref || editHref || deleteSpell) && (
         // The foot, as IngredientCard's: who last edited, then the actions on one row, the
-        // Quick Look eye at the bottom left (the start group) and the Edit pencil and the Delete Spell bin (M13.11) at the right.
+        // Quick Look eye at the bottom left (the start group) and the Edit pencil and Delete Spell bin at the right.
         <div className="specimen__foot">
           {lastEdit != null && <LastEdit by={lastEdit.by} at={lastEdit.at} />}
           {(lookHref || editHref || deleteSpell) && (
@@ -132,11 +131,9 @@ const SpellCard = ({
 };
 
 /**
- * The filter that tears the smouldering edge ragged, referenced by id from index.scss.
- * Rendered once per page beside the list of cards (GrimoireList), not per card: an id
- * must be unique, and one filter serves every card. Without it the burn front is a smooth
- * curve. Coarse noise displacing the hole and its ember and char bands; still, since a
- * burn line does not wriggle.
+ * The filter that tears the smouldering edge ragged, referenced by id from index.scss and rendered once per page (an id must be unique).
+ * Coarse and still noise displaces the hole and its ember and char bands; without it the burn front is a smooth curve.
+ * (claude-docs/components/spell-card.md, "The burn filter").
  */
 export const SpellCardFilters = (): ReactElement => (
   <svg className="spell-card-filters" aria-hidden="true" focusable="false" width="0" height="0">

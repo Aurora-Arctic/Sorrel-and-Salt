@@ -3,7 +3,7 @@ import { afterEach, describe, expect, it, vi } from 'vitest';
 import ImpersonationBanner from '@/components/ImpersonationBanner';
 import { stubLocationAssign } from '../../support/location';
 
-// MB.53's way out: every page, `/admin` included, says whose session this is
+// The way out of an impersonation: every page, `/admin` included, says whose session this is
 // and carries Stop (claude-docs/components/impersonation-banner.md).
 
 // Mocked wholesale: a real call would reach /api/auth, and its success

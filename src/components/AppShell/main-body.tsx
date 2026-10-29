@@ -11,20 +11,9 @@ import {
   useLeavingSkeleton,
 } from '../SkeletonFade';
 
-// The shell's body while a site-level navigation is on its way (M12.33): the
-// page that was there is hidden and one skeleton stands over it, in a `main`
-// of its own so the page keeps its landmark during the wait (the pages draw
-// their own `main`, which is hidden with the page). Only a `main` target is answered here; a
-// `coven` or `admin` target is `SectionBody`'s, and no target at all (a refresh) leaves the
-// page standing. The page's own heading goes with it, so the wait carries a
-// hidden one: a page without a level-one heading fails the accessibility scan.
-// A client part, since the state is the browser's.
-// claude-docs/components/app-shell.md
-// The frame the destination sits in, so the wait is the page's width and
-// place rather than the standard centred `.page-frame` (66ch, drawn down the
-// window): the wide column for the wide pages and the menu pages, the forms'
-// column for the narrow ones. The standard frame stays for a target that names
-// none (the brand link's). A `skeleton-frame` is top-aligned, never centred.
+// The shell's body during a site-level navigation: the old page is hidden and one skeleton stands over
+// it in its own `main`, with a hidden heading for the accessibility scan. Only a `main` target is
+// answered here (`coven` and `admin` are `SectionBody`'s); a client part, as the state is the browser's.
 const FRAME_CLASS = {
   wide: 'page-column',
   'with-nav': 'page-column',
@@ -61,9 +50,9 @@ const MainBody = ({ children }: { children: ReactNode }): ReactElement => {
   // What stays over the arrived page while it fades: the frame without the
   // hidden heading, since the page has its own.
   const leaving = useLeavingSkeleton(frame ? <main className={className}>{frame}</main> : null);
-  // The page is held beneath the skeleton rather than swapped for it, so the
-  // scroll position the browser saves for Back is the page's (MB.271;
-  // claude-docs/components/skeleton-fade.md).
+  // The page is held beneath the skeleton rather than swapped for it, so the scroll
+  // position the browser saves for Back is the page's
+  // (claude-docs/components/skeleton-fade.md).
   return (
     <div className={skeletonFadeHost(leaving !== null)}>
       <div {...heldPage(frame !== null)}>{children}</div>

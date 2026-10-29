@@ -3,9 +3,9 @@ import { auditColumns, users } from './users';
 import { idColumn } from '../../../db/schema-parts';
 
 // pgEnums because each set is closed. The privilege names the `users` column
-// a change was to, `role` as `admin` or `curator` (M11.20) and
+// a change was to, `role` as `admin` or `curator` and
 // `can_create_workspace` as `create_workspace`, so a future flag is a value
-// here and a line in MB.195's trigger rather than a table.
+// here and a line in the trigger rather than a table.
 export const userPrivilege = pgEnum('user_privilege', ['admin', 'create_workspace', 'curator']);
 
 export const userPrivilegeChange = pgEnum('user_privilege_change', ['grant', 'revoke']);
@@ -20,13 +20,8 @@ export const userPrivilegeRoute = pgEnum('user_privilege_route', [
   'manual',
 ]);
 
-// The one privilege ledger: one row per change to a privilege column on
-// `users`, since the next update to a user's row overwrites its `updated_by`.
-// `created_by` is the actor and `created_at` when. Append-only by the
-// database, not by the writer's types: the migration's `forbid_rewrite`
-// trigger refuses every update and delete from any client. It replaces the
-// two one-privilege ledgers MB.58 and MB.193 built, and is a privilege's
-// account, not §13's edit history
+// The one privilege ledger: one row per change to a privilege column on `users`, since the next update overwrites its `updated_by`.
+// Append-only by the database, not by the writer's types: the `forbid_rewrite` trigger refuses every update and delete
 // (claude-docs/design-decisions/mb.194-privilege-ledger-by-trigger.md).
 export const userPrivilegeChanges = pgTable('user_privilege_changes', {
   id: idColumn(),

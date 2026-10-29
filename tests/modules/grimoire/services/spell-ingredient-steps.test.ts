@@ -11,10 +11,8 @@ import { insertStock } from '../../../support/db/insert-stock';
 import { variantIdOf } from '../../../support/db/read-variants';
 import { makeIngredient, makeVariant } from '../../../support/fixtures';
 
-// The spell builder's Add to Jar (M10.15): a step names an ingredient and the
-// form laid, as the ingredient and variant ids, and never the coven's
-// cupboard entry or jar of it. Every assertion reads the rows a save left
-// behind, raw.
+// The spell builder's Add to Jar: a step names an ingredient and the form laid, as the ingredient and variant ids, and never the coven's cupboard entry or jar of it.
+// Every assertion reads the rows a save left behind, raw.
 
 let sql: postgres.Sql;
 useTestDatabase((client) => {
@@ -146,7 +144,7 @@ describe('an ingredient step', () => {
     expect((await liveStepsOf(spell.id)).map((row) => row.id)).toEqual([saved.id]);
   });
 
-  it('refuses a form the coven holds of a retired entry as a new layer, and keeps one already laid (M14.30)', async () => {
+  it('refuses a form the coven holds of a retired entry as a new layer, and keeps one already laid', async () => {
     // A live form beneath a soft-deleted compendium entry, as migration 0090
     // leaves a form a coven holds, and the coven's cupboard row naming it.
     const rosewort = await formOf('Fixture Rosewort');

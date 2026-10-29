@@ -5,7 +5,7 @@
 // stamped when its author runs `generate`: so an entry merged older than one
 // already applied is skipped on staging and production without a word, while a
 // test database, which starts empty, runs it. The incident and the regenerate
-// step are claude-docs/db/migrations-and-scripts.md, "Migration order" (MB.173).
+// step are claude-docs/db/migrations-and-scripts.md, "Migration order".
 //
 // The branch's journal is the working tree's, so a just-generated migration
 // counts; the base's is the base ref's committed one. The base resolves as

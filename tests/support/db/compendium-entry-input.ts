@@ -13,13 +13,9 @@ import {
 type CompendiumEntryInput = Parameters<typeof createCompendiumEntry>[1];
 
 /**
- * The compendium entry fixture for the files that write compendium entries,
- * split by concern from one file.
- *
- * Reads the live curated forms by folded name once per file: a compendium
- * entry's every form is a pick (MB.167), so `entry` picks the row each form's
- * text names unless the test states its `formId`, as the admin's autofill
- * would.
+ * The compendium entry fixture for the files that write compendium entries. Reads the live curated
+ * forms by folded name once per file: every form is a pick, so `entry` picks the row each form's
+ * text names unless the test states its `formId`, as the admin's autofill would.
  */
 export function useCompendiumEntryInput(sql: () => postgres.Sql) {
   let formIds: Map<string, string>;
@@ -32,11 +28,9 @@ export function useCompendiumEntryInput(sql: () => postgres.Sql) {
   });
 
   /**
-   * The fixture as an admin's input: everything but the tier and the category
-   * names, its substitutes and deities typed, and each form picked by its text
-   * unless the variant states its `formId` (`null` for a typed one). One
-   * curated form, Herb, unless the test states `variants`: the fixture's own
-   * default is invented, so no curated row holds it.
+   * The fixture as an admin's input: everything but the tier and category names, its substitutes and deities
+   * typed, each form picked by its text unless the variant states `formId`. One curated form, Herb, unless
+   * the test states `variants`.
    */
   return function entry(overrides: Overrides<IngredientFixture> = {}): CompendiumEntryInput {
     const fixture = makeIngredient({ variants: [makeVariant({ form: 'Herb' })], ...overrides });

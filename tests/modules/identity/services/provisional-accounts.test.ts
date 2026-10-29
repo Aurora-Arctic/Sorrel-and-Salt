@@ -16,7 +16,7 @@ import { asTouch } from '../../../support/db/touch-row';
 import type { AuthInstance, Profile } from '../../../support/types';
 import type { ProvisionalUserRow } from './types';
 
-// Story 58, through Better Auth's real endpoints: an unverified account lapses
+// Through Better Auth's real endpoints: an unverified account lapses
 // one verification lifetime after its last mail, and the next OAuth callback
 // sweeps it (claude-docs/auth/admin-bootstrap.md, "Provisional accounts").
 
@@ -94,13 +94,7 @@ async function linkedRows(userId: string) {
   return { users, accounts, sessions } as { users: number; accounts: number; sessions: number };
 }
 
-/**
- * Moves the row's sign-up and last touch back together, as if it happened
- * `by` ago. The `set_updated_at` trigger overwrites any `updated_at` an
- * UPDATE supplies, so it is switched off for this one statement; the worker's
- * database is its own clone, and the transaction holds the lock only for as
- * long as the statement.
- */
+/** Moves the row's sign-up and last touch back together by `by`. The `set_updated_at` trigger overwrites any `updated_at` an UPDATE supplies, so it is switched off for this one statement. */
 async function backdate(userId: string, by: string): Promise<void> {
   await sql.begin(async (tx) => {
     await tx`alter table users disable trigger set_updated_at`;
@@ -233,8 +227,8 @@ describe('Story 58: what the sweep removes', () => {
   });
 });
 
-// MB.204: an admin may approve an unverified account (M5.8) or make it an
-// admin (MB.59), and the ledger row that writes references the account with a
+// An admin may approve an unverified account or make it an
+// admin, and the ledger row that writes references the account with a
 // plain foreign key, so the sweep keeps it rather than fail on it.
 describe('Story 58: an account an admin has vouched for is not swept', () => {
   const VOUCHED = `vouched${DOMAIN}`;

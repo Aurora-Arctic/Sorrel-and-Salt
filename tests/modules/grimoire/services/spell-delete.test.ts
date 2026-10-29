@@ -10,9 +10,9 @@ import { insertSpell } from '../../../support/db/insert-spell';
 import { makeSpell } from '../../../support/fixtures';
 import type { SpellVisibility } from '@/modules/grimoire';
 
-// Deleting a spell (M13.11): a soft delete of the spell and its steps in one
+// Deleting a spell: a soft delete of the spell and its steps in one
 // transaction, by a role holding `spell: delete`, of a spell the caller can
-// read. Story 56's rule governs widening, not existence, so a shared spell
+// read. The visibility lock governs widening, not existence, so a shared spell
 // goes too. Who may read which spell is spell-reads.test.ts's; here is who
 // may delete what, and that the two tables fall together or not at all.
 
@@ -90,7 +90,7 @@ describe('deleteSpell', () => {
 
   it('deletes a shared spell another member wrote, and a complete one: the rule is about widening, not existence', async () => {
     // Why this could have been refused: the spell is complete and shared, which locks its
-    // visibility from narrowing (M10.10).
+    // visibility from narrowing.
     const id = await seed(A, 'workspace', { status: 'complete', title: 'Shared Working' });
     await expect(
       updateSpell(asUser(B), WORKSPACE_W_ID, id, { visibility: 'private', expectedRevision: null }),

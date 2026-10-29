@@ -4,7 +4,7 @@ import { IngredientFormGroupInput } from '@/modules/vocabulary/validation/ingred
 
 // What the schema adds over curatedValueInput, whose name, description and
 // dropped slug are tests/lib/validation.test.ts's: the icon standing for the
-// group (M12.6), one of the six or none, which is the generic.
+// group, one of the six or none, which is the generic.
 
 const VALID = { name: 'Fixture Matter', description: 'Invented.' };
 

@@ -58,3 +58,19 @@ A `MenuButtonItem` has a `key`, a title-case `label` and an optional `destructiv
 ## Where it is tested
 
 `tests/components/MenuButton/index.test.tsx`: the keys, the closing, a link choice and the busy state, and the edge the menu hangs from (the end edge, even in the start half of the window). The entry page's choices are in `tests/components/IngredientEntry/cupboard-actions.test.tsx`, and the browser walks in `tests/e2e/cupboard-screens.spec.ts` and `tests/e2e/make-it-ours.spec.ts`; the Annotate dialog's More, staying inside the dialog, its items in its type, and full width at 375px, and a card's More near the window's foot opening above it inside the window at a desktop's width and at 375px, in `tests/e2e/coven-ingredients.spec.ts`. Story: `src/components/MenuButton/index.stories.tsx`.
+
+## The menu-button pattern
+
+`MenuButton` is a labelled button with a chevron that opens a menu of choices, none of them the button's own. It follows the APG menu-button pattern, as the bar's Add Ingredient chevron does (`claude-docs/components/app-shell.md`). Opening moves the focus to the first item. The arrows, Home and End rove. Escape closes and hands the focus back. Tab and a press outside close it.
+
+An item is a link or an action, and choosing either closes the menu first. An action may be disabled, which is shown and reached but not choosable, with a note saying why. The menu fades in and out over the short motion: a closing menu stays drawn, inert and hidden from assistive technology until its fade ends.
+
+It is placed as a Combobox's list is, on Floating UI. It hangs from the button's end edge, below it or above it when there is more room there, shifted to stay on the screen clear of the phone's bottom bar. It is `fixed`, so a scrolling dialog cannot clip it, and follows a scroll or a resize while open.
+
+## Menu sections
+
+A menu that holds both the compendium's choices and the coven's draws two sections, the viewer's own side first. The compendium's side comes first on the public compendium and the admin pages, and the coven's on a coven's. The caller says where the viewer is (`viewing`), since the menu reads no address. A side with nothing to offer is left out, so a menu of one kind has one section. The code is generic over the item so both menus, with items of their own, share it.
+
+A More menu always draws the labelled sections (`choicesFor`), viewer's side first, even where only one side has items. A card's dots, whose choices are all the coven's, still show a lone "Coven" section under its discreet label. The bar's Add Ingredient menu keeps a plain list for one kind of place and draws it flat.
+
+A menu never holds a single choice. A caller whose one choice is a Remove or Delete draws the bin instead and does not come here.

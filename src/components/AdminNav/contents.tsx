@@ -4,10 +4,9 @@ import type { ReactElement } from 'react';
 import { adminSections } from './sections';
 import type { AdminNavProps } from './types';
 
-// The `/admin` index's table of contents (MB.115): the nav's sections, each a
-// titled list of its pages with the one line saying what each is for. Here
-// rather than in the page so it reads the nav's own list, and the two cannot
-// drift (claude-docs/components/admin-nav.md, "The index").
+// The `/admin` index's table of contents: the nav's sections, each a titled list of its pages with a line
+// saying what each is for. Here rather than in the page so it reads the nav's own list
+// (claude-docs/components/admin-nav.md, "The index").
 
 // An id from the page's first tab, `/admin/categories` giving
 // `admin-contents-categories`, so the link can be described by its line.

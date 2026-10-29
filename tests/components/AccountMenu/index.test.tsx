@@ -12,7 +12,7 @@ vi.mock('@/lib/auth-client', () => ({ signOut: vi.fn() }));
 const { default: AccountMenu } = await import('@/components/AccountMenu');
 const { initialsOf } = await import('@/components/AccountMenu/initials');
 
-// The account button and its disclosure panel (MB.7). A disclosure, so the
+// The account button and its disclosure panel. A disclosure, so the
 // button states whether the panel is open and which element it controls.
 
 const button = () => screen.getByRole('button', { name: 'Fixture Owner' });
@@ -121,7 +121,7 @@ describe('AccountMenu', () => {
   });
 });
 
-// Coven invitations waiting for the viewer's address (M10.32): the count is a
+// Coven invitations waiting for the viewer's address: the count is a
 // link of its own to the account page's Invitations section, beside Your
 // Account, which still opens the page itself; the button says how many.
 describe('AccountMenu with pending invitations', () => {

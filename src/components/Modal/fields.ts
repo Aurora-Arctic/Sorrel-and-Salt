@@ -1,6 +1,6 @@
 // Where the focus goes in a modal's body when nothing else says: its first
 // field. The modal's open puts it there, and a question over the form gives
-// it back there when what had it has gone (claude-docs/components/modal.md).
+// it back there when what had it has gone (claude-docs/components/modal.md, "Focus and the fade").
 
 /** A field a person can type into or choose in: not a hidden input, not disabled. */
 export const FIRST_FIELD =

@@ -16,27 +16,16 @@ import {
   withSql,
 } from './stories/coven-ingredients';
 
-// Every wait looks the same (M12.33; claude-docs/design-decisions/m12.33-plan.md),
-// against the built server with the server's answer held back, so the wait
-// lasts until the test lets it end. Three navigations, each a different part
-// of the page: a coven switch (the coven's body), a section link (the same),
-// and a site link (the shell's whole body). During each, the pressed control
-// is busy, the old page is gone, one status stands in its place, and axe
-// passes; once it ends the new page is there, and after a switch the focus
-// is back on the switcher, whose layout remounted under it. A run under
-// reduced motion proves every moving loading mark is the one shared pulse.
-//
-// What this does not repeat: a direct request to a coven by a non-member is
-// still a 404, which a Suspense boundary above the guard would turn into a
-// 200. tests/e2e/coven-ingredients.spec.ts ("a non-member is told the page
-// does not exist") and tests/e2e/coven.spec.ts prove it on every run.
+// Every loading wait looks the same (claude-docs/design-decisions/m12.33-plan.md), held open through a coven
+// switch, a section link and a site link: the pressed control is busy, the old page is gone, one status stands
+// in its place, axe passes and the focus ends where it should. A non-member's 404 is coven.spec.ts's.
 
-/** The keyframes every loading mark pulses with under reduced motion (the owner's call). */
+/** The keyframes every loading mark pulses with under reduced motion. */
 const PULSE = 'loading-pulse';
 
 const HOLLOW = 'Fixture Coven Hollow';
 const WILLOW = 'Fixture Coven Willow';
-// Invented, so no seed can ever hold them (M1.25).
+// Invented, so no seed can ever hold them.
 const HOLLOW_ENTRY = 'Hollowwort';
 const WILLOW_ENTRY = 'Willowwort';
 
@@ -80,11 +69,8 @@ test.beforeAll(async ({ browser, slot }) => {
 });
 
 /**
- * Holds back every React Server Components answer from the moment `hold()`
- * is called, so a client navigation stays on its way until `release()`. A
- * prefetch is held too, so none can answer the navigation early; `navigations`
- * counts only the requests a navigation made, which is how a test knows its
- * press has actually set one off.
+ * Holds back every React Server Components answer from `hold()` until `release()`, prefetches included;
+ * `navigations` counts only the requests a navigation made.
  */
 async function holdServerAnswers(page: Page) {
   const held: Route[] = [];
@@ -127,10 +113,7 @@ async function openIngredients(page: Page, coven: Coven, entry: string): Promise
   await expect(rowOf(ingredientList(page), entry)).toHaveCount(1);
 }
 
-/**
- * Nothing loading moves on a page at rest, so whatever moves during a wait is
- * the wait's; this also lets the last page's fade-in finish first.
- */
+/** Nothing loading moves on a page at rest, so whatever moves during a wait is the wait's. */
 async function expectStill(page: Page): Promise<void> {
   await expect.poll(async () => (await runningAnimations(page)).length).toBe(0);
 }
@@ -142,9 +125,8 @@ async function pickCoven(page: Page, name: string): Promise<void> {
 }
 
 /**
- * The page's running loading animations: each CSS animation on the
- * document's own timeline (a scroll-driven one, the sorrel's, is not a wait),
- * by its keyframes' name and whether it sits in the main landmark.
+ * The page's running loading animations: each CSS animation on the document's own timeline, by its
+ * keyframes' name and whether it sits in the main landmark.
  */
 function runningAnimations(page: Page) {
   return page.evaluate(() =>
@@ -240,7 +222,7 @@ test("a site link takes the shell's page away at once and puts one status in its
   await expect(compendiumList(page)).toBeVisible();
 });
 
-// A bug that reached the owner's review of M10.11: a tabbed page held hidden under the
+// A bug that reached review: a tabbed page held hidden under the
 // shell's wait still showed its tab row's open pill through the skeleton, since the pill
 // set its own visibility rather than inheriting the held page's. Members is a tabbed page.
 test('a site link from a tabbed page shows nothing of the held page through the wait', async ({
@@ -279,10 +261,8 @@ test('a site link from a tabbed page shows nothing of the held page through the 
   await expect(compendiumList(page)).toBeVisible();
 });
 
-// The three below start from a control that the wait itself takes away: the
-// region they aim at holds the link that was pressed, so the swap unmounts it.
-// The wait must still last until the server answers (the navigation provider
-// owns it, not the link).
+// These three start from a control the wait takes away: the pressed link sits in the region the swap
+// unmounts, so the wait must still last until the server answers (the navigation provider owns it).
 
 test("an admin nav link keeps the admin page's wait until the server answers, though the nav is swapped out", async ({
   page,
@@ -418,11 +398,8 @@ test('under reduced motion, every loading mark of a wait pulses with the one sha
   await expect(page).toHaveURL(`/coven/${hollow.slug}/ingredients`);
 });
 
-// Signed out, the public frame's body answers a move between public pages
-// as the shell's does (M12.47): the page gives way to the destination's
-// skeleton under the frame's bar and nav, in the page's one main landmark.
-// What these do not repeat: a retired slug still answers 308 on a direct
-// request, which tests/e2e/compendium-entry.spec.ts proves on every run.
+// Signed out, the public frame's body gives way to the destination's skeleton under the frame's bar and nav,
+// in the page's one main landmark. A retired slug's 308 is compendium-entry.spec.ts's.
 
 /** A signed-out visitor's page: the frame's way in is in the bar. */
 async function expectSignedOut(page: Page): Promise<void> {

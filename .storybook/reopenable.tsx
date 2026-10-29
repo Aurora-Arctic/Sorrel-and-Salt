@@ -2,14 +2,9 @@ import { useState } from 'react';
 import type { ReactElement, ReactNode } from 'react';
 import { WorkshopNavigation } from './navigation';
 
-// What stands in for a modal's owner in a story. The app's owners close a
-// modal by unmounting it once it has faded out; a story has no owner, and a
-// modal left mounted stays a native modal dialog, invisible but holding the
-// rest of the page inert. So this unmounts it when it asks to close, whether
-// through its own `onClose` (the function handed to `children`) or through the
-// workshop's router, which is how a `RouteModal` closes (".storybook/navigation.ts"),
-// and offers Open Again to mount it afresh, so a review can look again without
-// reloading the story.
+// Stands in for a modal's owner in a story. A modal left mounted stays a native modal dialog,
+// invisible but holding the page inert, so this unmounts it when it asks to close (its `onClose`, or
+// the workshop's router, which is how a `RouteModal` closes) and offers Open Again.
 export function Reopenable({
   children,
 }: {

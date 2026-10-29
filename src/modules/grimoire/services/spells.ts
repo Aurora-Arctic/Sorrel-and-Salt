@@ -22,11 +22,8 @@ import type {
   SpellUpdate,
 } from '../types';
 
-// The grimoire's service (M10.5). Owners and members create and edit, viewers
-// read. A private spell is its author's alone, and that is the finders' work:
-// `findOneSpell` answers `undefined` to anyone else, so every call below that
-// names a spell turns it into `NotFound` and never confirms a hidden one
-// exists. See claude-docs/db/spell-visibility.md.
+// The grimoire's service. Owners and members create and edit, viewers read. A private spell is its author's alone, which the
+// finders enforce: a hidden spell is `NotFound`, never confirmed to exist (claude-docs/db/spell-visibility.md).
 
 /** The spell, or the `NotFound` that is also the answer for one this reader may not see. */
 async function readableSpell(membership: Membership, spellId: string): Promise<SpellRow> {
@@ -35,9 +32,7 @@ async function readableSpell(membership: Membership, spellId: string): Promise<S
   return spell;
 }
 
-/**
- * The spell row's own columns a save names (DESIGN.md §5, `spells`).
- */
+/** The spell row's own columns a save names (DESIGN.md §5, `spells`). */
 function spellColumns(input: {
   title?: string | null;
   intent?: string | null;
@@ -104,12 +99,9 @@ export async function createSpell(
 }
 
 /**
- * Saves a spell: the fields it names, each left out unchanged, and when it
- * names its steps, the whole recipe in order; when it names its categories,
- * the whole set it is assigned. A save written against a
- * revision the spell has moved past is refused, and null overwrites (M13.15).
- * A complete spell's visibility only widens, as `setSpellVisibility` holds it;
- * a draft's moves either way (M10.20).
+ * Saves a spell: the fields it names, each left out unchanged, the whole recipe in order when it names its steps, and the whole
+ * assigned set when it names its categories. A save against a revision the spell has moved past is refused, and null overwrites.
+ * A complete spell's visibility only widens, as `setSpellVisibility` holds it; a draft's moves either way.
  *
  * @throws {Forbidden} the caller may not write this coven's grimoire, or the
  * save narrows a shared complete spell.
@@ -198,12 +190,10 @@ export async function updateSpellStep(
 }
 
 /**
- * Deletes a spell: a soft delete of the spell and its steps in one
- * transaction (M13.11). Owners and members delete, viewers are refused; the
- * spell must be one the caller can read, so another member's private spell
- * is refused as if it did not exist. Story 56's rule governs widening, not
- * existence, so a shared or complete spell goes too. Stock is never touched;
- * a working's rows wait for M13.5, which extends the same writer.
+ * Deletes a spell: a soft delete of the spell and its steps in one transaction. Owners and
+ * members delete, viewers are refused; another member's private spell is refused as if it did not
+ * exist. The visibility lock governs widening, not existence, so a shared or complete spell goes
+ * too. Stock is never touched.
  *
  * @throws {Forbidden} the caller may not delete in this coven's grimoire.
  * @throws {NotFound} no such spell here, or none this caller may read.

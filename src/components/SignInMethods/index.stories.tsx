@@ -11,15 +11,13 @@ import SignInMethods from '.';
 import type { LinkedAccount, ProviderId } from '../../lib/types';
 import type { SignInMethodsProps } from './types';
 
-// Render-only; behaviour is asserted in tests/components/SignInMethods. Adding
-// or removing here reaches for /api/auth, which the workshop does not serve,
-// so a click fails into a callout under the control pressed — a state worth
-// seeing in itself.
+// Render-only; behaviour is asserted in tests/components/SignInMethods. Adding or
+// removing reaches /api/auth, which the workshop does not serve, so a click fails
+// into a callout under the control pressed.
 const meta = {
   title: 'Sign In / Sign-In Methods',
 } satisfies Meta;
 export default meta;
-// The dropdown story's `state` arg is the node it draws (see its argTypes mapping).
 type Story = StoryObj<{ state?: import('react').ReactNode }>;
 
 const ALL_PROVIDERS: readonly ProviderId[] = ['discord', 'google', 'facebook', 'microsoft'];
@@ -79,12 +77,10 @@ const failedNode = (
 // Local dev with one registered pair: the rest cannot be added.
 const someUnavailableNode = <Page linked={[DISCORD]} configured={['discord']} />;
 
-// The whole /account page, which is a server component and has no story of
-// its own: composed as page.tsx composes it, a bare heading, the jump links
-// (PageNav), then the four sections, each on its own panel, Invitations with
-// none waiting. The `page-with-nav` class on the main is what lays the
-// sections out in two columns on a wide screen. Fixture props stand in for the session and the
-// row. Sign Out is not here: since MB.7 it sits only in the account menu.
+// The whole /account page (a server component with no story of its own), composed
+// as page.tsx composes it: heading, jump links (PageNav), then four panels, with
+// Invitations empty. The `page-with-nav` class lays the sections out in two columns
+// on a wide screen. Sign Out is only in the account menu.
 const WholeAccountPage = ({
   methods = { linked: [DISCORD], configured: ALL_PROVIDERS },
 }: {
@@ -156,7 +152,7 @@ const EveryRow = () => (
 const everyRowStateNode = <EveryRow />;
 // Add pressed on Google, as a person would, with the link request left
 // unanswered: the row's button reads "Adding" and waits, as it does while the
-// browser is on its way to the provider (M12.33).
+// browser is on its way to the provider.
 export const PendingAdd: Story = {
   beforeEach: ({ msw }) => msw.use(hangAuth()),
   render: () => {
@@ -177,8 +173,6 @@ export const FailedRemove: Story = {
   },
 };
 
-// One story with a control to choose the state: each is a whole page or list,
-// too big to sit beside the others (claude-docs/workshop.md, rule 5).
 const STATES_STATES: Record<string, ReactNode> = {
   Default: defaultNode,
   'Two Linked': twoLinkedNode,
@@ -195,8 +189,6 @@ export const States: Story = {
   render: ({ state }) => <div key={String(state)}>{state}</div>,
 };
 
-// One story with a control to choose the state: each is a whole page or list,
-// too big to sit beside the others (claude-docs/workshop.md, rule 5).
 const WHOLEPAGE_STATES: Record<string, ReactNode> = {
   'Whole Page': wholePageNode,
   'Every Row State': everyRowStateNode,

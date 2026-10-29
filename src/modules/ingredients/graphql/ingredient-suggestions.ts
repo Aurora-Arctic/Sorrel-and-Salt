@@ -3,14 +3,14 @@ import { sessionOf } from '../../../graphql/context-helpers';
 import { suggestIngredients } from '../services/ingredient-suggestions';
 import { IngredientRef } from './ingredient';
 
-// Which of the picker's two groups an entry is listed in (M12.19).
+// Which of the picker's two groups an entry is listed in.
 const SuggestionGroupEnum = builder.enumType('SuggestionGroup', {
   values: ['yours', 'compendium'] as const,
   description:
     "Where the substitute picker lists an entry: the coven's own cupboard (yours), or the rest of the compendium.",
 });
 
-// The substitute picker's search (MB.138), which MB.131's combobox reads. The
+// The substitute picker's search, which the substitute combobox reads. The
 // resolver refuses only a missing session; which covens a caller may ask about
 // is the service's check (claude-docs/graphql/schema.md, "ingredientSuggestions").
 

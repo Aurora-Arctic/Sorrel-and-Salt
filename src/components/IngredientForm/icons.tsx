@@ -1,10 +1,8 @@
 import type { ReactElement } from 'react';
 
-// The form's row icons, a reference row's and a variant's edit and remove
-// (MB.115), and a reference's Edit Source: drawn at the icon size in the
-// button's own ink, and hidden from assistive technology, since the button
-// around each is what names it. The pencil is every Edit control's, the
-// admin lists' too, so it lives with the tip they share.
+// The form's row icons, drawn at the icon size in the button's own ink and hidden from assistive
+// technology, since the button around each names it. The pencil is every Edit control's, the admin
+// lists' too, so it lives with the tip they share.
 
 export { PencilIcon as EditIcon } from '../IconTip';
 

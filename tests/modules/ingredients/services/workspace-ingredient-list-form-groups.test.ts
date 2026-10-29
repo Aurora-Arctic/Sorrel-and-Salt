@@ -4,11 +4,8 @@ import { readFormIcons } from '@/app/compendium-reads';
 import { useTestDatabase } from '../../../support/db/database';
 import { clearDataCache } from '../../../support/next-data-cache';
 
-// M9.6: a coven's Ingredients list draws each jar line's form icon from its
-// form's group. The list read carries the form by name; the group comes from
-// this read of the curated vocabulary, over the real tables, folded to lower
-// case as the page looks it up. The drawing itself is JarLines' and FormIcon's
-// component tests; this is the server half no component test can see.
+// A coven's Ingredients list draws each jar line's form icon from its form's group. The list read carries the form by name; the group comes from this read of the curated vocabulary, over the real tables, folded to lower case as the page looks it up.
+// The drawing is JarLines' and FormIcon's component tests; this is the server half no component test can see.
 vi.mock('next/cache', () => import('../../../support/next-data-cache'));
 
 let sql: postgres.Sql;

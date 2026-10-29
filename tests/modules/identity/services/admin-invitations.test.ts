@@ -20,13 +20,9 @@ import { useTestDatabase } from '../../../support/db/database';
 import { asManualFix } from '../../../support/db/privileges';
 import type { InvitationStateRow } from './types';
 
-// MB.70: an admin invites an address to become an admin. The token is
-// `crypto.randomBytes` output that only the mail carries; the row holds its
-// hash. Creating and revoking are a site admin's alone and paused with the
-// rest of the admin changes for every admin but the primary one
-// (claude-docs/auth/admin-users.md, "Inviting an admin"). The transport is the
-// test double: the real sender builds the link and hands it to a mocked
-// `send`, so what reaches the address is what the test reads.
+// An admin invites an address to become an admin. The token is `crypto.randomBytes` output that only the mail carries; the row holds its hash.
+// Creating and revoking are a site admin's alone and paused with the rest of the admin changes for every admin but the primary one (claude-docs/auth/admin-users.md, "Inviting an admin").
+// The real sender builds the link and hands it to a mocked `send`, so what reaches the address is what the test reads.
 
 const send = vi.hoisted(() => vi.fn<(message: Message) => Promise<void>>(async () => {}));
 vi.mock('@/lib/mail', () => ({ send }));
@@ -220,7 +216,7 @@ describe('createAdminInvitation', () => {
     expect(await invitations()).toEqual([]);
   });
 
-  // M11.20: the site role is the admin's pick, and the row records it.
+  // The site role is the admin's pick, and the row records it.
   it('invites to the curator role, recording it on the row', async () => {
     await createAdminInvitation(asUser(E), INVITED, 'curator', undefined, sender());
 
@@ -323,7 +319,7 @@ describe('listPendingAdminInvitations', () => {
     ]);
   });
 
-  // MB.115: the list's two filters, each in the finder's SQL.
+  // The list's two filters, each in the finder's SQL.
   const listedEmails = async (filter: Parameters<typeof listPendingAdminInvitations>[1]) =>
     (await pending(filter)).map(({ email }) => email).sort();
 
@@ -356,7 +352,7 @@ describe('listPendingAdminInvitations', () => {
     expect(await listedEmails({ expiringSoon: true })).toEqual([`soon${DOMAIN}`]);
   });
 
-  // MB.115: a page at a time, as every admin list reads (CLAUDE.md rule 8).
+  // A page at a time, as every admin list reads (CLAUDE.md rule 8).
   const id = (n: number) => `00000000-0000-0000-0000-0000000001${String(n).padStart(2, '0')}`;
 
   // Five pending invitations an hour apart but for two sharing an instant,

@@ -8,11 +8,8 @@ import { useTestDatabase } from '../../support/db/database';
 import type { PageRequest } from '@/lib/types';
 import type { Logged } from '../../support/db/types';
 
-// The plan the grimoire search runs (M10.11), read off the connection's log
-// and explained, as compendium-search-query.test.ts does for the compendium:
-// each arm of the search starts from the spells' expression index over title
-// and intent, rather than reading every spell in the coven
-// (claude-docs/db/grimoire.md, "The grimoire search").
+// The plan the grimoire search runs, read off the connection's log and explained as compendium-search-query.test.ts does for the compendium:
+// each arm starts from the spells' expression index over title and intent rather than reading every spell in the coven (claude-docs/db/grimoire.md, "The grimoire search").
 
 const logged = vi.hoisted(() => [] as Logged[]);
 
@@ -43,11 +40,7 @@ async function statementFor(request: () => Promise<unknown>): Promise<Logged> {
   return read;
 }
 
-/**
- * `explain` of a logged statement, in a transaction holding the search's
- * threshold with sequential scans disabled, so the question is whether the
- * index can be reached at all rather than what the planner prefers.
- */
+/** `explain` of a logged statement in a transaction holding the search's threshold with sequential scans disabled, so the question is whether the index can be reached at all, not what the planner prefers. */
 async function explain({ query, params }: Logged): Promise<string> {
   return sql.begin(async (tx) => {
     await tx`select set_config('pg_trgm.word_similarity_threshold', '0.5', true)`;
@@ -61,7 +54,7 @@ describe('the grimoire search plan over ~20,000 spells', () => {
   const FIRST: PageRequest = { limit: 24, inverted: false };
   let page: Logged;
 
-  // Seeded once per file (MB.184): twenty thousand spells in W that share no
+  // Seeded once per file: twenty thousand spells in W that share no
   // word with `hearth`, and six hundred that do, by title or by intent.
   beforeAll(async () => {
     await sql`

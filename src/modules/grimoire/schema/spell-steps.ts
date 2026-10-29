@@ -17,18 +17,8 @@ import { QUANTITY_PRECISION, QUANTITY_SCALE } from '../../ingredients/schema/qua
 import { spells } from './spells';
 import { idColumn, liveUnique } from '../../../db/schema-parts';
 
-// A spell's recipe, one ordered list (stories 50, 57, 80): a step is an
-// instruction, an ingredient laid in the jar, or both. A step that lays an
-// ingredient is a layer: either an ingredient the workspace knows or a name
-// written for this one jar. One table rather than a steps table beside an
-// ingredients one, because one ordered list cannot span two tables
-// (claude-docs/design-decisions/m13.1-spell-steps.md).
-//
-// It references the ingredient, never the inventory item: stock is what a
-// workspace holds today, and a recipe pointing at it would be damaged by
-// running out. Soft-deleted, unlike the other two join tables (MB.110): a
-// spell is a record of a working, so a step taken out of it is a tombstone
-// (claude-docs/db/grimoire.md, "The grimoire").
+// A spell's recipe, one ordered list: a step is an instruction, an ingredient laid in the jar, or both. It references the
+// ingredient, never the inventory item, and is soft-deleted as a tombstone (claude-docs/db/grimoire.md, "Grimoire service and schema details").
 export const spellSteps = pgTable(
   'spell_steps',
   {
@@ -41,7 +31,7 @@ export const spellSteps = pgTable(
     // Nullable: a custom row and an instruction-only step have no ingredient.
     // The CHECKs below allow at most one of this and `name`.
     ingredientId: uuid('ingredient_id').references(() => ingredients.id),
-    // The form laid (MB.217), set exactly when `ingredient_id` is: a jar may
+    // The form laid, set exactly when `ingredient_id` is: a jar may
     // hold Rosemary herb and Rosemary oil, a custom layer neither.
     variantId: uuid('variant_id'),
     // The custom row's label and form. Never becomes an `ingredients` row and
@@ -70,12 +60,8 @@ export const spellSteps = pgTable(
     // sweeping `position + 1`.
     liveUnique('spell_steps_spell_id_position_unique', table, table.spellId, table.position),
 
-    // No unique index on a jar's forms: a spell may lay one form in several
-    // steps, at different depths or for different purposes (the owner, 2026-10-28;
-    // before it, MB.217 allowed one step per form). A custom row is still
-    // identified by its name, below.
-    // Its mirror over the custom rows, on name alone: a custom row is matched
-    // against nothing, so `form` is part of no key.
+    // No unique index on a jar's forms: a spell may lay one form in several steps.
+    // Its mirror over the custom rows, on name alone, so `form` is part of no key.
     uniqueIndex('spell_steps_spell_id_custom_name_unique')
       .on(table.spellId, sql`lower(${table.name})`)
       .where(sql`${table.ingredientId} is null and ${table.deletedAt} is null`),

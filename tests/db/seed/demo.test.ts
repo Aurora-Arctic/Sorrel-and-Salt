@@ -1,11 +1,8 @@
 import { describe, expect, it } from 'vitest';
 import { DEMO_SPELLS, WORKSPACE_W_CUPBOARD, WORKSPACE_W_INGREDIENTS } from '@/db/seed/demo';
 
-// The demo scenario's spells against W's cupboard (M13.21). A spell step names only what
-// the coven holds: the recipe service checks a laid variant against the coven's readable
-// ones. The seed writes raw, past that check, so this proves the data keeps the rule: every
-// compendium entry a demo layer lays is in W's cupboard, and every workspace entry is W's own.
-// Found by the owner on 2026-10-29, when a step's Quick Look eye opened nothing for Black Salt.
+// The demo scenario's spells against W's cupboard. A spell step names only what the coven holds, and the seed writes raw, past the recipe service's check, so this proves the data keeps the rule:
+// every compendium entry a demo layer lays is in W's cupboard, and every workspace entry is W's own.
 
 describe('the demo scenario', () => {
   it('lays only ingredients W holds: compendium entries in its cupboard, own entries of its own', () => {

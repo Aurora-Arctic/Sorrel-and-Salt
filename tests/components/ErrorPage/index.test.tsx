@@ -2,7 +2,7 @@ import { render, screen } from '@testing-library/react';
 import { describe, expect, it } from 'vitest';
 import ErrorPage from '@/components/ErrorPage';
 
-// The shared body of the 404 and 500 screens (M11.10): a heading, a reason
+// The shared body of the 404 and 500 screens: a heading, a reason
 // and the way onward, never an error's own text (claude-docs/components/error-page.md).
 
 describe('ErrorPage', () => {

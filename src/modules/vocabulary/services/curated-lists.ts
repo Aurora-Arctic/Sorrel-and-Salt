@@ -8,10 +8,8 @@ import { RowId } from '../../../lib/validation';
 // beside the read it names; this file only wraps them. Internal to the module; the index exports no part of it.
 
 /**
- * The filter as the repository reads it, its query trimmed and a blank one
- * dropped; `undefined` when `idKey` holds an id that is not a uuid, which
- * names nothing and would be a driver error at the comparison. Without an
- * `idKey` there is no id to refuse, so the filter always reads.
+ * The filter as the repository reads it, its query trimmed and a blank one dropped; `undefined` when `idKey` holds an id that is not a uuid,
+ * which would be a driver error at the comparison. Without an `idKey` the filter always reads.
  */
 export function readableFilter<Filter extends { query?: string }>(filter: Filter): Filter;
 export function readableFilter<Filter extends { query?: string }>(
@@ -27,11 +25,7 @@ export function readableFilter<Filter extends { query?: string }>(
   return { ...filter, query: filter.query?.trim() || undefined };
 }
 
-/**
- * A filtered list and its count over the two cached reads given, each reading
- * `readableFilter`'s answer: a filter naming no group lists nothing and counts
- * nothing, without a read.
- */
+/** A filtered list and its count over the two cached reads given: a filter naming no group lists and counts nothing, without a read. */
 export function cachedFilteredList<Filter extends { query?: string }, Row>(
   cachedPage: (filter: Filter, page: PageRequest) => Promise<PageEntry<Row>[]>,
   cachedCount: (filter: Filter, start: Cursor | undefined) => Promise<PageCount>,

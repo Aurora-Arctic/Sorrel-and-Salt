@@ -4,7 +4,7 @@ import ErrorBoundary from '@/app/error';
 import GlobalError from '@/app/global-error';
 import NotFound from '@/app/not-found';
 
-// M11.10: the screens a failure lands on. Each must offer a way onward and
+// The screens a failure lands on. Each must offer a way onward and
 // must not print the error's message or stack, whatever it holds.
 
 const failure = Object.assign(new Error('relation "secret_table" does not exist'), {

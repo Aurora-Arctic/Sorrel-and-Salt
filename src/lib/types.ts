@@ -12,11 +12,8 @@ export interface ConnectionArgs {
 }
 
 /**
- * A position in a list: each part of the row's sort key, as Postgres prints
- * it, and its id as the tie-break. Never an offset, so a row inserted or
- * deleted ahead of it cannot shift the page under a reader. The parts are text
- * because a `timestamptz` read into a JS `Date` loses its microseconds. How
- * many parts a list's key has is the list's to check, not the codec's.
+ * A position in a list: each part of the row's sort key as Postgres prints it, and its id as the tie-break. Never an offset, so an insert ahead cannot shift
+ * the page. The parts are text as a `timestamptz` read into a `Date` loses its microseconds; a list checks its own key's length.
  */
 export interface Cursor {
   key: readonly string[];
@@ -131,26 +128,24 @@ export interface ChainedError {
   constraint_name?: unknown;
 }
 
-/** A category group's two colours, one per theme, as its row stores them (MB.35). */
+/** A category group's two colours, one per theme, as its row stores them. */
 export interface GroupColors {
   colorDark: string;
   colorLight: string;
 }
 
-/** Which of a group's two colours: the one the dark theme wears, or the light (MB.36). */
+/** Which of a group's two colours: the one the dark theme wears, or the light. */
 export type GroupColorColumn = keyof GroupColors;
 
 /**
- * The two axes of a colour picker's area, as it lays them out for a format
- * (M5.6b): saturation across, and brightness or lightness up, 100 at the top.
+ * The two axes of a colour picker's area, as it lays them out for a format:
+ * saturation across, and brightness or lightness up, 100 at the top.
  */
 export type AreaSpace = 'hsb' | 'hsl';
 
 /**
- * The five kinds of source `references.kind` holds (MB.151), spelled here
- * because a lib file imports no module; a row's `ReferenceKind` must stay
- * assignable to it, so a sixth kind fails the type check at the renderer's
- * callers.
+ * The five kinds of source `references.kind` holds, spelled here as a lib file imports no module; a row's `ReferenceKind` must stay assignable to it, so a
+ * sixth kind fails the type check at the renderer's callers.
  */
 export type CitationKind = 'book' | 'chapter' | 'article' | 'entry' | 'web_page';
 
@@ -228,18 +223,18 @@ export interface PagerHrefs<Href extends string = string> {
   nextHref: Href | undefined;
 }
 
-/** The signed-in person as the application shell draws them (MB.7). */
+/** The signed-in person as the application shell draws them. */
 export interface ShellViewer {
   /** The name the site shows for them; the account button's text and its initials. */
   name: string;
-  /** A curator or a site admin (M11.20): the shell adds the Admin and Your Coven links. */
+  /** A curator or a site admin: the shell adds the Admin and Your Coven links. */
   canCurate: boolean;
   /** Holds `canCreateWorkspace`, read from the user row, never the session. */
   canCreate: boolean;
   /** Their address is verified. Until it is, the shell offers an account menu with Sign Out and nothing else. */
   verified: boolean;
   /**
-   * How many coven invitations wait for their verified address (M10.32): the
+   * How many coven invitations wait for their verified address: the
    * account menu's count and the landing's notice. Never read for an
    * unverified account, which reads 0.
    */

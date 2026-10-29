@@ -18,7 +18,7 @@ const WORKSPACES = [
 ];
 
 // In a workspace: its name is the value. Outside any workspace, on the account page: nothing chosen
-// yet. Can Create: a viewer holding creation rights, so the list ends with Create Coven (M9.16).
+// yet. Can Create: a viewer holding creation rights, so the list ends with Create Coven.
 export const States: Story = {
   render: () => (
     <StatesGrid

@@ -47,16 +47,10 @@ import { Navigating } from '../../support/navigating';
 const router = vi.hoisted(() => ({ push: vi.fn() }));
 vi.mock('next/navigation', () => ({ useRouter: () => router }));
 
-// The compendium's filter row (M12.4) and its search sentence, drawn without
-// the table beneath them, as IngredientSearch draws them above it. What the
-// list does while a filter is on its way, giving way to its status, is
-// index.test.tsx's, since only it renders the table.
+// The compendium's filter row and its search sentence, drawn without the table beneath them, as IngredientSearch draws them above it.
+// What the list does while a filter is on its way, giving way to its status, is index.test.tsx's, since only it renders the table.
 
-/**
- * The compendium's page as the App Router draws it: the row under the filter
- * its address shows, which a push changes inside the row's transition, as
- * Next renders the new page.
- */
+/** The compendium's page as the App Router draws it: the row under the filter its address shows, which a push changes inside the row's transition, as Next renders the new page. */
 function RoutedCompendium(): ReactElement {
   const [filter, setFilter] = useState<CompendiumListFilter>(NO_FILTER);
   router.push.mockImplementation((href: string) => {
@@ -244,8 +238,8 @@ describe('CompendiumList filter', () => {
     ]);
   });
 
-  // The owner's rule of 2026-10-27: a pick opens the entry's Quick Look, its details modal
-  // (M12.5), over the list as it stands, the page and the filter kept and the text typed and
+  // A pick opens the entry's Quick Look, its details modal,
+  // over the list as it stands, the page and the filter kept and the text typed but
   // not searched not applied. Each list keys its details as its own eye does.
   describe('picking a name from the dropdown', () => {
     const PAGE = { after: 'cursor-x' };
@@ -363,7 +357,7 @@ describe('CompendiumList filter', () => {
     expect(unsourcedSwitch()).not.toBeChecked();
   });
 
-  describe('In My Covens on the public list (M12.55)', () => {
+  describe('In My Covens on the public list', () => {
     const COVENS = [
       { id: 'coven-w', name: 'Testhollow' },
       { id: 'coven-v', name: 'Testwren' },
@@ -548,7 +542,7 @@ describe('CompendiumList filter', () => {
 
       expect(pushed().has('query')).toBe(false);
       expect(typing()).toBe(true);
-      // The old line is backspaced before the lead is typed (MB.270): once the lead is whole, the
+      // The old line is backspaced before the lead is typed: once the lead is whole, the
       // line holds no term.
       await typeOut();
       expect(typedLine()).toContain('Searching for ingredients');

@@ -11,10 +11,8 @@ import { usePendingNavigation } from './use-navigation';
 type PendingLinkProps = ComponentProps<typeof Link> & { navigationTarget?: NavigationTarget };
 
 /**
- * The one link the site draws. A plain press navigates through the shared
- * hook, so the page bar and the destination's skeleton follow. A press the
- * browser means for a new tab or window, or a link that opens elsewhere, is
- * left to the browser untouched.
+ * The one link the site draws. A plain press navigates through the shared hook, so the page bar and the destination's skeleton follow; a press meant for a
+ * new tab or window, or a link that opens elsewhere, is left to the browser.
  */
 export function PendingLink({
   navigationTarget,

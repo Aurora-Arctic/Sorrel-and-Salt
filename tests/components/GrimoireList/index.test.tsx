@@ -18,7 +18,7 @@ import { Navigating } from '../../support/navigating';
 const router = vi.hoisted(() => ({ push: vi.fn() }));
 vi.mock('next/navigation', () => ({ useRouter: () => router }));
 
-// A coven's Grimoire list (M10.11): a card per spell in the list named Grimoire, the title
+// A coven's Grimoire list: a card per spell in the list named Grimoire, the title
 // search and the Categories filter, and a status region when there is no card to show
 // (claude-docs/components/grimoire-list.md).
 
@@ -246,7 +246,7 @@ describe('GrimoireList', () => {
     expect(screen.queryByRole('option', { name: /^Testmending/ })).not.toBeInTheDocument();
   });
 
-  describe('the four facets (M13.22)', () => {
+  describe('the four facets', () => {
     const open = () => {
       fireEvent.click(screen.getByRole('button', { name: /^Filters/ }));
     };
@@ -424,7 +424,7 @@ describe('GrimoireList', () => {
       expect(screen.getByRole('status', { name: 'No Matches' })).toBeInTheDocument();
     });
   });
-  // M13.21: a picked title opens the spell's Quick Look over the list as it stands, as the
+  // A picked title opens the spell's Quick Look over the list as it stands, as the
   // card's eye does, the page and the filter kept and the text typed and not searched not applied.
   describe('picking a title from the dropdown', () => {
     beforeEach(() => {

@@ -20,14 +20,11 @@ import { lookHrefOf } from './recipe-href';
 import { nounOf } from './noun';
 import type { GrimoireFilterProps, GrimoireListFilter } from './types';
 
-// The grimoire's filter row (M10.11), the compendium's (CompendiumList/filter.tsx) on the
-// grimoire's parameter set: the title search, then the Filters (n) button with its Clear All
-// and the panel it opens, which holds the Categories line alone. Status is not a filter here:
-// Spells and Drafts are two tabs, so each tab's row searches and filters within its own status.
-// A change in the panel is held until it shuts, then applied in one soft navigation, as the
-// compendium's is. Picking a title in the search box's dropdown opens that spell's recipe page (MB.6). See claude-docs/components/grimoire-list.md.
+// The grimoire's filter row, the compendium's (CompendiumList/filter.tsx) on the grimoire's parameters:
+// the title search and the Filters (n) panel, holding the Categories line alone, applied in one soft
+// navigation when it shuts. Spells and Drafts are two tabs, not a status filter (claude-docs/components/grimoire-list.md).
 
-/** What the panel holds: the categories and their match mode, then the four facets (M13.22). */
+/** What the panel holds: the categories and their match mode, then the four facets. */
 interface Held {
   categories: readonly string[];
   categoryMode: CategoryMode;
@@ -236,7 +233,7 @@ const GrimoireFilterRow = ({
       className="compendium-list__row"
       searchHref={(query) => hrefFor(path, filter, held, query)}
       // A picked title opens the spell's Quick Look over the list as shown, as the card's eye
-      // does (M13.21): the page and the filter kept, the text typed and not searched not applied.
+      // does: the page and the filter kept, the text typed and not searched not applied.
       pickHref={({ id }) => lookHrefOf(GRIMOIRE_PARAMS.href(path, filter, { ...cursor }), id)}
       pickHeading={({ name }) => ({ title: name })}
       pickPlace={SPELL_LOOK_PLACE}

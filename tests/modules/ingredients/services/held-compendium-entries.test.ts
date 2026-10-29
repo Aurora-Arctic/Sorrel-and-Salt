@@ -10,7 +10,7 @@ import { insertIngredient } from '../../../support/db/insert-ingredient';
 import { makeIngredient } from '../../../support/fixtures';
 
 // Which of a page of compendium entries a coven's cupboard holds: the read behind the
-// compendium page's check icon (M9.12). It answers for the viewer's own coven, so it is read
+// compendium page's check icon. It answers for the viewer's own coven, so it is read
 // per viewer and never inside the cached compendium read (rule 6).
 
 let sql: postgres.Sql;

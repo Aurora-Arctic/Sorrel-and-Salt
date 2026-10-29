@@ -1,13 +1,8 @@
 import type { Route } from 'next';
 import type { ShellWorkspace } from './types';
 
-// Where the Your Coven link goes (MB.7). A member goes straight
-// into the first coven the switcher lists, rather than to the `/coven`
-// landing, which would only redirect them there and leave the browser a stop
-// with nothing on it (MB.257). Someone in no coven goes to the landing (M2.8),
-// which offers the create page to someone who may make one and explains the
-// invitation to anyone else. The list is the one `viewerOf` sorts, so the
-// link and the switcher agree on which coven is first.
+// Where the Your Coven link goes: a member straight into the first coven the switcher lists, not the `/coven` landing that would only redirect there; someone
+// in no coven to the landing. The list is `viewerOf`'s, so the link and the switcher agree on which is first.
 
 /** The viewer's first coven, or the landing for someone in none: a curator's or an admin's Your Coven link. */
 export function covenHome(workspaces: readonly Pick<ShellWorkspace, 'slug'>[]): Route {

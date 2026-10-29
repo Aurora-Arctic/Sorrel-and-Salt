@@ -10,13 +10,9 @@ import type { SpellRow, SpellStepView } from '../types';
 import { IngredientRef, IngredientVariantRef, InventoryUnitEnum } from '@/modules/ingredients';
 import { CategoryRef, type CategoryRow } from '@/modules/vocabulary';
 
-// The grimoire over the wire (M10.9): a coven's spells a page at a time, one
-// spell by id, and each spell's steps and its two kinds of category. Every
-// field a list could repeat per spell reads through a loader, so a page of
-// spells costs a fixed number of statements, not one per spell (CLAUDE.md
-// rule 9). The resolvers hold no check and no query: which spells a member
-// may read is the grimoire service's, which keeps a private spell its
-// author's in SQL (claude-docs/graphql/schema.md, "The grimoire").
+// The grimoire over the wire: a coven's spells a page at a time, one spell by id, each spell's steps and categories.
+// Fields a list could repeat per spell read through a loader (CLAUDE.md rule 9). The resolvers hold no check and no query;
+// the grimoire service keeps a private spell its author's in SQL (claude-docs/graphql/schema.md, "The grimoire").
 
 const SpellVisibilityEnum = builder.enumType('SpellVisibility', {
   description: 'Who reads a spell: its author alone, or every member of its coven.',
@@ -25,7 +21,7 @@ const SpellVisibilityEnum = builder.enumType('SpellVisibility', {
 
 const SpellStatusEnum = builder.enumType('SpellStatus', { values: spellStatus.enumValues });
 
-// How a grimoire page is ordered (M10.9), an argument rather than a field.
+// How a grimoire page is ordered, an argument rather than a field.
 const GrimoireOrderEnum = builder.enumType('GrimoireOrder', {
   values: GRIMOIRE_ORDERS,
   description:
@@ -190,7 +186,7 @@ builder.queryField('spell', (t) =>
   }),
 );
 
-// The saves (M10.10). Each sends the whole recipe as one ordered list, so a
+// The saves. Each sends the whole recipe as one ordered list, so a
 // step's place is its index; claude-docs/graphql/schema.md, "The grimoire",
 // says how a step is kept, added and removed.
 
@@ -263,11 +259,7 @@ const UpdateSpellInputRef = builder.inputType('UpdateSpellInput', {
   }),
 });
 
-/**
- * A status, visibility, recipe or category list sent as null, read as left
- * out: none of the four can be cleared that way (an empty list clears the
- * last two), and GraphQL lets any nullable input field be null.
- */
+/** A status, visibility, recipe or category list sent as null is read as left out: none of the four can be cleared that way. */
 function unstated<
   T extends { status?: unknown; visibility?: unknown; steps?: unknown; categoryIds?: unknown },
 >(input: T) {
@@ -326,7 +318,7 @@ builder.mutationField('updateSpell', (t) =>
 );
 
 // Answers the deleted id, not the entity: the page leaves by it, and a
-// deleted spell's steps and categories would resolve empty (M13.11).
+// deleted spell's steps and categories would resolve empty.
 builder.mutationField('deleteSpell', (t) =>
   t.id({
     description: "Soft-deletes a spell and its steps together; the spell's stock is untouched.",

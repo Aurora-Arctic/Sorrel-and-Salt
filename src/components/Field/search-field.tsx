@@ -7,14 +7,9 @@ import { FieldShell } from './shell';
 import type { SearchFieldProps } from './types';
 
 /**
- * A list filter's search box, drawn first in the row (MB.115): a text box
- * with its own submit, a magnifier named Search, at its end. The submit is
- * the form's, so the search applies by a press on the mark, which a first-time
- * user can see, or by Enter, which a box in a form with a submit button sends
- * natively; and before hydration the same press sends the whole form as a
- * GET. Drawn as one box, `.input.search-field`, holding a borderless input
- * and the button, as Combobox's control holds its text and indicators, so
- * the mark sits inside the edge rather than as a button beside it.
+ * A list filter's search box, drawn first in the row: a text box with its own submit, a magnifier
+ * named Search, inside its edge; the submit is the form's, so Enter and a press both apply the
+ * search, and before hydration the same press sends the form as a GET.
  */
 export function SearchField({
   id,

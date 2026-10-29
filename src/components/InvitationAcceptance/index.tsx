@@ -11,11 +11,8 @@ import Notice from '../Notice';
 import type { InvitationAcceptanceProps } from './types';
 import './index.scss';
 
-// `/invite/[token]`'s one panel (MB.70, a `.panel` as sign-in's and the email
-// page's are: MB.119 decision c): the page reads where the visitor
-// stands, through the accept service's own checks, and this shows it. Accept
-// sends the mutation, which checks again and decides; a refusal is said in
-// the service's words, in a callout from Accept (design F, ClickFeedback)
+// `/invite/[token]`'s one panel: the page reads where the visitor stands and this shows it. Accept
+// sends the mutation, which decides, and a refusal is shown in the service's words
 // (claude-docs/components/invitation-acceptance.md).
 
 const AcceptInvitationDocument = graphql(`
@@ -26,7 +23,7 @@ const AcceptInvitationDocument = graphql(`
   }
 `);
 
-/** What a site invitation grants, by the role it names (M11.20). */
+/** What a site invitation grants, by the role it names. */
 const SITE_GRANTS = {
   curator: "You've been invited to be a curator of Sorrel & Salt.",
   admin: "You've been invited to be an admin of Sorrel & Salt.",

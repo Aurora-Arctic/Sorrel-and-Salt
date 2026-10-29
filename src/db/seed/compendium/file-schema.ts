@@ -12,13 +12,8 @@ import type {
   SeedCompendiumVariant,
 } from '../types';
 
-// The frontmatter of a compendium entry file (M14.6), as zod schemas, every
-// one strict: a key the format does not name is an issue, never ignored, so a
-// misspelt `celestialBodies` cannot silently drop a list
-// (claude-docs/db/compendium-seed/README.md, "The file format"). The file
-// spells colours `colours`, as a key and in `supports`; the entry the seed
-// writes spells the column `colors`, and `toEntry` is the one place the two
-// meet.
+// The frontmatter of a compendium entry file as strict zod schemas: an unnamed key is an issue, so a misspelt `celestialBodies` cannot silently drop
+// a list (claude-docs/db/compendium-seed/README.md, "An entry, field by field"). The file spells `colours`, the row `colors`; `toEntry` is where they meet.
 
 export const FILE_STATUSES = ['draft', 'needs-review', 'approved'] as const;
 export const NAME_BASES = ['stated', 'resolved', 'unresolved', 'unaudited'] as const;
@@ -60,7 +55,7 @@ const text = z.string().min(1);
 const list = z.array(text).optional();
 const elements = z.array(z.enum(INGREDIENT_ELEMENTS)).optional();
 
-// `true` alone, as the seed type holds it (M14.1): a written `false` would
+// `true` alone, as the seed type holds it: a written `false` would
 // claim the thing is safe, which needs a source of its own, so the key is left
 // out instead.
 const flag = z

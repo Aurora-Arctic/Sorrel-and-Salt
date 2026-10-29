@@ -2,11 +2,9 @@ import MCR from 'monocart-coverage-reports';
 import coverageOptions, { coverageRequested } from './coverage.config';
 import { cloneE2eDatabases, seedE2eTemplate } from './database';
 
-// Once per run, before the first test — but after `webServer` has started the
-// servers, which Playwright does first. They connect on their first query, and
-// the readiness poll's session-less `/` makes none, so the databases need only
-// exist before a spec runs. Reseeding between spec files is each spec's own
-// `beforeAll`.
+// Once per run, after Playwright's `webServer` has started the servers. They connect on their first query
+// and the readiness poll's session-less `/` makes none, so the databases need only exist before a spec
+// runs. Reseeding between spec files is each spec's own `beforeAll`.
 export default async function globalSetup(): Promise<void> {
   await seedE2eTemplate();
   await cloneE2eDatabases();

@@ -25,12 +25,8 @@ import {
 } from '../../../support/db/insert-reference';
 import { type IngredientFixture, type Overrides, makeIngredient } from '../../../support/fixtures';
 
-// MB.153: an ingredient's references, each a link to a reference with an
-// optional locator, written in the ingredient's own transaction by either
-// tier's service, held to the tier rule, and read back alphabetically by
-// citation through `referencesOf`, the batch behind `Ingredient.references`
-// (DESIGN.md §5, "References"). Both tables are emptied per test, so every row
-// a result could come from is one this file wrote.
+// An ingredient's references, each a link to a reference with an optional locator, written in the ingredient's own transaction by either tier's service and held to the tier rule (DESIGN.md §5, "References").
+// `referencesOf`, the batch behind `Ingredient.references`, reads them back alphabetically by citation. Both tables are emptied per test, so every row a result could come from is one this file wrote.
 
 let sql: postgres.Sql;
 useTestDatabase((client) => {
@@ -376,7 +372,7 @@ describe('a soft-deleted reference', () => {
   });
 });
 
-// M5.5's to-do list: the compendium's live entries with no reference shown.
+// The to-do list: the compendium's live entries with no reference shown.
 describe('the compendium without references', () => {
   async function names(filter: { withoutReferences?: boolean }) {
     const page = await resolvePage({ first: 50 }, (request) => listCompendium(filter, request));
@@ -415,7 +411,7 @@ describe('the compendium without references', () => {
     expect((await countCompendium({ withoutReferences: true }, undefined)).totalCount).toBe(4);
   });
 
-  // The union rule (MB.215, MB.218): a source on one of an entry's forms
+  // The union rule: a source on one of an entry's forms
   // sources the entry, while that form is live.
   it('counts an entry sourced when one of its live variants cites, and only then', async () => {
     const book = await compendiumBook('Fixture Herbal');

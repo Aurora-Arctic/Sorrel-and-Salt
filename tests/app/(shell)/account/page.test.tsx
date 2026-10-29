@@ -5,13 +5,8 @@ import { makeQueryClient } from '@/lib/graphql-client';
 import { encodeCursor } from '@/lib/pagination';
 import type { Session } from '@/lib/session';
 
-// The one account page (MB.88): the Name, Email, Sign-In Methods and
-// Invitations (M10.32) sections,
-// each linked from the page's own nav (claude-docs/auth/admin-bootstrap.md,
-// "The account page"). The session, the row and the linked accounts are mocked;
-// what they are is tests/lib/request-session.test.ts's and the identity
-// service's. That an unverified account never reaches the page is
-// `requireSession()`'s, asserted there and in tests/e2e/account.spec.ts.
+// The one account page: the Name, Email, Sign-In Methods and Invitations sections, each linked from the page's own nav (claude-docs/auth/admin-bootstrap.md, "The account page").
+// The session, row and linked accounts are mocked (tests/lib/request-session.test.ts's and the identity service's); that an unverified account never reaches the page is `requireSession()`'s, asserted there and in tests/e2e/account.spec.ts.
 
 const requireSession = vi.fn<() => Promise<Session>>();
 const linkedAccounts = vi.fn(async () => [{ id: 'a1', providerId: 'discord', accountId: 'd-1' }]);

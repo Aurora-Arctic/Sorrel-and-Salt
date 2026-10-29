@@ -3,13 +3,9 @@ import { Forbidden } from '@/lib/errors';
 import type { PublicCupboardProps } from '@/components/IngredientEntry/types';
 import { entryDetail } from '../../../support/entry-detail';
 
-// The cupboard choices the public entry page hands the entry (M9.12): which of the viewer's
-// covens are offered, what each one's role permits, and which coven's Annotate dialog the
-// address opens. The entry component, the cached read and the viewer are mocked, since what
-// they do is their own tests' (tests/components/IngredientEntry/public-cupboard-actions.test.tsx
-// draws the choices). The roles go through the real `rolePermits`, so a viewer's role is
-// refused here exactly as the service refuses it. The per-viewer reads are the services', per
-// request, beside the sessionless cached read (CLAUDE.md rule 6).
+// The cupboard choices the public entry page hands the entry: which of the viewer's covens are offered, what each role permits, and which coven's Annotate dialog the address opens.
+// The entry component, the cached read and the viewer are mocked (tests/components/IngredientEntry/public-cupboard-actions.test.tsx draws the choices); the roles go through the real `rolePermits`.
+// The per-viewer reads are the services', per request, beside the sessionless cached read (CLAUDE.md rule 6).
 
 vi.mock('next/navigation', () => ({
   notFound: vi.fn(),
@@ -213,7 +209,7 @@ describe('the public entry page’s cupboard choices', () => {
   });
 });
 
-// The In Your Cupboard shelf before the name (M9.12): shown when any coven of the viewer's holds
+// The In Your Cupboard shelf before the name: shown when any coven of the viewer's holds
 // the entry, viewers' covens included, from the one held read that feeds the choices too.
 describe('the public entry page’s Edit Stock', () => {
   const STOCK = { forms: [{ variantId: 'v1', label: 'Leaf' }], jars: [] };

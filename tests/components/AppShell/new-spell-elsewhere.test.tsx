@@ -2,7 +2,7 @@ import { render } from '@testing-library/react';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 
 // `?new=spell-<slug>` away from that coven's grimoire moves there, since New Spell is a
-// dialog over the grimoire alone (M10.12, the owner's call, 2026-10-28).
+// dialog over the grimoire alone.
 const pathname = vi.fn<() => string>();
 const push = vi.fn();
 const replace = vi.fn();

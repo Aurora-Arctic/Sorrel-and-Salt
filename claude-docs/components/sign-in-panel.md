@@ -316,3 +316,19 @@ unconfigured state is every worker slot's own server, on 8001 and up; the
 configured one is a server of its own on 8100, reading `sorrel_e2e_providers`,
 which no spec reseeds. See [`testing/e2e.md`](../testing/e2e.md), "E2E —
 Playwright", for how they are wired.
+
+## Brand buttons against `.btn`
+
+Every button in the roster carries `.btn` (`_primitives.scss`) for its shape: padding, radius, shadow, focus ring and transition. The panel's stylesheet states only where a provider's brand button differs from `.btn`'s defaults. The icon sits at the left edge instead of centred. The button fills its grid column instead of sizing to its content. The edge is the 1px stroke Google's and Microsoft's guidelines draw, rather than `.btn`'s 1.6px, and it is applied to all four buttons so the roster stays one height. A white button takes its brand's `edge`; one with none keeps the transparent edge.
+
+Colour is never set in these shared rules. Each provider's published colours come from `$brand-palettes` (`_variables.scss`), not from the `$accent` and `$secondary` tokens, and `icons.tsx` names each mark's source. `.btn` changes its text colour on hover and focus to `$text-on-color`, which suits a plain outlined button. A brand button's text colour is part of the brand and stays fixed, so the hover and focus block restates its own `color`: an omitted `color` would tie with `.btn`'s in specificity and depend on stylesheet load order.
+
+The overrides are compounded with `.btn` (`.sign-in-panel__button.btn`) for the same reason: they apply whichever stylesheet loads first.
+
+## The panel's frame
+
+The page around the panel is `.page-frame--narrow` (`src/app/sign-in/page.tsx`), which centres it and holds it clear of the top inset. The panel fills that narrow column on its own `.panel` ground with one step more padding than the default, using `border-box` so the padding stays inside the column. Children stretch to the column and the button grid centres its own. The selector is compounded with `.panel` because in the app the primitives compile as `body .panel`, which outranks a lone component class. A bare `.sign-in-panel` would keep the panel's default padding in the app while the workshop, whose primitives are scoped with `:where()`, showed the override.
+
+## Disabled Facebook button
+
+The disabled look is the universal `.btn[aria-disabled='true']` (`_primitives.scss`). Facebook adds one wrinkle: its mark is a white shape with the "f" as a hole in it (`icons.tsx`), so the hole shows whatever sits behind the chip. Dropping the chip's own blue while disabled lets the hole show the button's own greyed background instead of staying blue against a grey button. The rule is scoped off the button's `aria-disabled`, not a brand class: a disabled button carries no `--facebook` class (see the `className` comment in `provider-button.tsx`), but `FacebookIcon` still renders its chip.

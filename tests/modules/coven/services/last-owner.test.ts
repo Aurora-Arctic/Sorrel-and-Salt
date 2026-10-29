@@ -8,7 +8,7 @@ import { makeWorkspace, workspaceColumns } from '../../../support/fixtures';
 
 useRawClient();
 
-// The last-owner guard (M6.8): a change that would leave a workspace with no
+// The last-owner guard: a change that would leave a workspace with no
 // owner is refused, and the refusal says which way out the interface can offer.
 
 async function insertCoven(

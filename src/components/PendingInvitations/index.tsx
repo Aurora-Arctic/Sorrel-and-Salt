@@ -9,15 +9,10 @@ import RevokeControl from './revoke-control';
 import type { PendingInvitationsProps } from './types';
 import './index.scss';
 
-// The invitations an owner has sent and nobody has accepted, under the
-// members roll (M7.6): address, role and status, newest first, with its own
-// pager. A pending one shows when it expires and offers Revoke; one the
-// invitee declined shows when, and offers Remove, until the owner clears it
-// (M10.34). The table carries the name "Pending Invitations" and there is no
-// region around it to repeat it: the page's heading and its open tab already
-// say what the page is (MB.119). The page draws it for owners only and reads it
-// through the services that check `member: invite`; nothing here decides who
-// may see it (claude-docs/components/pending-invitations.md).
+// The invitations an owner has sent and nobody has accepted, under the members roll: address, role
+// and status, newest first, with its own pager. A pending one shows its expiry and offers Revoke; a
+// declined one shows when, and offers Remove. The page draws it for owners only; nothing here
+// decides who may see it (claude-docs/components/pending-invitations.md).
 
 const PendingInvitations = ({
   workspaceId,

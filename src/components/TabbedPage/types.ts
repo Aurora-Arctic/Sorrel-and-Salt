@@ -5,12 +5,9 @@ import type { ReactNode } from 'react';
 export interface PageTab {
   href: Route;
   label: string;
-  /**
-   * Whether the tab's list opens with a filter, so its loading skeleton
-   * draws a filter row above the table; left out, it draws none.
-   */
+  /** Whether the tab's list opens with a filter, so its loading skeleton draws a filter row; left out, none. */
   filtered?: boolean;
-  /** What the tab's loading skeleton stands in for: a table (the default), or cards, as the grimoire's tabs (M10.11). */
+  /** What the tab's loading skeleton stands in for: a table (the default), or cards, as the grimoire's tabs. */
   shape?: 'table' | 'cards';
 }
 
@@ -19,11 +16,7 @@ export interface TabbedPageProps {
   title: string;
   /** In their order along the row; the open one is found from the address. */
   tabs: readonly PageTab[];
-  /**
-   * The open tab's one action, at the end of the heading's line: Add
-   * Category, New Invitation, Pause Admin Changes. The route group's `@action`
-   * slot, so it changes with the tab; nothing for a tab with none.
-   */
+  /** The open tab's one action at the end of the heading's line, from the route group's `@action` slot; nothing for a tab with none. */
   action?: ReactNode;
   /** The open tab's content. */
   children: ReactNode;

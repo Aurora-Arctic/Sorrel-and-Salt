@@ -25,8 +25,8 @@ describe('listHref', () => {
   });
 });
 
-// The modal's half of a list's address: the three href.ts files encoded it
-// alike before MB.115, and the pages read `new` by presence.
+// The modal's half of a list's address: the three href.ts files encode it alike, and the pages
+// read `new` by presence.
 describe('dialogParams', () => {
   it('writes the add form as a bare flag and an edit by its slug', () => {
     expect(listHref('/admin/categories', dialogParams('new'))).toBe('/admin/categories?new');
@@ -40,8 +40,8 @@ describe('dialogParams', () => {
   });
 });
 
-// M8.13: a list filter is a repeated parameter, `?forms=Herb&forms=Oil`, which
-// `list` (src/lib/search-params.ts) reads back.
+// A list filter is a repeated parameter, `?forms=Herb&forms=Oil`, which `list`
+// (src/lib/search-params.ts) reads back.
 describe('listHref, with a list', () => {
   it('writes each value as its own pair, in place', () => {
     expect(listHref('/compendium', { query: 'wort', forms: ['Herb', 'Oil'], after: 'c' })).toBe(

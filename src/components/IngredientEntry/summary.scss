@@ -1,10 +1,9 @@
 @use '../../scss/variables' as *;
 @use '../../scss/mixins' as *;
 
-// The details modal's body (M12.5): the description, the caution, then the
-// page's side column of blocks, stacked at every width (the owner's call,
-// 2026-10-20), as the 32rem modal has no room for the page's two columns. One
-// rhythm: each part stands off the next by the side column's own gap.
+// The details modal's body: the description, the caution, then the page's side column of blocks,
+// stacked at every width as the 32rem modal has no room for two columns.
+// (claude-docs/components/ingredient-entry.md, "Styling")
 .ingredient-summary {
   @include stack(6);
 }
@@ -16,18 +15,15 @@
   gap: space(2);
 }
 
-// The heading stands off its text by the stack gap alone, space(2) (8px), as every other
-// heading in the modal stands off its list; its own bottom margin on top of a section's gap
-// put it 24px off.
+// The heading stands off its text by the stack gap alone, space(2), as every other heading in the
+// modal does. (claude-docs/components/ingredient-entry.md, "Styling")
 .ingredient-summary .safety-note__heading {
   margin: 0;
 }
 
-// The side column's own top margin and grid column are the page's, set
-// against the viewport, which would put 16px under the caution on a phone and
-// none on a desktop; the stack above spaces it instead. Its blocks take the
-// summary's own gap: the page's stack is on `.ingredient-entry__body > …`,
-// which the modal is not, so without it Correspondences and Categories touched.
+// The page's side-column margin and grid column are set against the viewport, so the stack above
+// spaces it instead and its blocks take the summary's own gap.
+// (claude-docs/components/ingredient-entry.md, "Styling")
 .ingredient-summary .ingredient-entry__side {
   @include stack(6);
 
@@ -35,28 +31,16 @@
   margin-block-start: 0;
 }
 
-// The covens stand two steps further apart than the entry's other lists, space(3)
-// (12px) over the lists' space(1), so each coven's link reads as its own target (the
-// owner's calls, 2026-10-20). Through the summary, so it outranks .ingredient-entry__list.
+// The covens stand two steps further apart than the entry's other lists, so each link reads as its
+// own target; through the summary so it outranks .ingredient-entry__list.
+// (claude-docs/components/ingredient-entry.md, "Styling")
 .ingredient-summary .ingredient-summary__covens {
   gap: space(3);
 }
 
-// The forms (M9.9), each line a card's jar line in the body size: the icon and the
-// form's name, then on the coven's page the stock, in an element of its own. Without
-// jars (the compendium's pages) the list is the plain list of names it was, with no
-// empty column. With them (`--stocked`) the list is a grid of three columns: the names,
-// the quantities, the badges. Each line is a subgrid of the list's columns (and its stock
-// a subgrid of the last two), so every quantity ends in one right-aligned column however
-// long the names, and whether or not a badge follows it (the owner's call, 2026-10-20).
-// A form in no jar keeps its amount cell, holding only visually hidden text, so the
-// column stays where it is.
-// The names' column ends 4rem (`space(8)`) before the quantities, and the badge stands
-// `space(2)` after its quantity: both as padding or a margin rather than a column gap, so
-// a list with no badge draws no empty gap. The badge follows the quantity rather than
-// standing at the far end as on the card: across the modal's 32rem it would sit apart from
-// the line it flags. The spoken comma is out of the flow, so it takes no room. Subgrid is
-// Baseline widely available (2023).
+// The forms, each a card's jar line: a plain list of names without jars, with them (`--stocked`) a
+// three-column grid (names, quantities, badges) of subgrid lines, so quantities end in one right-aligned
+// column. Subgrid is Baseline widely available (claude-docs/components/ingredient-entry.md, "Styling").
 .ingredient-summary__forms > li {
   display: flex;
   align-items: center;
@@ -109,29 +93,17 @@
   margin-inline-start: space(2);
 }
 
-// In Your Cupboards: each coven's link led by the In Your Cupboard shelf, the name
-// one weight above the body's 300 (the owner's calls, 2026-10-20). The shelf
-// stands at the top of the link, level with the name's first line, so a wrapped
-// name runs on under itself; the link sits at the top of its line box
-// (`vertical-align`), where an inline-flex box would otherwise sit on its first
-// item's synthesised baseline. The shelf is `$icon-size` (24px; the owner's
-// call, 2026-10-20, that 20px was too small): its drawing is 18.4px tall and
-// its bottles about 15px, a little over Lexend's 11.25px cap height at 16px.
-// It centres on the first line's capitals rather than the line box: `$cap-middle` is
-// the capitals' middle measured from the line's top, and 0.5929 is where the
-// drawing's middle sits in its 32-unit box (y 6.7 to 31.24). Negative margins
-// rather than a move: the top one lifts the shelf, the bottom one stops what
-// hangs below from counting, so the row stays one line (20px) high; the ink
-// still ends inside it. Measured 2026-10-20.
-// claude-docs/components/ingredient-entry.md, "The details modal".
+// In Your Cupboards: each coven's link led by the In Your Cupboard shelf, at the top of the link
+// and centred on the first line's capitals (`$cap-middle`), with negative margins so the row stays
+// one line high. (claude-docs/components/ingredient-entry.md, "Styling")
 .ingredient-summary__covens a {
   display: inline-flex;
   align-items: flex-start;
   vertical-align: top;
   gap: space(2);
   font-weight: 400;
-  // Its colours, focus ring and faded underline are the References links' own
-  // rule (index.scss), so they rest in the body ink (the owner's call, 2026-10-20).
+  // Its colours, focus ring and faded underline are the References links' own rule (index.scss), so
+  // they rest in the body ink. (claude-docs/components/ingredient-entry.md, "Styling")
 
   > svg {
     flex: none;
@@ -153,16 +125,9 @@
 // The details modal's foot bar, with its variant that has a control beside the link, is in
 // _primitives.scss, which every page loads (the Quick Look of a spell draws it too).
 
-// The description and its Show More bar (the owner's calls, 2026-10-20). The
-// clip box round the paragraph is cut to six lines by the script, which sets
-// its height in pixels (summary-description.tsx); without the script it has
-// none and the whole text shows. The cut text fades out into the modal's
-// surface, and under it stands the bar: one real button the full width of the
-// text, on the modal's own surface with only a hairline along its top, the
-// label in the primary ink and a chevron after it. Opening moves the height
-// and the fade together over the medium motion (300ms, the owner's call) while
-// the chevron turns over with them; the bar stays where it is, under the text, and reads Show Less.
-// Under reduced motion nothing moves and each is at once.
+// The description and its Show More bar: a clip box cut to six lines by the script
+// (summary-description.tsx), its text fading into the surface over one full-width button; opening moves
+// height, fade and chevron together, and nothing moves under reduced motion (claude-docs/components/ingredient-entry.md, "Styling").
 .ingredient-summary__description {
   display: flex;
   flex-direction: column;
@@ -173,8 +138,8 @@
   overflow: hidden;
   transition: height $motion-medium ease-in-out;
 
-  // The fade: the surface the text stands on, in from clear at the top, so the
-  // last lines go into the bar rather than being cut. It lets the pointer through.
+  // The fade: the surface the text stands on, in from clear at the top, so the last lines go into
+  // the bar; it lets the pointer through. (claude-docs/components/ingredient-entry.md, "Styling")
   &::after {
     content: '';
     position: absolute;
@@ -199,12 +164,9 @@
   opacity: 1;
 }
 
-// The whole bar is the target. No fill and no corners: the modal's surface and
-// the hairline above it. Hover and focus leave the label as it is and grow the
-// chevron (below), and the focus is also the ring, drawn inside the bar. Open,
-// the bar stands further from the text it follows, since the fade that ran
-// under it is gone and the last line would otherwise touch it; collapsed it
-// stays close, so the fade runs under it.
+// The whole bar is the target, with no fill or corners, a hairline above it and the focus ring
+// inside; open, it stands further from the text since the fade is gone.
+// (claude-docs/components/ingredient-entry.md, "Styling")
 .ingredient-summary__more {
   @include button-reset;
 
@@ -238,11 +200,9 @@
   }
 }
 
-// The chevron after the label, down while the text is cut and turned over
-// once it is open, in step with the height. Pointed at or focused it grows a
-// quarter in the label's own colour, as the ingredient form's fold chevrons do
-// (`scale: 1.25`, IngredientForm/index.scss); `scale` composes with the
-// turn's `transform`.
+// The chevron after the label, down while the text is cut and turned over once open; pointed at or
+// focused it grows a quarter (`scale: 1.25`, as IngredientForm's fold chevrons do), composing with
+// the turn's `transform`. (claude-docs/components/ingredient-entry.md, "Styling")
 .ingredient-summary__more-chevron {
   flex: none;
   transition:

@@ -18,12 +18,8 @@ import {
   type FixtureFolder,
 } from './files-fixture';
 
-// M14.6: the rules a folder of entry files must satisfy over and above the
-// entries' own (guard.test.ts). The fixture folder passes
-// whole; each case breaks one rule in one file and expects the one issue,
-// then shows the folder passes again with the condition removed, so a rule
-// that never fired would fail here. The branch is always passed: CI sets
-// `GITHUB_BASE_REF`, and the status gate must not read it by accident.
+// The rules a folder of entry files must satisfy over and above the entries' own (guard.test.ts). The fixture folder passes whole; each case breaks one rule in one file and expects the one issue,
+// then shows the folder passes again with the condition removed, so a rule that never fired would fail here. The branch is always passed: CI sets `GITHUB_BASE_REF`, and the status gate must not read it by accident.
 
 const folders: FixtureFolder[] = [];
 afterEach(() => {

@@ -15,9 +15,9 @@
   opacity: 0;
   visibility: hidden;
 
-  // The fade-in and the pulse run after the delay. Under reduced motion
-  // `loading-motion` swaps both for the shared `loading-pulse`, so the dot
-  // pulses there too (the owner's call, 2026-10-19), as Spinner and Skeleton do.
+  // The fade-in and the pulse run after the delay. Under reduced motion `loading-motion`
+  // swaps both for the shared `loading-pulse`, so the dot pulses there too, as Spinner and
+  // Skeleton do.
   &.is-pending {
     visibility: visible;
 
@@ -31,9 +31,8 @@
   }
 }
 
-// In the accent colour at full strength, pulsing to half: at the link's own
-// colour and a third of its strength the dot was too faint to notice (the
-// owner's call, 2026-10-19).
+// In the accent colour at full strength, pulsing to half: at the link's own colour and a
+// third of its strength the dot was too faint to notice.
 @keyframes link-hint-in {
   to {
     opacity: 1;
@@ -46,12 +45,9 @@
   }
 }
 
-// The chain icon that becomes the ring (`LinkIconHint`): one 1em box holding
-// both, stacked, so the swap moves nothing. The box takes the place and
-// spacing the bare svg had in the link (the `icon-link` mixin's), and the
-// svg and the ring fill it. The icon is hidden once the ring appears
-// (`loading-appear`, the same zero-length step the ring uses), and where
-// motion is reduced the ring pulses (Spinner's own `loading-motion`).
+// The chain icon and the ring stacked in one 1em box, so the swap moves nothing; the box takes the
+// bare svg's place and spacing (`icon-link`). The icon hides once the ring appears
+// (`loading-appear`); reduced motion pulses the ring.
 .link-icon-hint {
   display: inline-grid;
   width: 1em;

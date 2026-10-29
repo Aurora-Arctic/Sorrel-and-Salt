@@ -8,12 +8,8 @@ import { A, B, D, E, asUser } from '../../../support/as-user';
 import { useTestDatabase } from '../../../support/db/database';
 import type { InvitationFixture } from './types';
 
-// M10.32: the coven invitations addressed to the signed-in account, as the
-// `/coven` landing lists them. The session is the scope, so a call needs no
-// permission and names no workspace; the repository matches the verified
-// address (tests/db/repository/invitations.test.ts). What this proves is the
-// service's own: the fields it assembles from three reads, and that another
-// account sees none of them.
+// The coven invitations addressed to the signed-in account, as the `/coven` landing lists them. The session is the scope, so a call needs no permission and names no workspace; the repository matches the verified address (tests/db/repository/invitations.test.ts).
+// This file proves the service's own part: the fields it assembles from three reads, and that another account sees none of them.
 
 let sql: postgres.Sql;
 useTestDatabase((client) => {

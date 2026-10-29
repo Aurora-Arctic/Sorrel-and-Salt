@@ -11,15 +11,10 @@ import ReviewRow from './review-row';
 import type { ReviewMarkProps } from './types';
 import './review-mark.scss';
 
-// The curator's Reviewed switch on a compendium entry (M14.8). It saves the moment it is flipped,
-// and stands, with the review day, as the last row of the Quick Look's head (admin and public) and
-// of the public entry page's head. The edit and add modals do not use this component: there the switch is a field of
-// the form, saved with Save (IngredientForm). It marks or clears the review. The badge saying where the entry stands is the
-// entry's own mark, drawn for everyone (EntryMarks).
-// A switch rather than a button that flips its label, so the state is the control's own to a
-// screen reader.  The mark is the seed's: the seed never rewrites an entry a curator has reviewed
-// (claude-docs/db/compendium-seed/README.md, "Write-once, and how a correction lands"). The
-// service is the guard; this is only the control (claude-docs/components/ingredient-entry.md).
+// The curator's Reviewed switch on a compendium entry: it saves on flip and stands, with the review day, as
+// the last row of the Quick Look's and the entry page's head. The edit and add modals carry the switch as a form field instead
+// (IngredientForm). The service is the guard; this is only the control (claude-docs/components/ingredient-entry.md, "Structure").
+// A switch, not a button that flips its label, so the state is the control's own to a screen reader.
 
 export const SetCompendiumEntryReviewedDocument = graphql(`
   mutation SetCompendiumEntryReviewed($id: ID!, $reviewed: Boolean!) {

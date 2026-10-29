@@ -551,3 +551,16 @@ The workshop's font plumbing substitutes, Vite-side, for what `next/font` +
   self-hosted `@fontsource` so `workshop:build` needs no network access.
 - **That `:root` override sits in `.storybook/typography.scss`** (prose rules).
   Move it to its own `.storybook/fonts.scss`, alongside the `preview-head.html` concern.
+
+## The `state` dropdown story
+
+A story with a `state` control (rule 5 above) draws a whole page or list, too big to sit beside the others. Its `state` arg is the node it draws: the `argTypes` mapping turns the chosen name into that node, so the story's type is `StoryObj<{ state?: ReactNode }>`. Story files do not repeat either fact.
+
+## Notes the `.storybook/` files cite
+
+- **The fake API answers under `/workshop/api/`.** The app's clients ask for `/workshop/api/...`, not `/api/...` (`WORKSHOP_API_PREFIX`, set in `main.ts`; `src/lib/api-path.ts`), because staging's Content Security Policy lets a workshop page reach only addresses under `/workshop/` and refuses the real ones before a service worker can answer. A story says what its requests get with `beforeEach: ({ msw }) => msw.use(answerMutation(SaveIngredientDocument, () => ({ ... })))`. The handlers in `mock-api.ts` are the defaults every story starts from, and the addon puts the worker back to them after each story.
+- **`useMockHandlers` and `beforeEach` are not mixed in one story.** `useMockHandlers` follows an arg or a `state` control, which `beforeEach` (it runs once, when the story loads) cannot. Removing its handlers puts the worker back to its defaults and re-adds only its own, so a story using both loses the `beforeEach` ones. Pass it a list that keeps its identity (a module constant or `useMemo`).
+- **The worker file is found beside the page** (`./mockServiceWorker.js`), so it works under `/workshop/` on staging as well as at the root of the dev server; the addon's own default is the root alone. Requests nothing handles go to the network.
+- **A navigation that never arrives** (`navigating.tsx`). The workshop's router goes nowhere, so a press would end its wait at once. `Navigating` suspends the router call inside the same transition, under an already-shown boundary. That keeps the transition pending, as the App Router does until a page renders, so the page bar's state, the link's `aria-busy` and the body's skeleton stay on screen. `tests/support/navigating.tsx` does the same with a mocked router. "Start Over" remounts the whole thing and is the only way the wait ends.
+- **The page bar needs a transformed box.** It is `position: fixed` against the window, but the shell frame pads the shell in from the window's edge. A transformed box (`translateZ(0)`) becomes the bar's containing block, so the bar lands on the global bar's bottom edge as in the app. The box also becomes the skip link's containing block, whose hiding (lifted above the page's top edge) would leave it in view; the clip hides it again, and it still shows on focus.
+- **Reduced motion on the page bar.** The sweep becomes a slow `loading-pulse`. The story pin (`meta.reducedMotion`) does not reach a CSS media query, so to see it, turn on the OS "reduce motion" setting or emulate `prefers-reduced-motion: reduce` in devtools (Rendering tab).

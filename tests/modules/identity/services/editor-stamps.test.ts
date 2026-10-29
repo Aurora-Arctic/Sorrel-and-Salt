@@ -5,10 +5,8 @@ import { Forbidden } from '@/lib/errors';
 import { A, B, F, asUser } from '../../../support/as-user';
 import { useTestDatabase } from '../../../support/db/database';
 
-// Regression: every admin curated list stamped its rows through a read only
-// a site admin could make, so a curator (M11.20) opening /admin/compendium
-// got a 500. The stamps are called as the pages call them, against the
-// seeded users, for each role that may open a curation screen.
+// Regression: every admin curated list stamped its rows through a read only a site admin could make, so a curator opening /admin/compendium got a 500.
+// The stamps are called as the pages call them, against the seeded users, for each role that may open a curation screen.
 
 let sql: postgres.Sql;
 useTestDatabase((client) => {

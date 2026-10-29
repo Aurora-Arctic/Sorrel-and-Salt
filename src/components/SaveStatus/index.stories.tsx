@@ -3,7 +3,7 @@ import { StatesGrid } from '../../../.storybook/states-grid';
 import SaveStatus from '.';
 import type { SaveStatusProps } from './types';
 
-// Every state an autosaving form's status line takes (M13.16), side by side.
+// Every state an autosaving form's status line takes, side by side.
 // Render-only: the once-per-burst announcement is the component test's.
 const meta = {
   title: 'Feedback / Save Status',

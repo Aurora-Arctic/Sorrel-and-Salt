@@ -1,24 +1,14 @@
 import { ISO_DAY, QUOTE_PAIRS } from '../../../lib/citation';
 import type { FieldFormat, ReferenceTextField } from './types';
 
-// How a reference's fields are tidied, and the shapes the schema's extra
-// checks accept (MB.154, the owner's calls). Pure and client-safe: the shared
-// schema applies each format as it parses, so the server stores it, and the
-// form applies the same one as a field is left, so the user sees it first. A
-// format changes only what it can read with certainty — spacing, the marks
-// around a title, a dash between numbers, an address's missing scheme, an
-// edition given as a number — and leaves everything else as typed, since
-// Chicago's forms vary more than any rule here would guess
-// (claude-docs/db/references.md, "Formatting and checks").
+// How a reference's fields are tidied, and the shapes the schema's extra checks accept. Pure and client-safe, so the server stores
+// what the form already showed. A format changes only what it can read with certainty and leaves the rest as typed, since
+// Chicago's forms vary more than any rule would guess (claude-docs/db/references.md, "Formatting and checks").
 
 /** Trimmed, every run of whitespace — a newline, a tab — one space. */
 export const tidy: FieldFormat = (text) => text.replace(/\s+/g, ' ').trim();
 
-/**
- * A title less the quotation marks wrapping the whole of it: the citation
- * quotes a chapter's or an article's title itself, so typed marks would print
- * twice. Marks inside it, a title within a title, stay.
- */
+/** A title less the quotation marks wrapping the whole of it: the citation quotes the title itself, so typed marks would print twice. */
 export const unquote: FieldFormat = (text) => {
   const close = QUOTE_PAIRS[text.charAt(0)];
   return close !== undefined && text.length > 1 && text.endsWith(close)
@@ -31,19 +21,11 @@ const DASHES = '[-‐‑‒—―]';
 const DIGIT_RANGE = new RegExp(`(\\d)\\s*${DASHES}\\s*(?=\\d)`, 'g');
 const NUMERAL_RANGE = new RegExp(`\\b([ivxlcdm]+)\\s*${DASHES}\\s*(?=[ivxlcdm]+\\b)`, 'gi');
 
-/**
- * Each range between numbers set with an en dash, as Chicago prints it:
- * "12-19" → "12–19", "1882—88" → "1882–88". A hyphen joining words stays,
- * and so does a day written as a date.
- */
+/** Each range between numbers set with an en dash, as Chicago prints it: "12-19" becomes "12–19". A hyphen joining words and a day written as a date stay. */
 export const dashRanges: FieldFormat = (text) =>
   ISO_DAY.test(text) ? text : text.replace(DIGIT_RANGE, '$1–');
 
-/**
- * As `dashRanges`, and a range of roman numerals too, "xii-xv" → "xii–xv":
- * only in a field that holds nothing but numbers, where a hyphen between two
- * runs of those letters cannot be a word's.
- */
+/** As `dashRanges`, and a range of roman numerals too ("xii-xv"), only in a field that holds nothing but numbers. */
 export const dashNumbers: FieldFormat = (text) => dashRanges(text).replace(NUMERAL_RANGE, '$1–');
 
 /** A scheme already given: "https:", "ftp:", "javascript:". */
@@ -79,11 +61,7 @@ function ordinal(n: number): string {
   return `${n}${suffix}`;
 }
 
-/**
- * An edition given as a number or a word as Chicago writes it: "2",
- * "second edition", "2nd edn" → "2nd ed.". Anything else — "Rev. ed.",
- * "2nd rev. ed." — stays as typed.
- */
+/** An edition given as a number or a word as Chicago writes it: "2", "second edition" and "2nd edn" become "2nd ed."; anything else stays as typed. */
 export const chicagoEdition: FieldFormat = (text) => {
   const match = EDITION.exec(text);
   if (!match) return text;
@@ -123,18 +101,10 @@ export const FORMAT_OF: Record<ReferenceTextField, FieldFormat> = {
   note: tidy,
 };
 
-/**
- * A reference's text fields, every one but the kind: the one list of them,
- * read off `FORMAT_OF`, whose type holds it to `CitationFields`, so a field
- * added there and not formatted here fails the type check.
- */
+/** A reference's text fields, every one but the kind. Read off `FORMAT_OF`, whose type holds it to `CitationFields`, so a field not formatted here fails the type check. */
 export const REFERENCE_TEXT_FIELDS = Object.keys(FORMAT_OF) as readonly ReferenceTextField[];
 
-/**
- * What is wrong with an address, or undefined when it is a full http(s) one
- * a browser can follow to a named site: no other scheme, no space, and a host
- * with a dot in it.
- */
+/** What is wrong with an address, or undefined when it is a full http(s) one a browser can follow to a named site: no other scheme, no space, a dot in the host. */
 export function addressProblem(url: string): string | undefined {
   if (!/^https?:\/\//i.test(url) || !URL.canParse(url)) {
     return 'Give the full address, starting http:// or https://';
@@ -156,11 +126,7 @@ const NUMBER_LIST = new RegExp(`^${NUMBER_RANGE}(?:\\s*,\\s*${NUMBER_RANGE})*$`,
 /** Numbers, numerals, ranges and lists of them, dashed: "51", "xii", "399–412", "12–19, 40". */
 export const isNumberList = (text: string): boolean => NUMBER_LIST.test(text);
 
-/**
- * The latest day a reference may say it was read or modified: tomorrow in
- * UTC, since a day east of Greenwich can already be tomorrow there, and the
- * form and the server may not share a clock's zone.
- */
+/** The latest day a reference may say it was read or modified: tomorrow in UTC, as the form and the server may not share a clock's zone. */
 export function latestDay(now: Date = new Date()): string {
   const tomorrow = new Date(now);
   tomorrow.setUTCDate(tomorrow.getUTCDate() + 1);

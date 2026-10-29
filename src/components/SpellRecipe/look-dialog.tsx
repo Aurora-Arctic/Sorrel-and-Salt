@@ -12,15 +12,9 @@ import DeleteSpellAction from './delete-spell';
 import type { SpellLookDialogProps } from './types';
 import './index.scss';
 
-// The Quick Look modal a grimoire card's eye opens over the list (M13.21), the spell's twin of
-// the ingredient details modal (M12.5): the spell read in the shared body, the last edit over
-// its title, Edit's pencil and Delete Spell's bin (M13.11) at the end of the title's line as the ingredient's
-// Quick Look has them (the owner's call, 2026-10-29), each for a role that may, and a link through to
-// the recipe page alone at the foot. Edit is a plain link to the list's address with `?edit=<id>` in
-// place of `?spell=<id>`, which the spell builder's dialog (M10.12) answers, so one dialog shows
-// at a time and closing the builder returns to the list rather than to this modal. A client
-// part because RouteModal takes its body as a function, which a server page cannot hand down;
-// the body arrives as the page's rendered children.
+// The Quick Look modal a grimoire card's eye opens: the spell body, last edit, Edit's pencil and
+// Delete Spell's bin for roles that may, and a link to the recipe page; a client part for RouteModal
+// (claude-docs/components/spell-recipe.md, "The Quick Look component").
 
 export default function SpellLookDialog({
   closeHref,
@@ -45,8 +39,7 @@ export default function SpellLookDialog({
   const name = opened ? opened.title?.trim() || UNTITLED_SPELL : '';
   const heading: ModalHeading | undefined = opened && {
     title: name,
-    // Edit and Delete as icons at the end of the title's line, as the ingredient's Quick Look has
-    // them (the owner's call, 2026-10-29), made by the card's own components.
+    // Edit and Delete as icons at the end of the title's line, as the ingredient's Quick Look has them.
     ...((opened.editHref || opened.deleteSpell) && {
       formalActions: (
         <span className="spell-look-actions">

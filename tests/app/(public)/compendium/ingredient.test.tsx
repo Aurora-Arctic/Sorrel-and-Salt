@@ -4,10 +4,8 @@ import { Forbidden, NotFound } from '@/lib/errors';
 import { EMPTY_VALUES } from '@/components/IngredientForm/values';
 import { entryDetail } from '../../../support/entry-detail';
 
-// The public entry page (M8.19; MB.80). The cached read and the viewer are
-// mocked, since what they decide is their own tests'. Here: which outcome of
-// the read becomes which response, who is offered Edit, and when the edit
-// dialog's values are read: only for a curator, and only with `?edit`.
+// The public entry page, with the cached read and the viewer mocked. It proves which outcome of the read becomes which response, who is offered Edit,
+// and that the edit dialog's values are read only for a curator and only with `?edit`.
 
 const notFound = vi.fn(() => {
   throw new Error('not-found');
@@ -23,7 +21,7 @@ const viewerIfSignedIn = vi.fn();
 vi.mock('@/lib/viewer', () => ({ viewerIfSignedIn }));
 
 const readCompendiumEntry = vi.fn();
-// The review switch's read (M14.8), per viewer, made for a curator or admin only.
+// The review switch's read, per viewer, made for a curator or admin only.
 const readCompendiumReview = vi.fn();
 vi.mock('@/modules/ingredients', () => ({ readCompendiumEntry, readCompendiumReview }));
 const SESSION = { userId: 'user-fixture' };
@@ -171,7 +169,7 @@ describe('the compendium entry page', () => {
   });
 });
 
-// M14.8: the Reviewed switch as the last row of the page's head, for a curator or
+// The Reviewed switch as the last row of the page's head, for a curator or
 // admin. Its read is per viewer and made for them alone, so a visitor's page is the cached one.
 describe('the compendium entry page, with the review switch', () => {
   const reviewSwitches = () => screen.queryAllByRole('switch', { name: 'Reviewed' });

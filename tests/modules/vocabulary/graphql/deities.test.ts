@@ -8,16 +8,9 @@ import { makeIngredient } from '../../../support/fixtures';
 import { run } from '../../../support/graphql/run';
 import type { DeityNode, FilteredDeities } from './types';
 
-// `deities` and `deityTraditions`, the curated deity vocabulary as the admin
-// pages read it, answered to a signed-out visitor (MB.80), and MB.132's six
-// admin writes. This file holds the transport's half
-// (claude-docs/testing/layer-ownership.md): a filtered page and its count,
-// each deity's tradition, `moveTo` reaching the delete, the loaders cleared
-// by a write, and per write one refusal per error code, read as the browser
-// reads it. Which roles are refused and the services' own rules are
-// services/deities.test.ts's and services/deity-traditions.test.ts's; a
-// signed-out caller refused at every field, and a non-admin at the `admin`
-// scope, are tests/db/graphql-query-scopes.test.ts's.
+// `deities` and `deityTraditions` over the wire, readable signed out, and the six admin writes: the transport's half (claude-docs/testing/layer-ownership.md).
+// That is a filtered page and its count, each deity's tradition, `moveTo` reaching the delete, the loaders cleared by a write, and one refusal per error code per write.
+// Roles and the services' rules are services/deities.test.ts's and services/deity-traditions.test.ts's; signed-out and non-admin scope refusals are tests/db/graphql-query-scopes.test.ts's.
 
 let sql: ReturnType<typeof postgres>;
 beforeAll(() => {

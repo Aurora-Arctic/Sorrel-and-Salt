@@ -85,7 +85,7 @@ export interface AstrologyValueConnection {
   pageInfo: { hasNextPage: boolean; endCursor: string | null };
 }
 
-/** A category group as M5.6b's writes answer it. */
+/** A category group as the group writes answer it. */
 export interface CategoryGroupNode {
   id: string;
   name: string;
@@ -95,7 +95,7 @@ export interface CategoryGroupNode {
   colorLight: string;
 }
 
-/** A form group as M5.6b's writes answer it. */
+/** A form group as the group writes answer it. */
 export interface FormGroupNode {
   id: string;
   name: string;

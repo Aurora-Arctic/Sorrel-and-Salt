@@ -16,7 +16,7 @@ import { asTouch } from '../support/db/touch-row';
 import { importAuth } from '../support/auth-module';
 import type { AuthInstance, Profile } from '../support/types';
 
-// Story 58, through Better Auth's real endpoints: an OAuth sign-up mails a
+// Through Better Auth's real endpoints: an OAuth sign-up mails a
 // link, and following it verifies the address only from a session holding
 // that account (claude-docs/auth/admin-bootstrap.md, "First-party verification").
 
@@ -78,11 +78,7 @@ async function userRow(email: string) {
     { id: string; email_verified: boolean; updated_by: string; updated_at: Date } | undefined;
 }
 
-/**
- * Hands the row's stamp to the bootstrap user, so a write that restamps it is
- * visible: the create hook already stamps a new row as itself, and an assertion
- * that `updated_by` is the user's own id would pass with no update hook at all.
- */
+/** Hands the row's stamp to the bootstrap user so a restamping write is visible: an `updated_by` assertion would pass with no update hook at all. */
 async function restamp(email: string): Promise<void> {
   await asTouch(
     sql,
@@ -298,7 +294,7 @@ describe('the update hook stamps other Better Auth writes', () => {
     expect(await userRow(OWNER)).toMatchObject({ email_verified: true, updated_by: id });
   });
 
-  // The name is `setName`'s, through `withAudit` (MB.88): Better Auth's own
+  // The name is `setName`'s, through `withAudit`: Better Auth's own
   // write of it, and of `image`, is refused before the endpoint runs.
   it('refuses /update-user, leaving the row unchanged', async () => {
     const response = await signIn('google', { sub: 'g-5', email: OWNER, verified: true });
@@ -334,7 +330,7 @@ describe('the update hook stamps other Better Auth writes', () => {
   });
 });
 
-// Promotion at verification (MB.68): our own mail vouches for the address the
+// Promotion at verification: our own mail vouches for the address the
 // way Google or Discord would, and only because the link is honoured from a
 // session holding the row.
 describe('the primary admin is promoted at first-party verification', () => {
@@ -365,11 +361,9 @@ describe('the primary admin is promoted at first-party verification', () => {
     expect((await userRow(OWNER))?.updated_by).toBe(before.id);
   });
 
-  // The email page's change link (MB.54): Better Auth's own change branch
-  // skips the session check, so src/lib/auth.ts gates it before the endpoint.
-  // Followed from the row's session it swaps the address, and the address
-  // being the bootstrap one, promotes — only the owner's inbox and the owner's
-  // session together can do that.
+  // The email page's change link: Better Auth's change branch skips the session check, so src/lib/auth.ts gates it.
+  // Followed from the row's session it swaps the address and, the address being the bootstrap one, promotes:
+  // only the owner's inbox and session together can do that.
   it('promotes at a change-email link to the bootstrap address from the row’s own session, and refuses one from none', async () => {
     const response = await signIn('microsoft', { sub: 'ms-7', email: STRANGER, verified: true });
     expectSignedIn(response);

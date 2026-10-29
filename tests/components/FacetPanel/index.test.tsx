@@ -7,7 +7,7 @@ import FacetPanel, { WIDE } from '@/components/FacetPanel';
 import type { FacetPanelFilter, FacetPanelProps } from '@/components/FacetPanel/types';
 import type { CompendiumFacetCounts } from '@/components/CompendiumList/types';
 
-// The Filters button and the panel it opens (M12.4): a dialog that slides down over the
+// The Filters button and the panel it opens: a dialog that slides down over the
 // results from the tablet width up and is a modal sheet below it, rendered inline and open
 // before the script runs (claude-docs/components/facet-panel.md).
 
@@ -296,7 +296,7 @@ describe('FacetPanel', () => {
     expect(sent('categoryMode')).toEqual(['any']);
   });
 
-  // M12.54: the Categories facet keeps its list open after a pick, as Forms and Deities do.
+  // The Categories facet keeps its list open after a pick, as Forms and Deities do.
   it('keeps the Categories list open after a pick, with the focus in the box, and applies the pick', () => {
     stubViewport(true);
     const onChange = vi.fn();
@@ -343,7 +343,7 @@ describe('FacetPanel', () => {
     expect(within(match()).getByRole('radio', { name: 'Any' })).toBeChecked();
   });
 
-  describe('the choice chips (M9.7)', () => {
+  describe('the choice chips', () => {
     const openPanel = (
       filter: Partial<FacetPanelFilter> = {},
       more: Partial<FacetPanelProps> = {},
@@ -444,7 +444,7 @@ describe('FacetPanel', () => {
     expect(screen.getByRole('switch', { name: /^No Refs/ })).toBeInTheDocument();
   });
 
-  describe('In My Covens (M12.55)', () => {
+  describe('In My Covens', () => {
     const COVENS = [
       { id: 'coven-w', name: 'Testhollow' },
       { id: 'coven-v', name: 'Testwren' },
@@ -467,7 +467,7 @@ describe('FacetPanel', () => {
     it('lists the viewer’s covens by name, with no counts, after Forms and Toxic', () => {
       open({ covens: [] }, { covens: COVENS });
       const box = screen.getByRole('combobox', { name: 'In My Covens' });
-      // Forms, then Toxic, then In My Covens, on their line (the owner's call, 2026-10-23).
+      // Forms, then Toxic, then In My Covens, on their line.
       const forms = screen.getByRole('combobox', { name: 'Forms' });
       const toxic = screen.getByRole('group', { name: 'Toxic' });
       expect(forms.compareDocumentPosition(toxic) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy();
@@ -590,7 +590,7 @@ describe('FacetPanel', () => {
     });
   });
 
-  describe("the coven's Source, In Stock and Low Stock Only controls (M9.7, M9.8)", () => {
+  describe("the coven's Source, In Stock and Low Stock Only controls", () => {
     const COVEN = { source: '', inStock: false, lowStockOnly: false } as const;
     const open = (filter: Partial<FacetPanelFilter> = {}, more: Partial<FacetPanelProps> = {}) => {
       stubViewport(true);
@@ -849,7 +849,7 @@ describe('FacetPanel', () => {
     expect(screen.queryByRole('switch', { name: /^No Form/ })).toBeNull();
   });
 
-  describe("the admin's Reviewed strip (M14.8)", () => {
+  describe("the admin's Reviewed strip", () => {
     const REVIEWED: CompendiumFacetCounts['reviewed'] = [
       { value: 'reviewed', label: 'Reviewed', count: 4 },
       { value: 'needs_review', label: 'Needs Review', count: 7 },

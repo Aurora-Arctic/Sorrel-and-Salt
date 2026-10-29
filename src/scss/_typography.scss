@@ -15,7 +15,7 @@
   h4 {
     @include heading-face;
     margin: 0 0 space(4);
-    // stylelint-disable-next-line plugin/use-baseline -- enhancement: the heading wraps in the ordinary way, uneven lines, widely available 2026-11-13
+    // stylelint-disable-next-line plugin/use-baseline -- enhancement: the heading wraps in the ordinary way, uneven lines, where unsupported
     text-wrap: balance;
   }
 
@@ -40,8 +40,8 @@
     line-height: 1.25;
   }
 
-  // Looser than the headings and than a control's text: a paragraph is
-  // read at length, and the thin face crowds at 1.5 (the owner's call, M8.19).
+  // Looser than the headings and a control's text: a paragraph is read at length, and the thin face
+  // crowds at 1.5.
   p {
     max-width: $measure;
     margin: space(2) 0;

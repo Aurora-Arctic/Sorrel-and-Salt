@@ -10,10 +10,9 @@ import {
 } from '@/lib/autosave';
 import { GraphQLClientError, StaleWriteError } from '@/lib/graphql-client-error';
 
-// An autosaving form (M13.16): a save 3 s after the last change and at most
-// 30 s into a run of them, one in flight, retries with backoff, a pause when
-// someone else saved first, and a copy in localStorage until the server has
-// the value (claude-docs/components/autosave.md).
+// An autosaving form: a save 3 s after the last change and at most 30 s into a run of them, one
+// in flight, retries with backoff, a pause when someone else saved first, and a copy in
+// localStorage until the server has the value (claude-docs/components/autosave.md).
 
 type Draft = { title: string };
 type Props = Partial<AutosaveOptions<Draft>> & { value: Draft };

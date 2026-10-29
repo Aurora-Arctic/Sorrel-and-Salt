@@ -12,7 +12,7 @@ export const spellStatus = pgEnum('spell_status', ['draft', 'complete']);
 // does not: `public`.
 export const spellVisibility = pgEnum('spell_visibility', ['private', 'workspace']);
 
-// Not a column: the orders a grimoire page takes (M10.9), kept here so the
+// Not a column: the orders a grimoire page takes, kept here so the
 // GraphQL enum and the repository read one list. Last edited first is the
 // default; claude-docs/graphql/schema.md, "The grimoire", says what each does.
 export const GRIMOIRE_ORDERS = ['UPDATED_DESC', 'CREATED_DESC', 'TITLE_ASC'] as const;
@@ -27,7 +27,7 @@ export const spells = pgTable(
       .references(() => workspaces.id),
     // Absent on a draft: autosave writes the row on the first keystroke, before
     // the member may have named it, and a placeholder would read as a real
-    // title. A title is required to complete, by the CHECK below (M13.15).
+    // title. A title is required to complete, by the CHECK below.
     title: text('title'),
     // What the spell is *for*, in the member's words; nothing compares it.
     intent: text('intent'),
@@ -46,7 +46,7 @@ export const spells = pgTable(
     // cannot see it is missing, and widening it back is the author's alone.
     // The author is `created_by` — §5 gives spells no separate author column.
     visibility: spellVisibility('visibility').notNull().default('workspace'),
-    // Raised by one on every UPDATE by the database; a save names it (M13.15).
+    // Raised by one on every UPDATE by the database; a save names it.
     revision: revisionColumn(),
     ...auditColumns,
   },
@@ -57,11 +57,8 @@ export const spells = pgTable(
       'spells_complete_has_title',
       sql`${table.status} <> 'complete' OR ${table.title} IS NOT NULL`,
     ),
-    // The grimoire search's fold, `unaccent_immutable($1) <% unaccent_immutable(title)`
-    // and the same over intent, reaches a trigram index only through an
-    // expression index over the same fold, as `ingredients_unaccent_trgm` does
-    // (claude-docs/db/grimoire.md, "The grimoire search"). One index over both
-    // columns serves either arm. Not partial: it reserves nothing.
+    // The grimoire search's fold reaches a trigram index only through an expression index over the same fold, as
+    // `ingredients_unaccent_trgm` does (claude-docs/db/grimoire.md, "Grimoire service and schema details"). Not partial: it reserves nothing.
     index('spells_unaccent_trgm').using(
       'gin',
       sql`unaccent_immutable(${table.title}) gin_trgm_ops`,

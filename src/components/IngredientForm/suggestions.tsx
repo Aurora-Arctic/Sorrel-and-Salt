@@ -36,12 +36,9 @@ import type {
 } from './types';
 import { COMPENDIUM_HEADING, YOUR_INGREDIENTS, draftOf, renamedTo, tierOf } from './values';
 
-// The lookups on the form's boxes: the form and folk names M4.7a serves, and
-// the celestial bodies, signs, deities and substitutes MB.131 adds. Each waits for the
-// typing to settle, asks /api/graphql for a page, and shapes the answer into
-// the combobox's rows. None asks until its box has been focused, so opening
-// the form sends nothing (claude-docs/components/ingredient-form.md, "The
-// lookups").
+// The lookups on the form's boxes: each waits for the typing to settle, asks /api/graphql for a
+// page and shapes the answer into the combobox's rows. None asks until its box has been focused, so
+// opening the form sends nothing (claude-docs/components/ingredient-form.md, "The lookups").
 
 const FormSuggestionsDocument = graphql(`
   query FormSuggestions($workspaceId: ID, $query: String, $first: Int) {
@@ -200,11 +197,9 @@ const qualified = (value: string, by: string | null | undefined): string =>
   by ? `${value} (${by})` : value;
 
 /**
- * The rows `document` answers for `text`, once it has settled, while
- * `active`: the last answer stays on screen while the next is fetched, and a
- * lookup that fails offers nothing rather than taking the form down. `scope`
- * is what it asks besides the text — the coven, or a null one for the
- * compendium's alone — and nothing for the compendium's own search.
+ * The rows `document` answers for `text`, once settled, while `active`: the last answer stays on
+ * screen while the next is fetched, and a failed lookup offers nothing. `scope` is what it asks
+ * besides the text (the coven, or null for the compendium's alone), and nothing for its own search.
  */
 export function useLookup<TResult, TScope extends object, O extends ComboboxOption>(
   document: TypedDocumentNode<TResult, TScope & LookupText>,
@@ -232,13 +227,13 @@ export function useLookup<TResult, TScope extends object, O extends ComboboxOpti
 const formOptions = (data: FormSuggestionsQuery): FormOption[] =>
   data.formSuggestions.edges.map(({ node }) => ({
     value: node.value,
-    // The group is what tells two same-named forms apart (M4.2a).
+    // The group is what tells two same-named forms apart.
     label: qualified(formLabel(node.value), node.group),
     note: [node.description, usedBy(node.claimants)].filter(Boolean).join(' · ') || undefined,
     curated: node.curated,
     // Null for a form only in use, which `FormIcon` draws as the generic.
     icon: <FormIcon name={node.icon ?? null} />,
-    // A curated row is what a pick links (MB.169); a form only in use has no
+    // A curated row is what a pick links; a form only in use has no
     // row, and a pick of it is typed text.
     link: node.id
       ? {
@@ -275,14 +270,14 @@ const deityOptions = (data: DeitySuggestionsQuery): ListOption[] =>
     ...correspondenceOption(node),
     // The tradition tells two same-named deities apart, as a form's group does.
     label: qualified(node.value, node.tradition),
-    // The other name the server found it by (M14.23), which its own name does
+    // The other name the server found it by, which its own name does
     // not show: "Astarte (Canaanite)" found by "ashtoreth" says why.
     note:
       [node.matchedName && `Also called ${node.matchedName}`, node.description]
         .filter(Boolean)
         .join(' · ') || undefined,
     // A curated deity is what a pick links, and its pill reads with its
-    // tradition (MB.169); one only in use has no row, and adds as text.
+    // tradition; one only in use has no row, and adds as text.
     link: node.id
       ? { id: node.id, tradition: node.tradition, description: node.description }
       : undefined,
@@ -316,7 +311,7 @@ const substituteOptions = (data: IngredientSuggestionsQuery): ListOption[] =>
       // and what its pill's tooltip tells.
       value: name,
       label: qualified(name, canonicalName),
-      // The server lists the cupboard first, then the compendium (M12.19), so
+      // The server lists the cupboard first, then the compendium, so
       // the headings are the two groups; the tier stays a note.
       heading: group === 'yours' ? YOUR_INGREDIENTS : COMPENDIUM_HEADING,
       note: tierOf(link),
@@ -368,7 +363,7 @@ export const useDeitySuggestions: UseSuggestions = (workspaceId, text, active) =
 
 /**
  * The ingredients a coven's substitute may link: the compendium's and its
- * own (MB.138). Asked only by a coven's form; the compendium's asks
+ * own. Asked only by a coven's form; the compendium's asks
  * `useCompendiumSubstitutes`.
  */
 export const useSubstituteSuggestions: UseSuggestions = (workspaceId, text, active) =>
@@ -382,24 +377,16 @@ export const useSubstituteSuggestions: UseSuggestions = (workspaceId, text, acti
 
 /**
  * The entries a compendium entry's substitute may link: the compendium's
- * alone, searched as its list is (M5.5), since a compendium substitute links
- * only the compendium (MB.138).
+ * alone, searched as its list is, since a compendium substitute links
+ * only the compendium.
  */
 export const useCompendiumSubstitutes: UseSuggestions = (_workspaceId, text, active) =>
   useLookup(CompendiumSubstitutesDocument, {}, text, active, compendiumOptions);
 
 /**
- * A variant's Form field, suggesting from the curated vocabulary and the
- * forms in use. A pick of a curated form links it, and the box shows its
- * group, which the text alone cannot: Wax under _Animal_ and under
- * _Substance_ both read "Wax" (MB.169). The text stays the member's to edit,
- * and an edit away from the picked name drops the link, the owner's call:
- * what is left is typed. On the compendium the form must be a pick (MB.162),
- * so the box offers the curated rows alone and no typed row.
- *
- * A pick an admin has since renamed (M5.6a) asks the member, beneath the box,
- * to use the new name or keep the text, which unlinks the pick; the resolver
- * holds the save until one is pressed (M8.17).
+ * A variant's Form field, suggesting from the curated vocabulary and the forms in use. A pick links
+ * a curated form and an edit away drops the link; on the compendium it must be a pick
+ * (claude-docs/components/ingredient-form.md, "Suggestion lists and fields").
  */
 export function FormField({ workspaceId, at, pickOnly }: FormFieldProps): ReactElement {
   const { control, getValues, setValue, clearErrors } = useFormContext<IngredientFormValues>();
@@ -430,7 +417,7 @@ export function FormField({ workspaceId, at, pickOnly }: FormFieldProps): ReactE
       qualifier={
         link?.group ? { text: link.group, detail: link.description ?? undefined } : undefined
       }
-      // Before the name, as each row has it (the owner's call, 2026-10-16):
+      // Before the name, as each row has it:
       // there while the box holds a pick, since an edit away drops the link.
       icon={link ? <FormIcon name={link.icon ?? null} /> : undefined}
       typedIcon={<FormIcon name={null} />}
@@ -457,10 +444,9 @@ export function FormField({ workspaceId, at, pickOnly }: FormFieldProps): ReactE
 }
 
 /**
- * The suggestions less the rows in use alone, when `only`: what a pick-only
- * box offers, since a value only in use is one the compendium refuses. Listed
- * flat, `curated` dropped: every row left is the compendium's, so a From
- * Compendium heading over them would tell the admin nothing.
+ * The suggestions less the rows in use alone, when `only`, listed flat with `curated` dropped:
+ * what a pick-only box offers, since a value only in use is one the compendium refuses, and every
+ * row left is the compendium's.
  */
 export function curatedOnly<O extends ComboboxOption>(
   found: Suggestions<O>,

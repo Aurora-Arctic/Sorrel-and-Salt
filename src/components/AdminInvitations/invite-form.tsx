@@ -11,14 +11,9 @@ import Notice from '../Notice';
 import { roleLabel, SITE_ROLE_ACCESS } from '../UserList/roles';
 import type { InvitableSiteRole, InviteFieldsProps, InviteFormProps } from './types';
 
-// The modal New Invitation opens, by the tab's address, `?invite`, as a value
-// page's `?new` opens its own (MB.115: New Invitation moved beside the page's
-// heading, out of this component's reach): an address, the site role it is
-// invited to (M11.20), and an optional reason, sent as
-// `createAdminInvitation`, which mails the link and answers
-// no link (MB.70). Closing goes back to the tab and re-reads it, so the new
-// invitation is listed. The service is the guard; a refused address is said
-// beside the field (claude-docs/components/admin-invitations.md).
+// The modal New Invitation opens at `?invite`: an address, the site role and an optional reason, sent as
+// `createAdminInvitation`, which mails the link and answers none. Closing re-reads the tab so the new invitation
+// is listed. The service is the guard; a refused address is said beside the field (claude-docs/components/admin-invitations.md).
 
 const CreateAdminInvitationDocument = graphql(`
   mutation CreateAdminInvitation($email: String!, $siteRole: InvitableSiteRole!, $note: String) {
@@ -29,16 +24,15 @@ const CreateAdminInvitationDocument = graphql(`
 `);
 
 /**
- * Where the Reason is kept, behind its info tip (MB.115, on the owner's
- * call): with the invitation first, where a confirmed change's is kept with
- * the change.
+ * Where the Reason is kept, behind its info tip: with the invitation first,
+ * where a confirmed change's is kept with the change.
  */
 const NOTE_HINT =
   'Kept with the invitation, and in the record of who changed what once it is accepted.';
 
 /**
- * The roles an invitation offers, the lesser first and chosen to begin with,
- * so granting the people page is a choice the admin makes (M11.20).
+ * The roles an invitation offers, the lesser first and chosen to begin with, so
+ * granting the people page is a choice the admin makes.
  */
 const SITE_ROLES: readonly InvitableSiteRole[] = ['curator', 'admin'];
 
@@ -60,8 +54,8 @@ const InviteFields = ({ onSent, close }: InviteFieldsProps): ReactElement => {
     error: failure.field?.message,
   });
 
-  // Anything typed is a change: Cancel, and every other way out, asks first
-  // (MB.115, the owner's call); a sent invitation does not.
+  // Anything typed is a change: Cancel, and every other way out, asks first; a sent
+  // invitation does not.
   const discard = useDiscardGuard(email !== '' || siteRole !== SITE_ROLES[0] || note !== '');
 
   async function submit(event: FormEvent<HTMLFormElement>) {
@@ -133,7 +127,7 @@ const InviteFields = ({ onSent, close }: InviteFieldsProps): ReactElement => {
         holdCancel
         onCancel={() => discard.request(close)}
       />
-      {/* Over the form, its buttons beneath (MB.115). */}
+      {/* Over the form, its buttons beneath. */}
       {discard.asking && <DiscardQuestion guard={discard} />}
     </form>
   );
@@ -142,9 +136,9 @@ const InviteFields = ({ onSent, close }: InviteFieldsProps): ReactElement => {
 /** The modal's head, and the tab's action that opens it. */
 export const INVITE_TITLE = 'New Invitation';
 
-// The tab's one modal place, rendered whether or not `?invite` is open, so
-// New Invitation's press shows it at once over a skeleton and the form
-// arrives in the same dialog (M9.18).
+// The tab's one modal place, rendered whether or not `?invite` is open, so New
+// Invitation's press shows it at once over a skeleton and the form arrives in the
+// same dialog.
 const InviteForm = ({ open, onSent, closeHref }: InviteFormProps): ReactElement => (
   <RouteModal
     closeHref={closeHref}

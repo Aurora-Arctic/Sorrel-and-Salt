@@ -11,10 +11,9 @@ import Notice from '../Notice';
 import type { NameFormProps } from './types';
 import './index.scss';
 
-// The account page's Name section (MB.88): the name the site shows, changed
-// through `setName`. A plain controlled input rather than react-hook-form, as
-// EmailForm is: one field, and every refusal is the server's.
-// See claude-docs/components/name-form.md.
+// The account page's Name section: the name the site shows, changed through `setName`. A
+// plain controlled input rather than react-hook-form, as EmailForm is: one field, and every
+// refusal is the server's. See claude-docs/components/name-form.md.
 
 const SetNameDocument = graphql(`
   mutation SetName($name: String!) {
@@ -82,8 +81,8 @@ const NameForm = ({ name }: NameFormProps): ReactElement => {
           />
         </FieldShell>
         <div className="form__actions">
-          {/* Offered only when there is something to save, and busy, saying
-              so, from the press to the answer — the owner's rule for every form. */}
+          {/* Offered only when there is something to save, and busy, saying so, from the press
+                        to the answer. */}
           <BusyButton
             type="submit"
             className="btn btn--solid"

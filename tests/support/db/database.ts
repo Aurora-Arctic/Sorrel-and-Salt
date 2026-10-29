@@ -2,18 +2,13 @@ import { afterAll, beforeAll } from 'vitest';
 import postgres from 'postgres';
 import type { IndexRow, CatalogueReads } from './types';
 
-// One client per test file, opened in `beforeAll` and ended in `afterAll`: the
-// harness re-clones the worker's database `WITH (FORCE)` before every file,
-// which kills any connection that outlived the file it was opened for
-// (claude-docs/testing/db-harness.md, "The db test harness"). Vitest's `sequence.hooks`
-// is `stack`, so a call at the top of a file opens before the file's own
-// `beforeAll` and closes after its `afterAll`.
+// One client per test file, opened in `beforeAll` and ended in `afterAll`: the harness re-clones the worker's
+// database `WITH (FORCE)` before every file, which kills a connection that outlived its file
+// (claude-docs/testing/db-harness.md, "The db test harness").
 
 /**
- * Hands the client to `bind` rather than returning it, so a file's existing
- * `let sql` — and every `sql\`…\``, `sql(row)` and `sql.begin` call on it —
- * stays as written. `DATABASE_URL` is read inside the hook, after
- * `db-setup.ts` has pointed it at this worker's clone.
+ * Hands the client to `bind` rather than returning it, so a file's existing `let sql` stays as written.
+ * `DATABASE_URL` is read inside the hook, after `db-setup.ts` has pointed it at this worker's clone.
  */
 export function useTestDatabase(bind: (client: postgres.Sql) => void): CatalogueReads {
   let sql: postgres.Sql;

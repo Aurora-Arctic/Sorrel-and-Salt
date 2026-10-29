@@ -4,10 +4,8 @@ import { Forbidden } from '@/lib/errors';
 import { assertMembership, membershipsOf } from '@/modules/coven';
 import { A, B, D, E, asUser } from '../../../support/as-user';
 
-// Whose covens a caller may list: their own, and for a site admin anyone's, by
-// workspace and role alone (M9.19) — an admin still reaches nothing a coven
-// holds. One answer per key, in key order, as a DataLoader batch needs; a
-// refused key is an Error in its slot rather than a rejection of the whole batch.
+// Whose covens a caller may list: their own, and for a site admin anyone's, by workspace and role alone, since an admin still reaches nothing a coven holds.
+// There is one answer per key, in key order, as a DataLoader batch needs; a refused key is an Error in its slot rather than a rejection of the whole batch.
 
 const summary = (answer: Awaited<ReturnType<typeof membershipsOf>>[number]) =>
   answer instanceof Error

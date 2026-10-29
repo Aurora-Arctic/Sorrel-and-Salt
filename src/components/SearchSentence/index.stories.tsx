@@ -5,13 +5,12 @@ import { buildSearchSentence } from '../IngredientSearch/sentence';
 import SearchSentence from '.';
 
 // Render-only; behaviour is asserted in tests/components/SearchSentence. Invented
-// values (M12.4). The search buttons stand in for a list's navigation: `pending` is
+// values. The search buttons stand in for a list's navigation: `pending` is
 // true until the "results" come back.
 const meta = {
   title: 'Ingredients / Search Sentence',
 } satisfies Meta;
 export default meta;
-// The dropdown story's `state` arg is the node it draws (see its argTypes mapping).
 type Story = StoryObj<{ state?: ReactNode }>;
 
 const FULL = (query: string) =>
@@ -72,12 +71,10 @@ function Searching({ wait, filtered = true }: { wait: number; filtered?: boolean
   );
 }
 
-// One story with a control to choose the state: each starts its own search on load, and the
-// control remounts it (claude-docs/workshop.md, rule 5).
-//   Settled: one closed line; press it to open the clauses.
-//   Slow Search: New Search types the sentence out; the results come back after four seconds.
-//   Fast Search: the results come back before the clauses are typed: they finish at a faster pace.
-//   Nothing To Open: a search term and no filter, so a plain line.
+// One control chooses the state; each starts its own search on load and the control
+// remounts it (claude-docs/workshop.md, rule 5). Settled: one closed line. Slow
+// Search: results return after four seconds. Fast Search: before the clauses finish
+// typing. Nothing To Open: a search term and no filter, so a plain line.
 const STATES: Record<string, ReactNode> = {
   Settled: <Searching wait={600} />,
   'Slow Search': <Searching wait={4000} />,

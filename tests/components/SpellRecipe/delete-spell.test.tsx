@@ -11,7 +11,7 @@ import { mockGraphQLError, mockGraphQLMutation } from '../../support/msw/graphql
 const router = vi.hoisted(() => ({ push: vi.fn(), replace: vi.fn(), refresh: vi.fn() }));
 vi.mock('next/navigation', () => ({ useRouter: () => router }));
 
-// Delete Spell on the recipe page (M13.11): the bin named for the spell, which asks in a
+// Delete Spell on the recipe page: the bin named for the spell, which asks in a
 // dialog, deletes nothing on Cancel, and on Delete runs the mutation and leaves for the
 // grimoire list (claude-docs/components/spell-recipe.md).
 

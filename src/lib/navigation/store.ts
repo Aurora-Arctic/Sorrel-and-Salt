@@ -1,9 +1,5 @@
-// The one piece of navigation state kept outside React: the browser has been
-// told to leave for a full page load (an OAuth redirect, say). Nothing in
-// React ends that wait, since the next page replaces this one rather than
-// rendering into it, so it cannot ride a transition the way a navigation does.
-// Read with `useSyncExternalStore`. A navigation's own state is the provider's
-// optimistic value (`provider.tsx`), which `useSyncExternalStore` cannot see.
+// The one piece of navigation state outside React: the browser has been told to leave for a full page load (an OAuth redirect). Nothing in React ends that
+// wait, so it cannot ride a transition. Read with `useSyncExternalStore`; a navigation's own state is the provider's optimistic value (`provider.tsx`).
 
 let leaving = false;
 const listeners = new Set<() => void>();

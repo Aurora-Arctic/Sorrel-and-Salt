@@ -6,9 +6,9 @@ import {
 } from '@/lib/compendium-cache';
 import { clearDataCache, declared } from '../support/next-data-cache';
 
-// M8.6's wrapper over `unstable_cache`, against a data cache that holds as
-// Next's does (tests/support/next-data-cache.ts): what each read is declared
-// with, and what a hit gives back (claude-docs/db/compendium-cache.md).
+// The wrapper over `unstable_cache`, against a data cache that holds as Next's does
+// (tests/support/next-data-cache.ts): what each read is declared with, and what a hit gives back
+// (claude-docs/db/compendium-cache.md).
 vi.mock('next/cache', () => import('../support/next-data-cache'));
 
 describe('cachedCompendiumRead', () => {

@@ -3,16 +3,8 @@ import { auditProjects } from './playwright.config';
 import { HTML_REPORT, baseConfig } from './tests/e2e/base-config';
 import { slotServers } from './tests/e2e/servers';
 
-// The story suite (M9.1): one browser flow per user story, under
-// tests/e2e/stories/, run by `npm run test:stories` and by the PR gate's
-// `stories` job, which is never a required check. It shares the slot servers,
-// databases and browser options with the gate suite (playwright.config.ts) and
-// nothing else: not the providers-configured or compendium-cache servers, which
-// no story needs.
-//
-// A retry lets a run finish, but the reporter counts a story that passed only
-// on retry as failing (tests/support/story-playwright-reporter.ts). With no
-// story file yet the run passes and prints every story as "no test yet".
+// The story suite: one browser flow per user story under tests/e2e/stories/, run by `npm run test:stories` and the PR gate's `stories` job. It shares the slot
+// servers, databases and browser options with the gate suite (playwright.config.ts). A story that passes only on retry is counted as failing by the reporter.
 export default defineConfig({
   ...baseConfig,
   testDir: './tests/e2e/stories',
@@ -21,7 +13,7 @@ export default defineConfig({
   passWithNoTests: true,
   reporter: [
     // Under Claude Code the per-test lines are dots; PW_REPORTER=list (or any
-    // value) restores them for timings (MB.142, M12.37).
+    // value) restores them for timings.
     [process.env.PW_REPORTER ?? (process.env.CLAUDECODE && !process.env.CI ? 'dot' : 'list')],
     ['./tests/support/story-playwright-reporter.ts', { outputFile: process.env.STORIES_JSON }],
     ...(process.env.CI ? ([['json'], ['html', HTML_REPORT]] as const) : []),

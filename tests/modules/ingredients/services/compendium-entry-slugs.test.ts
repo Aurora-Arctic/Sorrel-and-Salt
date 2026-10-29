@@ -20,11 +20,8 @@ import {
 } from '../../../support/fixtures';
 import { useCompendiumEntryInput } from '../../../support/db/compendium-entry-input';
 
-// Story 17's service, its identity half: the compendium's unique indexes met as
-// field errors, the slug an entry's label and formal name give it, and the
-// redirect a moved slug leaves (claude-docs/db/ingredient-slugs.md). Split from
-// compendium-entries.test.ts, which holds the writes. The table is emptied per
-// test, so every row a result could come from is one this file wrote.
+// The compendium service, its identity half: the compendium's unique indexes met as field errors, the slug an entry's label and formal name give it, and the redirect a moved slug leaves (claude-docs/db/ingredient-slugs.md).
+// Split from compendium-entries.test.ts, which holds the writes. The table is emptied per test, so every row a result could come from is one this file wrote.
 
 // The holder lookup, wrapped so one test can have the holder gone by the time
 // it is read without changing what it answers for the rest.
@@ -76,13 +73,13 @@ describe('a collision with another compendium entry', () => {
     return (error as ValidationError).issues;
   }
 
-  // MB.220: one formal name is one entry, so an oil beside its form is a form
+  // One formal name is one entry, so an oil beside its form is a form
   // of it, not a second entry. Under the same label, the address index
   // breaks first, and the refusal is still the formal name's.
   it('refuses a second entry under a formal name the compendium holds, whatever its form, on `canonicalName`, naming the entry', async () => {
     await seed();
     // Why it could have been admitted: Oil is a curated pick, so no vocabulary
-    // rule refuses it, and until MB.220 a differing form was another identity.
+    // rule refuses it, and a differing form is not another identity.
     const oil = entry({ variants: [makeVariant({ form: 'Oil' })] });
     expect(oil.variants?.[0].formId).toEqual(expect.any(String));
 
@@ -116,7 +113,7 @@ describe('a collision with another compendium entry', () => {
 
   it("refuses a rewrite onto another entry's identity, leaving the row as it was", async () => {
     await seed({ name: 'Testwort' });
-    // Another formal name: one formal name is one entry per tier since MB.216.
+    // Another formal name: one formal name is one entry per tier.
     const id = await seed({ name: 'Testwort', canonicalName: 'Fixtura alteralis' });
     const before = await rowOf(id);
 
@@ -188,11 +185,8 @@ describe('a collision with another compendium entry', () => {
   });
 });
 
-// MB.82's rule (claude-docs/db/ingredient-slugs.md, "Ingredient slugs"): the address follows the
-// label and the formal name, never the form (MB.220); the one it leaves redirects to the entry
-// for 180 days; and a write that would take another entry's redirected address
-// ends that redirect only once the admin confirms it. The clock is pinned, so
-// every window below is exact.
+// The slug rule (claude-docs/db/ingredient-slugs.md, "Ingredient slugs"): the address follows the label and the formal name, never the form; the one it leaves redirects to the entry for 180 days.
+// A write that would take another entry's redirected address ends that redirect only once the admin confirms it. The clock is pinned, so every window below is exact.
 describe('the slug', () => {
   const NOW = new Date('2026-03-01T12:00:00.000Z');
   // Midnight of 1 March, plus 180 days.
@@ -260,7 +254,7 @@ describe('the slug', () => {
     expect(await retirements()).toEqual([]);
   });
 
-  // MB.220: no SQL rewrites a slug, so a row saved before keeps its form in
+  // No SQL rewrites a slug, so a row saved before keeps its form in
   // the address until its own next save, which moves it and retires the old.
   it('moves a form-bearing slug on the next save, the old one redirecting to the entry', async () => {
     const id = await seed();
@@ -382,11 +376,8 @@ describe('the slug', () => {
   });
 });
 
-// The redirect's window and what a retirement answers are
-// tests/db/repository/slugs.test.ts's (findCompendiumSlugRedirect), and the
-// service's answer for a moved slug is the 'the address it moved off' row of
-// the READS table in compendium-entries.test.ts: what stays here is the entry,
-// and a coven's slug kept private.
+// The redirect's window and what a retirement answers are tests/db/repository/slugs.test.ts's (findCompendiumSlugRedirect), and the service's answer for a moved slug is the 'the address it moved off' row of the READS table in compendium-entries.test.ts.
+// What stays here is the entry, and a coven's slug kept private.
 describe('resolveCompendiumSlug', () => {
   it('answers the entry at its slug, with no session and no moved-away entry', async () => {
     const id = await seed();

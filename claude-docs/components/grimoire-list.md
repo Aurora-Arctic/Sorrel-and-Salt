@@ -180,3 +180,20 @@ One thing in the list exists for the cards' smouldering edge ([spell-card.md](sp
 - Visibility, search, categories and counts are proved below the page, in
   `tests/db/repository/readable-spell-page.test.ts` and
   `tests/modules/grimoire/services/spell-reads.test.ts`.
+
+## The empty states
+
+A grimoire tab with no card to show draws one of two status regions, named so a test or a screen reader can tell them apart, as the coven's cards do.
+
+- No Spells (No Drafts on the Drafts tab): the tab holds nothing yet.
+- No Matches: a filter is in force and matched nothing. The search sentence above already names the filter, so this only says what to do. `hasFilter` is the search sentence's own test, so the two never disagree.
+
+There is no first add here: New Spell at the Grimoire's heading opens the builder.
+
+## Search parameters
+
+The grimoire takes the compendium's search text and its category filter with the match mode as they are, so the filter row and the pager write the grimoire's address as they write every other list's (see "The parameter table" in `ingredient-search.md`). There is no status parameter, because Spells and Drafts are two addresses. Four facets sit beside them:
+
+- Moon Phase and Day of Week are free text, a spell's own words, so an uncurated value stays valid.
+- Visibility is one of a fixed pair.
+- Coven Member is the ids of the members who made the spells; each is checked as an id and a repeat is dropped.

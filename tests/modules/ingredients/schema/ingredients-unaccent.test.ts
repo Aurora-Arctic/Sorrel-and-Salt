@@ -4,12 +4,8 @@ import { useTestDatabase } from '../../../support/db/database';
 import { FIXTURE_USERS } from '@/db/seed/standard';
 import { ingredientSlug } from '@/lib/slugify';
 
-// The compendium search folds accents through `unaccent_immutable`, and the
-// two expression indexes are what let a fold reach a trigram index at all —
-// claude-docs/db/compendium-read.md, "The compendium read". That they are
-// reached is proved on the SQL the finder sends, in
-// tests/db/repository/compendium-search-query.test.ts (MB.184); what stays
-// here is the fold they exist for.
+// The compendium search folds accents through `unaccent_immutable`, and the two expression indexes are what let a fold reach a trigram index at all (claude-docs/db/compendium-read.md, "The compendium read").
+// That they are reached is proved on the SQL the finder sends, in tests/db/repository/compendium-search-query.test.ts; what stays here is the fold they exist for.
 const AUTHOR = FIXTURE_USERS.A.id;
 
 let sql: ReturnType<typeof postgres>;

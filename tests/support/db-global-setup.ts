@@ -5,22 +5,15 @@ import { TEST_TEMPLATE, workerDatabaseName } from './worker-database';
 
 declare module 'vitest' {
   interface ProvidedContext {
-    /**
-     * Every database this setup cloned, one per pool slot, so a test can assert
-     * its own is one that was made rather than recompute the bound.
-     */
+    /** Every database this setup cloned, one per pool slot, so a test can assert its own was made. */
     workerDatabases: string[];
     /** The migrated, `standard`-seeded template every one of those was cloned from. */
     templateDatabase: string;
   }
 }
 
-// `db` and `db-mocking` both name this file (MB.238), and Vitest runs each
-// project's global setup in turn, evaluating the file afresh for each, so the
-// second would rebuild the template and every clone the first just made. The
-// build is kept on `globalThis` because module scope is not shared between the
-// two, and keyed by the run's Vitest instance rather than held as a flag, so a
-// watch session that restarts on a config change builds afresh.
+// Vitest evaluates this file afresh for each project that names it, so the build is kept on `globalThis`,
+// keyed by the run's Vitest instance, so `db` and `db-mocking` share one and a restarted watch session builds afresh.
 const registry = globalThis as typeof globalThis & TemplateBuildRegistry;
 const builds = (registry.__sorrelTemplateBuilds ??= new WeakMap());
 

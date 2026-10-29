@@ -27,10 +27,9 @@ import {
   UndoIcon,
 } from '.';
 
-// Render-only; behaviour is asserted in tests/components/IconTip. Hover or
-// focus a pencil to open its tip; Escape closes it. The rows are a list's
-// banded table, so the pencil shows on both of its grounds, the page and the
-// card. The ingredient form's smaller pencils are drawn in its own stories.
+// Render-only; behaviour is asserted in tests/components/IconTip. Hover or focus
+// a pencil to open its tip; Escape closes it. The rows are a list's banded table,
+// so the pencil shows on both grounds, the page and the card.
 const meta = {
   title: 'Forms / Icon Tip',
 } satisfies Meta;
@@ -42,8 +41,8 @@ const ROWS = ['Fixture Salt', 'Testwort', 'Fixture Ash'].map((name) => ({
   description: 'An invented entry, for the workshop.',
 }));
 
-// The columns an admin list has: the name with its Quick Look eye (M12.5), the labels, then the pencil in its own,
-// unlabelled, at the row's end (a card's top right at a phone's width).
+// An admin list's columns: the name with its Quick Look eye, the labels, then an
+// unlabelled pencil at the row's end (a card's top right at phone width).
 const COLUMNS: StackColumn<(typeof ROWS)[number]>[] = [
   {
     heading: 'Name',
@@ -97,11 +96,9 @@ const GLYPHS = {
 const NOOP = (): void => undefined;
 const HEADING = { title: 'Testwort' };
 
-// Every glyph the wrapper's icons file draws, at the icon button's glyph size,
-// then every control that wears one with its tip (hover or focus it): the
-// edit, compendium edit, annotate and quick look links; the bin, annotate and
-// quick look buttons; and the three dots' menu, in its Compendium and Coven
-// sections.
+// Every glyph the wrapper's icons file draws at the icon button's glyph size,
+// then every control that wears one with its tip: the links, the buttons, and
+// the three dots' menu in its Compendium and Coven sections.
 export const States: Story = {
   render: () => (
     <StatesGrid

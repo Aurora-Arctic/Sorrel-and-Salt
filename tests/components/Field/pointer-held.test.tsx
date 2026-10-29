@@ -3,11 +3,8 @@ import { FormProvider, useForm } from 'react-hook-form';
 import { describe, expect, it } from 'vitest';
 import { TextField } from '@/components/Field';
 
-// A field's error is drawn when it is left, and pressing another control
-// leaves it on the press: the error line pushes the control down before the
-// button comes up, so the click misses. What is drawn stands still while a
-// button is down: an error just raised waits for the release, and one already
-// showing stays, since taking it away would move the controls the other way.
+// A field's error is drawn when it is left, and pressing another control leaves it on the press: the error line pushes the control down before the button comes up, so the click misses.
+// What is drawn therefore stands still while a button is down: an error just raised waits for the release, and one already showing stays, since taking it away would move the controls the other way.
 
 function Form() {
   const methods = useForm({

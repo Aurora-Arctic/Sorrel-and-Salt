@@ -19,22 +19,9 @@ import {
   withSql,
 } from './stories/coven-ingredients';
 
-// The coven's Ingredients page (M9.6), against the built server. Stories 20–27
-// (tests/e2e/stories/03-ingredients) walk a member through the list and its
-// filters; this proves what no story walks: a non-member reads no such page,
-// the pager holds its place and its filter, the Compact switch is the default
-// and its opposite is in place before the page is drawn, the type-ahead offers
-// this coven's cupboard and nothing else, a held compendium entry's card
-// opens Annotate over the list and closes back to its search (M8.17), a
-// card's More near the window's foot opens above it inside the window
-// (M8.17), a pager end lands on the new page's first entries, and the page
-// passes axe at both densities and at a phone's width. The jar lines' icons
-// and badges are JarLines', StockBadge's and FormIcon's component tests, with
-// the form-to-group read in
-// tests/modules/ingredients/services/workspace-ingredient-list-form-groups.test.ts;
-// a retired entry's card, writes and removal are IngredientCard's,
-// cupboard-actions' and the retired-entry service tests'; the own entry's
-// delete is story 25's.
+// The coven's Ingredients page against the built server, for what no story walks: a non-member's 404, the pager,
+// the Compact switch before paint, the type-ahead scoped to this cupboard, Annotate over the list, and axe at
+// both densities and a phone's width.
 
 // The cards page by 24 (`CARD_PAGE_SIZE`), so 26 entries make two pages.
 const PAGE_SIZE = 24;
@@ -45,7 +32,7 @@ test.beforeAll(async () => {
 
 const listPath = (coven: Coven) => `/coven/${coven.slug}/ingredients`;
 
-/** M9.6's Prev / "Page X of Y" / Next row. */
+/** The Prev / "Page X of Y" / Next row. */
 const pagerOf = (page: Page) => page.getByRole('navigation', { name: 'Pages' });
 
 /** The Compact switch in the filter row (CardDensitySwitch). */
@@ -280,7 +267,7 @@ test("the type-ahead offers this coven's cupboard alone", async ({ page }) => {
   // Typed again, the answer may come from the client's cache, with no request to wait on.
   await nameSearch(page).fill('Cronewort');
   await page.getByRole('option', { name: 'Fixture Mirrorwort (Fixtura nostra)' }).click();
-  // The pick opens the entry's Quick Look over the list (the owner's rule of 2026-10-27).
+  // The pick opens the entry's Quick Look over the list.
   await expect(page.getByRole('dialog', { name: 'Fixture Mirrorwort', exact: true })).toBeVisible();
   await expect(page).toHaveURL(
     new RegExp(`/coven/${ours.slug}/ingredients\\?(.*&)?entry=${own.ingredientId}(&|$)`),
@@ -318,12 +305,9 @@ test('the page passes axe at both densities and holds at a phone width', async (
   await assertNoSidewaysScroll(page);
 });
 
-// M8.17: Annotate on the card of a compendium entry the coven holds opens the
-// entry page's dialog over the list, and a close or a save comes back to the
-// list as it was, its search kept and the focus on the card's Annotate. The
-// dialog's More menu, opening upward inside it, removes the entry from the
-// cupboard behind the confirmation dialog, back onto the same search without
-// its card.
+// Annotate on a held compendium entry's card opens the entry page's dialog over the list; a close or save
+// comes back to the list as it was, search kept and focus on the card's Annotate. The dialog's More menu,
+// opening upward inside it, removes the entry from the cupboard behind a confirmation, back to the same search.
 test("a held compendium entry's card opens Annotate over the list, and closes back to its search", async ({
   page,
 }) => {
@@ -382,7 +366,7 @@ test("a held compendium entry's card opens Annotate over the list, and closes ba
   await expect(dialog).toHaveCount(0);
   await backAtSearch();
   // The save shows as the coven's label; the card wears no Annotated, which is the
-  // entry page's to say (the owner's call, 2026-10-20).
+  // entry page's to say.
   const annotated = rowOf(ingredientList(page), 'Fixture Our Notewort');
   await expect(annotated).toHaveCount(1);
   await expect(annotated.getByRole('button', { name: 'Annotated' })).toHaveCount(0);
@@ -417,7 +401,7 @@ test("a held compendium entry's card opens Annotate over the list, and closes ba
   await page.setViewportSize(wide);
 
   // The question is the form's own card, over the form in this dialog, as
-  // Delete asks (the owner's call, 2026-10-20): Cancel keeps the
+  // Delete asks: Cancel keeps the
   // dialog, the focus back on More.
   const question = dialog.getByRole('group', {
     name: /^Remove Fixture Our Notewort from your cupboard\?/,
@@ -446,10 +430,8 @@ test("a held compendium entry's card opens Annotate over the list, and closes ba
   expect(held).toHaveLength(0);
 });
 
-// A menu placed by Floating UI (M8.17, as MB.154 places a list): a card's
-// More near the window's foot opens above the button, since there is more room
-// there, and stays inside the window, at a desktop's width and a phone's, where
-// the fixed bottom bar takes the foot.
+// A card's More near the window's foot opens above the button, where there is more room, and stays inside the
+// window at a desktop's width and a phone's, where the fixed bottom bar takes the foot.
 test("a card's More opened near the window's foot opens above it, inside the window", async ({
   page,
 }) => {
@@ -457,7 +439,7 @@ test("a card's More opened near the window's foot opens above it, inside the win
     A: 'owner',
   });
   // A held compendium entry, whose More holds two choices; a coven's own entry with
-  // Delete alone draws a bin and no More (the owner's call, 2026-10-20).
+  // Delete alone draws a bin and no More.
   await withSql(async (sql) => {
     const ingredientId = await insertIngredient(
       sql,
@@ -509,12 +491,9 @@ test("a card's More opened near the window's foot opens above it, inside the win
   }
 });
 
-// ListFrame (MB.115): a pager end keeps the reader at the list rather than
-// Next's jump to the page top, and once the new page renders brings the
-// list's start to the line the stuck search row leaves (the root's
-// scroll-padding-top). A filter's page is Next's own scroll, to the top of the
-// page, with no pull to the list. Measured here because happy-dom draws no
-// layout to scroll.
+// ListFrame: a pager end keeps the reader at the list rather than Next's jump to the page top, then brings
+// the list's start to the line the stuck search row leaves (the root's scroll-padding-top). A filter's page
+// is Next's own scroll, to the top. Measured here because happy-dom draws no layout to scroll.
 test("a pager end lands on the new page's first entries", async ({ page }) => {
   const coven = await seedCoven(page, 'Fixture Coven Pager Scroll', 'pager-scroll.test', {
     A: 'owner',

@@ -5,17 +5,13 @@ import type { CompendiumFacetCounts } from '../CompendiumList/types';
 import FacetPanel, { WIDE } from '.';
 import type { FacetPanelFilter } from './types';
 
-// Render-only; behaviour is asserted in tests/components/FacetPanel. Invented values (M12.4).
-// A change is held, not applied (the list's page holds it until Apply Filters or a close),
-// and marks the chips "loading" for a moment, as the live counts on their way do. The
-// counts themselves do not follow the choices; they are fixed here. A value counting
-// nothing is left out of its list unless chosen. Narrow the preview below the tablet
-// width for the modal sheet.
+// Render-only; behaviour is asserted in tests/components/FacetPanel. A change is held
+// until Apply Filters or a close, and marks the chips "loading" briefly. Counts are
+// fixed. Narrow the preview below the tablet width for the modal sheet.
 const meta = {
   title: 'Ingredients / Facet Panel',
 } satisfies Meta;
 export default meta;
-// The dropdown story's `state` arg is the node it draws (see its argTypes mapping).
 type Story = StoryObj<{ state?: import('react').ReactNode }>;
 
 const WARDING = { id: 'g1', name: 'Protective', colorDark: '#50a58e', colorLight: '#1d755d' };
@@ -61,7 +57,7 @@ const FACETS: CompendiumFacetCounts = {
   withoutForms: 4,
 };
 
-// The coven's counts: Source's two values, one at zero as Toxic's may be, the In Stock count and the Low Stock Only count.
+// The coven's counts: Source's two values (one at zero), In Stock and Low Stock Only.
 const COVEN_FACETS: CompendiumFacetCounts = {
   ...FACETS,
   source: [
@@ -223,8 +219,8 @@ const sourceStuckNode = (
 // The admin list also has the No Refs switch, after Toxic on the Forms row.
 const adminNode = <Panel admin start={{ ...NONE, withoutReferences: true }} />;
 
-// The coven's list also has a Source chip, the In Stock switch and the Low Stock Only switch, on the Forms row beside Toxic.
-// Their values count on the Filters button, so the three chosen here make 3.
+// The coven's list adds a Source chip and the In Stock and Low Stock Only
+// switches on the Forms row. Their values count on the Filters button (3 here).
 const covenNode = (
   <Panel
     facets={COVEN_FACETS}
@@ -261,8 +257,6 @@ export const SourceMenu: Story = {
 // The admin's Toxic chip open, with No Refs on the same row.
 export const ToxicMenu: Story = { render: () => <Panel menu="Toxic" admin start={NONE} /> };
 
-// One story with a control to choose the state: each is a whole page or list,
-// too big to sit beside the others (claude-docs/workshop.md, rule 5).
 const STATES: Record<string, ReactNode> = {
   Default: defaultNode,
   Public: publicNode,

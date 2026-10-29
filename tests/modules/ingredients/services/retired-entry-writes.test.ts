@@ -22,15 +22,9 @@ import { insertIngredient } from '../../../support/db/insert-ingredient';
 import { insertStock } from '../../../support/db/insert-stock';
 import { makeIngredient, makeVariant } from '../../../support/fixtures';
 
-// The writes a coven keeps on a compendium entry the curators retired
-// (soft-deleted) while its cupboard row names it, by the owner's decision of
-// 2026-10-19, which reverses M12.24's "adds nothing to it": annotating the
-// entry through the row's overrides, removing it from the cupboard, Make It
-// Ours, and its jars (claude-docs/db/workspace-compendium-entries.md, "When
-// the compendium retires the entry"). Coven W holds the entry; coven X holds
-// no row naming it. Every test retires the entry first. No viewer case is
-// here: `assertMembership` refuses a viewer before the entry is read, so a
-// retired entry changes nothing the write paths' own viewer tests prove.
+// The writes a coven keeps on a compendium entry the curators retired (soft-deleted) while its cupboard row names it: annotating through the row's overrides, removing it from the cupboard, Make It Ours, and its jars
+// (claude-docs/db/workspace-compendium-entries.md, "When the compendium retires the entry"). Coven W holds the entry; coven X holds no row naming it. Every test retires the entry first.
+// No viewer case is here: `assertMembership` refuses a viewer before the entry is read, so a retired entry changes nothing the write paths' own viewer tests prove.
 
 let sql: postgres.Sql;
 useTestDatabase((client) => {
@@ -73,11 +67,7 @@ async function softDelete(
   });
 }
 
-/**
- * The preconditions every assertion leans on: the entry is the compendium's
- * and retired, W's row naming it is live (or, with `rowLive` false,
- * tombstoned), and X has no row naming it.
- */
+/** The preconditions every assertion leans on: the entry is the compendium's and retired, W's row naming it is live (or tombstoned, with `rowLive` false), and X has no row naming it. */
 async function expectPreconditions(rowLive = true) {
   const [entry] = await sql`
     select workspace_id, deleted_at from ingredients where id = ${entryId}`;

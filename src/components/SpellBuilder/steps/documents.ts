@@ -1,14 +1,7 @@
 import { graphql } from '../../../gql';
 
-// The builder's GraphQL for its steps (M10.15): the picker's lookup, and the
-// saved steps' read. A saved step's selection is written out in full here and in
-// both save mutations (../index.tsx) rather than shared as a fragment: graphql-armor
-// counts a fragment spread as a level (`flattenFragments` is off), and through a
-// spread the jar's `stock { variant { id } }` and the form's `formChoice { group
-// { icon } }` are 8 deep, past DESIGN.md §7's 7. Written out, they are 6. The
-// three copies cannot drift apart unseen: each answer is typed as
-// `SpellBuilderStep` (../types.ts) where the builder reads it, and
-// tests/guards/document-depth.test.ts holds every document to the limit.
+// The steps' GraphQL, with the saved step's selection written out in full, not a fragment, to stay within DESIGN.md §7's depth of 7
+// (claude-docs/components/spell-builder.md, "Step values, documents and totals").
 
 /**
  * The picker's lookup: the coven's ingredients and the compendium's, each
@@ -74,13 +67,9 @@ export const SpellIngredientSuggestionsDocument = graphql(`
 `);
 
 /**
- * A saved spell's steps, each as the builder opens it: what it lays and how much,
- * the form's icon, the categories it adds to the spell's derived ones, and the
- * coven's jar units, which a step's unit is checked against (story 77), the jar
- * list being the ingredient's for the coven `$workspaceId` names. The dialog
- * reads them once it opens on `?edit=<id>`: the dialog reads once it opens on `?edit=<id>`:
- * the page's server read gives the fields alone (M10.12), and an update's
- * steps are the whole recipe, so the builder sends nothing until these land.
+ * A saved spell's steps as the builder opens it, read once the dialog opens on `?edit=<id>`, since the page's server read gives the fields alone
+ * and an update's steps are the whole recipe; the jar units are the ingredient's for the coven `$workspaceId`.
+ * (claude-docs/components/spell-builder.md, "Step values, documents and totals").
  */
 export const SpellBuilderStepsDocument = graphql(`
   query SpellBuilderSteps($workspaceId: ID!, $id: ID!) {

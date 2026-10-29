@@ -9,24 +9,10 @@ import IconTip from '../IconTip';
 import { useTip } from '../InfoTip/use-tip';
 import type { ComboboxEntryProps, EntryHandleProps } from './types';
 
-// An entry a list holds, inside the control: its text, and the x that takes
-// it out. A text too long for the control is cut off with an ellipsis, and
-// shown whole in a tooltip while the entry is hovered or its x has focus —
-// only when it is cut off, and closed by Escape (WCAG 1.4.13). An entry with
-// a detail always has something to show, so its tooltip opens whether the
-// text fits or not (MB.164). Moved here from IngredientForm (MB.133) so that
-// every list draws the same entry (claude-docs/components/combobox.md, "An
-// entry"). In a sortable list the text is the handle the chip moves by, a
-// grip ahead of it (MB.170, "A sortable list"). An entry with a summary — a
-// linked substitute — has its text as a button instead, led by a link mark,
-// that opens the summary in a panel beneath the chip (MB.115, "A linked
-// entry's summary"); a typed one stays plain text.
+// An entry a list holds, inside the control: its text and the x that takes it out, with the whole text in a tooltip when cut off or when it has a detail
+// (claude-docs/components/combobox.md, "An entry"; "A sortable list"; "A linked entry's summary").
 
-/**
- * A sortable entry's handle: a real button, so it is in the tab order with
- * its focus ring, holding the grip and the text. dnd-kit's attributes give it
- * a button's role, which it has already.
- */
+/** A sortable entry's handle: a real button, so it is in the tab order with its focus ring, holding the grip and the text. */
 function EntryHandle({
   value,
   sortable,
@@ -89,17 +75,13 @@ export function ComboboxEntry({
     );
   }, 'top-start');
 
-  // The tooltip runs as wide as its words, past the chip and the control, the
-  // owner's call: only being cut off is wrong. `useTip` keeps it on the screen.
+  // The tooltip runs as wide as its words, past the chip and the control; only being cut off is wrong. `useTip` keeps it on screen.
   const textSpan = (
     <span ref={text} className="combobox__entry-text">
       {value}
     </span>
   );
-  // After the text, outside the span that is cut off, so a long name loses
-  // its tail and never its count. Read with the chip's text; the placeholder
-  // is for the eye alone. The space is a text node outside the span, so the
-  // chip reads "Water 7" (a name computation drops a span's own leading one).
+  // After the text, outside the span that is cut off, so a long name loses its tail and never its count; the space is a text node outside the span so the chip reads "Water 7".
   const countMark = loading ? (
     <span className="combobox__entry-count is-pending" aria-hidden="true" />
   ) : count !== undefined ? (
@@ -113,8 +95,7 @@ export function ComboboxEntry({
       {icon}
     </span>
   ) : null;
-  // What the x reads after its name, and the handle before how it moves: the
-  // error, the qualifier, then the detail.
+  // What the x reads after its name, and the handle before how it moves: the error, the qualifier, then the detail.
   const describedBy =
     [errorId, qualifier && qualifierId, detail && detailId].filter(Boolean).join(' ') || undefined;
 
@@ -131,9 +112,7 @@ export function ComboboxEntry({
       ]
         .filter(Boolean)
         .join(' ')}
-      // Its group's colour pair, read by the stylesheet (MB.126), and where a
-      // move has carried the chip so far, translated only: a chip keeps its
-      // own size wherever it goes.
+      // Its group's colour pair, read by the stylesheet, and where a move has carried the chip, translated only so a chip keeps its own size.
       style={{
         ...(colors && chipColors(colors)),
         ...(sortable && {
@@ -142,8 +121,7 @@ export function ComboboxEntry({
         }),
       }}
     >
-      {/* Hover on a wrapper holding the tooltip as well as the text, so the
-          pointer can move onto the tooltip without closing it. */}
+      {/* Hover on a wrapper holding the tooltip, so the pointer can move onto it without closing it. */}
       <span
         ref={anchor}
         className="combobox__entry-label"
@@ -187,8 +165,7 @@ export function ComboboxEntry({
           textSpan
         )}
         {countMark}
-        {/* In the page while closed, faded out and aria-hidden, so it fades
-            both ways as InfoTip's does. */}
+        {/* In the page while closed, faded out and aria-hidden, so it fades both ways as InfoTip's does. */}
         <span
           ref={bubble}
           role="tooltip"
@@ -197,9 +174,7 @@ export function ComboboxEntry({
           aria-hidden={!open}
         >
           {value}
-          {/* After the text on its line, in brackets, as a picked deity's
-              pill reads its tradition (MB.126): the brackets outside the
-              span, so the x's description reads the name alone. */}
+          {/* After the text, in brackets outside the span, so the x's description reads the name alone. */}
           {qualifier && (
             <>
               {' ('}
@@ -207,8 +182,7 @@ export function ComboboxEntry({
               {')'}
             </>
           )}
-          {/* Referenced by the x below, so read although the tooltip is
-              aria-hidden while closed. */}
+          {/* Referenced by the x below, so read although the tooltip is aria-hidden while closed. */}
           {detail && (
             <span id={detailId} className="combobox__entry-detail">
               {detail}
@@ -217,9 +191,7 @@ export function ComboboxEntry({
         </span>
       </span>
       {note && <span className="visually-hidden"> ({note})</span>}
-      {/* In the chip, after its button, so the Tab order runs from the text
-          into the panel and on to the x; placed beneath the chip, fixed, so
-          the control never clips it. */}
+      {/* In the chip, after its button, so the Tab order runs from the text into the panel and on to the x. */}
       {summary && opens.open && (
         // A non-modal dialog, opened by its attribute rather than `show()`,
         // so the browser gives it no Escape of its own: the hook's is the one.

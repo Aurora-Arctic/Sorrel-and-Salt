@@ -3,12 +3,8 @@
 import { createContext, useContext, useEffect, useRef } from 'react';
 import type { LeaveGuard, LeaveGuardOptions, LeaveGuardSlot } from './types';
 
-// A form's unsaved changes, kept from leaving the page (M13.14): closing the
-// tab or reloading raises the browser's own question, which is the only one a
-// page may raise there; an in-app navigation, which `NavigationProvider`
-// starts, waits on the form's own question instead. The browser's Back button
-// is not held: the App Router gives no way to cancel a history move
-// (claude-docs/components/modal.md, "Unsaved changes").
+// A form's unsaved changes, kept from leaving the page: closing the tab or reloading raises the browser's own question, and an in-app navigation waits on the
+// form's own. Back is not held, as the App Router cannot cancel a history move (claude-docs/components/modal.md, "Unsaved changes").
 
 /** The provider's slot. Null outside it, where nothing holds a navigation. */
 export const LeaveGuardContext = createContext<LeaveGuardSlot | null>(null);

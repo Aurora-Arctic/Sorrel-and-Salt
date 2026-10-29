@@ -21,11 +21,8 @@ import { insertStock } from '../../../support/db/insert-stock';
 import { variantIdOf } from '../../../support/db/read-variants';
 import { makeIngredient, makeVariant } from '../../../support/fixtures';
 
-// Story 12's stock half (M9.3): members and owners write a coven's stock,
-// viewers read it, and nobody outside the coven reaches it — the site admin
-// included. The ingredient tables are emptied per test, and the cascade
-// empties `inventory_items` with them, so every jar a result could come from
-// is one this file wrote.
+// The stock service: members and owners write a coven's stock, viewers read it, and nobody outside the coven reaches it, the site admin included.
+// The ingredient tables are emptied per test and the cascade empties `inventory_items` with them, so every jar a result could come from is one this file wrote.
 
 let sql: postgres.Sql;
 useTestDatabase((client) => {
@@ -532,14 +529,11 @@ describe('stockOf', () => {
 });
 
 // createStock takes the coven's stock lock, which the cupboard's writes that
-// count or move jars queue on too (M12.15, M12.21, M12.23).
+// count or move jars queue on too.
 describe("a coven's stock lock", () => {
   const WAIT_MS = 200;
 
-  /**
-   * Holds `workspaceId`'s lock in an open transaction while `during` runs, and
-   * releases it after, even when `during` throws.
-   */
+  /** Holds `workspaceId`'s lock in an open transaction while `during` runs, and releases it after, even when `during` throws. */
   async function holding(workspaceId: string, during: () => Promise<void>) {
     let release!: () => void;
     const released = new Promise<void>((resolve) => (release = resolve));
@@ -559,11 +553,7 @@ describe("a coven's stock lock", () => {
     }
   }
 
-  /**
-   * Starts `call` while `lockedId`'s lock is held, asserts it has not settled
-   * and `untouched` still holds after the wait, then releases the lock and
-   * returns what the call came to.
-   */
+  /** Starts `call` while `lockedId`'s lock is held, asserts it has not settled and `untouched` still holds after the wait, then releases the lock and returns what the call came to. */
   async function queued<T>(
     lockedId: string,
     call: () => Promise<T>,
@@ -610,7 +600,7 @@ describe("a coven's stock lock", () => {
   });
 });
 
-// M9.9's batch: the dialog's one Save, a list of creates, updates and deletes
+// The batch: the dialog's one Save, a list of creates, updates and deletes
 // of one ingredient's jars in one transaction. Compendium entries are in the
 // cupboard only once stocked, so the cupboard rows are read raw below.
 describe('saveStock', () => {

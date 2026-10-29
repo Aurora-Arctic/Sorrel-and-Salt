@@ -2,11 +2,9 @@ import { Children, type ReactElement } from 'react';
 import type { IngredientCardListProps } from './types';
 import './index.scss';
 
-// The grid of ingredient cards the public compendium (M8.18) and the coven's
-// Ingredients page (M9.6) share, so the two are laid out alike: a list of cards,
-// each in an `li`, filling a row with as many as fit. Presentational: it
-// decides nothing about what is listed and does not page (the caller's
-// `findPage` and `Pager` do). claude-docs/components/ingredient-card-list.md.
+// The grid of ingredient cards the public compendium and the coven's Ingredients page share, each in an
+// `li`. Presentational: it decides nothing about what is listed and does not page
+// (claude-docs/components/ingredient-card-list.md).
 const IngredientCardList = ({
   label,
   density = 'regular',

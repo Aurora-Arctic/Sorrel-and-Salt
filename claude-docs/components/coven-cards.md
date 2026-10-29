@@ -60,3 +60,9 @@ The page hands the `Membership` that guard returns to `readCovenIngredients`, wh
 ## Stories and tests
 
 Stories: `States`, drawn inside the app shell with the coven switcher, nav and Ingredients heading, with a control that chooses Default, For A Viewer, Middle Page, Empty, Empty For A Viewer and No Matches; and `WithLoneBin` and `WithStock` (the full member foot: Edit or Annotate, Edit Stock, More). Tests: `tests/components/CovenCards/index.test.tsx`, `card-more.test.tsx` beside it, and `tests/app/(shell)/coven/[slug]/ingredients/page.test.tsx`; the browser flow for Annotate on the list is in `tests/e2e/coven-ingredients.spec.ts`.
+
+## The More menu on a card
+
+A coven card's More is the vertical dots beside Edit or Annotate, opening a menu downward. On the coven's own entry it offers Delete Ingredient. On a compendium entry the cupboard holds, it offers Make It Ours and Remove, each asked in place in the dialogs the entry page shares. Choices sit under the one "Coven" label every More draws.
+
+A lone Delete or Remove is its own bin, because a one-choice menu costs two presses. A lone Make It Ours stays a menu, as it needs the delete permission too and no role reaches it alone. A write that takes the card away reads the list again and focus goes to the page's heading; a refusal gives the control focus back.

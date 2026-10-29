@@ -18,7 +18,6 @@ const meta = {
   title: 'Ingredients / Coven Cards',
 } satisfies Meta;
 export default meta;
-// The dropdown story's `state` arg is the node it draws (see its argTypes mapping).
 type Story = StoryObj<{ state?: import('react').ReactNode }>;
 
 const NO_FILTER: CovenCardsProps['filter'] = {
@@ -128,7 +127,7 @@ export const WithLoneBin: Story = {
   ),
 };
 
-// A member's full foot (M8.17, M9.9): Edit or Annotate, the Edit Stock pencil, then More,
+// A member's full foot: Edit or Annotate, the Edit Stock pencil, then More,
 // with Delete on the coven's own entry and Make It Ours and Remove on a compendium entry.
 // The jar lines stay, a badge per jar; the forms line is gone from every coven card.
 const STOCK: Record<string, CovenCardEntry['stock']> = {
@@ -173,8 +172,6 @@ const defaultNode = withStockNode;
 
 export const WithStock: Story = { render: () => withStockNode };
 
-// One story with a control to choose the state: each is a whole page or list,
-// too big to sit beside the others (claude-docs/workshop.md, rule 5).
 const STATES: Record<string, ReactNode> = {
   Default: defaultNode,
   'For A Viewer': forAViewerNode,

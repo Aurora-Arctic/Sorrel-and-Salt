@@ -22,21 +22,8 @@ import { HELD_IN_COVENS_TITLE } from '../AddIcon/wording';
 import './index.scss';
 import './summary.scss';
 
-// The details modal's body (M12.5): the entry page's Details section, drawn by
-// the page's own blocks in the page's order, cut to the owner's choice (the
-// description, the caution, the forms, then the correspondences, folk names and
-// categories; the description added by the owner's call, 2026-10-20, the forms
-// by M9.9, set under the caution by the owner's call of the same day). On the
-// coven's page each form also shows the coven's jar of it: its quantity or
-// Unmeasured, and its stock badge (a form in no jar shows nothing, and is
-// Not Stocked to a screen reader alone); the compendium's pages pass
-// no jars and name the forms alone. No substitutes, references or
-// Similar: the entry's own page has those, and its forms' own sections. Shown as the list names the entry, the coven's annotations laid over a
-// held compendium entry as the page lays them. Each form's caution stays on the
-// page's form sections; a line here says which forms carry one (the owner's
-// call, 2026-10-20). An empty block or correspondence row is left out here,
-// where the page says "None recorded": a glance shows what the entry holds
-// (the owner's call, 2026-10-20). claude-docs/components/ingredient-entry.md, "The details modal".
+// The details modal's body: the entry page's Details section cut to a glance, drawn by the page's
+// own blocks and leaving out what is empty (claude-docs/components/ingredient-entry.md, "The details modal").
 
 /** "The Oil form", "The Oil and Root forms", "The Oil, Root and Tincture forms". */
 function formsCarrying(labels: readonly string[]): string {
@@ -55,17 +42,9 @@ export default function IngredientSummary({
   jars,
 }: {
   detail: IngredientDetail;
-  /**
-   * The viewer's own covens that hold this entry, read per viewer by the page
-   * (`covensHoldingEntry`); none for a visitor. Drawn for a compendium entry only:
-   * a coven's own entry is held by its coven alone, which the list already is.
-   */
+  /** The viewer's own covens that hold this entry, per viewer; none for a visitor, and drawn for a compendium entry only. */
   covens?: readonly HoldingCoven[];
-  /**
-   * The coven's jars of the entry, from the coven's page alone, so each form shows its
-   * stock; a form with none of them is Not Stocked, said to a screen reader alone. Left
-   * out, the forms are named alone.
-   */
+  /** The coven's jars of the entry, from the coven's page alone, so each form shows its stock; left out, the forms are named alone. */
   jars?: readonly SummaryJar[];
 }): ReactElement {
   const { cupboardEntry, folkNames, categories, deities, variants } = detail;
@@ -75,15 +54,9 @@ export default function IngredientSummary({
     .map(({ variant }) => formLabel(variant.form));
   const rows = correspondences(shown, deities).filter((row) => row.values.length > 0);
   const listed = rows.length > 0 || folkNames.length > 0 || categories.length > 0;
-  // Each form as a jar line draws it (JarLines): its icon and name, then, with the
-  // coven's jars, its stock in an element of its own: the quantity and the badge, which
-  // the list lays out as a grid so every quantity ends in one column (summary.scss). No
-  // visible dot between the two; the spoken comma stays. A sibling of JarLines rather than
-  // JarLines itself, which draws its own list of jars where this is one line per form,
-  // a form in no jar among them, in the block's list under its heading. A form in no jar
-  // shows no stock (the owner's call, 2026-10-20): "Not Stocked" is visually hidden, so a
-  // screen reader still hears "Oil, Not Stocked", and its empty amount cell keeps its place
-  // in the grid, so the quantities' column does not move.
+  // Each form as a jar line: icon and name, then with the coven's jars its stock in a grid cell so
+  // quantities end in one column; a form in no jar says "Not Stocked" to a screen reader alone
+  // (claude-docs/components/ingredient-entry.md, "Structure").
   const forms = variants.length > 0 && (
     <ListBlock
       block={blockOf('summary', 'forms')}
@@ -127,10 +100,8 @@ export default function IngredientSummary({
     </ListBlock>
   );
   const holding = detail.entry.workspaceId === null ? covens : [];
-  // Where the viewer holds the entry, last (the owner's call, 2026-10-20). Not
-  // something recorded of the entry, so it never stands in for the line below.
-  // Each coven's link leads with the In Your Cupboard shelf, as the coven's page
-  // of the entry heads its name with it (the owner's call, 2026-10-20).
+  // Where the viewer holds the entry, last; not something recorded of the entry, so it never stands
+  // in for the line below.
   const inYourCovens = holding.length > 0 && (
     <ListBlock
       block={blockOf('summary', 'covens')}
@@ -148,8 +119,7 @@ export default function IngredientSummary({
       ))}
     </ListBlock>
   );
-  // With every section hidden, one line says so rather than leave the body blank
-  // (the owner's call, 2026-10-20).
+  // With every section hidden, one line says so rather than leave the body blank.
   if (
     !listed &&
     !forms &&

@@ -10,7 +10,7 @@ vi.mock('next/navigation', () => ({ useRouter: () => ({ push: vi.fn(), refresh: 
 
 const { default: SpellBuilder } = await import('@/components/SpellBuilder');
 
-// The intent-against-ingredients panel (M10.17, story 52): both gaps, named
+// The intent-against-ingredients panel: both gaps, named
 // apart, and the ingredient with no reason to be in the jar singled out in
 // words. The panel is drawn from what the builder holds now, saved or not.
 

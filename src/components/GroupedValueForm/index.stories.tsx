@@ -8,23 +8,16 @@ import { setInputValue, submitForm, usePressOnMount, useSteps } from '../../../.
 import { FORM_GROUP_ICONS } from '../../modules/vocabulary/schema/form-group-icons';
 import GroupedValueForm from '.';
 
-// Render-only; behaviour is asserted in tests/components/GroupedValueForm.
-// Every kind, the flat celestial bodies and signs among them (MB.115).
-// A save is answered by the workshop's fake API (.storybook/mock-api.ts): the
-// states that save are refused, one beside a field and one above the fields.
-// Shown in the modal the admin pages open it in, each story in its own iframe,
-// so the modal's top layer covers the story's frame rather than Storybook's
-// sidebar. One story per way the form differs: a category (the plain grouped
-// kind), a form (its group choices draw an icon), a deity (a tradition after
-// its name), a flat kind (no group field).
+// Render-only; behaviour is asserted in tests/components/GroupedValueForm. The fake
+// API (.storybook/mock-api.ts) refuses the saving states, one beside a field and one
+// above. Shown in the admin modal. One story per kind: category, form, deity, flat.
 const meta = {
   title: 'Admin / Grouped Value Form',
 } satisfies Meta;
 export default meta;
-// The dropdown story's `state` arg is the node it draws (see its argTypes mapping).
 type Story = StoryObj<{ state?: import('react').ReactNode }>;
 
-// Enough of each to narrow: every group field is typed into (MB.115).
+// Enough of each to narrow: every group field is typed into.
 const CATEGORY_GROUPS = asOptions(GROUP_NAMES.category);
 // A form group's choices draw its icon: the first two their own, one none (the generic).
 const FORM_GROUPS = asOptions(GROUP_NAMES.form).map((group, index) => ({
@@ -129,7 +122,7 @@ const savingEmptyNode = <SavingEmptyView />;
 
 // Rename it to see the note by Save that the rename carries onto the
 // compendium, and the head keep the name it was saved under, its tradition
-// after it, as a deity's pills name it (MB.115).
+// after it, as a deity's pills name it.
 const editingADeityNode = (
   <InModal eyebrow="Edit Deity" title="Testra" qualifier="Fixtural">
     <GroupedValueForm
@@ -155,7 +148,7 @@ const addingACelestialBodyNode = (
 );
 
 // Delete pressed once drawn, as a person would: the question over the form,
-// dimmed and held beneath it until Delete or Keep It answers (MB.115).
+// dimmed and held beneath it until Delete or Keep It answers.
 export const AskingToDelete: Story = {
   render: () => {
     usePressOnMount('Delete Category');
@@ -163,8 +156,6 @@ export const AskingToDelete: Story = {
   },
 };
 
-// One story with a control to choose the state: each is a whole page or list,
-// too big to sit beside the others (claude-docs/workshop.md, rule 5).
 const STATES: Record<string, ReactNode> = {
   'Adding A Category': addingACategoryNode,
   'Editing A Category': editingACategoryNode,

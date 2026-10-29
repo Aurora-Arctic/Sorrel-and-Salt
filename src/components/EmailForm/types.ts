@@ -14,8 +14,8 @@ export interface EmailFormProps {
   error?: string;
   /** Seconds the server will refuse another mail for as of this render, so the countdown starts where it stands. */
   waitSeconds?: number;
-  /** The account page's path, offered as a secondary Continue to Account button inside the card to a verified account on the standalone page (the owner, MB.116). */
+  /** The account page's path, offered as a secondary Continue to Account button to a verified account on the standalone page. */
   accountPath?: string;
-  /** Inside the account page's Email section (MB.88): no page heading, which the section gives, and never the confirmed view, which stays the email page's. */
+  /** Inside the account page's Email section: no page heading, which the section gives, and never the confirmed view, which stays the email page's. */
   embedded?: boolean;
 }

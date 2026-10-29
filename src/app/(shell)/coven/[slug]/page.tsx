@@ -12,19 +12,9 @@ import type { PageNavEntry } from '../../../../components/PageNav/types';
 import { requireCovenMembership, requireSession } from '../../../../lib/request-session';
 import type { CovenLayoutParams } from './types';
 
-// The page a coven opens on (M9.15), where the switcher, an accepted
-// invitation and the shell's coven link all land. The layout's template
-// titles it with the coven's name alone, since Next does not apply a
-// layout's template to a page in its own segment. The guard runs again here
-// for the layout's reason: a layout does not re-run on client-side
-// navigation (claude-docs/auth/coven-guard.md, "The coven guard").
-//
-// The head says which role the caller holds and what it lets them do. Then
-// come its sections, reached from a jump menu laid out as the account
-// page's is (`.page-with-nav`): Contents, the coven's pages the caller can
-// open; Your Membership, which holds Leave alone; and for an owner Delete
-// This Coven, a section of its own so the buttons that end a seat and end a
-// coven are never side by side (the owner's call, MB.119).
+// The page a coven opens on. The layout's title template does not apply in its own segment, so this
+// titles itself with the coven's name. The guard runs again (claude-docs/auth/coven-guard.md,
+// "The coven guard"). Leave and Delete sit in separate sections, never side by side.
 const ROLE_NAME = { owner: 'an owner', member: 'a member', viewer: 'a viewer' } as const;
 
 export default async function CovenPage({ params }: CovenLayoutParams) {
@@ -34,10 +24,9 @@ export default async function CovenPage({ params }: CovenLayoutParams) {
   const canReadMembers = rolePermits(membership.role, { member: ['read'] });
   const canInvite = rolePermits(membership.role, { member: ['invite'] });
 
-  // The last-owner guard stops only an owner, and only when they are the sole
-  // one, so only then is the roll read: the others become the hand-over's
-  // choices (M6.16). Anyone else leaves by the plain confirmation, and a
-  // change in the owners since this render is still the service's to refuse.
+  // The last-owner guard stops only an owner, and only when they are the sole one, so only then is
+  // the roll read: the others become the hand-over's choices. Anyone else leaves by the plain
+  // confirmation, and a change in the owners since this render is still the service's to refuse.
   let successors: Successor[] | undefined;
   if (canDelete) {
     const session = await requireSession();
@@ -56,10 +45,9 @@ export default async function CovenPage({ params }: CovenLayoutParams) {
     }
   }
 
-  // Only the pages the caller can open are listed, so none is a link to a
-  // 404. Every role can open Ingredients, so Contents shows for all of them,
-  // viewers included; Members is listed only for a role that may read it.
-  // The section and its menu entry are built together, so they agree.
+  // Only the pages the caller can open are listed, so none is a link to a 404. Every role can open
+  // Ingredients; Members is listed only for a role that may read it. The section and its menu entry
+  // are built together, so they agree.
   const entries: PageNavEntry[] = [
     { href: '#coven-contents' as const, label: 'Contents' },
     { href: '#coven-membership', label: 'Your Membership' },
@@ -116,7 +104,7 @@ export default async function CovenPage({ params }: CovenLayoutParams) {
       </section>
       {/* Each button says its own refusal under itself. Leave is here, not
           on the members page, because a viewer cannot open that page and must
-          still be able to go. Delete asks for the permission M6.14's service
+          still be able to go. Delete asks for the permission its service
           checks, never a rank
           (claude-docs/auth/coven-guard.md, "The coven index page"). */}
       <section

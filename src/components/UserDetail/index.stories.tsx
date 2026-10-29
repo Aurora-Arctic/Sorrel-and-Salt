@@ -14,7 +14,6 @@ const meta = {
   title: 'Admin / User Detail',
 } satisfies Meta;
 export default meta;
-// The dropdown story's `state` arg is the node it draws (see its argTypes mapping).
 type Story = StoryObj<{ state?: import('react').ReactNode }>;
 
 const FACTS = {
@@ -40,7 +39,7 @@ const ADA: UserDetailUser = {
   primaryAdmin: true,
   canCreateWorkspace: true,
 };
-// A curator (M11.20): the role in bold, no coven-creation control, and Impersonate.
+// A curator: the role in bold, no coven-creation control, and Impersonate.
 const DEE: UserDetailUser = {
   ...FACTS,
   id: 'u-dee',
@@ -79,7 +78,7 @@ const COVENS: readonly UserCoven[] = [
   },
 ];
 
-// The dialog the users page opens: User over the name, the address beneath it (M9.19).
+// The dialog the users page opens: User over the name, the address beneath it.
 // The head is the page's user-heading.tsx, written out here as the UserList story does.
 const inDialog = (user: Pick<UserDetailUser, 'name' | 'email'>, body: ReactNode): ReactNode => (
   <InModal
@@ -98,14 +97,14 @@ const noCovensNode = inDialog(BO, <UserDetail user={BO} memberships={[]} canImpe
 // Several providers and an unverified address.
 const severalProvidersNode = inDialog(MANY, <UserDetail user={MANY} memberships={COVENS} />);
 
-// The primary admin carries the crown. No Impersonate on an admin: the endpoint refuses one (MB.53).
+// The primary admin carries the crown. No Impersonate on an admin: the endpoint refuses one.
 const adminNode = inDialog(ADA, <UserDetail user={ADA} memberships={COVENS} canImpersonate />);
 
 const curatorNode = inDialog(DEE, <UserDetail user={DEE} memberships={[]} canImpersonate />);
 
 const withoutImpersonationNode = inDialog(BO, <UserDetail user={BO} memberships={COVENS} />);
 
-// Admin changes are locked for the viewing admin (MB.63): the controls say why.
+// Admin changes are locked for the viewing admin: the controls say why.
 const changesPausedNode = inDialog(
   BO,
   <UserDetail user={BO} memberships={COVENS} canImpersonate changesPaused />,
@@ -159,8 +158,6 @@ export const InAModal: Story = {
 
 // In its own iframe: `showModal()` puts the dialog in the top layer.
 
-// One story with a control to choose the state: each is a whole page or list,
-// too big to sit beside the others (claude-docs/workshop.md, rule 5).
 const STATES_STATES: Record<string, ReactNode> = {
   Default: defaultNode,
   'No Covens': noCovensNode,

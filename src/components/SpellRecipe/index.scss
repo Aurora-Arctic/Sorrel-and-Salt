@@ -4,13 +4,13 @@
 // The reading column: the body's width on its own, on the page and in the Quick Look modal.
 $recipe-column: 48rem;
 
-// A saved spell's page (MB.6). Tokens only; the layout is a single readable column. Print
-// styles are M10.22's.
+// A saved spell's page. Tokens only; the layout is a single readable column. Print
+// styles are not set here.
 .spell-recipe {
   display: flex;
   flex-direction: column;
   // The Edited line close over the title, and the title close over the body: the title's line
-  // box carries its own air, so a wider gap read as a gulf (the owner, 2026-10-29).
+  // box carries its own air, so a wider gap read as a gulf.
   gap: space(2);
   max-width: $recipe-column;
   margin-inline: auto;
@@ -23,7 +23,7 @@ $recipe-column: 48rem;
   margin-block-end: space(2);
 }
 
-// The body and, on the page, the side column (M13.21): a stack on a phone, the column beside
+// The body and, on the page, the side column: a stack on a phone, the column beside
 // the body past a tablet's width, in the ingredient entry page's columns (`entry-section`, the
 // same side width and gutter). The body keeps its own stack, so its sections space as before.
 .spell-recipe__columns {
@@ -48,7 +48,7 @@ $recipe-column: 48rem;
 
 // With the side column the article is the paragraphs' measure, the gutter and the column, no
 // wider: the body's sections are capped at the measure, so a wider body column would stand
-// empty before the gutter (the owner, 2026-10-29). The head stays over the body, so the Edit
+// empty before the gutter. The head stays over the body, so the Edit
 // pencil ends where the text does, as the entry page's does.
 .spell-recipe--with-aside {
   max-width: calc(#{$measure} + #{space(8)} + #{$side-column});
@@ -58,11 +58,9 @@ $recipe-column: 48rem;
       max-width: calc(100% - #{space(8)} - #{$side-column});
     }
 
-    // The side column starts level with the facts strip, not the purpose (the owner,
-    // 2026-10-29): the body's two boxes become the grid's own items in the text column, the
-    // lead in the first row and the rest in the next, and the column, placed after them, takes
-    // the rest's row. With no lead the rest is the first row and the column starts at the top.
-    // The grid's row gap is the body's own space(4), so the body spaces as before.
+    // The side column starts level with the facts strip: the body's two boxes become grid items in
+    // the text column and the column takes the rest's row. With no lead it starts at the top. The
+    // row gap is the body's own `space(4)`.
     .spell-recipe__main {
       display: contents;
     }
@@ -75,15 +73,15 @@ $recipe-column: 48rem;
 }
 
 // The column's two panels, Category Match then In Coven Inventory (the builder's order
-// reversed: the owner, 2026-10-29), headed as the entry page's side blocks are: at the h3 size, with no rule under
-// them (the owner, 2026-10-29).
+// reversed), headed as the entry page's side blocks are: at the h3 size, with no rule under
+// them.
 .spell-recipe__aside {
   @include entry-side;
 
   // Heading to content as the entry page's side blocks space it (`.ingredient-entry__block`,
   // a `stack(2)`): the panels ask for the same gap, but the page's own `section` rule
   // (_layout.scss) outweighs their class alone and widened it to space(4), and gave them a
-  // margin (the owner, 2026-10-29).
+  // margin.
   > .comparison-panel,
   > .spell-inventory {
     gap: space(2);
@@ -111,7 +109,7 @@ $recipe-column: 48rem;
   }
 }
 
-// The pencil and the bin (M13.10, M13.11) on one line at the heading's end, as the
+// The pencil and the bin on one line at the heading's end, as the
 // ingredient entry's icons stand (`.ingredient-entry__cupboard--icons`).
 .spell-recipe__actions {
   display: flex;
@@ -144,11 +142,9 @@ $recipe-column: 48rem;
   margin: 0;
 }
 
-// The steps (M13.21), as the Recipe Card mock-up draws them: a 1.5rem position column that
-// the numbers line up in, beside it the amount leading the name on the first line, and the
-// step's text and note on lines of their own, indented to the name rather than the number.
-// The position stays a flex item (an absolute one would not share the first line's
-// baseline), so the wrapped lines indent themselves by the column it takes.
+// The steps as the Recipe Card mock-up draws them: a 1.5rem position column, the amount leading the
+// name on the first line, the text and note on lines of their own indented to the name. The
+// position stays a flex item (an absolute one would not share the baseline).
 .spell-recipe__steps .step-row {
   align-items: baseline;
   gap: space(1) space(2);
@@ -156,8 +152,7 @@ $recipe-column: 48rem;
 
 .spell-recipe__steps .step-row__position {
   order: -2;
-  // Room for a two-digit number and its stop, and no more: wider read as an indent (the
-  // owner, 2026-10-29).
+  // Room for a two-digit number and its stop, and no more: wider read as an indent.
   flex: 0 0 1.5rem;
   text-align: end;
   color: $text-muted;
@@ -186,7 +181,7 @@ $recipe-column: 48rem;
 }
 
 // The step's Quick Look eye well under the list's size, seven eighths of the form icon's box and
-// glyph (the owner, 2026-10-29), so it sits in the name's line without weight.
+// glyph, so it sits in the name's line without weight.
 .spell-recipe__steps .icon-tip__look {
   @include icon-button($icon-size * 0.875, $glyph-size * 0.875);
 }
@@ -196,7 +191,7 @@ $recipe-column: 48rem;
   margin-inline-start: calc(1.5rem + #{space(2)});
 }
 
-// A step's text reads as its note does, `.meta` (the owner, 2026-10-28): caption size, muted,
+// A step's text reads as its note does, `.meta`: caption size, muted,
 // under the amount and name. Hand-written here rather than the class, since StepRow sets the
 // class names and its other callers keep the body at text size.
 .spell-recipe__steps .step-row__body {
@@ -206,7 +201,7 @@ $recipe-column: 48rem;
 
 // A step with no ingredient is the instruction alone, so it sits on the number's own line,
 // filling it, rather than on a line of its own beneath, at the ingredients' size and colour,
-// keeping the text's weight (the owner, 2026-10-28).
+// keeping the text's weight.
 .spell-recipe__instruction .step-row__body {
   flex: 1 1 0;
   margin-inline-start: 0;
@@ -215,7 +210,7 @@ $recipe-column: 48rem;
 }
 
 // An ingredient step on a grid rather than the flex row, so its note stops at the name's end
-// and never runs under the badges (the owner, 2026-10-29): the position, the amount, the name and
+// and never runs under the badges: the position, the amount, the name and
 // the marks across the first line, and the note beneath in the amount's and name's columns, the
 // marks' column left empty. With no amount the name takes the amount's column too.
 .spell-recipe__steps .step-row:not(.spell-recipe__instruction) {
@@ -250,7 +245,7 @@ $recipe-column: 48rem;
 }
 
 // The one-off mark at the size the builder's supply marks take.
-// The marks sit at the row's end, right-aligned (the owner, 2026-10-28), One-Off at the
+// The marks sit at the row's end, right-aligned, One-Off at the
 // compact default badge size.
 .spell-recipe__marks {
   display: flex;
@@ -263,7 +258,7 @@ $recipe-column: 48rem;
   @include badge-size('default');
 }
 
-// The facts strip (M13.21): up to four cells under a hairline, two to a row in a narrow column.
+// The facts strip: up to four cells under a hairline, two to a row in a narrow column.
 // The box is the container, since the column (page or modal) decides the width, not the window.
 .spell-recipe__facts-box {
   container-type: inline-size;
@@ -299,7 +294,7 @@ $recipe-column: 48rem;
     overflow-wrap: anywhere;
   }
 
-  // The moon a third larger than its 1.25em line size (the owner, 2026-10-29), so the phase reads
+  // The moon a third larger than its 1.25em line size, so the phase reads
   // at a glance; the cell centres it on the name, so its sunk baseline plays no part here.
   .moon-phase-icon {
     width: calc(1.25em * 4 / 3);
@@ -309,13 +304,13 @@ $recipe-column: 48rem;
 
 // The note, under its own hairline, only where there is one.
 .spell-recipe__note {
-  // Clear of the last step (the owner, 2026-10-28), over the column's own gap.
+  // Clear of the last step, over the column's own gap.
   margin-block-start: space(2);
   padding-block-start: space(3);
   border-top: 1px solid $hairline;
 }
 
-// The Quick Look body (M13.21): the recipe body's sections in a column, spaced as the page's.
+// The Quick Look body: the recipe body's sections in a column, spaced as the page's.
 .spell-recipe-look {
   display: flex;
   flex-direction: column;
@@ -323,12 +318,9 @@ $recipe-column: 48rem;
 }
 
 // The Quick Look's Edit and Delete icons (`formalActions`, wrapped in `.spell-look-actions`, so
-// the ingredient's Quick Look, which shares the Modal's slot, is left as it is). A spell has no formal
-// name to ride on, so the Modal's own placement puts them level with the head's `$icon-size` and
-// short of the right edge by the × reserve. Here they stand on the middle of the title's first
-// line (its `h2` size and line height, so a wrapped title keeps them on its first line) and run to
-// the dialog's right edge, beneath the × (the head stops short of it by the × width and a gap,
-// which the naming grid takes back). A wrapped title stays clear of them, being the grid's first column.
+// the ingredient's Quick Look, which shares the Modal's slot, is left as it is). A spell has no
+// formal name to ride on, so they stand on the middle of the title's first line and run to the
+// dialog's right edge, beneath the ×; the naming grid takes back the head's reserve for the ×.
 .modal-dialog__naming:has(.spell-look-actions) {
   margin-inline-end: calc(-1 * (#{$close-target} + #{space(3)}));
 
@@ -343,7 +335,7 @@ $recipe-column: 48rem;
 }
 
 // The Quick Look's head content (the Edited line, the title, the icons) stands lower than the
-// Modal's default, for room between the × and the bin beneath it (the owner's call, 2026-10-29).
+// Modal's default, for room between the × and the bin beneath it.
 // The × is the header's own child and does not move. Scoped by the same hook, so the ingredient's
 // Quick Look is as it was.
 .modal-dialog__heading:has(.spell-look-actions) {

@@ -4,13 +4,9 @@ import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { makeQueryClient } from '@/lib/graphql-client';
 import type { Session } from '@/lib/session';
 
-// Where the email page's Continue goes once a followed link has proved the
-// address: the `next` the account was sent with, or with none, the landing
-// for the role it holds now — a primary admin promoted by that very link
-// included (claude-docs/auth/admin-bootstrap.md, "The email page"). The session and the row
-// are mocked; what they are is tests/lib/request-session.test.ts's and the
-// identity service's, and which landing a role gets and which `next` is safe
-// are tests/lib/sign-in.test.ts's.
+// Where the email page's Continue goes once a followed link has proved the address: the `next` the account was sent with, or with none, the landing for the role it holds now,
+// a primary admin promoted by that very link included (claude-docs/auth/admin-bootstrap.md, "The email page"). The session and row are mocked (tests/lib/request-session.test.ts's and the identity service's);
+// which landing a role gets and which `next` is safe are tests/lib/sign-in.test.ts's.
 
 const requireSession = vi.fn<() => Promise<Session>>();
 vi.mock('@/lib/request-session', () => ({ requireSession }));
@@ -63,7 +59,7 @@ describe('the /account/email page', () => {
     expect(continueLink()).toHaveAttribute('href', '/coven');
   });
 
-  // Into the coven itself, never via the /coven landing's redirect (MB.257).
+  // Into the coven itself, never via the /coven landing's redirect.
   it("continues a member's confirmed address straight into their first coven", async () => {
     firstCovenSlugOf.mockResolvedValue('fixture-coven');
     await renderPage('user', { verified: '' });
@@ -71,7 +67,7 @@ describe('the /account/email page', () => {
     expect(continueLink()).toHaveAttribute('href', '/coven/fixture-coven');
   });
 
-  // Its own way across, offered to a verified account (MB.88).
+  // Its own way across, offered to a verified account.
   it('links a verified account to the account page', async () => {
     await renderPage('user', {});
 

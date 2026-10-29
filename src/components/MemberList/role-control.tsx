@@ -10,13 +10,9 @@ import { workspaceRoleLabel } from '../UserDetail/roles';
 import { WORKSPACE_ROLE_ACCESS } from './role-access';
 import type { RoleControlProps } from './types';
 
-// The members page's Change Role beside a role (M6.13). It opens a
-// modal naming the member and asking which role they move to, every other
-// role with what it may do, then sends `updateMemberRole`. The page shows the
-// control to owners only; the service is the guard, and refuses a change that
-// would leave no owner, which a callout under the control then says (M12.31).
-// A change is said in the page's status region, beside the role the table
-// shows once read again (claude-docs/components/member-list.md).
+// The members page's Change Role: a modal asking which role the member moves to, then
+// `updateMemberRole`. Owners only; the service refuses leaving no owner, said in a callout
+// (claude-docs/components/member-list.md).
 
 const UpdateMemberRoleDocument = graphql(`
   mutation UpdateMemberRole($workspaceId: ID!, $userId: ID!, $role: WorkspaceRole!) {

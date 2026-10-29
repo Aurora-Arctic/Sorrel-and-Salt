@@ -5,15 +5,13 @@ import ListFrame, { ListBody } from '../ListFrame';
 import Notice from '../Notice';
 import type { MemberListEntry } from './types';
 
-// Render-only; behaviour is asserted in tests/components/MemberList. A
-// member's view leaves the addresses out; an owner's draws them (M11.19). The
-// controls are plain buttons standing in for the page's own, styled as the
-// admin user table styles its own: Change Role quiet, Remove destructive.
+// Render-only; behaviour is asserted in tests/components/MemberList. A member's
+// view leaves the addresses out; an owner's draws them. The controls are plain
+// buttons styled as the admin user table's: Change Role quiet, Remove destructive.
 const meta = {
   title: 'Coven / Member List',
 } satisfies Meta;
 export default meta;
-// The dropdown story's `state` arg is the node it draws (see its argTypes mapping).
 type Story = StoryObj<{ state?: import('react').ReactNode }>;
 
 const MEMBERS: readonly MemberListEntry[] = [
@@ -72,7 +70,7 @@ const withActionsNode = (
 );
 
 // The page's composition: the sole-owner note inside the list frame, ahead of
-// the list, so the frame's gap spaces it (MB.119; src/app/(shell)/coven/[slug]/
+// the list, so the frame's gap spaces it (src/app/(shell)/coven/[slug]/
 // (people)/members/page.tsx). The note is the page's, not MemberList's.
 const SoleOwnerPage = () => (
   <ListFrame>
@@ -120,8 +118,6 @@ const gapsNode = (
 // An owner's view with the addresses but no controls, as a viewer's page draws it.
 const addressesOnlyNode = <MemberList members={MEMBERS} currentUserId="u-cy" showEmail />;
 
-// One story with a control to choose the state: each is a whole page or list,
-// too big to sit beside the others (claude-docs/workshop.md, rule 5).
 const STATES_STATES: Record<string, ReactNode> = {
   Default: defaultNode,
   'With Actions': withActionsNode,

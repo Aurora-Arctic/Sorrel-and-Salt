@@ -63,12 +63,8 @@ export const RULES: { name: string; test: (statement: string) => boolean }[] = [
   },
 ];
 
-// Removes what a rule must never read as SQL: `--` comments (including
-// `--> statement-breakpoint`), `/* */` comments and string literal contents,
-// in one left-to-right scan because the three nest in both directions. Quoted
-// identifiers pass through. Dollar-quoted bodies are not handled: a PL/pgSQL
-// function is judged as `;`-split fragments, harmless while no rule spans
-// `BEGIN ... END`.
+// Removes what a rule must never read as SQL: `--` and `/* */` comments and string literal contents, in one left-to-right scan as the three nest. Quoted identifiers
+// pass through. Dollar-quoted bodies are not handled, so a PL/pgSQL function is judged as `;`-split fragments.
 function stripCommentsAndLiterals(sql: string): string {
   let out = '';
   let index = 0;

@@ -26,17 +26,10 @@ import { assertMembership, type Membership } from '@/modules/coven';
 import type { CategoryRow } from '@/modules/vocabulary';
 import type { SpellKey, SpellRow, SpellStepView } from '../types';
 
-// The grimoire's reads (M10.9): the paged list and its count (M10.11), one spell, and
-// the batches a spell's fields load through. Every read is a reader's of the
-// coven, `spell: ['read']`, and every row comes through the finders that keep
-// a private spell its author's (claude-docs/db/spell-visibility.md), so a
-// spell this reader may not see is `NotFound` by id and absent from a batch.
+// The grimoire's reads: the paged list and its count, one spell, and the batches a spell's fields load through. A spell the reader
+// may not see is `NotFound` by id and absent from a batch (claude-docs/db/grimoire.md, "Grimoire read details").
 
-/**
- * The query with a search shorter than `MIN_QUERY_LENGTH` dropped, counted in
- * composed code points as the compendium counts it: one character matches
- * nearly every spell, so it is no search at all.
- */
+/** The query with a search shorter than `MIN_QUERY_LENGTH` dropped, as the compendium counts it: one character is no search. */
 function searchable(query: GrimoireQuery): GrimoireQuery {
   const text = query.query?.trim();
   const long = text !== undefined && Array.from(text.normalize('NFC')).length >= MIN_QUERY_LENGTH;
@@ -44,9 +37,7 @@ function searchable(query: GrimoireQuery): GrimoireQuery {
 }
 
 /**
- * One page of the coven's grimoire in `order`: its shared spells and the
- * caller's own private ones, narrowed by the query's status, search and
- * categories.
+ * One page of the coven's grimoire in `order`: its shared spells and the caller's own private ones, narrowed by the query.
  *
  * @throws {Forbidden} the caller is not a member of this coven.
  */
@@ -61,9 +52,7 @@ export async function listGrimoire(
 }
 
 /**
- * How many spells `listGrimoire` lists under `query`, and how many of them
- * come before `start`: the count the numbered pager reads (M10.11). A private
- * spell counts for its author alone, as it lists.
+ * How many spells `listGrimoire` lists under `query`, and how many come before `start`, for the numbered pager.
  *
  * @throws {Forbidden} the caller is not a member of this coven.
  */
@@ -78,10 +67,7 @@ export async function countGrimoire(
 }
 
 /**
- * How many spells `listGrimoire` would list in each category under the rest
- * of `query`: the Categories filter's counts (M10.11), each a category's id
- * and its count, a category no readable spell carries absent. A private
- * spell counts for its author alone, as it lists.
+ * How many spells `listGrimoire` would list in each category under the rest of `query`: the Categories filter's counts.
  *
  * @throws {Forbidden} the caller is not a member of this coven.
  */
@@ -95,12 +81,8 @@ export async function countGrimoireCategories(
 }
 
 /**
- * The counts behind the grimoire's Moon Phase, Day of Week, Visibility and
- * Coven Member facets (M13.22), each facet's counted under the rest of
- * `query` with its own picks left out. They are also the facets' choices: a
- * value no readable spell carries is absent, and another member's private
- * spell is never counted or offered, as it never lists. A maker is a user id,
- * to be named by the caller.
+ * The counts behind the Moon Phase, Day of Week, Visibility and Coven Member facets, which are also the facets' choices
+ * (claude-docs/db/grimoire.md, "Grimoire read details").
  *
  * @throws {Forbidden} the caller is not a member of this coven.
  */
@@ -130,11 +112,7 @@ export async function readSpell(
   return spell;
 }
 
-/**
- * Each spell's live steps in recipe order, with the ingredient and form each
- * links (see `stepsInSpells`): `Spell.steps`' batch. Four reads per coven
- * named, whatever the batch size, plus a role lookup each.
- */
+/** Each spell's live steps in recipe order, with the ingredient and form each links: `Spell.steps`' batch. */
 export function stepsOfSpells(
   session: Session,
   refs: readonly SpellKey[],
@@ -142,11 +120,7 @@ export function stepsOfSpells(
   return perCoven(session, refs, stepsInSpells);
 }
 
-/**
- * The categories each spell's author assigned it, what it intends, sorted by
- * name: `Spell.categories`' batch. Two reads per coven named. A category
- * deleted since drops out.
- */
+/** The categories each spell's author assigned it, sorted by name: `Spell.categories`' batch. */
 export function assignedCategoriesOf(
   session: Session,
   refs: readonly SpellKey[],
@@ -159,15 +133,7 @@ export function assignedCategoriesOf(
   });
 }
 
-/**
- * The categories each spell is made of, sorted by name:
- * `Spell.derivedCategories`' batch (DESIGN.md §5, "Two kinds of spell
- * category"). A linked step contributes its ingredient's own pairs and the
- * pairs of the form it lays, never another form's (MB.215); a one-off row and
- * an instruction contribute none. An ingredient deleted since still
- * contributes, read through the finder that keeps it. Four reads per coven
- * named, whatever the batch size.
- */
+/** The categories each spell is made of, sorted by name: `Spell.derivedCategories`' batch (DESIGN.md §5, "Two kinds of spell category"). */
 export function derivedCategoriesOf(
   session: Session,
   refs: readonly SpellKey[],
@@ -204,13 +170,7 @@ export function derivedCategoriesOf(
   });
 }
 
-/**
- * Answers a batch one coven at a time, as `stockOf` does: each coven named is
- * checked once, its spells read together, and a ref naming a coven the caller
- * may not read gets a `Forbidden` in its slot while the rest of the batch
- * stands. A spell the caller may not read, or one not in the coven its ref
- * names, answers whatever `read` answers for a spell with no rows.
- */
+/** Answers a batch one coven at a time, as `stockOf` does; a coven the caller may not read gets a `Forbidden` in its slot. */
 async function perCoven<T>(
   session: Session,
   refs: readonly SpellKey[],

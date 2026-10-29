@@ -22,12 +22,11 @@ $theme-toggle-icon-arc: 130deg;
 // The pinned corner (the root layout, for pages with no application shell).
 .theme-toggle--corner {
   position: fixed;
-  // Beneath anything in the page's flow above it: the impersonation banner
-  // on a touch screen (MB.53).
+  // Beneath anything in the page's flow above it: the impersonation banner on a touch screen.
   top: $top-inset;
   // Clear of the scrollbar's room while a modal holds the page (Modal/page-hold.ts).
   right: var(--scrollbar-width, 0);
-  // Above the impersonation banner, which runs beneath this corner (MB.53).
+  // Above the impersonation banner, which runs beneath this corner.
   z-index: layer('toggle');
   display: flex;
   align-items: center;
@@ -59,20 +58,17 @@ $theme-toggle-icon-arc: 130deg;
   }
 }
 
-// The root layout is session-free, so it cannot know a page has the shell
-// around it and always mounts the corner. The shell has its own disc in the
-// bar, and two would be one too many: this hides the corner on any page that
-// holds the shell or the public frame (MB.83). Written here, with the toggle,
+// The root layout is session-free, so it cannot know a page has the shell around it and
+// always mounts the corner. The shell has its own disc in the bar, so this hides the corner
+// on any page that holds the shell or the public frame. Written here, with the toggle,
 // rather than in the shell.
 body:has(.app-shell, .public-frame) > .theme-toggle--corner {
   display: none;
 }
 
-// The disc in the flow (the shell's bar). The
-// button is transparent and padded out to a control's height, so the target
-// is a finger's; the disc inside is what is drawn, round and clipping the
-// facet that swings out of it, which a bare button's own box could not do
-// without hiding its padding too.
+// The disc in the flow (the shell's bar). The button is transparent and padded to a control's
+// height for a finger's target; the disc inside is round and clips the swinging facet, which a bare
+// button's box could not without hiding its padding.
 $theme-toggle-disc: 2rem;
 $theme-toggle-facet: 1.1875rem;
 

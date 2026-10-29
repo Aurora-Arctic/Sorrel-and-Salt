@@ -9,14 +9,10 @@ import type { CategoryGroupRow, DeityTraditionRow, IngredientFormGroupRow } from
 
 // The group lookups behind `Category.group`, `IngredientFormValue.group` and
 // `Deity.tradition`. Public reference data — a compendium chip wears its
-// group's colours for a signed-out visitor too (MB.80) — so none takes a
+// group's colours for a signed-out visitor too — so none takes a
 // session.
 
-/**
- * The category groups by id, one answer per id in the order given: the row,
- * or a `NotFound` where no live group carries the id, so a loader rejects that
- * key alone. One read whatever the batch size.
- */
+/** The category groups by id, in order: the row, or a `NotFound` where no live group carries the id, so a loader rejects that key alone. */
 export function categoryGroupsOf(ids: readonly string[]): Promise<(CategoryGroupRow | NotFound)[]> {
   return groupsOf(categoryGroups, ids);
 }
@@ -28,11 +24,7 @@ export function formGroupsOf(
   return groupsOf(ingredientFormGroups, ids);
 }
 
-/**
- * The deity traditions by id, answered as `categoryGroupsOf` answers. A
- * deity is read only while its tradition is live, so a `NotFound` here means
- * one retired between the two reads.
- */
+/** The deity traditions by id, answered as `categoryGroupsOf` answers; a `NotFound` means the tradition was retired between the two reads. */
 export function deityTraditionsOf(
   ids: readonly string[],
 ): Promise<(DeityTraditionRow | NotFound)[]> {

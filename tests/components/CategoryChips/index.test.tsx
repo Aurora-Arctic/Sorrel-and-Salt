@@ -3,10 +3,8 @@ import { afterEach, describe, expect, it, vi } from 'vitest';
 import CategoryChips from '@/components/CategoryChips';
 import { CATEGORY_CHIP_LIMIT } from '@/components/CategoryChips/constants';
 
-// The chip row the ingredient card and the admin compendium list share: the first few
-// chips, the rest behind a +N toggletip (claude-docs/components/category-chips.md). The
-// row measures nothing, so jsdom is enough for what is tested here; where the panel
-// lands is proved in a browser (tests/e2e/admin-compendium.spec.ts).
+// The chip row the ingredient card and the admin compendium list share: the first few chips, the rest behind a +N toggletip (claude-docs/components/category-chips.md).
+// The row measures nothing, so jsdom is enough here; where the panel lands is proved in a browser (tests/e2e/admin-compendium.spec.ts).
 
 const GROUP = { colorDark: '#112233', colorLight: '#445566' };
 const many = (n: number) =>

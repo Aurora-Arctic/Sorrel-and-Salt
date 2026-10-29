@@ -3,17 +3,13 @@ import type { ReactNode } from 'react';
 import Pager from '../Pager';
 import ListFrame, { ListBody, ListNavigationContext } from '.';
 
-// Render-only; behaviour is asserted where a list uses it, in the tests of
-// CompendiumList (soft), UserList (full) and Pager. A list's
-// frame and body around a small table and its pager; `Pending` holds a page
-// on its way, through a navigation provided above the frame, since the
-// workshop's router goes nowhere. A whole list on its way, filter row and
-// all, is GroupedValueList's `CategoriesPending` and its phone pair.
+// Render-only; behaviour is asserted in the tests of CompendiumList, UserList and
+// Pager. A list's frame around a small table and pager; `Pending` holds a page on
+// its way. A whole list on its way is GroupedValueList's `CategoriesPending`.
 const meta = {
   title: 'Layout / List Frame',
 } satisfies Meta;
 export default meta;
-// The dropdown story's `state` arg is the node it draws (see its argTypes mapping).
 type Story = StoryObj<{ state?: import('react').ReactNode }>;
 
 const ROWS = ['Testwort', 'Fixture Salt', 'Mockroot'];
@@ -62,8 +58,6 @@ const pendingCardsNode = (
   </ListNavigationContext.Provider>
 );
 
-// One story with a control to choose the state: each is a whole page or list,
-// too big to sit beside the others (claude-docs/workshop.md, rule 5).
 const STATES_STATES: Record<string, ReactNode> = {
   Default: defaultNode,
   Pending: pendingNode,

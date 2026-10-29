@@ -55,21 +55,20 @@ export interface CompendiumCardEntry {
   /** New or Updated, from the entry's stamps; none once 30 days have passed. */
   recency: EntryRecency | null;
   /**
-   * The search's own address with `?entry=<id>`, where the card's Quick Look opens the
-   * entry's details over the results (M12.5), for anyone; left out, no Quick Look shows.
+   * The search's own address with `?entry=<id>`, where the card's Quick Look opens
+   * the entry's details over the results. Left out, no Quick Look shows.
    */
   details?: RouteModalLink;
   /**
    * The search's own address with `?edit=<slug>`, where the card's Edit opens the
-   * compendium's edit dialog over the results (M8.17). Given for a curator alone; left out,
-   * no Edit shows.
+   * compendium's edit dialog over the results. For a curator alone; left out, no Edit.
    */
   editHref?: Route;
   /** The head of the dialog Edit opens, shown at once over a skeleton while the form loads. */
   editHeading?: ModalHeading;
   /**
-   * Every coven the viewer may write in holds this entry (M9.12): its card shows the check, not
-   * the plus. With one such coven that is whether it holds it.
+   * Every coven the viewer may write in holds this entry: its card shows the check,
+   * not the plus.
    */
   held?: boolean;
   /**
@@ -78,8 +77,8 @@ export interface CompendiumCardEntry {
    */
   heldIn?: readonly string[];
   /**
-   * The names of every coven of the viewer's that holds it, any role, a viewer's too (M12.55):
-   * counted on the plus or the check and named in its tip. Left out, or empty, neither shows.
+   * The names of every coven of the viewer's that holds it, any role: counted on the
+   * plus or the check and named in its tip. Left out, or empty, neither shows.
    */
   holding?: readonly string[];
   /**
@@ -90,9 +89,9 @@ export interface CompendiumCardEntry {
 }
 
 /**
- * What the foot of each card holds (M8.18): `add` is Add to My Ingredients, for a signed-in
- * owner or member of a coven; `none` is nothing, for an account that only views and for a
- * signed-out visitor, who signs in through the header.
+ * What the foot of each card holds: `add` is Add to My Ingredients, for a signed-in
+ * owner or member of a coven; `none` is nothing, for a viewer-only account and a
+ * signed-out visitor.
  */
 export type CompendiumCardsAction = 'add' | 'none';
 
@@ -112,20 +111,19 @@ export interface CompendiumCardsProps extends Pick<
   /** What the foot of each card holds. */
   action: CompendiumCardsAction;
   /**
-   * The default coven (M9.12): the one Add Ingredient would choose, which on this page, with no
-   * coven in its address, is the first the viewer may write in. The plus adds there where the page
-   * names no `covens`. With `action` `add` and no coven, the cards show no plus and no check.
+   * The default coven: the one Add Ingredient would choose, which with no coven in
+   * the address is the first the viewer may write in. With `action` `add` and no
+   * coven, the cards show no plus and no check.
    */
   workspaceId?: string;
   /**
-   * Every coven the viewer may write in, in the order Add Ingredient lists them. With two or more, a
-   * card's plus is a menu of them all by name; with one, it adds there at once.
+   * Every coven the viewer may write in, in the order Add Ingredient lists them. With two or more,
+   * a card's plus is a menu of them all by name; with one, it adds there at once.
    */
   covens?: readonly CompendiumCoven[];
   /**
-   * Every coven the viewer belongs to, any role (M12.55), for the filter's In My Covens: wider
-   * than `covens`, since a viewer's coven narrows the list as well as anyone's. Left out, or
-   * empty, as for a signed-out visitor or one in no coven, the field does not show.
+   * Every coven the viewer belongs to, any role, for the filter's In My Covens.
+   * Left out, or empty, the field does not show.
    */
   myCovens?: readonly { id: string; name: string }[];
 }

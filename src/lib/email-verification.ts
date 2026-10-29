@@ -3,14 +3,9 @@ import { VERIFICATION_LIFETIME_SECONDS, type EmailVerificationSender } from '@/m
 import { verifyEmailMessage } from '../emails/verify-email';
 import { requestOrigin } from './request-origin';
 
-// Where the email page's decisions meet Better Auth: a resend goes through its
-// endpoint, and a change mints the change token its /verify-email endpoint
-// already honours — under the same secret and the request's own base URL, so
-// a preview host gets a link to itself. Handed to the service by the GraphQL
-// context, since a service may not import `auth` (claude-docs/auth/admin-bootstrap.md, "The
-// email page"). `auth` is imported at call time, for the reason
-// `requestOrigin` gives. Either link lands on the page that shows the
-// address it has just proved, with the way on.
+// Where the email page's decisions meet Better Auth: a resend goes through its endpoint, and a change mints the token its /verify-email endpoint honours,
+// under the request's own base URL so a preview host links to itself. Handed to the service by the GraphQL context, as a service may not import `auth`
+// (claude-docs/auth/admin-bootstrap.md, "The email page"); imported at call time, for the reason `requestOrigin` gives.
 
 export function emailVerificationSender(request: Request): EmailVerificationSender {
   return {

@@ -1,11 +1,8 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { Forbidden, NotFound } from '@/lib/errors';
 
-// The stock a compendium page hands Edit Stock (M9.12; the owner's call, 2026-10-21): the forms
-// each entry comes in and the jars a coven holds of it, read per viewer through the services in
-// one batch for the page, never from the cached compendium read. The session and the two services
-// are mocked: what they answer is their own tests'. Here: the batching, the shape handed on, and
-// that a refusal leaves the entry without stock rather than failing the page.
+// The stock a compendium page hands Edit Stock: each entry's forms and the jars a coven holds of it, read per viewer through the services in one batch, never from the cached compendium read.
+// The session and services are mocked: what they answer is their own tests'. Here: the batching, the shape handed on, and that a refusal leaves the entry without stock rather than failing the page.
 
 const getSession = vi.fn();
 vi.mock('@/lib/request-session', () => ({ getSession }));
