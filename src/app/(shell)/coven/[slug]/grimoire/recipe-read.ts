@@ -1,4 +1,5 @@
 import 'server-only';
+import type { Route } from 'next';
 import { readCategories } from '@/app/compendium-reads';
 import type { CardCategory } from '@/components/IngredientCard/types';
 import type { RecipeStep } from '@/components/SpellRecipe/types';
@@ -22,7 +23,8 @@ export interface RecipeRead {
 export async function readRecipeOf(
   session: Session,
   spell: Awaited<ReturnType<typeof readSpell>>,
-  covenSlug: string,
+  /** Where the recipe is drawn, which its steps' Quick Look eyes add `entry=` to. */
+  hereHref: Route,
 ): Promise<RecipeRead> {
   const ref = [{ id: spell.id, workspaceId: spell.workspaceId }];
   const [[steps], [assigned], known, [editor]] = await Promise.all([
@@ -35,7 +37,7 @@ export async function readRecipeOf(
     throw steps instanceof Error ? steps : assigned;
   const byId = new Map(known.map((category) => [category.id, category]));
   return {
-    steps: recipeStepsOf(steps ?? [], covenSlug),
+    steps: recipeStepsOf(steps ?? [], hereHref),
     categories: (assigned ?? []).flatMap(({ id }): CardCategory[] => {
       const category = byId.get(id);
       return category ? [{ category: { id, name: category.name }, group: category.group }] : [];

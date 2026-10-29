@@ -2,13 +2,14 @@ import { test, expect } from './fixtures';
 import { assertNoAccessibilityViolations } from './axe';
 import { recreateE2eDatabase } from './database';
 import { signInAgainAs } from './session';
-import { insertSpell, seedCoven, withSql } from './stories/coven-ingredients';
+import { insertSpell, localIngredient, seedCoven, withSql } from './stories/coven-ingredients';
 
 // Quick Look a spell from the grimoire list (M13.21). What no story walks: the eye opens the
 // spell in a modal at the tab's own address plus ?spell=<id>, Escape and Close return to the
 // list with focus on the eye, Edit swaps ?spell for ?edit, a viewer has no Edit, another
-// member's private spell and another coven's spell open nothing, and the modal passes axe and
-// stays usable at 375px.
+// member's private spell and another coven's spell open nothing, an ingredient step's eye opens
+// the ingredient's details over the modal at &entry=<id> (the owner, 2026-10-28), and the modal
+// passes axe and stays usable at 375px.
 
 test.beforeAll(async () => {
   await recreateE2eDatabase();
@@ -22,10 +23,28 @@ test('the eye opens a spell in a modal over the list, and the modal is closed, e
     B: 'member',
     C: 'viewer',
   });
-  const [shared, secret] = await withSql(async (sql) => [
-    await insertSpell(sql, coven.id, 'Fixture Working', 'workspace', coven.users.B, 'complete'),
-    await insertSpell(sql, coven.id, 'Fixture Secret', 'private', coven.users.A, 'complete'),
-  ]);
+  const [shared, secret, held] = await withSql(async (sql) => {
+    const shared = await insertSpell(
+      sql,
+      coven.id,
+      'Fixture Working',
+      'workspace',
+      coven.users.B,
+      'complete',
+    );
+    // One ingredient step, laying the coven's own Testwort, for the eye the modal's step draws.
+    const testwort = await localIngredient(sql, coven.id, coven.users.A);
+    await sql.begin(async (tx) => {
+      await tx`select set_config('app.current_user_id', ${coven.users.B}, true)`;
+      await tx`insert into spell_steps (spell_id, ingredient_id, variant_id, position, layer_order, quantity, unit, created_by, updated_by)
+        values (${shared}, ${testwort.ingredientId}, ${testwort.variantId}, 1, 1, 2, 'tsp', ${coven.users.B}, ${coven.users.B})`;
+    });
+    return [
+      shared,
+      await insertSpell(sql, coven.id, 'Fixture Secret', 'private', coven.users.A, 'complete'),
+      testwort.ingredientId,
+    ];
+  });
   const other = await seedCoven(page, 'Fixture Coven Look X', 'spell-look-x.test', { D: 'owner' });
   const grimoire = `/coven/${coven.slug}/grimoire`;
 
@@ -42,6 +61,17 @@ test('the eye opens a spell in a modal over the list, and the modal is closed, e
     `${grimoire}/${shared}`,
   );
   await assertNoAccessibilityViolations(page);
+
+  // The step's eye opens the ingredient's details over the modal, at the same address plus
+  // &entry=<id>; Escape closes the details and the spell's modal is still there.
+  await look.getByRole('link', { name: 'Quick Look Testwort' }).click();
+  await expect(page).toHaveURL(`${grimoire}?query=fixture&spell=${shared}&entry=${held}`);
+  const details = page.getByRole('dialog', { name: 'Testwort' });
+  await expect(details).toBeVisible();
+  await page.keyboard.press('Escape');
+  await expect(page).toHaveURL(`${grimoire}?query=fixture&spell=${shared}`);
+  await expect(details).toHaveCount(0);
+  await expect(look).toBeVisible();
 
   // Escape returns to the list as it was, with focus back on the eye.
   await page.keyboard.press('Escape');

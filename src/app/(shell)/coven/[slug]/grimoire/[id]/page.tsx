@@ -3,6 +3,7 @@ import { notFound } from 'next/navigation';
 import { cache } from 'react';
 import { RouteModalProvider } from '@/components/Modal/route-modal-provider';
 import { EditLink } from '@/components/IconTip';
+import DetailsDialog from '@/components/IngredientEntry/details-dialog';
 import SpellDialog from '@/components/SpellBuilder/spell-dialog';
 import SpellRecipe from '@/components/SpellRecipe';
 import { UNTITLED_SPELL } from '@/components/SpellCard';
@@ -12,6 +13,8 @@ import { rolePermits } from '@/modules/coven';
 import { requireCovenMembership, requireSession } from '@/lib/request-session';
 import { readSpell } from '@/modules/grimoire';
 import { readEditedSpell } from '../(list)/reads';
+import { readViewedEntry } from '../../ingredients/reads';
+import { viewedDetailsOf } from '../../ingredients/viewed-details';
 import { readRecipeOf } from '../recipe-read';
 import type { SpellRecipeParams } from './types';
 
@@ -47,10 +50,16 @@ export async function generateMetadata({ params }: SpellRecipeParams): Promise<M
 export default async function SpellRecipePage({ params, searchParams }: SpellRecipeParams) {
   const { slug, id } = await params;
   const { workspace, membership, session, spell } = await spellOf(slug, id);
-  const recipe = await readRecipeOf(session, spell, workspace.slug);
-  const canUpdate = rolePermits(membership.role, { spell: ['update'] });
   const recipePath = `/coven/${workspace.slug}/grimoire/${spell.id}` as Route;
-  const edit = (await searchParams).edit;
+  const recipe = await readRecipeOf(session, spell, recipePath);
+  const canUpdate = rolePermits(membership.role, { spell: ['update'] });
+  const query = await searchParams;
+  const edit = query.edit;
+  // An ingredient step's Quick Look eye opens the ingredient's details over the recipe, at this
+  // page's `?entry=<id>` (the owner, 2026-10-28), read as the coven's Ingredients page reads it:
+  // any member's, and nothing for an id the service withholds.
+  const entryId = typeof query.entry === 'string' && query.entry ? query.entry : undefined;
+  const viewed = entryId ? await readViewedEntry(membership, entryId) : undefined;
   const wanted = typeof edit === 'string' ? RowId.safeParse(edit) : undefined;
   const saved =
     canUpdate && wanted?.success && wanted.data === spell.id
@@ -91,6 +100,10 @@ export default async function SpellRecipePage({ params, searchParams }: SpellRec
           opened={saved && { spell: saved }}
           canCreate={false}
           userId={membership.userId}
+        />
+        <DetailsDialog
+          closeHref={recipePath}
+          opened={viewed && viewedDetailsOf(viewed, workspace.slug)}
         />
       </RouteModalProvider>
     </main>

@@ -1,3 +1,5 @@
+@use '../../scss/variables' as *;
+
 // A step's row (M13.3). Laid out no further than the tokens until the
 // grimoire's design review.
 .step-row {
@@ -5,6 +7,11 @@
   flex-wrap: wrap;
   align-items: center;
   gap: 0.5rem;
+}
+
+// The dash standing for a missing quantity, faded so the unit reads first (the owner, 2026-10-28).
+.step-row__dash {
+  color: $text-muted;
 }
 
 .step-row__body {

@@ -84,7 +84,13 @@
 // The mock-up's steps carry no form icon: the recipe is read, not picked from, and the
 // builder's rows keep theirs. Hidden here rather than left out of StepRow, which draws it
 // for every caller.
-.spell-recipe__steps .step-row__name > .form-icon {
+.spell-recipe__steps // The step's Quick Look eye at the form's icon size, not the list's larger one (the owner,
+// 2026-10-28), so it sits in the name's line.
+.spell-recipe__steps .icon-tip__look {
+  @include icon-button($icon-size, $glyph-size);
+}
+
+.step-row__name > .form-icon {
   display: none;
 }
 
@@ -112,10 +118,17 @@
 }
 
 // The one-off mark at the size the builder's supply marks take.
+// The marks sit at the row's end, right-aligned (the owner, 2026-10-28), One-Off at the
+// compact default badge size.
+.spell-recipe__marks {
+  display: flex;
+  gap: space(1);
+  align-items: center;
+  margin-inline-start: auto;
+}
+
 .spell-recipe__one-off {
-  @include badge-size('small');
-  margin-inline-start: space(1);
-  vertical-align: middle;
+  @include badge-size('default');
 }
 
 // The facts strip (M13.21): up to four cells under a hairline, two to a row in a narrow column.
@@ -157,6 +170,8 @@
 
 // The note, under its own hairline, only where there is one.
 .spell-recipe__note {
+  // Clear of the last step (the owner, 2026-10-28), over the column's own gap.
+  margin-block-start: space(2);
   padding-block-start: space(3);
   border-top: 1px solid $hairline;
 }

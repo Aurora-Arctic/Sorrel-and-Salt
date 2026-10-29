@@ -106,8 +106,16 @@ beforeEach(() => {
         variantId: 'v-1',
         quantity: '2',
         unit: 'tsp',
-        ingredient: { id: 'ing-1', name: 'Testwort', canonicalName: null, deleted: false },
-        variant: { id: 'v-1', form: 'dried leaf', deleted: false },
+        ingredient: {
+          id: 'ing-1',
+          name: 'Testwort',
+          canonicalName: null,
+          nomenclature: 'none',
+          toxic: false,
+          safetyNotes: null,
+          deleted: false,
+        },
+        variant: { id: 'v-1', form: 'dried leaf', toxic: false, safetyNotes: null, deleted: false },
       },
       { ...stepRow, id: 's-a', body: 'Stir three times' },
     ],
@@ -136,6 +144,14 @@ describe('the spell recipe page', () => {
     ]);
     expect(screen.getByText('Best on a dry night.')).toBeInTheDocument();
     expect(screen.getAllByText(/Fixture Author/).length).toBeGreaterThan(0);
+  });
+
+  it("gives an ingredient step a Quick Look eye to this page's own address with ?entry=<id>, so the details open over the recipe", async () => {
+    await draw();
+    expect(screen.getByRole('link', { name: 'Quick Look Testwort' })).toHaveAttribute(
+      'href',
+      `/coven/fixture-coven/grimoire/${SPELL_ID}?entry=ing-1`,
+    );
   });
 
   describe('editing (M13.10)', () => {

@@ -2,7 +2,9 @@ import type { Route } from 'next';
 import type { ReactNode } from 'react';
 import type { CardCategory } from '../CategoryChips/types';
 import type { LastEditProps } from '../LastEdit/types';
+import type { SafetyMarkProps } from '../SafetyNote/types';
 import type { SpellStatus, SpellVisibility } from '@/modules/grimoire';
+import type { IngredientRow } from '@/modules/ingredients';
 
 /** A step that does something in words: "Stir three times", with no ingredient. */
 export interface InstructionRecipeStep {
@@ -30,8 +32,14 @@ export interface IngredientRecipeStep {
   /** The amount, as written; null for none ("a pinch" has no number). */
   quantity: string | null;
   unit: string | null;
-  /** The ingredient's page in this coven; null for a one-off, or an ingredient since deleted. */
-  href: Route | null;
+  /**
+   * What the step's Quick Look eye opens: the ingredient's details modal over the coven's
+   * ingredients (M8.19), with what the modal's head needs. The name itself is no link (the owner,
+   * 2026-10-28). Null for a one-off, or an ingredient since deleted.
+   */
+  look: IngredientLook | null;
+  /** The ingredient's and the laid form's safety, for the Toxic and Caution marks; null for a one-off. */
+  safety: Pick<SafetyMarkProps, 'toxic' | 'safetyNotes' | 'variants'> | null;
   oneOff: boolean;
   /** The ingredient or its form has been deleted since; the step still says what went in. */
   deleted: boolean;
@@ -39,6 +47,13 @@ export interface IngredientRecipeStep {
   note: string | null;
   /** An instruction given on the same step. */
   body: string | null;
+}
+
+export interface IngredientLook extends Pick<
+  IngredientRow,
+  'name' | 'canonicalName' | 'nomenclature'
+> {
+  href: Route;
 }
 
 export type RecipeStep = InstructionRecipeStep | IngredientRecipeStep;

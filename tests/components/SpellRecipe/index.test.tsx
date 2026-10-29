@@ -24,7 +24,8 @@ const ingredient = (
   formal: null,
   quantity: null,
   unit: null,
-  href: null,
+  look: null,
+  safety: null,
   oneOff: false,
   deleted: false,
   note: null,
@@ -160,12 +161,19 @@ describe('SpellRecipe', () => {
     ).toBeInTheDocument();
   });
 
-  it('links an ingredient to its page and a one-off to nothing, marking it One-Off', () => {
+  it('gives an ingredient a Quick Look eye, not a link on its name, and a one-off neither, marking it One-Off', () => {
     render(
       <SpellRecipe
         {...props({
           steps: [
-            ingredient('a', { href: '/coven/fixture-coven/ingredients/i1' as Route }),
+            ingredient('a', {
+              look: {
+                href: '/coven/fixture-coven/ingredients?entry=i1' as Route,
+                name: 'Testwort',
+                canonicalName: null,
+                nomenclature: 'none',
+              },
+            }),
             ingredient('b', { name: 'Fixture Moss', form: 'fresh', oneOff: true }),
           ],
         })}
@@ -173,12 +181,32 @@ describe('SpellRecipe', () => {
     );
     const steps = screen.getByRole('list', { name: 'Steps' });
     expect(within(steps).getAllByRole('link')).toHaveLength(1);
-    expect(within(steps).getByRole('link')).toHaveAttribute(
+    expect(within(steps).getByRole('link', { name: /Quick Look Testwort/ })).toHaveAttribute(
       'href',
-      '/coven/fixture-coven/ingredients/i1',
+      '/coven/fixture-coven/ingredients?entry=i1',
     );
+    expect(within(steps).getByText('Testwort').closest('a')).toBeNull();
     expect(within(steps).getByText(/Fixture Moss \(Fresh\)/)).toBeInTheDocument();
     expect(within(steps).getByText(/One-Off/)).toBeInTheDocument();
+  });
+
+  it('marks a toxic ingredient Toxic and one with safety notes Caution, and a one-off neither', () => {
+    render(
+      <SpellRecipe
+        {...props({
+          steps: [
+            ingredient('a', { safety: { toxic: true } }),
+            ingredient('b', { name: 'Fixture Rue', safety: { safetyNotes: 'Wash hands.' } }),
+            ingredient('c', { name: 'Fixture Moss', oneOff: true }),
+          ],
+        })}
+      />,
+    );
+    const steps = screen.getByRole('list', { name: 'Steps' });
+    const rows = within(steps).getAllByRole('listitem');
+    expect(within(rows[0]!).getByText('Toxic')).toBeInTheDocument();
+    expect(within(rows[1]!).getByText('Caution')).toBeInTheDocument();
+    expect(within(rows[2]!).queryByText(/Toxic|Caution/)).toBeNull();
   });
 
   it('shows the note, with no heading, and none when blank', () => {

@@ -1,4 +1,4 @@
-import type { ReactElement } from 'react';
+import type { ReactElement, ReactNode } from 'react';
 import FormIcon from '../FormIcon';
 import './index.scss';
 import type { StepRowProps } from './types';
@@ -22,9 +22,16 @@ const plainQuantity = (quantity: string): string =>
  * quantity reads "— tsp", an en dash where the number would be: a missing amount, not an
  * amount of nothing, which "0 tsp" would claim (the owner, 2026-10-28).
  */
-const amountOf = (quantity?: string | null, unit?: string | null): string | null => {
+const amountOf = (quantity?: string | null, unit?: string | null): ReactNode => {
   if (!quantity && !unit) return null;
-  return [quantity ? plainQuantity(quantity) : '—', unit].filter(Boolean).join(' ');
+  const number = quantity ? plainQuantity(quantity) : <span className="step-row__dash">—</span>;
+  return unit ? (
+    <>
+      {number} {unit}
+    </>
+  ) : (
+    number
+  );
 };
 
 export default function StepRow({

@@ -544,6 +544,36 @@ describe('Quick Look over a Grimoire tab', () => {
     expect(eye).toHaveAttribute('href', '/coven/fixture-coven/grimoire?query=fixture&spell=s1');
   });
 
+  it("gives an ingredient step's Quick Look eye the tab's address with ?spell kept and &entry=<id> added, so the details open over the modal", async () => {
+    as('member');
+    stepsOfSpells.mockResolvedValue([
+      [
+        {
+          ...STEP,
+          body: null,
+          ingredientId: 'ing-1',
+          ingredient: {
+            id: 'ing-1',
+            name: 'Testwort',
+            canonicalName: null,
+            nomenclature: 'none',
+            toxic: false,
+            safetyNotes: null,
+            deleted: false,
+          },
+          variant: { id: 'v-1', form: 'root', toxic: false, safetyNotes: null, deleted: false },
+        },
+      ],
+    ]);
+    await renderTab(SpellsPage, { query: 'fixture', spell: SPELL_ID });
+
+    const dialog = screen.getByRole('dialog', { name: 'Fixture Working' });
+    expect(within(dialog).getByRole('link', { name: 'Quick Look Testwort' })).toHaveAttribute(
+      'href',
+      `/coven/fixture-coven/grimoire?query=fixture&spell=${SPELL_ID}&entry=ing-1`,
+    );
+  });
+
   it.each(['owner', 'member', 'viewer'] as const)(
     'opens the spell in a modal over the list for a coven %s, read through the service',
     async (role) => {

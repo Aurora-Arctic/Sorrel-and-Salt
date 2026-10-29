@@ -125,7 +125,12 @@ assigned categories and editor come from `readRecipeOf` (`grimoire/recipe-read.t
 function the recipe page calls, with the editor named in one `displayNamesOf` call. A malformed
 id reads nothing, and `?new` or `?edit` hold the modal back so one dialog shows at a time. The
 modal's Edit shows for the same `rolePermits(role, { spell: ['update'] })` check as the card's
-pencil and links to `?edit=<id>` in place of `?spell=<id>`.
+pencil and links to `?edit=<id>` in place of `?spell=<id>`. An ingredient step's Quick Look eye
+opens the ingredient's details (`DetailsDialog`, M12.5) over the spell's modal, at the same
+address plus `&entry=<id>`, read with the Ingredients page's `readViewedEntry` and drawn with
+its `viewedDetailsOf` (`ingredients/viewed-details.tsx`), without the card's actions; closing
+the details returns to the spell's modal (the owner, 2026-10-28). The details wait on the spell's
+modal: `?entry` with no spell open opens nothing.
 
 ## The Compact switch
 

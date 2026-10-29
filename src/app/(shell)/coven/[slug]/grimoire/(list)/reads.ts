@@ -1,4 +1,5 @@
 import 'server-only';
+import type { Route } from 'next';
 import { cache } from 'react';
 import { readCategories } from '@/app/compendium-reads';
 import type { GrimoireSpell } from '@/components/GrimoireList/types';
@@ -185,11 +186,12 @@ export const readGrimoireFacetCounts = cache(
  * tab opens nothing and tells a stranger nothing. Any other failure is `failed`, which the
  * modal says in a Notice rather than drawing an empty spell.
  */
-export async function readLookedSpell(workspaceId: string, covenSlug: string, id: string) {
+/** The spell `?spell=<id>` opens at `lookHref`, the tab's address with it, and its recipe drawn there. */
+export async function readLookedSpell(workspaceId: string, lookHref: Route, id: string) {
   const session = await requireSession();
   try {
     const spell = await readSpell(session, workspaceId, id);
-    return { spell, recipe: await readRecipeOf(session, spell, covenSlug) };
+    return { spell, recipe: await readRecipeOf(session, spell, lookHref) };
   } catch (error) {
     if (error instanceof NotFound || error instanceof Forbidden) return undefined;
     return { failed: true as const };

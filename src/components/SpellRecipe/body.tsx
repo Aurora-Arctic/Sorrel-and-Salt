@@ -1,10 +1,10 @@
 import type { ReactElement } from 'react';
-import { PendingLink } from '../../lib/navigation';
-import { ingredientLinkTarget } from '../AppShell/site-target';
 import CategoryChips from '../CategoryChips';
+import { QuickLookLink } from '../IconTip';
+import { DETAILS_PLACE, detailsHeading } from '../IngredientEntry/details';
 import StepRow from '../StepRow';
-import LinkHint from '../LinkHint';
 import MoonPhaseIcon from '../MoonPhaseIcon';
+import { SafetyMark } from '../SafetyNote';
 import { formLabel } from '../../modules/ingredients/validation/form-label';
 import { UNTITLED_SPELL } from '../SpellCard';
 import type { IngredientRecipeStep, RecipeStep, SpellRecipeBodyProps } from './types';
@@ -19,22 +19,38 @@ import './index.scss';
 const labelOf = ({ name, form }: IngredientRecipeStep): string =>
   form ? `${name} (${formLabel(form)})` : name;
 
-/** The ingredient's name: a link to its page where it has one, with its formal name beside it where two share a label. */
+/**
+ * The ingredient's name as plain text, not a link (the owner, 2026-10-28): the Quick Look eye
+ * beside it opens the ingredient's details modal. The formal name follows where two share a label.
+ */
 const Name = ({ step }: { step: IngredientRecipeStep }): ReactElement => (
   <>
-    {step.href ? (
-      <PendingLink href={step.href} navigationTarget={ingredientLinkTarget(step.href)}>
-        {labelOf(step)} <LinkHint />
-      </PendingLink>
-    ) : (
-      <span>{labelOf(step)}</span>
-    )}
+    <span>{labelOf(step)}</span>
     {step.formal !== null && <span className="meta spell-recipe__formal"> ({step.formal})</span>}
-    {/* The mark the builder's SupplyMark gives a one-off, so the two read alike. */}
-    {step.oneOff && <span className="badge badge--local spell-recipe__one-off">One-Off</span>}
     {step.deleted && <span className="meta"> (Deleted)</span>}
+    {step.look && (
+      <>
+        {' '}
+        <QuickLookLink
+          href={step.look.href}
+          name={step.look.name}
+          heading={detailsHeading(step.look)}
+          place={DETAILS_PLACE}
+        />
+      </>
+    )}
   </>
 );
+
+/** The step's marks, at the row's end: Toxic or Caution from the ingredient, and the builder's One-Off. */
+const Marks = ({ step }: { step: IngredientRecipeStep }): ReactElement | null =>
+  step.safety || step.oneOff ? (
+    <span className="spell-recipe__marks">
+      {step.safety && <SafetyMark {...step.safety} />}
+      {/* The mark the builder's SupplyMark gives a one-off, so the two read alike. */}
+      {step.oneOff && <span className="badge badge--local spell-recipe__one-off">One-Off</span>}
+    </span>
+  ) : null;
 
 const SpellRecipeBody = ({
   title,
@@ -101,6 +117,7 @@ const SpellRecipeBody = ({
                 key={step.id}
                 position={i + 1}
                 name={<Name step={step} />}
+                marks={<Marks step={step} />}
                 quantity={step.quantity}
                 unit={step.unit}
                 // An ingredient step shows its note and not its text (the owner, 2026-10-28);
