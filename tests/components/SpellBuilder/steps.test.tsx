@@ -276,7 +276,7 @@ describe('the spell builder’s Add to Jar', () => {
     expect(row).toHaveTextContent('Dried Leaf');
     expect(iconOf(row)).toBe(drawn('botanical'));
     expect(search()).toHaveValue('');
-    expect(save()).toBeEnabled();
+    expect(save().matches(':disabled, [aria-disabled="true"]')).toBe(false);
   });
 
   // Story 51 typed its second ingredient as the first was added; the new
@@ -562,12 +562,12 @@ describe('the spell builder’s Add to Jar', () => {
     chooseUnit(row, 'ml');
     await waitFor(() => expect(unit).toHaveAttribute('aria-invalid', 'true'));
     expect(unit).toHaveAccessibleDescription(UNMEASURABLE_UNIT);
-    expect(save()).toBeDisabled();
+    expect(save().matches(':disabled, [aria-disabled="true"]')).toBe(true);
 
     // Another weight converts.
     chooseUnit(row, 'kg');
     await waitFor(() => expect(unit).not.toHaveAttribute('aria-invalid', 'true'));
-    expect(save()).toBeEnabled();
+    expect(save().matches(':disabled, [aria-disabled="true"]')).toBe(false);
   });
 
   it('shows each row’s categories beneath its name: the form’s own, else the ingredient’s', async () => {
@@ -612,7 +612,7 @@ describe('the spell builder’s Add to Jar', () => {
     const unit = within(row).getByRole('combobox', { name: /^Unit/ });
     await waitFor(() => expect(unit).toHaveTextContent('ml'));
     expect(unit).not.toHaveAttribute('aria-invalid', 'true');
-    expect(save()).toBeEnabled();
+    expect(save().matches(':disabled, [aria-disabled="true"]')).toBe(false);
   });
 
   it('opens a saved spell’s steps, and saves them back by id with the step added', async () => {
@@ -667,7 +667,7 @@ describe('the spell builder’s Add to Jar', () => {
     expect(within(row).getByRole('spinbutton', { name: /^Quantity/ })).toHaveValue(3);
     expect(within(row).getByRole('combobox', { name: /^Unit/ })).toHaveTextContent('g');
     expect(stepRow('Testwort')).toBeInTheDocument();
-    expect(save()).toBeDisabled();
+    expect(save().matches(':disabled, [aria-disabled="true"]')).toBe(true);
 
     await add('Mock', /Fixture Mockroot/);
     submit();

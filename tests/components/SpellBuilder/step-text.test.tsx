@@ -192,7 +192,7 @@ describe('the spell builder’s step text', () => {
     expect(within(rows()[1] as HTMLElement).getByRole('spinbutton')).toBeInTheDocument();
     openStep(1);
     expect(instructions().map((field) => field.value)).toEqual(['Light the candle']);
-    expect(save()).toBeDisabled();
+    expect(save().matches(':disabled, [aria-disabled="true"]')).toBe(true);
   });
 
   it('saves an edited text on a saved step by its id, and leaves the other alone', async () => {
@@ -201,7 +201,7 @@ describe('the spell builder’s step text', () => {
 
     openStep(1);
     fireEvent.change(instructions()[0] as HTMLElement, { target: { value: 'Snuff the candle' } });
-    expect(save()).toBeEnabled();
+    expect(save().matches(':disabled, [aria-disabled="true"]')).toBe(false);
     submit();
 
     await waitFor(() => expect(calls).toHaveLength(1));

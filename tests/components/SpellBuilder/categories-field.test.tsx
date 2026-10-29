@@ -146,20 +146,20 @@ describe('the spell builder’s categories', () => {
     await waitFor(() => expect(calls).toHaveLength(1));
     expect(calls[0].input.categoryIds).toEqual([TESTWARD.id, SHIELD.id]);
     // What was saved is the new start: the picks stay, and Save goes off.
-    await waitFor(() => expect(save()).toBeDisabled());
+    await waitFor(() => expect(save().matches(':disabled, [aria-disabled="true"]')).toBe(true));
     expect(chip('Testward')).toBeInTheDocument();
     expect(chip('Fixture Shield')).toBeInTheDocument();
   });
 
   it('has something to save once a category is picked, and nothing once it is removed', async () => {
     renderBuilder();
-    expect(save()).toBeDisabled();
+    expect(save().matches(':disabled, [aria-disabled="true"]')).toBe(true);
 
     await pick('Testward');
-    expect(save()).toBeEnabled();
+    expect(save().matches(':disabled, [aria-disabled="true"]')).toBe(false);
 
     fireEvent.click(chip('Testward') as HTMLElement);
-    expect(save()).toBeDisabled();
+    expect(save().matches(':disabled, [aria-disabled="true"]')).toBe(true);
   });
 
   it('opens a saved spell with its categories, and sends the set left once one is removed', async () => {
@@ -167,7 +167,7 @@ describe('the spell builder’s categories', () => {
     renderBuilder({ spell: savedSpell([TESTWARD.id, SHIELD.id]) });
     await waitFor(() => expect(chip('Testward')).toBeInTheDocument());
     expect(chip('Fixture Shield')).toBeInTheDocument();
-    expect(save()).toBeDisabled();
+    expect(save().matches(':disabled, [aria-disabled="true"]')).toBe(true);
 
     fireEvent.click(chip('Testward') as HTMLElement);
     submit();
@@ -175,7 +175,7 @@ describe('the spell builder’s categories', () => {
     await waitFor(() => expect(calls).toHaveLength(1));
     expect(calls[0]).toMatchObject({ id: 's9', input: { categoryIds: [SHIELD.id] } });
     // Removing the last one sends an empty set, which clears them all.
-    await waitFor(() => expect(save()).toBeDisabled());
+    await waitFor(() => expect(save().matches(':disabled, [aria-disabled="true"]')).toBe(true));
     fireEvent.click(chip('Fixture Shield') as HTMLElement);
     submit();
     await waitFor(() => expect(calls).toHaveLength(2));
