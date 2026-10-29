@@ -131,10 +131,14 @@ which width is presentation, the workshop's and the browser's.
 once the curator guard resolves, and sets `managesPeople` by role, and that the index links every page the nav does,
 in its order. `tests/e2e/admin.spec.ts` checks that an admin sees the nav, a curator sees it without People, and a non-admin's 403 page carries none of it.
 
-## Source notes
+## Where the nav is drawn
 
-Comments in the source that point here; each is the detail behind a one-line comment.
+The `/admin` layout's nav sits in the context row beside the word Admin and, on a phone, in the bottom bar. It lists every admin page, in the sections the `/admin` index's table of contents shows too. It renders only inside the guarded layout, so only a curator or an admin sees it, and People only an admin. A page is linked at its first tab and is current on any of its tabs. The first page of each section after the first starts a group, which the row sets apart by a hairline.
 
-- `index.tsx`: The `/admin` layout's nav, in the context row beside the word Admin and, on a phone, the bottom bar: every admin page, in the sections the `/admin` index's table of contents shows too. It renders only inside the guarded layout, so only a curator or an admin sees it, and People only an admin (claude-docs/components/admin-nav.md). A page is linked at its first tab and is current on any of its tabs; the first page of each section after the first starts a group, which the row sets apart by a hairline.
-- `sections.ts`: Every admin page, its tabs and its section: the one list the nav, the `/admin` index and each tabbed page's layout read, so the three cannot drift (claude-docs/components/admin-nav.md). A list shares its page with the group list that organises it, a tab each, as Category Groups organise Categories. A vocabulary's tab is built from its kind table (`GroupList/kinds.ts`, `GroupedValueList/kinds.ts`), which holds its address; the others are checked against the built routes (typedRoutes). A tab marked `filtered` opens with a filter, which its loading skeleton draws.
-- `target.ts`: What each admin page draws while it is on its way, keyed by the address the nav and the index link it at, its first tab. The admin area has its own body under its context row, so every wait is the `admin` region's and the row with its nav stays. The wait is the page that arrives: its heading, the action at the heading's end, its filter row, then the list. The index is sections of links and draws its own heading. A tabbed page draws its tab row between the heading and the action; the Compendium has one tab and so no row.
+## One list of pages
+
+`sections.ts` holds every admin page, its tabs and its section. The nav, the `/admin` index and each tabbed page's layout all read it, so the three cannot drift. A list shares its page with the group list that organises it, a tab each, as Category Groups organise Categories. A vocabulary's tab is built from its kind table (`GroupList/kinds.ts`, `GroupedValueList/kinds.ts`), which holds its address. The other addresses are checked against the built routes (`typedRoutes`). A tab marked `filtered` opens with a filter, which its loading skeleton draws.
+
+## The wait for an admin page
+
+`target.ts` says what each admin page draws while it is on its way, keyed by the address the nav and the index link it at, its first tab. The admin area has its own body under its context row, so every wait belongs to the `admin` region and the row with its nav stays. The wait is the page that arrives: its heading, the action at the heading's end, its filter row, then the list. The index is sections of links and draws its own heading. A tabbed page draws its tab row between the heading and the action. The Compendium has one tab and so no row.

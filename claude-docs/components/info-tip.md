@@ -160,10 +160,18 @@ opened by hover, kept open while the pointer is on the tip, and closed a
 moment after it leaves; opened by focus and closed by blur; opened by a tap
 that a second tap does not shut; closed by Escape from anywhere.
 
-## Source notes
+## The bubble
 
-Comments in the source that point here; each is the detail behind a one-line comment.
+The bubble uses the tip-bubble mixin in `index.scss`: the muted ink tinted into the surface, so it reads as a note beside the label rather than as another field, faded in and out. Its ground is an opaque mix, so the control beneath it does not show through. `useTip` places it when it opens, above the ⓘ where there is room and kept on the screen. The bubble is as wide as its text up to `$tip-width` (18rem) and is shifted along the line until it is inside the window. It opens above by default because the tip opens while its field has focus, and below it would cover what is typed. A region may ask for another side with `--tip-placement`.
 
-- `index.scss`: The tip-bubble mixin's: the muted ink tinted into the surface, so it reads as a note beside the label rather than as another field, faded in and out. Its ground is an opaque mix, so the control beneath it does not show through. Placed by `useTip` when it opens, above the ⓘ where there is room and kept on the screen: the bubble is as wide as its text up to `$tip-width` (18rem), and shifted along the line until it is inside the window. Above, not below, by default: the tip opens while its field has focus, and below it would cover what is typed. A region may ask for another side with `--tip-placement`.
-- `use-tip.ts`: Whether the tip is open, and its three handlers. `canOpen` is asked as it opens rather than watched: whether a Combobox entry's text fits changes with the control's width, and only matters at the moment someone looks. `placement` is the side the bubble prefers, `top` unless a stylesheet's `--tip-placement` says otherwise. `timing` sets how long a hover waits to open (`showSoon`) and a leave to close (`hideSoon`); IconTip's bubble cannot be hovered, so it closes with no wait. The caller hands `anchor` to the element the bubble belongs to (the wrapper that hears the hover), `bubble` to the bubble, and `bubbleStyle` to the bubble's `style`.
-- `use-tip.ts`: The side a stylesheet asks for. `--tip-placement` is a custom property, so a rule can set it for a whole region (the filter panel's tips open below) or by a container query (a stacked table's), and it inherits to every tip inside. Read as the tip opens, as `canOpen` is, since a media or container query may have changed it since. Anything else, or none, is `fallback`.
+## `useTip`
+
+`useTip` returns whether the tip is open and its three handlers. The caller hands `anchor` to the element the bubble belongs to (the wrapper that hears the hover), `bubble` to the bubble, and `bubbleStyle` to the bubble's `style`.
+
+- `canOpen` is asked as the tip opens rather than watched. Whether a Combobox entry's text fits changes with the control's width and only matters at the moment someone looks.
+- `placement` is the side the bubble prefers, `top` unless a stylesheet's `--tip-placement` says otherwise.
+- `timing` sets how long a hover waits to open (`showSoon`) and a leave to close (`hideSoon`). `IconTip`'s bubble cannot be hovered, so it closes with no wait.
+
+## The placement property
+
+`--tip-placement` is a custom property, so a rule can set it for a whole region (the filter panel's tips open below) or by a container query (a stacked table's), and it inherits to every tip inside. It is read as the tip opens, as `canOpen` is, since a media or container query may have changed it since. Anything else, or none, gives `fallback`.
