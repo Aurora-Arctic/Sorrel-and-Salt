@@ -86,8 +86,6 @@ export default function SpellDialog({
   return (
     <RouteModal
       closeHref={closeHref}
-      // Wide, so the jar's steps sit beside its supply and intent (55rem, modal.md).
-      size="wide"
       content={
         opened && {
           heading,

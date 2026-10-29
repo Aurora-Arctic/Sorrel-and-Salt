@@ -167,7 +167,7 @@ describe('the spell builder’s step order', () => {
     renderBuilder();
 
     expect(order()).toEqual([ROSEWORT, 'Testwort', 'Stir thrice']);
-    expect(save()).toBeDisabled();
+    expect(save().matches(':disabled, [aria-disabled="true"]')).toBe(true);
   });
 
   it('moves a step by keyboard alone, says each step, and keeps the focus on its handle', async () => {
@@ -221,7 +221,7 @@ describe('the spell builder’s step order', () => {
 
     expect(announced()).toContain('Move cancelled. Testwort is back at position 2 of 3.');
     expect(order()).toEqual([ROSEWORT, 'Testwort', 'Stir thrice']);
-    expect(save()).toBeDisabled();
+    expect(save().matches(':disabled, [aria-disabled="true"]')).toBe(true);
   });
 
   it('moves a step by dragging its handle', async () => {
@@ -336,7 +336,7 @@ describe('the spell builder’s undo across a save', () => {
     await waitFor(() => expect(rows()).toHaveLength(2));
     submit();
     await waitFor(() => expect(calls).toHaveLength(1));
-    await waitFor(() => expect(save()).toBeDisabled());
+    await waitFor(() => expect(save().matches(':disabled, [aria-disabled="true"]')).toBe(true));
     const kept = rows().length;
 
     fireEvent.click(screen.getByRole('button', { name: 'Undo' }));

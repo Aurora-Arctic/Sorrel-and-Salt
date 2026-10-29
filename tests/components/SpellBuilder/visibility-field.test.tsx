@@ -156,7 +156,7 @@ describe('SpellBuilder visibility', () => {
 
     await waitFor(() => expect(calls).toHaveLength(1));
     expect(calls[0]?.input).toMatchObject({ visibility: 'workspace' });
-    await waitFor(() => expect(save()).toBeDisabled());
+    await waitFor(() => expect(save().matches(':disabled, [aria-disabled="true"]')).toBe(true));
     // Still a draft, so the switch stays free.
     expect(toggle()).toBeChecked();
     expect(toggle()).toBeEnabled();
@@ -166,7 +166,7 @@ describe('SpellBuilder visibility', () => {
   it('has something to save once only the choice has changed, and nothing once it is back', () => {
     renderBuilder();
     // Why Save could stay off: no field holds anything.
-    expect(save()).toBeDisabled();
+    expect(save().matches(':disabled, [aria-disabled="true"]')).toBe(true);
 
     fireEvent.click(toggle());
 
@@ -175,7 +175,7 @@ describe('SpellBuilder visibility', () => {
 
     fireEvent.click(toggle());
 
-    expect(save()).toBeDisabled();
+    expect(save().matches(':disabled, [aria-disabled="true"]')).toBe(true);
   });
 
   describe('a complete private spell', () => {
@@ -271,7 +271,7 @@ describe('SpellBuilder visibility', () => {
       fireEvent.change(title(), { target: { value: 'Fixture Working' } });
       submit();
 
-      await waitFor(() => expect(save()).toBeDisabled());
+      await waitFor(() => expect(save().matches(':disabled, [aria-disabled="true"]')).toBe(true));
       expect(toggle()).toBeChecked();
       expect(toggle()).toBeEnabled();
       expect(toggle()).toHaveAccessibleDescription(/once the spell is complete, it stays shared/i);

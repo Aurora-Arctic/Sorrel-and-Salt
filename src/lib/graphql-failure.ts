@@ -88,8 +88,7 @@ export function placeServerIssues<Name extends string>(
       // Each distinct message once: a rule the schema and the service both state (a step that
       // is not the spell's) would otherwise print twice, run together.
       if (!unplaced.includes(issue.message)) unplaced.push(issue.message);
-    }
-    else {
+    } else {
       setError(field, { type: 'server', message: issue.message });
       placed = true;
     }

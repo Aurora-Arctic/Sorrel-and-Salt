@@ -181,7 +181,7 @@ export function SpellSteps({
       </div>
       {/* One grid holds the list, then the add row: the box and Add Instruction, beneath the
           list where a new step lands (second design review, 2026-10-28). The button follows the
-          box on a wide column and is a numbered line beneath it on a narrow one, by grid
+          box on a wide column and is a dashed line beneath it on a narrow one, by grid
           placement alone, so it is one button, in the one place in the markup. */}
       <div className="spell-steps__body">
         <SortableSteps ids={keys} names={names} onMove={move}>
@@ -202,9 +202,6 @@ export function SpellSteps({
           <StepPicker workspaceId={workspaceId} oneOffs={oneOffs} onAdd={add} />
         </div>
         <button type="button" className="btn spell-steps__add-step" onClick={addStep}>
-          <span className="spell-steps__next" aria-hidden="true">
-            {fields.length + 1}.
-          </span>
           Add Instruction
         </button>
       </div>

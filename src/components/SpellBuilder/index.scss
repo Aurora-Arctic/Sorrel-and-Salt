@@ -14,95 +14,6 @@
   }
 }
 
-// The two-column rhythm the Purpose section and the Jar section share, so Categories and the
-// Jar's aside are one column: the main column's least width, the gap, the side column's width
-// (border-box, so its line and its padding are inside it) and the container width at which both
-// fit. The side column's content starts `$spell-side-inset` past its edge, in both sections.
-$spell-main-min: 28rem;
-$spell-side: 21rem;
-$spell-columns-gap: space(4);
-$spell-side-inset: space(4);
-$spell-columns-switch: $spell-main-min + $spell-columns-gap + $spell-side;
-
-// The side column's dividing line, drawn as its own border so no element is added for a screen
-// reader, with the same padding on the content's side: above it when the columns stack, beside
-// it when they sit side by side. Both sections use these, so the line and the content line up.
-@mixin spell-side-stacked {
-  box-sizing: border-box;
-  padding-block-start: space(4);
-  border-block-start: 1px solid $hairline;
-}
-
-@mixin spell-side-beside {
-  padding-block-start: 0;
-  padding-inline-start: $spell-side-inset;
-  border-block-start: 0;
-  border-inline-start: 1px solid $hairline;
-}
-
-// The Purpose section's two columns: Title and Intent at the left, capped as above, and
-// Categories at the right, top-aligned with Title. The section's own width is the container
-// (not the screen's), so the pair stacks (Title, Intent, Categories) when the dialog is too
-// narrow for both: at the Jar's own switch point, with Categories the Jar aside's width and
-// left edge (the shared numbers above).
-// `minmax(0, ...)` on each track lets a long chip row shrink rather than push the dialog wider.
-.spell-purpose {
-  container: spell-purpose / inline-size;
-}
-
-.spell-purpose__columns,
-.spell-purpose__text {
-  display: flex;
-  flex-direction: column;
-  gap: space(5);
-  min-width: 0;
-}
-
-.spell-purpose__columns > :last-child {
-  @include spell-side-stacked;
-}
-
-@container spell-purpose (min-width: #{$spell-columns-switch}) {
-  .spell-purpose__columns {
-    display: grid;
-    grid-template-columns: minmax(0, 1fr) $spell-side;
-    column-gap: $spell-columns-gap;
-    // Stretched, so Categories' line runs the height of Title and Intent, as the aside's does.
-    align-items: stretch;
-  }
-
-  .spell-purpose__columns > :last-child {
-    @include spell-side-beside;
-  }
-}
-
-// When to Work It and Notes: their fields end where the Jar's What Goes In column ends (the
-// owner's call, 2026-10-28). The section's own width is the container, and the same
-// two-track grid as the Purpose section leaves the side track empty, so the fields are the
-// main column's width from the Jar's switch point up, and the whole width below it.
-.spell-main-column {
-  container: spell-main-column / inline-size;
-}
-
-.spell-main-column__fields {
-  display: flex;
-  flex-direction: column;
-  gap: space(5);
-  min-width: 0;
-}
-
-@container spell-main-column (min-width: #{$spell-columns-switch}) {
-  .spell-main-column__fields {
-    display: grid;
-    grid-template-columns: minmax(0, 1fr) $spell-side;
-    gap: space(5) $spell-columns-gap;
-  }
-
-  .spell-main-column__fields > * {
-    grid-column: 1;
-  }
-}
-
 // A step's handle (M10.16): the grip it is moved by, a button unboxed as the
 // combobox's chip handle is. `touch-action` is dnd-kit's ask, so that a drag
 // by touch moves the step rather than the page. Muted, as a grip is a
@@ -385,11 +296,6 @@ $spell-columns-switch: $spell-main-min + $spell-columns-gap + $spell-side;
   font-style: italic;
 }
 
-// The next step's number, shown only where the button is a line of the list.
-.spell-steps__next {
-  display: none;
-}
-
 .spell-steps__body > .spell-steps__list {
   grid-column: 1 / -1;
   grid-row: 1;
@@ -410,7 +316,7 @@ $spell-columns-switch: $spell-main-min + $spell-columns-gap + $spell-side;
     grid-column: 1;
   }
 
-  // The dashed last line of the list, numbered as the next step, full width.
+  // The dashed last line of the list, full width, with no number (the owner, 2026-10-29).
   .spell-steps__add-step {
     grid-column: 1;
     grid-row: 3;
@@ -421,11 +327,6 @@ $spell-columns-switch: $spell-main-min + $spell-columns-gap + $spell-side;
     border: 1px dashed $hairline;
     background-color: transparent;
     color: $text-primary;
-  }
-
-  .spell-steps__next {
-    display: inline;
-    color: $text-muted;
   }
 }
 
@@ -447,64 +348,6 @@ $spell-columns-switch: $spell-main-min + $spell-columns-gap + $spell-side;
   display: none;
 }
 
-// The Jar section (the owner's Option C2): the steps on the left and an aside on the right,
-// side by side where the dialog is wide enough and the aside beneath the list where it is
-// not. The list takes what is spare (`999` to the aside's `1`) and never less than its
-// minimum, so the pair wraps once both cannot fit: 28rem, 1rem and 21rem (the aside's 1rem
-// of padding beside its line, so 20rem of content) make the 50rem the container query below
-// names, inside the wide dialog's 55rem; a phone is one column.
-.spell-jar-layout {
-  display: flex;
-  flex-wrap: wrap;
-  // Stretched, so the aside's line runs the height of whichever column is taller (the owner's call, 2026-10-29).
-  align-items: stretch;
-  gap: $spell-columns-gap;
-  container: spell-jar / inline-size;
-}
-
-.spell-jar-layout__list {
-  flex: 999 1 $spell-main-min;
-  min-width: 0;
-
-  // The steps section's bare-`section` rhythm margin (_layout.scss) would push What Goes In
-  // below The Jar, which has none: the two headings share a line.
-  .spell-steps {
-    margin: 0;
-  }
-}
-
-// A hairline between the two columns, drawn as the aside's own border so no element is
-// added for a screen reader: beneath the list when they stack, beside it when they do not.
-.spell-aside {
-  display: flex;
-  box-sizing: border-box;
-  flex: 1 1 $spell-side;
-  flex-direction: column;
-  // Its blocks are told apart by distance alone: space(6) between them, and no
-  // hairline (design review, 2026-10-28, finding 3).
-  gap: space(6);
-  min-width: 0;
-  @include spell-side-stacked;
-
-  h4,
-  h5 {
-    margin: 0;
-  }
-}
-
-// The width at which both columns fit (`$spell-columns-switch`, 50rem).
-@container spell-jar (min-width: #{$spell-columns-switch}) {
-  .spell-aside {
-    @include spell-side-beside;
-  }
-}
-
-// The aside's own gap spaces these sections. A bare `section` carries space(4) of margin
-// (_layout.scss), which would sit on top of the gap.
-.spell-aside > section {
-  margin-block: 0;
-}
-
 .spell-aside__empty {
   margin: 0;
   color: $text-muted;
@@ -517,27 +360,30 @@ body .spell-builder .collapsible-section__fields {
   padding-block-end: space(6);
 }
 
-// The first block: heading, jar and description, space(2) apart. The aside's space(6) gap
-// separates it from the blocks after it.
-.spell-aside__block {
+// The fields' own gap spaces the steps and the category match; a bare `section` carries
+// space(4) of margin (_layout.scss) that would sit on top of it.
+body .spell-builder .collapsible-section__fields > section {
+  margin-block: 0;
+}
+
+// The jar details above the step list: the jar at the left of Seal Wax, then Jar
+// Description on its own line (the owner's call, 2026-10-29).
+.jar-details {
   display: flex;
   flex-direction: column;
-  gap: space(2);
+  gap: space(5);
 }
 
-// The jar drawing with the two fields beside it.
-.spell-aside__jar {
+// Seal Wax takes the width the jar leaves. The jar stretches to the row's height, so it spans
+// the label and the input together (the owner's call, 2026-10-29).
+.jar-details__wax {
   display: flex;
-  // The jar is centred on the whole Seal Wax field, its label as well as its input.
-  align-items: center;
-  gap: space(2);
+  align-items: stretch;
+  gap: space(3);
 }
 
-.spell-aside__fields {
-  display: flex;
+.jar-details__wax-field {
   flex: 1 1 auto;
-  flex-direction: column;
-  gap: space(2);
   min-width: 0;
 }
 
@@ -546,13 +392,16 @@ body .spell-builder .collapsible-section__fields {
   flex: none;
   align-items: center;
   inline-size: 4rem;
-  block-size: $control-height;
+  // Stretched to the Seal Wax row, label and input together; the svg keeps its aspect ratio
+  // inside that box (the default `meet`), so the drawing is never distorted.
+  align-self: stretch;
+  min-block-size: $control-height;
 
   svg {
     display: block;
     flex: none;
     inline-size: 100%;
-    block-size: auto;
+    block-size: 100%;
     // The stroke is centred on the path, so a path on the box's bottom edge loses half its
     // width to the svg's clip; letting it overflow keeps the jar's base whole.
     overflow: visible;
@@ -813,12 +662,6 @@ body .spell-builder .collapsible-section__fields {
     flex: 1 1 8rem;
     margin: 0;
   }
-}
-
-// Why Save Spell is off, beside it in the form's action row: muted text, not a tooltip.
-.spell-builder__save-reason {
-  margin: 0;
-  color: $text-muted;
 }
 
 // The recovery banner: a flex row like the save status's notices, with space(2) between the

@@ -256,7 +256,7 @@ describe('SpellDialog', () => {
     const steps = await stepsLanded();
     expect(within(steps).getByRole('listitem')).toHaveTextContent('Fixture Rosewort');
     expect(reads).toEqual([{ workspaceId: 'w1', id: SAVED.id }]);
-    expect(save()).toBeDisabled();
+    expect(save().matches(':disabled, [aria-disabled="true"]')).toBe(true);
 
     type('Intent', 'Calmer');
     fireEvent.click(save());
@@ -273,7 +273,7 @@ describe('SpellDialog', () => {
     openAll();
     type('Intent', 'Calmer');
 
-    expect(save()).toBeDisabled();
+    expect(save().matches(':disabled, [aria-disabled="true"]')).toBe(true);
     // Enter in a field submits the form even with Save off.
     fireEvent.submit(field('Title').closest('form') as HTMLFormElement);
     await act(async () => {});
@@ -318,7 +318,7 @@ describe('SpellDialog', () => {
     type('Title', 'Fixture Working');
     fireEvent.click(save());
     await waitFor(() => expect(router.replace).toHaveBeenCalledTimes(1));
-    await waitFor(() => expect(save()).toBeDisabled());
+    await waitFor(() => expect(save().matches(':disabled, [aria-disabled="true"]')).toBe(true));
 
     type('Intent', 'Calm');
     fireEvent.click(save());
@@ -338,7 +338,7 @@ describe('SpellDialog', () => {
     fireEvent.click(save());
 
     await waitFor(() => expect(updated).toHaveLength(1));
-    await waitFor(() => expect(save()).toBeDisabled());
+    await waitFor(() => expect(save().matches(':disabled, [aria-disabled="true"]')).toBe(true));
     expect(router.replace).not.toHaveBeenCalled();
   });
 
@@ -446,7 +446,7 @@ describe('SpellDialog', () => {
       type('Intent', 'Calmer');
 
       expect(await within(dialog()).findByRole('alert')).toBeInTheDocument();
-      expect(save()).toBeDisabled();
+      expect(save().matches(':disabled, [aria-disabled="true"]')).toBe(true);
       await act(async () => {
         fireEvent.click(close());
       });

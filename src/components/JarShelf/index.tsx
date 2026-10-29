@@ -192,11 +192,12 @@ export function JarDrawing({
                   style={ink ? bandInk(ink) : undefined}
                   d={bandPath(height, i)}
                 />
-                <path
-                  className={`jar-shelf__band-edge${ink ? ' jar-shelf__band-edge--group' : ''}${i === bands.length - 1 ? ' jar-shelf__band-edge--top' : ''}`}
-                  style={ink ? bandInk(ink) : undefined}
-                  d={waveForward(waveOf(i + 1), i === bands.length - 1 ? -TOP_LINE_LIFT : 0)}
-                />
+                {i === bands.length - 1 && (
+                  <path
+                    className="jar-shelf__band-edge"
+                    d={waveForward(waveOf(i + 1), -TOP_LINE_LIFT)}
+                  />
+                )}
               </g>
             );
           })}

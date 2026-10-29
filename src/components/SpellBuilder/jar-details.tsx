@@ -1,19 +1,18 @@
 'use client';
 
-import { type ReactElement, type ReactNode, useId, useMemo } from 'react';
+import { type ReactElement, type ReactNode, useMemo } from 'react';
 import { useFormContext, useWatch } from 'react-hook-form';
 import type { GroupColors } from '../../lib/types';
 import { JarDrawing, pickJarShape } from '../JarShelf';
 import { useCategoryColors } from './category-colors';
-import { SpellComparison } from './comparison-panel';
 import type { SpellStepsValues } from './steps/types';
 import { isInstruction } from './steps/values';
 
-// The Jar section's right-hand column (the owner's Option C2, 2026-10-28): the jar drawn
-// with the Seal Wax field to its right and the Jar Description beneath both, then the
-// spell's intent against what the ingredients carry. It sits beside the step list where the
-// dialog is wide enough and drops beneath it where it is not (index.scss).
-// claude-docs/components/spell-builder.md, "The aside".
+// The Jar section's details, above its step list (the owner's call, 2026-10-29: with In Coven
+// Inventory gone, one column): the Seal Wax field with the jar drawn at its left, level with
+// the label and the input together (the owner's call, 2026-10-29), then the Jar Description on its own line.
+// The jar fills as steps are added.
+// claude-docs/components/spell-builder.md, "The jar details".
 
 /**
  * The colour of a layer: the group colour of the step's first category in its listed order
@@ -52,32 +51,22 @@ function SpellJar(): ReactElement {
   );
 }
 
-export function JarAside({
+export function JarDetails({
   waxField,
   descriptionField,
-  ready,
 }: {
-  /** The Seal Wax field, drawn to the right of the jar. */
+  /** The Seal Wax field, on the first line with the jar drawn at its left. */
   waxField: ReactNode;
-  /** The Jar Description field, beneath the jar and the wax field, the aside's full width. */
+  /** The Jar Description field, on its own full-width line beneath. */
   descriptionField: ReactNode;
-  /** Whether the steps have been read; until they have, the reading is left out. */
-  ready: boolean;
 }): ReactElement {
-  const headingId = useId();
   return (
-    <aside className="spell-aside" aria-labelledby={headingId}>
-      <div className="spell-aside__block">
-        <h4 id={headingId}>The Jar</h4>
-        <div className="spell-aside__jar">
-          <SpellJar />
-          <div className="spell-aside__fields">{waxField}</div>
-        </div>
-        {descriptionField}
+    <div className="jar-details" role="group" aria-label="Jar Details">
+      <div className="jar-details__wax">
+        <SpellJar />
+        <div className="jar-details__wax-field">{waxField}</div>
       </div>
-      {ready && (
-        <SpellComparison />
-      )}
-    </aside>
+      {descriptionField}
+    </div>
   );
 }
