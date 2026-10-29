@@ -86,7 +86,7 @@ export function findManyInSpells<TTable extends PgTable & SpellScoped & Unscoped
 
 /**
  * The ingredients among `ingredientIds` that a readable spell holds, soft-deleted ones included: the second escape hatch and the
- * only read returning a deleted ingredient, since a spell records a working (claude-docs/db/spell-visibility.md, "What a spell holds").
+ * only read returning a deleted ingredient, since a spell keeps what went into its jar (claude-docs/db/spell-visibility.md, "What a spell holds").
  * The spell and layer must be live and the ingredient the compendium's or the proof's coven's (a foreign key checks the id alone).
  */
 export function findIngredientsInSpellsIncludingSoftDeleted(

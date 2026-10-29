@@ -19,7 +19,7 @@ import { insertIngredient } from '../../support/db/insert-ingredient';
 import { insertSpell } from '../../support/db/insert-spell';
 import { makeIngredient, makeSpell } from '../../support/fixtures';
 
-// What a spell holds, read past a tombstone: a spell records a working, so an ingredient deleted after it went into the jar is still in it, and its categories still count, for everyone who may read the spell and nobody else
+// What a spell holds, read past a tombstone: a spell keeps what went into its jar, so an ingredient deleted after it went into the jar is still in it, and its categories still count, for everyone who may read the spell and nobody else
 // (claude-docs/db/spell-visibility.md, "What a spell holds"). Every row a result could come from is one this file wrote.
 
 let sql: postgres.Sql;

@@ -40,7 +40,7 @@ const CHECK_BODY_NOT_BLANK = 'spell_steps_body_not_blank';
 describe('spell_steps schema', () => {
   const { byName } = tableFacts(spellSteps);
 
-  // The full six: a spell is a record of a working, so a step
+  // The full six: a spell is a recipe that keeps what went into its jar, so a step
   // pulled out of it is a tombstone rather than gone.
   it('has DESIGN.md §5 columns and nothing else', () => {
     expect(Object.keys(byName).sort()).toEqual([...OWN_COLUMNS, ...AUDIT_COLUMNS].sort());
