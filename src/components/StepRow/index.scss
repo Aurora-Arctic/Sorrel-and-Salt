@@ -212,6 +212,23 @@ $step-ink-drop: 0.05rem;
     @include truncate;
   }
 
+  // A closed ingredient row's one line: the amount whole, then the instruction cut by an ellipsis.
+  .step-row__line {
+    display: flex;
+    min-width: 0;
+  }
+
+  .step-row__line-amount {
+    flex: none;
+    white-space: pre;
+  }
+
+  .step-row__line-body {
+    min-width: 0;
+
+    @include truncate;
+  }
+
   .step-row__edit {
     @include icon-button;
     @include icon-button-edit;

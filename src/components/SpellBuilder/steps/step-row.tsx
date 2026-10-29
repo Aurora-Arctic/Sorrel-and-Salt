@@ -171,11 +171,19 @@ export function BuilderStepRow({
         ) : null
       }
       summary={
-        instruction
-          ? (bodyTyped ?? '').trim() || (
-              <span className="step-row__placeholder">Write the step</span>
-            )
-          : [amountLine, bodyLine].filter(Boolean).join(' · ') || null
+        instruction ? (
+          (bodyTyped ?? '').trim() || <span className="step-row__placeholder">Write the step</span>
+        ) : amountLine || bodyLine ? (
+          // The amount never shrinks; only the instruction's tail is cut by the ellipsis.
+          <span className="step-row__line">
+            {amountLine && (
+              <span className="step-row__line-amount">
+                {bodyLine ? `${amountLine} · ` : amountLine}
+              </span>
+            )}
+            {bodyLine && <span className="step-row__line-body">{bodyLine}</span>}
+          </span>
+        ) : null
       }
       edit={
         <button
