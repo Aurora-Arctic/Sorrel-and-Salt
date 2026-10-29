@@ -1,0 +1,32 @@
+# Gathered for M14.29; the seed never reads this folder.
+entry: botanical/osha-ligusticum-porteri
+status: approved
+listings:
+  - list: iucn
+    name: IUCN Red List
+    value: Least Concern (IUCN 3.1)
+    listedAs: Ligusticum porteri
+    nameBasis: stated
+    source: wikipedia-ligusticum-porteri
+    locator: taxobox, conservation status (status = LC, IUCN3.1)
+  - list: other
+    name: NatureServe
+    value: Vulnerable (G3), global, evaluated 1999
+    listedAs: Ligusticum porteri
+    nameBasis: stated
+    source: wikipedia-ligusticum-porteri
+    locator: Conservation
+  - list: other
+    name: NatureServe, Utah
+    value: Vulnerable (S3)
+    listedAs: Ligusticum porteri
+    nameBasis: stated
+    source: wikipedia-ligusticum-porteri
+    locator: Conservation
+  - list: other
+    name: NatureServe, Colorado
+    value: Vulnerable (S3)
+    listedAs: Ligusticum porteri
+    nameBasis: stated
+    source: wikipedia-ligusticum-porteri
+    locator: Conservation
