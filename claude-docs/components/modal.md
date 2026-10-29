@@ -572,7 +572,10 @@ sentence and a row both present, the row stands `space(4)` below the sentence
 header's `space(4)`), so the row reads with the form it works rather than
 with the sentence (the owner's call of 2026-10-20). Empty, it takes no line, so a dialog with no
 sentence is unchanged. It is not held while a confirmation is asked, as it holds
-no control.
+no control. The spell builder puts its two notices that ask for a decision
+there as well, the recovery banner and the conflict notice (M13.18, the
+owner's call of 2026-10-29): the line is a grid with a `space(2)` gap, so two
+stack, and a notice in it drops its own bottom margin.
 
 ## ModalButton
 

@@ -2,6 +2,7 @@
 
 import { zodResolver } from '@hookform/resolvers/zod';
 import { type ReactElement, type ReactNode, useCallback, useEffect, useRef, useState } from 'react';
+import { createPortal } from 'react-dom';
 import { FormProvider, type Resolver, useForm, useWatch } from 'react-hook-form';
 import { CollapsibleSection, FoldAll } from '../CollapsibleSection';
 import {
@@ -24,6 +25,7 @@ import {
 } from '../Field';
 import { clockTime } from '../LastEdit/relative';
 import { moonPhaseIcon } from './moon-phase-icon';
+import { useModalHeaderNote } from '../Modal';
 import Notice from '../Notice';
 import SaveStatus from '../SaveStatus';
 import Skeleton from '../Skeleton';
@@ -31,7 +33,7 @@ import { SpellCategoriesField, sameCategories, useCategoryName } from './categor
 import { SpellComparison } from './comparison-panel';
 import { JarDetails } from './jar-details';
 import { DAYS_OF_THE_WEEK, MOON_PHASES } from './constants';
-import { saveSpell } from './autosave';
+import { readLatestSpell, saveSpell } from './autosave';
 import { useSaveOnClose } from './save-on-close';
 import { SpellSteps } from './steps';
 import type { SpellStepSend, SpellStepValue } from './steps/types';
@@ -210,6 +212,9 @@ const resolver: Resolver<SpellBuilderValues, unknown, SpellBuilderInput> = async
 /** Said in the jar's place while a saved spell's steps cannot be read. */
 const STEPS_FAILED =
   "The spell's steps could not be loaded, so nothing can be saved. Reload the page to try again.";
+
+/** Said on the form when Reload Latest could not read the spell: the conflict stays, to try again. */
+const RELOAD_FAILED = "The latest version couldn't be loaded. Try again.";
 
 /** Said on the form when a save is tried while a field holds an error the form shows. */
 const FIX_FIELDS = 'Some fields need fixing before this can be saved.';
@@ -447,7 +452,8 @@ const SpellBuilder = ({
         workspaceId,
         id === null
           ? { kind: 'new' }
-          : { kind: 'spell', id, revision: context.force ? null : context.revision },
+          : // After Keep My Version the engine's revision is the one the refusal reported (M13.18).
+            { kind: 'spell', id, revision: context.revision },
         input,
       );
     } catch (error) {
@@ -608,6 +614,50 @@ const SpellBuilder = ({
     if (mirror) clearMirror(mirror);
     setRecovered(null);
   };
+  // Where the two notices that ask for a decision go, the recovery banner and
+  // the conflict notice: under the dialog's title, in view however far the
+  // form has scrolled, since in the footer and above the fields they were
+  // missed (the owner's call, 2026-10-29). Outside a modal they stay in the
+  // form's flow.
+  const headerNote = useModalHeaderNote();
+  const recovery = recovered && jarReady && (
+    <Notice kind="warn" block className="spell-builder__restored">
+      <span>Restored unsaved changes from {clockTime(recovered.at)}</span>
+      <span className="spell-builder__recovered">
+        {/* One primary: Keep, the choice that loses no typing; Discard sits back, quiet (the owner's call, 2026-10-29). */}
+        <button type="button" className="btn btn--small btn--solid" onClick={keepRecovered}>
+          Keep
+        </button>
+        <button type="button" className="btn btn--small btn--quiet" onClick={discardRecovered}>
+          Discard
+        </button>
+      </span>
+    </Notice>
+  );
+
+  /**
+   * Reload Latest, after someone else's save got in first (M13.18): the spell
+   * as the server has it now replaces the form, what was typed into it
+   * included, and the form starts clean from it. The engine takes the revision
+   * the refusal reported; a save made since is met as the next conflict. A read
+   * that fails leaves the conflict and the typing as they are, and says so.
+   */
+  const reloadLatest = async () => {
+    const id = createdId ?? opened?.id;
+    if (!id) return;
+    let latest: SpellBuilderSpell;
+    try {
+      latest = await readLatestSpell(workspaceId, id);
+    } catch {
+      setError('root', { message: RELOAD_FAILED });
+      openErred();
+      return;
+    }
+    await autosave.resolveConflict('reload');
+    reset(valuesOf(latest));
+    clearErrors('root');
+    setRecovered(null);
+  };
 
   return (
     <FormProvider {...methods}>
@@ -621,19 +671,7 @@ const SpellBuilder = ({
           }}
           noValidate
         >
-          {recovered && jarReady && (
-            <Notice kind="plain" block className="spell-builder__restored">
-              <span>Restored unsaved changes from {clockTime(recovered.at)}</span>
-              <span className="spell-builder__recovered">
-                <button type="button" className="btn btn--small" onClick={keepRecovered}>
-                  Keep
-                </button>
-                <button type="button" className="btn btn--small" onClick={discardRecovered}>
-                  Discard
-                </button>
-              </span>
-            </Notice>
-          )}
+          {recovery && (headerNote ? createPortal(recovery, headerNote) : recovery)}
           {errors.root?.message && <Notice kind="error">{errors.root.message}</Notice>}
           <div className="collapsible-sections">
             <FoldAll
@@ -742,11 +780,9 @@ const SpellBuilder = ({
               savedAt={autosave.savedAt}
               draft={defaultValues?.status !== 'complete'}
               conflictMessage="This spell was changed elsewhere."
+              conflictInto={headerNote}
               onRetry={autosave.retry}
-              onReload={() => {
-                // Reloading the page reads the saved row afresh (the proper reload is M13.18's).
-                void autosave.resolveConflict('reload').then(() => window.location.reload());
-              }}
+              onReload={() => void reloadLatest()}
               onKeepMine={() => void autosave.resolveConflict('keep-mine').catch(() => undefined)}
             />
           </FormActions>

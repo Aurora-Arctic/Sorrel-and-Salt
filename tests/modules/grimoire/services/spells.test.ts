@@ -916,3 +916,77 @@ describe('a spell’s assigned categories', () => {
     expect(await assigned(id)).toEqual(['Protection']);
   });
 });
+
+describe('updateSpell, against the revision it was read at (M13.18)', () => {
+  /** A spell two members have both read at the same revision. */
+  async function readByBoth() {
+    const id = await seed(A, 'workspace', { title: 'Shared Jar' });
+    const readByA = await readSpell(asUser(A), WORKSPACE_W_ID, id);
+    const readByB = await readSpell(asUser(B), WORKSPACE_W_ID, id);
+    expect(readByB.revision).toBe(readByA.revision);
+    return { id, revision: readByA.revision };
+  }
+
+  it('refuses the second save of two written against one revision, naming the revision now', async () => {
+    const { id, revision } = await readByBoth();
+
+    const first = await updateSpell(asUser(A), WORKSPACE_W_ID, id, {
+      expectedRevision: revision,
+      title: 'Renamed by A',
+    });
+    expect(first.revision).toBe(revision + 1);
+
+    const second = updateSpell(asUser(B), WORKSPACE_W_ID, id, {
+      expectedRevision: revision,
+      title: 'Renamed by B',
+    });
+    await expect(second).rejects.toThrow(StaleWrite);
+    await expect(second).rejects.toMatchObject({ currentRevision: revision + 1 });
+    // Nothing of B's landed.
+    const [row] = await sql<{ title: string; revision: number }[]>`
+      select title, revision from spells where id = ${id}`;
+    expect(row).toEqual({ title: 'Renamed by A', revision: revision + 1 });
+    // Why B's save could have succeeded: B may write here, and the same save at the revision now lands.
+    const again = await updateSpell(asUser(B), WORKSPACE_W_ID, id, {
+      expectedRevision: revision + 1,
+      title: 'Renamed by B',
+    });
+    expect(again).toMatchObject({ title: 'Renamed by B', revision: revision + 2 });
+  });
+
+  it('refuses a non-member’s stale save as Forbidden, never as stale', async () => {
+    const { id, revision } = await readByBoth();
+    await updateSpell(asUser(A), WORKSPACE_W_ID, id, {
+      expectedRevision: revision,
+      title: 'Renamed by A',
+    });
+    // The revision D names is stale: a member naming it is told so.
+    await expect(
+      updateSpell(asUser(B), WORKSPACE_W_ID, id, { expectedRevision: revision, title: 'By B' }),
+    ).rejects.toThrow(StaleWrite);
+
+    const byOutsider = updateSpell(asUser(D), WORKSPACE_W_ID, id, {
+      expectedRevision: revision,
+      title: 'Renamed by D',
+    });
+    await expect(byOutsider).rejects.toThrow(Forbidden);
+    await expect(byOutsider).rejects.not.toThrow(StaleWrite);
+  });
+
+  it('writes over whatever the spell is at when the expected revision is null, and returns the next', async () => {
+    const { id, revision } = await readByBoth();
+    await updateSpell(asUser(A), WORKSPACE_W_ID, id, {
+      expectedRevision: revision,
+      title: 'Renamed by A',
+    });
+
+    const kept = await updateSpell(asUser(B), WORKSPACE_W_ID, id, {
+      expectedRevision: null,
+      title: 'Kept by B',
+    });
+
+    expect(kept).toMatchObject({ title: 'Kept by B', revision: revision + 2 });
+    const [row] = await sql<{ title: string }[]>`select title from spells where id = ${id}`;
+    expect(row!.title).toBe('Kept by B');
+  });
+});
