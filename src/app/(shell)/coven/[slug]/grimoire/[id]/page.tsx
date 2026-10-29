@@ -6,6 +6,7 @@ import { EditLink } from '@/components/IconTip';
 import DetailsDialog from '@/components/IngredientEntry/details-dialog';
 import SpellDialog from '@/components/SpellBuilder/spell-dialog';
 import DeleteSpellAction from '@/components/SpellRecipe/delete-spell';
+import DuplicateSpellAction from '@/components/SpellRecipe/duplicate-spell';
 import SpellRecipe from '@/components/SpellRecipe';
 import SpellRecipeAside from '@/components/SpellRecipe/aside';
 import { UNTITLED_SPELL } from '@/components/SpellCard';
@@ -63,6 +64,7 @@ export default async function SpellRecipePage({ params, searchParams }: SpellRec
   );
   const canUpdate = rolePermits(membership.role, { spell: ['update'] });
   const canDelete = rolePermits(membership.role, { spell: ['delete'] });
+  const canDuplicate = rolePermits(membership.role, { spell: ['create'] });
   const name = spell.title?.trim() || UNTITLED_SPELL;
   const listPath = `/coven/${workspace.slug}/grimoire${spell.status === 'draft' ? '/drafts' : ''}`;
   const deletedHref = `${listPath}?${new URLSearchParams({ deleted: name })}` as Route;
@@ -96,13 +98,21 @@ export default async function SpellRecipePage({ params, searchParams }: SpellRec
           steps={recipe.steps}
           aside={<SpellRecipeAside {...aside} />}
           action={
-            (canUpdate || canDelete) && (
+            (canUpdate || canDelete || canDuplicate) && (
               <div className="spell-recipe__actions">
                 {canUpdate && (
                   <EditLink
                     href={`${recipePath}?edit=${spell.id}` as Route}
                     name={name}
                     heading={{ eyebrow: 'Edit Spell', title: name }}
+                  />
+                )}
+                {canDuplicate && (
+                  <DuplicateSpellAction
+                    workspaceId={workspace.id}
+                    covenSlug={workspace.slug}
+                    spellId={spell.id}
+                    name={name}
                   />
                 )}
                 {canDelete && (
@@ -125,6 +135,7 @@ export default async function SpellRecipePage({ params, searchParams }: SpellRec
           closeHref={recipePath}
           opened={saved && { spell: saved }}
           canCreate={false}
+          canDuplicate={canDuplicate}
           userId={membership.userId}
         />
         <DetailsDialog

@@ -198,6 +198,51 @@ describe('updateSpell', () => {
       ).rejects.toBeInstanceOf(NotFound);
     }
   });
+
+  describe('a complete spell', () => {
+    // Complete stays complete: a change to it goes through a draft copy (duplicateSpell).
+    it('cannot go back to a draft, and says to duplicate it', async () => {
+      const id = await seed(A, 'workspace', { status: 'complete', title: 'Finished Working' });
+
+      // The same caller may update the spell's other fields, so the status is what is refused.
+      const edited = await updateSpell(asUser(B), WORKSPACE_W_ID, id, {
+        expectedRevision: null,
+        intent: 'Still editable',
+      });
+      expect(edited.status).toBe('complete');
+
+      const refused = updateSpell(asUser(B), WORKSPACE_W_ID, id, {
+        expectedRevision: null,
+        status: 'draft',
+      });
+      await expect(refused).rejects.toBeInstanceOf(Forbidden);
+      await expect(refused).rejects.toThrow(/Duplicate it to get a draft copy/);
+      const [row] = await sql`select status::text from spells where id = ${id}`;
+      expect(row?.status).toBe('complete');
+    });
+
+    it('may name complete again, and a draft may still be completed or stay a draft', async () => {
+      const done = await seed(A, 'workspace', { status: 'complete', title: 'Finished Working' });
+      const draft = await seed(A, 'workspace', { status: 'draft' });
+
+      await updateSpell(asUser(B), WORKSPACE_W_ID, done, {
+        expectedRevision: null,
+        status: 'complete',
+        title: 'Finished Working',
+      });
+      await updateSpell(asUser(B), WORKSPACE_W_ID, draft, {
+        expectedRevision: null,
+        status: 'draft',
+      });
+      const finished = await updateSpell(asUser(B), WORKSPACE_W_ID, draft, {
+        expectedRevision: null,
+        status: 'complete',
+        title: 'Now Finished',
+      });
+
+      expect(finished.status).toBe('complete');
+    });
+  });
 });
 
 describe('a custom, one-off ingredient row', () => {

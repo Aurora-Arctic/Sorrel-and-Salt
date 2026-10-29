@@ -231,6 +231,7 @@ const SpellBuilder = ({
   onCreated,
   stepsRead,
   deletedHrefOf,
+  copiedHrefOf,
 }: SpellBuilderProps): ReactElement => {
   // The spell this builder opened on. The dialog hands the builder a different
   // `spell` once the builder's own first save has moved the address to it; the
@@ -799,7 +800,12 @@ const SpellBuilder = ({
                 : undefined
             }
           >
-            <SpellStatusField flush={flush} />
+            <SpellStatusField
+              flush={flush}
+              workspaceId={workspaceId}
+              spellId={spellId}
+              copiedHrefOf={copiedHrefOf}
+            />
             <SaveStatus
               status={autosave.status}
               savedAt={autosave.savedAt}

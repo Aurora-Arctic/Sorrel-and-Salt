@@ -145,6 +145,10 @@ In Coven Inventory shows one line for each form, at its first step's place. The 
 
 A line may carry doors (`doorsOf`): a Quick Look eye in a column of its own at the line's right, and Edit Stock behind the jar and the name, as a `StockJarButton` stretched over both, the way the entry page's shelf stretches it over a jar. The builder draws no stock, so doors serve the page alone.
 
+## Duplicate
+
+A Duplicate button in the actions row, in `duplicate-spell.tsx`, for a role that may create a spell (`canDuplicate`, separate from the dialog's `canCreate`). It calls `duplicateSpell`, which makes a private draft of the spell with " (Copy)" added to the title, then opens the copy's builder over the recipe page, closing back to the copy's own page (`copied-href.ts`). A refusal is the callout under the button.
+
 ## Delete Spell
 
 The bin beside the Edit pencil, in `delete-spell.tsx`, for a role that may delete a spell. It is named for the spell ("Delete Spell Hearth Warding") and asks in a `Modal` titled Delete Spell, as a coven's own ingredient's page asks: the question names the spell and says the coven loses it, since a shared spell can be deleted (the visibility lock governs widening, not existence). Delete is `.btn--destructive` and busy "Deleting"; Cancel is quiet. It is not a `ConfirmQuestion`, which asks over a form, and this page has none. Confirmed, `deleteSpell` runs and the page leaves, replacing its history entry so Back does not return to a 404, for the tab the spell was listed on with `?deleted=<name>` (`deleted-href.ts`). The Modal, gone with the page, gives the focus to the list's heading. A refusal is the callout under the bin.
