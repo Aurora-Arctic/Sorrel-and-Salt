@@ -211,6 +211,8 @@ export async function deleteSpell(
     // next write takes away. One transaction, so a spell that is gone by then
     // (deleted in between) takes the steps' tombstones back with it.
     await write.softDeleteStepsOfSpell(membership, spellId);
+    // The workings the same way; their participant and deduction rows have no tombstone and go hidden with them.
+    await write.softDeleteWorkingsOfSpell(membership, spellId);
     const [spell] = await write.softDeleteSpell(membership, spellId);
     if (!spell) throw new NotFound('No such spell in this coven');
   });
