@@ -553,7 +553,8 @@ One line per entry: `<nomenclature>/<entry-file-slug>`. An entry with an ethics 
 
 ## M14.18
 
-- Checked for everything except CITES (the M14.29 sweep covers CITES).
+- Checked for everything, CITES included: matched against the CITES Appendices valid from 5 March 2026 (`cites-appendices`) by formal name; the entries that needed an owner decision have an ethics file.
+- botanical/astragalus-astragalus-mongholicus
 - botanical/aconitum-carmichaelii-aconitum-carmichaelii
 - botanical/amur-cork-tree-phellodendron-amurense
 - botanical/atractylodes-atractylodes-macrocephala
@@ -642,7 +643,6 @@ One line per entry: `<nomenclature>/<entry-file-slug>`. An entry with an ethics 
 - botanical/pericon-tagetes-lucida
 - botanical/plao-yai-croton-persimilis
 - botanical/prairie-sage-artemisia-ludoviciana
-- botanical/prickly-pear-opuntia
 - botanical/sacred-datura-toloache-datura-innoxia
 - botanical/salvia-divinorum-salvia-divinorum
 - botanical/sambong-blumea-balsamifera
