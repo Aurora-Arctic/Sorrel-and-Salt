@@ -32,7 +32,6 @@ categories:
   - Protection
   - Healing
   - Funeral Rites
-  - Grief Work
   - Sex
   - Sexuality
   - Adaptability

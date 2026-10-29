@@ -30,7 +30,6 @@ categories:
   - Banishing
   - Luck
   - Hex-Breaking
-  - Faerie Sight
 references:
   - source: cunningham-herbs
     locator: under "Clover"; p. 266

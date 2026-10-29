@@ -20,7 +20,6 @@ categories:
   - Strength
   - Wealth
   - Security
-  - Manifestation
   - Renewal
   - Transformation
 references:

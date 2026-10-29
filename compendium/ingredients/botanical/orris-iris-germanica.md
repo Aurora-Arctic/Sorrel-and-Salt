@@ -37,7 +37,6 @@ categories:
   - Release
   - Success
   - Wisdom
-  - Wealth
   - Luck
   - Focus
   - Determination

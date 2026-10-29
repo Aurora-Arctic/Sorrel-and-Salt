@@ -46,7 +46,6 @@ categories:
   - Grief Work
   - Negativity
   - Emotions
-  - Growth
   - Spirit Work
 references:
   - source: cunningham-herbs

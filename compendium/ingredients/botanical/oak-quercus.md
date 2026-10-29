@@ -63,7 +63,6 @@ categories:
   - Awareness
   - Determination
   - Sexuality
-  - Secrets
   - Leadership
   - Spirit Work
 references:

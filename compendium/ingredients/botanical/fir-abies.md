@@ -40,7 +40,6 @@ categories:
   - Transformation
   - Spirituality
   - Funeral Rites
-  - Hope
   - Joy
   - Awareness
   - Renewal

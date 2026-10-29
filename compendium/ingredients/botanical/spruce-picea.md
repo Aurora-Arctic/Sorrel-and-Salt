@@ -26,7 +26,6 @@ categories:
   - Wisdom
   - Wealth
   - Spirituality
-  - Hope
   - Security
   - Renewal
   - Challenges

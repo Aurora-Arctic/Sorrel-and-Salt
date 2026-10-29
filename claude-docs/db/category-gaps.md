@@ -51,6 +51,20 @@ Cross-check corrections, 2026-10-29:
 - Aspen (Populus tremuloides): Cunningham's "Poplar" heading prints Populus tremuloides, so Wealth was added (Poplar: "Money").
 - Quassia (Quassia amara): Wealth added. The Kynes appendix heading "Prosperity/Money" counts.
 
+Kynes qualifier rule, 2026-10-29: keep a category that rests on a Kynes bracketed qualifier only when the bracket describes the entry's own species. A flower colour of the same plant counts. A bracket naming one species does not apply to a genus-level entry. Before removing, I checked whether another cited source prints the same word unqualified for the entry; none did. Removed, each added by this branch (none was there before 989e2fd2e's parent):
+
+- Clover (Trifolium pratense): Faerie Sight, from "(four-leaf)".
+- Hickory (Carya, the genus): Manifestation, from "(pecan)".
+- Fir (Abies): Hope, from "(silver)".
+- Spruce (Picea): Hope, from "(Norway)".
+- Oak (Quercus): Secrets, from "(white)".
+- Eucalyptus (E. globulus): Growth, from "(lemon)".
+- Black poplar (Populus nigra): Hope and Renewal, from "(white)".
+- Orris (Iris germanica) and yellow flag (Iris pseudacorus): Wealth, from "(blue flag)".
+- White willow (Salix alba): Grief Work, from "(weeping)".
+
+Kept: Clover Luck "(four-leaf & red)", Geranium Security "(pink)", Quince Sex and Sexuality "(common)", Pecan Manifestation.
+
 ## The Gaps
 
 38 gaps, plus Shadow Work, which was reported but is already seeded. 22 propose a mapping, 16 propose a new category, and 13 are marked unsure.
