@@ -91,7 +91,8 @@ after them. It calls `playwright.yml` with
 `suite: stories`, which switches the run command, the summariser
 (`.github/scripts/summarize-stories.mjs`), the check name and the comment
 thread (marker `stories`). Its comment carries the story suite's own coverage
-figure and per-file table (M14.28), and the coverage artifact is named
+figure in its summary line (M14.28); the per-file table is the merged
+comment's alone, and the coverage artifact is named
 `playwright-coverage-stories`. The `playwright-coverage` job then merges
 this suite's coverage with the gate suite's and posts the merged figure in a
 "Playwright Coverage" comment of its own (`testing/coverage.md`, "The merged
