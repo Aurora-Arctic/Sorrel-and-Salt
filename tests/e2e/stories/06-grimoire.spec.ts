@@ -341,8 +341,9 @@ test(
     // In Coven Inventory says so in words, beside the step's name.
     const hold = page.getByRole('region', { name: 'In Coven Inventory' });
     const rosemary = hold.getByRole('listitem').filter({ hasText: 'Rosemary' });
-    await expect(rosemary).toContainText('have none');
-    await expect(rosemary.getByRole('button', { name: 'Out' })).toBeVisible();
+    // The coven keeps no jar of it, which the line says as such, not as an empty jar's Out.
+    await expect(rosemary).toContainText('have no jar');
+    await expect(rosemary.getByRole('button', { name: 'Out' })).toHaveCount(0);
   },
 );
 

@@ -12,8 +12,11 @@ import type { StepJar, SpellStepValue } from './types';
 export type StepSupply =
   /** A one-off: nothing in the cupboard could ever answer it. */
   | { kind: 'one-off' }
-  /** The jar is empty, or the coven holds none of this form: StockBadge's Out of Stock. */
-  | { kind: 'out'; jar: StepJar | null }
+  /** The coven keeps no jar of this form: told apart from an empty jar, and not called Out
+   *  (the owner, 2026-10-29), as the entry page's shelf draws such a form dashed, not red. */
+  | { kind: 'no-jar' }
+  /** The jar is empty: StockBadge's Out of Stock. */
+  | { kind: 'out'; jar: StepJar }
   /** The jar holds less than the step calls for, once both are in one unit. */
   | { kind: 'short'; held: number; unit: Unit }
   /** The step's amount cannot be set against the jar's, so no verdict is given. */
@@ -38,7 +41,8 @@ export function supplyOf(
   if (step.name === null) return null;
   if (step.ingredientId === null || step.variantId === null) return { kind: 'one-off' };
   const jar = step.jar;
-  if (jar === null || jar.quantity === 0) return { kind: 'out', jar };
+  if (jar === null) return { kind: 'no-jar' };
+  if (jar.quantity === 0) return { kind: 'out', jar };
   // Held but not weighed: nothing to compare against.
   if (jar.quantity === null) return null;
 

@@ -83,7 +83,7 @@ withholds has no categories and no jar; no form icon or safety is read, since th
 neither.
 
 Each inventory line of a linked step carries two doors (the owner, 2026-10-29), read in the same
-pass as `doors` and drawn by `InCovenInventory`'s `doorsOf`: a Quick Look eye after the name,
+pass as `doors` and drawn by `InCovenInventory`'s `doorsOf`: a Quick Look eye in a column of its own at the line's right,
 the same `QuickLookLink` the steps carry, to this page's `?entry=<id>`; and, for a role that
 may update stock (`rolePermits(role, { inventory: ['update'] })`, the permission `saveStock`
 asserts), Edit Stock behind the jar and the name, a `StockJarButton` ([`stock-dialog.md`](stock-dialog.md))

@@ -23,7 +23,7 @@ import { isInstruction, stepNameOf } from './steps/values';
 // and Units Differ): the words are the button's name and the reason is its IconTip (the owner's
 // call, 2026-10-28), the verdict's `mark`. A step with an instruction only has
 // no line. On the spell's recipe page (M13.21) a line may carry doors (`doorsOf`): a Quick
-// Look eye after the name, and Edit Stock behind the jar and the name (a `StockJarButton`
+// Look eye in a column of its own at the line's right, and Edit Stock behind the jar and the name (a `StockJarButton`
 // stretched over both, as the entry page's shelf stretches it over a jar). The builder's
 // lines carry none. See claude-docs/components/spell-builder.md, "The aside".
 
@@ -79,11 +79,13 @@ export function holdWords(
   const need = typed === '' ? null : `need ${[typed, step.unit].filter(Boolean).join(' ')}`;
   const jar = step.jar;
   const hold =
-    jar === null || jar.quantity === 0
-      ? 'have none'
-      : jar.quantity === null
-        ? 'have unmeasured'
-        : `have ${amountText(jar.quantity, jar.unit)}`;
+    jar === null
+      ? 'have no jar'
+      : jar.quantity === 0
+        ? 'have none'
+        : jar.quantity === null
+          ? 'have unmeasured'
+          : `have ${amountText(jar.quantity, jar.unit)}`;
   return {
     parts: [need, hold].filter((part): part is string => part !== null),
     verdict: (supply && VERDICTS[supply.kind]) ?? null,
@@ -110,7 +112,8 @@ function HoldLine({
   const jar = step.jar;
   // The form only picks the vessel's shape here; it is not shown.
   const { form: formKey } = step;
-  const state = jar ? stockState(jar.quantity, jar.threshold) : 'out';
+  // A form with no jar is drawn as the shelf draws one, dashed (the owner, 2026-10-29).
+  const state = jar ? stockState(jar.quantity, jar.threshold) : 'empty';
   const modifier = oneOff || state === 'ok' ? '' : `jar-shelf__jar--${state}`;
   return (
     <li className={`spell-inventory__line${oneOff ? ' is-one-off' : ''}`}>
@@ -133,14 +136,21 @@ function HoldLine({
         ) : (
           <span className="spell-inventory__name">{name}</span>
         )}
-        {doors?.look ? (
-          <span className="spell-inventory__look">{doors.look}</span>
-        ) : (
-          look &&
-          step.ingredientId !== null && (
+      </span>
+      {/* The eye in a column of its own at the line's right, so it stands in one place down the
+          list whatever the name's length (the owner, 2026-10-29, the mock's Option C). */}
+      {doors?.look ? (
+        <span className="spell-inventory__look">{doors.look}</span>
+      ) : (
+        look &&
+        step.ingredientId !== null && (
+          <span className="spell-inventory__look">
             <StepQuickLook ingredientId={step.ingredientId} name={step.name ?? ''} look={look} />
-          )
-        )}
+          </span>
+        )
+      )}
+      <span className="spell-inventory__words">
+        {/* The verdict's mark opens the words it is about: the need and the have. */}
         {verdict && (
           <span className={`spell-inventory__verdict is-${verdict.tone}`}>
             <IconTip tip={verdict.mark.tip}>
@@ -150,8 +160,8 @@ function HoldLine({
             </IconTip>
           </span>
         )}
+        <span>{parts.join(' · ')}</span>
       </span>
-      <span className="spell-inventory__words">{parts.join(' · ')}</span>
     </li>
   );
 }

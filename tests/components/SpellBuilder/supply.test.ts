@@ -34,8 +34,8 @@ describe('supplyOf', () => {
     ).toEqual({ kind: 'one-off' });
   });
 
-  it('counts a form the coven holds no jar of as out of stock', () => {
-    expect(supplyOf(step({ jar: null }))).toEqual({ kind: 'out', jar: null });
+  it('tells a form the coven holds no jar of from an empty jar (the owner, 2026-10-29)', () => {
+    expect(supplyOf(step({ jar: null }))).toEqual({ kind: 'no-jar' });
   });
 
   it('counts an empty jar as out of stock, distinct from one that is merely short', () => {

@@ -10,8 +10,11 @@ import type { StepSupply } from './supply';
 export function SupplyMark({ supply }: { supply: StepSupply | null }): ReactElement | null {
   if (supply === null) return null;
   switch (supply.kind) {
+    case 'no-jar':
+      // No jar is told in words, not as a badge (the owner, 2026-10-29).
+      return null;
     case 'out':
-      return <StockBadge quantity={0} threshold={supply.jar?.threshold} unit={supply.jar?.unit} />;
+      return <StockBadge quantity={0} threshold={supply.jar.threshold} unit={supply.jar.unit} />;
     case 'low':
       return (
         <StockBadge

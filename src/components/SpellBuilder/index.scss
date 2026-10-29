@@ -499,10 +499,11 @@ body .spell-builder .collapsible-section__fields {
   // The Edit Stock press's stretch (`__press::after`) is placed against the line.
   position: relative;
   display: grid;
+  // The Quick Look eye has the right-hand column, level with the name (the owner, 2026-10-29).
   grid-template-areas:
-    'jar name'
-    'jar words';
-  grid-template-columns: 2rem minmax(0, 1fr);
+    'jar name look'
+    'jar words .';
+  grid-template-columns: 2rem minmax(0, 1fr) auto;
   column-gap: space(2);
 
   // A one-off holds no stock, but its jar looks as if it holds something: the glass, the level
@@ -534,8 +535,7 @@ body .spell-builder .collapsible-section__fields {
   }
 }
 
-// The name line: the name, which is cut short with an ellipsis, then the Low or Out state,
-// which is not.
+// The name line: the name alone, cut short with an ellipsis.
 .spell-inventory__title {
   display: flex;
   grid-area: name;
@@ -552,8 +552,12 @@ body .spell-builder .collapsible-section__fields {
   white-space: nowrap;
 }
 
+// The words line: the verdict's mark, then the need and the have.
 .spell-inventory__words {
+  display: flex;
   grid-area: words;
+  gap: space(1);
+  align-items: center;
   color: $text-muted;
 }
 
@@ -632,7 +636,7 @@ body .spell-builder .collapsible-section__fields {
 // and raised above the press's stretch with the verdict, so each keeps its own press.
 .spell-inventory__look {
   display: inline-flex;
-  flex: none;
+  grid-area: look;
   align-self: center;
 
   .icon-tip__look {
@@ -649,8 +653,6 @@ body .spell-builder .collapsible-section__fields {
 .spell-inventory__verdict {
   display: inline-flex;
   flex: none;
-  // Pushed to the line's right end; the name keeps the rest and is the one cut short.
-  margin-inline-start: auto;
   align-items: center;
   gap: space(1);
   color: $text-muted;

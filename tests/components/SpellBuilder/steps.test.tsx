@@ -838,16 +838,14 @@ describe('the spell builder’s In Coven Inventory', () => {
     expect(hold()).toHaveTextContent('Nothing in the jar yet.');
   });
 
-  it('flags a compendium form the coven holds no jar of as Out, on add', async () => {
+  it('says a compendium form the coven holds no jar of has no jar, and does not call it Out, on add (the owner, 2026-10-29)', async () => {
     suggest(MOCKROOT);
     renderBuilder();
 
     await add('Mock', /Fixture Mockroot/);
 
-    expect(
-      within(line('Fixture Mockroot')).getByRole('button', { name: 'Out' }),
-    ).toBeInTheDocument();
-    expect(line('Fixture Mockroot')).toHaveTextContent('have none');
+    expect(line('Fixture Mockroot')).toHaveTextContent('have no jar');
+    expect(within(line('Fixture Mockroot')).queryByRole('button', { name: 'Out' })).toBeNull();
   });
 
   it('flags an empty jar as Out', async () => {
