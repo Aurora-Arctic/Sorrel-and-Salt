@@ -17,9 +17,7 @@ import { mockGraphQLQuery } from '../../support/msw/graphql';
 const router = vi.hoisted(() => ({ push: vi.fn() }));
 vi.mock('next/navigation', () => ({ useRouter: () => router }));
 
-// The search shell and its row: a type-ahead over the compendium's
-// ranked search, whose dropdown follows the debounced text while the list
-// changes only on Enter, a pick or the action row
+// The search shell and its row: a type-ahead over the compendium's ranked search, whose dropdown follows the debounced text while the list changes only on Enter, a pick or the action row
 // (claude-docs/components/ingredient-search.md, "Testing").
 
 const PATH = '/compendium';

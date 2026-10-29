@@ -153,10 +153,8 @@ describe('CompendiumCards', () => {
       expect(screen.queryByRole('button', HELD)).toBeNull();
     });
 
-    // The check is a status mark, not a link, since the details
-    // modal's In Your Cupboards list carries the links to each coven's copy; it is tipped and
-    // named In Every Cupboard and its entry (the one noun for "you hold this"; the tip
-    // says the name too), a button only to carry its tip, as the entry page's shelf is.
+    // The check is a status mark, not a link, since the details modal's In Your Cupboards list carries the links to each coven's copy.
+    // It is tipped and named In Every Cupboard and its entry (the one noun for "you hold this"), a button only to carry its tip, as the entry page's shelf is.
     it('swaps the plus for a check named In Every Cupboard and its entry on a card every coven holds, and no link', () => {
       const held = ENTRIES.map((one, index) => (index === 0 ? { ...one, held: true } : one));
       render(<Cards {...props({ entries: held, action: 'add' })} />);

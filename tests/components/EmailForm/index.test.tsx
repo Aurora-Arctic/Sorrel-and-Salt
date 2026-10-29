@@ -14,9 +14,7 @@ import { makeQueryClient } from '@/lib/graphql-client';
 import { graphqlLink, mockGraphQLError, mockGraphQLMutation } from '../../support/msw/graphql';
 import { server } from '../../support/msw/server';
 
-// The /account/email form. The mutation is answered by MSW in the shape
-// /api/graphql answers (tests/support/msw/graphql.ts), so what the component
-// reads back is the route's own error mapping, not a hand-written body
+// The /account/email form. MSW answers the mutation in the shape /api/graphql answers (tests/support/msw/graphql.ts), so the component reads back the route's own error mapping, not a hand-written body
 // (claude-docs/components/email-form.md).
 
 function renderForm(ui: ReactNode) {
@@ -152,10 +150,8 @@ describe('EmailForm', () => {
     expect(calls).toEqual([{ email: 'ada@example.test', next: '/admin' }]);
   });
 
-  // One mail per minute from a form, so a held-down Enter key or a nervous
-  // reader cannot fill an inbox. The clock is faked, so the minute passes at
-  // once; `shouldAdvanceTime` keeps it moving for MSW's fetch and `waitFor`,
-  // as the IngredientForm files fake it.
+  // The form sends one mail per minute, so a held-down Enter key or a nervous reader cannot fill an inbox.
+  // The clock is faked so the minute passes at once; `shouldAdvanceTime` keeps it moving for MSW's fetch and `waitFor`, as the IngredientForm files fake it.
   it('waits out a cooldown after a send, refusing a submit meanwhile, then offers to send again', async () => {
     vi.useFakeTimers({ shouldAdvanceTime: true });
     onTestFinished(() => {

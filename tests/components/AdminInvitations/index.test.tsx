@@ -253,11 +253,8 @@ describe('AdminInvitations', () => {
   });
 });
 
-// The filter: FilterForm's loading state and Clear are
-// CompendiumList's to test; the shared rows assert the address this one
-// builds and which of its values count as a filter, and this that the switch
-// carries the email and the invite form keeps the filter and the page shown. Soft, from the first page, as every page under /admin runs its
-// own guard.
+// The filter: FilterForm's loading state and Clear are CompendiumList's to test, and the shared rows assert the address this one builds and which values count as a filter.
+// This file proves the switch carries the email and the invite form keeps the filter and the page shown. It is a soft navigation from the first page, as every page under /admin runs its own guard.
 describe('AdminInvitations filter', () => {
   const FERN = { email: 'fern', expiringSoon: true };
   const email = () => screen.getByRole('searchbox', { name: 'Email' });

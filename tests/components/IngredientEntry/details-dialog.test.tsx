@@ -20,10 +20,8 @@ const { detailsHeading } = await import('@/components/IngredientEntry/details');
 const { editHeading } = await import('@/components/CompendiumList/heading');
 const { covenCardActions } = await import('@/components/CovenCards/actions');
 
-// The details modal over a list: a summary of the entry, a way through
-// to its full page, and, for whoever may edit it, an Edit that opens the edit
-// modal over it (claude-docs/components/ingredient-entry.md, "The details
-// modal").
+// The details modal over a list: a summary of the entry, a way through to its full page, and, for whoever may edit it, an Edit that opens the edit modal over it
+// (claude-docs/components/ingredient-entry.md, "The details modal").
 
 const LIST: Route = '/admin/compendium';
 const PAGE = '/compendium/ingredients/testwort' as Route;
@@ -210,10 +208,8 @@ describe('DetailsDialog', () => {
     expect(dialog()).toBeInTheDocument();
   });
 
-  // The head: the entry's badges are the card's and the
-  // entry page's own components, the safety badge beside the name, the formal name on its
-  // own line below it, the other badges in a row under that, and the Edit pencil last of
-  // what stands beside the name.
+  // The head: the entry's badges are the card's and the entry page's own components, with the safety badge beside the name,
+  // the formal name on its own line below it, the other badges in a row under that, and the Edit pencil last of what stands beside the name.
   describe('head', () => {
     const marks = (more: Record<string, unknown> = {}) => ({
       kind: 'compendium' as const,
@@ -357,10 +353,8 @@ describe('DetailsDialog from a compendium card', () => {
   });
 });
 
-// The window's icons are the coven card's, drawn by the same `covenCardActions` the list's cards
-// use, so what the card shows for this entry and role is what the
-// window shows: Edit and the bin on the coven's own entry, Annotate and More on a compendium
-// entry the cupboard holds.
+// The window's icons are the coven card's, drawn by the same `covenCardActions` the list's cards use, so the window shows what the card shows for this entry and role:
+// Edit and the bin on the coven's own entry, Annotate and More on a compendium entry the cupboard holds.
 describe('DetailsDialog coven card controls', () => {
   const WORKSPACE_ID = '00000000-0000-4000-8000-000000000001';
   const ID = '00000000-0000-4000-8000-0000000000bb';

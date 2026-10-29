@@ -16,10 +16,8 @@ import { mockGraphQLError, mockGraphQLMutation } from '../../support/msw/graphql
 const router = vi.hoisted(() => ({ push: vi.fn(), replace: vi.fn(), refresh: vi.fn() }));
 vi.mock('next/navigation', () => ({ useRouter: () => router }));
 
-// A coven card's More: Delete on the coven's own entry, Make It Ours and
-// Remove on a compendium entry, a lone Delete or Remove its own bin and two choices a menu;
-// Delete, Make It Ours and Remove ask in place (option A), and a write that takes the card away leaves the focus on the page's
-// heading, a refusal on More (claude-docs/components/coven-cards.md).
+// A coven card's More: Delete on the coven's own entry, Make It Ours and Remove on a compendium entry, a lone Delete or Remove as its own bin and two choices as a menu.
+// Delete, Make It Ours and Remove ask in place (option A); a write that takes the card away leaves the focus on the page's heading, a refusal on More (claude-docs/components/coven-cards.md).
 
 const WORKSPACE_ID = '00000000-0000-4000-8000-000000000001';
 const ID = '00000000-0000-4000-8000-000000000002';

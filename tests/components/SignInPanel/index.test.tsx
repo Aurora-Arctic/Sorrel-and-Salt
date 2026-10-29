@@ -9,11 +9,8 @@ import {
   signInErrorMessage,
 } from '@/lib/sign-in';
 
-// Better Auth's client performs the OAuth hop by assigning
-// `window.location.href` (tests/lib/auth-client.test.ts) — happy-dom can't
-// follow that, so `signIn` is mocked here rather than stubbing fetch, which is
-// how auth-client.test.ts exercises the real thing. The rest of the module is
-// the real one, so the last-used mark reads happy-dom's own `document.cookie`.
+// Better Auth's client performs the OAuth hop by assigning `window.location.href` (tests/lib/auth-client.test.ts), which happy-dom cannot follow, so `signIn` is mocked here rather than stubbing fetch.
+// The rest of the module is the real one, so the last-used mark reads happy-dom's own `document.cookie`.
 const socialMock = vi.fn();
 vi.mock('@/lib/auth-client', async (importOriginal) => ({
   ...(await importOriginal<typeof import('@/lib/auth-client')>()),
@@ -221,10 +218,8 @@ describe('SignInPanel', () => {
     }
   });
 
-  // The server has no cookie to read, so its HTML must carry no mark, or a
-  // returning visitor's hydration would disagree with it. happy-dom has a
-  // `document` even here, so it is the server snapshot, not its absence, that
-  // keeps the mark out.
+  // The server has no cookie to read, so its HTML must carry no mark, or a returning visitor's hydration would disagree with it.
+  // happy-dom has a `document` even here, so it is the server snapshot, not its absence, that keeps the mark out.
   it('server-renders no mark, and hydration adds it without a mismatch', async () => {
     setLastUsed('google');
     const panel = <SignInPanel next="/" configured={['google']} />;

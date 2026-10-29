@@ -4,10 +4,8 @@ import { describe, expect, it } from 'vitest';
 import { useClickFeedback } from '@/components/ClickFeedback';
 import { StatusRegionProvider, useAnnounce } from '@/components/ClickFeedback/status-region';
 
-// The click-feedback callout, design F (claude-docs/components/click-feedback.md):
-// a failed click's sentence in a callout under the control, a badge on the
-// control that brings it back, and the control described by the failure until
-// the next try clears it.
+// The click-feedback callout, design F (claude-docs/components/click-feedback.md): a failed click's sentence in a callout under the control,
+// a badge on the control that brings it back, and the control described by the failure until the next try clears it.
 
 const REFUSED = 'Testwort is in a spell, so it cannot be removed.';
 const OTHER = 'Mossbell could not be saved.';
