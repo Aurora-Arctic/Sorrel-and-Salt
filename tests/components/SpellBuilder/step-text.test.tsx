@@ -238,6 +238,27 @@ describe('the spell builder’s step text', () => {
     expect(instructions().map((field) => field.value)).toEqual(['Crush it first']);
   });
 
+  it('opens a closed instruction from a click on its text, as an ingredient row opens, and shows Close, not Remove, while open', () => {
+    renderSaved();
+    expect(screen.getByRole('button', { name: 'Remove step 1' })).toBeInTheDocument();
+
+    fireEvent.click(screen.getByText('Light the candle', { selector: 'p' }));
+
+    expect(screen.getByRole('button', { name: 'Close step 1' })).toHaveAttribute(
+      'aria-expanded',
+      'true',
+    );
+    expect(instructions().map((field) => field.value)).toEqual(['Light the candle']);
+    expect(screen.queryByRole('button', { name: 'Remove step 1' })).toBeNull();
+
+    fireEvent.click(screen.getByRole('button', { name: 'Close step 1' }));
+    expect(screen.getByRole('button', { name: 'Edit step 1' })).toHaveAttribute(
+      'aria-expanded',
+      'false',
+    );
+    expect(screen.getByRole('button', { name: 'Remove step 1' })).toBeInTheDocument();
+  });
+
   it('removes an instruction-only step, says so, and leaves it out of what is sent', async () => {
     const calls = acceptUpdate();
     renderSaved();

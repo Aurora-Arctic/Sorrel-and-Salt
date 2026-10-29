@@ -144,7 +144,8 @@ $step-line: type-size('body') * 1.65;
 $step-ink-drop: 0.05rem;
 
 // A closed ingredient row opens on a click anywhere on its face (the pencil still does too).
-.step-row.step-row--card.step-row--closed:not(.step-row--instruction) {
+.step-row.step-row--card.step-row--closed:not(.step-row--instruction),
+.step-row.step-row--instruction.step-row--folded {
   cursor: pointer;
 }
 
@@ -375,6 +376,44 @@ $step-ink-drop: 0.05rem;
 
   .step-row__placeholder {
     color: $text-muted;
+  }
+
+  // Open, the pencil is the Close chevron at the right edge, as on an ingredient row.
+  .step-row__edit--close {
+    grid-area: remove;
+
+    &,
+    &:hover,
+    &:focus-visible {
+      color: $text-primary;
+    }
+
+    .chevron-icon {
+      transform: rotate(180deg);
+    }
+  }
+
+  // Closed, the instruction is one line of the height of a closed ingredient row's: its text
+  // runs on under an ellipsis, and the handle, number and buttons centre on that line, with no
+  // textarea's padding to stand clear of. Open, the textarea shows all of it.
+  &.step-row--folded {
+    .step-row__handle,
+    .step-row__position {
+      margin-block-start: 0;
+    }
+
+    .step-row__edit,
+    .step-row__remove {
+      margin-block-start: calc(($step-line - $icon-size) / 2);
+    }
+
+    .step-row__text {
+      padding-block: 0;
+      line-height: $step-line;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+    }
   }
 
   .field__label-row {

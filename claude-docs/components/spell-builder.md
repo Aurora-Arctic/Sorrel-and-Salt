@@ -351,8 +351,9 @@ being read the column is a skeleton, and if the read fails, an error in its plac
   Open, it also shows Name (one-offs only, required, editable: the header and inventory line follow it, a blank is refused as "Give the ingredient a name" and a repeat as the picker does, both in the field; a linked ingredient's name is read-only), Form (one-offs only), Quantity and Unit on one line, and Instruction full width on a line beneath. One row is open at a
   time: a new step opens, opening another closes the one before, and a step whose unit breaks the
   rule is forced open so its error is seen. An open row also closes when a click or tap lands outside it or the focus leaves it; a new step stays open while the focus is in Add to Jar and closes on the next click or focus outside the box and the row. What was typed in a closed row is kept. An instruction-only step is the same
-  card: closed, its text itself (a muted "Write the step" when empty) with a pencil ("Edit step N")
-  and Remove; open, a text area in place of the text.
+  card: closed, its text on one line (a muted "Write the step" when empty) with a pencil ("Edit step N")
+  and Remove, as tall as a closed ingredient row; a click on it or the pencil opens it, a text area in place of
+  the text, and the pencil becomes the Close chevron at the right with Remove hidden.
 - **Add an Instruction** (M13.3) is on the add row, after the picker: a `.btn` on wide, and on narrow the
   dashed numbered last line, beneath the picker. It appends an instruction-only step, opens it and puts the
   focus in its Instruction field. Until something is written the step is named "New Instruction"

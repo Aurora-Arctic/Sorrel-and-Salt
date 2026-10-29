@@ -65,6 +65,7 @@ export default function StepRow({
   const className_ = [
     'step-row',
     collapsible && (open ? 'step-row--open' : 'step-row--closed'),
+    textCard && !open && 'step-row--folded',
     className,
   ]
     .filter(Boolean)
@@ -86,7 +87,12 @@ export default function StepRow({
   );
   if (textCard) {
     return (
-      <li ref={rowRef} className={className_} style={style}>
+      <li
+        ref={rowRef}
+        className={className_}
+        style={style}
+        onClick={onToggle && ((event) => toggleFromFace(event, open, onToggle))}
+      >
         {identity}
         {open ? (
           <div className="step-row__field" id={fieldsId}>
