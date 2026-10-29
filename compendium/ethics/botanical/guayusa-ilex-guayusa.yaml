@@ -1,0 +1,11 @@
+# Gathered for M14.29; the seed never reads this folder.
+entry: botanical/guayusa-ilex-guayusa
+status: approved
+listings:
+  - list: iucn
+    name: IUCN Red List
+    value: Least Concern (IUCN 3.1)
+    listedAs: Ilex guayusa
+    nameBasis: stated
+    source: wikipedia-ilex-guayusa
+    locator: taxobox, conservation status (status = LC, IUCN3.1)

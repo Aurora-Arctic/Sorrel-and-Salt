@@ -1,0 +1,11 @@
+# Gathered for M14.29; the seed never reads this folder.
+entry: botanical/mormon-tea-ephedra-nevadensis
+status: approved
+listings:
+  - list: iucn
+    name: IUCN Red List
+    value: Least Concern (IUCN 3.1)
+    listedAs: Ephedra nevadensis
+    nameBasis: stated
+    source: wikipedia-ephedra-nevadensis
+    locator: taxobox, conservation status (status = LC, IUCN3.1)
