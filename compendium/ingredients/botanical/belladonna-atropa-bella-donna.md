@@ -116,7 +116,7 @@ variants:
           - description
           - safetyNotes
           - toxic
-seedUpdate: 0a7d1ad49bfaf02f8edcedc13178cb3bd2c62581b04a7cf21858ae851dfc0137
+seedUpdate: 515b151ee14f938a36b26c38f9c25ce86c7dc06fbdb053ca0506f47b21a77f31
 ---
 
 # Belladonna

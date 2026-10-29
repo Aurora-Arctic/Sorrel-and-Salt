@@ -215,7 +215,7 @@ variants:
         supports:
           - form
           - description
-seedUpdate: 63dd506ae675fb5456f96a4dc974a94cce2598627dbd8fb7fb4498e81eed9d47
+seedUpdate: dc0dc9c37f5151a0704a262461372aa067d91c82c807f801f6c38441adf2b399
 ---
 
 # Rosemary

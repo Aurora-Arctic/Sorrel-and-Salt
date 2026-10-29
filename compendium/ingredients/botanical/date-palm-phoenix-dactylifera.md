@@ -137,7 +137,7 @@ variants:
         supports:
           - form
           - description
-seedUpdate: 228517fee2e58d49f91ffdadfcb8ba7d15c20861963001afa24fcba4128d9e89
+seedUpdate: 53ba66b8a5a36337d8168771609abe2c66d1eab76209ed2685e751ef83c47acd
 ---
 
 # Date Palm

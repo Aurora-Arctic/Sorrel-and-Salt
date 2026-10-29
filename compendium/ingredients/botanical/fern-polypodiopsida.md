@@ -82,7 +82,7 @@ variants:
         supports:
           - form
           - description
-seedUpdate: e5d6ea3624b2a1dfa0535f73c92dfca1a9b30e35119ee158aa96691e8f7cee96
+seedUpdate: 771d191934e8c9441926414664678b86686e09b8eeb729bbabaf69383e19d392
 ---
 
 # Fern

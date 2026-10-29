@@ -99,7 +99,7 @@ variants:
           - description
           - safetyNotes
           - toxic
-seedUpdate: 045fbd23eed3d9456d1e19b0b2593cdb29694605e928984f025cc486097aefef
+seedUpdate: dde3a2cfbed23bb448848d77bedc8da6daa0c655ff48a8f18b030e77d039d6a7
 ---
 
 # Mesquite

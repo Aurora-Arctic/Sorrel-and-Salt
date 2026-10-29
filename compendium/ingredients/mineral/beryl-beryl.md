@@ -83,7 +83,7 @@ variants:
         supports:
           - form
           - description
-seedUpdate: bcede0af906c875da6332af78541814102d3db07c975dea7eedbd2e3ff2bc1db
+seedUpdate: 704fbfd909f7c7a658f450d7a8fa42e3ecf1d74496e568a89c33ee41664b3557
 ---
 
 # Beryl
