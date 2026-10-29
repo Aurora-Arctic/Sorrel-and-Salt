@@ -84,7 +84,7 @@ const SaveStatus = ({
           </span>
         </Notice>
       ) : next.failing ? (
-        <Notice kind="error" block className="save-status__failed">
+        <Notice kind="warn" block className="save-status__failed">
           <span>Couldn&rsquo;t save.</span>
           <button
             type="button"
