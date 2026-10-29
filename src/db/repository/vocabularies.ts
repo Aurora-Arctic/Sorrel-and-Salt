@@ -401,7 +401,7 @@ function groupingOf(vocabulary: ListedVocabulary): TwoTierPair | undefined {
 /**
  * One page of what a member's autofill offers for `vocabulary`'s column: live
  * curated rows matching `query`, then values written on live ingredients the
- * `memberships` prove. No proofs reads the compendium alone. (claude-docs/db/write-path.md, "Repository comments in full")
+ * `memberships` prove. No proofs reads the compendium alone. (claude-docs/db/compendium-read.md, "Tier-scoped reads")
  */
 export function findVocabularySuggestions(
   memberships: readonly Membership[],

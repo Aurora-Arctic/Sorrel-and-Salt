@@ -1029,7 +1029,7 @@ async function insertMissingFolkNames(
 /**
  * Each entry's deities, picked in the literal's order, keyed on the case-folded name
  * the row holds. A missing pick goes after the entry's live picks, so a second run
- * moves nothing (claude-docs/db/standard-scenario.md). (claude-docs/db/compendium-seed/README.md, "Seed comments in full")
+ * moves nothing (claude-docs/db/standard-scenario.md, "A reseed of `standard` puts a deity pick back; `demo` does not")
  */
 async function insertMissingDeities(
   tx: SeedTransaction,

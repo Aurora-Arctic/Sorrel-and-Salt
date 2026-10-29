@@ -10,7 +10,7 @@ import { existsIn } from './select';
 /**
  * Hard-deletes every provisional account (unverified, with a provider
  * `accounts` row, idle or older than the cap), outside `withAudit`: a tombstone
- * would block Better Auth's sign-in. A user with a privilege-ledger row is kept. (claude-docs/db/write-path.md, "Repository comments in full")
+ * would block Better Auth's sign-in. A user with a privilege-ledger row is kept. (claude-docs/db/write-path.md, "Sweeping provisional accounts")
  */
 export async function deleteProvisionalUsers(
   lifetimeSeconds: number,

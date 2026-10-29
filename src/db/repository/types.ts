@@ -332,7 +332,7 @@ export interface AuditWriter {
   /**
    * `updateByIdInWorkspace` for a table carrying `revision`, written only while the row is at `expectedRevision`: a live row that has moved on
    * throws `StaleWrite` with its revision now; `null` writes whatever the row holds. No live row of the proof's workspace answers `[]`, never
-   * `StaleWrite`, which would tell another coven's reader the row exists (claude-docs/db/write-path.md, "Writer methods and filter fields in full").
+   * `StaleWrite`, which would tell another coven's reader the row exists (claude-docs/db/write-path.md, "Writer contracts and filter fields").
    */
   updateRevisioned<TTable extends PgTable & WorkspaceScoped & Generic & Identified & Revisioned>(
     membership: Membership,
@@ -605,7 +605,7 @@ export interface AuditWriter {
   /**
    * Hard-delete, for the join tables that carry no `deleted_at`. A table carrying one is rejected by the type, as is one carrying `workspace_id`.
    * Rows are named by `match`, every column of which they must hold; a list matching nothing deletes nothing without a statement,
-   * and a match naming no column is refused rather than emptying the table (claude-docs/db/write-path.md, "Writer methods and filter fields in full").
+   * and a match naming no column is refused rather than emptying the table (claude-docs/db/write-path.md, "Writer contracts and filter fields").
    */
   delete<TTable extends PgTable & HardDeletable & Unscoped & Generic>(
     table: TTable,

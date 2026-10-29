@@ -112,7 +112,7 @@ const NOWHERE = 2147483647;
 /**
  * A search for `query` by word similarity: `matches`, `similarity`, `contains` and
  * `position` (the first character of a verbatim hit, or `NOWHERE`), each side folded
- * through `unaccent_immutable` so the expression indexes answer the match. (claude-docs/db/write-path.md, "Repository comments in full")
+ * through `unaccent_immutable` so the expression indexes answer the match. (claude-docs/db/compendium-read.md, "Search ranking")
  */
 export function foldedWordMatch(query: string): WordMatch {
   const folded = sql`unaccent_immutable(${query})`;

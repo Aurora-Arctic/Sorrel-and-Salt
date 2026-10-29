@@ -217,7 +217,7 @@ export function findGrimoireCategoryCounts(
 /**
  * The counts behind the four grimoire facets, under the list's visibility rule, so
  * another member's private spell is never counted. Each facet leaves its own picks
- * out of its query; a value no readable spell carries is absent, not zero. (claude-docs/db/write-path.md, "Repository comments in full")
+ * out of its query; a value no readable spell carries is absent, not zero. (claude-docs/db/grimoire.md, "The four facets' counts (M13.22)")
  */
 export async function findGrimoireFacetCounts(
   membership: Membership,

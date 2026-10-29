@@ -12,7 +12,7 @@ import type {
 
 // The form vocabulary: six groups and every form, a starting set an admin may edit.
 // Reference data, not a scenario, so it inserts the bootstrap user itself. A group's
-// slug is `slugify(name)`; a form's is `formSlug` of its name and its group's. (claude-docs/db/compendium-seed/README.md, "Seed comments in full")
+// slug is `slugify(name)`; a form's is `formSlug` of its name and its group's. (claude-docs/db/compendium-seed/README.md, "The form vocabulary seed's groups")
 
 /**
  * The six groups in order, which nothing reads (groups list alphabetically), kept so the two compare. Each names its icon, written only into a group the seed

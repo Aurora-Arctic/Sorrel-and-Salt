@@ -83,7 +83,7 @@ import type {
 /**
  * The rows of an ingredient's child table (folk names, categories, variants and the rest) that belong to these ingredients themselves, not to one of their forms,
  * readable exactly when the parent is: live, and in the compendium or a coven one of `memberships` proves. No proofs reads the compendium alone.
- * With `heldBy`, a retired compendium entry that coven's cupboard names is read too (claude-docs/db/compendium-read.md, "Ingredient finders in full").
+ * With `heldBy`, a retired compendium entry that coven's cupboard names is read too (claude-docs/db/compendium-read.md, "Tier-scoped reads").
  */
 export function findManyOfIngredients<
   TTable extends PgTable & IngredientScoped & Unscoped & NotSpellScoped,
@@ -107,7 +107,7 @@ export function findManyOfIngredients<
 
 /**
  * The live variant with this id, while its ingredient is live and in the compendium or a coven one of `memberships` proves: the form a jar may name.
- * With `heldBy`, also a live form of a retired compendium entry that coven still holds a live cupboard row for; no `heldBy` reads the live tiers alone (claude-docs/db/compendium-read.md, "Ingredient finders in full").
+ * With `heldBy`, also a live form of a retired compendium entry that coven still holds a live cupboard row for; no `heldBy` reads the live tiers alone (claude-docs/db/compendium-read.md, "Tier-scoped reads").
  */
 export function findReadableVariant(
   memberships: readonly Membership[],
@@ -145,7 +145,7 @@ export function findReadableVariants(
 
 /**
  * The live rows these variants own (one form's categories, say), readable exactly when the variant and its ingredient are.
- * Never by a bare id: a variant has no `workspace_id`, so its ingredient's tier is its only scope. With `heldBy`, as `findManyOfIngredients` reads with it (claude-docs/db/compendium-read.md, "Ingredient finders in full").
+ * Never by a bare id: a variant has no `workspace_id`, so its ingredient's tier is its only scope. With `heldBy`, as `findManyOfIngredients` reads with it (claude-docs/db/compendium-read.md, "Tier-scoped reads").
  */
 export function findManyOfVariants<
   TTable extends PgTable & VariantScoped & IngredientScoped & Unscoped & NotSpellScoped,
@@ -168,7 +168,7 @@ export function findManyOfVariants<
 
 /**
  * The live deities of these ingredients, each beside the curated deity it links while that deity is live under a live tradition, and null for a typed name
- * or a deity since retired. Readable exactly when the parent is, `heldBy` included. Unordered; a caller sorts by `position` (claude-docs/db/compendium-read.md, "Ingredient finders in full").
+ * or a deity since retired. Readable exactly when the parent is, `heldBy` included. Unordered; a caller sorts by `position` (claude-docs/db/compendium-read.md, "Tier-scoped reads").
  */
 export function findDeitiesOfIngredients(
   memberships: readonly Membership[],
@@ -193,7 +193,7 @@ export function findDeitiesOfIngredients(
 /**
  * The live substitutes of these ingredients, or of these variants (`of` says which the ids name), each beside the ingredient it links, soft-deleted or not,
  * or null for a typed name. The escape hatch that skips the linked ingredient's filter and no other, so a link to a deleted ingredient reads as its last name
- * (claude-docs/db/soft-delete.md, "Soft-delete filtering"); the parent must be live and readable, and the link must point where its readers may look (claude-docs/db/compendium-read.md, "Ingredient finders in full").
+ * (claude-docs/db/soft-delete.md, "Soft-delete filtering"); the parent must be live and readable, and the link must point where its readers may look (claude-docs/db/compendium-read.md, "Tier-scoped reads").
  */
 export function findSubstitutesIncludingSoftDeleted(
   memberships: readonly Membership[],
@@ -235,7 +235,7 @@ export function findSubstitutesIncludingSoftDeleted(
 /**
  * One page of the live ingredients, in the compendium or a coven one of `memberships` proves, whose display name, formal name or a live folk name is trigram-similar
  * to `name`, best match first, keyed `[-score, name]`, each carrying its score. No proofs reads the compendium alone. The three matches are a `UNION ALL` under
- * `id IN (...)`, not an `OR` beside the scope, which Postgres cannot plan as a join (claude-docs/db/compendium-read.md, "Ingredient finders in full").
+ * `id IN (...)`, not an `OR` beside the scope, which Postgres cannot plan as a join (claude-docs/db/compendium-read.md, "Ingredient suggestions").
  */
 export function findSimilarIngredients(
   memberships: readonly Membership[],
@@ -336,7 +336,7 @@ export function findWorkspaceIngredientCount(
 
 /**
  * Which rows a coven's ingredient list holds: its own live entries, and the compendium entries a live cupboard row of its names, including a retired one the coven still holds.
- * The scope carries the tombstone filters itself, so its readers page it without one, and the page and the facets both read it (claude-docs/db/compendium-read.md, "Ingredient finders in full").
+ * The scope carries the tombstone filters itself, so its readers page it without one, and the page and the facets both read it (claude-docs/db/compendium-read.md, "The coven list scope").
  */
 export function workspaceListScopeIncludingSoftDeleted(
   membership: Membership,
@@ -365,7 +365,7 @@ export function workspaceListScopeIncludingSoftDeleted(
 
 /**
  * The `inStock` filter: the coven holds a live jar of the row, of a live form, and the jar is not at 0. A jar with no quantity is held unweighed,
- * so it is an `OR` with null rather than `<> 0` alone, which SQL reads as unknown for null (claude-docs/db/compendium-read.md, "Ingredient finders in full").
+ * so it is an `OR` with null rather than `<> 0` alone, which SQL reads as unknown for null (claude-docs/db/compendium-read.md, "The coven list scope").
  */
 function holdsJarInStock(membership: Membership): SQL {
   return existsIn(
@@ -408,7 +408,7 @@ const SUGGESTION_GROUP_LIMIT = 8;
 /**
  * The substitute picker's rows, in two groups: `yours` (the coven's own live entries and the compendium entries it holds, found by its label as well as the compendium's name)
  * and `compendium` (every other live compendium entry). An entry is in one group and a retired one in neither; each group is matched and ordered as the compendium search is,
- * cut at `SUGGESTION_GROUP_LIMIT`, `yours` first, each row carrying its `group` (claude-docs/db/compendium-read.md, "Ingredient finders in full").
+ * cut at `SUGGESTION_GROUP_LIMIT`, `yours` first, each row carrying its `group` (claude-docs/db/compendium-read.md, "Ingredient suggestions").
  */
 export async function findIngredientSuggestions(
   membership: Membership,
@@ -596,7 +596,7 @@ function identityIs({ name, canonicalName }: IngredientIdentity): SQL {
 
 /**
  * What a compendium page and its count share: the filter's arms, and the key with the search's join, so the count reads the rows the pages hold in the order they hold them.
- * A search keys `[-rank, position, name]`; a browse keys `[name]` (claude-docs/db/compendium-read.md, "Ingredient finders in full").
+ * A search keys `[-rank, position, name]`; a browse keys `[name]` (claude-docs/db/compendium-read.md, "Search ranking").
  */
 export function compendiumList(
   filter: IngredientFilter,
@@ -679,7 +679,7 @@ const cupboard = alias(workspaceCompendiumEntries, 'cupboard');
 
 /**
  * The name, elements, celestial bodies and zodiac signs a list reads. Under a coven's proof each is `coalesce(cupboard row's, entry's)`, so an override sorts, filters and counts
- * where the coven put it, and a cleared empty list matches nothing; without a proof each is the entry's column. Raw SQL, since `coalesce` has no builder (claude-docs/db/compendium-read.md, "Ingredient finders in full").
+ * where the coven put it, and a cleared empty list matches nothing; without a proof each is the entry's column. Raw SQL, since `coalesce` has no builder (claude-docs/db/compendium-read.md, "The coven list scope").
  */
 export function listColumns(membership?: Membership): ListColumns {
   if (!membership) {
@@ -723,7 +723,7 @@ const SEARCH_WEIGHTS = {
 /**
  * The rows matching a search, as a relation to join, each row's rank, and where its best field holds the query. A row matches when the query is word-similar (`<%`)
  * to its label, formal name, a live folk name, or the form or description of a live variant, each side accent-folded so the expression indexes answer it; blank means no search.
- * One `UNION ALL` arm per field, ranked by the best arm (claude-docs/db/compendium-read.md, "Ingredient finders in full").
+ * One `UNION ALL` arm per field, ranked by the best arm (claude-docs/db/compendium-read.md, "Search ranking").
  */
 function searchMatch(
   query: string | undefined,
@@ -806,7 +806,7 @@ export function hasNoForm(): SQL {
 
 /**
  * The category filter: under `all` one correlated `EXISTS` per id, so an entry carries every one; under `any` a single `EXISTS` over the list.
- * The category may be filed on the entry or on a live form, and the variant's liveness is read here; the category itself must be live too, through `pointsLive` (claude-docs/db/compendium-read.md, "Ingredient finders in full").
+ * The category may be filed on the entry or on a live form, and the variant's liveness is read here; the category itself must be live too, through `pointsLive` (claude-docs/db/compendium-read.md, "Filter arms").
  */
 function categoryArms(categoryIds: readonly string[], mode: CategoryMode = 'all'): SQL[] {
   if (categoryIds.length === 0) return [];

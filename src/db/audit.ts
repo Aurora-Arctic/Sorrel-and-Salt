@@ -99,7 +99,7 @@ export function applyAudit<T extends object>(
 /**
  * Publishes who is writing as the four transaction-local `app.*` settings, each always
  * set (an absent one as ''), so a pooled connection never shows an earlier value.
- * The executor is the caller's transaction, so this module stays client-free. (claude-docs/db/write-path.md, "Repository comments in full")
+ * The executor is the caller's transaction, so this module stays client-free. (claude-docs/db/write-path.md, "Publishing the actor")
  */
 export async function publishActor(
   executor: ActorExecutor,

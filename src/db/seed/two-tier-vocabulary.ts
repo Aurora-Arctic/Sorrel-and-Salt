@@ -110,7 +110,7 @@ async function groupsByItemKey(
 /**
  * The backfill for a slug that carries its group: each live item's slug is re-derived
  * by `slugOf` and written only where it differs, so a reseed with nothing to change
- * writes nothing. A soft-deleted item keeps its slug. (claude-docs/db/compendium-seed/README.md, "Seed comments in full")
+ * writes nothing. A soft-deleted item keeps its slug. (claude-docs/db/compendium-seed/README.md, "Re-slugging a two-tier vocabulary")
  */
 async function reslugItems(
   tx: SeedTransaction,

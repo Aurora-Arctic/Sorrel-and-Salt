@@ -44,7 +44,7 @@ import type {
 /**
  * How many compendium entries each filter value would list under the rest of
  * `filter`, with no proof (the public list). Orderings, the `withoutReferences`
- * and `withoutForms` counts and `withReview` are set out in full. (claude-docs/db/write-path.md, "Repository comments in full")
+ * and `withoutForms` counts and `withReview` are set out in full. (claude-docs/db/compendium-read.md, "Facet counts")
  */
 export async function findCompendiumFacets(
   filter: IngredientFilter,

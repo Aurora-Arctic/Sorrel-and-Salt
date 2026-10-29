@@ -51,7 +51,7 @@ export function findCupboardEntriesOf(
 /**
  * The compendium entry with this id, retired or not, beside the proof's live cupboard
  * entry naming it. A retired entry stays readable to exactly the covens whose cupboard
- * names it (claude-docs/db/workspace-compendium-entries.md); it skips only the entry's filter. (claude-docs/db/write-path.md, "Repository comments in full")
+ * names it (claude-docs/db/workspace-compendium-entries.md); it skips only the entry's filter. (claude-docs/db/write-path.md, "Reads that take no proof")
  */
 export async function findCupboardEntryIncludingSoftDeleted(
   membership: Membership,

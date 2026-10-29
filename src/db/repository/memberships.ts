@@ -37,7 +37,7 @@ export async function findWorkspaceRole(
 /**
  * Every live membership each of these users holds, in a live workspace. A proofless
  * read: a user's memberships span workspaces, so the service decides whose ids may be
- * asked about, and the index's export list is pinned. (claude-docs/db/write-path.md, "Repository comments in full")
+ * asked about, and the index's export list is pinned. (claude-docs/db/write-path.md, "Reads that take no proof")
  */
 export async function findMembershipsOfUsers(
   userIds: readonly string[],

@@ -155,7 +155,7 @@ function nameKey(value: string): string {
 /**
  * Whether a Wikipedia page is the article on exactly the formal name given, for a
  * mineral or chemical (no taxobox). Rocks, groups and pages with no infobox do not
- * count; a variety needs its own article. Anything less stays a doubt for a person. (claude-docs/db/compendium-seed/README.md, "Seed comments in full")
+ * count; a variety needs its own article. Anything less stays a doubt for a person. (claude-docs/db/compendium-seed/README.md, "Matching a mineral or chemical page")
  */
 export function pageNamesEntry(page: string, title: string, canonicalName: string): boolean {
   const templates = templatesIn(page);

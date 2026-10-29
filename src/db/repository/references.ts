@@ -31,7 +31,7 @@ import type {
 /**
  * The live links of these rows of the sourced table `key` names, each beside the
  * live reference it cites, read only where the reader may read the reference:
- * the compendium's or its own coven's. One statement for the whole batch. (claude-docs/db/write-path.md, "Repository comments in full")
+ * the compendium's or its own coven's. One statement for the whole batch. (claude-docs/db/write-path.md, "Reading the links that cite references")
  */
 export async function findReferencesOf(
   memberships: readonly Membership[],

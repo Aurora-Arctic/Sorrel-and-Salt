@@ -45,7 +45,7 @@ export const NO_MATCH_ADVICE = `. ${NO_MATCH_HINT}`;
 /**
  * What an admin list says when it shows no rows: with a filter, a sentence
  * naming each filter in `parts`; with none, the caller's `emptyText`. `noun` is
- * the plural, so one wording serves every list. (claude-docs/modules.md, "Library comments in full")
+ * the plural, so one wording serves every list. (claude-docs/modules.md, "Empty-list text")
  */
 export function noMatchText(noun: string, parts: readonly string[], emptyText: string): string {
   return parts.length ? `${noMatchLead(noun)}${joinAnd(parts)}${NO_MATCH_ADVICE}` : emptyText;

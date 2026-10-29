@@ -6,7 +6,7 @@ import type { SearchField, WeightedSearch } from './types';
 /**
  * A best-match search over several text fields: a relation to join onto the listed
  * table, giving each row's rank and where its best field holds the query. Shared by
- * the ingredient and grimoire searches, so both rank one way. (claude-docs/db/write-path.md, "Repository comments in full")
+ * the ingredient and grimoire searches, so both rank one way. (claude-docs/db/compendium-read.md, "Search ranking")
  */
 export function weightedSearch(
   query: string,

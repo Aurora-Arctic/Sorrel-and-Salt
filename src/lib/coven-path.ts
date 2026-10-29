@@ -80,7 +80,7 @@ export interface PathInCovenOptions {
 /**
  * Where the same page is in another workspace: a section's index, or a page beneath
  * it only when the page said it opens there. A people page the viewer's role cannot
- * open steps back to the members page or the index. (claude-docs/modules.md, "Library comments in full")
+ * open steps back to the members page or the index. (claude-docs/modules.md, "Moving a page to another coven")
  */
 export function pathInCoven(
   pathname: string,

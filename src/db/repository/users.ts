@@ -84,7 +84,7 @@ export async function findProvidersOfUsers(
 /**
  * The display name of each given user who holds or has held a seat in a coven
  * `viewerId` sits in now, and nothing else of the row. A proofless read: the
- * viewer's own live seat is the scope. Skips the soft-delete filter on the user. (claude-docs/db/write-path.md, "Repository comments in full")
+ * viewer's own live seat is the scope. Skips the soft-delete filter on the user. (claude-docs/db/write-path.md, "Reads that take no proof")
  */
 export async function findCoMemberNamesIncludingSoftDeleted(
   viewerId: string,

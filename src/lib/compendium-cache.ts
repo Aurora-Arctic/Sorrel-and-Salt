@@ -26,7 +26,7 @@ function deploymentKeyPart(): string[] {
 /**
  * `read`, held in the data cache under `COMPENDIUM_TAG` and keyed by `key` and its
  * arguments, so only a read every viewer sees alike may be wrapped. Stored as superjson,
- * since Next's `JSON.stringify` would turn a hit's `Date` columns into strings. (claude-docs/modules.md, "Library comments in full")
+ * since Next's `JSON.stringify` would turn a hit's `Date` columns into strings. (claude-docs/modules.md, "Caching a compendium read")
  */
 export function cachedCompendiumRead<A extends unknown[], R>(
   key: string,

@@ -44,7 +44,7 @@ export function readGraphqlIssues(error: unknown): ValidationIssue[] {
 /**
  * Places every issue a failed save carries on a react-hook-form form: a field
  * `toField` names gets its own error, the rest join into one message on `root`.
- * Answers whether it set any error. (claude-docs/modules.md, "Library comments in full")
+ * Answers whether it set any error. (claude-docs/modules.md, "Placing server issues on a form")
  */
 export function placeServerIssues<Name extends string>(
   error: unknown,

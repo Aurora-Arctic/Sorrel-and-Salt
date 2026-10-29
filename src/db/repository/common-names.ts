@@ -11,7 +11,7 @@ import type { CommonNameSuggestion } from './types';
 /**
  * One page of what a common-name field offers: display and live folk names of live
  * ingredients in the compendium or the `memberships`' covens that match `query`,
- * folded and offered once each. No proofs reads the compendium alone. (claude-docs/db/write-path.md, "Repository comments in full")
+ * folded and offered once each. No proofs reads the compendium alone. (claude-docs/db/compendium-read.md, "Tier-scoped reads")
  */
 export async function findCommonNameSuggestions(
   memberships: readonly Membership[],

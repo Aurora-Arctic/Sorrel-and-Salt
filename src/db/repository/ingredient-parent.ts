@@ -49,7 +49,7 @@ export function readableVariantParent(
 /**
  * `readableIngredientParent`, or a compendium entry the curators have retired while
  * `heldBy`'s coven has a live cupboard entry naming it. One `EXISTS` over the parent,
- * so it skips `existsIn`'s tombstone filter and restores it on the first arm. (claude-docs/db/write-path.md, "Repository comments in full")
+ * so it skips `existsIn`'s tombstone filter and restores it on the first arm. (claude-docs/db/write-path.md, "Reads that take no proof")
  */
 export function inUseIngredientParent(
   memberships: readonly Membership[],

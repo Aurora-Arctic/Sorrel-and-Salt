@@ -20,7 +20,7 @@ import type {
 /**
  * The reader rule as a predicate: the coven's shared spells plus this reader's private
  * ones. Exported for the repository's finders, not the index; the lint rule
- * `sorrel/spell-visibility-read-in-one-place` fails a visibility comparison elsewhere. (claude-docs/db/write-path.md, "Repository comments in full")
+ * `sorrel/spell-visibility-read-in-one-place` fails a visibility comparison elsewhere. (claude-docs/db/spell-visibility.md, "Reading: one predicate, nine finders, and why the generic ones refuse")
  */
 export function readableSpells(membership: Membership): SQL | undefined {
   return and(
