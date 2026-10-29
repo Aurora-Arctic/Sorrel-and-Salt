@@ -13,6 +13,7 @@ import {
 import { celestialBodies, zodiacSigns } from '@/modules/vocabulary/schema/astrology';
 import { deityTraditions } from '@/modules/vocabulary/schema/deities';
 import { decodeCursor, resolvePage } from '@/lib/pagination';
+import { DEITIES } from '@/db/seed/deities';
 import { A } from '../../support/as-user';
 import type { ConnectionArgs, Page } from '@/lib/types';
 import type { DeityFilter, IngredientFormValueRow } from '@/modules/vocabulary';
@@ -263,8 +264,8 @@ describe('findDeityPage and findDeityCount', () => {
 
   it('walks every curated deity once, by tradition then name, at the maximum page size', async () => {
     const expected = await expectedDeities();
-    // The precondition: the seed's 216 deities, more than two pages of 100.
-    expect(expected).toHaveLength(216);
+    // The precondition: the seed's deities, more than two pages of 100.
+    expect(expected).toHaveLength(DEITIES.length);
 
     expect(await idsOf()).toEqual(expected);
   });
@@ -282,7 +283,7 @@ describe('findDeityPage and findDeityCount', () => {
 
     const ids = await idsOf();
 
-    expect(ids).toHaveLength(216 - 1 - underRoman);
+    expect(ids).toHaveLength(DEITIES.length - 1 - underRoman);
     expect(ids).toEqual(await expectedDeities());
     await expect(findDeityCount({}, undefined)).resolves.toEqual({
       totalCount: ids.length,
@@ -362,7 +363,7 @@ describe('findDeityPage and findDeityCount', () => {
 
     await expect(
       findDeityCount({}, decodeCursor(second.pageInfo.startCursor as string)),
-    ).resolves.toEqual({ totalCount: 216, countBefore: 25 });
+    ).resolves.toEqual({ totalCount: DEITIES.length, countBefore: 25 });
   });
 });
 
