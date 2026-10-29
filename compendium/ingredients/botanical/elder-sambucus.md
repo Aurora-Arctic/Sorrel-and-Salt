@@ -169,3 +169,7 @@ seedUpdate: 8f74bd5211624d3a87d657e06fbbfcbbfefd461e245910530a342c1004839b59
 # Elder
 
 Elder is the everyday name for Sambucus, a genus of twenty to thirty species now placed in the family Viburnaceae, with wild members across Eurasia, the Americas, Africa and Australia. Kynes describes the familiar elders as large shrubs with oval leaves and flat, umbrella-like heads of tiny white flowers, up to ten inches across, that ripen into heavy hanging bunches of bluish-black berries; the American elder's flowers smell of lemon and the European's are musky. The flowers flavour cordials and liqueurs, the berries of most species are eaten cooked, and the intensely blue-purple juice serves as a food colouring and a dye. The genus takes its name from a Greek wind instrument, since the pithy twigs hollow out easily, and hollowed twigs have been made into flutes. Folklore clings to every part of the tree. A spirit was thought to live inside it, Frau Ellhorn in Germany and Hyldemoer, the Elder Mother, in Denmark, and her leave was asked, kneeling, before any wood was cut; the red sap was said to be the tree bleeding. In England the elder came to be linked with witches and black magic, yet across Europe it was hung up or planted to keep witches, evil and lightning from the house, worn against attackers, and brought to weddings for luck.
+
+#### Edit Notes for Claude
+
+- Deity gap: Cailleach Bheur (Kynes, under "Elder"), not in the vocabulary; link once M14.15 adds it.

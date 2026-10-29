@@ -49,3 +49,7 @@ seedUpdate: 54ac247ce0566049ba92cd01c196c04156dd82cf41f1aaffce5eee6136dd6e9a
 # Banyan
 
 The banyan is a fig tree whose home is the Indian subcontinent, and it is India's national tree. Like many figs it is a strangler: it begins life as an epiphyte resting on another tree, which in time it wraps round and engulfs. An evergreen that can reach thirty metres, it lets down aerial roots that take hold in the soil and thicken into woody trunks, so that one tree may spread outward over a great area. Indian specimens rank with the world's biggest trees by the ground their crowns cover; Thimmamma Marrimanu in Andhra Pradesh spreads over more than nineteen thousand square metres. Birds such as mynas eat the figs, and seeds that pass through a bird sprout more readily. The tree is sacred in India. Hindus revere it and plant it beside their temples, which are often built close to one. In Theravada Buddhism the Kassapa Buddha is said to have reached enlightenment under a banyan, and Jains hold that Adhinath, the first Tirthankara, did likewise. In Hawaii and across Polynesia it was bound up with Maui's worship. In magic merely sitting under a banyan, or even looking at one, is said to bring good luck, and a couple wed beneath its branches are assured of a happy marriage.
+
+#### Edit Notes for Claude
+
+- Deity gap: Maui (Cunningham, under "Banyan"), not in the vocabulary; link once M14.15 adds it.

@@ -120,3 +120,8 @@ seedUpdate: 0a7d1ad49bfaf02f8edcedc13178cb3bd2c62581b04a7cf21858ae851dfc0137
 # Belladonna
 
 Belladonna, or deadly nightshade, is a bushy perennial of the nightshade family, native to Europe, western Asia and north-west Africa and partial to chalk and limestone; in Britain it is native only to England. It bears dull purple, bell-shaped flowers and glossy black berries about the size of a cherry, sweet enough to tempt children, and it ranks among the most poisonous plants known, every part carrying atropine and related alkaloids. Linnaeus named the genus after Atropos, the Fate who cuts the thread of life, while the species name, Italian for 'beautiful woman', recalls the drops women once put in their eyes to widen the pupils. Its older English name was dwale. Lore makes it a poisoner's plant: Livia was rumoured to have killed Augustus with its juice, and the Scots are said to have drugged an invading army with it during a truce. The priests of Bellona, the Roman war goddess, reputedly drank it before invoking her, and it was named among the ingredients of the witches' flying ointment. Old legend held that the Devil tended it himself, leaving it only on Walpurgis Night. Today's writers urge great care: Cunningham calls it best avoided, and Kynes suggests working with a picture of the plant, for journeying, astral work or keeping a secret, and leaving an offering to Hecate where it grows wild.
+
+#### Edit Notes for Claude
+
+- Deity gap: Bellona (Cunningham, under "Belladonna"), not in the vocabulary; link once M14.15 adds it.
+- Deity gap: Macha (Kynes, under "Nightshade"), not in the vocabulary; link once M14.15 adds it.

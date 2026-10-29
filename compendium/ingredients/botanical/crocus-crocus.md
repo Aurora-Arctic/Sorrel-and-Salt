@@ -84,3 +84,7 @@ variants:
 # Crocus
 
 Crocus is a large genus of the iris family: low perennials that grow from corms and keep their flower stems below ground, sending up chalice-shaped blooms in white, yellow, orange or purple between narrow, dark green leaves striped down the middle with white or silver. The flowers shut at night and under cloud. Wild species range from the Mediterranean and North Africa through central and southern Europe, the Aegean islands and the Middle East to Central Asia and western China. They reached European gardens from Turkey in the sixteenth century and are now among the most popular garden flowers of late winter and early spring, and the crocus is widely used as a symbol of spring and new beginnings. Saffron, the spice and dye, is the dried stigma of one autumn-flowering species. Greek legend tells of a youth, Krokus, turned into the flower after dying of unanswered love for Smilax, and the Greeks and Romans decorated banquet tables and wedding beds with the flowers; Kynes adds that faeries were said to prefer the purple woodland crocus. Cunningham holds that growing crocus draws love, and records an ancient Egyptian rite of burning it with alum in a censer to see a vision of the thief who has robbed you.
+
+#### Edit Notes for Claude
+
+- Deity gap: Eos (Kynes, under "Crocus"), not in the vocabulary; link once M14.15 adds it.

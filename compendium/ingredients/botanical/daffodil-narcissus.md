@@ -133,3 +133,7 @@ seedUpdate: 716362fedfec5f73b481e528c9805fc03fd2a54a0b30bc4b02ad225edce546d9
 # Daffodil
 
 Narcissus, the daffodil, is a genus of spring-flowering bulbs in the amaryllis family. The wild species belong to the meadows and woods of southern Europe and North Africa, above all the Iberian Peninsula, though wild and garden plants alike have naturalised far afield. A brown-skinned bulb sends up narrow, strap-like leaves and a hollow, leafless stem, usually crowned by a single white or yellow flower: six tepals around a cup or trumpet called the corona. Breeders have raised thousands of cultivars, and the daffodil is the national flower of Wales. Its English name grew out of asphodel. Greek myth tied it to the underworld: Persephone was reaching for a narcissus when Hades seized her, the flower was held sacred to both, and Homer's Elysian meadows were thought to be carpeted with it. Greeks planted narcissi near tombs and Egyptians wove them into funeral wreaths, yet the flower also heralds spring, Lent and Easter. Kynes records that in medieval Britain the first daffodil of the year brought luck while one drooping towards a person foretold a death, and that a patch growing wild was taken to mark an old sacred site. Cunningham lays the flower on the altar in love spells, keeps fresh blooms in the bedroom for fertility, and wears one over the heart for luck.
+
+#### Edit Notes for Claude
+
+- Deity gap: Fates (Kynes, under "Daffodil"), not in the vocabulary; link once M14.15 adds it.

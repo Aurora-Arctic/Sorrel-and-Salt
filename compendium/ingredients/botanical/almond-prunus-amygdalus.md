@@ -150,3 +150,7 @@ seedUpdate: 2661111ac133ce6bdb07fcf8341eb876dc0aab5ca8ed1379ff5cb07d3ea9d399
 # Almond
 
 The almond, Prunus amygdalus, is a deciduous tree of the plum and cherry genus, grouped with the peach in the subgenus Amygdalus, and grows three to four and a half metres tall. Its scented flowers, white to pale pink with five petals, open in early spring ahead of the leaves. The fruit is a drupe: a leathery grey-green hull around a hard shell, inside which lies the edible seed that is commonly called a nut. Wild almonds are mostly bitter, and picking out the sweet kind began the tree's domestication; it was among the first fruit trees farmed, with Early Bronze Age evidence from the Middle East, though its homeland is disputed, placed anywhere from Central Asia and Iran to the lands between Mongolia and Uzbekistan. In the Bible, Aaron's rod put out almond blossom, and the Hebrew name for the tree plays on a word for watching. Greek myth tells of Phyllis, turned into an almond tree, which burst into flower when her returning lover embraced it. The Greeks used crushed almonds in water to stand for the seed of Zeus and scattered them at weddings for fertility, and almonds were long eaten to ward off drunkenness. In magic the nuts, leaves and wood serve prosperity and money spells, climbing the tree is said to bring success in business, a pocketful of almonds is said to lead to treasure, and almond milk is poured as a libation.
+
+#### Edit Notes for Claude
+
+- Deity gap: Shakti (Kynes, under "Almond"), not in the vocabulary; link once M14.15 adds it.

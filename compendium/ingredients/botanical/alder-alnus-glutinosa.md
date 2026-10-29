@@ -137,3 +137,7 @@ variants:
 # Alder
 
 The common or black alder is a tree of the birch family, native to most of Europe, Britain and Ireland included, and to south-west Asia and north Africa. It grows in wet ground by rivers, ponds and swamps, where nodules on its roots, formed by a nitrogen-fixing bacterium, let it flourish in poor soil. Its rounded, glossy leaves are sticky when young, its male catkins hang slender and drooping, and its woody female catkins look like tiny cones. In folklore from Britain and Ireland to the Continent, the alder was a tree of great magic. Irish lore names it the forest's warrior witch and says faeries guard it and open their realm through it; in Denmark faeries were thought to live in or beneath it; Germanic peoples burned its wood in sacred fires; and Germans and Belgians hung its sprigs on houses and stables against witches, though they also believed witches used it to work the weather. A Herefordshire rhyme times the trout season on the Wye by the size of its buds. Culpeper places it under Venus. In magic it is used for divination, dream work, prophecy, protection, healing and banishing.
+
+#### Edit Notes for Claude
+
+- Deity gap: Cailleach Bheur (Kynes, under "Alder"), not in the vocabulary; link once M14.15 adds it.
