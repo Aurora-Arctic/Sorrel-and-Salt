@@ -43,7 +43,8 @@ $recipe-column: 48rem;
 }
 
 // The column's two panels, In Coven Inventory then Category Match, as the builder's Jar aside
-// orders them, with the entry page's ruled section headings.
+// orders them, headed as the entry page's side blocks are: at the h3 size, with no rule under
+// them (the owner, 2026-10-29).
 .spell-recipe__aside {
   @include entry-side;
 
@@ -52,8 +53,6 @@ $recipe-column: 48rem;
   }
 
   h2 {
-    @include entry-heading-rule;
-
     margin: 0;
     font-size: heading-size(3);
   }

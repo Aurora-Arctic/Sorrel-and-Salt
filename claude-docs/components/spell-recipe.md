@@ -62,7 +62,8 @@ with no steps says so.
 The page alone draws a side column (M13.21; the owner, 2026-10-29), the builder's two Jar aside
 panels on the saved spell: In Coven Inventory (`SpellBuilder/inventory.tsx`) then Category
 Match (`SpellBuilder/comparison-panel.tsx`), as the builder orders them, each with an `h2`
-(a prop; the builder keeps `h5` under its Jar heading) in the entry page's ruled heading style.
+(a prop; the builder keeps `h5` under its Jar heading) styled as the entry page's side blocks head
+themselves: the h3 size and no rule beneath (the owner, 2026-10-29).
 The Quick Look modal draws neither. `SpellRecipe` takes the column as its `aside` slot and
 wraps it in an `aside` named The Jar (a landmark needs the name inside an `article`), beside the
 body in the ingredient entry page's columns (`entry-section` and `entry-side`: the same side
