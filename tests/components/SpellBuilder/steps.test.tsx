@@ -820,12 +820,12 @@ describe('the spell builder’s safety warning', () => {
   });
 });
 
-// The Jar aside's drawing fills with one band per ingredient step. It is decorative and has no
+// The jar details' drawing fills with one band per ingredient step. It is decorative and has no
 // text alternative, so the bands are counted as the drawing's own elements.
 describe('the spell builder’s jar fill', () => {
   const bands = () =>
     screen
-      .getByRole('complementary', { name: 'The Jar' })
+      .getByRole('group', { name: 'Jar Details' })
       .querySelectorAll('svg .jar-shelf__band-fill').length;
 
   it('draws a band for each ingredient step, a one-off too, and none for an instruction', async () => {
@@ -848,7 +848,7 @@ describe('the spell builder’s jar fill colours', () => {
   const fills = () =>
     Array.from(
       screen
-        .getByRole('complementary', { name: 'The Jar' })
+        .getByRole('group', { name: 'Jar Details' })
         .querySelectorAll<SVGPathElement>('svg .jar-shelf__band-fill'),
     );
   const group = (name: string, colorDark: string, colorLight: string) => ({
