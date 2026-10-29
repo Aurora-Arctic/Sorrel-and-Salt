@@ -27,8 +27,9 @@ list. Four columns, two per row in a column narrower than `$narrow-column` (a co
 the strip's box). There is no Ingredients section: the steps carry the amounts, the amount leading
 the name in weight 500 with the name in 400, and an instruction-only step's text is muted and fills
 the number's line. The steps are an `ol` named Steps with no visible heading, in `position`
-order, the position column 2rem and right-aligned; an ingredient step draws its note (not its
-`body`) indented to the name, and an instruction step is its text, at the ingredients' size and
+order, the position column 2rem and right-aligned; an ingredient step draws its note, or its `body` where
+it has no note (the note column is retired into `body` by PR #1308's migration 0088, and `note`
+is read only until M13.9 drops it), indented to the name, and an instruction step is its text, at the ingredients' size and
 colour (the owner, 2026-10-28). A unit with no quantity reads "— tsp", the dash muted (`StepRow`);
 the form icon `StepRow` draws is hidden here, as the mock-up's steps carry none. The marks sit
 right-aligned at the row's end: Toxic or Caution (`SafetyMark`, from the ingredient and the form
@@ -39,7 +40,7 @@ muted paragraph under its own hairline, drawn only when there is one; the strip 
 capped at the paragraphs' `$measure`, so the two hairlines end together on the page. A spell
 with no steps says so.
 
-- An ingredient's name is plain text; a Quick Look eye beside it, at the form's icon size, opens
+- An ingredient's name is plain text; a Quick Look eye beside it, at seven eighths of the form's icon size, opens
   the ingredient's details (`DetailsDialog`, M12.5) over the spell, never leaving it (the owner,
   2026-10-28): the recipe page's own address plus `?entry=<id>`, or in the grimoire's Quick Look
   the tab's address with `?spell=<id>` kept and `&entry=<id>` added. The page and the tab read it

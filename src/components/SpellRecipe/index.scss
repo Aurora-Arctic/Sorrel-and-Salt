@@ -84,14 +84,14 @@
 // The mock-up's steps carry no form icon: the recipe is read, not picked from, and the
 // builder's rows keep theirs. Hidden here rather than left out of StepRow, which draws it
 // for every caller.
-.spell-recipe__steps // The step's Quick Look eye at the form's icon size, not the list's larger one (the owner,
-// 2026-10-28), so it sits in the name's line.
-.spell-recipe__steps .icon-tip__look {
-  @include icon-button($icon-size, $glyph-size);
+.spell-recipe__steps .step-row__name > .form-icon {
+  display: none;
 }
 
-.step-row__name > .form-icon {
-  display: none;
+// The step's Quick Look eye well under the list's size, seven eighths of the form icon's box and
+// glyph (the owner, 2026-10-29), so it sits in the name's line without weight.
+.spell-recipe__steps .icon-tip__look {
+  @include icon-button($icon-size * 0.875, $glyph-size * 0.875);
 }
 
 .spell-recipe__steps .step-row__body,
