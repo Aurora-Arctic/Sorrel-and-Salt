@@ -23,10 +23,7 @@ const nextConfig: NextConfig = {
   // (claude-docs/db/compendium-cache.md, "In tests").
   ...(process.env.NEXT_DATA_CACHE === 'off' && { cacheMaxMemorySize: 0 }),
   experimental: {
-    // Server Fast Refresh re-runs an edited module and its importers but not
-    // the GraphQL builder they register on, so an edited GraphQL module adds
-    // its fields twice and every request fails until a restart. Off, `next dev`
-    // reloads the server's modules from disk after an edit instead
+    // Off, as Server Fast Refresh would re-run an edited GraphQL module and add its fields to the builder twice, failing every request until a restart
     // (claude-docs/debugging.md).
     turbopackServerFastRefresh: false,
     // Off, so a restart of `next dev` compiles from the files on disk: the

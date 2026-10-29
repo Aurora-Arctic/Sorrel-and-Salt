@@ -21,15 +21,9 @@ import type {
   SeedSubstitute,
 } from '../types';
 
-// The compendium seed's guard: every rule the entry files under
-// `compendium/` are written to that a function can check, run by a
-// database-free test and again by `seedCompendium` before its transaction
-// opens, so a file that breaks one never reaches staging or production. The
-// entries' own rules (`checkCompendium`) take a list of shards, a name and
-// its entries, because they were first written for the TypeScript lists the
-// markdown files replaced; the loader hands them the files as one shard. It returns every issue rather than
-// throwing at the first, so a lane sees its whole list at once. The rules are
-// claude-docs/db/compendium-seed/README.md's.
+// The compendium seed's guard: every rule the entry files are written to that a function can check, run by a database-free
+// test and by `seedCompendium` before its transaction opens. `checkCompendium` takes a list of shards (the loader hands it
+// the files as one) and returns every issue, not the first (claude-docs/db/compendium-seed/README.md).
 
 /**
  * The curated vocabularies an entry may name, each by the slug of a name its
@@ -60,11 +54,8 @@ export const CURATED: CuratedNames = {
 export const ENTRY_WORDS = { min: 100, max: 250 } as const;
 export const VARIANT_WORDS_MAX = 120;
 
-// A binomial (`Genus species`), a trinomial with or without its rank
-// (`subsp.`, `var.`, `f.`), a hybrid's `×`, a quoted cultivar, or the genus
-// or higher taxon alone where practice does not split it (`Usnea`), or a
-// group within a genus the candidate list names by its rank (`Rubus subg.
-// Rubus`, `Vaccinium sect. Cyanococcus`).
+// A binomial, a trinomial with or without its rank (`subsp.`, `var.`, `f.`), a hybrid's `×`, a quoted cultivar, a genus or
+// higher taxon alone (`Usnea`), or a group within a genus named by rank (`Rubus subg. Rubus`).
 const EPITHET = String.raw`(?:× )?[a-z][a-z-]*`;
 const TAXON = new RegExp(
   String.raw`^[A-Z][a-z]+(?: (?:subg\.|sect\.) [A-Z][a-z]+|(?: ${EPITHET}(?: (?:(?:subsp\.|var\.|f\.) )?[a-z][a-z-]*)?)?(?: '[^']+')?)$`,
@@ -140,10 +131,8 @@ export interface GuardOptions {
    */
   whereOf?: (shard: SeedCompendiumShard, entry: SeedCompendiumEntry) => string;
   /**
-   * Which entries the content rules are reported for: every one by default.
-   * The files' guard passes the `approved` ones: a `needs-review`
-   * file is the curator's queue and may be unfinished, while its identity, slug
-   * and path still have to be sound, so those rules run on every entry.
+   * Which entries the content rules are reported for: every one by default; the files' guard passes the `approved` ones, as a
+   * `needs-review` file may be unfinished but its identity, slug and path rules still run on every entry.
    */
   reportContent?: (entry: SeedCompendiumEntry) => boolean;
 }
@@ -424,10 +413,8 @@ function checkCitations<Field extends string>(
 export const RELEASE_BRANCHES: readonly string[] = ['staging', 'main'];
 
 /**
- * The branch a CI run is for: on a pull request, the branch it merges into
- * (`GITHUB_BASE_REF`); on a push, the branch pushed (`GITHUB_REF`,
- * `refs/heads/<name>`). Nothing outside Actions, so a local run is on no
- * release branch and a `draft` passes.
+ * The branch a CI run is for: a pull request's base (`GITHUB_BASE_REF`) or a push's ref (`GITHUB_REF`). Nothing outside
+ * Actions, so a local run is on no release branch and a `draft` passes.
  */
 export function releaseBranch(
   env: Record<string, string | undefined> = process.env,
@@ -445,10 +432,8 @@ export interface FilesGuardOptions extends Pick<GuardOptions, 'works' | 'curated
 }
 
 /**
- * Every issue the files raise: the loader's, then each file's own rules —
- * path, sections, `seedUpdate`, `nameBasis`, the legacy list, the status gate
- * — then `checkCompendium` over the one shard, its content rules reported
- * for `approved` files only. Empty means the folder is sound on `branch`.
+ * Every issue the files raise: the loader's, then each file's own rules (path, sections, `seedUpdate`, `nameBasis`, legacy
+ * list, status gate), then `checkCompendium` over the one shard for `approved` files only. Empty means sound on `branch`.
  */
 export function checkCompendiumFiles(
   loaded: LoadedCompendium,
@@ -525,11 +510,9 @@ function citationsOf(file: SeedCompendiumFile): SeedCitation<string>[] {
 }
 
 /**
- * The formal-name rule, per citation (CLAUDE.md, "What the compendium says,
- * it sources"): on an entry with a formal name every citation says how the
- * source's name was matched to it, `resolved` names its heading and an
- * authority other than itself, doubt keeps the file out of `approved`, and
- * `unaudited` is accepted only on the files the legacy list names.
+ * The formal-name rule, per citation (CLAUDE.md, "What the compendium says, it sources"): each says how the source's name was
+ * matched; `resolved` names its heading and an authority other than itself, doubt keeps the file out of `approved`, and
+ * `unaudited` is accepted only on the legacy list.
  */
 function checkNameBases(
   file: SeedCompendiumFile,
@@ -586,12 +569,8 @@ function checkNameBases(
 }
 
 /**
- * The ratchet on the legacy list: `unaudited.txt` may only shrink.
- * `baseline` is the list as last committed beside the test that holds it, so
- * a path the list gains is refused, and a path it has dropped asks for the
- * baseline to drop it too, or the path could come back unnoticed. The guard
- * already keeps the list equal to the files carrying the flag, so this is
- * what stops a new file joining both.
+ * The ratchet on the legacy list: `unaudited.txt` may only shrink. `baseline` is the list as last committed, so a path the
+ * list gains is refused, and a dropped path asks for the baseline to drop it, or it could come back unnoticed.
  */
 export function unauditedGrowth(listed: readonly string[], baseline: readonly string[]): string[] {
   const was = new Set(baseline);

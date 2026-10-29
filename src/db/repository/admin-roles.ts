@@ -8,12 +8,8 @@ import { selectFrom, selectOne } from './select';
 import type { AuditWriter, SiteInvitationRow, WriterContext } from './types';
 
 /**
- * The open pause on admin role changes, or `undefined` while none holds:
- * what the grant and revoke read before acting. Under the
- * `SiteAdmin` proof, since only an admin's act asks, or under a site-tier
- * invitation, which is an admin's act its invitee completes: the accept
- * reads it as the grant does, from a session that holds no proof. The
- * one-open index allows one at most.
+ * The open pause on admin role changes, or `undefined` while none holds: what the grant and revoke read before acting. Under the
+ * `SiteAdmin` proof, or a site-tier invitation's accept, which reads it from a session holding no proof. The one-open index allows one at most.
  */
 export function findOpenAdminRoleChangePause(
   _asker: SiteAdmin | SiteInvitationRow,
@@ -25,10 +21,8 @@ export function findOpenAdminRoleChangePause(
 }
 
 /**
- * The admin role's writer methods, beside the pause's finder rather than in
- * `write.ts`: the pause ledger's two named writes, the only writes its
- * `namedWrites` table takes, and the lock a revoke counts under.
- * `writerFor` spreads them into the writer.
+ * The admin role's writer methods, beside the pause's finder and not in `write.ts`: the pause ledger's two named writes and the lock a
+ * revoke counts under. `writerFor` spreads them into the writer.
  */
 export function adminRoleWrites({
   tx,

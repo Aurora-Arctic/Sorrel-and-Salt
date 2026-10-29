@@ -6,11 +6,8 @@ import type { SeedDatabase } from './types';
 // the client exemption set stays at six, taking the handle it is given.
 
 /**
- * Drops `public` (tables, enums, `set_updated_at()`, pg_trgm — migration 0000
- * puts the extension back, so a drop is always followed by migrate) and
- * `drizzle` (the migration journal — left in place, `db:migrate` would treat
- * every migration as applied and do nothing). `IF EXISTS` on both, so an
- * interrupted reset is a no-op rather than an error.
+ * Drops `public` (tables, enums, `set_updated_at()`, pg_trgm; migration 0000 restores the extension, so migrate follows) and `drizzle` (the journal, which
+ * left in place would mark every migration applied). `IF EXISTS` on both, so an interrupted reset is a no-op.
  */
 export async function dropSchema(db: SeedDatabase): Promise<void> {
   // One transaction: DDL is transactional, so a half-failed drop leaves the

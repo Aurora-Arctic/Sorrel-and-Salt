@@ -1,12 +1,8 @@
 import { posix, relative, sep } from 'node:path';
 import { rules as sweepRules } from './source-sweeps.js';
 
-// The architecture rules lint can carry, as oxlint JS-plugin rules loaded by
-// `.oxlintrc.json`'s `jsPlugins` (claude-docs/testing/layer-ownership.md,
-// "What a test may assert", rule 8). Each was a Vitest guard scanning the tree
-// on every run; a rule here fails the diff that breaks it in the editor and in
-// `npm run lint`, and costs the test run nothing. Each was proved once by a
-// probe file `npm run lint` rejected.
+// The architecture rules lint can carry, as oxlint JS-plugin rules loaded by `.oxlintrc.json`'s `jsPlugins`, so a breaking diff fails in the editor and in `npm run lint`
+// and costs the test run nothing (claude-docs/testing/layer-ownership.md, "What a test may assert", rule 8).
 
 /** The file being linted, repo-relative with forward slashes. */
 const fileOf = (context) => relative(context.cwd, context.filename).split(sep).join('/');

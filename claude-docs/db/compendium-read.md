@@ -455,143 +455,211 @@ of the proof's workspace, never another, so it is on
   name), 2 for the rest. The rank is part of the key, so the cursor and
   the count stay consistent.
 
-## Ingredient finders in full
+### Facet counts
 
-`src/db/repository/ingredients.ts` comments each finder in one to three lines.
-What does not fit is here.
+How many entries each filter value would list under the rest of the filter. The
+public list takes no proof. A value's count is what `findCompendiumCount` reads
+with that value as its kind's only choice, except that a category under `all` is
+counted with the chosen ones beside it.
 
-- **Child tables read under the parent's tier.** Ingredient child tables
-  (`ingredient_folk_names`, `ingredient_categories`, `ingredient_variants` and
-  the rest) carry no `workspace_id`. `findManyOfIngredients` reads the rows the
-  ingredient itself owns (`ownedByIngredient`), and `findManyOfVariants` the
-  rows one form owns (`readableVariantParent`), each through a correlated
-  `EXISTS` over the parent that is live and in the compendium or a coven one of
-  `memberships` proves. No proofs reads the compendium alone. A caller naming
-  another coven's id gets no rows, rather than a filter applied after the fetch
-  (rule 7). With `heldBy`, a retired compendium entry that coven's cupboard
-  names is read too (`inUseIngredientParent`, `inUseVariantParent`).
-- **`findReadableVariant(s)`** return the live variant while its ingredient is
-  live and in a readable tier, so another coven's form is no form at all. With
-  `heldBy`, also a live form of a retired compendium entry whose cupboard row in
-  that coven is live, so the coven may start a new jar of an entry it still
-  holds. `findReadableVariants` takes many ids; an id that is not a readable
-  form is absent, so the caller compares lengths.
-- **`findDeitiesOfIngredients`** returns each live deity link beside the curated
-  deity it names while that deity is live under a live tradition, and null for a
-  typed name or a deity since retired, which reads as the name the row holds.
-  It is not an escape hatch: the retired deity is filtered like any other.
-  Unordered; the caller sorts by `position`.
-- **`findSubstitutesIncludingSoftDeleted`** is the substitute escape hatch (see
-  "Soft-delete filtering"). It skips the linked ingredient's filter and no
-  other. The substitute's own tombstone filters; its parent (the ingredient, or
-  the variant and its ingredient) must be live and readable; and the link must
-  point where the parent's readers may look, the compendium or the parent's
-  own coven, so a row written past the service's tier rule shows nothing. One
-  statement for the batch: the linked ingredient is a left join under an alias,
-  since the parent's correlated subquery reads `ingredients` itself.
-- **`findSimilarIngredients`** builds its three matches (display name, formal
-  name, a live folk name) as a `UNION ALL` under `id IN (...)`, not an `OR`
-  beside the scope: Postgres cannot turn a subquery inside an `OR` into a join,
-  so that form walks `ingredients` whole, and a `UNION`'s de-duplication walks
-  `ingredients_pkey` whole (see `fuzzy-matching.md`).
-- **`workspaceListScopeIncludingSoftDeleted`** holds a coven's own live entries
-  and the compendium entries a live cupboard row of its names, one keyed `EXISTS`
-  on the row's `(workspace_id, ingredient_id)` unique. The second arm admits a
-  compendium entry a curator has retired: the coven still holds it, so it stays
-  listed until the coven removes it (`workspace-compendium-entries.md`, "When
-  the compendium retires the entry"). The scope carries the tombstone filters
-  itself, the own entry's here and the cupboard row's in `existsIn`, so its
-  readers page it without one, and `inCompendium` keeps a coven's own deleted
-  entry off the second arm. A jar does not decide it, and an own entry sharing a
-  compendium entry's name leaves both listed. The page and the facets both read
-  it, so they hold the same rows. The coven-only `source`, `inStock` and
-  `lowStockOnly` settings are read here, not in `compendiumList`, which the
-  compendium's page and count share and where a coven's jars mean nothing.
-- **`holdsJarInStock` and `holdsJarLowOrOut`** use a plain live-variant `EXISTS`
-  rather than `readableVariantParent`'s tier check, since the row is already the
-  readable ingredient. A jar with no quantity is held unweighed: `inStock` is an
-  `OR` with null, because `<> 0` alone reads null as unknown and would drop it,
-  and `lowStockOnly` never matches it. The same rule as `stockState` in
-  `src/components/StockBadge/stock-state.ts`; `tests/support/jar-states.ts` is
-  the list both are tested against.
-- **`findIngredientSuggestions`** (the substitute picker) has two groups.
-  `yours` is the coven's cupboard: its own live entries and each compendium
-  entry it holds a live cupboard row for, found by the label it gave the entry
-  as well as the compendium's name. `compendium` is every other live compendium
-  entry, through a keyed `NOT EXISTS` on that row. An entry is in one group, an
-  own entry and a compendium entry sharing a name are both offered, and a retired
-  compendium entry is in neither. Each group is matched and ordered as the
-  compendium search is and cut at `SUGGESTION_GROUP_LIMIT` (8, an estimate tuned
-  in the e2e test); the result lists `yours` first and pages by cursor, each
-  row carrying its `group`. A blank `query` lists both by name. `categoryIds`
-  keeps entries carrying any of them, on the entry or one of its variants.
-- **`findCompendiumReview`** reads the review time as epoch milliseconds: a
-  column inside an aggregate loses Drizzle's date mapping, and a `Date` holds
-  no finer than that anyway.
-- **`compendiumList`** builds the arms and the key with the search's join in one
-  place, so the count reads the rows the pages hold in the order they hold them.
-  A search keys `[-rank, position, name]`: the rank is `searchMatch`'s weighted
-  score, negated so one ascending row comparison bounds it, and the position is
-  where its best field holds the query, so Wood Ash leads Sandalwood for `wood`.
-  A browse keys `[name]`.
-- **`listColumns`** reads `coalesce(cupboard row's, entry's)` under a coven's
-  proof, so an override sorts, filters and counts where the coven put it, and an
-  empty list it cleared matches nothing (`coalesce` takes `[]` as a value, as
+What each kind lists and in what order:
+
+- Zodiac signs and celestial bodies list every live curated row, by position
+  (nulls last) then name.
+- Elements and toxic list every setting, zeros included, in the vocabulary's own
+  order.
+- Forms, deities and categories list the values some entry carries plus every
+  chosen one (at zero if none carries it), alphabetically in natural-language
+  order and never by count. A category sorts by group then name, a deity by
+  tradition then name.
+- A form is spelled as the live curated form that folds the same, otherwise as
+  its counted variants most often spell it, ties alphabetically.
+
+`withoutReferences` counts entries that cite no live reference, on themselves or
+a live form, under the rest of the filter, with the filter's own
+`withoutReferences` forced on so the number is the same whether the switch is on
+or off. `withoutForms` is the same for the No Form switch. Both come from one
+read. `withReview` is a curator's alone: false sends no statement for the
+Reviewed counts and answers `reviewed: null`.
+
+### Vocabulary finders
+
+"Curated" means a live row under a live group or tradition, for the form page
+(`findIngredientFormValues`) and for the autofill suggestions alike. The
+autofill itself is in claude-docs/db/member-autofill.md.
+
+Two facts sit beside them. The deity filter matches a name by an `EXISTS` over the
+deity's live other names, so a folk name finds the deity. A curated form's rename
+is refused when it would leave a compendium entry with two live forms of one name:
+the check counts entries with a variant that picked the form and another variant
+whose form already folds to the new name, before the write and again after the
+unique index refuses one.
+
+### Tier-scoped reads
+
+Ingredient child tables (`ingredient_folk_names`, `ingredient_categories`,
+`ingredient_variants` and the rest) carry no `workspace_id`, so they are read
+under the parent's tier.
+
+- `findManyOfIngredients` reads what the ingredient owns, and
+  `findManyOfVariants` what one form owns, each through a correlated `EXISTS`
+  over a live parent in the compendium or in a coven one of `memberships` proves.
+  No proofs reads the compendium alone. A caller naming another coven's id gets
+  no rows, rather than a filter applied after the fetch (rule 7).
+- `heldBy` widens that by one case: a retired compendium entry whose cupboard row
+  in that coven is live is read too, and so is a live form of it, so the coven can
+  start a new jar of an entry it still holds. Without it only the live tiers are
+  read.
+- `findReadableVariant` and `findReadableVariants` return a live variant while its
+  ingredient is live and in a readable tier, so another coven's form is no form
+  at all. The plural takes many ids and omits any that is not readable, so the
+  caller compares lengths.
+- `findDeitiesOfIngredients` pairs each live deity link with the curated deity it
+  names while that deity is live under a live tradition. A typed name, or a deity
+  since retired, reads as the name the row holds with a null deity, and the
+  retired deity is filtered like any other. It is unordered; a caller sorts by
+  `position`.
+- `findSubstitutesIncludingSoftDeleted` is the substitute escape hatch (see
+  "Soft-delete filtering"). It skips the linked ingredient's filter and no other.
+  The substitute's own tombstone filters, its parent must be live and readable,
+  and the link must point where the parent's readers may look, the compendium or
+  the parent's own coven, so a row written past the service's tier rule shows
+  nothing. The linked ingredient is a left join under an alias, since the
+  parent's correlated subquery reads `ingredients` itself.
+
+### The coven list scope
+
+`workspaceListScopeIncludingSoftDeleted` is what a coven's ingredient list reads:
+the coven's own live entries plus the compendium entries a live cupboard row of
+the coven names, as one keyed `EXISTS` on the row's `(workspace_id, ingredient_id)`
+unique. The second arm admits a compendium entry a curator has retired, so it
+stays listed until the coven removes it (claude-docs/db/workspace-compendium-entries.md,
+"When the compendium retires the entry").
+
+- The scope carries the tombstone filters itself, the own entry's here and the
+  cupboard row's in `existsIn`, so its readers page it without one, and
+  `inCompendium` keeps a coven's own deleted entry off the second arm.
+- A jar does not decide membership, and an own entry sharing a compendium
+  entry's name leaves both listed.
+- The page and the facets read the same scope, so they hold the same rows.
+- The coven-only `source`, `inStock` and `lowStockOnly` settings are read here, not in
+  `compendiumList`, which the compendium's page and count share and where a
+  coven's jars mean nothing.
+- `holdsJarInStock` and `holdsJarLowOrOut` use a plain live-variant `EXISTS`, as the
+  row is already the readable ingredient. A jar with no quantity is held
+  unweighed: `inStock` is an `OR` with null, because `<> 0` alone reads null as
+  unknown and would drop it, and `lowStockOnly` never matches it. The rule is
+  `stockState`'s in `src/components/StockBadge/stock-state.ts`, and
+  `tests/support/jar-states.ts` is the list both are tested against.
+- `listColumns` reads `coalesce(cupboard row's, entry's)` under a coven's proof, so
+  an override sorts, filters and counts where the coven put it, and an empty list
+  it cleared matches nothing (`coalesce` takes `[]` as a value, as
   `applyCupboardEntry`'s `??` does). The join matches the proof's live row for a
   live compendium entry, so a coven's own entry reads its own columns. Without a
-  proof each is the entry's column. Raw SQL, since `coalesce` has no builder.
-- **`SEARCH_WEIGHTS`** gives every field its own weight because a boost on the
-  label alone would leave a formal name, a folk name, a form and a description
-  tied, a word in a variant's prose ranking with the entry's own formal name.
-- **`searchMatch`** matches when the query is word-similar (`<%`) to the label,
-  the formal name, a live folk name, or the form or description of a live
-  variant, each side folded through `unaccent_immutable` so the expression
-  indexes of migration 0027 and `ingredient_variants_unaccent_trgm` answer it;
-  the threshold is the keyset read's (`wordMatch`). The five fields are five
-  arms of `weightedSearch`'s `UNION ALL`, so each arm's `where` is that field's
-  own indexed match and the position an arm reports belongs to the field it
-  scored. An arm scores its field's `word_similarity` (which the index's recheck
-  has just computed), or 1 where the field holds the query verbatim, times the
-  field's weight, and reports the character the query starts at. The rank is
-  the best of an entry's arms (`max ... group by id`), so an entry two of whose
-  forms match is still one row, with the best arm's position. A field only
-  scores where it matched itself, so a weak hit in a heavier field never
-  outranks the field that matched. Plain columns, so the order and the page
-  bound read them per matched row rather than a correlated folk-name subquery
-  per compendium row. Blank means no search.
-- **`citesNowhere`** is the admin's to-do list: an entry whose only source is on
-  its oil is sourced (the union rule), so it is not on the list. **`hasNoForm`**
-  lists entries nobody can stock or put in a spell yet; a soft-deleted variant
-  is none, through `existsIn`.
-- **`categoryArms`** under `all` is one correlated `EXISTS` per id, so an entry
-  must carry every one; under `any` a single `EXISTS` over the list, which also
+  proof each is the entry's column. It is raw SQL because `coalesce` has no
+  builder.
+- `heldInAnyOf` and `heldInNoneOf` (In My Covens, Not In) go through `existsIn`,
+  which ANDs the cupboard row's tombstone filter, so a removed row does not hold
+  the entry. A coven's own entries never match, as the compendium lists none.
+
+### Ingredient suggestions
+
+`findIngredientSuggestions`, the substitute picker, has two groups. `yours` is the
+coven's cupboard: its own live entries and each compendium entry it holds a live
+cupboard row for, found by the label it gave the entry as well as the
+compendium's name. `compendium` is every other live compendium entry, through a
+keyed `NOT EXISTS` on that row. An entry is in one group, an own entry and a
+compendium entry sharing a name are both offered, and a retired compendium entry
+is in neither.
+
+Each group is matched and ordered as the compendium search is and cut at
+`SUGGESTION_GROUP_LIMIT` (8, an estimate tuned in the e2e test). The result lists
+`yours` first, pages by cursor, and carries each row's `group`. A blank `query`
+lists both by name. `categoryIds` keeps entries carrying any of them, on the entry
+or one of its variants.
+
+`findSimilarIngredients` builds its three matches (display name, formal name, a
+live folk name) as a `UNION ALL` under `id IN (...)`, not an `OR` beside the scope:
+Postgres cannot turn a subquery inside an `OR` into a join, so that form walks
+`ingredients` whole, and a `UNION`'s de-duplication walks `ingredients_pkey` whole
+(claude-docs/db/fuzzy-matching.md).
+
+### Search ranking
+
+One ranking serves the compendium, a coven's ingredients and the grimoire.
+
+- `weightedSearch` is a best-match search over several text fields, returned as a
+  relation to join onto the listed table, with each row's rank and where its best
+  field holds the query. It is one `UNION ALL` arm per field, so each arm's
+  `where` is that field's own `<%` match, which an index can answer, and the
+  position an arm reports belongs to the field it scored. An arm scores its
+  field's `word_similarity` (which the index recheck has just computed), or 1
+  where the field holds the query verbatim, times the field's weight. The rank
+  is the best of a row's arms (`max … group by id`), so a row two of whose fields
+  match is still one row, with the best arm's position, earliest first among
+  equal arms. The threshold is the keyset read's, so the order using it must say
+  `wordMatch`. `query` is trimmed and never blank.
+- `foldedWordMatch(query)` supplies the pieces. `matches` is word similarity
+  (`<%`) and `similarity` its score, each side folded through
+  `unaccent_immutable` so the expression indexes of migration 0027 answer it.
+  `contains` holds where the text holds the query verbatim, folded the same way
+  and lower-cased, because `<%` ignores case and `word_similarity` scores against
+  whole words: a caller ranks a fragment inside a longer word (`wood` in
+  Sandalwood) as a full hit with it. `position` is the character where that
+  verbatim match starts, or `NOWHERE`, and orders hits of equal score so Wood Ash
+  leads Sandalwood. It uses `strpos` rather than `ilike` because `strpos` reads
+  the query as plain text, where a pattern would need `%`, `_` and `` escaped.
+- `SEARCH_WEIGHTS` gives every field its own weight. A boost on the label alone
+  would leave a formal name, a folk name, a form and a description tied, so a
+  word in a variant's prose would rank with the entry's own formal name.
+- `searchMatch` matches the label, the formal name, a live folk name, and the form
+  or description of a live variant, as five arms of `weightedSearch`; the indexes
+  `ingredient_variants_unaccent_trgm` and 0027's expression indexes answer them.
+  A field only scores where it matched itself, so a weak hit in a heavier field
+  never outranks the field that matched. The arms are plain columns, so the order
+  and the page bound read them per matched row, not a correlated folk-name
+  subquery per compendium row. A blank query means no search.
+- `compendiumList` builds the arms and the key with the search's join in one
+  place, so the count reads the rows the pages hold in the order they hold them.
+  A search keys `[-rank, position, name]`, the rank negated so one ascending row
+  comparison bounds it; a browse keys `[name]`.
+
+### Filter arms
+
+Each filter kind is a predicate built once and shared by the page, the count and
+the facets, so they cannot disagree.
+
+- `categoryArms` under `all` is one correlated `EXISTS` per id, so an entry must
+  carry every one. Under `any` it is a single `EXISTS` over the list, which also
   keeps an entry holding two of them from being found twice. The category may be
-  filed on the entry or on a live form: a variant's pair names the ingredient
+  filed on the entry or on a live form. A variant's pair names the ingredient
   too, so the union comes free, but the table is hard-deleted and its pairs
   outlive a soft-deleted variant, so the variant's liveness is read here (and by
   `pairIsLive`, which takes the pair's column so an aliased read can ask too).
-  The category itself must be live too, through `pointsLive`.
-- **`stated`** drops blank values from a list filter, so `['', 'Mars']` filters
-  by Mars and `[' ']` by nothing; the fold stays in SQL, beside the column's own.
-  **`listArm`** is one `IN` per value, ORed, rather than an array overlap (`&&`):
-  the list's side has to be folded entry by entry, which `listFolds` does, and an
+  The category itself must be live, through `pointsLive`.
+- `stated` drops blank values from a list filter, so `['', 'Mars']` filters by Mars
+  and `[' ']` by nothing; the fold stays in SQL, beside the column's own.
+  `listArm` is one `IN` per value, ORed, not an array overlap (`&&`), because the
+  list's side has to be folded entry by entry, which `listFolds` does, and an
   overlap would compare raw spellings.
-- **`elementArm`** is an array overlap on the entry's own list and a correlated
+- `elementArm` is an array overlap on the entry's own list and a correlated
   `EXISTS` on a live variant's, so an entry is one row however many of its forms
   hold an element and a retired form's counts for nothing. Elements are a closed
-  set, so there is nothing to fold. **`formArm`** and **`deityArm`** are
-  correlated `EXISTS` for the same one-row reason; the deity arm is answered by
-  `ingredient_deities_deity_id_idx` and `pickedFormArm` by
-  `ingredient_variants_form_id_idx`.
-- **`pointsLive`**: the curated row a link names is live, and so is its group,
-  which is what the facets' join reads, so a value the facets count at nothing
-  lists nothing. A curator cannot delete a row a compendium entry links, but a
-  coven's own entry keeps its link through the delete.
-- **`toxicArm`**: toxic when the entry's own flag is on or a live variant's is;
-  not toxic is the negation of the same predicate, so the two settings always
-  split the list between them.
-- **`reviewArm`** reads `curator_reviewed_at`, which a CHECK keeps set exactly
-  when `curator_reviewed_by` is.
-- **`heldInAnyOf` and `heldInNoneOf`** (In My Covens, Not In): `existsIn` ANDs
-  the cupboard row's tombstone filter, so a removed row does not hold the entry;
-  a coven's own entries never match, as the compendium lists none.
+  set, so nothing is folded. `formArm` and `deityArm` are correlated `EXISTS` for
+  the same one-row reason, answered by `ingredient_variants_form_id_idx` and
+  `ingredient_deities_deity_id_idx`.
+- `pointsLive` requires the curated row a link names to be live and its group
+  live too, which is what the facets' join reads, so a value the facets count at
+  nothing lists nothing. A curator cannot delete a row a compendium entry links,
+  but a coven's own entry keeps its link through the delete.
+- `toxicArm` is toxic when the entry's own flag is on or a live variant's is. Not
+  toxic is the negation of the same predicate, so the two settings always split
+  the list between them.
+- `reviewArm` reads `curator_reviewed_at`, which a CHECK keeps set exactly when
+  `curator_reviewed_by` is. `findCompendiumReview` returns that time as epoch
+  milliseconds, as a column inside an aggregate loses Drizzle's date mapping and
+  a `Date` holds no finer anyway.
+- `citesNowhere` is the admin's to-do list: an entry whose only source is on its
+  oil is sourced (the union rule), so it is not on the list. `hasNoForm` lists
+  entries nobody can stock or put in a spell yet; a soft-deleted variant is none,
+  through `existsIn`.

@@ -37,10 +37,8 @@ export function verifiedLanding(next: string | undefined): string {
 }
 
 /**
- * Where a verification link's `callbackURL` says the account was going. A
- * sign-up's is the sign-in's own destination; one on the email page — a
- * resend's landing, or a sign-in headed there — carries it as the page's
- * `next`, and the page itself is never the destination.
+ * Where a verification link's `callbackURL` says the account was going: a sign-up's is the sign-in's destination; one on the email page carries it as
+ * the page's `next`, and the page itself is never the destination.
  */
 export function returnPathOf(callbackURL: string | null): string | undefined {
   if (callbackURL === null) return undefined;

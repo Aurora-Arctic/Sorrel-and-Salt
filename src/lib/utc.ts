@@ -1,8 +1,6 @@
 /**
- * An instant as a person reads it, in UTC: `28 August 2026, 00:00 UTC`. How a
- * refusal names the instant a compendium redirect closes, whichever
- * module refuses: `expires_at` is midnight UTC, so the server's zone must not
- * move it.
+ * An instant as a person reads it, in UTC (`28 August 2026, 00:00 UTC`): how a refusal names when a compendium redirect closes. `expires_at` is midnight UTC,
+ * so the server's zone must not move it.
  */
 export function inUtc(at: Date): string {
   const day = at.toLocaleDateString('en-GB', {

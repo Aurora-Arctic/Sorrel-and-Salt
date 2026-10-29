@@ -12,11 +12,8 @@ export interface ConnectionArgs {
 }
 
 /**
- * A position in a list: each part of the row's sort key, as Postgres prints
- * it, and its id as the tie-break. Never an offset, so a row inserted or
- * deleted ahead of it cannot shift the page under a reader. The parts are text
- * because a `timestamptz` read into a JS `Date` loses its microseconds. How
- * many parts a list's key has is the list's to check, not the codec's.
+ * A position in a list: each part of the row's sort key as Postgres prints it, and its id as the tie-break. Never an offset, so an insert ahead cannot shift
+ * the page. The parts are text as a `timestamptz` read into a `Date` loses its microseconds; a list checks its own key's length.
  */
 export interface Cursor {
   key: readonly string[];
@@ -147,10 +144,8 @@ export type GroupColorColumn = keyof GroupColors;
 export type AreaSpace = 'hsb' | 'hsl';
 
 /**
- * The five kinds of source `references.kind` holds, spelled here
- * because a lib file imports no module; a row's `ReferenceKind` must stay
- * assignable to it, so a sixth kind fails the type check at the renderer's
- * callers.
+ * The five kinds of source `references.kind` holds, spelled here as a lib file imports no module; a row's `ReferenceKind` must stay assignable to it, so a
+ * sixth kind fails the type check at the renderer's callers.
  */
 export type CitationKind = 'book' | 'chapter' | 'article' | 'entry' | 'web_page';
 

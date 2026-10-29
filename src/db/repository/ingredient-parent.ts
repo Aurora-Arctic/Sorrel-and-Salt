@@ -13,12 +13,9 @@ import { existsIn, existsInIncludingSoftDeleted } from './select';
 // any table and names none.
 
 /**
- * The ingredient `childColumn` names is readable, as `readableInTiers` reads
- * one, and holds `where` too: how a child table with no `workspace_id` of its
- * own takes its parent's tier, so a caller naming another coven's ingredient
- * gets no rows rather than a filter applied after the fetch (rule 7). A
- * correlated `EXISTS`, whose builder ANDs the parent's tombstone filter; `where`
- * reads the parent as `ingredients`, so a child compares its own tier with it.
+ * The ingredient `childColumn` names is readable as `readableInTiers` reads one, and holds `where`: how a child table with no
+ * `workspace_id` takes its parent's tier, so another coven's ingredient gets no rows, not a filter after the fetch (rule 7). A correlated
+ * `EXISTS` that ANDs the parent's tombstone filter; `where` reads the parent as `ingredients`.
  */
 export function readableIngredientParent(
   memberships: readonly Membership[],
@@ -32,12 +29,8 @@ export function readableIngredientParent(
 }
 
 /**
- * The live variant `variantColumn` names belongs to a readable ingredient, as
- * `readableIngredientParent` reads one, which holds `where` too: how a row one
- * form of an ingredient owns takes the ingredient's tier. Through the
- * variant rather than the row's own `ingredient_id`, so the form's tombstone
- * hides its rows as the ingredient's hides the ingredient's; the composite
- * key holds the two ids to one ingredient either way.
+ * The live variant `variantColumn` names belongs to a readable ingredient (which holds `where`): how a row one form owns takes the
+ * ingredient's tier. Through the variant, not the row's `ingredient_id`, so the form's tombstone hides its rows.
  */
 export function readableVariantParent(
   memberships: readonly Membership[],
@@ -56,7 +49,7 @@ export function readableVariantParent(
 /**
  * `readableIngredientParent`, or a compendium entry the curators have retired while
  * `heldBy`'s coven has a live cupboard entry naming it. One `EXISTS` over the parent,
- * so it skips `existsIn`'s tombstone filter and restores it on the first arm. (claude-docs/db/write-path.md, "Repository comments in full")
+ * so it skips `existsIn`'s tombstone filter and restores it on the first arm. (claude-docs/db/write-path.md, "Reads that take no proof")
  */
 export function inUseIngredientParent(
   memberships: readonly Membership[],
@@ -88,10 +81,8 @@ export function inUseIngredientParent(
 }
 
 /**
- * `readableVariantParent`, or a live form of a retired compendium entry
- * `heldBy`'s cupboard names, as `inUseIngredientParent` admits one: the
- * entry's forms and jars stay readable to the covens that use it. The form's
- * own tombstone still filters. No `heldBy` is `readableVariantParent`'s read.
+ * `readableVariantParent`, or a live form of a retired compendium entry `heldBy`'s cupboard names, as `inUseIngredientParent`
+ * admits one, so its forms and jars stay readable to the covens using it. No `heldBy` is `readableVariantParent`'s read.
  */
 export function inUseVariantParent(
   memberships: readonly Membership[],

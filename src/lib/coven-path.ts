@@ -6,10 +6,8 @@ import type { NavigationTarget } from './navigation';
 const COVEN = 'coven';
 
 /**
- * The segment the create-workspace page sits at. Beneath `/coven/`
- * like the workspaces, so a static segment beside `[slug]`; the slug rule
- * below keeps it from ever being a workspace's, or a coven named "New" could
- * never be reached.
+ * The segment the create-workspace page sits at: a static segment beside `[slug]`, which the slug rule keeps from ever being a
+ * workspace's, or a coven named "New" could never be reached.
  */
 const NEW = 'new';
 
@@ -42,11 +40,8 @@ export const NEW_COVEN_INGREDIENT_PREFIX = 'ingredient-coven-';
 export const NEW_SPELL_PREFIX = 'spell-';
 
 /**
- * The values of `?new` that are a word alone, reserved as slugs. Each value naming a coven
- * starts with a fixed prefix and ends with the whole slug, so the prefixes need no
- * reservation: `spell-` or `ingredient-coven-` followed by any slug reads one way. The two
- * words stay reserved so that no coven's address reads as a dialog's word
- * (claude-docs/design-decisions/m10.12-spell-builder-modal.md).
+ * The `?new` values that are a word alone, reserved as slugs. The others start with a fixed prefix (`spell-`,
+ * `ingredient-coven-`) and end with the whole slug, so need no reservation (claude-docs/design-decisions/m10.12-spell-builder-modal.md).
  */
 const DIALOG_VALUES = new Set([NEW_SPELL, NEW_INGREDIENT]);
 
@@ -85,7 +80,7 @@ export interface PathInCovenOptions {
 /**
  * Where the same page is in another workspace: a section's index, or a page beneath
  * it only when the page said it opens there. A people page the viewer's role cannot
- * open steps back to the members page or the index. (claude-docs/modules.md, "Library comments in full")
+ * open steps back to the members page or the index. (claude-docs/modules.md, "Moving a page to another coven")
  */
 export function pathInCoven(
   pathname: string,
@@ -103,13 +98,9 @@ export function pathInCoven(
 }
 
 /**
- * What each section's page draws while it is on its way: the page
- * that arrives, its heading and then what it holds. Ingredients is its cards
- * under a filter, and the grimoire its cards under the tab row (Spells and
- * Drafts) and a filter; the people pages are a table under the tab row (Members and,
- * for an owner, Invitations; the row draws for a lone tab too). The Invite
- * action is an owner's alone and the address does not say who is asking, so
- * it is left out.
+ * What each section's page draws while it is on its way: the heading and its cards under a filter (Ingredients), the tab row
+ * and a filter (grimoire), or a table under the tab row (people; Invitations for an owner). The Invite action is left out,
+ * as it is an owner's alone and the address does not say who is asking.
  */
 const PARTS_OF_SECTION: Record<string, Omit<NavigationTarget, 'region'>> = {
   ingredients: { shape: 'cards', title: true, filter: true },
@@ -119,11 +110,8 @@ const PARTS_OF_SECTION: Record<string, Omit<NavigationTarget, 'region'>> = {
 };
 
 /**
- * What a coven page draws while it is on its way: the parts of the section the
- * address names. The coven's home is a page with its contents menu beside it,
- * and so is one ingredient's page (the address has an id beneath
- * `ingredients`: its jump menu stands beside it, not the list's cards); a
- * section not named is a plain page. One mapping for the switcher, the
+ * What a coven page draws while it is on its way, from the section the address names: the home and one ingredient's page
+ * (an id beneath `ingredients`) have a menu beside them, any other section is a plain page. One mapping for the switcher,
  * section nav, the home's Contents and the links into an ingredient.
  */
 export function covenTarget(pathname: string): NavigationTarget {

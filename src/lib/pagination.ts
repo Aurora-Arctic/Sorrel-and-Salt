@@ -64,10 +64,8 @@ export function decodeCursor(cursor: string): Cursor {
 }
 
 /**
- * A connection from a page finder: decodes the cursors, clamps the size, asks
- * `fetch` for one row more than the page, and builds the edges and page info
- * from what came back. `fetch` sees a `PageRequest` and never the client's
- * raw arguments, so no finder can skip the clamp.
+ * A connection from a page finder: decodes the cursors, clamps the size, asks `fetch` for one row more than the page, and builds
+ * the edges and page info. `fetch` sees a `PageRequest`, never the raw arguments, so no finder can skip the clamp.
  */
 export async function resolvePage<T, Edge extends object = {}>(
   args: ConnectionArgs,
@@ -105,14 +103,9 @@ export async function resolvePage<T, Edge extends object = {}>(
 }
 
 /**
- * One page of a list, `size` rows (`DEFAULT_PAGE_SIZE` unless a card list
- * passes `CARD_PAGE_SIZE`) after `after` or else
- * before `before`, and where it stands, for the pager's "Page X of Y":
- * `count` reads the list's total and the rows before the page's first row —
- * none on an empty page — the total is returned beside it, for a list that says how many it
- * found, and the position is page floor(before / size) + 1
- * of ceil(total / size), never fewer than one. Every admin list page reads
- * through it, so the arithmetic is written once.
+ * One page of a list, `size` rows (`DEFAULT_PAGE_SIZE`, or `CARD_PAGE_SIZE` for a card list) after `after` or before `before`, with its
+ * position for "Page X of Y": `count` reads the total and the rows before the page, and the page is floor(before / size) + 1 of
+ * ceil(total / size), never under one. Every admin list reads through it, so the arithmetic is written once.
  */
 export async function resolveNumberedPage<T, Edge extends object = {}>(
   { after, before }: { after?: string; before?: string },
@@ -134,10 +127,8 @@ export async function resolveNumberedPage<T, Edge extends object = {}>(
 }
 
 /**
- * Every row a page finder holds, read `MAX_PAGE_SIZE` at a time in its own
- * order: for a service that must act on all of them, as a group's delete
- * moves every row filed under it. Through the finder rather than an unpaged
- * read, so "live" means what the list means by it, and no read is unbounded.
+ * Every row a page finder holds, read `MAX_PAGE_SIZE` at a time in its own order, for a service that must act on all of them. Through
+ * the finder, not an unpaged read, so "live" means what the list means and no read is unbounded.
  */
 export async function allPages<T, Edge extends object = {}>(
   read: (request: PageRequest) => Promise<PageEntry<T, Edge>[]>,

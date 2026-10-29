@@ -18,12 +18,9 @@ import type { LinkedAccount } from './types';
 // protection").
 
 /**
- * Whether Better Auth would still call a session created at `createdAt`
- * fresh: the check its `/unlink-account` makes, restated so the account page
- * can withhold Remove rather than offer a press that is refused. The window
- * is Better Auth's own resolved `freshAge` (a day by default, pinned in
- * tests/lib/auth.test.ts), not a copy of its default; 0 turns the check off,
- * as it does there.
+ * Whether Better Auth would still call a session created at `createdAt` fresh (the `/unlink-account` check), so the account
+ * page can withhold Remove rather than offer a refused press. The window is Better Auth's resolved `freshAge` (pinned in
+ * tests/lib/auth.test.ts); 0 turns the check off, as there.
  */
 async function isFresh(createdAt: Date | string): Promise<boolean> {
   const { freshAge } = (await auth.$context).sessionConfig;
@@ -49,10 +46,8 @@ async function stateFromHeaders(requestHeaders: Headers): Promise<SessionState> 
 }
 
 /**
- * The signed-in user for these request headers, or `null`. Asks the database
- * through Better Auth, so an expired, revoked or forged cookie is `null` here
- * even though the proxy's cookie check let it through. For the proxy, which
- * has the request but no `headers()`; a page calls `getSession()`.
+ * The signed-in user for these request headers, or `null`. Asks the database through Better Auth, so an expired, revoked or
+ * forged cookie is `null` though the proxy's cookie check passed it. For the proxy, which has no `headers()`; a page calls `getSession()`.
  */
 export async function sessionFromHeaders(requestHeaders: Headers): Promise<Session | null> {
   return (await stateFromHeaders(requestHeaders)).session;
@@ -90,13 +85,9 @@ async function forwardedReturnPath(): Promise<string | undefined> {
 }
 
 /**
- * The signed-in user, or a redirect to `/sign-in` carrying the page's own path
- * back as `?next=`: `requireSession()` without its email check. For the shell
- * layout and what it draws, never a page. The shell is drawn round the email
- * page too, and a layout that throws the email redirect while the browser is
- * navigating into it leaves the router refetching that page without end
- * (claude-docs/auth/route-protection.md, "Where the email redirect is
- * thrown").
+ * The signed-in user or a redirect to `/sign-in` carrying the page's path as `?next=`: `requireSession()` without its email
+ * check, for the shell layout only. The shell is drawn round the email page, and a layout throwing the email redirect there
+ * loops the router (claude-docs/auth/route-protection.md, "Where the email redirect is thrown").
  */
 export async function requireSignedIn(): Promise<Session> {
   const { session } = await getSessionState();
@@ -105,12 +96,9 @@ export async function requireSignedIn(): Promise<Session> {
 }
 
 /**
- * The signed-in user, or a redirect: to `/sign-in` carrying the page's own
- * path back as `?next=` when there is none, and to the email page, carrying
- * the same, while the account's address is unverified — a provisional account
- * can do nothing else, so no other page shows it anything
- * (claude-docs/auth/admin-bootstrap.md, "The email page"). The call every protected page
- * makes before it reads anything; the email page is the one it lets through.
+ * The signed-in user, or a redirect to `/sign-in` with the page's path as `?next=`, or to the email page while the address is
+ * unverified (a provisional account can do nothing else). Every protected page calls it before reading anything
+ * (claude-docs/auth/admin-bootstrap.md, "The email page").
  */
 export async function requireSession(): Promise<Session> {
   const session = await requireSignedIn();
@@ -123,11 +111,9 @@ export async function requireSession(): Promise<Session> {
 }
 
 /**
- * `requireSession()`, then the site-role check: a signed-in non-admin gets
- * Next's forbidden page, with a 403, rather than a redirect or a 404 —
- * `/admin` is a path everyone already knows (claude-docs/auth/admin-guard.md, "The admin
- * guard"). The layout under `/admin` calls it, and so does every page there,
- * because a layout does not re-run on client-side navigation.
+ * `requireSession()` then the site-role check: a signed-in non-admin gets Next's forbidden page (403), not a redirect or 404,
+ * as `/admin` is a known path (claude-docs/auth/admin-guard.md, "The admin guard"). The layout and every page call it,
+ * since a layout does not re-run on client-side navigation.
  */
 export async function requireAdminSession(): Promise<Session> {
   const session = await requireSession();
@@ -141,11 +127,8 @@ export async function requireAdminSession(): Promise<Session> {
 }
 
 /**
- * `requireSession()`, then the curation check: a curator or an admin
- * passes, and anyone else gets the forbidden page, as at
- * `requireAdminSession()`. The layout under `/admin` calls it, and so does every
- * curation page there; the people pages call `requireAdminSession()`, which a
- * curator fails (claude-docs/auth/admin-guard.md, "The curator guard").
+ * `requireSession()` then the curation check: a curator or an admin passes, anyone else gets the forbidden page. The people
+ * pages call `requireAdminSession()`, which a curator fails (claude-docs/auth/admin-guard.md, "The curator guard").
  */
 export async function requireCuratorSession(): Promise<Session> {
   const session = await requireSession();
@@ -162,12 +145,9 @@ export async function requireCuratorSession(): Promise<Session> {
 const covenOf = cache(async (slug: string) => membershipBySlug(await requireSession(), slug));
 
 /**
- * `requireSession()`, then the workspace the `/coven/[slug]` address names
- * and the proof the user is a member of it. A refusal is Next's 404,
- * not the 403 `/admin` answers: a slug is a guess at someone's private data,
- * so an unknown slug and a coven the user is not in must look the same
- * (claude-docs/auth/coven-guard.md, "The coven guard"). The layout calls it,
- * and so does every page beneath it, for the reason the admin pages do.
+ * `requireSession()`, then the workspace the `/coven/[slug]` address names and the proof the user is a member. A refusal is
+ * Next's 404, not 403: an unknown slug and a coven the user is not in must look the same (claude-docs/auth/coven-guard.md,
+ * "The coven guard"). The layout and every page beneath it call it.
  */
 export async function requireCovenMembership(slug: string): Promise<CovenMembership> {
   try {

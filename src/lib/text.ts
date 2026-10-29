@@ -14,10 +14,8 @@ export function joinAnd(items: readonly string[]): string {
 }
 
 /**
- * The refusal of a write whose slug another live row holds: `holder`
- * names that row, as the refusing service tells one apart, and `remedy` says
- * which fields make the address. One sentence for the curated vocabularies,
- * the compendium and a coven's ingredients, so the wording is one edit.
+ * The refusal of a write whose slug another live row holds: `holder` names that row and `remedy` says which fields make the address. One sentence for the
+ * vocabularies, the compendium and a coven's ingredients, so the wording is one edit.
  */
 export function addressTaken(holder: string, slug: string, remedy: string): string {
   return `${holder} already has the address "${slug}" — ${remedy}`;
@@ -47,7 +45,7 @@ export const NO_MATCH_ADVICE = `. ${NO_MATCH_HINT}`;
 /**
  * What an admin list says when it shows no rows: with a filter, a sentence
  * naming each filter in `parts`; with none, the caller's `emptyText`. `noun` is
- * the plural, so one wording serves every list. (claude-docs/modules.md, "Library comments in full")
+ * the plural, so one wording serves every list. (claude-docs/modules.md, "Empty-list text")
  */
 export function noMatchText(noun: string, parts: readonly string[], emptyText: string): string {
   return parts.length ? `${noMatchLead(noun)}${joinAnd(parts)}${NO_MATCH_ADVICE}` : emptyText;
@@ -78,13 +76,8 @@ function raised(part: string): string {
 }
 
 /**
- * `text` in title case, for display only: "dried leaf" is "Dried Leaf", "oil of
- * cloves" is "Oil of Cloves". The small words of, and, in, on, the, a, an, or,
- * for, to, with, at, by and from stay lower-case unless they come first; each
- * part of a hyphenated word is raised ("cold-pressed" is "Cold-Pressed"); a
- * word that already holds a capital past its first letter is left as written.
- * Runs of whitespace become one space, so the result is a label and never a
- * value to store: a stored form keeps what was typed, and matching folds case.
+ * `text` in title case, for display only ("oil of cloves" is "Oil of Cloves"): small words (of, and, in, on, the, a, an, or, for, to, with, at, by, from) stay
+ * lower-case unless first, hyphenated parts are each raised, and a word with a capital past its first letter is left. Whitespace collapses, so it is a label, never a value to store.
  */
 export function titleCase(text: string): string {
   return text

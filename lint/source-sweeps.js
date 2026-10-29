@@ -1,10 +1,7 @@
 import { relative, sep } from 'node:path';
 
-// Seven rules that were Vitest guards reading the source as text or as an
-// abstract syntax tree (claude-docs/testing/layer-ownership.md, "What a
-// test may assert", rule 8). Each fails the same pattern its guard failed,
-// now in the editor and in `npm run lint` instead of in a test run.
-// `lint/sorrel-lint.js` spreads them into the `sorrel` plugin.
+// Seven rules that were Vitest guards reading source as text or syntax tree (claude-docs/testing/layer-ownership.md,
+// "What a test may assert"), now in the editor and `npm run lint`. `lint/sorrel-lint.js` spreads them into the `sorrel` plugin.
 
 /** The file being linted, repo-relative with forward slashes. */
 const fileOf = (context) => relative(context.cwd, context.filename).split(sep).join('/');
@@ -50,11 +47,8 @@ function* walk(node) {
 }
 
 export const rules = {
-  // CLAUDE.md rule 8's sweep: the site navigates through
-  // `usePendingNavigation` or `PendingLink`, so the page bar and the skeletons
-  // follow every move. A bare `router.push`, `replace` or `refresh` moves the
-  // page with no signal. Next's `<Link>` is not covered. The old guard's
-  // baseline of allowed files was empty, so this has none.
+  // CLAUDE.md rule 8's sweep: the site navigates through `usePendingNavigation` or `PendingLink`, so the page bar and
+  // skeletons follow every move. A bare `router.push`, `replace` or `refresh` moves the page with no signal. `<Link>` is not covered.
   'no-bare-router-navigation': {
     create: (context) => {
       const file = fileOf(context);
@@ -84,12 +78,9 @@ export const rules = {
     },
   },
 
-  // CLAUDE.md rule 8's sweep for claude-docs/components/ingredient-form.md,
-  // "Forms are shown in title case": a form is shown through `formLabel`. It is
-  // a line check, not a type check: it sees `x.form` and a JSX `{form}`, and
-  // passes a line that does something else with the text (folds it, slugs it,
-  // keys a list by it). A form copied into a local first, or arriving as a
-  // plain string prop, is not caught; a reviewer reads those.
+  // A form is shown through `formLabel` (claude-docs/components/ingredient-form.md, "Forms are shown in title case"). A line
+  // check, not a type check: it sees `x.form` and a JSX `{form}`, passes a line that folds or keys the text, and misses
+  // a form copied to a local or passed as a string prop.
   'form-shown-through-form-label': {
     create: (context) => {
       const file = fileOf(context);
@@ -126,15 +117,9 @@ export const rules = {
     },
   },
 
-  // CLAUDE.md rule 7 and claude-docs/db/spell-visibility.md, "Reading": who may
-  // read a spell is `readableSpells` in src/db/repository/spells.ts, and
-  // nothing else in src/ compares a spell's visibility. A second comparison is
-  // a second rule: a finder that agrees today and drifts tomorrow, or a
-  // service filtering rows after fetching them. It catches the column in a
-  // query, the word inside a raw sql`` template, and a JavaScript comparison of
-  // a row's `.visibility` (the last only under src/db/ and src/modules/, where
-  // read decisions live: a component compares it to draw a badge, on a spell
-  // the service has already let the viewer read). Comments are not read.
+  // Who may read a spell is `readableSpells` in src/db/repository/spells.ts and nothing else in src/ compares a spell's
+  // visibility (claude-docs/db/spell-visibility.md, "Reading"). Catches the column in a query, the word in a raw sql``
+  // template, and a `.visibility` comparison under src/db/ and src/modules/ only (a component compares it to draw a badge).
   'spell-visibility-read-in-one-place': {
     create: (context) => {
       const file = fileOf(context);
@@ -208,12 +193,8 @@ export const rules = {
     },
   },
 
-  // Only the curator's switch,
-  // `setCompendiumEntryReviewed`, writes a compendium entry's review mark. A
-  // create, an edit or a promote leaves it as it was, so no service file names
-  // the mark's columns, and the one repository writer that sets them is called
-  // from the switch alone. The behaviour is tests/modules/ingredients/
-  // services/compendium-review.test.ts's.
+  // Only the curator's switch, `setCompendiumEntryReviewed`, writes a compendium entry's review mark: no service file
+  // names the mark's columns, and the one repository writer that sets them is called from the switch alone.
   'compendium-review-mark-switch-only': {
     create: (context) => {
       const file = fileOf(context);
@@ -252,14 +233,9 @@ export const rules = {
     },
   },
 
-  // A modal gives the focus back to what opened it however it closes
-  // (claude-docs/design-decisions/m8.17-plan.md, "Giving the focus back"),
-  // and the mechanism is Modal's own (`modal.tsx`), with RouteModal's
-  // fallbacks beside it. An owner names where the focus goes when its opener is
-  // gone through `returnTo`, and focuses nothing itself. A `.focus()` in a file
-  // that draws a dialog, or in Modal's directory, is a hand-built return unless
-  // the allowance below says otherwise. The allowance is counted by call, and a
-  // count that no longer matches is reported too, so it can only shrink.
+  // A modal gives the focus back to its opener however it closes, and the mechanism is Modal's own (`modal.tsx`)
+  // (claude-docs/design-decisions/m8.17-plan.md, "Giving the focus back"). A `.focus()` in a file that draws a dialog is a
+  // hand-built return unless the allowance below says so; it is counted by call, and a stale count is reported, so it only shrinks.
   'modal-focus-return-through-modal': {
     create: (context) => {
       const file = fileOf(context);
@@ -314,15 +290,9 @@ export const rules = {
     },
   },
 
-  // A form that holds what someone typed asks before a tab
-  // close, a reload or a link leaves it unsaved. The mechanism is
-  // `useLeaveGuard` (src/lib/navigation/leave-guard.tsx), which
-  // `useDiscardGuard` calls for every form already guarded in a modal, and
-  // the spell builder's `useSaveOnClose` calls for a form that saves on close
-  // rather than asking. A component that draws a `<form>`, renders
-  // `FormActions` or calls react-hook-form's `useForm` must call one of the
-  // three unless the list below says why not; a listed file that no longer needs its place is reported
-  // too, so the list can only shrink.
+  // A form holding typed text asks before a tab close, reload or link leaves it unsaved, through `useLeaveGuard`
+  // (src/lib/navigation/leave-guard.tsx), `useDiscardGuard` or `useSaveOnClose`. A component drawing a `<form>`, `FormActions`
+  // or `useForm` must call one unless the list below says why not; a listed file that no longer needs it is reported.
   'long-form-guards-leaving': {
     create: (context) => {
       const file = fileOf(context);
@@ -361,16 +331,9 @@ export const rules = {
     },
   },
 
-  // A spec file's tests spread across Playwright's workers, each with
-  // its own database, so a test that reads what an earlier test wrote passes
-  // only when both land on the same worker: an intermittent red, the worst
-  // kind. The one shape every chained file had was a variable declared outside
-  // the test and assigned inside it, so this fails that shape wherever the file,
-  // or the `describe` block around the test, is not serial. Assigning in a hook
-  // (`beforeAll`, `beforeEach`) stays legal: a hook runs on every worker that
-  // comes to the file. `.oxlintrc.json` turns it on for `tests/e2e/**/*.spec.ts`
-  // alone. The rule, and when serial is still the choice: claude-docs/testing/
-  // e2e.md, "E2E" (the paragraph on `fullyParallel`).
+  // A spec's tests spread across Playwright workers, each with its own database, so a test reading what an earlier one wrote
+  // is intermittently red. Fails a variable declared outside a test and assigned inside it, in a file or `describe` not serial;
+  // a hook assignment stays legal. On for `tests/e2e/**/*.spec.ts` only (claude-docs/testing/e2e.md, "E2E").
   'e2e-chained-tests-serial': {
     create: (context) => {
       const TEST_CALL = /^test(\.(only|skip|fixme|fail))?$/;

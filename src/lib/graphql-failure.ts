@@ -2,24 +2,15 @@ import type { ErrorOption } from 'react-hook-form';
 import { GraphQLClientError } from './graphql-client-error';
 import type { Failure, ValidationIssue } from './types';
 
-// One reader for a failed GraphQL request from the browser, shared by every
-// form and button that sends one. Without it each of them would unpack the
-// error itself, ten times over, and declared the fallback sentence eleven
-// times. Client-safe: nothing here touches the server.
-// claude-docs/graphql/errors.md, "Errors", describes the shape it reads.
+// One reader for a failed GraphQL request from the browser, so no form or button unpacks the error itself. Client-safe.
+// The shape it reads is in claude-docs/graphql/errors.md, "Errors".
 
 /** The one sentence for a request that got no usable answer: a network fault, a crash, a refusal with no message. */
 export const GENERIC_FAILURE = "That didn't work. Please try again.";
 
 /**
- * What a failed request leaves to say: beside one of the form's fields, or in
- * its alert region.
- *
- * `fields` names the fields the form draws its own error under. A VALIDATION
- * issue whose path starts with one of them comes back as `field`; every other
- * failure comes back as `alert`, carrying the server's own sentence where it
- * sent one and `GENERIC_FAILURE` where it did not. A form with no fields of
- * its own, a button say, passes none and always gets an `alert`.
+ * What a failed request leaves to say: beside a field, or in the alert region. A VALIDATION issue whose path starts with one of
+ * `fields` is a `field`; any other failure is an `alert`, with the server's sentence or `GENERIC_FAILURE`. No fields, always an `alert`.
  */
 export function readGraphqlFailure(error: unknown, fields: readonly string[] = []): Failure {
   if (!(error instanceof GraphQLClientError)) return { alert: GENERIC_FAILURE };
@@ -36,11 +27,8 @@ export function readGraphqlFailure(error: unknown, fields: readonly string[] = [
 }
 
 /**
- * Every issue a failed request carries, for a form that places each field
- * error at once and joins the rest into its alert, where `readGraphqlFailure`
- * answers the first field it finds. A VALIDATION refusal gives its own list;
- * anything else is one issue with no path, carrying the sentence the
- * single-field reader would have put in the alert.
+ * Every issue a failed request carries, for a form that places each field error at once and joins the rest into its alert. A
+ * VALIDATION refusal gives its own list; anything else is one issue with no path.
  */
 export function readGraphqlIssues(error: unknown): ValidationIssue[] {
   if (error instanceof GraphQLClientError) {
@@ -56,7 +44,7 @@ export function readGraphqlIssues(error: unknown): ValidationIssue[] {
 /**
  * Places every issue a failed save carries on a react-hook-form form: a field
  * `toField` names gets its own error, the rest join into one message on `root`.
- * Answers whether it set any error. (claude-docs/modules.md, "Library comments in full")
+ * Answers whether it set any error. (claude-docs/modules.md, "Placing server issues on a form")
  */
 export function placeServerIssues<Name extends string>(
   error: unknown,

@@ -20,12 +20,8 @@ export function findCompendiumEntryBySlug(slug: string): Promise<IngredientRow |
 }
 
 /**
- * The live compendium entry that moved off `slug` most recently and whose
- * redirect from it is still running at `at` — `expires_at` after it, and no
- * live entry holding `slug` now — or `undefined`. `excluding` leaves one
- * entry out on both sides, as the one that moved and as the one holding the
- * slug: a write asks about every entry but the one it is writing, and the
- * entry at an address asks who moved off it.
+ * The live compendium entry that most recently moved off `slug` and whose redirect from it still runs at `at` (`expires_at` after it,
+ * no live entry holding `slug` now), or `undefined`. `excluding` leaves one entry out on both sides, so a write asks about every entry but its own.
  */
 export async function findCompendiumSlugRedirect(
   slug: string,
@@ -66,12 +62,8 @@ export async function findCompendiumSlugRedirect(
 }
 
 /**
- * Every live compendium entry's address, by name: what the sitemap and
- * `llms.txt` list. `lastModified` is the row's `updated_at`, which
- * moves only on a real change (claude-docs/db/updated-at.md). Soft-deleted
- * entries and every coven's rows are left out here, in SQL.
- *
- * `description` lets `llms.txt` note each link; the sitemap ignores it. Still one cached, sessionless read.
+ * Every live compendium entry's address, by name, for the sitemap and `llms.txt`. `lastModified` is `updated_at`, which moves only on a real
+ * change (claude-docs/db/updated-at.md). Deleted entries and every coven's rows are left out in SQL. `description` is for `llms.txt`; one cached, sessionless read.
  */
 export async function findCompendiumSlugs(): Promise<CompendiumSlugEntry[]> {
   const rows = await selectFrom(

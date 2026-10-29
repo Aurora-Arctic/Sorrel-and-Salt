@@ -13,10 +13,8 @@ export type PageKeys = { after: string; before: string };
 export const DEFAULT_PAGE_KEYS: PageKeys = { after: 'after', before: 'before' };
 
 /**
- * One numbered page of a list, through `resolveNumberedPage`, or its first
- * page again for a cursor that names no row of it: one the codec reads but
- * this list's key will not cast, as a cursor copied from another list is.
- * Any other failure is still thrown.
+ * One numbered page of a list through `resolveNumberedPage`, or its first page again for a cursor the codec reads but this list's key will not cast (one
+ * copied from another list). Any other failure is thrown.
  */
 export async function readNumberedPage<T, Edge extends object = {}>(
   { after, before }: { after?: string; before?: string },

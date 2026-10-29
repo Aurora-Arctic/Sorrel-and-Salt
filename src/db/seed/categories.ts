@@ -6,11 +6,8 @@ import { seedTwoTierVocabulary } from './two-tier-vocabulary';
 import { TWO_TIER } from '../vocabularies';
 import type { SeedCategory, SeedDatabase, SeedRunOptions, SeedTransaction } from './types';
 
-// DESIGN.md §6's vocabulary: eight groups and every category, a starting set
-// an admin may edit. Not a scenario — migrate.yml seeds it on its own after
-// migrating, so it inserts the bootstrap user itself. No slug is written down:
-// every one is `slugify(name)`, which expands `&` to `and`
-// (claude-docs/db/category-seed.md, "The category seed").
+// The category vocabulary: eight groups and every category, a starting set an admin may edit. Inserts the bootstrap user itself. No slug is
+// written down; each is `slugify(name)` (claude-docs/db/category-seed.md, "The category seed").
 
 /** Every category §6 lists, in §6's order, grouped as §6 groups them. */
 export const CATEGORIES: SeedCategory[] = [

@@ -1,8 +1,6 @@
 /**
- * Where an autosaving form stands: nothing to save (`idle`), a
- * change waiting for its delay (`pending`), a save in flight or between its
- * retries (`saving`), the server has the latest value (`saved`), the retries
- * ran out (`failed`), or someone else saved the row first (`conflict`).
+ * Where an autosaving form stands: `idle`, a change waiting for its delay (`pending`), a save in flight or between retries (`saving`), the server
+ * has the latest (`saved`), the retries ran out (`failed`), or someone else saved the row first (`conflict`).
  */
 export type AutosaveStatus = 'idle' | 'pending' | 'saving' | 'saved' | 'failed' | 'conflict';
 

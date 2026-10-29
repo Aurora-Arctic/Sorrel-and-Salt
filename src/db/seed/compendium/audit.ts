@@ -10,14 +10,9 @@ import type {
 import type { LoadedCompendium } from './load';
 import { WORKS } from './works';
 
-// The attribution audit: a read over every entry file that ranks the
-// citations whose source may describe another taxon than the entry's formal
-// name, for the curator to settle. It never decides a citation is wrong; it
-// finds the ones worth reading first. Pure: the files, the sources and the
-// fetched Wikipedia pages come in, a report goes out, and `audit-run.ts`
-// does the reading and writing. Each heuristic is a reason to doubt, not
-// proof, so a candidate carries the evidence a person checks it against
-// (claude-docs/db/compendium-seed/README.md, "The attribution audit").
+// The attribution audit: a read over every entry file that ranks the citations whose source may describe another taxon than the
+// entry's formal name, for the curator to settle. Pure: files, sources and fetched Wikipedia pages in, a report out (`audit-run.ts`
+// does the I/O). Each heuristic is a reason to doubt, so a candidate carries its evidence (claude-docs/db/compendium-seed/README.md, "The attribution audit").
 
 const TAXONOMIC = new Set(['botanical', 'fungal', 'zoological']);
 
@@ -160,7 +155,7 @@ function nameKey(value: string): string {
 /**
  * Whether a Wikipedia page is the article on exactly the formal name given, for a
  * mineral or chemical (no taxobox). Rocks, groups and pages with no infobox do not
- * count; a variety needs its own article. Anything less stays a doubt for a person. (claude-docs/db/compendium-seed/README.md, "Seed comments in full")
+ * count; a variety needs its own article. Anything less stays a doubt for a person. (claude-docs/db/compendium-seed/README.md, "Matching a mineral or chemical page")
  */
 export function pageNamesEntry(page: string, title: string, canonicalName: string): boolean {
   const templates = templatesIn(page);
@@ -243,10 +238,8 @@ function leadOf(page: string): string {
 }
 
 /**
- * The taxa a page's hatnotes name. A disambiguation page — one carrying a
- * disambiguation template, or whose opening says it "may refer to" — is read
- * by its list lines instead, since its whole body is the hatnote. An article
- * whose references happen to say "may refer to" is not one.
+ * The taxa a page's hatnotes name. A disambiguation page (a disambiguation template, or an opening saying it "may refer to") is read by
+ * its list lines instead, as its whole body is the hatnote; an article whose references say "may refer to" is not one.
  */
 function hatnoteTaxa(page: string, genera: ReadonlySet<string>): string[] {
   const templates = templatesIn(page);
@@ -369,10 +362,8 @@ function printsBinomial(
 }
 
 /**
- * The audit over a loaded compendium. `sources` defaults to the shared works
- * and the loaded per-entry files; `wiki` holds the fetched Wikipedia pages by
- * `wikiKey(title)`. Only a citation not yet `stated` or `resolved`, on an
- * entry with a formal name, is read.
+ * The audit over a loaded compendium. `sources` defaults to the shared works and the loaded per-entry files; `wiki` holds the
+ * fetched pages by `wikiKey(title)`. Only a citation not yet `stated` or `resolved`, on an entry with a formal name, is read.
  */
 export function auditCompendium(
   loaded: Pick<LoadedCompendium, 'files' | 'sources'>,

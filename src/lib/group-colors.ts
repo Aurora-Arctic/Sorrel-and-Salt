@@ -1,13 +1,9 @@
 import { MIN_CHIP_CONTRAST, channels, chipContrast } from './contrast';
 import type { AreaSpace, GroupColorColumn } from './types';
 
-// A category group's two colours as one family: the
-// pair keeps one hue, as every seeded pair does to within a degree, and the
-// partner of a colour chosen first is derived from it rather than left to the
-// admin to match by eye. The derivation is the seeds' own rule: the hue kept,
-// the saturation scaled between the themes as the seeds scale it, 40% on the
-// dark card to 55% on the light page on average, and the lightness solved for the
-// partner's ground (claude-docs/components/group-form.md, "The pair").
+// A category group's two colours as one family: the pair keeps one hue, and the partner of a colour chosen first is derived
+// by the seeds' rule (saturation scaled between themes, lightness solved for the partner's ground), not matched by eye
+// (claude-docs/components/group-form.md, "The pair").
 
 /** The widest gap, in degrees round the wheel, a pair's two hues may keep. */
 export const MAX_HUE_DISTANCE = 10;
@@ -70,12 +66,9 @@ export function hueDistance(a: string, b: string): number {
 }
 
 /**
- * The partner `column` takes for a colour chosen first: the same hue, the
- * saturation scaled to `column`'s ground as the seeds scale it — none for a
- * grey, which stays grey — and the lightness nearest that ground which still
- * clears PAIRED_CONTRAST on it, so the partner is no further from the ground
- * than it needs to be. Walked in thousandths: the hex rounds, so the ratio is
- * measured on the hex itself.
+ * The partner `column` takes for a colour chosen first: the same hue, the saturation scaled to `column`'s ground (none for a
+ * grey), and the lightness nearest that ground that still clears PAIRED_CONTRAST. Walked in thousandths, as the hex rounds and
+ * the ratio is measured on the hex itself.
  */
 export function pairedColor(hex: string, column: GroupColorColumn): string {
   const source = hex.toLowerCase();
@@ -123,13 +116,9 @@ export function passesAt(
 }
 
 /**
- * The points across the picker's area at `hue` where a colour's contrast against
- * `column`'s ground crosses the 4.5:1 floor, as [x, y] in a 0–100 box with y
- * down, as the picker places its thumb. One point per two steps of
- * saturation, each found by bisection on the vertical axis: the dark card
- * wants the colour light enough, so the passing side is above the points; the
- * light page wants it dark enough, so below. None where the whole column
- * passes or none of it does.
+ * The points across the picker's area at `hue` where contrast against `column`'s ground crosses 4.5:1, as [x, y] in a 0–100
+ * box with y down. One per two steps of saturation, found by bisection on the vertical axis; the passing side is above them on the dark
+ * card and below on the light page. None where the whole column passes or none does.
  */
 export function boundaryPoints(
   hue: number,
@@ -156,10 +145,8 @@ export function boundaryPoints(
 }
 
 /**
- * The low-contrast side of the picker's area at `hue` for `column`'s ground,
- * as a polygon in the area's 0–100 box with y down: below the boundary on the
- * dark card, above it on the light page. A column the boundary does not cross
- * is in it whole or not at all, as its colours fail or pass.
+ * The low-contrast side of the picker's area at `hue` for `column`'s ground, as a polygon in the 0–100 box with y down: below
+ * the boundary on the dark card, above it on the light page. A column the boundary does not cross is in it whole or not at all.
  */
 export function failingRegion(
   hue: number,
@@ -182,13 +169,9 @@ export function failingRegion(
 }
 
 /**
- * Where a label sits inside the low-contrast side of the area at `hue`:
- * across, at the side's own centre of area, kept within the area's middle
- * eight tenths so a centred label stays inside; down, at the middle of the
- * side's stretch in that column. Where that stretch is
- * too shallow to hold a label, a fifth of the area's height, the nearest
- * column out from there that is deep enough, or else the deepest. In the
- * area's 0–100 box with y down; none when nothing fails.
+ * Where a label sits in the low-contrast side at `hue`: across at the side's centre of area (kept within the middle eight
+ * tenths), down at the middle of its stretch in that column, or the nearest column deep enough (a fifth of the height) else the
+ * deepest. In the 0–100 box with y down; none when nothing fails.
  */
 export function failingLabelPoint(
   hue: number,

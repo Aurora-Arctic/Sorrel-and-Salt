@@ -7,11 +7,8 @@ import type {
   SeedSubstitute,
 } from '../types';
 
-// An entry as a file: the inverse of `parseEntryFile`, so a test can
-// prove a file reads back as the entry it was written from. Only the tests
-// render it now, writing their fixture files the way the corpus is
-// written. The keys go in one fixed order with `status` first; the key order
-// a hand-edited file has is free.
+// An entry as a file: the inverse of `parseEntryFile`, so a test can prove a file reads back as the entry it was written from. Keys go in one
+// fixed order with `status` first; a hand-edited file's order is free.
 
 /** What `renderEntryFile` takes: a file minus what it derives, the hash and the path. */
 export type RenderableEntryFile = Omit<SeedCompendiumFile, 'hash' | 'path'>;

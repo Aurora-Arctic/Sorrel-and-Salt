@@ -11,12 +11,8 @@ function databaseUrl(): string {
   return withoutClientOnlyParams(url);
 }
 
-// One client per process per URL, kept on `globalThis` rather than in this
-// module's scope: a module can be evaluated more than once in one process —
-// `vi.resetModules()` in the OAuth tests, a hot reload under `next dev` — and
-// each evaluation would otherwise open a pool that nothing ends, the earlier
-// ones idling on their connections until the server runs out. Keyed
-// by the URL so a test that repoints `DATABASE_URL` still gets its own.
+// One client per process per URL, kept on `globalThis` and not in module scope: a module can be evaluated twice in one process
+// (`vi.resetModules()`, a hot reload), and each evaluation would open a pool nothing ends. Keyed by URL so a test repointing `DATABASE_URL` gets its own.
 const registry = globalThis as typeof globalThis & ClientRegistry;
 const clients = (registry.__sorrelPostgresClients ??= new Map());
 

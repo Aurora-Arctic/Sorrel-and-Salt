@@ -1,10 +1,7 @@
 import type { MirrorEntry } from './types';
 
-// A copy of an autosaving form's value in this browser's localStorage:
-// written on every change and cleared only once the server has
-// confirmed a save, so a closed tab or a lost connection keeps what was typed.
-// Storage can be absent, full or refused (a private window, blocked site
-// data), so every access is in try/catch and a failure means no mirror.
+// A copy of an autosaving form's value in localStorage, written on every change and cleared only once the server confirms a save, so a closed tab
+// keeps what was typed. Storage can be absent, full or refused, so every access is in try/catch and a failure means no mirror.
 
 /** A day: an older copy is too stale to offer back. */
 const MAX_AGE_MS = 24 * 60 * 60 * 1000;

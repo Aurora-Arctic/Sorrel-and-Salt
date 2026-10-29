@@ -7,14 +7,9 @@ import type { Session } from './session';
 import { curates } from './site-roles';
 import type { ShellContext } from './types';
 
-// What the application shell draws and the coven layout's switcher lists: the
-// viewer, their covens, and how many coven invitations wait for them. Cached
-// per request, so the shell layout and the coven layout beneath it share one
-// set of lookups. It reads the user row, not the session, since accepting an
-// invitation sets `canCreateWorkspace` mid-session. It asks only that someone
-// is signed in: the shell layout draws it round an unverified account's email
-// page too, and the page beneath is what sends that account to the email page
-//.
+// What the shell draws and the coven layout's switcher lists: the viewer, their covens and how many invitations wait. Cached per request so both layouts share
+// one set of lookups. Reads the user row, not the session, as accepting an invitation sets `canCreateWorkspace` mid-session. It asks only that someone is signed in,
+// as the shell also draws an unverified account's email page.
 
 /**
  * The viewer's own memberships, read once per request whoever asks: the shell, and the public

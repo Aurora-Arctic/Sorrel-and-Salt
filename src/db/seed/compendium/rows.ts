@@ -23,12 +23,8 @@ import type {
   SeedTransaction,
 } from '../types';
 
-// The rows a compendium entry becomes: pure builders over an entry and
-// the curated picks it names, shared by the insert and the update so the two
-// cannot drift on what a column holds. Nothing here writes; the seed
-// (../compendium.ts) and the update (./update.ts) do. Not `writeChildren`
-// (src/modules/ingredients/services/ingredient-rows.ts): that is a service
-// writer that needs a `withAudit` session, and the seed has none.
+// The rows a compendium entry becomes: pure builders over an entry and its curated picks, shared by the insert and the update so they cannot drift.
+// Not `writeChildren`, a service writer needing a `withAudit` session, which the seed lacks.
 
 /** A curated row a literal names, by the key its seed gave it: its id and current spelling, or `null` once retired. */
 export type CuratedPick = { id: string; name: string } | null;
@@ -198,10 +194,8 @@ export type DeityRow = Pick<
 >;
 
 /**
- * The entry's deities in its order, each linked to the curated row under its
- * current name; a retired pick is left off. A name may be one of the deity's
- * other names, linked to the one deity it means; the guard has
- * refused a name meaning none or several before this runs.
+ * The entry's deities in its order, each linked to the curated row under its current name; a retired pick is left off. A name may be a deity's other
+ * name, linked to that one deity; the guard refuses a name meaning none or several before this runs.
  */
 export function deityRows(
   entry: SeedCompendiumEntry,

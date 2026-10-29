@@ -34,12 +34,8 @@ const newestFirst = (column: typeof spells.updatedAt | typeof spells.createdAt):
 });
 
 /**
- * The grimoire's orders, each a cursor key that the page's id follows, so
- * spells tied on every part still page once each. Every part must be NOT
- * NULL, because the cursor compares the key as one row value. A draft may
- * have no title, so `TITLE_ASC` sorts on "is it untitled" first —
- * untitled spells last — then on the title with a null read as empty, rather
- * than on the bare column.
+ * The grimoire's orders, each a cursor key the page's id follows. Every part is NOT NULL, as the cursor compares the key as one
+ * row value, so `TITLE_ASC` sorts on "untitled" first (a draft may have no title), then the title read as empty if null.
  */
 const GRIMOIRE_ORDER: Record<GrimoireQuery['order'], readonly SortPart[]> = {
   UPDATED_DESC: [newestFirst(spells.updatedAt)],
@@ -51,18 +47,14 @@ const GRIMOIRE_ORDER: Record<GrimoireQuery['order'], readonly SortPart[]> = {
 };
 
 /**
- * How much a match in each field counts towards a search's rank, as
- * `SEARCH_WEIGHTS` does for an ingredient: a title is what a spell is
- * called, and an intent is a sentence about it, so a title match ranks above
- * an equally close intent match.
+ * How much a match in each field counts towards a search's rank, as `SEARCH_WEIGHTS` does for an ingredient: a title
+ * match ranks above an equally close intent match.
  */
 const GRIMOIRE_SEARCH_WEIGHTS = { title: 1, intent: 0.5 } as const;
 
 /**
- * Title or intent holds the search as a word or part of one, accents and
- * case set aside, ranked as the ingredient search ranks (`weightedSearch`):
- * one arm per field, over this coven's spells, each scoring its field. A null
- * title or intent matches nothing. Blank means no search.
+ * Title or intent holds the search as a word or part of one, accents and case set aside, ranked as the ingredient search
+ * is (`weightedSearch`): one arm per field over this coven's spells. A null field matches nothing; blank means no search.
  */
 function searchMatch(membership: Membership, text: string | undefined): WeightedSearch | undefined {
   const trimmed = text?.trim();
@@ -93,13 +85,9 @@ function searchMatch(membership: Membership, text: string | undefined): Weighted
 }
 
 /**
- * The order a query reads under. Without a search, the one asked for. With
- * one, best match first — `[-rank, position]`, as the ingredient search keys
- * it — and the asked-for order breaks a tie, so a page and its count read the
- * same rows in the same order. A search holds a `<%` word match, which only
- * finds a fragment of a longer word under the search's own threshold, so its
- * read is flagged `wordMatch` and runs in a transaction that sets it
- * (`select.ts`).
+ * The order a query reads under: the asked-for one, or with a search best match first (`[-rank, position]`) with the
+ * asked-for order breaking ties, so a page and its count read the same rows. A search holds a `<%` match, so its read is
+ * flagged `wordMatch` and runs under its own threshold (`select.ts`).
  */
 function orderOf(query: GrimoireQuery, match: WeightedSearch | undefined): ListOrder {
   if (!match) return { sort: GRIMOIRE_ORDER[query.order] };
@@ -115,10 +103,8 @@ function orderOf(query: GrimoireQuery, match: WeightedSearch | undefined): ListO
 }
 
 /**
- * The spell is assigned the chosen categories: each of them for `all`, one
- * of them for `any`. The link table is hard-deleted, but a category is soft
- * deleted, so the category (and its group) must be live, as the ingredient
- * filter asks through `pointsLive`.
+ * The spell is assigned the chosen categories: all of them for `all`, one for `any`. The link table is hard-deleted but a
+ * category is soft-deleted, so the category and its group must be live, as the ingredient filter asks through `pointsLive`.
  */
 function categoryArms({ categoryIds = [], categoryMode = 'all' }: GrimoireQuery): SQL[] {
   if (categoryIds.length === 0) return [];
@@ -153,10 +139,8 @@ function textArm(column: TextColumn, values: readonly string[] | undefined): SQL
 }
 
 /**
- * Everything a query narrows by besides the search, ANDed: status, categories
- * and the four facets each filter in SQL (rule 7), the picks within
- * a facet alternatives. The search narrows through its join, which holds only
- * the spells that match.
+ * Everything a query narrows by besides the search, ANDed in SQL (rule 7); the picks within a facet are alternatives.
+ * The search narrows through its join.
  */
 function whereOf(query: GrimoireQuery): SQL | undefined {
   return and(
@@ -170,10 +154,8 @@ function whereOf(query: GrimoireQuery): SQL | undefined {
 }
 
 /**
- * One page of the coven's grimoire this member may read — its shared spells
- * and the reader's own private ones — in the asked-for order, through the
- * cursor helper (rule 8), narrowed by the query's status, search and
- * categories.
+ * One page of the coven's grimoire this member may read (shared spells and their own private ones) in the asked-for
+ * order, through the cursor helper (rule 8), narrowed by status, search and categories.
  */
 export function findGrimoirePage(
   membership: Membership,
@@ -199,13 +181,9 @@ export function findGrimoireCount(
 }
 
 /**
- * How many spells `findGrimoirePage` would list in each live category, under
- * the rest of the query: the Categories filter's counts, read as
- * the ingredient facets read theirs (`categoryFacet`), in one grouped read
- * under the same visibility rule, so another member's private spell never
- * counts. Under `all` the chosen categories stay in the query, so each count
- * is the chosen ones and that one together; under `any` they leave it. A
- * category no spell carries is absent rather than at zero.
+ * How many spells `findGrimoirePage` lists in each live category, in one grouped read under the same visibility rule, so
+ * another member's private spell never counts. Under `all` the chosen categories stay in the query; under `any` they leave
+ * it. A category no spell carries is absent, not zero.
  */
 export function findGrimoireCategoryCounts(
   membership: Membership,
@@ -239,7 +217,7 @@ export function findGrimoireCategoryCounts(
 /**
  * The counts behind the four grimoire facets, under the list's visibility rule, so
  * another member's private spell is never counted. Each facet leaves its own picks
- * out of its query; a value no readable spell carries is absent, not zero. (claude-docs/db/write-path.md, "Repository comments in full")
+ * out of its query; a value no readable spell carries is absent, not zero. (claude-docs/db/grimoire.md, "The four facets' counts (M13.22)")
  */
 export async function findGrimoireFacetCounts(
   membership: Membership,

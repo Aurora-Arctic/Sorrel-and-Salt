@@ -10,12 +10,9 @@ import { existsIn, selectFrom, selectOne } from './select';
 import type { PageEntry, PageRequest } from '../../lib/types';
 import type { CupboardEntryRow, IngredientRow } from './types';
 
-// The reads over a coven's cupboard entries: the rows of
-// `workspace_compendium_entries`, each naming one compendium entry the coven
-// holds, with its own overrides. That the entry is the compendium's is a read
-// filter here rather than a constraint, so every read joins `ingredients`
-// under `workspace_id IS NULL`: a row naming a coven's own ingredient is never
-// returned (claude-docs/db/workspace-compendium-entries.md, "Reading it").
+// The reads over a coven's cupboard entries (`workspace_compendium_entries`), each naming a compendium entry the coven holds,
+// with its overrides. That the entry is the compendium's is a read filter, not a constraint, so every read joins `ingredients`
+// under `workspace_id IS NULL` (claude-docs/db/workspace-compendium-entries.md, "Reading it").
 
 /** The proof's live cupboard entry for this compendium entry, or `undefined`. */
 export function findCupboardEntry(
@@ -54,7 +51,7 @@ export function findCupboardEntriesOf(
 /**
  * The compendium entry with this id, retired or not, beside the proof's live cupboard
  * entry naming it. A retired entry stays readable to exactly the covens whose cupboard
- * names it (claude-docs/db/workspace-compendium-entries.md); it skips only the entry's filter. (claude-docs/db/write-path.md, "Repository comments in full")
+ * names it (claude-docs/db/workspace-compendium-entries.md); it skips only the entry's filter. (claude-docs/db/write-path.md, "Reads that take no proof")
  */
 export async function findCupboardEntryIncludingSoftDeleted(
   membership: Membership,
@@ -80,11 +77,8 @@ export async function findCupboardEntryIncludingSoftDeleted(
 }
 
 /**
- * The proof's rows that name a live compendium entry. `existsIn` ANDs the
- * entry's own tombstone filter, so the row of an entry the compendium has
- * deleted reads as no row here: `findCupboardEntryIncludingSoftDeleted` reads
- * it. The row's own tombstone
- * filter stays in each finder, where the soft-delete guard reads it.
+ * The proof's rows that name a live compendium entry: `existsIn` ANDs the entry's tombstone filter, so a deleted entry's row reads
+ * as none (`findCupboardEntryIncludingSoftDeleted` reads it). The row's own tombstone filter stays in each finder.
  */
 function inCupboard(membership: Membership): SQL | undefined {
   return and(
@@ -97,10 +91,8 @@ function inCupboard(membership: Membership): SQL | undefined {
 }
 
 /**
- * The live compendium entries whose label or formal name is `name`, exactly
- * but for case, in no particular order: the entries a coven's typed name already
- * names. Unscoped, since the compendium is public. Exact
- * rather than fuzzy: a near spelling is `findSimilarIngredients`'.
+ * The live compendium entries whose label or formal name is `name`, exactly but for case, unordered: what a coven's typed name
+ * already names. Unscoped, as the compendium is public; a near spelling is `findSimilarIngredients`'.
  */
 export function findCompendiumMatchesByName(name: string): Promise<IngredientRow[]> {
   return selectFrom(ingredients, and(compendiumNamed(name), notSoftDeleted(ingredients)));
@@ -138,11 +130,8 @@ function compendiumNamed(name: string): SQL | undefined {
 }
 
 /**
- * The proof's live cupboard entry labelled `label`, case folded, or
- * `undefined`: the row a label the coven is about to take would collide with.
- * It does not join the compendium entry: the label index does not,
- * so a row naming an entry the compendium has since deleted still holds its
- * label.
+ * The proof's live cupboard entry labelled `label`, case folded, or `undefined`: what a label about to be taken collides with.
+ * It does not join the compendium entry, as the label index does not, so a deleted entry's row still holds its label.
  */
 export function findCupboardEntryByLabel(
   membership: Membership,
@@ -179,12 +168,8 @@ export function findWorkspaceIngredientByName(
 }
 
 /**
- * How many covens hold this compendium entry in their cupboard: the distinct
- * live covens with a live cupboard row naming it. Unscoped, so it
- * takes a curator's proof rather than a coven's, and it answers a number and
- * never a coven's name or id: the curator's delete confirm shows how many the
- * deletion touches, not who. Zero for an id that is not a live compendium
- * entry, which the service has told apart already.
+ * How many covens hold this compendium entry: distinct live covens with a live cupboard row naming it. Unscoped, so it takes a
+ * curator's proof, and answers a number never a name or id (the delete confirm shows how many, not who). Zero for a non-entry id.
  */
 export async function countCovensUsing(_curator: Curator, ingredientId: string): Promise<number> {
   const [row] = await selectFrom(

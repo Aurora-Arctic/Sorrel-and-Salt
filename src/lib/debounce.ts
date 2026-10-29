@@ -1,10 +1,7 @@
 import { useEffect, useState } from 'react';
 
-// The one debounce a typed lookup waits on, so every suggesting field settles
-// at the same pace: the form and folk-name boxes, the name field and the search.
-// Built as its own file because the first lookup needed it before the search
-// existed (claude-docs/components/combobox.md,
-// "The debounce").
+// The one debounce every typed lookup waits on, so every suggesting field settles
+// at the same pace (claude-docs/components/combobox.md, "The debounce").
 
 /** How long a value must stop changing before a lookup is sent. */
 export const DEBOUNCE_MS = 300;

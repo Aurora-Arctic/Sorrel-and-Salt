@@ -12,11 +12,8 @@ import { existsIn, pageBounds, selectFrom, selectOne } from './select';
 import type { AuditWriter, Keyset, WriterContext } from './types';
 
 /**
- * The one workspace-scoped read that takes no proof, because it is what mints
- * one: `assertMembership` has nothing to pass until this has answered. It is
- * narrow on purpose — a role, not rows — so it cannot stand in for a finder,
- * and the index's export list is pinned, so a second exception is a decision
- * rather than an addition.
+ * The one workspace-scoped read that takes no proof, because it mints one. Narrow on purpose (a role, not rows) so it
+ * cannot stand in for a finder; the index's export list is pinned, so a second exception is a decision.
  */
 export async function findWorkspaceRole(
   userId: string,
@@ -40,7 +37,7 @@ export async function findWorkspaceRole(
 /**
  * Every live membership each of these users holds, in a live workspace. A proofless
  * read: a user's memberships span workspaces, so the service decides whose ids may be
- * asked about, and the index's export list is pinned. (claude-docs/db/write-path.md, "Repository comments in full")
+ * asked about, and the index's export list is pinned. (claude-docs/db/write-path.md, "Reads that take no proof")
  */
 export async function findMembershipsOfUsers(
   userIds: readonly string[],
@@ -57,10 +54,8 @@ export async function findMembershipsOfUsers(
 }
 
 /**
- * One page of the live members of the coven the proof names, in the order
- * they joined. Its own finder rather than `findPageInWorkspace`,
- * which breaks ties on a table's `id`: a membership is keyed on the pair,
- * so inside one coven the user id breaks them instead.
+ * One page of the live members of the proof's coven, in the order they joined. Its own finder, as a membership is
+ * keyed on the pair, so the user id breaks ties instead of `id`.
  */
 export function findMemberPage(
   membership: Membership,
@@ -83,10 +78,8 @@ export function findMemberPage(
 }
 
 /**
- * The live member of the proof's coven who holds this address, or `undefined`:
- * what the invite check reads to refuse inviting someone already inside.
- * The address is matched lower-cased against a live user row, in SQL, so the
- * coven's roll is never fetched to be searched.
+ * The live member of the proof's coven who holds this address, or `undefined`, for the invite check. The address is
+ * matched lower-cased against a live user row in SQL, so the roll is never fetched to be searched.
  */
 export function findMemberByEmail(
   membership: Membership,
@@ -109,12 +102,8 @@ export function findMemberByEmail(
 }
 
 /**
- * The address of each of these users who holds a live seat in the proof's
- * coven, read off their own `users` row: the
- * owner's Email column. Nothing else of the row leaves
- * the repository. A user outside the coven, or removed from it, is left out
- * in SQL, so another coven's address is never fetched to be dropped. The
- * caller has checked `member: readEmail`, which only owners hold.
+ * The address of each of these users holding a live seat in the proof's coven, for the owner's Email column; nothing else
+ * of the row leaves the repository. Others are left out in SQL. The caller has checked `member: readEmail`, held by owners.
  */
 export async function findMemberEmails(
   membership: Membership,
@@ -136,12 +125,9 @@ export async function findMemberEmails(
 }
 
 /**
- * Soft-deletes the workspace the proof names. Its own writer rather
- * than `softDeleteInWorkspace`, which scopes on a `workspace_id` column that
- * `workspaces` does not have: its own `id` is the workspace. The membership
- * rows are left as they were, since `findWorkspaceRole` stops admitting
- * anyone once the workspace is gone. The caller has checked `workspace: delete`.
- * No row comes back for a workspace already deleted.
+ * Soft-deletes the workspace the proof names. Its own writer, as `softDeleteInWorkspace` scopes on a `workspace_id` that
+ * `workspaces` lacks. Membership rows stay, as `findWorkspaceRole` stops admitting anyone. The caller has checked
+ * `workspace: delete`; no row comes back for a workspace already deleted.
  */
 export function workspaceWrites({
   softDelete,
@@ -153,13 +139,9 @@ export function workspaceWrites({
 }
 
 /**
- * The membership write that takes no proof, for the reason `findWorkspaceRole`
- * is the read that takes none: a proof is minted from a membership row, so
- * the row that makes a creator an owner, or an invitee a member, has none to
- * be written under. Spread into the writer beside `invitationWrites`,
- * so it still runs inside `withAudit` and is stamped from the session. Narrow
- * on purpose — one row, the pair and the role named — and the caller decides
- * whether this user may be seated.
+ * The membership write that takes no proof, as `findWorkspaceRole` is the read that takes none: a proof is minted from a
+ * membership row, so the row making a creator an owner has none to be written under. Still inside `withAudit`. One row,
+ * the pair and role named; the caller decides whether this user may be seated.
  */
 export function membershipWrites({
   insert,
@@ -200,14 +182,9 @@ export function membershipWrites({
         workspaceMembers,
         and(scopedTo(membership, workspaceMembers), eq(workspaceMembers.userId, userId)),
       ),
-    // Rule 4's fourth named exception, and
-    // the only writer that touches a deleted row: the audit writer's `update`
-    // skips one by design, and the pair `(workspace_id, user_id)` is the
-    // primary key, so a person invited back cannot be inserted a second time.
-    // It reaches deleted rows only (`isNotNull`), so no live seat is rewritten.
-    // Takes no proof for `insertMembership`'s reason: the seat a proof is
-    // minted from is the one being restored. `joinedAt` restarts, because the
-    // members list shows when this membership began.
+    // Rule 4's fourth named exception and the only writer touching a deleted row: the audit writer's `update` skips one,
+    // and the `(workspace_id, user_id)` primary key stops a second insert. Deleted rows only (`isNotNull`), no proof (the seat
+    // a proof comes from is being restored), and `joinedAt` restarts because the members list shows when it began.
     reviveMembership: (workspaceId, userId, role, invitedBy) => {
       const now = new Date();
       return tx

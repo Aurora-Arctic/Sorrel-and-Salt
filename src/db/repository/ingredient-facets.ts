@@ -37,17 +37,14 @@ import type {
   WorkspaceIngredientFacets,
 } from './types';
 
-// How many entries each value of each filter kind would list. A kind
-// is counted under the list's own filter minus that kind's own choice, read
-// through the list's own arms, so a facet cannot match differently from the
-// list it narrows. One grouped read per kind, the seven run side by side,
-// and for the compendium an eighth, its two switch counts (No Refs and No Form)
-// (claude-docs/db/compendium-read.md).
+// How many entries each value of each filter kind would list, under the list's own filter minus that kind's own choice and
+// its own arms, so a facet cannot match differently from its list. One grouped read per kind, run side by side, plus the
+// compendium's two switch counts (claude-docs/db/compendium-read.md, "Facet counts").
 
 /**
  * How many compendium entries each filter value would list under the rest of
  * `filter`, with no proof (the public list). Orderings, the `withoutReferences`
- * and `withoutForms` counts and `withReview` are set out in full. (claude-docs/db/write-path.md, "Repository comments in full")
+ * and `withoutForms` counts and `withReview` are set out in full. (claude-docs/db/compendium-read.md, "Facet counts")
  */
 export async function findCompendiumFacets(
   filter: IngredientFilter,
@@ -63,13 +60,9 @@ export async function findCompendiumFacets(
 }
 
 /**
- * How many of a coven's ingredients each filter value would list: the
- * rows `findWorkspaceIngredientPage` reads, a retired compendium entry the
- * coven still holds included, counted as `findCompendiumFacets`
- * counts the compendium's, over the coven's overrides: an entry's
- * elements, celestial bodies and zodiac signs are counted as its cupboard row
- * states them, an empty list under none. Categories have no override, so
- * they stay the compendium's.
+ * How many of a coven's ingredients each filter value would list: the rows `findWorkspaceIngredientPage` reads, retired
+ * compendium entries included, counted over the coven's overrides (elements, bodies and signs as the cupboard row states
+ * them, an empty list under none). Categories have no override.
  */
 export async function findWorkspaceIngredientFacets(
   membership: Membership,
@@ -187,13 +180,9 @@ function listed(
 const entries = sql<number>`count(distinct ${ingredients.id})::int`;
 
 /**
- * Forms, grouped by the fold `formArm` matches on, over each entry's live
- * variants. Each group reads the live curated form folding the same, the
- * spellings its variants use, and which chosen forms fold to it, so a chosen
- * form is matched to its group by Postgres's fold rather than JavaScript's.
- * The chosen forms are compared with the fold of the group's `min` form,
- * which every form in it shares: Postgres takes no grouped expression inside
- * a subquery, but takes an aggregate of the outer read's columns.
+ * Forms grouped by the fold `formArm` matches on, over each entry's live variants. Chosen forms are matched to a group
+ * by Postgres's fold, not JavaScript's, comparing against the fold of the group's `min` form (Postgres takes an
+ * aggregate of the outer read's columns inside a subquery, but not a grouped expression).
  */
 async function formFacet(
   filter: IngredientFilter,
@@ -302,11 +291,8 @@ async function categoryFacet(
 }
 
 /**
- * A flat vocabulary's every live row, each with how many entries' `list`
- * holds its name under the fold `listArm` matches by. A right join, so a row
- * no entry holds still reads, at zero: the entries' scope and arms sit in its
- * `on` rather than the `where`, which would drop those rows, and the `where`
- * holds the vocabulary's own filter.
+ * A flat vocabulary's every live row with how many entries' `list` holds its name under `listArm`'s fold. A right join,
+ * so an unheld row reads at zero: the entries' scope sits in its `on`, as the `where` would drop those rows.
  */
 function listFacet(
   vocabulary: typeof zodiacSigns | typeof celestialBodies,
@@ -377,11 +363,8 @@ async function toxicFacet(
 }
 
 /**
- * How many entries the list holds with the No Refs switch on, and with the No
- * Form switch on, each under the rest of the filter, in one pass. The pass
- * reads the list with both switches off and counts each arm beside the other
- * switch's own setting, so a switch the filter has on narrows the other's
- * count as it narrows the list.
+ * How many entries the list holds with the No Refs switch on, and with No Form on, each under the rest of the filter, in
+ * one pass: the list is read with both switches off, so a switch the filter has on narrows the other's count.
  */
 async function switchCounts(
   filter: IngredientFilter,
@@ -455,10 +438,8 @@ interface Orders {
 }
 
 /**
- * The counted values, already in SQL order, and the unmatched chosen ones at
- * zero in their own place in it, not last: `order` lists every live id as the
- * facet sorts them, and the lot is sorted by position in it. With no zero the
- * SQL order stands.
+ * The counted values in SQL order, with unmatched chosen ones at zero in their own place in it, not last: `order` lists
+ * every live id as the facet sorts them. With no zero the SQL order stands.
  */
 function withZeros({ counted, zeros }: Counted, order: readonly string[]): FacetCount[] {
   if (zeros.length === 0) return counted;
@@ -470,11 +451,8 @@ function withZeros({ counted, zeros }: Counted, order: readonly string[]): Facet
 }
 
 /**
- * Every live id of `items` as a subquery lists them: group or tradition name,
- * then name, both naturally, then id. Read only when `chosen` holds something;
- * it sits in a read that always returns a row, because the zero-count place of
- * a chosen value must come without a read of its own (the facet reads have a
- * fixed query budget).
+ * Every live id of `items` as a subquery lists them: group or tradition name, name, then id. Read only when `chosen`
+ * holds something, inside a read that always returns a row, as the facet reads have a fixed query budget.
  */
 function rankOf(
   items: typeof categories | typeof deities,
@@ -489,12 +467,8 @@ function rankOf(
 }
 
 /**
- * `facets` sorted by value in natural-language order, ties by code unit. The
- * forms list is sorted here rather than in SQL because its values are settled
- * in code: a form chosen in the filter that no entry in the current results
- * uses joins the list here with a count of zero, and a group's label is
- * picked by `mostUsed`. ICU's English collation (`Intl.Collator`) gives the
- * order `NATURAL_COLLATION` gives the other kinds.
+ * `facets` sorted by value in natural-language order, ties by code unit, here and not in SQL: a chosen form no result uses
+ * joins the list with a count of zero, and `mostUsed` picks a group's label. `Intl.Collator` matches `NATURAL_COLLATION`.
  */
 function alphabetical(facets: FacetCount[]): FacetCount[] {
   const collator = new Intl.Collator('en-US');
