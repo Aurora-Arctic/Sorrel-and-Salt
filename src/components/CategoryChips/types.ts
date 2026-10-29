@@ -13,7 +13,7 @@ export interface CategoryChipsProps {
   label: string;
   /** The tighter chip size, for a table cell; the card keeps the regular one. */
   compact?: boolean;
-  /** Draw the chips hollow (no fill, a dashed border, muted text), for categories that are named but not there. */
+  /** Draw the chips hollow (no fill, a dashed muted border, muted text), for categories that are named but not there. */
   absent?: boolean;
   /** Show every chip with no +N button (default false: the first few, then +N). */
   showAll?: boolean;
