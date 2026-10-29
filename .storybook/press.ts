@@ -5,10 +5,8 @@ import { useEffect } from 'react';
 // rather than reaching into the component for a state it keeps to itself.
 
 /**
- * Presses the button named `name` now: the first whose text is `name`, or
- * whose `aria-label` is, for a button drawn as an icon. For a story that
- * presses several in turn, a frame apart; one press on mount is
- * `usePressOnMount`.
+ * Presses the button named `name` now: the first whose text or `aria-label` (for an icon button)
+ * is `name`. One press on mount is `usePressOnMount`; several in turn is `useSteps`.
  */
 export function press(name: string): void {
   [...document.querySelectorAll<HTMLButtonElement>('button')]
@@ -22,19 +20,15 @@ export function usePressOnMount(name: string): void {
 }
 
 /**
- * Types `value` into `input` so React sees it: React tracks an input's value
- * itself, and only the native setter, followed by an `input` event, reaches its
- * `onChange`. Setting `input.value` directly changes nothing React hears.
+ * Types `value` into `input` so React sees it: only the native setter followed by an `input`
+ * event reaches `onChange`; setting `input.value` directly changes nothing React hears.
  */
 export function setInputValue(input: HTMLInputElement, value: string): void {
   Object.getOwnPropertyDescriptor(HTMLInputElement.prototype, 'value')?.set?.call(input, value);
   input.dispatchEvent(new Event('input', { bubbles: true }));
 }
 
-/**
- * Presses the last button named `name`: the confirm inside a dialog that
- * opened over the button of the same name, which `press` would find first.
- */
+/** Presses the last button named `name`: the confirm in a dialog opened over a same-named button, which `press` would find first. */
 export function pressLast(name: string): void {
   [...document.querySelectorAll<HTMLButtonElement>('button')]
     .filter((button) => button.textContent === name || button.ariaLabel === name)
@@ -42,10 +36,7 @@ export function pressLast(name: string): void {
     ?.click();
 }
 
-/**
- * Runs `steps` once the story has mounted, a short wait between each, for a
- * state reached by several presses and a typed value, as a person would.
- */
+/** Runs `steps` once the story has mounted, a short wait between each, as a person would. */
 export function useSteps(steps: readonly (() => void)[], gap = 80): void {
   useEffect(() => {
     const timers = steps.map((step, i) => window.setTimeout(step, gap * (i + 1)));

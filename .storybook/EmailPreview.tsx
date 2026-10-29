@@ -10,10 +10,8 @@ import type { Message } from '../src/lib/types';
 export const WORKSHOP_ORIGIN = typeof window === 'undefined' ? '' : window.location.origin;
 
 /**
- * The mail as a client in `scheme` would apply it. A framed document's
- * `prefers-color-scheme` follows the browser, not the frame's `color-scheme`,
- * so the toolbar cannot reach the mail's media query; its one light block is
- * made to always or never apply instead.
+ * The mail as a client in `scheme` would apply it. A frame's `prefers-color-scheme` follows the
+ * browser, not its `color-scheme`, so the mail's one light block is forced to always or never apply.
  */
 function inScheme(html: string, scheme: 'dark' | 'light'): string {
   return html.replace(LIGHT_MEDIA, scheme === 'light' ? '@media all' : '@media not all');

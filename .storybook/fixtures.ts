@@ -2,10 +2,8 @@ import { slugify } from '../src/lib/slugify';
 import type { AdminInvitationEntry } from '../src/components/AdminInvitations/types';
 import type { GroupKind } from '../src/components/GroupForm/types';
 
-// Invented rows the admin stories share, so a form's story and its list's
-// story offer the same groups and the same invitations. Every name is
-// invented — Fixture, Mock, Stub — never a real plant, tradition or person, so no seed
-// can ever hold one of them.
+// Invented rows the admin stories share, so a form's story and its list's offer the same groups
+// and invitations. Every name is invented (Fixture, Mock, Stub), never a real plant or person.
 
 /** Four group names per kind of group, enough for a type-ahead to narrow as it is typed into. */
 export const GROUP_NAMES: Record<GroupKind, readonly string[]> = {

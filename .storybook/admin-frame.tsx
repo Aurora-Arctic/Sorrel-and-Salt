@@ -11,14 +11,9 @@ import { WorkshopPathname } from './navigation';
 import { ShellFrame } from './shell-frame';
 import type { AdminFrameProps, AdminTabbedFrameProps } from './types';
 
-// The admin layout's frame for a story, so the workshop shows a component as
-// an admin page holds it. Not the
-// app's own `src/app/(shell)/admin/layout.tsx`, which is a server component that
-// reads the session; this is its markup alone, with the route-modal provider and the
-// section body it draws. The layout puts the context row, "Admin" and the nav,
-// above the `.page-column` column that holds the page, so the frame does too,
-// all inside the shell's `.app-shell__main`, which keeps the last row clear of
-// the phone's bottom nav (_primitives.scss).
+// The admin layout's markup for a story, without the server component's session read
+// (`src/app/(shell)/admin/layout.tsx`). The context row and nav sit above `.page-column`,
+// all inside `.app-shell__main`, which keeps the last row clear of the phone's bottom nav.
 
 // A provider only where a story names an address; without one the stub's own default stands.
 const Opened = ({ at, children }: { at?: string; children: ReactNode }): ReactElement =>
@@ -29,11 +24,9 @@ const Opened = ({ at, children }: { at?: string; children: ReactNode }): ReactEl
   );
 
 /**
- * The admin layout as it is: the context row with the nav, then the
- * `.page-column` column around `children`. `open` is the address the
- * workshop pretends to be on (./navigation.ts), which decides the nav's
- * current page; the People page's Users tab by default. `managesPeople`
- * false draws a curator's nav, without People.
+ * The admin layout: the context row with the nav, then `.page-column` around `children`. `open` is
+ * the address the workshop pretends to be on (./navigation.ts), People's Users tab by default;
+ * `managesPeople` false draws a curator's nav, without People.
  */
 export const AdminFrame = ({
   open,
@@ -77,10 +70,8 @@ export const AdminFrame = ({
   );
 
 /**
- * A tabbed admin page as its route draws it: the frame, the page's heading
- * and tabs from `ADMIN_PAGES`, `action` beside the heading, and the open
- * tab's content beneath. `open` is the address the workshop pretends to be
- * on (./navigation.ts), which decides the tab shown open.
+ * A tabbed admin page as its route draws it: the frame, the heading and tabs from `ADMIN_PAGES`,
+ * `action` beside the heading, and the open tab beneath. `open` is the pretend address (./navigation.ts).
  */
 export const AdminTabbedFrame = ({
   page,

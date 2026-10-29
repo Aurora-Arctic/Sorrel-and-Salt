@@ -16,12 +16,12 @@ export interface EmailTheme {
 export interface BaseEmailProps {
   /** The link the mail's one action follows. */
   url: string;
-  /** Where the images and fonts are served from: the link's own origin unless a preview says otherwise. */
+  /** Where images and fonts are served from: the link's own origin unless a preview says otherwise. */
   origin?: string;
   part: Part;
 }
 
-/** A template's message function's argument: its props bar `part`, which it renders both of, and the recipient. */
+/** A template's message function's argument: its props bar `part`, and the recipient. */
 export type MessageInput<Props extends BaseEmailProps> = Omit<Props, 'part'> & { to: string };
 
 /** A sign-up proving the address it arrived with, or an existing account asking for this one. */
