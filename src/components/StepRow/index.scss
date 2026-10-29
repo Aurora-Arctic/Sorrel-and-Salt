@@ -244,7 +244,14 @@ $step-ink-drop: 0.05rem;
     grid-area: controls;
     display: flex;
     align-items: flex-start;
+    justify-content: flex-end;
     gap: space(1);
+
+    // Always three slots wide (eye, Edit or Close, Remove), whichever are drawn, so the badges
+    // before it end at the same x on every row; a missing control leaves its slot empty and the
+    // rest keep their places at the right edge (owner, 2026-10-29).
+    inline-size: calc(#{$icon-size} * 3 + #{space(1)} * 2);
+    flex: none;
   }
 
   // The eye stands on the first line's centre like the marks and the buttons.
@@ -289,7 +296,10 @@ $step-ink-drop: 0.05rem;
     flex-wrap: wrap;
     // From the top, so an error under one field never drops its neighbours to its foot.
     align-items: flex-start;
-    gap: space(2);
+    // A line of fields from the next: `space(4)`, the gap between fields in the ingredient form's
+    // variant sections (`.collapsible-section__fields`); it was `space(2)`, so the Instruction
+    // stood too close under Quantity and Unit. Beside each other they keep `space(2)`.
+    gap: space(4) space(2);
   }
 
   // A field's error, across the whole row of inputs and not wrapped in its narrow column.

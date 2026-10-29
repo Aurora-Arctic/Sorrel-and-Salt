@@ -48,6 +48,22 @@ describe('placeServerIssues', () => {
     ]);
   });
 
+  it('shows a root message once however many issues state it', () => {
+    const setError = vi.fn<UseFormSetError<Values>>();
+
+    placeServerIssues(
+      refusal([
+        { path: ['slug'], message: 'SAME' },
+        { path: ['slug', 0], message: 'SAME' },
+        { path: ['slug', 1], message: 'OTHER' },
+      ]),
+      setError,
+      flat,
+    );
+
+    expect(setError.mock.calls).toEqual([['root', { type: 'server', message: 'SAME OTHER' }]]);
+  });
+
   it('puts a failure with no issues of its own in the root', () => {
     const setError = vi.fn<UseFormSetError<Values>>();
 

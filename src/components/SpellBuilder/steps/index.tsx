@@ -29,6 +29,9 @@ export function SpellSteps({
   const { control } = useFormContext<SpellStepsValues>();
   const { fields, append, remove, move } = useFieldArray({ control, name: 'steps' });
   const steps = useWatch({ control, name: 'steps' });
+  // Each row's key follows its step, not its place: written back whole by an Undo, the array
+  // keeps its steps' keys, where react-hook-form's own ids are all made afresh.
+  const keys = fields.map((field) => field.rowKey ?? field.id);
   const names = fields.map((field, index) => stepNameOf(steps[index] ?? field));
   const { announce, announcement } = useAnnouncement();
   const regionId = useId();
@@ -57,7 +60,7 @@ export function SpellSteps({
   useEffect(() => {
     if (!openNew.current) return;
     openNew.current = false;
-    const id = fields[fields.length - 1]?.id ?? null;
+    const id = keys[keys.length - 1] ?? null;
     addedId.current = id;
     setOpenId(id);
   }, [fields]);
@@ -85,7 +88,7 @@ export function SpellSteps({
       if (event.type === 'focusin' && pressed) return;
       const target = event.target;
       if (!(target instanceof Node) || !target.isConnected) return;
-      const index = fields.findIndex((field) => field.id === openId);
+      const index = keys.indexOf(openId as string);
       const row = root.current?.querySelectorAll('.spell-steps__list > li')[index];
       if (row?.contains(target)) return;
       // A click on a part of the row that cannot take the focus (a label, a gap, the padding) drops
@@ -120,7 +123,7 @@ export function SpellSteps({
   useEffect(() => {
     if (!focusField.current || openId === null) return;
     focusField.current = false;
-    const index = fields.findIndex((field) => field.id === openId);
+    const index = keys.indexOf(openId as string);
     root.current
       ?.querySelectorAll<HTMLElement>('.spell-steps__list > li')
       [index]?.querySelector<HTMLElement>('textarea')
@@ -181,15 +184,15 @@ export function SpellSteps({
           box on a wide column and is a numbered line beneath it on a narrow one, by grid
           placement alone, so it is one button, in the one place in the markup. */}
       <div className="spell-steps__body">
-        <SortableSteps ids={fields.map((field) => field.id)} names={names} onMove={move}>
+        <SortableSteps ids={keys} names={names} onMove={move}>
           {fields.map((field, index) => (
             <BuilderStepRow
-              key={field.id}
-              id={field.id}
+              key={keys[index]}
+              id={keys[index]!}
               index={index}
               step={steps[index] ?? field}
-              open={openId === field.id}
-              onToggle={() => setOpenId((was) => (was === field.id ? null : field.id))}
+              open={openId === keys[index]}
+              onToggle={() => setOpenId((was) => (was === keys[index] ? null : keys[index]!))}
               onRemove={() => removeAt(index)}
               look={look}
             />

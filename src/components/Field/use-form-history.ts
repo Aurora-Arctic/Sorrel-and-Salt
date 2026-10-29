@@ -85,6 +85,7 @@ export function useFormHistory<V extends FieldValues>(
     enabled = true,
     ignore,
     skip,
+    prepare,
     onRestored,
     pauseMs = TYPING_PAUSE_MS,
     limit = HISTORY_LIMIT,
@@ -242,7 +243,12 @@ export function useFormHistory<V extends FieldValues>(
           // Validated only once a submit has shown errors: before one the form is quiet.
           setValue(
             diff.name as never,
-            cloneValues(direction === 'undo' ? diff.before : diff.after) as never,
+            (prepare
+              ? prepare(
+                  diff.name,
+                  cloneValues(direction === 'undo' ? diff.before : diff.after),
+                )
+              : cloneValues(direction === 'undo' ? diff.before : diff.after)) as never,
             {
               shouldDirty: true,
               shouldValidate: isSubmitted,
@@ -261,7 +267,7 @@ export function useFormHistory<V extends FieldValues>(
       );
       pendingFocus.current = [focusOn || step.diffs[0].name];
     },
-    [setValue, getValues, isSubmitted, onRestored],
+    [setValue, getValues, isSubmitted, onRestored, prepare],
   );
 
   const undo = useCallback(() => {

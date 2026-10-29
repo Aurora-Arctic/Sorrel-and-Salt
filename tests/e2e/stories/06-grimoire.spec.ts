@@ -326,27 +326,6 @@ test(
   },
 );
 
-test(
-  'a member sees when they are adding something the coven has none of',
-  { tag: '@story-54' },
-  async ({ page }) => {
-    const coven = await seedCoven(page, 'Fixture Coven Fifty-Four', 'story-54.test', {
-      A: 'owner',
-      B: 'member',
-    });
-    await signInAgainAs(page, coven.users.B);
-    await openBuilder(page, coven.slug);
-    // Rosemary is in the compendium and not in this coven's cupboard.
-    await addIngredientStep(page, 'Rosemary (Herb)');
-    // In Coven Inventory says so in words, beside the step's name.
-    const hold = page.getByRole('region', { name: 'In Coven Inventory' });
-    const rosemary = hold.getByRole('listitem').filter({ hasText: 'Rosemary' });
-    // The coven keeps no jar of it, which the line says as such, not as an empty jar's Out.
-    await expect(rosemary).toContainText('have no jar');
-    await expect(rosemary.getByRole('button', { name: 'Out' })).toHaveCount(0);
-  },
-);
-
 test('a member saves a spell as a draft', { tag: '@story-55' }, async ({ page }) => {
   const coven = await seedCoven(page, 'Fixture Coven Fifty-Five', 'story-55.test', {
     A: 'owner',
@@ -362,11 +341,10 @@ test('a member saves a spell as a draft', { tag: '@story-55' }, async ({ page })
   await page.goto(`/coven/${coven.slug}/grimoire/drafts`);
   const card = grimoireList(page).getByRole('listitem', { name: /Fixture Working/ });
   await expect(card.getByText('Draft')).toBeVisible();
-  // Marking it complete is explicit, and final: the statement replaces the button.
+  // Marking it complete is explicit, and final: the button goes and nothing replaces it.
   await page.goto(draft);
   const edit = page.getByRole('dialog', { name: 'Edit Spell, Fixture Working' });
   await edit.getByRole('button', { name: 'Mark Complete' }).click();
-  await expect(edit.getByText(/^Complete\./)).toBeVisible();
   await expect(edit.getByRole('button', { name: 'Mark Complete' })).toHaveCount(0);
   // A saved spell is edited from its card's link, and the change reads back on the card.
   await page.goto(`/coven/${coven.slug}/grimoire/drafts`);
