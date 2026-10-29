@@ -395,6 +395,7 @@ const history = useFormHistory(methods, { root, enabled: !discard.asking });
   undo time: its label, else its `aria-label`, else the legend of its fieldset.
 - **`skip(name)` keeps a name out of the history**, for state that is not an
   edit, such as the ingredient form's note that its reference panel is open.
+- **`prepare(name, value)` adjusts a value just before an undo or redo writes it back**, for a form whose values name things that can stop existing. Left out, nothing changes, so the other forms are untouched. The spell builder uses it to turn a step's saved id into none when a save has since deleted that step.
 - **A `reset` clears the history.** The hook sees the form's defaults change
   and starts over. A form that makes its saved values the new start another
   way calls `history.clear()`. `enabled: false` makes the chords, the buttons
