@@ -19,11 +19,7 @@ import {
  */
 const filterText = optionalText().transform((value) => value ?? undefined);
 
-/**
- * A list of text values as a filter takes it: each trimmed and the blank ones
- * dropped, and a list left empty, null or missing is no filter. Any one of
- * the values matches.
- */
+/** A list of text values as a filter takes it: each trimmed, blanks dropped, and an empty, null or missing list is no filter. Any one value matches. */
 const filterTexts = z
   .array(z.string())
   .nullish()
@@ -33,31 +29,21 @@ const filterTexts = z
   });
 
 /**
- * A list of row ids as a filter takes it: an empty list, null or missing is
- * no filter. Each is checked as a uuid, since it reaches a `uuid` comparison
- * inside the keyset query, whose one client text was the cursor: unchecked, a
- * malformed id would come back as "Invalid cursor".
+ * A list of row ids as a filter takes it: an empty, null or missing list is no filter. Each is checked as a uuid, because it reaches a `uuid`
+ * comparison inside the keyset query, where a malformed id would come back as "Invalid cursor".
  */
 const filterIds = z
   .array(RowId)
   .nullish()
   .transform((ids) => (ids && ids.length > 0 ? ids : undefined));
 
-/**
- * A list of elements as a filter takes it: a value that is none of the five is
- * refused rather than matched to nothing, and a list left empty, null or
- * missing is no filter. Any one of them matches.
- */
+/** A list of elements as a filter takes it: a value that is none of the five is refused rather than matched to nothing. An empty, null or missing list is no filter. */
 const filterElements = z
   .array(z.enum(INGREDIENT_ELEMENTS))
   .nullish()
   .transform((elements) => (elements && elements.length > 0 ? elements : undefined));
 
-/**
- * The shortest query that searches. One character is a trigram or two that
- * half the compendium shares at the search's threshold, so it filters and
- * ranks by noise; shorter is no search at all.
- */
+/** The shortest query that searches: one character is a trigram or two that half the compendium shares, so it ranks by noise. */
 export const MIN_QUERY_LENGTH = 2;
 
 export const CompendiumFilter = z.object({

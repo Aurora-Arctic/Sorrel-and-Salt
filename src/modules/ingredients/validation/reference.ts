@@ -33,11 +33,7 @@ const TEXT_FIELDS = Object.fromEntries(
 const optionalDay = (field: 'modified' | 'accessed') =>
   textField(field).pipe(CalendarDay.nullish());
 
-/**
- * Absolute http(s), as `references_url_absolute` holds it, and an address a
- * browser can follow to a named site; one typed without its scheme is taken
- * as https first.
- */
+/** Absolute http(s), as `references_url_absolute` holds it; one typed without its scheme is taken as https first. */
 const url = textField('url').superRefine((value, ctx) => {
   const problem = value == null ? undefined : addressProblem(value);
   if (problem) ctx.addIssue({ code: 'custom', message: problem });

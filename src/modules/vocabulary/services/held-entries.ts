@@ -10,13 +10,8 @@ import { joinAnd, plural } from '../../../lib/text';
 import { inUtc } from '../../../lib/utc';
 import type { HeldWording } from '../types';
 
-// How a write names the compendium entries it would disturb: a vocabulary
-// delete refused while live entries hold the row — a category's, a
-// form's, a deity's, a celestial body's or a sign's — and a slug a
-// compendium write would take from another entry's running redirect;
-// a form's rename moves no slug. The index exports
-// `describeEntry` and `redirectRefusal` for the ingredient services, and no
-// other part of it.
+// How a write names the compendium entries it would disturb: a vocabulary delete refused while live entries hold the row, and a slug a compendium write
+// would take from another entry's running redirect. The index exports `describeEntry` and `redirectRefusal` for the ingredient services, and nothing else.
 
 /** How many entries a refused delete names before it counts the rest. */
 const ENTRIES_NAMED = 3;
@@ -45,25 +40,14 @@ export async function refuseWhileHeld(
   );
 }
 
-/**
- * An entry as a person tells it apart, as every refusal naming one does: its
- * label, then its formal name, which is its identity — two entries may share
- * a label, never a formal name. No form: an entry may have several.
- * The label unquoted, so a list of entries reads as one:
- * `Rose (Rosa gallica)`.
- */
+/** An entry as a person tells it apart in a refusal: its label, then its formal name, which is its identity, e.g. `Rose (Rosa gallica)`. No form: an entry may have several. */
 export function describeEntry(entry: { name: string; canonicalName: string | null }): string {
   return entry.canonicalName ? `${entry.name} (${entry.canonicalName})` : entry.name;
 }
 
 /**
- * The refusal of a write moving entries onto slugs other entries' redirects
- * still run from, naming each address, the entry it redirects to and
- * the instant its window closes; `undefined` when none does. Each slug is
- * read beside the entry moving onto it, whose own redirect is no refusal. On
- * `endRedirect`, so the form can ask and send the write again once the admin
- * confirms. Read before the write rather than inside it: two admins saving at
- * once can both pass it.
+ * The refusal of a write moving entries onto slugs other entries' redirects still run from, naming each address, its entry and when its window closes; `undefined` when none does.
+ * On `endRedirect`, so the form can ask and send again once the admin confirms. Read before the write, as two admins saving at once can both pass it.
  */
 export async function redirectRefusal(
   slugs: readonly { slug: string; entryId?: string }[],

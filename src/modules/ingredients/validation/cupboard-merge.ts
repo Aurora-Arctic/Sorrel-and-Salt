@@ -20,11 +20,8 @@ export const isAnnotated = (entry: CupboardEntryRow): boolean =>
   OVERRIDES.some((column) => entry[column] !== null);
 
 /**
- * `row` as a coven reads it through its cupboard entry: per column
- * `entry?.x ?? row.x`, the label standing over the name. A null override is
- * the compendium's value and a set one the coven's; an empty list is a set
- * one, cleared on purpose, which is why this is `??` and never `||`. No entry
- * answers `row` as it is. The id and the tier stay the compendium's.
+ * `row` as a coven reads it through its cupboard entry: per column `entry?.x ?? row.x`, the label standing over the name. A set override includes an empty
+ * list, cleared on purpose, which is why this is `??` and never `||`. The id and the tier stay the compendium's.
  */
 export function applyCupboardEntry(
   row: IngredientRow,

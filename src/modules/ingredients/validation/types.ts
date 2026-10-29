@@ -51,11 +51,8 @@ export type SubstituteFields = LinkOrNameFields<'ingredientId'> & {
 };
 
 /**
- * One substitute as the schema parses it (DESIGN.md §5, `ingredient_substitutes`):
- * an ingredient to link, or the name of one that is not entered, and the
- * linked ingredient's form it names — null for the ingredient whole, and
- * always beside a typed name. Optional in the type, so a caller writing an
- * entry by hand may leave it out; the parse always sets it.
+ * One substitute as the schema parses it (DESIGN.md §5, `ingredient_substitutes`): an ingredient to link or the name of one not entered, and the
+ * linked form it names (null for the ingredient whole). Optional in the type; the parse always sets it.
  */
 export type SubstituteEntry = LinkOrName<'ingredientId'> & { substituteVariantId?: string | null };
 
@@ -77,18 +74,10 @@ export interface ReferenceLinkEntry {
 /** One deity as the schema reads it. */
 export type DeityFields = LinkOrNameFields<'deityId'>;
 
-/**
- * One deity as the schema parses it (DESIGN.md §5, `ingredient_deities`): the
- * curated deity picked, whose name the service writes beside the link, or a
- * name typed.
- */
+/** One deity as the schema parses it (DESIGN.md §5, `ingredient_deities`): the curated deity picked, whose name the service writes, or a name typed. */
 export type DeityEntry = LinkOrName<'deityId'>;
 
-/**
- * What `crossFieldRules` reads of one form in `variants`: its id and
- * its text. Zod runs the rules across the list only once each entry has its
- * fields, so the text is there.
- */
+/** What `crossFieldRules` reads of one form in `variants`: its id and its text. Zod runs the rules only once each entry has its fields. */
 export interface VariantFields {
   id?: string | null;
   form: string;
