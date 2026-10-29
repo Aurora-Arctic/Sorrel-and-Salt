@@ -2,24 +2,21 @@ import { test, expect } from './fixtures';
 import { recreateE2eDatabase } from './database';
 import { assertNoAccessibilityViolations } from './axe';
 import { signInAgainAs } from './session';
-import {
-  applyFilters,
-  insertSpell,
-  openFilters,
-  seedCoven,
-  withSql,
-} from './stories/coven-ingredients';
+import { insertSpell, openFilters, seedCoven, withSql } from './stories/coven-ingredients';
 
 // The grimoire's Moon Phase, Day of Week, Visibility and Coven Member facets
-// (M13.22), and its Compact switch. No numbered story walks them: story 56
-// walks a private spell's listing. Spells are written as raw SQL because the
-// builder is not what is under test; what the list shows is read from the page.
+// (M13.22), and its Compact switch. Story 84 walks picking Moon Phase,
+// Visibility and Coven Member in the panel; what it does not walk is the GET
+// form's address filtering before hydration, the maker read as created_by, a
+// hidden spell's phase never suggested, the Compact switch, axe and 375px.
+// Spells are written as raw SQL because the builder is not what is under test;
+// what the list shows is read from the page.
 
 test.beforeAll(async () => {
   await recreateE2eDatabase();
 });
 
-test('a member narrows the grimoire by moon phase, visibility and maker, and the picks reach the address', async ({
+test('the grimoire address filters by moon phase, visibility and maker, and a hidden phase is never suggested', async ({
   page,
 }) => {
   const coven = await seedCoven(page, 'Fixture Coven Facets', 'grimoire-facets.test', {
@@ -88,19 +85,12 @@ test('a member narrows the grimoire by moon phase, visibility and maker, and the
     page.getByRole('link', { name: 'Shared Full Moon Working', exact: true }),
   ).toBeVisible();
 
-  // Picked in the panel, applied with Apply Filters.
+  // Another member's private spell's phase is not a suggestion, though a phase B can see is.
   await page.goto(path);
   const panel = await openFilters(page);
-  await expect(panel.getByRole('combobox', { name: 'Moon Phase' })).toBeVisible();
   await panel.getByRole('combobox', { name: 'Moon Phase' }).fill('waning');
-  await page.getByRole('option', { name: /Waning Crescent/ }).click();
-  await applyFilters(page, panel);
-  await expect(page).toHaveURL(/moonPhase=Waning/);
-  await expect(items()).toHaveCount(1);
-
-  // Another member's private spell's phase is not a suggestion.
-  const again = await openFilters(page);
-  await again.getByRole('combobox', { name: 'Moon Phase' }).fill('new');
+  await expect(page.getByRole('option', { name: /Waning Crescent/ })).toBeVisible();
+  await panel.getByRole('combobox', { name: 'Moon Phase' }).fill('new');
   await expect(page.getByRole('option', { name: /New Moon/ })).toHaveCount(0);
   await page.keyboard.press('Escape');
 });

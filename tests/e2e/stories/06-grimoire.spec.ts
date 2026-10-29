@@ -3,18 +3,21 @@ import { test, expect } from '../fixtures';
 import { recreateE2eDatabase } from '../database';
 import { signInAgainAs } from '../session';
 import {
+  applyFilters,
+  chooseChip,
   compendiumVariant,
   insertSpell,
   insertStep,
   insertStock,
   localIngredient,
+  openFilters,
   seedCoven,
   withSql,
 } from './coven-ingredients';
 import { categoryChip, pickCategoryIn } from './ingredient-dialogs';
 import { makeVariant } from '../../support/fixtures/ingredient';
 
-// Stories 47 to 57 and 76 to 80: the grimoire, from naming a spell to the
+// Stories 47 to 57, 76 to 80, 83 and 84: the grimoire, from naming a spell to the
 // workings recorded against it. Every story here is a scaffold: the page it
 // walks is not built yet, and the task named in its annotation turns its
 // `fixme` into `test` and makes it pass. Each body is the flow as the finished
@@ -678,5 +681,126 @@ test(
     await expect(page.getByRole('textbox', { name: 'Intent' })).toHaveValue(
       'To see clearly, offline',
     );
+  },
+);
+
+test(
+  "a member opens a spell's details over the grimoire list, from its card or a search pick",
+  { tag: '@story-83' },
+  async ({ page }) => {
+    const coven = await seedCoven(page, 'Fixture Coven Eighty-Three', 'story-83.test', {
+      A: 'owner',
+      B: 'member',
+      C: 'viewer',
+    });
+    const spell = await withSql((sql) =>
+      insertSpell(sql, coven.id, 'Fixture Working', 'workspace', coven.users.B, 'complete'),
+    );
+    const grimoire = `/coven/${coven.slug}/grimoire`;
+    const look = page.getByRole('dialog', { name: 'Fixture Working' });
+
+    // From the card's eye, and back to the list with focus where it was.
+    await signInAgainAs(page, coven.users.B);
+    await page.goto(grimoire);
+    const eye = grimoireList(page).getByRole('link', { name: 'Quick Look Fixture Working' });
+    await eye.click();
+    await expect(look).toBeVisible();
+    await page.keyboard.press('Escape');
+    await expect(look).toHaveCount(0);
+    await expect(eye).toBeFocused();
+
+    // From a pick in the title search: the same details, over the list, and back to the box.
+    const title = page.getByRole('combobox', { name: 'Title' });
+    await title.fill('fixture');
+    await page.getByRole('option', { name: 'Fixture Working' }).click();
+    await expect(page).toHaveURL(`${grimoire}?spell=${spell}`);
+    await expect(look).toBeVisible();
+    await expect(grimoireList(page)).toBeVisible();
+    await page.keyboard.press('Escape');
+    await expect(look).toHaveCount(0);
+    await expect(title).toBeFocused();
+
+    // A member who may change the spell is offered Edit, which opens the builder on it.
+    await eye.click();
+    await look.getByRole('link', { name: 'Edit Spell', exact: true }).click();
+    await expect(page.getByRole('dialog', { name: 'Edit Spell, Fixture Working' })).toBeVisible();
+
+    // A viewer sees the same details and is offered no Edit.
+    await signInAgainAs(page, coven.users.C);
+    await page.goto(grimoire);
+    await grimoireList(page).getByRole('link', { name: 'Quick Look Fixture Working' }).click();
+    await expect(look).toBeVisible();
+    await expect(look.getByRole('link', { name: /^Edit / })).toHaveCount(0);
+  },
+);
+
+test(
+  'a member narrows the grimoire by moon phase, visibility and maker',
+  { tag: '@story-84' },
+  async ({ page }) => {
+    const coven = await seedCoven(page, 'Fixture Coven Eighty-Four', 'story-84.test', {
+      A: 'owner',
+      B: 'member',
+    });
+    await withSql(async (sql) => {
+      const full = await insertSpell(
+        sql,
+        coven.id,
+        'Shared Full Moon Working',
+        'workspace',
+        coven.users.A,
+        'complete',
+      );
+      const waning = await insertSpell(
+        sql,
+        coven.id,
+        'Shared Waning Working',
+        'workspace',
+        coven.users.B,
+        'complete',
+      );
+      const mine = await insertSpell(
+        sql,
+        coven.id,
+        'Private Full Moon Working',
+        'private',
+        coven.users.B,
+        'complete',
+      );
+      await sql`update spells set moon_phase = 'Full Moon' where id in (${full}, ${mine})`;
+      await sql`update spells set moon_phase = 'Waning Crescent' where id = ${waning}`;
+    });
+    await signInAgainAs(page, coven.users.B);
+    await page.goto(`/coven/${coven.slug}/grimoire`);
+    const items = grimoireList(page).getByRole('listitem');
+    const item = (name: string) => grimoireList(page).getByRole('listitem', { name });
+    await expect(items).toHaveCount(3);
+
+    // The moon phase it is worked under.
+    let panel = await openFilters(page);
+    await panel.getByRole('combobox', { name: 'Moon Phase' }).fill('full');
+    await page.getByRole('option', { name: /Full Moon/ }).click();
+    await applyFilters(page, panel);
+    await expect(items).toHaveCount(2);
+    await expect(item('Shared Waning Working')).toHaveCount(0);
+
+    // Of those, only what is shared.
+    panel = await openFilters(page);
+    await chooseChip(panel.getByRole('group', { name: 'Visibility' }), /^Shared/);
+    await applyFilters(page, panel);
+    await expect(items).toHaveCount(1);
+    await expect(item('Shared Full Moon Working')).toBeVisible();
+
+    // Who made it: a member's own, whatever its phase.
+    await page.goto(`/coven/${coven.slug}/grimoire`);
+    panel = await openFilters(page);
+    await panel.getByRole('combobox', { name: 'Coven Member' }).fill('Fixture B');
+    await page.getByRole('option', { name: /^Fixture B/ }).click();
+    // The box takes several members, so its menu stays open on the rest until it is shut.
+    await panel.getByRole('button', { name: 'Show Coven Member coven members' }).click();
+    await applyFilters(page, panel);
+    await expect(items).toHaveCount(2);
+    await expect(item('Private Full Moon Working')).toBeVisible();
+    await expect(item('Shared Waning Working')).toBeVisible();
   },
 );
