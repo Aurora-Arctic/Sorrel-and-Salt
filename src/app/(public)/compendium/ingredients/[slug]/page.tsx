@@ -13,23 +13,11 @@ import { publicCupboardOf } from './cupboard';
 import { covensHolding } from '@/app/plus-covens';
 import type { CompendiumEntryParams } from './types';
 
-// One compendium entry, at its public address (M8.19; MB.80): readable by
-// anyone, signed out included, and the address the coven's copy of the page
-// names as canonical. The (public) layout owns `<main>`, so this renders
-// none.
-//
-// The entry comes from `readCompendiumEntry`, a cached read that takes no
-// session, so nothing private can reach it. The page itself is drawn per
-// request: it asks `viewerIfSignedIn()`, which never redirects, to decide
-// whether to offer a curator Edit, and a signed-in person's cupboard choices
-// across the covens they may write in (M9.12, `cupboard.ts`). A visitor with
-// no session reads the page the same as ever. A member whose covens hold the
-// entry sees the In Your Cupboard shelf before its name, read once with the
-// choices (`covensHolding`); the choices change none of the page's other marks.
-//
-// An unknown slug and a coven entry's slug both answer 404, since the read
-// refuses them alike. A slug the entry has moved off answers 308 to its
-// current address; MB.84 pins that response's headers.
+// One compendium entry at its public address: readable signed out, and the address the coven's copy
+// names as canonical. The (public) layout owns `<main>`, so this renders none. The entry comes from
+// the cached, sessionless `readCompendiumEntry`; the page itself is drawn per request, because a
+// signed-in viewer gets a curator Edit and their cupboard choices (`cupboard.ts`). An unknown slug and
+// a coven entry's slug both answer 404; a moved slug answers 308 to the current address.
 
 const addressOf = (slug: string) => `/compendium/ingredients/${slug}` as Route;
 
@@ -70,9 +58,8 @@ export default async function CompendiumEntryPage({ params, searchParams }: Comp
   const { detail, movedAway } = found;
   const entry = detail.entry;
 
-  // Edit opens the compendium's edit modal over this page (M8.19), so the
-  // address carries a bare `?edit`. The form's values are read only for a
-  // curator who asks for them, since they are the longest read the page makes.
+  // A bare `?edit` opens the compendium's edit modal over this page. The form's values are read
+  // only for a curator who asks, as they are the longest read the page makes.
   const canEdit = shell?.viewer.canCurate === true;
   const own = addressOf(entry.slug);
   const search = await searchParams;

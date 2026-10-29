@@ -33,11 +33,9 @@ export const metadata: Metadata = {
   title: 'Users',
 };
 
-// The page and GraphQL's `users` end at the same service, paged by the same
-// helper (CLAUDE.md rule 1, rule 8), and counted for the pager's "Page X of
-// Y" as every admin list is (MB.115): the first page again for a cursor that
-// names no row of the list. Cached so a second render in the request reads
-// once.
+// The page and GraphQL's `users` end at the same service, paged by the same helper (rules 1 and 8)
+// and counted for the pager as every admin list is; a cursor naming no row gives the first page
+// again. Cached so a second render in the request reads once.
 const readUsers = cache(
   async (
     session: Session,
@@ -62,13 +60,13 @@ const readUsers = cache(
       const linked = providers[index];
       // An admin's batch answers every slot; a refusal here is the guard's bug.
       if (!linked || linked instanceof Error) throw linked ?? new Error('No providers read');
-      // Read from ADMIN_BOOTSTRAP_EMAIL now, so the label follows the variable (MB.59).
+      // Read from ADMIN_BOOTSTRAP_EMAIL, so the label follows the variable.
       return {
         ...node,
         providers: linked,
         primaryAdmin: isPrimaryAdmin(node),
-        // Its modal over this page, the filter and cursor kept, under the head
-        // the loaded modal carries (M9.19).
+        // Its modal over this page, the filter and cursor kept, under the head the loaded modal
+        // carries.
         openHref: userListHref(here, cursorOf(after, before), node.id),
         heading: userHeading(node),
       };
@@ -78,13 +76,10 @@ const readUsers = cache(
 );
 
 /**
- * The user `?user=` names, with their covens, for the modal (M9.19); none
- * when the address names no one the list shows: an id that is not one, no
- * live user, or the seed's bootstrap user, live but left off the list. Read
- * with the navigation, through the services GraphQL ends at too, rather than
- * fetched by the modal (CLAUDE.md rule 1;
- * claude-docs/design-decisions/m9.19-admin-sees-user-covens.md). Cached as
- * `readUsers` is.
+ * The user `?user=` names, with their covens, for the modal; none when the address names no one the
+ * list shows (not a user, not live, or the seed's bootstrap user, who is left off the list). Read
+ * with the navigation through the services GraphQL ends at too (rule 1;
+ * claude-docs/design-decisions/m9.19-admin-sees-user-covens.md). Cached as `readUsers` is.
  */
 const readOpenedUser = cache(async (session: Session, raw: string) => {
   // A hand-edited address is a missing user, not an error: the list beneath
@@ -105,7 +100,7 @@ const readOpenedUser = cache(async (session: Session, raw: string) => {
   if (!providers || providers instanceof Error) throw providers ?? new Error('No providers read');
   return {
     heading: userHeading(found),
-    // Every fact the list's row shows, so the modal holds them all (M9.19).
+    // Every fact the list's row shows, so the modal holds them all.
     user: {
       id: found.id,
       name: found.name,
@@ -133,10 +128,9 @@ function cursorOf(after: string | undefined, before: string | undefined): PagerC
   return before ? { before } : undefined;
 }
 
-// Everyone with an account, for an admin to act on without being sent an id
-// (MB.52). A read of who has an account confers no workspace access, and the
-// page offers no control over one (claude-docs/auth/admin-users.md, "The user
-// list").
+// Everyone with an account, for an admin to act on without being sent an id. A read of who has an
+// account confers no workspace access, and the page offers no control over one
+// (claude-docs/auth/admin-users.md, "The user list").
 export default async function AdminUsersPage({ searchParams }: AdminUsersPageProps) {
   const session = await requireAdminSession();
   const params: UsersSearchParams = await searchParams;
@@ -151,13 +145,13 @@ export default async function AdminUsersPage({ searchParams }: AdminUsersPagePro
 
   const [{ users, pageInfo, position }, adminChanges, opened] = await Promise.all([
     readUsers(session, query, awaitingApproval, role, after, before),
-    // The pause on admin changes and whether this admin may flip it (MB.63),
-    // which the switch beside the heading reads too (`@action/users`).
+    // The pause on admin changes and whether this admin may flip it, which the switch beside the
+    // heading reads too (`@action/users`).
     readPauseState(session),
     userParam ? readOpenedUser(session, userParam) : undefined,
   ]);
   const canImpersonate = impersonationEnabled();
-  // The pause as the list's controls read it, for the modal's own (MB.63).
+  // The pause as the list's controls read it, for the modal's own.
   const changesPaused = Boolean(adminChanges && changesLocked(adminChanges));
 
   return (

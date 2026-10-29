@@ -17,14 +17,11 @@ export const metadata: Metadata = {
   title: { template: '%s — Admin — Sorrel & Salt', default: 'Admin — Sorrel & Salt' },
 };
 
-// The curation guard, which a curator passes as well as an admin (M11.20);
-// a curator's nav leaves People out, and each people page calls the admin
-// guard. Every page under `/admin` calls a guard too: a layout does not re-run on
-// client-side navigation (claude-docs/auth/admin-guard.md, "The admin guard").
-// The route-modal provider holds a pressed modal on its way (M9.18), shared
-// by every page's Add and Edit and the page's one modal place. The context
-// row (MB.7) names the area and carries its nav above the page's own frame;
-// the shell's bar and the session lookup are the group layout's.
+// The curation guard, which a curator passes as well as an admin; a curator's nav leaves People
+// out, and each people page calls the admin guard. Every page under `/admin` calls a guard too, as
+// a layout does not re-run on client-side navigation (claude-docs/auth/admin-guard.md, "The admin
+// guard"). The route-modal provider holds a pressed modal on its way, shared by every page's Add
+// and Edit. The context row names the area and carries its nav above the page's own frame.
 export default async function AdminLayout({ children }: AdminLayoutProps) {
   const { role } = await requireCuratorSession();
 

@@ -13,16 +13,13 @@ import { categoriesOf, categoriesOfVariants, stockOf, variantsOf } from '@/modul
 import { entryHrefOf } from './recipe-steps';
 import { jarRowsOf } from './recipe-supply';
 
-// What the recipe page's side column reads (M13.21; the owner, 2026-10-29): the spell's
-// steps as the builder's Jar aside holds them, so In Coven Inventory and Category Match draw
-// on the page exactly as they do while the spell is built. Each linked step's categories (its
-// ingredient's, then its form's: the union rule, MB.215) and the coven's jar of its form come
-// from the ingredients module's own batch reads, one call each whatever the spell's length,
-// and never through GraphQL (CLAUDE.md rule 1). The Quick Look modal reads none of this: the
-// column is the page's alone. Each inventory line also gets its doors (the owner, 2026-10-29):
-// a Quick Look eye to this page's `?entry=<id>`, and, for a role that may update stock, Edit
-// Stock on the ingredient's forms and the coven's jars, opening on the step's form; the forms
-// are read only for such a role. Read per request and never cached (rule 6).
+// What the recipe page's side column reads: the spell's steps as the builder's Jar aside holds
+// them, so In Coven Inventory and Category Match draw on the page as they do while the spell is
+// built. Each linked step's categories (its ingredient's, then its form's: the union rule) and the
+// coven's jar of its form come from the ingredients module's batch reads, one call each whatever
+// the spell's length, never through GraphQL (rule 1). Each inventory line gets a Quick Look eye to
+// `?entry=<id>` and, for a role that may update stock, Edit Stock opening on the step's form (forms
+// are read only for such a role). Read per request and never cached (rule 6).
 
 /** A step the service withheld, or one with nothing to read, holds no categories and no jar. */
 const answered = <T>(answer: T | Error | undefined): T | undefined =>

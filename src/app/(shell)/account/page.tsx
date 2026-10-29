@@ -26,17 +26,12 @@ export const metadata: Metadata = {
   title: 'Your Account — Sorrel & Salt',
 };
 
-// The one account page (MB.88): the name the site shows, the address it
-// writes to, the ways in, and the coven invitations waiting for that address
-// (M10.32), each a section on its own panel under its own
-// heading, reached from a nav of jump links: a column to the left of the sections on a
-// wide screen, a menu above them on a phone (the owner's calls, MB.88, MB.116
-// and MB.7). Sign Out is the shell's account menu's, not this page's. The page owns all four heads, so each section is a
-// region named by its heading. The ids are prefixed so no form's own id can
-// meet them. A link to add a provider lands back here, with `?error=` and
-// `?provider=` when it failed (claude-docs/auth/admin-bootstrap.md, "The
-// account page"). An unverified account never reaches it: `requireSession()`
-// sends it to the email page.
+// The one account page: the name the site shows, the address it writes to, the ways in, and the coven
+// invitations waiting for that address, each a section on its own panel under its own heading. A nav
+// of jump links sits left of the sections on a wide screen and above them on a phone. The page owns
+// all four heads, and the ids are prefixed so no form's own id can meet them. A failed provider link
+// lands back here with `?error=` and `?provider=` (claude-docs/auth/admin-bootstrap.md, "The account
+// page"). `requireSession()` sends an unverified account to the email page.
 export default async function AccountPage({ searchParams }: AccountPageProps) {
   const [session, params] = await Promise.all([requireSession(), searchParams]);
   const { after, before } = readPageCursors(params);

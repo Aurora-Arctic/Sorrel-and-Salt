@@ -25,24 +25,21 @@ import {
   workspaceIngredientFacets,
 } from '@/modules/ingredients';
 
-// The reads the coven's Ingredients page makes (M9.6), twin of `compendium-reads.ts`.
-// The data is the coven's, so each read goes through the services for the signed-in
-// session, which asserts membership, and none is held in the data cache (CLAUDE.md
-// rule 6). React's `cache` keeps a second call in one request to one read, so each is
-// keyed by primitives, the coven's id and the filter as the parameter table's
-// variables written as JSON, and for the page read, the coven's `Membership` last. That
-// one is an object, so `cache` keys it by identity: `requireCovenMembership` is cached
-// per slug per request, so the page passes the same object each time and a second call
-// still hits. A fresh object would only miss, never read wrongly.
+// The reads the coven's Ingredients page makes, twin of `compendium-reads.ts`. The data is the
+// coven's, so each read goes through the services for the signed-in session, which asserts
+// membership, and none is data-cached (rule 6). React's `cache` keeps a second call in one request
+// to one read, so each is keyed by primitives (the coven's id and the filter written as JSON) and,
+// for the page read, the coven's `Membership` last. That is an object, so `cache` keys it by
+// identity: `requireCovenMembership` is cached per slug per request, so the page passes the same
+// object each time. A fresh object would only miss, never read wrongly.
 
 type Filter = Parameters<typeof listWorkspaceIngredients>[2];
 
 /**
- * One page of `CARD_PAGE_SIZE` entries with its count and everything a card draws:
- * forms, category chips, the coven's jars and each card's last edit. Each is one batch for the page,
- * whatever its length, and the jars of the whole page are one `stockOf` call.
- * Each edge keeps its `cupboardEntry`, for the label and the Annotated and Retired
- * marks.
+ * One page of `CARD_PAGE_SIZE` entries with its count and everything a card draws: forms, category
+ * chips, the coven's jars and each card's last edit. Each is one batch for the page, and the jars
+ * of the whole page are one `stockOf` call. Each edge keeps its `cupboardEntry`, for the label and
+ * the Annotated and Retired marks.
  */
 export const readCovenIngredients = cache(
   async (
@@ -50,9 +47,9 @@ export const readCovenIngredients = cache(
     variables: string,
     after: string | undefined,
     before: string | undefined,
-    // The coven's proof, handed to every child read as `heldBy`: a retired compendium entry
-    // the coven's live cupboard row still names reads its forms and categories on it
-    // (M12.24), the entry page's rule. The page holds it; nothing here builds one.
+    // The coven's proof, handed to every child read as `heldBy`: a retired compendium entry the
+    // coven's live cupboard row still names reads its forms and categories on it, the entry page's
+    // rule. The page holds it; nothing here builds one.
     heldBy: CovenMembership['membership'],
   ): Promise<CovenIngredientPage> => {
     const session = await requireSession();
@@ -73,7 +70,7 @@ export const readCovenIngredients = cache(
         session,
         page.edges.map(({ node }) => ({ ingredientId: node.id, workspaceId })),
       ),
-      // Who last touched each card, the names resolved in one batch for the page (M6.18).
+      // Who last touched each card, the names resolved in one batch for the page.
       lastEditsOf(
         session,
         workspaceId,
@@ -116,10 +113,10 @@ export const readCovenFacets = cache(async (workspaceId: string, variables: stri
 });
 
 /**
- * The coven's own entry `?edit=<id>` names, with its values for the edit form (M8.17), read
- * as the signed-in member. Nothing for an id the coven cannot reach, or for a compendium entry
- * it names, which a coven does not edit: the list then opens no dialog (the plan's D8). Any
- * other failure of the read is let through rather than called no entry.
+ * The coven's own entry `?edit=<id>` names, with its values for the edit form, read as the
+ * signed-in member. Nothing for an id the coven cannot reach, or for a compendium entry it names,
+ * which a coven does not edit: the list then opens no dialog. Any other failure of the read is let
+ * through rather than called no entry.
  */
 export async function readEditedEntry(workspaceId: string, id: string) {
   const session = await requireSession();
@@ -135,14 +132,13 @@ export async function readEditedEntry(workspaceId: string, id: string) {
 }
 
 /**
- * The entry `?entry=<id>` opens the details of over the list (M12.5), read as the signed-in
- * member, any role: the coven's own entry, or a compendium entry its cupboard holds, under
- * the coven's label, a retired one included, as the list shows it. Nothing for an id the
- * coven cannot reach, or a compendium entry the cupboard does not hold, which the list
- * never shows: the list then opens no modal, as `readEditedEntry`'s does. Any other failure
- * of the read is let through rather than called no entry. With it, `detail`: the sections
- * the details show, read as the entry's page in the coven reads them, the held entry's
- * cupboard entry laid in; and `jars`, the coven's jars of it, for the details' Edit Stock (M9.9).
+ * The entry `?entry=<id>` opens the details of over the list, read as the signed-in member, any
+ * role: the coven's own entry, or a compendium entry its cupboard holds, under the coven's label,
+ * a retired one included. Nothing for an id the coven cannot reach, or a compendium entry the
+ * cupboard does not hold, so the list opens no modal. Any other failure of the read is let through
+ * rather than called no entry. With it, `detail`: the sections the details show, read as the
+ * entry's page reads them, the held entry's cupboard entry laid in; and `jars`, the coven's jars of
+ * it, for the details' Edit Stock.
  */
 export async function readViewedEntry(membership: CovenMembership['membership'], id: string) {
   const session = await requireSession();
@@ -153,11 +149,11 @@ export async function readViewedEntry(membership: CovenMembership['membership'],
     if (error instanceof NotFound || error instanceof Forbidden) return undefined;
     throw error;
   }
-  // A retired entry is read in the coven, whose cupboard entry is its proof (M12.24).
+  // A retired entry is read in the coven, whose cupboard entry is its proof.
   const detailOf = () =>
     ingredientDetailOf(session, entry, isRetired(entry) ? membership.workspaceId : undefined);
   const jarsOf = () => covenJarsOf(session, membership.workspaceId, id);
-  // The same read the cards make, for the one entry (M6.18).
+  // The same read the cards make, for the one entry.
   const lastEditOf = async () =>
     (await lastEditsOf(session, membership.workspaceId, [entry]))[0] ?? null;
   if (entry.workspaceId === membership.workspaceId) {
@@ -166,7 +162,7 @@ export async function readViewedEntry(membership: CovenMembership['membership'],
   }
   const held = await heldCompendiumEntry(membership, id);
   if (!held) return undefined;
-  // The viewer's covens that hold it, this one among them, for the details' links (M12.5).
+  // The viewer's covens that hold it, this one among them, for the details' links.
   const [read, covens, jars, lastEdit] = await Promise.all([
     detailOf(),
     covensHolding(id),

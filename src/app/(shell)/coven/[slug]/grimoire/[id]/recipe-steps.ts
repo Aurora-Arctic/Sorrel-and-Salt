@@ -2,18 +2,16 @@ import type { Route } from 'next';
 import type { RecipeStep } from '@/components/SpellRecipe/types';
 import type { SpellStepView } from '@/modules/grimoire';
 
-// A spell's steps as the recipe page draws them (MB.6): the service's views, already in
-// recipe order, made into display values. Kept apart from the page so the rules (which
-// step is an instruction, a one-off, or an ingredient since deleted, and when a formal
-// name is shown) are tested on their own.
+// A spell's steps as the recipe page draws them: the service's views, already in recipe order,
+// made into display values. Kept apart from the page so the rules (which step is an instruction, a
+// one-off, or an ingredient since deleted, and when a formal name is shown) are tested on their own.
 
 /** What a linked step reads when the service withheld its ingredient (another coven's, say). */
 export const UNAVAILABLE_INGREDIENT = 'Unavailable Ingredient';
 
 /**
  * `hereHref` with the ingredient's details asked for: the page's own address, or the tab's with
- * `?spell=` kept, plus `entry=<id>`, so the details open over the spell rather than leaving it
- * (the owner, 2026-10-28).
+ * `?spell=` kept, plus `entry=<id>`, so the details open over the spell rather than leaving it.
  */
 export const entryHrefOf = (hereHref: Route, id: string): Route =>
   `${hereHref}${hereHref.includes('?') ? '&' : '?'}entry=${id}` as Route;
@@ -60,9 +58,9 @@ export function recipeStepsOf(views: readonly SpellStepView[], hereHref: Route):
     };
   });
 
-  // Two different ingredients with the same label in one spell are told apart by the formal
-  // name of each (§5, MB.215: the formal name is the identity). The same ingredient in two
-  // forms is one label and needs none.
+  // Two different ingredients with the same label in one spell are told apart by the formal name of
+  // each (§5: the formal name is the identity). The same ingredient in two forms is one label and
+  // needs none.
   const owners = new Map<string, Set<string>>();
   views.forEach((view, i) => {
     const step = steps[i];

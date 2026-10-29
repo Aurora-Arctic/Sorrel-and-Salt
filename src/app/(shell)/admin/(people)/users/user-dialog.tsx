@@ -5,11 +5,10 @@ import { RouteModal } from '../../../../../components/Modal';
 import UserDetail from '../../../../../components/UserDetail';
 import type { UserDialogProps } from './types';
 
-// The users page's modal, opened by `?user=<id>` or, at once, by a press on a
-// name (M9.18, M9.19). The client edge between the server page and the body:
-// `RouteModal` takes its contents as a function, which a server component
-// cannot pass. Rendered whatever the address opens, so a press's skeleton and
-// the covens that replace it are one dialog.
+// The users page's modal, opened by `?user=<id>` or at once by a press on a name. The client edge
+// between the server page and the body, as `RouteModal` takes its contents as a function a server
+// component cannot pass. Rendered whatever the address opens, so a press's skeleton and the covens
+// that replace it are one dialog.
 export default function UserDialog({
   closeHref,
   opened,

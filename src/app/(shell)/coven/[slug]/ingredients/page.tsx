@@ -39,21 +39,12 @@ import {
 } from '@/modules/ingredients';
 import { stockDialogOf } from '@/app/coven-stock';
 
-// A coven's Ingredients (M9.6): what the coven has, as compact cards with their jars. The coven
-// comes from the address and the guard proves the caller is in it, as on every coven page (a
-// non-member gets the 404). Read per request and never cached, since a cupboard is the coven's
-// alone (CLAUDE.md rule 6). The shell draws no `<main>`, so the page does. The address carries
-// the compendium list's filters plus Source, In Stock and Low Stock Only (`COVEN_PARAMS`), and
-// the page reads one page of 24 under them. A member's card for the coven's own entry has
-// Edit, which opens the entry page's dialog over the list under `?edit=<id>`, and a card
-// for a compendium entry the cupboard holds has Annotate, which opens the entry page's
-// Annotate dialog under `?annotate=<id>`; closing or saving either comes back to the list as
-// it was, filter and page kept (M8.17). Each card's Quick Look opens the entry's details over
-// the list under `?entry=<id>`, for any member, with an Edit on the coven's own entry for a
-// role that may edit, opening the edit dialog over the details and saving back to them
-// (M12.5). The page is its own RouteModalProvider, so each of these opens at once on a press,
-// as the admin list's do. A member who may add is offered the first add on an
-// empty cupboard (M9.11). claude-docs/components/coven-cards.md.
+// A coven's Ingredients: what the coven has, as compact cards with their jars. The guard proves the
+// caller is in the coven (a non-member gets the 404). Read per request and never cached (rule 6).
+// The page draws its own `<main>` and is its own RouteModalProvider. The address carries the
+// compendium list's filters plus Source, In Stock and Low Stock Only (`COVEN_PARAMS`), and one page
+// of 24 is read under them. Card actions and Quick Look dialogs are described in
+// claude-docs/components/coven-cards.md.
 
 export const metadata: Metadata = { title: 'Ingredients' };
 
@@ -69,8 +60,8 @@ export default async function CovenIngredientsPage({
   // The list as it is, with no dialog: where the dialog closes and saves back to.
   const listHref = covenIngredientsHref(workspace.slug, { ...filter, after, before });
   const mayEdit = rolePermits(membership.role, { ingredient: ['update'] });
-  // The entry whose details are open over the list, `?entry=<id>` (M12.5): any member's,
-  // a viewer's too, since the details only read.
+  // The entry whose details are open over the list, `?entry=<id>`: any member's, a viewer's too,
+  // since the details only read.
   const entryId = typeof query.entry === 'string' && query.entry ? query.entry : undefined;
   const viewed = entryId ? await readViewedEntry(membership, entryId) : undefined;
   // The list with the details open, which an edit modal opens over and closes back to.
@@ -85,19 +76,19 @@ export default async function CovenIngredientsPage({
   // retired one included; an own entry or one not held opens nothing.
   const annotated =
     mayEdit && annotateId ? await heldCompendiumEntry(membership, annotateId) : undefined;
-  // A card's More (M8.17): Delete on the coven's own entry, Make It Ours and
-  // Remove on a compendium entry, on the permissions their services assert.
+  // A card's More: Delete on the coven's own entry, Make It Ours and Remove on a compendium entry,
+  // on the permissions their services assert.
   const mayDelete = rolePermits(membership.role, { ingredient: ['delete'] });
   const mayMakeOurs = rolePermits(membership.role, MAKE_IT_OURS_PERMISSION);
-  // The foot's Edit Stock pencil (M9.9), on the permission `saveStock` asserts: none for a viewer.
+  // The foot's Edit Stock pencil, on the permission `saveStock` asserts: none for a viewer.
   const mayStock = rolePermits(membership.role, { inventory: ['update'] });
   // A card's Edit and Annotate open over the list alone, never over details.
   const placed = (dialog: CovenListDialog) =>
     covenIngredientsHref(workspace.slug, { ...filter, after, before }, dialog);
   // What a card's foot may do to an entry, for the role: Edit on the coven's own, Annotate on a
   // compendium entry the cupboard holds, and More's writes. The Quick Look window draws the very
-  // same through `covenCardActions` (the owner's call, 2026-10-20); only its Edit opens over the
-  // details, `editHref`, where the card's opens over the list.
+  // same through `covenCardActions`; only its Edit opens over the details, `editHref`, where the
+  // card's opens over the list.
   const footOf = (
     own: boolean,
     shown: Parameters<typeof editHeading>[0] & { id: string },
@@ -199,9 +190,8 @@ export default async function CovenIngredientsPage({
           opened={
             viewed && {
               ...viewedDetailsOf(viewed, workspace.slug),
-              // The card's own controls for this entry (the owner's call, 2026-10-20): Edit over the
-              // details or Annotate, and More or the bin, whose delete or remove goes back to the
-              // list, which closes them.
+              // The card's own controls for this entry: Edit over the details or Annotate, and
+              // More or the bin, whose delete or remove goes back to the list, which closes them.
               actions: covenCardActions(
                 {
                   id: viewed.shown.id,
@@ -232,8 +222,8 @@ export default async function CovenIngredientsPage({
             edit={{
               href: hereHref,
               closeHref: hereHref,
-              // A save (M8.17) stays where the edit opened from, the list or the details over
-              // it, fetched again; a delete goes back to the list, the details' entry gone.
+              // A save stays where the edit opened from, the list or the details over it, fetched
+              // again; a delete goes back to the list, the details' entry gone.
               deletedHref: listHref,
               savedHref: hereHref,
               opened: edited && { id: edited.entry.id, values: edited.values },
@@ -255,8 +245,8 @@ export default async function CovenIngredientsPage({
                 ...cupboardFormValues(annotated.entry, annotated.cupboardEntry),
               }
             }
-            // Make It Ours and Remove in the dialog's More menu (M8.17), on the
-            // permissions the entry page reads; a remove returns to this list.
+            // Make It Ours and Remove in the dialog's More menu, on the permissions the entry page
+            // reads; a remove returns to this list.
             more={{
               covenSlug: workspace.slug,
               canMakeOurs: mayMakeOurs,

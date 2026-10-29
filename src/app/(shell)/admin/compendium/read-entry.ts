@@ -2,9 +2,8 @@ import 'server-only';
 import { resolveCompendiumSlug } from '@/modules/ingredients';
 import { entryValues } from '@/app/entry-values';
 
-// What a compendium list's `?edit=` names, read once for the two lists that
-// open the compendium's edit dialog over themselves: the admin Compendium
-// (M5.5) and, for a curator, the public search (M8.17).
+// What a compendium list's `?edit=` names, read once for the two lists that open the compendium's
+// edit dialog over themselves: the admin Compendium and, for a curator, the public search.
 
 /**
  * What `?edit=` names: the entry there, its values read for the form, or the

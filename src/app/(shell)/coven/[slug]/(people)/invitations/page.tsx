@@ -16,12 +16,10 @@ export const metadata: Metadata = {
   title: 'Invitations',
 };
 
-// The invitations an owner has sent and nobody has answered (story 5; M7.6),
-// newest first with Revoke on each. Owners only: the addresses are those of
-// people who have not joined. The page decides by the permission
-// (`member: invite`) and answers anyone else with the 404 a stranger gets,
-// and the services check it again, so a direct visit by a member reads
-// nothing (claude-docs/auth/coven-guard.md, "The invitations page").
+// The invitations an owner has sent and nobody has answered, newest first with Revoke on each.
+// Owners only, as the addresses are those of people who have not joined. The page decides by the
+// permission (`member: invite`) and answers anyone else with the stranger's 404; the services check
+// again (claude-docs/auth/coven-guard.md, "The invitations page").
 export default async function InvitationsPage({
   params,
   searchParams,

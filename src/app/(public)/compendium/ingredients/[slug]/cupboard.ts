@@ -17,13 +17,11 @@ import {
   type IngredientRow,
 } from '@/modules/ingredients';
 
-// The cupboard choices the public entry page offers a signed-in person (M9.12): every coven
-// they may write in, whether it holds the entry, and what their role there permits, read as
-// the coven's own page reads them. Per viewer, so read per request through the services and
-// never from the page's cached, sessionless read (CLAUDE.md rule 6). The covens come from the
-// viewer's own memberships, never the address: `?annotate=<covenSlug>` only picks among them,
-// and a slug naming none of them, or one that may not annotate there, is ignored before any
-// read is made. claude-docs/components/ingredient-entry.md, "On the public page".
+// The cupboard choices the public entry page offers a signed-in person: every coven they may write
+// in, whether it holds the entry, and what their role there permits. Per viewer, so never from the
+// page's cached, sessionless read (rule 6). `?annotate=<covenSlug>` only picks among the viewer's own
+// memberships; a slug naming none of them is ignored before any read.
+// (claude-docs/components/ingredient-entry.md, "On the public page")
 
 export async function publicCupboardOf(
   entry: Pick<
@@ -46,8 +44,8 @@ export async function publicCupboardOf(
   if (writable.length === 0) return undefined;
   const roles = await covenRolesIfSignedIn();
   const held = new Set(holding.map(({ id }) => id));
-  // Edit Stock (the owner's call, 2026-10-21): a holding coven whose role may update stock, with
-  // the stock read for it in one batch, per viewer (rule 6).
+  // Edit Stock: a holding coven whose role may update stock, with the stock read for it in one
+  // batch, per viewer (rule 6).
   const stockers = writable.filter(({ id }) => {
     const role = roles?.get(id);
     return held.has(id) && role !== undefined && rolePermits(role, { inventory: ['update'] });

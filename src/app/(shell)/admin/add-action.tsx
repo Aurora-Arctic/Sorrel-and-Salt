@@ -7,21 +7,16 @@ import { useOpenModalClick } from '../../../components/Modal';
 import type { AddActionProps } from './types';
 
 /**
- * A list page's Add, the open tab's action beside the page's heading, at
- * `href` so it keeps the list's place. A press opens its modal at once under
- * `heading`, the form arriving with the navigation (M9.18); a link still, so
- * a new tab, or a press before the script loads, opens the address. A client
- * part of its own, out of the server-only `list-page.tsx`, for the press.
- * The label is always in the page, so the link's name never changes: wider
- * than the header's narrow width it shows, the labelled solid button, and at
- * the narrow width it is hidden and the plus shows instead, with the label as
- * its tip (`_primitives.scss`, `.add-action`; claude-docs/components/page-header.md).
+ * A list page's Add, the open tab's action beside the page's heading, at `href` so it keeps the
+ * list's place. A press opens its modal at once under `heading`; a link still, so a new tab, or a
+ * press before the script loads, opens the address. The label is always in the page; at the narrow
+ * header width the plus shows instead, with the label as its tip (`_primitives.scss`,
+ * `.add-action`; claude-docs/components/page-header.md).
  *
- * With `drawnHere`, for a dialog that reads the address in the browser and draws its form
- * there (New Spell, M10.12), a plain press writes the address with the browser's `pushState`,
- * which Next's router follows with no server request, as the shell's Add Ingredient does.
- * The dialog then opens at its full size at once, rather than as the heading's skeleton that
- * the server's form replaces, a change of size that moved the dialog under the pointer.
+ * With `drawnHere`, for a dialog that reads the address in the browser and draws its form there
+ * (New Spell), a press writes the address with `pushState`, which Next's router follows with no
+ * server request. The dialog opens at full size at once, not as a skeleton that grows under the
+ * pointer.
  */
 export default function AddAction({
   href,

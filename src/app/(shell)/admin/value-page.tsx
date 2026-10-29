@@ -19,13 +19,11 @@ import { VALUE_KINDS } from './value-kinds';
 import type { ModalHeading } from '../../../components/Modal/types';
 import type { ValueGroupRow, ValuePageProps, ValueRow, ValueSearchParams } from './types';
 
-// The page every curated value vocabulary shares (MB.115): the categories
-// (M5.6, MB.178), forms (M5.6a) and deities (MB.132), each filed under a
-// group, and the celestial bodies and zodiac signs (MB.95), filed under nothing. Each
-// route's `page.tsx` keeps its `metadata` and hands its kind and address
-// here; the heading and tabs are its route group's layout's (MB.115). The page and GraphQL's lists end at the same services, paged by the
-// same helper (CLAUDE.md rule 1, rule 8); the writes are the modal's, through
-// the kind's mutations.
+// The page every curated value vocabulary shares: the categories, forms and deities, each filed
+// under a group, and the celestial bodies and zodiac signs, filed under nothing. Each route's
+// `page.tsx` keeps its `metadata` and hands its kind and address here; the heading and tabs are its
+// route group's layout's. The page and GraphQL's lists end at the same services, paged by the same
+// helper (rules 1 and 8); the writes are the modal's, through the kind's mutations.
 
 // One page of the kind under the filter, with "Page X of Y" counted from its
 // first row (src/lib/pagination.ts). Cached so a second render in the request
@@ -49,12 +47,9 @@ const readValues = cache(
 );
 
 /**
- * Where the address puts the list: its filter, cursor and modal, and the
- * kind's groups. The group parameter names a group by slug, as `?edit=`
- * names a value, so it is resolved against the groups, which are cached, so
- * the page and its action read them once. A slug no group holds is ignored,
- * as a hand-edited cursor gets the first page, and only a group that exists
- * is kept in the filter, so an unknown slug leaves every link.
+ * Where the address puts the list: its filter, cursor and modal, and the kind's groups. A group
+ * slug is resolved against the (cached) groups, and only a group that exists is kept in the
+ * filter, so an unknown slug leaves every link, as a hand-edited cursor gets the first page.
  */
 async function readPlace(kind: GroupedValueKind, params: ValueSearchParams) {
   const { query, after, before, editSlug, adding } = readListPlace(params);
@@ -78,9 +73,8 @@ async function readPlace(kind: GroupedValueKind, params: ValueSearchParams) {
 }
 
 /**
- * A value's edit dialog head (MB.115): the name it was saved under, not the
- * Name field's, and a deity's tradition after it, as its pills name it
- * ("Hecate (Greek)"), since two traditions may share a deity's name. A
+ * A value's edit dialog head: the name it was saved under, not the Name field's, and a deity's
+ * tradition after it ("Hecate (Greek)"), since two traditions may share a deity's name. A
  * category's or a form's group is where it is filed, not part of its name.
  */
 function editHeading(
@@ -97,10 +91,9 @@ function editHeading(
 }
 
 /**
- * The kind's Add, the open tab's action beside the page's heading: its
- * route group's `@action` slot renders it, so it changes with the tab
- * (claude-docs/components/tabbed-page.md). It keeps the list's filter and
- * cursor, as every link on the page does.
+ * The kind's Add, the open tab's action beside the page's heading: its route group's `@action`
+ * slot renders it, so it changes with the tab (claude-docs/components/tabbed-page.md). It keeps the
+ * list's filter and cursor, as every link on the page does.
  */
 export async function ValueAction({ kind, searchParams }: ValuePageProps): Promise<ReactElement> {
   await requireCuratorSession();
@@ -114,11 +107,10 @@ export async function ValueAction({ kind, searchParams }: ValuePageProps): Promi
 }
 
 /**
- * A curated vocabulary, for an admin to add to, edit and retire. A modal over
- * the list does the writing, opened by the address — `?new`, or
- * `?edit=<slug>` — so it can be linked to and Back closes it. The list
- * narrows by `?query=` and a grouped kind's group, which every link here
- * keeps (claude-docs/components/grouped-value-form.md, "On the admin pages").
+ * A curated vocabulary, for an admin to add to, edit and retire. A modal over the list does the
+ * writing, opened by `?new` or `?edit=<slug>` so it can be linked to and Back closes it. The list
+ * narrows by `?query=` and a grouped kind's group, which every link keeps
+ * (claude-docs/components/grouped-value-form.md, "On the admin pages").
  */
 export async function ValuePage({ kind, searchParams }: ValuePageProps): Promise<ReactElement> {
   const session = await requireCuratorSession();

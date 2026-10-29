@@ -27,18 +27,11 @@ import type { GrimoireTabProps } from './types';
 import { readViewedEntry } from '../../ingredients/reads';
 import { viewedDetailsOf } from '../../ingredients/viewed-details';
 
-// One grimoire tab, Spells or Drafts (M10.11): the guard on the slug from the address, the
-// address read as the filter, and one page of 24 cards of the tab's status. Read per request
-// and never cached, since a grimoire is the coven's alone (CLAUDE.md rule 6). The layout's
-// TabbedPage draws the `<main>` and the heading, inside the RouteModalProvider the spell
-// builder's dialog opens in (M10.12): `?new=spell-<slug>` (or `?new=spell`) for New Spell and
-// `?edit=<id>` for a saved spell, over the tab as it was, for a role that may write a spell. A viewer's opens
-// nothing. `?new` is shared with the shell's Add Ingredient, `?new=ingredient-coven-<slug>`, and its
-// value says which dialog (claude-docs/design-decisions/m10.12-spell-builder-modal.md).
-// A role that may update a spell also gets each card's Edit pencil, a link to the tab's own
-// address with `?edit=<id>` added (M13.10), so closing the dialog returns to it as it was.
-// A function the two pages call rather than a component they draw, so each page is the
-// async component itself and a test awaits it whole.
+// One grimoire tab, Spells or Drafts: the slug guard, the address read as the filter, and one page
+// of 24 cards of the tab's status. Read per request and never cached (rule 6). A function the two
+// pages call rather than a component, so each page is the async component itself and a test awaits
+// it whole. The dialogs it opens are described in
+// claude-docs/design-decisions/m10.12-spell-builder-modal.md.
 /** `closeHref` with a saved spell's dialog open over it. */
 const editHrefOf = (closeHref: Route, id: string): Route =>
   `${closeHref}${closeHref.includes('?') ? '&' : '?'}${new URLSearchParams({ edit: id })}` as Route;
@@ -49,9 +42,9 @@ const VISIBILITY_LABELS: Record<(typeof VISIBILITIES)[number], string> = {
 };
 
 /**
- * The four facets' choices from their counts (M13.22). Moon phase and day are the spells' own
- * words, so a value picked from a hand-edited address that no spell holds is still offered, at 0,
- * and keeps its chip. Visibility is the fixed pair, each shown whether or not a spell holds it.
+ * The four facets' choices from their counts. Moon phase and day are the spells' own words, so a
+ * value picked from a hand-edited address that no spell holds is still offered, at 0, and keeps
+ * its chip. Visibility is the fixed pair, each shown whether or not a spell holds it.
  */
 function facetsOf(
   filter: GrimoireListFilter,
@@ -110,10 +103,10 @@ export async function grimoireTab({
   const facets = facetsOf(filter, facetCounts);
 
   // The dialog the address opens, if this role may write a spell. `?new` is read first:
-  // `?new=spell-<slug>` naming this coven, or `?new=spell`, is New Spell. Any other `?new` is
-  // the shell's Add Ingredient, or another coven's New Spell on its way there, so a
-  // saved spell's `?edit` waits beneath it and opens when that dialog's close drops `new`.
-  // One dialog shows at a time. An `edit` that is not an id reads nothing.
+  // `?new=spell-<slug>` naming this coven, or `?new=spell`, is New Spell. Any other `?new` is the
+  // shell's Add Ingredient, or another coven's New Spell on its way there, so a saved spell's
+  // `?edit` waits beneath it and opens when that dialog's close drops `new`. One dialog shows at a
+  // time. An `edit` that is not an id reads nothing.
   const role = membership.role;
   const adding = query[NEW];
   const edit = adding === undefined ? query.edit : undefined;
@@ -130,8 +123,8 @@ export async function grimoireTab({
           )
         : undefined;
 
-  // Quick Look (M13.21): `?spell=<id>` opens a read-only modal for any role, and waits beneath
-  // another dialog the way `?edit` does. Its Edit link is the card pencil's own check.
+  // Quick Look: `?spell=<id>` opens a read-only modal for any role, and waits beneath another
+  // dialog the way `?edit` does. Its Edit link is the card pencil's own check.
   const look = query.spell;
   const lookId =
     adding === undefined && opened === undefined && typeof look === 'string'
@@ -144,8 +137,8 @@ export async function grimoireTab({
       ? await readLookedSpell(workspace.id, lookHref, lookId.data)
       : undefined;
   // An ingredient step's eye opens the ingredient's details over the spell's modal, at
-  // `&entry=<id>` (the owner, 2026-10-28), read as the coven's Ingredients page reads it. It
-  // waits on the spell's modal: no spell open, no details.
+  // `&entry=<id>`, read as the coven's Ingredients page reads it. It waits on the spell's modal:
+  // no spell open, no details.
   const entryId = typeof query.entry === 'string' && query.entry ? query.entry : undefined;
   const viewed =
     entryId && looked && !('failed' in looked)
