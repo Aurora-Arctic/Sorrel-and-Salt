@@ -503,6 +503,14 @@ References the ingredient and the form laid, not the inventory item, so a saved 
 
 A custom row lives inside its spell and shares its visibility. It is never an `ingredients` row: it does not appear on the workspace's ingredients page, is offered no compendium match, contributes nothing to derived categories, has no safety note to surface and no stock to be held or not held. Reusable is a different thing and already exists — a workspace-local `ingredients` row with only a `name` (story 29). Removing one is a soft delete, as removing any layer is (MB.110). What reads through the table — derived categories, on their way to `ingredient_categories` — reads it by `existsIn`, which filters a removed layer by construction. [`mb.40-custom-spell-ingredients.md`](design-decisions/mb.40-custom-spell-ingredients.md) carries the alternatives.
 
+**Workings** (M13.4). A spell is the recipe; a working is the record of one time a coven made it. Three tables hold it, and the service that writes them is M13.5.
+
+**`spell_workings`** — `id`, `spellId`, `status` (`draft` | `complete`, the `working_status` enum), `workedOn` (a date, when it was made), `completedAt` (null while a draft), `note` (nullable), `visibility` (the `spell_visibility` enum, default `workspace`), + `...auditColumns`, soft-deleted. `createdBy` is who recorded it. Index on `(spell_id, worked_on DESC) WHERE deleted_at IS NULL`. Two CHECKs: a `note` is never blank, and `(status = 'complete') = (completed_at IS NOT NULL)`, so a complete working always says when and a draft never does. A working of a deleted spell is unreachable because it is read through its spell's filter (`findManyInSpell`), not because the delete cascades.
+
+**`spell_working_participants`** — `id`, `workingId`, `userId` (nullable), `name` (nullable), `position` (the order entered), + the four audit stamps and no `deleted_at`. `CHECK (num_nonnulls(user_id, name) = 1)`: a participant is a member or a typed name, never both or neither. A name is never blank. Unique on `(working_id, user_id)` and on `(working_id, lower(name))`; these are plain unique indexes, because the table has no `deleted_at`, so a removed participant is a deleted row.
+
+**`spell_working_deductions`** — `id`, `workingId`, `spellStepId`, `inventoryItemId`, `quantity`, `unit` (the stock row's unit), `shortfall` (`0` when fully met), + the four audit stamps. Written once at completion and never edited, so it has no `deleted_at` and no `updated_at` use beyond the trigger every audited table carries. Index on `working_id`.
+
 **Notes are deferred to v2.** The first-class `notes` model and its `private | workspace | public` visibility model are specified in §13. Nothing in v1 writes a note, and no v1 table references one. `notes` is the reason the ingredient detail page (§9) is built to take a section beneath it without restructuring.
 
 ### Ingredient identity — the formal name
@@ -1482,7 +1490,7 @@ Modern module system throughout — `@use '../../scss/variables' as *;`, never t
 
 ### Notes — deferred to v2
 
-Stories 35–46 covered the three-tier experience-notes system. They move to v2 with the rest of the notes subsystem (§13). Story numbers are **not** reused: the grimoire stories keep their original 47–56, story 57 (MB.40) took the next free number rather than one of the twelve, and 58–62 (M2.9: email verification, changing an email, granting admin, the ledger, inviting an admin) followed the same way, as their own list because Prettier renumbers a list from its first item, and 63 (MB.80: the public compendium) the same way after them, and 64 (MB.151: references) after it, and 77 (step units), 80 (a spell's steps) and 81 (autosave) after them, and 83 (a spell's Quick Look) and 84 (the grimoire's filters) after those, so a v1 count is 57 stories (1–34, 47–64, 77, 80, 81, 83, 84).
+Stories 35–46 covered the three-tier experience-notes system. They move to v2 with the rest of the notes subsystem (§13). Story numbers are **not** reused: the grimoire stories keep their original 47–56, story 57 (MB.40) took the next free number rather than one of the twelve, and 58–62 (M2.9: email verification, changing an email, granting admin, the ledger, inviting an admin) followed the same way, as their own list because Prettier renumbers a list from its first item, and 63 (MB.80: the public compendium) the same way after them, and 64 (MB.151: references) after it, and 76 (recording a working), 77 (step units), 78 (completing a working), 79 (workings on the recipe page), 80 (a spell's steps) and 81 (autosave) after them, and 83 (a spell's Quick Look) and 84 (the grimoire's filters) after those, so a v1 count is 57 stories (1–34, 47–64, 77, 80, 81, 83, 84).
 
 ### Grimoire
 
@@ -1517,6 +1525,12 @@ Stories 35–46 covered the three-tier experience-notes system. They move to v2 
 ### Step units (M13.2)
 
 77. Give a step that lays a form my coven holds stock of a unit that stock can be measured in (any weight against weight, any volume against volume, the same unit for a count), so that making the spell can take it out of stock.
+
+### Workings (M13.4)
+
+76. Record a working of a spell: the day I made it, who took part (coven members or names I type) and a note on how it went, so the grimoire keeps what was made as well as the recipe.
+77. Complete a working and have the stock it used taken out of my coven's jars, warned where a jar cannot cover it, so the stock I see matches what is on the shelf.
+78. See a spell's workings on its recipe page, and how many there are on its card in the grimoire list, so I can tell what I have made and how often.
 
 ### Spell steps (M13.1)
 
