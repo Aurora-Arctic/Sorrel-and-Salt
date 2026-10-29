@@ -6,6 +6,7 @@ listings:
     name: IUCN Red List of Threatened Species, as printed in the Wikipedia taxobox
     value: Endangered
     listedAs: Aconitum heterophyllum
+    scope: global
     nameBasis: stated
     source: wikipedia-aconitum-heterophyllum
     locator: 'taxobox "Conservation status": Endangered (IUCN 3.1)'

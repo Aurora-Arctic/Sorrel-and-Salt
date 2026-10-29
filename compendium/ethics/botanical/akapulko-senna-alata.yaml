@@ -6,6 +6,7 @@ listings:
     name: IUCN Red List
     value: Least Concern (IUCN 3.1)
     listedAs: Senna alata
+    scope: global
     nameBasis: stated
     source: wikipedia-senna-alata
     locator: taxobox, conservation status (status = LC, IUCN3.1)

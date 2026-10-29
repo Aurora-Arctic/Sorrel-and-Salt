@@ -3,9 +3,10 @@ entry: botanical/grains-of-selim-xylopia-aethiopica
 status: approved
 listings:
   - list: iucn
-    name: 'IUCN Red List of Threatened Species'
-    value: 'Least Concern (IUCN 3.1)'
-    listedAs: 'Xylopia aethiopica'
+    name: IUCN Red List of Threatened Species
+    value: Least Concern (IUCN 3.1)
+    listedAs: Xylopia aethiopica
+    scope: global
     nameBasis: stated
     source: wikipedia-xylopia-aethiopica
     locator: 'taxobox, "Conservation status": "Least Concern (IUCN 3.1)"'

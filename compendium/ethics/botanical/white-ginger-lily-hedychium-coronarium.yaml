@@ -6,6 +6,7 @@ listings:
     name: IUCN Red List of Threatened Species, as printed in the Wikipedia taxobox
     value: Data Deficient
     listedAs: Hedychium coronarium
+    scope: global
     nameBasis: stated
     source: wikipedia-hedychium-coronarium
     locator: 'taxobox "Conservation status": Data Deficient (IUCN 3.1)'

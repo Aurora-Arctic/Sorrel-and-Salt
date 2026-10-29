@@ -6,6 +6,7 @@ listings:
     name: IUCN Red List of Threatened Species
     value: Least Concern (IUCN 3.1)
     listedAs: Prunus mume
+    scope: global
     nameBasis: stated
     source: wikipedia-prunus-mume
     locator: Infobox, Conservation status

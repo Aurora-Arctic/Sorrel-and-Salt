@@ -6,6 +6,7 @@ listings:
     name: IUCN Red List of Threatened Species, as printed in Wikipedia's taxobox
     value: LC
     listedAs: Cupressus sempervirens
+    scope: global
     nameBasis: stated
     source: wikipedia-iucn-cupressus-sempervirens
     locator: 'Taxobox: status = LC, status_system = IUCN3.1; its status_ref reads: "The IUCN Red List of Threatened Species", 2011-07-15'

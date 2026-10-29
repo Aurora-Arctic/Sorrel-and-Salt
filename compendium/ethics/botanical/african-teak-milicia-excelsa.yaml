@@ -3,9 +3,10 @@ entry: botanical/african-teak-milicia-excelsa
 status: approved
 listings:
   - list: iucn
-    name: 'IUCN Red List of Threatened Species'
-    value: 'Near Threatened (IUCN 2.3)'
-    listedAs: 'Milicia excelsa'
+    name: IUCN Red List of Threatened Species
+    value: Near Threatened (IUCN 2.3)
+    listedAs: Milicia excelsa
+    scope: global
     nameBasis: stated
     source: wikipedia-milicia-excelsa
     locator: 'taxobox, "Conservation status": "Near Threatened (IUCN 2.3)"; text: "The International Union for Conservation of Nature has this species on the Red List under ''Near Threatened''"'

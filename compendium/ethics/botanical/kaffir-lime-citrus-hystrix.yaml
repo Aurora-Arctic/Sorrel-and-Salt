@@ -6,6 +6,7 @@ listings:
     name: IUCN Red List
     value: Least Concern (IUCN 3.1)
     listedAs: Citrus hystrix
+    scope: global
     nameBasis: stated
     source: wikipedia-kaffir-lime
     locator: taxobox, conservation status (status = LC, IUCN3.1)

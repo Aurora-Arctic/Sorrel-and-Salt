@@ -6,6 +6,7 @@ listings:
     name: IUCN Red List of Threatened Species, as printed in the Wikipedia taxobox
     value: Near Threatened
     listedAs: Aegle marmelos
+    scope: global
     nameBasis: stated
     source: wikipedia-aegle-marmelos
     locator: 'taxobox "Conservation status": Near Threatened (IUCN 3.1)'

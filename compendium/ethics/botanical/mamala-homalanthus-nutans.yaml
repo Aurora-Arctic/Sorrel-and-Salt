@@ -6,6 +6,7 @@ listings:
     name: IUCN Red List
     value: Least Concern (IUCN 3.1)
     listedAs: Homalanthus nutans
+    scope: global
     nameBasis: stated
     source: wikipedia-homalanthus-nutans
     locator: taxobox, conservation status (status = LC, IUCN3.1)

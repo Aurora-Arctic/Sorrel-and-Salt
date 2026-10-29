@@ -6,6 +6,7 @@ listings:
     name: IUCN Red List of Threatened Species, as printed in Wikipedia's taxobox
     value: LC
     listedAs: Urtica dioica
+    scope: global
     nameBasis: stated
     source: wikipedia-iucn-urtica-dioica
     locator: 'Taxobox: status = LC, status_system = IUCN3.1; its status_ref reads: "Urtica dioica", Maiz-Tome, L., 2016, 10.2305/IUCN.UK.2016-1.RLTS.T167815A78457212.en'

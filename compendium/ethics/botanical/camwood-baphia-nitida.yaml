@@ -3,9 +3,10 @@ entry: botanical/camwood-baphia-nitida
 status: approved
 listings:
   - list: iucn
-    name: 'IUCN Red List of Threatened Species'
-    value: 'Least Concern (IUCN 3.1)'
-    listedAs: 'Baphia nitida'
+    name: IUCN Red List of Threatened Species
+    value: Least Concern (IUCN 3.1)
+    listedAs: Baphia nitida
+    scope: global
     nameBasis: stated
     source: wikipedia-baphia-nitida
     locator: 'taxobox, "Conservation status": "Least Concern (IUCN 3.1)"'

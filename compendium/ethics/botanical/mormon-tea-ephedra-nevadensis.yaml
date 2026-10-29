@@ -6,6 +6,7 @@ listings:
     name: IUCN Red List
     value: Least Concern (IUCN 3.1)
     listedAs: Ephedra nevadensis
+    scope: global
     nameBasis: stated
     source: wikipedia-ephedra-nevadensis
     locator: taxobox, conservation status (status = LC, IUCN3.1)

@@ -6,6 +6,7 @@ listings:
     name: IUCN Red List of Threatened Species
     value: Least Concern (IUCN 3.1)
     listedAs: Torreya nucifera
+    scope: global
     nameBasis: stated
     source: wikipedia-torreya-nucifera
     locator: Infobox, Conservation status
@@ -13,6 +14,7 @@ listings:
     name: Protection in Japan, assessor not named
     value: protected
     listedAs: Torreya nucifera
+    scope: Japan
     nameBasis: stated
     source: wikipedia-torreya-nucifera
     locator: Uses section

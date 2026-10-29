@@ -6,6 +6,7 @@ listings:
     name: IUCN Red List of Threatened Species
     value: Vulnerable (IUCN 3.1)
     listedAs: Eucommia ulmoides
+    scope: global
     nameBasis: stated
     source: wikipedia-eucommia-ulmoides
     locator: Infobox, Conservation status

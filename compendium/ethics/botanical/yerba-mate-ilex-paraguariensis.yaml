@@ -6,6 +6,7 @@ listings:
     name: IUCN Red List of Threatened Species, as printed in Wikipedia's taxobox
     value: NT
     listedAs: Ilex paraguariensis
+    scope: global
     nameBasis: stated
     source: wikipedia-iucn-ilex-paraguariensis
     locator: 'Taxobox: status = NT, status_system = IUCN3.1; its status_ref reads: (no assessment named)'

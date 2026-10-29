@@ -3,9 +3,10 @@ entry: botanical/sausage-tree-kigelia-africana
 status: approved
 listings:
   - list: iucn
-    name: 'IUCN Red List of Threatened Species'
-    value: 'Least Concern (IUCN 3.1)'
-    listedAs: 'Kigelia africana'
+    name: IUCN Red List of Threatened Species
+    value: Least Concern (IUCN 3.1)
+    listedAs: Kigelia africana
+    scope: global
     nameBasis: stated
     source: wikipedia-kigelia
     locator: 'taxobox, "Conservation status": "Least Concern (IUCN 3.1)"'

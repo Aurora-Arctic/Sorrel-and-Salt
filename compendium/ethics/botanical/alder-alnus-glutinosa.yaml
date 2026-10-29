@@ -6,6 +6,7 @@ listings:
     name: IUCN Red List of Threatened Species, as printed in Wikipedia's taxobox
     value: LC
     listedAs: Alnus glutinosa
+    scope: global
     nameBasis: stated
     source: wikipedia-iucn-alnus-glutinosa
     locator: 'Taxobox: status = LC, status_system = IUCN3.1; its status_ref reads: "Alnus glutinosa", Shaw, K., 2014, 10.2305/IUCN.UK.2014-3.RLTS.T63517A3125479.en'

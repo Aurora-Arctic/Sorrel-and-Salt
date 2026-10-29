@@ -3,11 +3,12 @@ entry: botanical/pepper-fruit-dennettia-tripetala
 status: needs-review
 listings:
   - list: iucn
-    name: 'IUCN Red List of Threatened Species'
-    value: 'Least Concern (IUCN 3.1)'
-    listedAs: 'Dennettia tripetala'
+    name: IUCN Red List of Threatened Species
+    value: Least Concern (IUCN 3.1)
+    listedAs: Dennettia tripetala
+    scope: global
     nameBasis: stated
     source: wikipedia-dennettia
     locator: 'taxobox, "Conservation status": "Least Concern (IUCN 3.1)"'
 questions:
-  - 'The IUCN listing rests on the assessment of the synonym Uvariopsis tripetala, and the same article says the species is threatened by habitat loss.'
+  - The IUCN listing rests on the assessment of the synonym Uvariopsis tripetala, and the same article says the species is threatened by habitat loss.

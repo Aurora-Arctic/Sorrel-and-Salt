@@ -3,9 +3,10 @@ entry: botanical/camphor-bush-tarchonanthus-camphoratus
 status: approved
 listings:
   - list: iucn
-    name: 'IUCN Red List of Threatened Species'
-    value: 'Least Concern (IUCN 3.1)'
-    listedAs: 'Tarchonanthus camphoratus'
+    name: IUCN Red List of Threatened Species
+    value: Least Concern (IUCN 3.1)
+    listedAs: Tarchonanthus camphoratus
+    scope: global
     nameBasis: stated
     source: wikipedia-tarchonanthus-camphoratus
     locator: 'taxobox, "Conservation status": "Least Concern (IUCN 3.1)"'

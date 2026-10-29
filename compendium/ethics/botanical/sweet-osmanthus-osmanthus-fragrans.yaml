@@ -6,6 +6,7 @@ listings:
     name: IUCN Red List of Threatened Species
     value: Least Concern (IUCN 3.1)
     listedAs: Osmanthus fragrans
+    scope: global
     nameBasis: stated
     source: wikipedia-osmanthus-fragrans
     locator: Infobox, Conservation status

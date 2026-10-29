@@ -6,6 +6,7 @@ listings:
     name: IUCN Red List of Threatened Species, as printed in the Wikipedia taxobox
     value: Vulnerable
     listedAs: Saraca asoca
+    scope: global
     nameBasis: stated
     source: wikipedia-saraca-asoca
     locator: 'taxobox "Conservation status": Vulnerable (IUCN 2.3); taxobox cites version 2.3, an older assessment than 3.1'

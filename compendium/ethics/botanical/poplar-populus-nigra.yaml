@@ -6,6 +6,7 @@ listings:
     name: IUCN Red List of Threatened Species, as printed in Wikipedia's taxobox
     value: DD
     listedAs: Populus nigra
+    scope: global
     nameBasis: stated
     source: wikipedia-iucn-populus-nigra
     locator: 'Taxobox: status = DD, status_system = IUCN3.1; its status_ref reads: "Populus nigra", 2017, 10.2305/IUCN.UK.2017-3.RLTS.T63530A68106816.en'

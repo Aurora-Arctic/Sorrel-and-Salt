@@ -6,6 +6,7 @@ listings:
     name: IUCN Red List of Threatened Species, as printed in Wikipedia's taxobox
     value: CR
     listedAs: Lathyrus odoratus
+    scope: global
     nameBasis: stated
     source: wikipedia-iucn-lathyrus-odoratus
     locator: 'Taxobox: status = CR, status_system = IUCN3.1; its status_ref reads: "Lathyrus odoratus", Rowe, J., Shehadeh, A., Maxted, N., Donnini, D. & Branca, F., 2019, 10.2305/IUCN.UK.2019-2.RLTS.T176367A61528477.en'

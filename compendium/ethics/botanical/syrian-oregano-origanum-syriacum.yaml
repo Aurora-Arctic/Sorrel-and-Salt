@@ -6,6 +6,7 @@ listings:
     name: Israeli law (as described by Wikipedia; statute not named)
     value: protected under Israeli law as endangered plants (the page says "Wild hyssop and sage")
     listedAs: wild hyssop
+    scope: Israel
     nameBasis: stated
     source: wikipedia-origanum-syriacum
     locator: Distribution

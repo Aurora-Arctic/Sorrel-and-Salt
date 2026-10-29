@@ -6,6 +6,7 @@ listings:
     name: United Plant Savers Species At-Risk List
     value: At-Risk
     listedAs: Berberis spp.
+    scope: global
     nameBasis: stated
     source: ups-species-at-risk
     locator: under the heading "At-Risk", entry for Oregon Root
@@ -13,9 +14,9 @@ listings:
     name: IUCN Red List of Threatened Species, as printed in Wikipedia's taxobox
     value: LC
     listedAs: Berberis vulgaris
+    scope: Europe
     nameBasis: stated
     source: wikipedia-iucn-berberis-vulgaris
     locator: 'Taxobox: status = LC, status_system = IUCN3.1; its status_ref reads: "Berberis vulgaris (Europe assessment)", Bilz, M., 2026, 10.2305/IUCN.UK.2026-1.RLTS.T202941A209174073.en'
 questions:
   - "The list prints a genus-level entry (spp.) and states its purpose as a list of wild medicinals of North America. I did not check where this species grows. Does the genus listing cover it? Recommendation: keep the listing but show it as the list's genus-level statement, or drop it; owner to decide."
-  - 'Wikipedia''s status_ref names a regional assessment ("Berberis vulgaris (Europe assessment)"), not a global one. Recommendation: record it only as a regional listing, or leave it out; owner to decide.'

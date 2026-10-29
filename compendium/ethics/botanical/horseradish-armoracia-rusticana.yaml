@@ -6,6 +6,7 @@ listings:
     name: IUCN Red List of Threatened Species, as printed in Wikipedia's taxobox
     value: LC
     listedAs: Armoracia rusticana
+    scope: global
     nameBasis: stated
     source: wikipedia-iucn-armoracia-rusticana
     locator: 'Taxobox: status = LC, status_system = IUCN3.1; its status_ref reads: "Horseradish", 2011'

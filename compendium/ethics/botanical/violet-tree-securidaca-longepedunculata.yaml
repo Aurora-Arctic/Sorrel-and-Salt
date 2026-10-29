@@ -3,9 +3,10 @@ entry: botanical/violet-tree-securidaca-longepedunculata
 status: approved
 listings:
   - list: other
-    name: 'National Forests Act 1998 (South Africa), as stated in the Wikipedia article'
-    value: 'Protected tree'
-    listedAs: 'Securidaca longepedunculata'
+    name: National Forests Act 1998 (South Africa), as stated in the Wikipedia article
+    value: Protected tree
+    listedAs: Securidaca longepedunculata
+    scope: South Africa
     nameBasis: stated
     source: wikipedia-securidaca-longepedunculata
     locator: 'conservation section: "It is listed on the National Forests Act of 1998 of South Africa, where it is noted as a protected tree."'

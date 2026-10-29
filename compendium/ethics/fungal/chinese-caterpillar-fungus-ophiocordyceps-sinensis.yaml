@@ -6,6 +6,7 @@ listings:
     name: IUCN Red List of Threatened Species
     value: Vulnerable (IUCN 3.1)
     listedAs: Ophiocordyceps sinensis
+    scope: global
     nameBasis: stated
     source: wikipedia-ophiocordyceps-sinensis
     locator: Infobox, Conservation status
@@ -13,6 +14,7 @@ listings:
     name: Endangered in China, assessor not named
     value: endangered species in China
     listedAs: Ophiocordyceps sinensis
+    scope: China
     nameBasis: stated
     source: wikipedia-ophiocordyceps-sinensis
     locator: Wikipedia, Ophiocordyceps sinensis, oldid 1380190907

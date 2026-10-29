@@ -6,6 +6,7 @@ listings:
     name: IUCN Red List of Threatened Species, as printed in Wikipedia's taxobox
     value: DD
     listedAs: Dipteryx odorata
+    scope: global
     nameBasis: stated
     source: wikipedia-iucn-dipteryx-odorata
     locator: 'Taxobox: status = DD, status_system = IUCN3.1; its status_ref reads: "Dipteryx odorata", Requena Suarez, D.K., 2017, 10.2305/IUCN.UK.2017-3.RLTS.T62024955A62024965.en'

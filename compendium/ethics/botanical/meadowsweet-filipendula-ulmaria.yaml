@@ -6,6 +6,7 @@ listings:
     name: IUCN Red List of Threatened Species, as printed in Wikipedia's taxobox
     value: LC
     listedAs: Filipendula ulmaria
+    scope: global
     nameBasis: stated
     source: wikipedia-iucn-filipendula-ulmaria
     locator: 'Taxobox: status = LC, status_system = IUCN3.1; its status_ref reads: "Filipendula ulmaria", Lansdown, 2014, 10.2305/IUCN.UK.2014-1.RLTS.T203433A42408831.en'

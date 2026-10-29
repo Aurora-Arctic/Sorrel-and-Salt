@@ -6,6 +6,7 @@ listings:
     name: IUCN Red List of Threatened Species
     value: Least Concern (IUCN 3.1)
     listedAs: Cleyera japonica
+    scope: global
     nameBasis: stated
     source: wikipedia-cleyera-japonica
     locator: Infobox, Conservation status

@@ -6,6 +6,7 @@ listings:
     name: IUCN Red List of Threatened Species, as printed in Wikipedia's taxobox
     value: LC
     listedAs: Populus tremula
+    scope: global
     nameBasis: stated
     source: wikipedia-iucn-populus-tremula
     locator: 'Taxobox: status = LC, status_system = IUCN3.1; its status_ref reads: "Populus tremula", Barstow, M., 2017, 10.2305/IUCN.UK.2017-3.RLTS.T61959941A61959943.en'

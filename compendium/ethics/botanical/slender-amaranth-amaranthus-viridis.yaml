@@ -3,9 +3,10 @@ entry: botanical/slender-amaranth-amaranthus-viridis
 status: approved
 listings:
   - list: iucn
-    name: 'IUCN Red List of Threatened Species'
-    value: 'Least Concern (IUCN 3.1)'
-    listedAs: 'Amaranthus viridis'
+    name: IUCN Red List of Threatened Species
+    value: Least Concern (IUCN 3.1)
+    listedAs: Amaranthus viridis
+    scope: global
     nameBasis: stated
     source: wikipedia-amaranthus-viridis
     locator: 'taxobox, "Conservation status": "Least Concern (IUCN 3.1)"'

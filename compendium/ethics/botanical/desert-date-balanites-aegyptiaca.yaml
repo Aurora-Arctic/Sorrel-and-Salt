@@ -3,9 +3,10 @@ entry: botanical/desert-date-balanites-aegyptiaca
 status: approved
 listings:
   - list: iucn
-    name: 'IUCN Red List of Threatened Species'
-    value: 'Least Concern (IUCN 3.1)'
-    listedAs: 'Balanites aegyptiaca'
+    name: IUCN Red List of Threatened Species
+    value: Least Concern (IUCN 3.1)
+    listedAs: Balanites aegyptiaca
+    scope: global
     nameBasis: stated
     source: wikipedia-balanites-aegyptiaca
     locator: 'taxobox, "Conservation status": "Least Concern (IUCN 3.1)"'

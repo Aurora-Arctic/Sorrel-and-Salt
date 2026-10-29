@@ -6,6 +6,15 @@ listings:
     name: IUCN Red List of Threatened Species, as printed in the Wikipedia taxobox
     value: Endangered
     listedAs: Taxus wallichiana
+    scope: global
     nameBasis: stated
     source: wikipedia-taxus-wallichiana
     locator: 'taxobox "Conservation status": Endangered (IUCN 3.1); The page also says exploitation of leaves and bark has caused declines of up to 90% reported in India and Nepal.'
+  - list: cites
+    name: CITES Appendices I, II and III, valid from 5 March 2026
+    value: Appendix II
+    listedAs: Taxus wallichiana
+    scope: global
+    nameBasis: stated
+    source: cites-appendices
+    locator: 'p. 78, Appendix II column, family TAXACEAE: "Taxus wallichiana", annotation #2: "All parts and derivatives except: a) seeds and pollen; and b) finished products packaged and ready for retail trade."'

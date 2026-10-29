@@ -6,6 +6,7 @@ listings:
     name: United Plant Savers Species At-Risk List
     value: At-Risk
     listedAs: Panax quinquefolius
+    scope: global
     nameBasis: stated
     source: ups-species-at-risk
     locator: under the heading "At-Risk", entry for American Ginseng
@@ -13,6 +14,7 @@ listings:
     name: Committee on the Status of Endangered Wildlife in Canada (COSEWIC), as stated by Wikipedia
     value: Endangered (E)
     listedAs: Panax quinquefolius
+    scope: Canada
     nameBasis: stated
     source: wikipedia-panax-quinquefolius-conservation
     locator: 'Section "Status": "As determined by the Committee on the Status of Endangered Wildlife in Canada, the conservation status of Panax quinquefolius is Endangered (E) in Canada."'
@@ -20,6 +22,7 @@ listings:
     name: CITES Appendices I, II and III, valid from 5 March 2026
     value: Appendix II
     listedAs: Panax quinquefolius
+    scope: global
     nameBasis: stated
     source: cites-appendices
     locator: 'p. 62, Appendix II column, family ARALIACEAE: "Panax quinquefolius", annotation #3: "Whole and sliced roots and parts of roots, excluding manufactured parts or derivatives, such as powders, pills, extracts, tonics, teas and confectionery."'

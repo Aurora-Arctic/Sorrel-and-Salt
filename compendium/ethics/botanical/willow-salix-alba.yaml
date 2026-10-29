@@ -6,6 +6,7 @@ listings:
     name: IUCN Red List of Threatened Species, as printed in Wikipedia's taxobox
     value: LC
     listedAs: Salix alba
+    scope: global
     nameBasis: stated
     source: wikipedia-iucn-salix-alba
     locator: 'Taxobox: status = LC, status_system = IUCN3.1; its status_ref reads: "Salix alba", Lansdown, R.V., 2014, 10.2305/IUCN.UK.2014-1.RLTS.T203465A42409554.en'

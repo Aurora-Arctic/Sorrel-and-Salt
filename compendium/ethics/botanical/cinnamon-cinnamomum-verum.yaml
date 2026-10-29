@@ -6,6 +6,7 @@ listings:
     name: IUCN Red List of Threatened Species, as printed in Wikipedia's taxobox
     value: VU
     listedAs: Cinnamomum verum
+    scope: global
     nameBasis: stated
     source: wikipedia-iucn-cinnamomum-verum
     locator: 'Taxobox: status = VU, status_system = IUCN3.1; its status_ref reads: "Cinnamomum verum", de Kok, R., 2024, 10.2305/IUCN.UK.2024-1.RLTS.T15441323A15441339.en'

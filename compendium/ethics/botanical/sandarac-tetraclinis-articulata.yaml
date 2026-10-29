@@ -6,6 +6,7 @@ listings:
     name: IUCN Red List of Threatened Species, as printed in Wikipedia's taxobox
     value: LC
     listedAs: Tetraclinis articulata
+    scope: global
     nameBasis: stated
     source: wikipedia-iucn-tetraclinis-articulata
     locator: 'Taxobox: status = LC, status_system = IUCN3.1; its status_ref reads: "Tetraclinis articulata", Sánchez Gómez, P., 2011, 10.2305/IUCN.UK.2011-2.RLTS.T30318A9534227.en'

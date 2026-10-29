@@ -6,8 +6,7 @@ listings:
     name: IUCN Red List of Threatened Species, as printed in Wikipedia's taxobox
     value: LC
     listedAs: Melissa officinalis
+    scope: Europe
     nameBasis: stated
     source: wikipedia-iucn-melissa-officinalis
     locator: 'Taxobox: status = LC, status_system = IUCN3.1; its status_ref reads: "Melissa officinalis (Europe assessment)", 2013'
-questions:
-  - 'Wikipedia''s status_ref names a regional assessment ("Melissa officinalis (Europe assessment)"), not a global one. Recommendation: record it only as a regional listing, or leave it out; owner to decide.'

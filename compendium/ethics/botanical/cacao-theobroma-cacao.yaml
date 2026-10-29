@@ -6,6 +6,7 @@ listings:
     name: IUCN Red List
     value: Data Deficient (IUCN 3.1)
     listedAs: Theobroma cacao
+    scope: global
     nameBasis: stated
     source: wikipedia-theobroma-cacao
     locator: taxobox, conservation status (status = DD, IUCN3.1)

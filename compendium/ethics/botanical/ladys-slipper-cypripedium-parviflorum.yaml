@@ -6,6 +6,7 @@ listings:
     name: United Plant Savers Species At-Risk List
     value: Critical
     listedAs: Cypripedium spp.
+    scope: global
     nameBasis: stated
     source: ups-species-at-risk
     locator: under the heading "Critical", entry for Lady’s Slipper Orchid
@@ -13,6 +14,7 @@ listings:
     name: IUCN Red List of Threatened Species, as printed in Wikipedia's taxobox
     value: LC
     listedAs: Cypripedium parviflorum
+    scope: global
     nameBasis: stated
     source: wikipedia-iucn-cypripedium-parviflorum
     locator: 'Taxobox: status = LC, status_system = IUCN3.1; its status_ref reads: "Cypripedium parviflorum", Rankou, 2014, 10.2305/IUCN.UK.2014-1.RLTS.T43316816A43327704.en'

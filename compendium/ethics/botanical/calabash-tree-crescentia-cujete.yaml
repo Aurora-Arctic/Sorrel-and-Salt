@@ -3,9 +3,10 @@ entry: botanical/calabash-tree-crescentia-cujete
 status: approved
 listings:
   - list: iucn
-    name: 'IUCN Red List of Threatened Species'
-    value: 'Least Concern (IUCN 3.1)'
-    listedAs: 'Crescentia cujete'
+    name: IUCN Red List of Threatened Species
+    value: Least Concern (IUCN 3.1)
+    listedAs: Crescentia cujete
+    scope: global
     nameBasis: stated
     source: wikipedia-crescentia-cujete
     locator: 'taxobox, "Conservation status": "Least Concern (IUCN 3.1)"'

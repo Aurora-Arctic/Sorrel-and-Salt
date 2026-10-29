@@ -6,6 +6,7 @@ listings:
     name: IUCN Red List of Threatened Species, as printed in Wikipedia's taxobox
     value: LC
     listedAs: Ceratonia siliqua
+    scope: global
     nameBasis: stated
     source: wikipedia-iucn-ceratonia-siliqua
     locator: 'Taxobox: status = LC, status_system = IUCN3.1; its status_ref reads: "Ceratonia siliqua", 2017, 10.2305/IUCN.UK.2017-3.RLTS.T202951A112823254.en'

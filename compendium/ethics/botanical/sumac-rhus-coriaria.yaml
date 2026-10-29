@@ -6,6 +6,7 @@ listings:
     name: IUCN Red List of Threatened Species, as printed by Wikipedia
     value: Least Concern
     listedAs: Rhus coriaria
+    scope: global
     nameBasis: stated
     source: wikipedia-rhus-coriaria
     locator: 'taxobox status LC (IUCN3.1); reference printed: Rivers, M.C. et al. 2020, Rhus coriaria, e.T63485A112727303'

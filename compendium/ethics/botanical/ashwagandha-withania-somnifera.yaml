@@ -6,6 +6,7 @@ listings:
     name: IUCN Red List of Threatened Species, as printed in the Wikipedia taxobox
     value: Least Concern
     listedAs: Withania somnifera
+    scope: global
     nameBasis: stated
     source: wikipedia-withania-somnifera
     locator: 'taxobox "Conservation status": Least Concern (IUCN 3.1)'

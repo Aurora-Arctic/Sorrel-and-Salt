@@ -6,6 +6,7 @@ listings:
     name: IUCN Red List
     value: Least Concern (IUCN 3.1)
     listedAs: Lobelia siphilitica
+    scope: global
     nameBasis: stated
     source: wikipedia-lobelia-siphilitica
     locator: taxobox, conservation status (status = LC, IUCN3.1)

@@ -6,6 +6,7 @@ listings:
     name: IUCN Red List
     value: Extinct in the Wild
     listedAs: Brugmansia
+    scope: global
     nameBasis: stated
     source: wikipedia-brugmansia
     locator: 'lead paragraph: "listed as Extinct in the Wild by the IUCN Red List"'

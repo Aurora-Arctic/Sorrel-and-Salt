@@ -6,6 +6,7 @@ listings:
     name: IUCN Red List of Threatened Species, as printed in Wikipedia's taxobox
     value: LC
     listedAs: Cydonia oblonga
+    scope: global
     nameBasis: stated
     source: wikipedia-iucn-cydonia-oblonga
     locator: 'Taxobox: status = LC, status_system = IUCN3.1; its status_ref reads: "Cydonia oblonga", 2021, 10.2305/IUCN.UK.2021-2.RLTS.T61611928A61611931.en'

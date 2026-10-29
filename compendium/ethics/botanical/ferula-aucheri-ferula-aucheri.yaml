@@ -6,8 +6,10 @@ listings:
     name: Conservation statement in Wikipedia prose, no assessor named
     value: endangered in local provinces
     listedAs: Ferula aucheri
+    scope: unknown
     nameBasis: stated
     source: wikipedia-ferula-aucheri
     locator: lead
 questions:
   - Wikipedia (Ferula aucheri, oldid 1306008749) says 'Excessive harvesting of these plants for both cooking and traditional medicine has led it to become endangered in local provinces' but names no assessor. Find the assessment, or drop the row?
+  - 'The source does not say where the status "endangered in local provinces" (Conservation statement in Wikipedia prose, no assessor named) applies, so its scope is recorded as unknown. Owner: say whether it is global or for one place, and whether to keep the row. Recommendation: keep it as unknown and do not remove the entry on it.'

@@ -6,6 +6,7 @@ listings:
     name: IUCN Red List
     value: Data Deficient (IUCN 3.1)
     listedAs: Areca catechu
+    scope: global
     nameBasis: stated
     source: wikipedia-areca-catechu
     locator: taxobox, conservation status (status = DD, IUCN3.1)

@@ -6,6 +6,7 @@ listings:
     name: IUCN Red List of Threatened Species, as printed in Wikipedia's taxobox
     value: LC
     listedAs: Leontopodium nivale
+    scope: global
     nameBasis: stated
     source: wikipedia-iucn-leontopodium-nivale
     locator: 'Taxobox: status = LC, status_system = IUCN3.1; its status_ref reads: "Leontopodium alpinum", Khela, S., 2013, 10.2305/IUCN.UK.2013-2.RLTS.T202984A2758405.en'

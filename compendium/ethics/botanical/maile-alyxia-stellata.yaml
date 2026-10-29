@@ -6,6 +6,7 @@ listings:
     name: The Nature Conservancy (NatureServe) global rank
     value: G3
     listedAs: Alyxia stellata
+    scope: global
     nameBasis: stated
     source: wikipedia-alyxia-stellata
     locator: taxobox, conservation status (status = G3, status_system = TNC)

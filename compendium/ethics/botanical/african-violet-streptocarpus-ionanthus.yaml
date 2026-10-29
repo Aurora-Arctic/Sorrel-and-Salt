@@ -6,6 +6,7 @@ listings:
     name: IUCN Red List of Threatened Species, as printed in Wikipedia's taxobox
     value: NT
     listedAs: Streptocarpus ionanthus
+    scope: global
     nameBasis: stated
     source: wikipedia-iucn-streptocarpus-ionanthus
     locator: 'Taxobox: status = NT, status_system = IUCN3.1; its status_ref reads: "Saintpaulia ionantha", IUCN SSC East African Plants Red List Authority., 2014, 10.2305/IUCN.UK.2014-1.RLTS.T158153A763135.en'

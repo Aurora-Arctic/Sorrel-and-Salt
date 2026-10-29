@@ -6,6 +6,7 @@ listings:
     name: IUCN Red List of Threatened Species, as printed in the Wikipedia taxobox
     value: Least Concern
     listedAs: Nyctanthes arbor-tristis
+    scope: global
     nameBasis: stated
     source: wikipedia-nyctanthes-arbor-tristis
     locator: 'taxobox "Conservation status": Least Concern (IUCN 3.1)'

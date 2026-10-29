@@ -3,9 +3,10 @@ entry: botanical/broom-cluster-fig-ficus-sur
 status: approved
 listings:
   - list: iucn
-    name: 'IUCN Red List of Threatened Species'
-    value: 'Least Concern (IUCN 3.1)'
-    listedAs: 'Ficus sur'
+    name: IUCN Red List of Threatened Species
+    value: Least Concern (IUCN 3.1)
+    listedAs: Ficus sur
+    scope: global
     nameBasis: stated
     source: wikipedia-ficus-sur
     locator: 'taxobox, "Conservation status": "Least Concern (IUCN 3.1)"'

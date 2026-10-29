@@ -6,6 +6,7 @@ listings:
     name: IUCN Red List
     value: Least Concern (IUCN 3.1)
     listedAs: Pandanus tectorius
+    scope: global
     nameBasis: stated
     source: wikipedia-pandanus-tectorius
     locator: taxobox, conservation status (status = LC, IUCN3.1)

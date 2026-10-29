@@ -6,6 +6,7 @@ listings:
     name: IUCN Red List of Threatened Species, as printed in Wikipedia's taxobox
     value: LC
     listedAs: Plumeria rubra
+    scope: global
     nameBasis: stated
     source: wikipedia-iucn-plumeria-rubra
     locator: 'Taxobox: status = LC, status_system = IUCN3.1; its status_ref reads: "Plumeria rubra", 2019'
