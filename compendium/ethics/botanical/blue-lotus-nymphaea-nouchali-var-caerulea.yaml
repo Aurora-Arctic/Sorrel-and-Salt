@@ -1,0 +1,11 @@
+# Gathered for M14.29; the seed never reads this folder.
+entry: botanical/blue-lotus-nymphaea-nouchali-var-caerulea
+status: approved
+listings:
+  - list: other
+    name: 'Red List of South African Plants (SANBI), as printed by Wikipedia'
+    value: 'Least Concern'
+    listedAs: 'Nymphaea nouchali var. caerulea'
+    nameBasis: stated
+    source: wikipedia-nymphaea-nouchali-var-caerulea
+    locator: 'text: "The conservation status has not been evaluated by the IUCN, but it is considered a species of ''least concern'' by the South African National Biodiversity Institute in their Red List of South African Plants."'
