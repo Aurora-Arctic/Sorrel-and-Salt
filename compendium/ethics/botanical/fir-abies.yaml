@@ -1,5 +1,6 @@
 # Gathered for M14.29; the seed never reads this folder.
 entry: botanical/fir-abies
-status: needs-review
+status: approved
 questions:
-  - 'The CITES Appendices (valid from 5 March 2026) list one species of this genus: p. 76, Appendix I column, family PINACEAE, "Abies guatemalensis". The entry is the whole genus Abies. Owner: nothing to record unless you want a note that one fir is Appendix I. Recommendation: no listing row for the genus; keep this question.'
+  - 'The CITES Appendices (valid from 5 March 2026) list one species of this genus: p. 76, Appendix I column, family PINACEAE, "Abies guatemalensis". The entry is the whole genus Abies, and the genus is not listed as a genus.'
+  - 'Kept by the owner 2026-10-29: the entry is not removed for the one Appendix I species, because the entry is the genus and not that species. No listing row for the genus.'
