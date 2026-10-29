@@ -1,0 +1,12 @@
+# Gathered for M14.29; the seed never reads this folder.
+entry: botanical/rimu-dacrydium-cupressinum
+status: approved
+listings:
+  - list: iucn
+    name: IUCN Red List
+    value: Least Concern (IUCN 3.1)
+    listedAs: Dacrydium cupressinum
+    scope: global
+    nameBasis: stated
+    source: wikipedia-dacrydium-cupressinum
+    locator: taxobox, conservation status (status = LC, IUCN3.1)

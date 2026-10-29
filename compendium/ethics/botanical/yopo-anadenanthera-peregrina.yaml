@@ -1,0 +1,14 @@
+# Gathered for M14.29; the seed never reads this folder.
+entry: botanical/yopo-anadenanthera-peregrina
+status: needs-review
+listings:
+  - list: iucn
+    name: IUCN Red List
+    value: Least Concern (IUCN 3.1)
+    listedAs: Anadenanthera peregrina
+    scope: global
+    nameBasis: stated
+    source: wikipedia-anadenanthera-peregrina
+    locator: taxobox, conservation status (status = LC, IUCN3.1)
+questions:
+  - The source says that among the Piaroa yopo is reserved primarily for shamanic specialists. That limits use inside the community and does not say outsiders may not use it, so no closedPractice row is written. Is there a tribal or academic source that names yopo as closed to outsiders?

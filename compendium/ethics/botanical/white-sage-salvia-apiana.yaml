@@ -1,0 +1,5 @@
+# Gathered for M14.29; the seed never reads this folder.
+entry: botanical/white-sage-salvia-apiana
+status: needs-review
+questions:
+  - Wikipedia says that, because of the plant's sacredness to certain Indigenous tribes, many Native Americans have asked non-Natives to refrain from using white sage. Wikipedia is not an allowed closed-practice source, and a search of the Tongva Taraxat Paxaavxa Conservancy page found no statement naming white sage as closed to others (its Protect White Sage page returned HTTP 404). Is there a tribal, religious-house or academic source that names this ingredient as closed, so a closedPractice row can be added?
