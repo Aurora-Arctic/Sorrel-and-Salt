@@ -52,17 +52,25 @@ function Row({
   );
 }
 
-export function ComparisonPanel({ intended, steps, groups }: ComparisonPanelProps): ReactElement {
-  const headingId = useId();
-  const intendedIds = intended.map(({ id }) => id);
-  const ingredientSteps = steps.filter((step) => step.ingredientId !== null);
+/**
+ * The comparison of the assigned categories with what the jar's steps carry: the one derivation
+ * Category Match draws from and the Add to Jar picker orders its rows by (Missing first).
+ */
+export function compareJar(intendedIds: readonly string[], steps: readonly SpellStepValue[]) {
   const present = summarizeSpellCategories(
     steps.map((step) => ({
       ingredientId: step.ingredientId,
       categoryIds: step.categories.map(({ id }) => id),
     })),
   );
-  const gaps = compareSpellCategories(intendedIds, present);
+  return compareSpellCategories(intendedIds, present);
+}
+
+export function ComparisonPanel({ intended, steps, groups }: ComparisonPanelProps): ReactElement {
+  const headingId = useId();
+  const intendedIds = intended.map(({ id }) => id);
+  const ingredientSteps = steps.filter((step) => step.ingredientId !== null);
+  const gaps = compareJar(intendedIds, steps);
   const missing = intended.filter(({ id }) => gaps.intendedNotPresent.includes(id));
   const carried = intended.filter(({ id }) => !gaps.intendedNotPresent.includes(id));
   const chipsOf = (list: readonly StepCategory[]): CardCategory[] =>
