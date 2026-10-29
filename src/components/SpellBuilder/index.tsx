@@ -61,8 +61,8 @@ import './index.scss';
 
 // The spell builder: a spell's title, intent, jar and note in four folding sections, inside the
 // dialog (./spell-dialog.tsx). It autosaves (./autosave.ts) and Close saves first
-// (./save-on-close.ts). (claude-docs/components/spell-builder.md, "Notes from code comments: the
-// builder")
+// (./save-on-close.ts). (claude-docs/components/spell-builder.md, "The builder's sections and
+// autosave")
 
 /** A step's saved id, set by a save's answer: bookkeeping, never a step of the history. */
 const isStepIdName = (name: string): boolean => /^steps\.\d+\.stepId$/.test(name);
@@ -633,7 +633,7 @@ const SpellBuilder = ({
 
   /**
    * Reload Latest, after a stale save: replaces the form, typing included, with the spell as the server has it; a failed read leaves the conflict as it is
-   * (claude-docs/components/spell-builder.md, "Notes from code comments: reload latest").
+   * (claude-docs/components/spell-builder.md, "The save module and its conflicts").
    */
   const reloadLatest = async () => {
     const id = createdId ?? opened?.id;

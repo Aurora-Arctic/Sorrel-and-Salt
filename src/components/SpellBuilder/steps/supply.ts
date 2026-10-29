@@ -72,7 +72,7 @@ const rounded = (value: number): number => Math.round(value * 1000) / 1000;
 /**
  * What a form's steps need together: one amount as typed; one unit added as is; two units of one dimension added in the jar's unit by `unitConvert`;
  * anything else listed ("1 tsp + 2 pinch") rather than guessed. A blank amount adds nothing; no amount at all is null.
- * (claude-docs/components/spell-builder.md, "Notes from code comments: the supply total").
+ * (claude-docs/components/spell-builder.md, "Step values, documents and totals").
  */
 export function needOf(steps: readonly NeedInput[], jarUnit: Unit | null): string | null {
   const amounts = steps

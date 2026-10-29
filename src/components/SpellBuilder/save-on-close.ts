@@ -4,7 +4,7 @@ import { useContext, useEffect, useRef } from 'react';
 import { CloseGuardContext } from '../Modal/close-guard';
 
 // The modal's way out: Close, Escape and an outside click save what is unsaved, then close, with no Discard question; a refused save keeps it open
-// (claude-docs/components/spell-builder.md, "Notes from code comments: closing the modal").
+// (claude-docs/components/spell-builder.md, "Closing the modal").
 
 /**
  * Puts the save-on-close guard in the modal's slot. `unsaved` is whether

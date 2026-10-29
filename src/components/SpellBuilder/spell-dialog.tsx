@@ -17,7 +17,7 @@ import type { SpellDialogProps } from './types';
 // The spell builder as a modal over the grimoire: New Spell opens it under `?new=spell-<slug>`, a
 // spell's Edit under `?edit=<id>`, and a draft's first save swaps `?new` for `?edit=<id>`. Close
 // saves first (./save-on-close.ts). A client part because the builder's handlers are functions.
-// (claude-docs/components/spell-builder.md, "Notes from code comments: the spell dialog")
+// (claude-docs/components/spell-builder.md, "The spell dialog and its address")
 
 /**
  * `closeHref` with a saved spell's dialog open over it, `?edit=<id>`. Built here rather than
