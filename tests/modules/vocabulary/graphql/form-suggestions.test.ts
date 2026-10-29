@@ -10,7 +10,7 @@ import { run as runOperation } from '../../../support/graphql/run';
 import { makeIngredient, makeVariant } from '../../../support/fixtures';
 import type { FormSuggestionConnection } from './types';
 
-// The transport half of M4.7a's form lookup: the nodes, each curated row
+// The transport half of the form lookup: the nodes, each curated row
 // carrying its group and every suggestion its claimants, a page by cursor and
 // the compendium-only mode. Who is refused, what
 // each bucket holds and the scope are services/form-suggestions.test.ts's, and

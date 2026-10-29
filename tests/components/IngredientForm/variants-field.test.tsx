@@ -140,7 +140,7 @@ describe('VariantsField', () => {
     expect(newForm()).toHaveValue('  oIL ');
   });
 
-  // The owner's call: each variant one summary line, opened by its
+  // Each variant one summary line, opened by its
   // Edit, one at a time, its fields hidden while closed but kept.
   describe('folded to a line', () => {
     it('opens an entry with every variant closed, its fields out of reach until Edit opens it', () => {
@@ -180,7 +180,7 @@ describe('VariantsField', () => {
       );
     });
 
-    // The owner's call: an open variant's fields in the ingredient's
+    // An open variant's fields in the ingredient's
     // sections, a heading level beneath Variants.
     it('heads an open variant’s sections with the ingredient’s section headings, a level beneath Variants', () => {
       renderVariants({ workspaceId: null, values: twoForms() });
@@ -221,7 +221,7 @@ describe('VariantsField', () => {
       expect(newForm()).toHaveFocus();
     });
 
-    // The owner's call: the box heads the section, the newest variant beneath it.
+    // The box heads the section, the newest variant beneath it.
     it('lists a variant added beneath the New Form box, ahead of those before it', () => {
       renderVariants({ workspaceId: WORKSPACE_ID });
 
@@ -236,7 +236,7 @@ describe('VariantsField', () => {
     });
   });
 
-  // The owner's ask: an open variant's sections fold as the
+  // An open variant's sections fold as the
   // ingredient's do, under its own headings.
   describe('a variant’s sections', () => {
     it('opens an existing variant with every section closed, each summarising what it holds', () => {

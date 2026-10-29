@@ -124,8 +124,8 @@ describe('the holding covens (M12.55)', () => {
   });
 });
 
-// The plus of someone who may write in several covens asks which in a menu (the owner's
-// call, 2026-10-20): its items are every coven, one holding the entry disabled, and choosing one
+// The plus of someone who may write in several covens asks which in a menu:
+// its items are every coven, one holding the entry disabled, and choosing one
 // adds there at once. With one coven at all, the plus adds there with no menu. A success turns
 // the spinner into a check, which fades back to the plus after a hold unless every coven now
 // holds the entry (claude-docs/components/compendium-cards.md, "The plus"). These cases render
@@ -198,7 +198,7 @@ describe('the add icon among several covens', () => {
     expect(calls).toEqual([{ workspaceId: ONE.id, ingredientId: 'fixture-testwort-id' }]);
   });
 
-  // The owner’s call, 2026-10-20: the plus adds at once only where there is one coven at all,
+  // The plus adds at once only where there is one coven at all,
   // never because one coven alone is left without the entry.
   it('opens a menu where there are two covens and one holds the entry, the holder disabled', () => {
     const calls = mockAdd();
@@ -296,8 +296,8 @@ describe('the add icon among several covens', () => {
   });
 });
 
-// The owner's call, 2026-10-20: "When you click the plus and it adds to a coven the loading should
-// animate into a check mark and then fade to the plus." The plus says which it shows in its
+// A click on the plus that adds to a coven animates the spinner into a check mark, then fades
+// back to the plus. The plus says which it shows in its
 // `data-state`, the attribute its stylesheet draws from: `added` for the check, `returning` while
 // the check fades back to the plus, and none for the plus itself.
 describe('the plus after an add', () => {

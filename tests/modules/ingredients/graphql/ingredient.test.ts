@@ -88,7 +88,7 @@ describe('ingredient', () => {
     expect(result.data?.ingredient).toMatchObject({ id: localId, isGlobal: false });
   });
 
-  // The transport's half of M12.24: `retired` reaches the wire. Who reads a
+  // The transport's half of retirement: `retired` reaches the wire. Who reads a
   // retired entry is services/retired-entry.test.ts's.
   it('marks a retired entry retired to a coven whose cupboard names it', async () => {
     await insertCupboardEntry(

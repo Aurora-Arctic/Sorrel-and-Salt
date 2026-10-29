@@ -15,7 +15,7 @@ import type {
   DeclineInvitationByIdResult,
 } from './types';
 
-// MB.70's three mutations, the transport's half
+// The three mutations, the transport's half
 // (claude-docs/testing/layer-ownership.md): an admin's answer, which carries
 // no token and no link, the session as the actor, and one refusal per error
 // code, read as the browser reads them. Which callers, addresses and links the

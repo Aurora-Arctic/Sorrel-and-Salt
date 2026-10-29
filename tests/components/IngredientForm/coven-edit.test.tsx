@@ -108,8 +108,8 @@ describe("IngredientForm editing a coven's own entry", () => {
     );
   });
 
-  // Delete sits at the dialog's foot as the compendium's does (moved
-  // from M9.10 by the owner, 2026-10-19), and deletes from this coven alone.
+  // Delete sits at the dialog's foot as the compendium's does,
+  // and deletes from this coven alone.
   it('deletes the entry from the coven once confirmed, naming it, and says why when refused', async () => {
     const onDeleted = vi.fn();
     renderEdit({ onDeleted });

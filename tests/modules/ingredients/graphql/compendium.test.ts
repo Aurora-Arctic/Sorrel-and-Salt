@@ -174,7 +174,7 @@ describe('compendium', () => {
     ]);
   });
 
-  // M11.22's facets: the four lists, the toxic setting and the two
+  // The facets: the four lists, the toxic setting and the two
   // to-do switches reach the read as the service parses them, and `any` as no
   // filter. What each matches is tests/db/repository/ingredients.test.ts's.
   it('passes the facet arguments to the read, the toxic setting as a ToxicFilter', async () => {

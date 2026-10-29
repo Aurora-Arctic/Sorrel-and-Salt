@@ -18,7 +18,7 @@ import { run } from '../../../support/graphql/run';
 
 // A compendium entry the curators retired (soft-deleted) stays on a
 // coven's Ingredients list, its count and its facet counts while that coven's
-// live cupboard row names it, by M12.24's rule
+// live cupboard row names it, by the retired-entry rule
 // (claude-docs/db/workspace-compendium-entries.md, "When the compendium
 // retires the entry"). Coven W holds the entry; coven X holds a jar of its
 // form but no cupboard row, which no service writes but the table does not

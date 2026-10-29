@@ -9,7 +9,7 @@ import { run as runOperation } from '../../../support/graphql/run';
 import { makeIngredient } from '../../../support/fixtures';
 import type { AstrologySuggestionConnection } from './types';
 
-// The transport half of MB.94: two connection fields over one type, a page
+// The transport half of the suggestion lookup: two connection fields over one type, a page
 // each, and the compendium-only mode. Who is
 // refused, what each bucket holds and the thresholds are
 // services/suggestions.test.ts's, and a signed-out caller at every field is

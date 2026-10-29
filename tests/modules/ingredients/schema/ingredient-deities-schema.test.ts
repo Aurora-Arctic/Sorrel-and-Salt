@@ -30,7 +30,7 @@ const AUTHOR = FIXTURE_USERS.A.id;
 let MUGWORT: string;
 let UNCARIA: string;
 // One invented god under two invented traditions: the Greek and Roman Hecate
-// case, without colliding with a row MB.129 seeds.
+// case, without colliding with a seeded row.
 let TESTRA_FIXTURAL: string;
 let TESTRA_MOCKISH: string;
 
@@ -143,7 +143,7 @@ describe('ingredient_deities table', () => {
     });
   });
 
-  // DESIGN.md §5: no repeats. MB.167's shared schema refuses a repeat first,
+  // DESIGN.md §5: no repeats. The shared schema refuses a repeat first,
   // so these indexes are the floor beneath it.
   describe('an ingredient names a deity once', () => {
     it('refuses a second live link to the same deity', async () => {

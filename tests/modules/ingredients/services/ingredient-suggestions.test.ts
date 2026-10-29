@@ -95,7 +95,7 @@ describe('suggestIngredients', () => {
     });
   });
 
-  // MB.131's picker shows which plant a suggestion is, and whose.
+  // The picker shows which plant a suggestion is, and whose.
   it('carries each entry’s formal name and tier', async () => {
     await addIngredient({ name: "Cat's Claw", canonicalName: 'Uncaria tomentosa' });
     // A coven entry naming another species, so the two are told apart by formal name.

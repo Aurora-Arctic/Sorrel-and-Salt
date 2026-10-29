@@ -19,7 +19,7 @@ import { useTestDatabase } from '../../../support/db/database';
 import { insertIngredient } from '../../../support/db/insert-ingredient';
 import { makeIngredient } from '../../../support/fixtures';
 
-// Story 18's category-group half: the groups' writes, the site
+// The category-group half: the groups' writes, the site
 // admin's alone. Each colour is held to 4.5:1 against its own theme's harder
 // surface. A group is deleted only once its live categories have
 // somewhere to go: the admin names a group, and they move there in the same

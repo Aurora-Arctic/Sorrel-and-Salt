@@ -7,9 +7,9 @@ import { retiredIngredientSlugs } from '@/modules/ingredients/schema/retired-ing
 import { FIXTURE_USERS } from '@/db/seed/standard';
 import type { Retired } from './types';
 
-// MB.80's ledger: a slug an ingredient moved off, answering a 308 and reserved
-// until `expires_at`. The columns and the generated expiry only — MB.82 is
-// the first thing to read it (claude-docs/db/ingredient-slugs.md, "Ingredient slugs").
+// The ledger: a slug an ingredient moved off, answering a 308 and reserved
+// until `expires_at`. The columns and the generated expiry only; the slug
+// service is the first thing to read it (claude-docs/db/ingredient-slugs.md, "Ingredient slugs").
 
 describe('retired_ingredient_slugs schema', () => {
   const { byName } = tableFacts(retiredIngredientSlugs);
@@ -91,7 +91,7 @@ describe('retired_ingredient_slugs table', () => {
         ['2026-03-15 00:00:00', '2026-09-11 00:00:00'],
         ['2026-03-15 12:34:56.789', '2026-09-11 00:00:00'],
         ['2026-03-15 23:59:59.999', '2026-09-11 00:00:00'],
-        // Calendar days across a leap day: 2028-02-29 is one of the 180.
+        // Calendar days across a leap day: the leap day is one of the 180.
         ['2027-12-31 23:00:00', '2028-06-28 00:00:00'],
       ];
 

@@ -26,7 +26,7 @@ import {
 } from '../../../support/db/invitation-acceptance';
 
 // The one accept service, `acceptInvitation(session, token)`, with the
-// site tier's branch; M7.5 adds the workspace's. Holding the token names the
+// site tier's branch and the workspace's. Holding the token names the
 // invitation, and the session's verified address is what admits: a matching
 // unverified account is sent to the email page, a different address refused.
 // The three dead-link checks run first, for both tiers, one reason per link.

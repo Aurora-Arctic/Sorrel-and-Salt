@@ -11,7 +11,7 @@ import { type IngredientFixture, makeIngredient, makeVariant } from '../../../su
 import type { Overrides } from '../../../support/fixtures';
 import { run as runOperation } from '../../../support/graphql/run';
 
-// M12.3's two queries, `compendiumFacets` and `workspaceIngredientFacets`.
+// The two queries, `compendiumFacets` and `workspaceIngredientFacets`.
 // How each value is counted, and who may read which coven's counts, is
 // services/ingredient-facets.test.ts's and tests/db/repository/ingredient-facets.test.ts's;
 // this file holds the transport's half — the arguments reaching the service,

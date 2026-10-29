@@ -19,8 +19,8 @@ import { server } from '../../support/msw/server';
 const router = vi.hoisted(() => ({ push: vi.fn(), replace: vi.fn(), refresh: vi.fn() }));
 vi.mock('next/navigation', () => ({ useRouter: () => router }));
 
-// Which cupboard choices a compendium entry offers (M12.23;
-// claude-docs/components/ingredient-entry.md): the page decides from the
+// Which cupboard choices a compendium entry offers
+// (claude-docs/components/ingredient-entry.md): the page decides from the
 // member's permissions, the choices follow whether the coven holds the entry, and they are drawn
 // as the list cards draw them: a main icon (Annotate on a
 // coven's page, Edit in Compendium on the compendium's) and the three dots for what is further,
@@ -144,8 +144,8 @@ describe('CupboardActions', () => {
     expect(container).toBeEmptyDOMElement();
   });
 
-  // The dots draw the labelled section even though every choice is the coven's (the owner's call,
-  // 2026-10-20): the lone Coven section, and no Compendium one for an empty side.
+  // The dots draw the labelled section even though every choice is the coven's:
+  // the lone Coven section, and no Compendium one for an empty side.
   it('puts Make It Ours and Remove in the three dots, in a Coven section, not Add, once the coven holds it', () => {
     renderActions({ held: true });
 
@@ -306,7 +306,7 @@ describe('CupboardActions', () => {
 
   // The entry's page heading takes the focus once the re-read says the coven no
   // longer holds it: Remove went with its menu, and the control left may be
-  // another element (after M12.31's follow-up 5). Until then the
+  // another element. Until then the
   // confirmation stays, busy, as ConfirmedAction's does.
   it("reads the page again once the entry is removed, and closes onto the page's heading when the re-read drops it", async () => {
     mockGraphQLMutation<RemoveCupboardEntryMutation, Record<string, unknown>>(

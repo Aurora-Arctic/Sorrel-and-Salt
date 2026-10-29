@@ -649,7 +649,7 @@ describe('the ingredient fields, on the local variant', () => {
       ).toEqual([['variants', 0, 'formId']]);
     });
 
-    // The owner's call: a form stands in for a form, so a variant's
+    // A form stands in for a form, so a variant's
     // link names one; the ingredient's own list may still link it whole.
     it('refuses a variant’s link naming no form, beside its form, which the ingredient’s own list takes', () => {
       const whole = { substitutes: [{ ingredientId: LINKED }] };

@@ -20,7 +20,7 @@ import {
 } from '../../../support/fixtures';
 import { useCompendiumEntryInput } from '../../../support/db/compendium-entry-input';
 
-// Story 17's service, its identity half: the compendium's unique indexes met as
+// The compendium service, its identity half: the compendium's unique indexes met as
 // field errors, the slug an entry's label and formal name give it, and the
 // redirect a moved slug leaves (claude-docs/db/ingredient-slugs.md). Split from
 // compendium-entries.test.ts, which holds the writes. The table is emptied per
@@ -82,7 +82,7 @@ describe('a collision with another compendium entry', () => {
   it('refuses a second entry under a formal name the compendium holds, whatever its form, on `canonicalName`, naming the entry', async () => {
     await seed();
     // Why it could have been admitted: Oil is a curated pick, so no vocabulary
-    // rule refuses it, and until MB.220 a differing form was another identity.
+    // rule refuses it, and a differing form is not another identity.
     const oil = entry({ variants: [makeVariant({ form: 'Oil' })] });
     expect(oil.variants?.[0].formId).toEqual(expect.any(String));
 
@@ -116,7 +116,7 @@ describe('a collision with another compendium entry', () => {
 
   it("refuses a rewrite onto another entry's identity, leaving the row as it was", async () => {
     await seed({ name: 'Testwort' });
-    // Another formal name: one formal name is one entry per tier since MB.216.
+    // Another formal name: one formal name is one entry per tier.
     const id = await seed({ name: 'Testwort', canonicalName: 'Fixtura alteralis' });
     const before = await rowOf(id);
 
@@ -188,7 +188,7 @@ describe('a collision with another compendium entry', () => {
   });
 });
 
-// MB.82's rule (claude-docs/db/ingredient-slugs.md, "Ingredient slugs"): the address follows the
+// The slug rule (claude-docs/db/ingredient-slugs.md, "Ingredient slugs"): the address follows the
 // label and the formal name, never the form; the one it leaves redirects to the entry
 // for 180 days; and a write that would take another entry's redirected address
 // ends that redirect only once the admin confirms it. The clock is pinned, so

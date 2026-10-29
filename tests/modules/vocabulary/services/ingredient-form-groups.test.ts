@@ -22,7 +22,7 @@ import { useTestDatabase } from '../../../support/db/database';
 import { insertIngredient } from '../../../support/db/insert-ingredient';
 import { makeIngredient, makeVariant } from '../../../support/fixtures';
 
-// Story 18's form-group half: the groups' writes, the site admin's
+// The form-group half: the groups' writes, the site admin's
 // alone. A form's slug is its name and its group, so a rename moves
 // the slug of every form under the group, and a delete moves its live forms
 // to the group the admin names, each re-slugged there — the forms stay
@@ -74,7 +74,7 @@ async function seedGroup(name: string): Promise<string> {
   return row.id;
 }
 
-/** Seeds a form under the group, slugged as M5.6a slugs one, stamped by A. */
+/** Seeds a form under the group, slugged as the forms' slugs are made, stamped by A. */
 async function seedForm(name: string, groupId: string, groupName: string): Promise<string> {
   const [row] = await sql<{ id: string }[]>`
     insert into ingredient_forms (name, slug, description, group_id, created_by, updated_by)

@@ -390,7 +390,7 @@ describe('who the ingredient-children loaders answer', () => {
     categoriesByIngredient: ['Protection'],
     folkNamesByIngredient: ['Testbane'],
     substitutesByIngredient: ['Testbane'],
-    // The fixture's own form, a variant since MB.216, and the one added.
+    // The fixture's own form, a variant, and the one added.
     variantsByIngredient: ['Fixture Gum', 'Testform'],
     referencesByIngredient: ['Fixture Herbal'],
     categoriesByVariant: ['Protection'],

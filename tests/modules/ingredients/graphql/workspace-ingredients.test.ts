@@ -19,7 +19,7 @@ import {
 import { run } from '../../../support/graphql/run';
 import type { WorkspaceIngredientNode } from './types';
 
-// Stories 15, 25 and 34 over the wire: the three mutations a coven's
+// Over the wire: the three mutations a coven's
 // ingredient form saves and deletes through. This file holds the transport's
 // half (claude-docs/testing/layer-ownership.md): the SDL's own refusals, the
 // answer as a fresh read gives it, the loaders cleared between two writes in
@@ -431,7 +431,7 @@ describe('updateIngredient', () => {
   });
 });
 
-// Story 25 over the wire. The answer is the deleted id rather than the
+// Deleting over the wire. The answer is the deleted id rather than the
 // entity: a list evicts a row by its id, and a deleted ingredient's children
 // would read as empty (claude-docs/graphql/schema.md, "The workspace ingredient mutations").
 describe('deleteIngredient', () => {

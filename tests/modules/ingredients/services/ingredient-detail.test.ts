@@ -372,8 +372,8 @@ describe('readCompendiumEntry', () => {
     await expect(readCompendiumEntry('nothing-here')).rejects.toThrow(NotFound);
   });
 
-  // MB.85 cites this test for "a coven's entry is a 404 at the public address"
-  // rather than repeating it.
+  // This test stands for "a coven's entry is a 404 at the public address"
+  // wherever that is cited, rather than repeating it.
   it("a workspace entry's slug at the public read is NotFound", async () => {
     const id = await seed({ workspaceId: WORKSPACE_W_ID });
     const [{ slug }] = await sql`select slug from ingredients where id = ${id}`;

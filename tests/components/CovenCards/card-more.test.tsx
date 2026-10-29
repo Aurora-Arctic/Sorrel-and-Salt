@@ -107,8 +107,7 @@ describe('CardMore', () => {
   it('offers Make It Ours and Remove on a compendium entry the cupboard holds', () => {
     renderOnPage(HELD);
     expect(choices('House Salt')).toEqual(['Make It Ours', 'Remove']);
-    // The dots draw their labelled section though every choice is the coven's (the owner's call,
-    // 2026-10-20).
+    // The dots draw their labelled section though every choice is the coven's.
     const menu = screen.getByRole('menu', { name: 'More for House Salt' });
     expect(within(menu).getByRole('group', { name: 'Coven' })).toContainElement(
       within(menu).getByRole('menuitem', { name: 'Remove' }),

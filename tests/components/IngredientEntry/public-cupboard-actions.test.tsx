@@ -160,8 +160,8 @@ describe('CupboardActions on the public page', () => {
     await act(async () => {
       fireEvent.click(screen.getByRole('button', { name: 'More for Testwort' }));
     });
-    // Only the coven's choices are left, in the one Coven section the dots always draw (the
-    // owner's call, 2026-10-20), Remove among them and so no bin.
+    // Only the coven's choices are left, in the one Coven section the dots always draw,
+    // Remove among them and so no bin.
     expect(shownChoices()).toEqual(['Annotate', 'Make It Ours', 'Remove']);
     const menu = screen.getByRole('menu', { name: 'More for Testwort' });
     expect(within(menu).getByRole('group', { name: 'Coven' })).toBeInTheDocument();
@@ -204,7 +204,7 @@ describe('CupboardActions on the public page', () => {
     expect(screen.queryByRole('button', { name: /^(More|Remove)/ })).toBeNull();
   });
 
-  // The plus, as the compendium card has it (the owner's calls, 2026-10-20): just before the
+  // The plus, as the compendium card has it: just before the
   // pencil, and Add to Cupboard is no longer one of the pencil's choices.
   describe('the plus', () => {
     it('is a menu of both covens where one holds the entry, the holder disabled, with no Add in the dots', async () => {

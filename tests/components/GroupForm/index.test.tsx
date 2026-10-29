@@ -189,7 +189,7 @@ describe('GroupForm, for a category group', () => {
     });
   });
 
-  // The owner's call: the colour chosen first sets its partner, the same hue
+  // The colour chosen first sets its partner, the same hue
   // fitted to the other ground, until the admin sets the partner themselves.
   describe('the pair', () => {
     it('fills either colour from the other chosen first', () => {
@@ -248,7 +248,7 @@ describe('GroupForm, for a category group', () => {
     });
   });
 
-  // The owner's call: a colour too close to another group's in the same
+  // A colour too close to another group's in the same
   // theme is warned of, beside its picker, and never blocks the save.
   describe('the near-colour warning', () => {
     const COLOURED = [

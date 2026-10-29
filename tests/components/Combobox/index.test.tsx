@@ -85,7 +85,7 @@ describe('Combobox', () => {
     expect(screen.queryByRole('button', { name: /Show/ })).not.toBeInTheDocument();
   });
 
-  // Regression, found by MB.221's e2e flow: a box left while its list was
+  // Regression: a box left while its list was
   // empty — a pick-only box's lookup still answering — kept wanting it open,
   // and when the answer came the list opened and took the focus back from
   // whatever box was then in use.
@@ -755,7 +755,7 @@ describe('Combobox', () => {
 
     afterEach(() => vi.restoreAllMocks());
 
-    // The owner's call at MB.115's review: the prompt for the next entry
+    // The prompt for the next entry
     // stays beside the chips while nothing is typed.
     it('keeps the placeholder of the box beside its entries', () => {
       render(
@@ -986,7 +986,7 @@ describe('Combobox', () => {
       expect(handle('Mars')).not.toHaveAttribute('aria-pressed', 'true');
     });
 
-    // The owner's reports: on wrapped rows the arrows moved a chip by where
+    // On wrapped rows the arrows moved a chip by where
     // the chips sit, so Left from the second chip on row 2 went to a chip on
     // row 1 whose corners were nearer; and the chips making way overlapped or
     // left gaps. Left and Right step through the list, Up and Down jump a
@@ -1332,7 +1332,7 @@ describe('Combobox', () => {
       expect(elements()).toHaveTextContent('Fire, Earth');
     });
 
-    // The owner's call at MB.115's review: a placeholder that went with the
+    // A placeholder that went with the
     // first chip left nothing prompting for the next.
     // In a modal, an Escape let through shuts the whole dialog, as
     // the select-only box's test says.

@@ -23,8 +23,7 @@ import { insertStock } from '../../../support/db/insert-stock';
 import { makeIngredient, makeVariant } from '../../../support/fixtures';
 
 // The writes a coven keeps on a compendium entry the curators retired
-// (soft-deleted) while its cupboard row names it, by the owner's decision of
-// 2026-10-19, which reverses M12.24's "adds nothing to it": annotating the
+// (soft-deleted) while its cupboard row names it, which still lets the coven write on it: annotating the
 // entry through the row's overrides, removing it from the cupboard, Make It
 // Ours, and its jars (claude-docs/db/workspace-compendium-entries.md, "When
 // the compendium retires the entry"). Coven W holds the entry; coven X holds

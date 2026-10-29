@@ -323,7 +323,7 @@ describe('IngredientSearch', () => {
     expect(screen.getByText('Results go here')).toBeInTheDocument();
   });
 
-  // The owner's rule of 2026-10-27: a pick opens the item's Quick Look, so under a route
+  // A pick opens the item's Quick Look, so under a route
   // modal opener it opens there, in the place the page's details modal stands in, and the
   // modal shows its head at once while its page loads.
   it('opens a pick through the route modal opener, under its heading and in its place', async () => {

@@ -70,7 +70,7 @@ describe('RemoveControl', () => {
 // The row's own Remove takes its row with it: the members page, the
 // invitations' Revoke and Remove, the account page's Decline and the admin
 // invitations' Revoke all ask through ConfirmedAction's modal, so one row
-// proves the landing for them all (after M12.31's follow-up 5).
+// proves the landing for them all.
 describe('RemoveControl, where the focus lands', () => {
   beforeEach(() => {
     refresh.mockReset();

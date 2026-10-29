@@ -19,7 +19,7 @@ import {
 import { run } from '../../../support/graphql/run';
 import type { WorkspaceIngredientNode } from './types';
 
-// Story 18 over the wire: the site admin's three compendium writes.
+// Over the wire: the site admin's three compendium writes.
 // This file holds the transport's half (claude-docs/testing/layer-ownership.md):
 // the SDL's own refusals, the loaders cleared between two writes in one
 // request, `endRedirect` reaching the service, and one refusal per error code

@@ -4,7 +4,7 @@ import { A, E, asUser } from '../../../support/as-user';
 import { run } from '../../../support/graphql/run';
 import type { SetUserRoleResult } from './types';
 
-// MB.59's `setUserRole`, the transport's half (claude-docs/testing/layer-ownership.md):
+// `setUserRole`, the transport's half (claude-docs/testing/layer-ownership.md):
 // an admin's answer, the reason reaching the ledger, and one refusal per error
 // code, read as the browser reads them. Which callers and targets the service
 // refuses is services/user-role.test.ts's; a signed-out caller and the scope

@@ -49,7 +49,7 @@ describe('a variant’s substitutes', () => {
     ]);
   });
 
-  // The owner's calls: a variant's substitute is picked form by
+  // A variant's substitute is picked form by
   // form, and a link always names one.
   it('offers an ingredient only as its forms, one row each, and one in no form not at all', async () => {
     renderVariants({ workspaceId: WORKSPACE_ID });

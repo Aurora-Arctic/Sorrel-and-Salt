@@ -277,7 +277,7 @@ describe('grimoire', () => {
     ]);
   });
 
-  // M13.15 lets a draft go untitled, so the title reads as null rather than
+  // A draft may go untitled, so the title reads as null rather than
   // failing the whole page, and an untitled draft sorts after every title.
   it('reads an untitled draft as a null title, last by title', async () => {
     for (const title of ['Birch Charm', 'Alder Jar']) {

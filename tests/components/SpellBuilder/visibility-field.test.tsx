@@ -113,7 +113,7 @@ function acceptUpdate() {
   return calls;
 }
 
-// The words M10.6's one-way rule refuses a narrowing with (visibility-rule.ts).
+// The words the one-way visibility rule refuses a narrowing with (visibility-rule.ts).
 const NARROWING_REFUSED =
   'This spell has been shared with the coven and cannot be made private again. ' +
   'Delete it instead if it should not be there.';

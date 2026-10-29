@@ -350,7 +350,7 @@ describe('the Reviewed filter (M14.8)', () => {
   });
 
   // The coven-held reads filter the compendium by what covens hold, and
-  // must keep M14.8's gate: a read that parses the filter without it answers anyone.
+  // must keep the gate: a read that parses the filter without it answers anyone.
   it.each([
     ['no coven picked, the cached read', []],
     ['W picked, the scoped read', [WORKSPACE_W_ID]],

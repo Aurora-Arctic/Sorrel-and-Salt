@@ -12,9 +12,9 @@ import {
 import type { PrivilegeChangeRow } from './types';
 
 // The one privilege ledger, one row per change to a privilege column
-// on `users`, which the two one-privilege ledgers MB.58 and MB.193 built
+// on `users`, which the two earlier one-privilege ledgers
 // fold into. Append-only by
-// `forbid_rewrite()`; MB.195's trigger on `users` writes it (claude-docs/design-decisions/mb.194-privilege-ledger-by-trigger.md).
+// `forbid_rewrite()`; the trigger on `users` writes it (claude-docs/design-decisions/mb.194-privilege-ledger-by-trigger.md).
 
 describe('user_privilege_changes schema', () => {
   const { byName } = tableFacts(userPrivilegeChanges);
@@ -43,7 +43,7 @@ async function everyChange(): Promise<PrivilegeChangeRow[]> {
 
 describe('user_privilege_changes table', () => {
   // pgEnums because each set is closed: a third privilege is a value in
-  // `user_privilege` and a line in MB.195's trigger, not a table.
+  // `user_privilege` and a line in the trigger, not a table.
   it('holds the privileges, changes and routes the code declares', async () => {
     const [row] = await sql`
       select enum_range(null::user_privilege)::text[] as privileges,

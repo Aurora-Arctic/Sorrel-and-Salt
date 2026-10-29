@@ -9,7 +9,7 @@ import { insertIngredient } from '../../../support/db/insert-ingredient';
 import { makeIngredient } from '../../../support/fixtures';
 
 // Which of the viewer's own covens hold a compendium entry: the details modal's In Your Cupboards
-// links (the owner's call of 2026-10-20). Per viewer and never cached (rule 6), and
+// links. Per viewer and never cached (rule 6), and
 // only covens the viewer belongs to, each read under its own Membership proof (rule 5).
 
 let sql: postgres.Sql;

@@ -167,7 +167,7 @@ describe('ingredients table', () => {
     });
   });
 
-  // MB.220: identity is the formal name alone, falling back to the
+  // Identity is the formal name alone, falling back to the
   // label; the form is a variant's and no part of it.
   describe('identity_key', () => {
     it('is refused by Postgres on insert and on update', async () => {

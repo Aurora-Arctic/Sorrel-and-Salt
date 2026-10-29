@@ -45,8 +45,8 @@ describe('RadioGroupField, strip', () => {
   });
 
   // Each segment's name, shown above it on hover and on its radio's focus,
-  // for a sighted person who cannot tell the icons apart (the owner's call,
-  // 2026-10-16). Decoration: the radio's own name already says it, so the tip
+  // for a sighted person who cannot tell the icons apart.
+  // Decoration: the radio's own name already says it, so the tip
   // is kept out of the accessibility tree, and found with `hidden`.
   it('opens the name tip of the segment pointed at, and no other', async () => {
     render(<Harness />);

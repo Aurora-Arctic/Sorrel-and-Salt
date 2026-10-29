@@ -15,7 +15,7 @@ import type { IngredientOverrides, Inserted } from './types';
 const WORKSPACE_LABEL = 'ingredients_workspace_label_unique';
 const COMPENDIUM_IDENTITY_KEY = 'ingredients_compendium_identity_key_unique';
 const WORKSPACE_IDENTITY_KEY = 'ingredients_workspace_identity_key_unique';
-// MB.80's two: the public address unique per tier —
+// Two indexes: the public address unique per tier —
 // claude-docs/db/ingredient-slugs.md, "Ingredient slugs".
 const COMPENDIUM_SLUG = 'ingredients_compendium_slug_unique';
 const WORKSPACE_SLUG = 'ingredients_workspace_slug_unique';
@@ -169,7 +169,7 @@ describe('ingredients unique indexes', () => {
     });
   });
 
-  // MB.80/MB.81: the slug is the label and the formal name, so it
+  // The slug is the label and the formal name, so it
   // collides only where `slugify` folds two different identities together —
   // punctuation or accents in a formal name, or a label differing only in
   // punctuation. Those pairs are refused here, not by identity or the label.

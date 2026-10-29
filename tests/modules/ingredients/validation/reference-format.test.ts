@@ -14,7 +14,7 @@ import {
   withScheme,
 } from '@/modules/ingredients/validation/reference-format';
 
-// The owner's calls: what a reference's fields are tidied into, the
+// What a reference's fields are tidied into, the
 // same on the form as a field is left and in the shared schema the service
 // parses with, and the shapes the schema's extra checks accept
 // (claude-docs/db/references.md, "Formatting and checks").

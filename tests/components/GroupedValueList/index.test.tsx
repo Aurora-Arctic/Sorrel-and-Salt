@@ -14,8 +14,8 @@ import type { FilterFormSubject, GroupedValueListSubject } from '../../support/t
 const router = vi.hoisted(() => ({ push: vi.fn() }));
 vi.mock('next/navigation', () => ({ useRouter: () => router }));
 
-// A curated vocabulary's filter, table and pager — `/admin/categories`' (
-// MB.178), `/admin/forms`' and `/admin/deities`': each value
+// A curated vocabulary's filter, table and pager — `/admin/categories`',
+// `/admin/forms`' and `/admin/deities`': each value
 // with its group, an Edit link opening it in the page's modal, and the filter
 // that narrows them, and the flat celestial bodies and signs with no group at
 // all (claude-docs/components/grouped-value-list.md). The kinds
@@ -114,7 +114,7 @@ describe('GroupedValueList', () => {
     );
   });
 
-  // MB.95's flat kinds, folded in at MB.115: filed under nothing, so
+  // The flat kinds: filed under nothing, so
   // neither the table nor the filter offers a group.
   it('shows a flat kind with no group column and no group filter', () => {
     render(<GroupedValueList {...props({ kind: 'celestialBody', groups: undefined })} />);
@@ -222,7 +222,7 @@ describe('GroupedValueList', () => {
 
     it.each(FILTER_ROWS)('%s', (_title, run) => run(SUBJECT));
 
-    // The owner's call: typed into once hydrated, but drawn as a
+    // Typed into once hydrated, but drawn as a
     // native select by the server, so the filter works before JavaScript.
     it('draws the group as a native select on the server, and as a type-ahead once hydrated', async () => {
       const { container, hydrate } = drawnOnServer(

@@ -9,7 +9,7 @@ import { adminRoleChangePauses } from '@/modules/identity/schema/admin-role-chan
 import type { NamedWrites } from '@/db/types';
 import type { PauseRow } from './types';
 
-// M2.9's pause switch, table half. One row per pause rather than one
+// The pause switch, table half. One row per pause rather than one
 // row of settings, so no migration has to seed a row it has no user to stamp
 // with, and every pause keeps who began it and who ended it
 // (claude-docs/design-decisions/mb.62-pause-ledger.md).

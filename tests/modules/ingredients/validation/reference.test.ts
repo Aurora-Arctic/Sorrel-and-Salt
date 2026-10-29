@@ -2,7 +2,7 @@ import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { ReferenceInput } from '@/modules/ingredients/validation/reference';
 
 // DESIGN.md §5, "References": a reference's fields as the form sends them,
-// held to the CHECKs MB.152 put on the table — each refusal pathed to its
+// held to the CHECKs on the table — each refusal pathed to its
 // field, per kind — plus the form's own rule that a book needs a date
 // (claude-docs/design-decisions/mb.151-references.md).
 
@@ -122,7 +122,7 @@ describe('ReferenceInput', () => {
     });
   });
 
-  // The owner's calls: what is typed is tidied the way the citation
+  // What is typed is tidied the way the citation
   // prints it, on the server as on the form (reference-format.ts).
   describe('formatting', () => {
     it('tidies spacing, drops quotes around a title, and dashes ranges', () => {

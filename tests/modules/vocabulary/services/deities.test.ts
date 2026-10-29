@@ -21,7 +21,7 @@ import { useTestDatabase } from '../../../support/db/database';
 import { insertDeityLink, insertIngredient } from '../../../support/db/insert-ingredient';
 import { makeIngredient } from '../../../support/fixtures';
 
-// Story 18's deity half: the curated deity vocabulary's writes, the
+// The deity half: the curated deity vocabulary's writes, the
 // site admin's alone, and the reads the admin page lists them by. A
 // compendium entry's deities are picks, so a deity a live entry
 // links is held: its delete is refused, and its rename is carried onto the
@@ -270,7 +270,7 @@ describe('createDeity', () => {
     },
   );
 
-  // As M5.6a for forms: two live deities may share a name, told apart by the tradition.
+  // As for forms: two live deities may share a name, told apart by the tradition.
   it('holds two deities of one name under two traditions', async () => {
     const greek = await createDeity(admin, input({ name: 'Fixture Hekate' }));
     const roman = await createDeity(

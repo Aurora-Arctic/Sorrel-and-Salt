@@ -82,7 +82,7 @@ describe('users email case', () => {
 // The flag is what lets anyone create a workspace, admins included, so
 // a CHECK holds every admin to it rather than the gate reading `role` beside
 // it (claude-docs/design-decisions/mb.177-admins-hold-workspace-creation.md).
-// M11.20 widens it to every role but `user`, curators included
+// It holds for every role but `user`, curators included
 // (claude-docs/design-decisions/m11.20-curator-role.md).
 describe('users privileged creation flag', () => {
   let sql: postgres.Sql;
@@ -93,7 +93,7 @@ describe('users privileged creation flag', () => {
   const CONSTRAINT = 'users_privileged_can_create_workspace';
 
   // Each write here that grants a privilege declares itself, as a `psql` fix
-  // must since MB.195's trigger; the CHECK refuses before the trigger runs.
+  // must because of the trigger; the CHECK refuses before the trigger runs.
   const insert = (email: string, role: UserRole, canCreateWorkspace: boolean) =>
     sql.begin(async (tx) => {
       await tx`select set_config('app.privilege_route', 'manual', true)`;

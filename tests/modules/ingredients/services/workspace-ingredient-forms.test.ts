@@ -52,7 +52,7 @@ const countIngredients = async () => {
 // An ingredient's forms are written inside its own save, each with its
 // own substitutes, references and categories (DESIGN.md §5, "Variants are
 // written inside the ingredient's save"). What the schema refuses is
-// `validation/ingredient.test.ts`'s; what is read back is MB.218's.
+// `validation/ingredient.test.ts`'s; what is read back is the ingredient read's.
 describe('its forms', () => {
   let protection: string;
   let love: string;
@@ -191,7 +191,7 @@ describe('its forms', () => {
     expect(await countIngredients()).toBe(3);
   });
 
-  // The owner's call: a form stands in for a form, so a form's link
+  // A form stands in for a form, so a form's link
   // names one of what it links.
   it("refuses a form's link naming no form of what it links, at create and update, on that form, writing nothing", async () => {
     const testroot = await compendiumEntry('Testroot');
@@ -228,7 +228,7 @@ describe('its forms', () => {
     ).toEqual([{ substitute_variant_id: testroot.form }]);
   });
 
-  // MB.217's narrowed `not_itself`: the same ingredient and the same form.
+  // The narrowed `not_itself`: the same ingredient and the same form.
   it('lets a form name a sibling form as its substitute, refusing the form itself on that entry', async () => {
     const created = await createWorkspaceIngredient(
       asUser(B),

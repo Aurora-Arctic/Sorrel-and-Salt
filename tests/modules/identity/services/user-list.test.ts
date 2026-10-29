@@ -9,7 +9,7 @@ import { useTestDatabase } from '../../../support/db/database';
 import { asManualFix } from '../../../support/db/privileges';
 import type { ListedUserRow } from './types';
 
-// MB.52's two reads behind `/admin/users`: the list itself and the providers
+// The two reads behind `/admin/users`: the list itself and the providers
 // linked to each listed account. Both are a site admin's alone, refused at
 // the service by direct call rather than by the page being out of reach
 // (claude-docs/auth/admin-users.md, "The user list").
@@ -106,7 +106,7 @@ describe('listUsers', () => {
     expect(await names({ query: '   ' })).toEqual((await listableUsers()).map((row) => row.name));
   });
 
-  // M5.8's to-do list: who may not yet create a workspace.
+  // The to-do list: who may not yet create a workspace.
   it('narrows to the users awaiting approval, alone or beside a query', async () => {
     const [{ count }] = await sql<{ count: number }[]>`
       select count(*)::int as count from users

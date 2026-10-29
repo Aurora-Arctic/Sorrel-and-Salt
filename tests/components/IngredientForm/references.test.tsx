@@ -391,7 +391,7 @@ describe('ReferencesField', () => {
       offerReferences([]);
     });
 
-    // The owner's call: asking again for a panel already open takes you
+    // Asking again for a panel already open takes you
     // back to it, rather than doing nothing; that the panel then focuses
     // Kind and keeps what was typed is reference-panel.test.tsx's.
     it('opens from the list’s last row, "New Reference", taking you to Kind, and again while open', async () => {

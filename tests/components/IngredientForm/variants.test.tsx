@@ -336,7 +336,7 @@ describe('IngredientForm’s variants', () => {
     });
   });
 
-  // The owner's call: each of an open variant's fields but its form
+  // Each of an open variant's fields but its form
   // fills from the ingredient's own, adding and never taking away.
   describe('copying from the ingredient', () => {
     it('adds the ingredient’s entries the variant lacks after its own, removing none, and sends them', async () => {

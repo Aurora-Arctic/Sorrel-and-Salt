@@ -89,7 +89,7 @@ describe('MenuButton', () => {
     expect(screen.queryByRole('menu')).toBeNull();
   });
 
-  // A disabled item (the owner's call of 2026-10-20: a coven that holds the entry is shown, not
+  // A disabled item (a coven that holds the entry is shown, not
   // left out): the APG menu pattern, so it stays in the roving and is read as unavailable, and
   // choosing it runs nothing and leaves the menu open.
   describe('a disabled item', () => {
@@ -197,7 +197,7 @@ describe('MenuButton', () => {
     });
   });
 
-  // An icon in place of the words (M8.17's card More): the label still names
+  // An icon in place of the words (the card More): the label still names
   // the button and its menu, read by a screen reader though not shown.
   it("keeps its label as its name and its menu's with an icon in place of the words", () => {
     render(
@@ -417,8 +417,8 @@ describe('MenuButton sections', () => {
       expect(sectionsFor({ compendium: [], coven: [] }, 'coven')).toEqual([]);
     });
 
-    // A More menu always draws its labelled section, even for one kind of choice (the owner's
-    // call, 2026-10-20), and an empty side is left out.
+    // A More menu always draws its labelled section, even for one kind of choice,
+    // and an empty side is left out.
     it('hands a More menu the sections even where only one side has items', () => {
       expect(choicesFor(groups, 'coven').sections).toHaveLength(2);
       const lone = choicesFor({ ...groups, compendium: [] }, 'coven');

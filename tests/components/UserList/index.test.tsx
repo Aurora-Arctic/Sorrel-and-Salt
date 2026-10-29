@@ -281,7 +281,7 @@ describe('UserList filter', () => {
 
   it.each(FILTER_ROWS)('%s', (_title, run) => run(SUBJECT));
 
-  // The owner's call: a select-only box once hydrated, as every
+  // A select-only box once hydrated, as every
   // closed set in the row is, over the native select the server draws.
   it('narrows by role the moment one is picked, from a native select on the server that starts at the role shown', async () => {
     const { container, hydrate } = drawnOnServer(
@@ -439,8 +439,8 @@ describe('UserList approval', () => {
     ).not.toHaveAccessibleDescription();
   });
 
-  // The owner's call, beside MB.59's: each confirmation takes the same
-  // optional reason, sent trimmed, or not at all when blank.
+  // Each confirmation takes the same optional reason, sent trimmed,
+  // or not at all when blank.
   it('approves with a reason, and revokes with one', async () => {
     const calls: unknown[] = [];
     mockGraphQLMutation('GrantWorkspaceCreation', (variables) => {
@@ -516,7 +516,7 @@ describe('UserList approval', () => {
   });
 });
 
-// M11.20: the role cell's Change Role, asking in a modal naming the
+// The role cell's Change Role, asking in a modal naming the
 // user which role they move to, every role but the one held, with an
 // optional reason; the primary admin's in view but unusable, saying why. The
 // service is the guard, and refuses the same.
@@ -620,7 +620,7 @@ describe('UserList site role', () => {
     expect(calls).toEqual([{ userId: CY.id, role: 'user' }]);
   });
 
-  // MB.205's warning, in Promote's words: a promotion vouches as an approval
+  // The warning, in Promote's words: a promotion vouches as an approval
   // does; a demotion vouches for no one.
   it('warns before promoting a user whose email is unverified, and not before demoting them', async () => {
     sent();
@@ -686,8 +686,7 @@ describe('UserList admin changes switch', () => {
   });
 
   // The paused notice is a plain paragraph before the switch, the state's one
-  // rendering; while changes are on, the switch stands alone.
-  // On the owner's call, reversing MB.63's: Pause asks first.
+  // rendering; while changes are on, the switch stands alone. Pause asks first.
   const confirming = () => screen.getByRole('dialog', { name: 'Pause Admin Changes' });
 
   it('lets the primary admin pause once confirmed, stating that changes are on, and says so', async () => {
@@ -698,7 +697,7 @@ describe('UserList admin changes switch', () => {
     });
     render(<PauseControl paused={false} canToggle={true} />, { wrapper: StatusRegionProvider });
 
-    // No sentence while changes are on, on the owner's call: only the button.
+    // No sentence while changes are on: only the button.
     const pause = screen.getByRole('button', { name: 'Pause Admin Changes' });
     expect(pause.previousElementSibling).toBeNull();
     expect(pause).not.toHaveAttribute('aria-disabled');
@@ -756,7 +755,7 @@ describe('UserList admin changes switch', () => {
     expect(pause).toHaveAccessibleDescription(/\S/);
   });
 
-  // One sentence on the page, on the owner's call: the notice; the switch's
+  // One sentence on the page: the notice; the switch's
   // own reason is in its tip.
   it('shows another admin the paused notice and a locked Resume whose reason is a tip', () => {
     render(<PauseControl paused canToggle={false} />);
@@ -796,7 +795,7 @@ describe('UserList admin role while admin changes are paused', () => {
     }
   });
 
-  // Amended on the owner's call: coven creation's Approve and Revoke pause too.
+  // Coven creation's Approve and Revoke pause too.
   it('locks Approve and Revoke of coven creation for another admin, each described by the reason', () => {
     render(
       <UserList

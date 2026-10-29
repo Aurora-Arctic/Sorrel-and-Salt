@@ -187,7 +187,7 @@ describe('FormField', () => {
     );
     const inUse = screen.getByRole('group', { name: 'From Coven' });
     expect(within(inUse).getByRole('option', { name: /^Rhizomes/ })).toHaveTextContent('Mockleaf');
-    // What was typed comes first, the owner's call.
+    // What was typed comes first.
     const rows = within(screen.getByRole('listbox', { name: 'Form suggestions' }));
     expect(rows.getAllByRole('option')[0]).toHaveAccessibleName(expect.stringContaining('wax'));
   });
@@ -227,7 +227,7 @@ describe('FormField', () => {
     expect((await sentForm(send))?.formId).toBe(ANIMAL_WAX_ID);
   });
 
-  // The owner's call: the text is still the member's to edit, and an edit
+  // The text is still the member's to edit, and an edit
   // away from the pick leaves typed text, which links nothing.
   it('drops the group and the id once the text is edited away from the pick', async () => {
     const send = renderField();

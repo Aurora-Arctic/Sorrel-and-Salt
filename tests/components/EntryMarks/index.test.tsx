@@ -155,8 +155,8 @@ describe('EntryMarks badge order', () => {
     expect(caution()).toBeNull();
   });
 
-  // New or Updated comes before every badge, in reading order and on screen (the owner's
-  // call, 2026-10-20), whichever row it shares with them.
+  // New or Updated comes before every badge, in reading order and on screen,
+  // whichever row it shares with them.
   it('draws New or Updated ahead of every badge', () => {
     render(
       <EntryMarks kind="own" retired recency="updated" safetyNotes="Fixture entry caution." />,

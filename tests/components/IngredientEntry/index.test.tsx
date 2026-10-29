@@ -1199,7 +1199,7 @@ describe('IngredientEntry on a coven page', () => {
 describe('IngredientEntry on the public page, held in a coven', () => {
   const shelf = () => screen.queryByRole('button', { name: 'In Your Cupboard' });
 
-  // The owner's call, 2026-10-20: a press opens the shelf's tip, as a tap does on InfoTip's ⓘ,
+  // A press opens the shelf's tip, as a tap does on InfoTip's ⓘ,
   // so it shows on touch. A click here focuses nothing, so the press alone opens it.
   it('opens the In Your Cupboard tip when the shelf is pressed', () => {
     renderEntry({ heldInCovens: true });

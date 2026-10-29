@@ -21,7 +21,7 @@ import { useTestDatabase } from '../../../support/db/database';
 import { insertIngredient } from '../../../support/db/insert-ingredient';
 import { makeIngredient } from '../../../support/fixtures';
 
-// Story 18's category half: the vocabulary's writes, which the site admin
+// The category half: the vocabulary's writes, which the site admin
 // makes and nobody else does, and the reads the admin page lists them by
 // (claude-docs/db/categories.md, "Category writes"). The seeded vocabulary
 // stays, so every row a test writes carries a name of its own.

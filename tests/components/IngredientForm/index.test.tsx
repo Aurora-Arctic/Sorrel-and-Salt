@@ -234,7 +234,7 @@ describe('IngredientForm', () => {
       });
     });
 
-    // The owner's call during MB.131: Save Ingredient opens what it made,
+    // Save Ingredient opens what it made,
     // and Save & Add Another leaves the form ready for the next ingredient.
     it('asks the page to open what Save Ingredient made, leaving the form as it is', async () => {
       acceptCreate();
@@ -892,7 +892,7 @@ describe('IngredientForm', () => {
     });
   });
 
-  // Story 16's warning, as only the whole form holds it: the form asks its
+  // The duplicate warning, as only the whole form holds it: the form asks its
   // `check` before it sends and moves the focus to Create Anyway. What the
   // warning says and when it asks is duplicates.test.tsx's.
   describe('the duplicate warning', () => {
@@ -989,7 +989,7 @@ describe('IngredientForm', () => {
     });
   });
 
-  // The + (M12.48's, once Use It), as only the whole form sends it.
+  // The + on a duplicate match, as only the whole form sends it.
   describe('using a compendium entry of the name typed', () => {
     const CLAW: DuplicateNode = {
       id: 'claw-1',
@@ -1001,7 +1001,7 @@ describe('IngredientForm', () => {
     /**
      * Adds as the server does in a coven that already calls another entry by the
      * name typed: any label sent is refused as taken, as Rose under "rosemary"
-     * was (the owner's report).
+     * was.
      */
     const accept = () => {
       const adds: AddCupboardEntryFromFormMutationVariables[] = [];
@@ -1061,7 +1061,7 @@ describe('IngredientForm', () => {
       expect(creates).toHaveLength(0);
     });
 
-    // The owner's report: the lookups' cached answers still said the
+    // The lookups' cached answers still said the
     // entry was not held, so its row stayed under In the Compendium with its +.
     const heldRow = () =>
       within(screen.getByRole('list', { name: 'In This Coven' })).getByRole('link', {
@@ -1086,8 +1086,8 @@ describe('IngredientForm', () => {
       await waitFor(() => expect(heldRow()).toBeInTheDocument());
     });
 
-    // After the add the form stays open (the owner's calls, M12.48, in place of
-    // opening the entry's page). The + turning to the check, then the eye, and the
+    // After the add the form stays open, rather than opening the entry's page. The + turning to
+    // the check, then the eye, and the
     // row moving under In This Coven are NameField's, in duplicates.test.tsx.
     describe('after the + has added', () => {
       /** The form in a coven named Hedge Coven, under the page's status region. */
@@ -1280,7 +1280,7 @@ describe('IngredientForm', () => {
   });
 
   // The save's result carries the new entry's jars for the dialog's status to
-  // name. Since M12.27 a save moves none, so only a mock fills it.
+  // name. A save moves none, so only a mock fills it.
   it('hands onSaved the jars the new entry holds', async () => {
     mockGraphQLMutation<
       CreateWorkspaceIngredientMutation,
@@ -1336,7 +1336,7 @@ describe('IngredientForm', () => {
     fireEvent.click(submit);
 
     await waitFor(() => expect(submit).toBeDisabled());
-    // Busy, the owner's call during MB.131; the other is held down beside it.
+    // Busy; the other is held down beside it.
     expect(submit).toHaveAttribute('aria-busy', 'true');
     expect(rest).toBeDisabled();
     expect(rest).not.toHaveAttribute('aria-busy');

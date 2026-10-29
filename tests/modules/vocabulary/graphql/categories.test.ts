@@ -8,7 +8,7 @@ import { makeIngredient } from '../../../support/fixtures';
 import { run } from '../../../support/graphql/run';
 import type { CategoryConnection, CategoryNode, FilteredCategories } from './types';
 
-// M5.6 over the wire: the public `categories` list and the admin's three
+// Over the wire: the public `categories` list and the admin's three
 // writes. This file holds the transport's half (claude-docs/testing/layer-ownership.md):
 // a page, its groups in one read, its count, the filters reaching the read,
 // and per write one refusal per error code, read as the browser reads it.

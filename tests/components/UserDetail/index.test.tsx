@@ -281,9 +281,9 @@ describe('UserDetail', () => {
   });
 });
 
-// A refusal of the role or creation control is design F inside this dialog too
-// (M12.31's rule 6, the owner's exception of 2026-10-20): a callout under the
-// control, which Escape or a press elsewhere closes without closing the modal.
+// A refusal of the role or creation control is a callout under the
+// control inside this dialog too: Escape or a press elsewhere closes it without
+// closing the modal.
 describe('UserDetail, when the service refuses a change', () => {
   const settle = (step: () => unknown) =>
     act(async () => {

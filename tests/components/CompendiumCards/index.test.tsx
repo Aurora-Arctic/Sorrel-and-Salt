@@ -153,7 +153,7 @@ describe('CompendiumCards', () => {
       expect(screen.queryByRole('button', HELD)).toBeNull();
     });
 
-    // The owner's calls, 2026-10-20: the check is a status mark, not a link, since the details
+    // The check is a status mark, not a link, since the details
     // modal's In Your Cupboards list carries the links to each coven's copy; it is tipped and
     // named In Every Cupboard and its entry (the one noun for "you hold this"; the tip
     // says the name too), a button only to carry its tip, as the entry page's shelf is.
@@ -167,7 +167,7 @@ describe('CompendiumCards', () => {
       expect(screen.queryByRole('link', HELD)).toBeNull();
     });
 
-    // The owner's call, 2026-10-20: a press opens the check's tip, as a tap does on InfoTip's ⓘ,
+    // A press opens the check's tip, as a tap does on InfoTip's ⓘ,
     // so it shows on touch, where there is no hover. A click here focuses nothing, so the
     // press alone opens it.
     it('opens the In Every Cupboard tip when the check is pressed', () => {
@@ -220,7 +220,7 @@ describe('CompendiumCards', () => {
     expect(screen.queryByRole('button', { name: /^More for / })).toBeNull();
   });
 
-  // The owner's call, 2026-10-20: up to three icons, the plus, Edit in Compendium and the three
+  // Up to three icons, the plus, Edit in Compendium and the three
   // dots, each only where the viewer may use it.
   describe('the foot, by viewer', () => {
     const PLACE = {

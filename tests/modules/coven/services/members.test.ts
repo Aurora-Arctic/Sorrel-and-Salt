@@ -10,7 +10,7 @@ useRawClient();
 
 // A coven's members list: its live seats, in the order they joined,
 // each carrying the coven, to the roles holding `member: read` — owners and
-// members, since M6.13. Every refusal names the coven
+// members. Every refusal names the coven
 // directly, so it is a `Forbidden` rather than a row missing from a list.
 
 const FIRST_PAGE = { limit: 26, inverted: false };

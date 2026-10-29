@@ -10,7 +10,7 @@ import { insertIngredient } from '../../../support/db/insert-ingredient';
 import { makeIngredient, makeVariant } from '../../../support/fixtures';
 
 // The forms of a compendium entry a coven holds, retired or live: what Edit Stock lists from the
-// compendium's three dots and the coven's entry page (the owner's call, 2026-10-21: stock
+// compendium's three dots and the coven's entry page (stock
 // is per coven, so a coven that still holds an entry the curators retired may stock it). The
 // forms are read through that coven's own proof, in SQL; a coven that does not hold the entry
 // reads none of it. Which jars come back is stockOf's, and holds the same way (stock.test.ts).

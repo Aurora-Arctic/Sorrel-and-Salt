@@ -2,8 +2,8 @@ import { describe, expect, it } from 'vitest';
 import { unitConvert } from '@/modules/ingredients';
 import { UNITS_BY_DIMENSION } from '@/modules/ingredients/schema/units';
 
-// Each unit's size in its dimension's base unit, transcribed from M9.5's task
-// entry rather than imported, so the converter is checked against the spec.
+// Each unit's size in its dimension's base unit, transcribed from the spec
+// rather than imported, so the converter is checked against the spec.
 // Milligrams for weight, millilitres for volume.
 const SPECIFIED_SIZE: Record<string, number> = {
   mg: 1,

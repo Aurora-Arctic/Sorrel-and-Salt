@@ -19,7 +19,7 @@ import { useTestDatabase } from '../../../support/db/database';
 import { insertIngredient } from '../../../support/db/insert-ingredient';
 import { makeIngredient } from '../../../support/fixtures';
 
-// Story 18's celestial body and sign half: the two flat astrology
+// The celestial body and sign half: the two flat astrology
 // vocabularies' writes, the site admin's alone, and the reads the admin pages
 // list them by. A compendium entry's celestial bodies and signs are spellings the
 // vocabulary curates, so a value a live entry's list holds is held:

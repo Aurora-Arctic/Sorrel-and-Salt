@@ -6,7 +6,7 @@ import { useTestDatabase } from '../../../support/db/database';
 import { run } from '../../../support/graphql/run';
 import type { PrivilegeChangesResult } from './types';
 
-// MB.199's `privilegeChanges`, the transport's half
+// `privilegeChanges`, the transport's half
 // (claude-docs/testing/layer-ownership.md): an admin's page with every field,
 // the filters reaching the service, subject and actor in one read per page,
 // and the `admin` scope's refusal. The order, the

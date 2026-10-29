@@ -9,7 +9,7 @@ import { pairedColor } from '@/lib/group-colors';
 // hex it writes, kept in step; the channels of a format the admin chooses; a
 // veil over the colours that fall short of 4.5:1 on its ground; a Match button setting it from its partner; a
 // sample chip there with its ratio; and a warning when another
-// group's colour in the theme stands too close (the owner's calls).
+// group's colour in the theme stands too close.
 
 function Controlled({
   initial = '#5d8ab1',
@@ -141,7 +141,7 @@ describe('ChipColorField', () => {
     await waitFor(() => expect(channel('red')).toHaveValue(0x35));
   });
 
-  // The owner's call: the pair's rule on demand, from the other colour.
+  // The pair's rule on demand, from the other colour.
   describe('Match', () => {
     it('sets the colour from its partner, fitted to this ground', () => {
       const onChange = vi.fn();
@@ -206,7 +206,7 @@ describe('ChipColorField', () => {
     });
   });
 
-  // The owner's call: a refusal in the error notice, as the warning is in its own.
+  // A refusal in the error notice, as the warning is in its own.
   it('shows a refusal passed in, describing the box by it ahead of the ratio', () => {
     render(
       <Controlled

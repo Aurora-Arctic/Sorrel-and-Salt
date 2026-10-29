@@ -244,8 +244,8 @@ describe('CompendiumList filter', () => {
     ]);
   });
 
-  // The owner's rule of 2026-10-27: a pick opens the entry's Quick Look, its details modal
-  // , over the list as it stands, the page and the filter kept and the text typed and
+  // A pick opens the entry's Quick Look, its details modal,
+  // over the list as it stands, the page and the filter kept and the text typed but
   // not searched not applied. Each list keys its details as its own eye does.
   describe('picking a name from the dropdown', () => {
     const PAGE = { after: 'cursor-x' };

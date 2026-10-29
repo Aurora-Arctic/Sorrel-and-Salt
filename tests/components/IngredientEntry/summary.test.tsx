@@ -6,8 +6,8 @@ import { formLabel } from '@/modules/ingredients/validation/form-label';
 import { entryDetail } from '../../support/entry-detail';
 
 // The details modal's body (claude-docs/components/ingredient-entry.md,
-// "The details modal"): the entry page's Details section cut to the owner's
-// choice, the caution and the categories, the folk names and the
+// "The details modal"): the entry page's Details section cut down to
+// the caution and the categories, the folk names and the
 // correspondences, drawn by the page's own blocks. Every value is the test's own
 // data, so finding one proves what rendered.
 

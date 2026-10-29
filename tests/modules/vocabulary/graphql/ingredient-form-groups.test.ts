@@ -6,7 +6,7 @@ import { E, asUser } from '../../../support/as-user';
 import { run } from '../../../support/graphql/run';
 import type { FormGroupNode } from './types';
 
-// M5.6b's three form-group writes over the wire. This file holds the
+// The three form-group writes over the wire. This file holds the
 // transport's half (claude-docs/testing/layer-ownership.md): the loaders
 // cleared by a write, `moveTo` reaching the delete, and per write one refusal
 // per error code, read as the browser reads it. Which roles are refused, and

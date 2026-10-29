@@ -14,7 +14,7 @@ const { default: CovenSwitchTargets } = await import('@/components/CovenSwitchTa
 const { CovenSwitchProvider } = await import('@/components/CovenSwitchTargets/context');
 
 // The viewer's workspaces, the current one read off the
-// address, a choice going to the same section in the other. Story 3:
+// address, a choice going to the same section in the other, and
 // the way to the create page, offered only to a viewer holding the right.
 
 const WORKSPACES = [

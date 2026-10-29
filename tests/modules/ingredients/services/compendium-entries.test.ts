@@ -46,7 +46,7 @@ import {
 } from '../../../support/fixtures';
 import { useCompendiumEntryInput } from '../../../support/db/compendium-entry-input';
 
-// Story 17's service: the compendium's writes, which the site admin makes and
+// The compendium's writes, which the site admin makes and
 // nobody else does, whatever their standing in a coven (claude-docs/db/compendium-writes.md,
 // "Compendium writes"). The table is emptied per test, so every row a result
 // could come from is one this file wrote.
@@ -386,7 +386,7 @@ describe('countCompendiumEntryUsers', () => {
   });
 });
 
-// Story 25's promise, over the compendium: a deleted entry is gone from every
+// Deleting, over the compendium: a deleted entry is gone from every
 // read, and what it held is free again, while its row stays for a restore
 // (claude-docs/db/compendium-writes.md, "Compendium writes").
 describe('a deleted entry', () => {
@@ -551,7 +551,7 @@ describe('a deleted entry', () => {
     expect(await shows(id)).toBe(false);
   });
 
-  // M4.1a's partial index, through the service: without its `deleted_at IS
+  // The partial index, through the service: without its `deleted_at IS
   // NULL`, deleting an entry would reserve its identity for good. On the
   // formal name, since two live entries may share a label anyway, so a label
   // coming back proves nothing about the index.

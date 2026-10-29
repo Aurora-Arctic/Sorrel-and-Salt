@@ -8,7 +8,7 @@ import IngredientCard from '@/components/IngredientCard';
 import { CATEGORY_CHIP_LIMIT } from '@/components/CategoryChips/constants';
 import { StockBadge } from '@/components/StockBadge';
 
-// M8.14 (claude-docs/components/ingredient-card.md): the card is presentational,
+// (claude-docs/components/ingredient-card.md): the card is presentational,
 // so each case is its props in and what rendered out. The names, forms and
 // notes are the test's own data. Marks are found by their exact text and
 // asserted by presence or absence, never by what the words say.
@@ -228,7 +228,7 @@ describe('IngredientCard', () => {
       expect(screen.queryAllByRole('status')).toHaveLength(0);
     });
 
-    // The owner's call, 2026-10-20: a coven's card says nothing of where a held
+    // A coven's card says nothing of where a held
     // entry came from; the entry page and its head still do (EntryMarks' own tests).
     it('shows neither Compendium nor Annotated on a compendium entry the cupboard holds', () => {
       render(<IngredientCard {...BASE} kind="cupboard" />);

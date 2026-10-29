@@ -16,7 +16,7 @@ import { type IngredientFixture, makeIngredient, makeVariant } from '../../../su
 import type { Overrides } from '../../../support/fixtures';
 import { JAR_STATES } from '../../../support/jar-states';
 
-// Story 14's list: a coven's ingredients are its own entries and
+// The list: a coven's ingredients are its own entries and
 // the compendium entries its cupboard names, one live
 // `workspace_compendium_entries` row each, filtered as the compendium is but
 // under the coven's proof and over the coven's overrides. The ingredient tables are emptied per test, so every row
@@ -316,7 +316,7 @@ describe('listWorkspaceIngredients', () => {
     expect(await listed(asUser(B))).toEqual(['Covenwort']);
   });
 
-  // M12.18 decision 2: the coven chose both entries, so both are listed; a
+  // The coven chose both entries, so both are listed; a
   // name match hides neither.
   it('lists a local entry beside the held compendium entry it matches', async () => {
     const entry = await held('Fixturewort', {
@@ -494,7 +494,7 @@ describe('listWorkspaceIngredients', () => {
     expect(await countOf('categories', byCategory, love.id)).toBe(0);
   });
 
-  // M11.22's facets all read through the one coven scope
+  // The facets all read through the one coven scope
   // (`workspaceListScopeIncludingSoftDeleted`), and their arms are the
   // compendium list's, which tests/db/repository/ingredients.test.ts proves.
   // So one facet stands for all five: the deity facet, the one that reaches

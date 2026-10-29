@@ -376,7 +376,7 @@ describe('a soft-deleted reference', () => {
   });
 });
 
-// M5.5's to-do list: the compendium's live entries with no reference shown.
+// The to-do list: the compendium's live entries with no reference shown.
 describe('the compendium without references', () => {
   async function names(filter: { withoutReferences?: boolean }) {
     const page = await resolvePage({ first: 50 }, (request) => listCompendium(filter, request));

@@ -145,7 +145,7 @@ describe('references table', () => {
     });
   });
 
-  // 23514 is check_violation, named: each refusal is the CHECK MB.153's field
+  // 23514 is check_violation, named: each refusal is the CHECK the field
   // error is pathed from, where NOT NULL alone would accept ''.
   describe('text is non-blank when set', () => {
     it('refuses a blank title', async () => {
@@ -174,7 +174,7 @@ describe('references table', () => {
     });
   });
 
-  // The CHECKs that make MB.153's renderer total: every row admitted renders
+  // The CHECKs that make the renderer total: every row admitted renders
   // without a branch for a missing required field.
   describe('the renderer is total over every row', () => {
     // An http(s) url is taken above, by every web page and the filled row.

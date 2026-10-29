@@ -72,7 +72,7 @@ describe('copying from the ingredient', () => {
     expect(copyOf(oil, 'Safety Notes')).toHaveFocus();
   });
 
-  // The owner's calls: Oil for Oil, and an ingredient in no such
+  // Oil for Oil, and an ingredient in no such
   // form skipped, since a variant's link names a form.
   it('links each substitute’s same form, skips one in no such form and says which, and keeps a name as a name', async () => {
     const onSubmit = renderVariants({ workspaceId: null, values: filled() });

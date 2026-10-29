@@ -23,7 +23,7 @@ import {
 } from '../../../support/fixtures';
 import { useCompendiumEntryInput } from '../../../support/db/compendium-entry-input';
 
-// Story 17's service, its vocabulary half: what a compendium entry's curated
+// The compendium service, its vocabulary half: what a compendium entry's curated
 // lists and forms are held to (claude-docs/db/compendium-writes.md). Split from
 // compendium-entries.test.ts, which holds the writes. The table is emptied per
 // test, so every row a result could come from is one this file wrote.
@@ -55,7 +55,7 @@ const countIngredients = async () => {
 
 const admin = asUser(E);
 
-// Moved onto the links by MB.167: a compendium entry's form and
+// A compendium entry's form and
 // deities each pick a curated row, and its celestial bodies and signs name one, where a
 // coven's ingredients keep free text (claude-docs/db/compendium-writes.md).
 // Retired vocabulary rows are put back after each test, since the clone is
@@ -371,7 +371,7 @@ describe('its forms', () => {
     });
   });
 
-  // The owner's call: a form stands in for a form, so a form's link
+  // A form stands in for a form, so a form's link
   // names one of what it links.
   it("refuses a form's link naming no form of what it links, at create and update, on that form, writing nothing", async () => {
     const testroot = await seed({ name: 'Testroot', canonicalName: null, nomenclature: 'none' });

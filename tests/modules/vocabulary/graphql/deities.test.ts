@@ -9,7 +9,7 @@ import { run } from '../../../support/graphql/run';
 import type { DeityNode, FilteredDeities } from './types';
 
 // `deities` and `deityTraditions`, the curated deity vocabulary as the admin
-// pages read it, answered to a signed-out visitor, and MB.132's six
+// pages read it, answered to a signed-out visitor, and the six
 // admin writes. This file holds the transport's half
 // (claude-docs/testing/layer-ownership.md): a filtered page and its count,
 // each deity's tradition, `moveTo` reaching the delete, the loaders cleared

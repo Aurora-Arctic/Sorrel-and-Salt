@@ -124,7 +124,7 @@ describe('a coven whose cupboard names a retired entry', () => {
   it('starts a fresh jar of it once its old one is emptied', async () => {
     await retire();
     await sql`update inventory_items set deleted_at = now(), deleted_by = ${A.id} where id = ${wJar}`;
-    // The owner's decision of 2026-10-19 reverses M12.24's "no new jar": the
+    // A retired entry's coven can still stock it: the
     // coven still reads the form, and may stock it again
     // (retired-entry-writes.test.ts has the refusals).
     const jar = await createStock(asUser(A), WORKSPACE_W_ID, variantId, {});

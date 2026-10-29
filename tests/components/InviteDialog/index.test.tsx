@@ -4,9 +4,9 @@ import InviteDialog from '@/components/InviteDialog';
 import type { CreateInvitationMutation, CreateInvitationMutationVariables } from '@/gql/graphql';
 import { mockGraphQLError, mockGraphQLMutation } from '../../support/msw/graphql';
 
-// The owner's invite dialog: an address, a role of viewer or member,
+// The invite dialog: an address, a role of viewer or member,
 // and a confirmation naming where the mail went. Render-and-send only: the
-// service behind the mutation is M7.3's and is tested there
+// service behind the mutation is tested in its own module
 // (claude-docs/components/invite-dialog.md).
 
 const router = { push: vi.fn(), replace: vi.fn(), refresh: vi.fn() };

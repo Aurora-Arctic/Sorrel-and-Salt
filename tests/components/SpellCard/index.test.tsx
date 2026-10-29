@@ -9,7 +9,7 @@ vi.mock('next/navigation', () => ({
   usePathname: () => '/here',
 }));
 
-// M10.11 (claude-docs/components/spell-card.md): the card is presentational, so each
+// (claude-docs/components/spell-card.md): the card is presentational, so each
 // case is its props in and what rendered out. The spells are the test's own data.
 
 const GROUP = { colorDark: '#7a5c99', colorLight: '#5b3f7a' };

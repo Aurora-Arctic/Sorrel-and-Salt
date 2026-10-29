@@ -73,7 +73,7 @@ describe('Pager', () => {
   });
 });
 
-// The owner's call: the end followed puts the tabs' skeleton, with
+// The end followed puts the tabs' skeleton, with
 // its one status, in place of the list and the pager, until the page
 // renders or the browser leaves, as a filter does.
 describe('Pager, once an end is followed', () => {

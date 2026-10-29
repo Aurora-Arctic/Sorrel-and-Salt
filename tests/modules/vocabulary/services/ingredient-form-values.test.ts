@@ -20,7 +20,7 @@ import { useTestDatabase } from '../../../support/db/database';
 import { insertIngredient, insertVariant } from '../../../support/db/insert-ingredient';
 import { makeIngredient, makeVariant } from '../../../support/fixtures';
 
-// Story 18's form half: the curated form vocabulary's writes, the site
+// The form half: the curated form vocabulary's writes, the site
 // admin's alone, and the reads the admin page lists them by. A compendium
 // entry's forms are its variants, each a pick, so a form a
 // live entry's variant picked is held: its delete is refused, and its rename
@@ -491,7 +491,7 @@ describe('updateIngredientFormValue', () => {
     await expect(updateIngredientFormValue(admin, 'not-a-uuid', input())).rejects.toThrow(NotFound);
   });
 
-  // MB.162 on the pick, onto the variants: the new spelling
+  // A rename onto the variants: the new spelling
   // is carried onto every live compendium variant that picked the form, and
   // no entry's address moves, since a form is no part of it. Which rows the
   // carry writes, stamps and leaves alone row by row is write.carryFormRename's

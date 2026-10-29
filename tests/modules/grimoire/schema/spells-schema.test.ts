@@ -6,7 +6,7 @@ import { type SpellOverrides, makeSpell, spellColumns } from '../../../support/f
 import { spellStatus, spellVisibility, spells } from '@/modules/grimoire/schema/spells';
 import { FIXTURE_USERS, WORKSPACE_W_ID, WORKSPACE_X_ID } from '@/db/seed/standard';
 
-// §5's columns, `visibility` included as of M10.3 — claude-docs/db/grimoire.md,
+// §5's columns, `visibility` included — claude-docs/db/grimoire.md,
 // "The grimoire".
 // `revision` is the counter a save names to detect a clash.
 const OWN_COLUMNS = [

@@ -9,7 +9,7 @@ import { makeIngredient } from '../../../support/fixtures';
 import { run } from '../../../support/graphql/run';
 import type { ReferenceNode } from './types';
 
-// MB.153 over the wire: a reference's two writes, its read by id, the picker's search,
+// Over the wire: a reference's two writes, its read by id, the picker's search,
 // `Ingredient.references` and the compendium's to-do filter. This file holds
 // the transport's half (claude-docs/testing/layer-ownership.md): the tier the
 // `workspaceId` argument names, the loader cleared by a write, the filter

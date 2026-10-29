@@ -161,7 +161,7 @@ describe('a save carrying deities', () => {
     for (const deity of rows) expect(deity).toMatchObject({ xmin: row.xmin, created_by: B.id });
   });
 
-  // MB.165 records the name beside the link, in the curated row's spelling.
+  // The service records the name beside the link, in the curated row's spelling.
   it('writes a picked deity’s name in its curated spelling', async () => {
     const created = await createWorkspaceIngredient(
       asUser(B),
@@ -381,7 +381,7 @@ describe('a save of an ingredient’s deities', () => {
   });
 });
 
-// MB.165's deletion rule, kept as MB.138 keeps a substitute's: an
+// The deletion rule, kept as a substitute's is: an
 // admin's delete reaches no coven's rows, so a pick whose deity is retired
 // stays, and reads as the name it was saved under.
 describe('a picked deity since retired', () => {

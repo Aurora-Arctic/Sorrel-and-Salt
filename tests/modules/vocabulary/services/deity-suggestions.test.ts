@@ -15,7 +15,7 @@ import type { ConnectionArgs, Page } from '@/lib/types';
 // vocabulary": the deities field's autofill offers the curated vocabulary
 // first, each row with its tradition, then the uncurated values in use in the
 // compendium and the caller's own workspace. The vocabulary is
-// MB.129's seed, revived per test since some tests retire a row; `ingredients`
+// the seed, revived per test since some tests retire a row; `ingredients`
 // is emptied per test, so every in-use value is one this file wrote.
 
 let sql: ReturnType<typeof postgres>;
@@ -198,7 +198,7 @@ describe('suggestDeities', () => {
   });
 
   describe('what counts as curated', () => {
-    // MB.136's scan: each entry of each list is a value, folded before grouping.
+    // The scan: each entry of each list is a value, folded before grouping.
     it('reads Hecate and hecate in two ingredients’ lists as one in-use value', async () => {
       await retire('deities', 'Hecate');
       await addIngredient({ deities: ['Hecate', 'Selene'] });

@@ -11,7 +11,7 @@ import { makeIngredient, makeVariant } from '../../../support/fixtures';
 import { run } from '../../../support/graphql/run';
 import type { InventoryItemNode } from './types';
 
-// Story 14 over the wire: the three mutations a coven's jars are
+// Over the wire: the three mutations a coven's jars are
 // written through, `InventoryItem` as they answer it, and `Ingredient.stock`.
 // This file holds the transport's half (claude-docs/testing/layer-ownership.md):
 // the answer as a fresh read gives it, the stock loader cleared between two

@@ -8,7 +8,7 @@ import { run as runOperation } from '../../../support/graphql/run';
 import { makeIngredient } from '../../../support/fixtures';
 import type { CommonNameConnection } from './types';
 
-// The transport half of M4.7a's common-name lookup: one bucket, each name
+// The transport half of the common-name lookup: one bucket, each name
 // with its claimants, a page at a time, and the compendium-only mode. Who is
 // refused is services/common-name-suggestions.test.ts's, and a signed-out
 // caller at every field is tests/db/graphql-query-scopes.test.ts's.

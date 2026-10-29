@@ -9,8 +9,8 @@ import { run } from '../../../support/graphql/run';
 
 useRawClient();
 
-// The transport's half of `Workspace.members` and `WorkspaceMember.user`
-// : a member's name comes through MB.10's `usersById`, one read per
+// The transport's half of `Workspace.members` and `WorkspaceMember.user`:
+// a member's name comes through `usersById`, one read per
 // coven listed however many members it holds, and the refusal
 // reaches the wire as `FORBIDDEN`. Who may list a coven's members is the
 // service's, in tests/modules/coven/services/members.test.ts.

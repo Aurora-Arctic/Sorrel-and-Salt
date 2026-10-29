@@ -129,7 +129,7 @@ describe('ComboboxTypeahead', () => {
     expect(box()).toHaveValue('Old Testic');
   });
 
-  // The owner's call: a press where the hidden clear sits lands on
+  // A press where the hidden clear sits lands on
   // the indicators' strip, `visibility` passing it through, and enters the
   // box as a press on the rest of the control does.
   it('enters the box from a press where its hidden clear sits', () => {
@@ -143,7 +143,7 @@ describe('ComboboxTypeahead', () => {
     expect(box()).toHaveFocus();
   });
 
-  // The owner's call: an empty box keeps its clear's room, so the
+  // An empty box keeps its clear's room, so the
   // clear is drawn from the first render, hidden from the tree and the tab
   // order while there is nothing to clear, and offered once there is.
   it('clears to no choice from its clear, offered while it holds text or a choice and kept, hidden, while it does not', () => {

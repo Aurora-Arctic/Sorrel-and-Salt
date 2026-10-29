@@ -112,7 +112,7 @@ describe('PrivilegeLedger', () => {
 
     it.each(FILTER_ROWS)('%s', (_title, run) => run(SUBJECT));
 
-    // The owner's call: a select-only box once hydrated, as every
+    // A select-only box once hydrated, as every
     // closed set in the row is, over the native select the server draws.
     it('offers every privilege, after the option for all, as a native select on the server and a select-only box once hydrated', async () => {
       const { container, hydrate } = drawnOnServer(

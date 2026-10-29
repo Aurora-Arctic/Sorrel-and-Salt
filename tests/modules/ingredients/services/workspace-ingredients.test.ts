@@ -22,7 +22,7 @@ import {
 } from '../../../support/fixtures';
 import { inputOf, local } from '../../../support/workspace-ingredient-input';
 
-// Story 15's service: a coven's own ingredients, written by its owners and
+// A coven's own ingredients, written by its owners and
 // members and read by its members, never by anyone else. The table is emptied
 // per test, so every row a result could come from is one this file wrote. What a
 // deleted row leaves in each read is workspace-ingredient-deleted-reads.test.ts's,

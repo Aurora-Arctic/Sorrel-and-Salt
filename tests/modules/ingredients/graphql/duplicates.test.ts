@@ -9,7 +9,7 @@ import { run as runOperation } from '../../../support/graphql/run';
 import { type IngredientFixture, type Overrides, makeIngredient } from '../../../support/fixtures';
 import type { DuplicateNode, DuplicateConnection, Result } from './types';
 
-// The transport half of M4.7's duplicate warning: what M5.10's debounced
+// The transport half of the duplicate warning: what the debounced
 // lookup calls — the nodes, the score on each edge, a page at a time, and the
 // compendium-only mode. The threshold, the scope and who is refused are
 // services/duplicates.test.ts's, and a signed-out caller at every field is

@@ -118,7 +118,7 @@ describe('SpellBuilder', () => {
       expect(field(label)).toHaveValue('');
       expect(field(label)).not.toBeRequired();
     }
-    // The recipe's steps are M13.3's; a step's instruction is its own field there.
+    // The recipe's steps are their own field; a step's instruction is edited there.
     expect(screen.queryByRole('textbox', { name: 'Instructions' })).toBeNull();
   });
 
@@ -148,7 +148,7 @@ describe('SpellBuilder', () => {
     expect(save()).not.toHaveAccessibleDescription();
   });
 
-  // The owner's report, 2026-10-29: after an edit that the autosave had saved, the reason
+  // After an edit that the autosave had saved, the reason
   // "Nothing to save yet" came back and stayed, as the save left the form matching the row.
   it('does not say there is nothing to save after an edit has been saved', async () => {
     acceptCreate();
@@ -484,7 +484,7 @@ describe('SpellBuilder', () => {
           ).toBeVisible();
         }
       }
-      // M10.13's switch folds with the note.
+      // The switch folds with the note.
       expect(
         within(fieldsOf('Notes')).getByRole('switch', { name: 'Share With the Coven' }),
       ).toBeVisible();

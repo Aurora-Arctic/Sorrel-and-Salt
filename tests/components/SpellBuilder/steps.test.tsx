@@ -21,7 +21,7 @@ vi.mock('next/navigation', () => ({ useRouter: () => ({ push: vi.fn(), refresh: 
 
 const { default: SpellBuilder } = await import('@/components/SpellBuilder');
 
-// The spell builder's Add to Jar (stories 49, 50, 57 and 77): the
+// The spell builder's Add to Jar: the
 // ingredient picker, a one-off ingredient, each step's quantity and unit, and
 // Remove. The picker's answers come from MSW in /api/graphql's shape. That a
 // save writes the ingredient and form ids and never a cupboard entry, and who
@@ -279,7 +279,7 @@ describe('the spell builder’s Add to Jar', () => {
     expect(save().matches(':disabled, [aria-disabled="true"]')).toBe(false);
   });
 
-  // Story 51 typed its second ingredient as the first was added; the new
+  // A second ingredient typed as the first was added: the new
   // step's Quantity took the focus a render later, and the list never opened.
   it('keeps the focus in the search after a pick, so the next ingredient can be typed', async () => {
     suggest(ROSEWORT);
@@ -702,7 +702,7 @@ describe('the spell builder’s Add to Jar', () => {
   });
 });
 
-// Story 53: a warning on an ingredient that is toxic or needs care. The
+// A warning on an ingredient that is toxic or needs care. The
 // mark and the note are SafetyNote's own (tests/components/SafetyNote); this is
 // only that the builder draws them for the right steps, and never blocks a save.
 describe('the spell builder’s safety warning', () => {

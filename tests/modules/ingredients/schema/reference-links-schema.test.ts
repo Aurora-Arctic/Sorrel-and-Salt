@@ -150,7 +150,7 @@ describe('reference_links table', () => {
     });
   });
 
-  // One link per reference per row. MB.153's service refuses a
+  // One link per reference per row. The service refuses a
   // repeat first, so these indexes are the floor beneath it.
   describe('a row cites a reference once', () => {
     it('refuses a second live link of one reference to it, whatever its locator', async () => {

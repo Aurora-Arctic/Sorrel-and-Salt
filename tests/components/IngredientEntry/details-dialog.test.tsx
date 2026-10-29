@@ -210,7 +210,7 @@ describe('DetailsDialog', () => {
     expect(dialog()).toBeInTheDocument();
   });
 
-  // The head (the owner's calls, 2026-10-20): the entry's badges are the card's and the
+  // The head: the entry's badges are the card's and the
   // entry page's own components, the safety badge beside the name, the formal name on its
   // own line below it, the other badges in a row under that, and the Edit pencil last of
   // what stands beside the name.
@@ -263,7 +263,7 @@ describe('DetailsDialog', () => {
 });
 
 // The plus beside the pencil, and the check once every coven the viewer may add in holds the
-// entry (the owner's calls, 2026-10-20), as the entry page has them.
+// entry, as the entry page has them.
 describe('DetailsDialog plus', () => {
   const ID = '00000000-0000-4000-8000-0000000000aa';
   const ONE = { id: '00000000-0000-4000-8000-000000000001', name: 'Fixture Coven One' };

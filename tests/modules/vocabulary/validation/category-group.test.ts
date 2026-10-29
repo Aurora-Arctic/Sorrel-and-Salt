@@ -16,7 +16,7 @@ const VALID = {
   colorLight: '#0c5393',
 };
 
-/** The dark page, which MB.36 moved the check off: the card is harder. */
+/** The dark page is not the surface checked: the card is harder. */
 const DARK_PAGE = '#14120e';
 
 function issuesOf(input: unknown) {
@@ -49,7 +49,7 @@ describe('CategoryGroupInput', () => {
     expect(failedPaths({ ...VALID, colorLight: '#abc' })).toEqual([['colorLight']]);
   });
 
-  // The owner's call: the pair is one family, as every seeded pair is.
+  // The pair is one family, as every seeded pair is.
   describe('the one hue', () => {
     it('refuses a pair whose hues are more than 10° apart, beside the light-theme colour', () => {
       expect(issuesOf({ ...VALID, colorLight: '#930c31' })).toEqual([

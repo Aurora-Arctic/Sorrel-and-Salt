@@ -34,7 +34,7 @@ import { insertSpell } from '../../../support/db/insert-spell';
 import { type IngredientFixture, makeSpell, makeVariant } from '../../../support/fixtures';
 import { inputOf, local } from '../../../support/workspace-ingredient-input';
 
-// Story 25 in the coven, split from workspace-ingredients.test.ts: what a
+// Deleting in the coven, split from workspace-ingredients.test.ts: what a
 // deleted coven ingredient leaves in each read. The table is emptied per test,
 // so every row a result could come from is one this file wrote.
 
@@ -55,7 +55,7 @@ async function rowOf(id: string) {
   return row;
 }
 
-// Story 25 in the coven: a deleted ingredient is gone from every read its
+// Deleting in the coven: a deleted ingredient is gone from every read its
 // members make, and what it held is free again (claude-docs/db/workspace-ingredients.md,
 // "Workspace ingredients").
 describe('a deleted coven ingredient', () => {
@@ -118,7 +118,7 @@ describe('a deleted coven ingredient', () => {
         return Array.isArray(cited) && cited.length > 0;
       },
     ],
-    // The fixture's own form, a variant since MB.216.
+    // The fixture's own form, a variant.
     [
       'its variants',
       async (id) => {
