@@ -37,9 +37,9 @@ import type {
   WorkspaceIngredientFacets,
 } from './types';
 
-// // How many entries each value of each filter kind would list, under the list's own filter minus that kind's own choice and
-// // its own arms, so a facet cannot match differently from its list. One grouped read per kind, run side by side, plus the
-// // compendium's two switch counts (claude-docs/db/compendium-read.md, "Facet counts").
+// How many entries each value of each filter kind would list, under the list's own filter minus that kind's own choice and
+// its own arms, so a facet cannot match differently from its list. One grouped read per kind, run side by side, plus the
+// compendium's two switch counts (claude-docs/db/compendium-read.md, "Facet counts").
 
 /**
  * How many compendium entries each filter value would list under the rest of

@@ -33,13 +33,9 @@ import type {
   SeedWorkspaceIngredient,
 } from './types';
 
-// The `demo` scenario: `standard` plus spells with ingredients and layer order,
-// written as a member would write them since screenshots are taken against it.
-// It adds W's cupboard (nine compendium entries held, six of them annotated),
-// W's own ingredients, so the jars mix both kinds, one custom one-off layer
-// with no `ingredient_id`, and W's stock: seven jars of what it holds
-// (claude-docs/db/demo-scenario.md, "The demo scenario").
-// Writes go through the handle `seed()` was given — see minimal.ts.
+// The `demo` scenario: `standard` plus spells with ingredients and layer order, written as a member would, since
+// screenshots are taken against it. It adds W's cupboard, W's own ingredients, a custom one-off layer and seven jars
+// (claude-docs/db/demo-scenario.md, "The demo scenario"). Writes use the handle `seed()` was given, not `withAudit`.
 
 /** A one-field stub: a thing no naming system names, so `none`. */
 const HEARTH_ASH: SeedWorkspaceIngredient = {
@@ -51,12 +47,8 @@ const HEARTH_ASH: SeedWorkspaceIngredient = {
 };
 
 /**
- * The "Similar in the Compendium" case: bought as "cat's claw" with no
- * formal name, so it is an own stub beside the compendium's five Cat's Claws
- * (four plants and the animal claw). A member can declare it to be one of the
- * five. It is the one own entry here that shares a name with the
- * compendium, and it hides none of the five: a name match hides nothing
- *.
+ * The "Similar in the Compendium" case: bought as "cat's claw" with no formal name, so an own stub beside the compendium's
+ * five Cat's Claws. A member can declare it one of them. It shares a name with the compendium and hides none: a name match hides nothing.
  */
 const CATS_CLAW: SeedWorkspaceIngredient = {
   name: "Cat's Claw",
@@ -68,10 +60,8 @@ const CATS_CLAW: SeedWorkspaceIngredient = {
 };
 
 /**
- * W's cupboard in `demo`: the `standard` rows, the curated German Chamomile
- * (which only `demo` seeds) relabelled, with a colour the compendium does not list,
- * and the two entries the spells below lay that `standard` does not hold. A spell
- * step names only what the coven holds (the recipe service's readable variants), and
+ * W's cupboard in `demo`: the `standard` rows, the curated German Chamomile relabelled with a colour the compendium does not
+ * list, and the two entries the spells lay that `standard` does not hold. A spell step names only what the coven holds, and
  * the seed writes raw, so it holds them here.
  */
 export const WORKSPACE_W_CUPBOARD: SeedCupboardEntry[] = [
@@ -97,10 +87,8 @@ export const WORKSPACE_W_INGREDIENTS: SeedWorkspaceIngredient[] = [HEARTH_ASH, C
 const CURATED_FILES = loadCompendium();
 
 /**
- * A compendium entry, `standard` or an `approved` file, looked up at module
- * load so a layer naming a missing entry fails on import rather than at a
- * foreign key later. A file held back from `approved` is not seeded, so a
- * layer may not name it.
+ * A compendium entry, `standard` or an `approved` file, looked up at module load, so a layer naming a missing entry fails on
+ * import rather than at a foreign key. A file held back from `approved` is not seeded, so a layer may not name it.
  */
 function fromCompendium(name: string, canonicalName?: string): NamedIngredient {
   const curated = CURATED_FILES.files.filter((file) => file.status === 'approved');
@@ -122,10 +110,8 @@ function fromWorkspace(entry: SeedWorkspaceIngredient): NamedIngredient {
 }
 
 /**
- * W's stock in `demo`: the `standard` jars, and the jars on entries only
- * `demo` seeds, in the ids `…0001`, `…0002`, `…0005` and `…0006` that
- * `standard` leaves free. Every compendium entry named here is in
- * `WORKSPACE_W_CUPBOARD`.
+ * W's stock in `demo`: the `standard` jars, plus jars on entries only `demo` seeds in the ids `…0001`, `…0002`, `…0005` and
+ * `…0006` that `standard` leaves free. Every compendium entry named is in `WORKSPACE_W_CUPBOARD`.
  */
 export const DEMO_STOCK: SeedStock[] = [
   ...STANDARD_STOCK,
@@ -267,11 +253,8 @@ export const DEMO_SPELLS: SeedSpell[] = [
       { body: 'Stitch the bag closed and keep it inside the pillowcase.' },
     ],
   },
-  // The shelf: more than a page of each status for a member, so both
-  // grimoire tabs page. Several titles share "Hearth", one spell reaches it
-  // only through its intent, one title is accented, one draft is untitled,
-  // and four spells are Fixture B's own and private, which no other member
-  // reads (claude-docs/db/demo-scenario.md, "The grimoire shelf").
+  // The shelf: more than a page of each status for a member, so both grimoire tabs page, with shared titles, an intent-only
+  // match, an accented title, an untitled draft and four private spells of Fixture B (claude-docs/db/demo-scenario.md, "The grimoire shelf").
   {
     id: '00000000-0000-0000-0002-000000000003',
     title: 'Hearth Fire Blessing',
@@ -1319,10 +1302,8 @@ function layerIdentity(
 }
 
 /**
- * A jar's recipe is seeded whole or not at all: a step's identity is a place in
- * a shared sequence, so patching one into an edited recipe collides on either
- * index. A jar that already has steps is left as it is
- * (claude-docs/db/demo-scenario.md, "A jar's stack is seeded whole or not at all").
+ * A jar's recipe is seeded whole or not at all: a step's identity is a place in a shared sequence, so patching one into an
+ * edited recipe collides on either index (claude-docs/db/demo-scenario.md, "A jar's stack is seeded whole or not at all").
  */
 async function insertMissingSteps(
   tx: SeedTransaction,

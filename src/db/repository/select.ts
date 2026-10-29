@@ -103,9 +103,9 @@ export async function selectFrom(
   const joined = order && 'leftJoin' in order ? order : undefined;
   const aggregated = order && 'aggregate' in order ? order : undefined;
   const keyed = keyset ?? tally?.count ?? aggregated?.over;
-  //   // A table is read whole, and a page adds its key, each part as Postgres prints it: a `timestamptz` read into a Date
-  //   // loses microseconds and its cursor would replay rows. A count, tally, left join, derived relation and a table with
-  //   // columns no finder reads (`unread-columns.ts`) each read their own columns.
+  // A table is read whole, and a page adds its key, each part as Postgres prints it: a `timestamptz` read into a Date
+  // loses microseconds and its cursor would replay rows. A count, tally, left join, derived relation and a table with
+  // columns no finder reads (`unread-columns.ts`) each read their own columns.
   const [source, selection] = is(relation, PgTable)
     ? [
         relation,

@@ -79,10 +79,8 @@ async function asksNoReturnPath(): Promise<boolean> {
 }
 
 /**
- * A provider's `mapProfileToUser`, built from its `PROFILE` entry. Each
- * mapping is spread after the provider's own, so it wins: one that never
- * vouches answers `emailVerified: false`, and a link writes nothing to the
- * row. Typed for any profile, since Better Auth types each provider's apart.
+ * A provider's `mapProfileToUser`, built from its `PROFILE` entry and spread after the provider's own, so it wins: a provider
+ * that never vouches answers `emailVerified: false`, and a link writes nothing to the row.
  */
 function mapProfile(id: ProviderId) {
   const { accountId, vouches } = PROFILE[id];
@@ -97,11 +95,8 @@ function mapProfile(id: ProviderId) {
   });
 }
 
-// Registered only when id and secret are both present, so `next dev` runs with
-// neither. A sign-in earns an account and nothing else (CLAUDE.md invariants).
-// The roster lives in social-providers.ts, shared with the sign-in page, and
-// what differs between providers in social-providers-config.ts's `PROFILE`,
-// so a provider added there needs no edit here.
+// Registered only when id and secret are both present, so `next dev` runs with neither. The roster is in
+// social-providers.ts and what differs per provider in social-providers-config.ts's `PROFILE`; a sign-in earns an account only.
 function socialProviders(): BetterAuthOptions['socialProviders'] {
   const providers: NonNullable<BetterAuthOptions['socialProviders']> = {};
 
@@ -118,12 +113,9 @@ function socialProviders(): BetterAuthOptions['socialProviders'] {
   return providers;
 }
 
-// Per request rather than a `BETTER_AUTH_URL` env var: production spans three
-// origins, and one Preview-scoped variable cannot tell staging from a hotfix.
-// Outside production the host is fixed: `next dev --hostname 0.0.0.0` derives
-// it from its bind address, so every `redirect_uri` would be `0.0.0.0:8000`.
-// The port is the server's own (Next sets `PORT` from `--port`), so a second
-// dev server or an e2e slot is not refused as an invalid origin.
+// Per request, not a `BETTER_AUTH_URL` variable: production spans three origins. Outside production the host is fixed
+// (`next dev --hostname 0.0.0.0` would make every `redirect_uri` `0.0.0.0:8000`) and the port is the server's own
+// (Next sets `PORT`), so a second dev server or an e2e slot is not refused as an invalid origin.
 function baseURL(): BetterAuthOptions['baseURL'] {
   if (process.env.NODE_ENV === 'production') {
     return {
@@ -191,11 +183,8 @@ function refuseWrongAccount(ctx: HookContext): APIError {
 }
 
 /**
- * A link opened from no session at all: to the sign-in page, whose sentence
- * says to open the link again once signed in, and which sends the account on
- * to the email page. Nothing from the link travels with it. A link carrying
- * no `callbackURL` has no page to go back to, and gets the 403 a wrong
- * account does.
+ * A link opened with no session: to the sign-in page, whose sentence says to open the link again once signed in, and which
+ * forwards to the email page. Nothing from the link travels with it; one with no `callbackURL` gets the 403 a wrong account does.
  */
 function refuseSignedOut(ctx: HookContext): APIError {
   if (typeof ctx.query?.callbackURL !== 'string') return refuseWrongAccount(ctx);
@@ -267,12 +256,9 @@ function tokenClaims(token: unknown): { email?: string; updateTo?: string } | un
   }
 }
 
-// The change branch of /verify-email — a token carrying `updateTo` — calls no
-// `beforeEmailVerification` and, given no session, mints one for whoever
-// opened the link. So the verified-link rule is applied here, before the endpoint: only
-// a session holding the row may follow it, and the address must still be free,
-// or the unique index would fail the write. The plain branch is gated by
-// `beforeEmailVerification` as before (claude-docs/auth/admin-bootstrap.md, "The email page").
+// The change branch of /verify-email (a token carrying `updateTo`) calls no `beforeEmailVerification` and mints a session
+// for whoever opened the link, so the rule is applied here first: only a session holding the row may follow it, and the
+// address must still be free or the unique index fails the write (claude-docs/auth/admin-bootstrap.md, "The email page").
 async function gateEmailChange(ctx: HookContext): Promise<void> {
   const claims = tokenClaims(ctx.query?.token);
   if (!claims?.email || !claims.updateTo) return;
@@ -310,11 +296,8 @@ export const auth = betterAuth({
     enabled: process.env.NODE_ENV === 'production',
     storage: 'database',
   },
-  // Cookie only: `storeInDatabase` would add a users column nothing reads.
-  // The sign-in page marks the provider this browser last used, and the
-  // server says nothing about an address (claude-docs/auth/plugins.md, "Plugins").
-  // Impersonation is never constructed at production, nor anywhere the flag
-  // is unset, so its endpoints are absent rather than refusing.
+  // Cookie only: `storeInDatabase` would add a users column nothing reads (claude-docs/auth/plugins.md, "Plugins").
+  // Impersonation is never constructed at production, nor where the flag is unset, so its endpoints are absent.
   plugins: [
     lastLoginMethod({ cookieName: LAST_USED_PROVIDER_COOKIE }),
     ...(impersonationEnabled() ? [impersonation()] : []),
@@ -351,11 +334,8 @@ export const auth = betterAuth({
       // Reached only at sign-up or from the row's own session (`requireOwnResend`),
       // so the stamp, which restarts the provisional window too, is the row's own.
       await recordVerificationSent({ userId: user.id });
-      // Better Auth lands a sign-up's link where the sign-in asked to go; every
-      // link lands on the email page's confirmed view instead, carrying that
-      // destination on to Continue — none for a sign-up that asked for none,
-      // whose `callbackURL` only stands in. A resend's `callbackURL` is already
-      // the landing, and passes the same guard as a sign-up's.
+      // Every link lands on the email page's confirmed view, carrying the sign-in's destination on to Continue (none for a
+      // sign-up that asked for none). A resend's `callbackURL` is already the landing and passes the same guard.
       const link = new URL(url);
       const next = (await asksNoReturnPath())
         ? undefined

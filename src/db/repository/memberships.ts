@@ -182,9 +182,9 @@ export function membershipWrites({
         workspaceMembers,
         and(scopedTo(membership, workspaceMembers), eq(workspaceMembers.userId, userId)),
       ),
-    //     // Rule 4's fourth named exception and the only writer touching a deleted row: the audit writer's `update` skips one,
-    //     // and the `(workspace_id, user_id)` primary key stops a second insert. Deleted rows only (`isNotNull`), no proof (the seat
-    //     // a proof comes from is being restored), and `joinedAt` restarts because the members list shows when it began.
+    // Rule 4's fourth named exception and the only writer touching a deleted row: the audit writer's `update` skips one,
+    // and the `(workspace_id, user_id)` primary key stops a second insert. Deleted rows only (`isNotNull`), no proof (the seat
+    // a proof comes from is being restored), and `joinedAt` restarts because the members list shows when it began.
     reviveMembership: (workspaceId, userId, role, invitedBy) => {
       const now = new Date();
       return tx

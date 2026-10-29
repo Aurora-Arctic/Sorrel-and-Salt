@@ -8,10 +8,8 @@ import { curates } from './site-roles';
 // sentences for the account page's own OAuth round trip, the link.
 
 /**
- * Where a sign-in goes when no page asked for the visitor back, for anyone
- * but a curator or an admin: the post-sign-in landing, not `/` — `/` is the public
- * front door, and a visitor who has just signed in has been through it already
- * (claude-docs/design-decisions/mb.57-post-sign-in-landing.md).
+ * Where a sign-in goes when no page asked for the visitor back, for anyone but a curator or an admin: the post-sign-in
+ * landing, not the public front door `/` (claude-docs/design-decisions/mb.57-post-sign-in-landing.md).
  */
 export const POST_SIGN_IN_LANDING = '/coven' satisfies Route;
 
@@ -24,13 +22,9 @@ export function postSignInLanding(role: UserRole): Route {
 }
 
 /**
- * The open-redirect guard for `?next=`. A same-site absolute path is kept
- * verbatim; anything else — an absolute URL, a protocol-relative `//host`, a
- * `/\host` some browsers still resolve as one, a relative path, a missing
- * value, or Next's array-valued searchParams for a repeated key — is no
- * return path at all, and the landing is then the role's (`postSignInLanding`).
- * Without this, `?next=https://evil.example` would make /sign-in redirect
- * anywhere after a real sign-in.
+ * The open-redirect guard for `?next=`: a same-site absolute path is kept verbatim; anything else (an absolute URL, `//host`,
+ * `/\host`, a relative path, a missing value or an array) is no return path, and the landing is the role's
+ * (`postSignInLanding`). Without it `?next=https://evil.example` would redirect anywhere after sign-in.
  */
 export function safeReturnPath(raw: string | string[] | undefined): string | undefined {
   if (typeof raw !== 'string' || raw.length === 0) return undefined;
@@ -44,10 +38,8 @@ export function safeReturnPath(raw: string | string[] | undefined): string | und
 }
 
 /**
- * What a sign-in with no return path tells the callback, in Better Auth's
- * `additionalData`, so that it lands the account by role. A flag rather than
- * a landing path for the callback to recognise: `/coven` asked for by name
- * must still win for an admin.
+ * What a sign-in with no return path tells the callback, in Better Auth's `additionalData`, so it lands the account by role.
+ * A flag, not a landing path: `/coven` asked for by name must still win for an admin.
  */
 export const NO_RETURN_PATH = { noReturnPath: true } as const;
 
@@ -68,10 +60,8 @@ export function socialSignInTarget(next: string | undefined) {
 }
 
 /**
- * The request header the proxy forwards a protected page's own path and query
- * in. A server component cannot read its URL, and `requireSession()` needs it
- * for a redirect the proxy's cookie check did not catch. The proxy overwrites
- * any client-supplied value; `safeReturnPath` still guards the read.
+ * The request header the proxy forwards a protected page's own path and query in, as a server component cannot read its URL
+ * and `requireSession()` needs it to redirect. The proxy overwrites any client value; `safeReturnPath` still guards the read.
  */
 export const RETURN_PATH_HEADER = 'x-sorrel-return-path';
 
@@ -114,18 +104,12 @@ function stateExpired(sentence: string) {
   return { state_mismatch: sentence, state_not_found: sentence, state_invalid: sentence };
 }
 
-// One sentence for every failure that trying again can fix and that needs
-// no word of its own: a callback that broke partway, and what SignInPanel
-// shows for a pre-redirect failure (a bad request, a network error) that
-// never reaches a `?error=` code at all. Also the fallback for a code the map
-// does not name.
+// One sentence for every failure that trying again can fix: a callback that broke partway, a pre-redirect failure that
+// never reaches a `?error=` code, and the fallback for a code the map does not name.
 export const GENERIC_SIGN_IN_ERROR = "We couldn't sign you in. Please try again.";
 
-// Better Auth's own OAuth callback error codes (node_modules/better-auth/dist/
-// oauth2/errors.mjs) plus the ones providers themselves return. Every
-// sentence here is ours — "a readable error, not a stack trace" means never
-// echoing the callback's own error_description, which is provider-controlled
-// text we have not reviewed.
+// Better Auth's own OAuth callback error codes (node_modules/better-auth/dist/oauth2/errors.mjs) plus providers' own. Every
+// sentence is ours: the callback's `error_description` is provider-controlled text and is never echoed.
 const ERROR_MESSAGES: Record<string, string> = {
   access_denied:
     'Signing in was cancelled before it finished. Choose a sign-in method to try again.',
@@ -202,10 +186,8 @@ export const GENERIC_UNLINK_ERROR = "That sign-in method couldn't be removed. Pl
 const unlinkLookup = messageLookup(UNLINK_ERROR_MESSAGES, GENERIC_UNLINK_ERROR);
 
 /**
- * One readable sentence for a refused `/unlink-account`. Unlike a callback's
- * lookup, a missing code still has a sentence: the call was refused either
- * way, so where `messageLookup` answers `undefined` for no code, this falls
- * back to the generic one.
+ * One readable sentence for a refused `/unlink-account`. Unlike a callback's lookup a missing code still has a sentence,
+ * since the call was refused either way: it falls back to the generic one.
  */
 export function unlinkErrorMessage(code: string | undefined): string {
   return unlinkLookup(code) ?? GENERIC_UNLINK_ERROR;

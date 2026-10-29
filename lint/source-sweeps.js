@@ -47,8 +47,8 @@ function* walk(node) {
 }
 
 export const rules = {
-  //   // CLAUDE.md rule 8's sweep: the site navigates through `usePendingNavigation` or `PendingLink`, so the page bar and
-  //   // skeletons follow every move. A bare `router.push`, `replace` or `refresh` moves the page with no signal. `<Link>` is not covered.
+  // CLAUDE.md rule 8's sweep: the site navigates through `usePendingNavigation` or `PendingLink`, so the page bar and
+  // skeletons follow every move. A bare `router.push`, `replace` or `refresh` moves the page with no signal. `<Link>` is not covered.
   'no-bare-router-navigation': {
     create: (context) => {
       const file = fileOf(context);
@@ -78,9 +78,9 @@ export const rules = {
     },
   },
 
-  //   // A form is shown through `formLabel` (claude-docs/components/ingredient-form.md, "Forms are shown in title case"). A line
-  //   // check, not a type check: it sees `x.form` and a JSX `{form}`, passes a line that folds or keys the text, and misses
-  //   // a form copied to a local or passed as a string prop.
+  // A form is shown through `formLabel` (claude-docs/components/ingredient-form.md, "Forms are shown in title case"). A line
+  // check, not a type check: it sees `x.form` and a JSX `{form}`, passes a line that folds or keys the text, and misses
+  // a form copied to a local or passed as a string prop.
   'form-shown-through-form-label': {
     create: (context) => {
       const file = fileOf(context);
@@ -117,9 +117,9 @@ export const rules = {
     },
   },
 
-  //   // Who may read a spell is `readableSpells` in src/db/repository/spells.ts and nothing else in src/ compares a spell's
-  //   // visibility (claude-docs/db/spell-visibility.md, "Reading"). Catches the column in a query, the word in a raw sql``
-  //   // template, and a `.visibility` comparison under src/db/ and src/modules/ only (a component compares it to draw a badge).
+  // Who may read a spell is `readableSpells` in src/db/repository/spells.ts and nothing else in src/ compares a spell's
+  // visibility (claude-docs/db/spell-visibility.md, "Reading"). Catches the column in a query, the word in a raw sql``
+  // template, and a `.visibility` comparison under src/db/ and src/modules/ only (a component compares it to draw a badge).
   'spell-visibility-read-in-one-place': {
     create: (context) => {
       const file = fileOf(context);
@@ -193,8 +193,8 @@ export const rules = {
     },
   },
 
-  //   // Only the curator's switch, `setCompendiumEntryReviewed`, writes a compendium entry's review mark: no service file
-  //   // names the mark's columns, and the one repository writer that sets them is called from the switch alone.
+  // Only the curator's switch, `setCompendiumEntryReviewed`, writes a compendium entry's review mark: no service file
+  // names the mark's columns, and the one repository writer that sets them is called from the switch alone.
   'compendium-review-mark-switch-only': {
     create: (context) => {
       const file = fileOf(context);
@@ -233,9 +233,9 @@ export const rules = {
     },
   },
 
-  //   // A modal gives the focus back to its opener however it closes, and the mechanism is Modal's own (`modal.tsx`)
-  //   // (claude-docs/design-decisions/m8.17-plan.md, "Giving the focus back"). A `.focus()` in a file that draws a dialog is a
-  //   // hand-built return unless the allowance below says so; it is counted by call, and a stale count is reported, so it only shrinks.
+  // A modal gives the focus back to its opener however it closes, and the mechanism is Modal's own (`modal.tsx`)
+  // (claude-docs/design-decisions/m8.17-plan.md, "Giving the focus back"). A `.focus()` in a file that draws a dialog is a
+  // hand-built return unless the allowance below says so; it is counted by call, and a stale count is reported, so it only shrinks.
   'modal-focus-return-through-modal': {
     create: (context) => {
       const file = fileOf(context);
@@ -290,9 +290,9 @@ export const rules = {
     },
   },
 
-  //   // A form holding typed text asks before a tab close, reload or link leaves it unsaved, through `useLeaveGuard`
-  //   // (src/lib/navigation/leave-guard.tsx), `useDiscardGuard` or `useSaveOnClose`. A component drawing a `<form>`, `FormActions`
-  //   // or `useForm` must call one unless the list below says why not; a listed file that no longer needs it is reported.
+  // A form holding typed text asks before a tab close, reload or link leaves it unsaved, through `useLeaveGuard`
+  // (src/lib/navigation/leave-guard.tsx), `useDiscardGuard` or `useSaveOnClose`. A component drawing a `<form>`, `FormActions`
+  // or `useForm` must call one unless the list below says why not; a listed file that no longer needs it is reported.
   'long-form-guards-leaving': {
     create: (context) => {
       const file = fileOf(context);
@@ -331,9 +331,9 @@ export const rules = {
     },
   },
 
-  //   // A spec's tests spread across Playwright workers, each with its own database, so a test reading what an earlier one wrote
-  //   // is intermittently red. Fails a variable declared outside a test and assigned inside it, in a file or `describe` not serial;
-  //   // a hook assignment stays legal. On for `tests/e2e/**/*.spec.ts` only (claude-docs/testing/e2e.md, "E2E").
+  // A spec's tests spread across Playwright workers, each with its own database, so a test reading what an earlier one wrote
+  // is intermittently red. Fails a variable declared outside a test and assigned inside it, in a file or `describe` not serial;
+  // a hook assignment stays legal. On for `tests/e2e/**/*.spec.ts` only (claude-docs/testing/e2e.md, "E2E").
   'e2e-chained-tests-serial': {
     create: (context) => {
       const TEST_CALL = /^test(\.(only|skip|fixme|fail))?$/;
