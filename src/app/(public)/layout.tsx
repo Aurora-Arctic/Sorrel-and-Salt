@@ -3,11 +3,9 @@ import AppShell from '../../components/AppShell';
 import PublicFrame from '../../components/PublicFrame';
 import { viewerIfSignedIn } from '../../lib/viewer';
 
-// The frame for the pages a signed-out visitor may open. A route group, so the URLs are unchanged.
-// It reads the session with `viewerIfSignedIn()`, never a guard that redirects: a signed-in visitor
-// (verified or not) gets the application shell, a signed-out one the public frame. Either way the
-// page sits in `.page-column`, and the layout owns `<main>`, which a page here does not render; the
-// wrapper keeps one landmark while the skeleton swaps in during a move between pages.
+// The frame for pages a signed-out visitor may open; a route group, so URLs are unchanged. It reads
+// `viewerIfSignedIn()`, never a redirecting guard: a signed-in visitor gets the shell, others this
+// frame. The layout owns `<main>`, so one landmark stays while the skeleton swaps in.
 export default async function PublicLayout({ children }: { children: ReactNode }) {
   const shell = await viewerIfSignedIn();
 

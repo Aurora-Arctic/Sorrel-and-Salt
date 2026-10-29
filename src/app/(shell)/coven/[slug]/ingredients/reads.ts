@@ -25,21 +25,15 @@ import {
   workspaceIngredientFacets,
 } from '@/modules/ingredients';
 
-// The reads the coven's Ingredients page makes, twin of `compendium-reads.ts`. The data is the
-// coven's, so each read goes through the services for the signed-in session, which asserts
-// membership, and none is data-cached (rule 6). React's `cache` keeps a second call in one request
-// to one read, so each is keyed by primitives (the coven's id and the filter written as JSON) and,
-// for the page read, the coven's `Membership` last. That is an object, so `cache` keys it by
-// identity: `requireCovenMembership` is cached per slug per request, so the page passes the same
-// object each time. A fresh object would only miss, never read wrongly.
+// The Ingredients page's reads, twin of `compendium-reads.ts`: through the services as the signed-in
+// session, none data-cached (rule 6). `cache` keys the page read by the coven's `Membership` last;
+// `requireCovenMembership` is cached per slug, so a fresh object would only miss.
 
 type Filter = Parameters<typeof listWorkspaceIngredients>[2];
 
 /**
- * One page of `CARD_PAGE_SIZE` entries with its count and everything a card draws: forms, category
- * chips, the coven's jars and each card's last edit. Each is one batch for the page, and the jars
- * of the whole page are one `stockOf` call. Each edge keeps its `cupboardEntry`, for the label and
- * the Annotated and Retired marks.
+ * One page of `CARD_PAGE_SIZE` entries with its count and all a card draws, each one batch for the
+ * page. Each edge keeps its `cupboardEntry` for the label and the Annotated and Retired marks.
  */
 export const readCovenIngredients = cache(
   async (
@@ -113,10 +107,8 @@ export const readCovenFacets = cache(async (workspaceId: string, variables: stri
 });
 
 /**
- * The coven's own entry `?edit=<id>` names, with its values for the edit form, read as the
- * signed-in member. Nothing for an id the coven cannot reach, or for a compendium entry it names,
- * which a coven does not edit: the list then opens no dialog. Any other failure of the read is let
- * through rather than called no entry.
+ * The coven's own entry `?edit=<id>` names, with its form values, read as the signed-in member.
+ * Nothing for an unreachable id or a compendium entry; any other failure is let through.
  */
 export async function readEditedEntry(workspaceId: string, id: string) {
   const session = await requireSession();
@@ -132,13 +124,9 @@ export async function readEditedEntry(workspaceId: string, id: string) {
 }
 
 /**
- * The entry `?entry=<id>` opens the details of over the list, read as the signed-in member, any
- * role: the coven's own entry, or a compendium entry its cupboard holds, under the coven's label,
- * a retired one included. Nothing for an id the coven cannot reach, or a compendium entry the
- * cupboard does not hold, so the list opens no modal. Any other failure of the read is let through
- * rather than called no entry. With it, `detail`: the sections the details show, read as the
- * entry's page reads them, the held entry's cupboard entry laid in; and `jars`, the coven's jars of
- * it, for the details' Edit Stock.
+ * The entry `?entry=<id>` opens details of, read as the signed-in member: the coven's own, or a
+ * held compendium entry under the coven's label, retired included. Nothing for an unreachable id,
+ * and other failures are let through. With it, `detail` and the coven's `jars` for Edit Stock.
  */
 export async function readViewedEntry(membership: CovenMembership['membership'], id: string) {
   const session = await requireSession();

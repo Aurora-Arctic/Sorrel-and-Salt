@@ -11,13 +11,9 @@ export const metadata: Metadata = {
   title: 'Create Coven — Sorrel & Salt',
 };
 
-// The create-workspace page, reached from `/coven` by a rights holder with no coven yet and from the
-// switcher's Create Coven. It belongs to no one coven, so its context row holds the switcher alone,
-// and only for someone who already has a coven to switch to. A static segment beside `[slug]`, which
-// Next routes first, so the coven guard does not run here; `isReservedCovenSlug` keeps `new` from
-// being a slug. The right is read from the row, not the session, since accepting an invitation sets it
-// mid-session; showing the form only to a holder is presentation, as `createWorkspace` is the gate
-// (claude-docs/auth/coven-guard.md, "The create page").
+// The create-workspace page. It belongs to no one coven, so the coven guard does not run;
+// `isReservedCovenSlug` keeps `new` from being a slug. The right is read from the row, not the session,
+// and showing the form only to a holder is presentation, as `createWorkspace` is the gate.
 export default async function NewCovenPage() {
   const session = await requireSession();
   const me = await getMe(session);

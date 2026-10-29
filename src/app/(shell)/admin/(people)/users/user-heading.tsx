@@ -2,10 +2,8 @@ import type { ModalHeading } from '../../../../../components/Modal/types';
 import type { UserListEntry } from '../../../../../components/UserList/types';
 
 /**
- * The user modal's head: what it is, then whom, by name and address. Built by the page for each
- * row's link and for the loaded modal alike, so the head a press shows is the one that stays
- * (claude-docs/components/modal.md, "Opening at once"). The address is a span of the users list's
- * own, so it sits beneath the name without the shared Modal changing for one caller.
+ * The user modal's head: what it is, then whom. Built for both the row's link and the loaded
+ * modal so the head stays (claude-docs/components/modal.md, "Opening at once").
  */
 export function userHeading({ name, email }: Pick<UserListEntry, 'name' | 'email'>): ModalHeading {
   return {

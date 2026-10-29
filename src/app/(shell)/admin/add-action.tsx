@@ -7,16 +7,9 @@ import { useOpenModalClick } from '../../../components/Modal';
 import type { AddActionProps } from './types';
 
 /**
- * A list page's Add, the open tab's action beside the page's heading, at `href` so it keeps the
- * list's place. A press opens its modal at once under `heading`; a link still, so a new tab, or a
- * press before the script loads, opens the address. The label is always in the page; at the narrow
- * header width the plus shows instead, with the label as its tip (`_primitives.scss`,
- * `.add-action`; claude-docs/components/page-header.md).
- *
- * With `drawnHere`, for a dialog that reads the address in the browser and draws its form there
- * (New Spell), a press writes the address with `pushState`, which Next's router follows with no
- * server request. The dialog opens at full size at once, not as a skeleton that grows under the
- * pointer.
+ * A list page's Add, the open tab's action, at `href` to keep the list's place. A press opens its
+ * modal at once; as a link it opens the address. With `drawnHere` the dialog draws its form from
+ * the address in the browser, so a press writes it with `pushState` (claude-docs/components/page-header.md).
  */
 export default function AddAction({
   href,

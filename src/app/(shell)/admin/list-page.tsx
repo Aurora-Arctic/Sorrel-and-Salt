@@ -8,10 +8,7 @@ import type { ListPlace, ListSearchParams } from './types';
 // the `?edit=` lookup that turns a stale slug into a notice rather than an error page. The pager's
 // two hrefs are `pagerHrefs` in src/lib/list-href.ts, pure so pages outside admin call it.
 
-/**
- * The name filter, cursor and modal the address asks for. `own` is the page's own value of `?new`
- * beside the bare flag, as the compendium's `ingredient-compendium`.
- */
+/** The name filter, cursor and modal the address asks for; `own` is the page's value of `?new`. */
 export function readListPlace(params: ListSearchParams, own?: string): ListPlace {
   const { after, before } = readPageCursors(params);
   const value = params.new === undefined ? undefined : (single(params.new) ?? '');
@@ -30,9 +27,8 @@ export function readListPlace(params: ListSearchParams, own?: string): ListPlace
 }
 
 /**
- * What `read` finds, or `undefined` where the service says `NotFound`: the row `?edit=` names may
- * have been renamed or deleted since the link was made, which the page answers with
- * `MissingNotice` over the list rather than an error. Any other failure is still thrown.
+ * What `read` finds, or `undefined` on `NotFound`: a renamed or deleted `?edit=` row shows
+ * `MissingNotice` over the list. Any other failure is thrown.
  */
 export async function readOrMissing<T>(read: () => Promise<T>): Promise<T | undefined> {
   try {
@@ -44,9 +40,8 @@ export async function readOrMissing<T>(read: () => Promise<T>): Promise<T | unde
 }
 
 /**
- * The row `?edit=` names, read by `read`, and whether the address names one that is gone:
- * `missing` is what a page answers with `MissingNotice` over the list. An add wins over an
- * `?edit=`, so it reads nothing, and a blank `?edit=` names none.
+ * The row `?edit=` names, and whether it is gone (`missing`). An add wins over `?edit=`, so reads
+ * nothing; a blank `?edit=` names none.
  */
 export async function readEditPlace<T>(
   { adding, editSlug }: Pick<ListPlace, 'adding' | 'editSlug'>,

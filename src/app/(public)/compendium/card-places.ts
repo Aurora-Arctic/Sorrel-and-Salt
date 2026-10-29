@@ -6,10 +6,8 @@ import { covenRolesIfSignedIn } from '../../../lib/viewer';
 import { rolePermits } from '@/modules/coven';
 import { MAKE_IT_OURS_PERMISSION } from '@/modules/ingredients';
 
-// What the compendium cards' three dots and the Quick Look window offer a signed-in member: every
-// coven they may write in, with what their role there permits, read as the entry page's cupboard
-// reads it (`publicCupboardOf`). Per viewer, so never in the cached compendium reads (rule 6).
-// (claude-docs/components/compendium-cards.md)
+// What the cards' three dots and Quick Look offer a signed-in member: each coven they may write in and
+// their role's permissions there. Per viewer, so never in the cached reads (rule 6).
 
 /** One of the viewer's writable covens, and what the role there permits about a held entry. */
 export interface CardCoven {
@@ -53,11 +51,8 @@ export async function readCardCovens(
 }
 
 /**
- * The covens that hold an entry and let the viewer do something about it from the card: the
- * More's places. `entryPath` is the entry's public page, which Annotate leads to with that
- * coven's dialog open. `stockOf` answers the stock read for a coven that may update it
- * (`readEntryStock`'s, per entry): Edit Stock is offered where it answers. None where no coven
- * holds it, which draws no dots.
+ * The covens that hold an entry and let the viewer act on it from the card, for the More's places.
+ * `stockOf` answers Edit Stock's read per coven; none where no coven holds it, which draws no dots.
  */
 export function cardPlacesOf(
   covens: readonly CardCoven[],

@@ -4,10 +4,9 @@
 @use '../scss/layout' as *;
 @use '../scss/primitives' as *;
 
-// The single global stylesheet, imported once by the root layout: the theme tokens and the three
-// `*-base` mixins must be emitted exactly once, and every component's index.scss is its own
-// compilation unit. Three theme states, not two; the :not([data-theme='dark']) guard lets an explicit
-// dark beat a light system preference. claude-docs/styling.md, "Theme resolution".
+// The single global stylesheet: the theme tokens and `*-base` mixins must be emitted once, as every
+// component's index.scss compiles alone. The :not([data-theme='dark']) guard lets an explicit dark beat
+// a light system preference (claude-docs/styling.md, "Theme resolution").
 :root {
   @include theme-dark;
 }

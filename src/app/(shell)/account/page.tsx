@@ -26,12 +26,9 @@ export const metadata: Metadata = {
   title: 'Your Account — Sorrel & Salt',
 };
 
-// The one account page: the name the site shows, the address it writes to, the ways in, and the coven
-// invitations waiting for that address, each a section on its own panel under its own heading. A nav
-// of jump links sits left of the sections on a wide screen and above them on a phone. The page owns
-// all four heads, and the ids are prefixed so no form's own id can meet them. A failed provider link
-// lands back here with `?error=` and `?provider=` (claude-docs/auth/admin-bootstrap.md, "The account
-// page"). `requireSession()` sends an unverified account to the email page.
+// The one account page: name, address, ways in and waiting coven invitations, each its own section
+// under its own heading, with ids prefixed so no form's id meets them. A failed provider link returns
+// with `?error=` and `?provider=` (claude-docs/auth/admin-bootstrap.md, "The account page").
 export default async function AccountPage({ searchParams }: AccountPageProps) {
   const [session, params] = await Promise.all([requireSession(), searchParams]);
   const { after, before } = readPageCursors(params);

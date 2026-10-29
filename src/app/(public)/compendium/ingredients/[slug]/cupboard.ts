@@ -17,11 +17,9 @@ import {
   type IngredientRow,
 } from '@/modules/ingredients';
 
-// The cupboard choices the public entry page offers a signed-in person: every coven they may write
-// in, whether it holds the entry, and what their role there permits. Per viewer, so never from the
-// page's cached, sessionless read (rule 6). `?annotate=<covenSlug>` only picks among the viewer's own
-// memberships; a slug naming none of them is ignored before any read.
-// (claude-docs/components/ingredient-entry.md, "On the public page")
+// The cupboard choices for a signed-in person: each coven they may write in, whether it holds the
+// entry, and their role's permissions. Per viewer, so never in the cached read (rule 6). A
+// `?annotate=` slug naming no membership is ignored (claude-docs/components/ingredient-entry.md).
 
 export async function publicCupboardOf(
   entry: Pick<

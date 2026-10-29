@@ -13,13 +13,9 @@ import { categoriesOf, categoriesOfVariants, stockOf, variantsOf } from '@/modul
 import { entryHrefOf } from './recipe-steps';
 import { jarRowsOf } from './recipe-supply';
 
-// What the recipe page's side column reads: the spell's steps as the builder's Jar aside holds
-// them, so In Coven Inventory and Category Match draw on the page as they do while the spell is
-// built. Each linked step's categories (its ingredient's, then its form's: the union rule) and the
-// coven's jar of its form come from the ingredients module's batch reads, one call each whatever
-// the spell's length, never through GraphQL (rule 1). Each inventory line gets a Quick Look eye to
-// `?entry=<id>` and, for a role that may update stock, Edit Stock opening on the step's form (forms
-// are read only for such a role). Read per request and never cached (rule 6).
+// What the recipe page's side column reads: each linked step's categories and the coven's jar of its
+// form, from the ingredients module's batch reads, never GraphQL (rule 1). Forms are read only for a
+// role that may update stock. Per request, never cached (rule 6).
 
 /** A step the service withheld, or one with nothing to read, holds no categories and no jar. */
 const answered = <T>(answer: T | Error | undefined): T | undefined =>

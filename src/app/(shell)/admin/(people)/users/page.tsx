@@ -76,9 +76,8 @@ const readUsers = cache(
 );
 
 /**
- * The user `?user=` names, with their covens, for the modal; none when the address names no one the
- * list shows (not a user, not live, or the seed's bootstrap user, who is left off the list). Read
- * with the navigation through the services GraphQL ends at too (rule 1;
+ * The user `?user=` names, with their covens; none when the list does not show them (not live, or
+ * the seed's bootstrap user). Read through the services GraphQL ends at (rule 1;
  * claude-docs/design-decisions/m9.19-admin-sees-user-covens.md). Cached as `readUsers` is.
  */
 const readOpenedUser = cache(async (session: Session, raw: string) => {

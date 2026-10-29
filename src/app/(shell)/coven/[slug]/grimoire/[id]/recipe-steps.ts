@@ -9,10 +9,7 @@ import type { SpellStepView } from '@/modules/grimoire';
 /** What a linked step reads when the service withheld its ingredient (another coven's, say). */
 export const UNAVAILABLE_INGREDIENT = 'Unavailable Ingredient';
 
-/**
- * `hereHref` with the ingredient's details asked for: the page's own address, or the tab's with
- * `?spell=` kept, plus `entry=<id>`, so the details open over the spell rather than leaving it.
- */
+/** `hereHref` with the ingredient's details asked for, `entry=<id>` added so they open over the spell. */
 export const entryHrefOf = (hereHref: Route, id: string): Route =>
   `${hereHref}${hereHref.includes('?') ? '&' : '?'}entry=${id}` as Route;
 

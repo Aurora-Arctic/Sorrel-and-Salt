@@ -27,11 +27,9 @@ import type { GrimoireTabProps } from './types';
 import { readViewedEntry } from '../../ingredients/reads';
 import { viewedDetailsOf } from '../../ingredients/viewed-details';
 
-// One grimoire tab, Spells or Drafts: the slug guard, the address read as the filter, and one page
-// of 24 cards of the tab's status. Read per request and never cached (rule 6). A function the two
-// pages call rather than a component, so each page is the async component itself and a test awaits
-// it whole. The dialogs it opens are described in
-// claude-docs/design-decisions/m10.12-spell-builder-modal.md.
+// One grimoire tab, Spells or Drafts: the slug guard, the address as the filter, and one page of 24
+// cards. Per request, never cached (rule 6). A function, not a component, so a test awaits each
+// page whole. Dialogs: claude-docs/design-decisions/m10.12-spell-builder-modal.md.
 /** `closeHref` with a saved spell's dialog open over it. */
 const editHrefOf = (closeHref: Route, id: string): Route =>
   `${closeHref}${closeHref.includes('?') ? '&' : '?'}${new URLSearchParams({ edit: id })}` as Route;
@@ -42,9 +40,8 @@ const VISIBILITY_LABELS: Record<(typeof VISIBILITIES)[number], string> = {
 };
 
 /**
- * The four facets' choices from their counts. Moon phase and day are the spells' own words, so a
- * value picked from a hand-edited address that no spell holds is still offered, at 0, and keeps
- * its chip. Visibility is the fixed pair, each shown whether or not a spell holds it.
+ * The four facets' choices from their counts. A picked moon phase or day no spell holds is still
+ * offered at 0 and keeps its chip; Visibility is the fixed pair, always shown.
  */
 function facetsOf(
   filter: GrimoireListFilter,
@@ -102,11 +99,9 @@ export async function grimoireTab({
 
   const facets = facetsOf(filter, facetCounts);
 
-  // The dialog the address opens, if this role may write a spell. `?new` is read first:
-  // `?new=spell-<slug>` naming this coven, or `?new=spell`, is New Spell. Any other `?new` is the
-  // shell's Add Ingredient, or another coven's New Spell on its way there, so a saved spell's
-  // `?edit` waits beneath it and opens when that dialog's close drops `new`. One dialog shows at a
-  // time. An `edit` that is not an id reads nothing.
+  // The dialog the address opens, if this role may write a spell. `?new` is read first: this
+  // coven's `spell-<slug>` or `spell` is New Spell; any other is the shell's Add Ingredient, with a
+  // saved spell's `?edit` waiting beneath it. One dialog at a time; a non-id `edit` reads nothing.
   const role = membership.role;
   const adding = query[NEW];
   const edit = adding === undefined ? query.edit : undefined;

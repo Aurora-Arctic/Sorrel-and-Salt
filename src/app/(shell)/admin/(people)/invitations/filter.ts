@@ -3,11 +3,8 @@ import { readListPlace } from '../../list-page';
 import type { InvitationsPlace, InvitationsSearchParams } from './types';
 
 /**
- * The tab's filter and page off its address, which the page and
- * New Invitation beside the heading both read: `email` trimmed, blank as none,
- * as a native submit sends `email=`; `expiring` by its presence, a native
- * submit's `expiring=` read the same as the bare flag; and at most one
- * cursor, read as every admin list reads one (`readListPlace`).
+ * The tab's filter and page off its address: `email` trimmed (blank is none), `expiring` by
+ * presence, and at most one cursor, as every admin list reads one (`readListPlace`).
  */
 export function readInvitationsPlace(params: InvitationsSearchParams): InvitationsPlace {
   const { after, before } = readListPlace(params);

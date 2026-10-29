@@ -20,13 +20,10 @@ import { readRecipeOf } from '../recipe-read';
 import { readRecipeAsideOf } from './recipe-aside';
 import type { SpellRecipeParams } from './types';
 
-// One saved spell as a page: the read surface for a spell, at /coven/[slug]/grimoire/[id]. The
-// guard proves the caller is in the coven; `readSpell` is given that coven's id and keeps a private
-// spell its author's in SQL, so a stranger, a spell of another coven and another member's private
-// spell all read as the same 404. Read per request and never cached (rule 6), through the services
-// (rule 1). The page calls `requireSession()` itself and draws its own `<main>`. The
-// RouteModalProvider is for the Edit dialog: `?edit=<id>` opens it for a role that may update a
-// spell, only when it names this page's own spell.
+// One saved spell as a page. `readSpell` keeps a private spell its author's in SQL, so a stranger,
+// another coven's spell and another member's private spell all read as the same 404. Per request,
+// never cached (rule 6). The page calls `requireSession()` and draws its own `<main>`; the
+// RouteModalProvider serves `?edit=<id>` for this page's own spell and a role that may update it.
 
 // One read per request, shared by the metadata and the page. The guard runs first.
 const spellOf = cache(async (slug: string, id: string) => {

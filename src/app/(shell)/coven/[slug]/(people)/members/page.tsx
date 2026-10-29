@@ -21,12 +21,9 @@ export const metadata: Metadata = {
   title: 'Members',
 };
 
-// Who is in the coven and what each may do. Owners and members see it; a viewer gets the stranger's
-// 404, since the page's existence would say who holds which role. The read is `listMembers`, the
-// service behind `Workspace.members`, so the page and GraphQL end at one check (rule 1). The role
-// controls are drawn for owners only. Each member's address is an owner's alone: asked for only
-// when the role holds `member: readEmail`, and checked again by `memberEmails`
-// (claude-docs/auth/coven-guard.md, "The members page").
+// Who is in the coven and what each may do. A viewer gets the stranger's 404. The read is
+// `listMembers`, which GraphQL ends at too (rule 1). An address is an owner's alone, asked only when
+// the role holds `member: readEmail` and checked again by `memberEmails`.
 export default async function MembersPage({
   params,
   searchParams,
