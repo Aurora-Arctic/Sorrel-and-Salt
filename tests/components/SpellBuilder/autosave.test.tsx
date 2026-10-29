@@ -138,7 +138,7 @@ describe('the spell builder’s saves', () => {
     renderBuilder();
 
     type('Title', 'Fixture Working');
-    fireEvent.click(screen.getByRole('button', { name: 'Add an Instruction' }));
+    fireEvent.click(screen.getByRole('button', { name: 'Add Instruction' }));
     fireEvent.click(save());
 
     expect(await screen.findByText('Write the instruction, or remove it')).toBeInTheDocument();
@@ -151,7 +151,7 @@ describe('the spell builder’s saves', () => {
     vi.useFakeTimers({ shouldAdvanceTime: true });
 
     type('Title', 'Fixture Working');
-    fireEvent.click(screen.getByRole('button', { name: 'Add an Instruction' }));
+    fireEvent.click(screen.getByRole('button', { name: 'Add Instruction' }));
     await act(async () => {
       await vi.advanceTimersByTimeAsync(3100);
     });

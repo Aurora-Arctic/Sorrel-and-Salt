@@ -298,7 +298,7 @@ describe('the spell builder’s undo of step changes', () => {
 
   it('undoes and redoes an added instruction', async () => {
     renderBuilder();
-    fireEvent.click(screen.getByRole('button', { name: 'Add an Instruction' }));
+    fireEvent.click(screen.getByRole('button', { name: 'Add Instruction' }));
     await waitFor(() => expect(within(steps()).getAllByRole('listitem')).toHaveLength(4));
 
     undo();

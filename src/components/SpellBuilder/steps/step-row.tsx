@@ -152,16 +152,15 @@ export function BuilderStepRow({
       icon={step.icon}
       // The care the ingredient needs, kept in view beside the step and never in the way of
       // saving it (M10.18). A one-off has none to show: it draws nothing, not "safe".
-      marks={
-        <>
-          {look && !instruction && step.ingredientId !== null && (
-            // A click inside the modal bubbles through React to the row, which would toggle it.
-            <span onClick={(event) => event.stopPropagation()}>
-              <StepQuickLook ingredientId={step.ingredientId} name={name} look={look} />
-            </span>
-          )}
-          {safety && <SafetyMark {...safety} />}
-        </>
+      marks={safety && <SafetyMark {...safety} />}
+      // The eye comes after every badge, with Edit and Remove in one tight group.
+      look={
+        look && !instruction && step.ingredientId !== null ? (
+          // A click inside the modal bubbles through React to the row, which would toggle it.
+          <span onClick={(event) => event.stopPropagation()}>
+            <StepQuickLook ingredientId={step.ingredientId} name={name} look={look} />
+          </span>
+        ) : null
       }
       note={safety && <SafetyNote level={5} compact {...safety} />}
       // The One-Off badge with its tip, the one the recipe page draws too (one-off-badge.tsx).

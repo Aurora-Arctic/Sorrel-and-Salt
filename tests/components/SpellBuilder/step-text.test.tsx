@@ -118,7 +118,7 @@ const announced = () =>
     .getAllByRole('status')
     .map((region) => region.textContent)
     .join(' | ');
-const addStep = () => fireEvent.click(screen.getByRole('button', { name: 'Add an Instruction' }));
+const addStep = () => fireEvent.click(screen.getByRole('button', { name: 'Add Instruction' }));
 /** Types a name into the Add to Jar box and picks its first row: a one-off ingredient. */
 const addOneOff = async (name: string) => {
   mockGraphQLQuery<SpellIngredientSuggestionsQuery>('SpellIngredientSuggestions', () => ({

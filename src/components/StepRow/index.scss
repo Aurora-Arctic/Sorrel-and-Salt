@@ -161,10 +161,10 @@ $step-ink-drop: 0.05rem;
   &.step-row--open {
     // The name's line, then the amount and the instruction on one muted line beneath it, in the name's column (the look of a closed section's summary).
     grid-template-areas:
-      'handle position name marks edit remove'
-      '. . summary summary summary summary';
+      'handle position name marks controls'
+      '. . summary summary summary';
     // The name keeps a sane minimum, so the marks beside it can never squeeze it to a letter a line.
-    grid-template-columns: auto auto minmax(6rem, 1fr) auto auto auto;
+    grid-template-columns: auto auto minmax(6rem, 1fr) auto auto;
 
     // Everything on the first line sits on that line's centre, and not on the
     // centre of the whole row: a name that wraps, or the summary that stands
@@ -238,19 +238,33 @@ $step-ink-drop: 0.05rem;
     @include truncate;
   }
 
+  // The Quick Look eye, Edit (or Close) and Remove: one tight group at the right of the first
+  // line, `space(1)` apart and not a grid column gap (`space(3)`) apart (owner, 2026-10-29).
+  .step-row__controls {
+    grid-area: controls;
+    display: flex;
+    align-items: flex-start;
+    gap: space(1);
+  }
+
+  // The eye stands on the first line's centre like the marks and the buttons.
+  .step-row__look {
+    position: relative;
+    inset-block-start: $step-ink-drop;
+    display: flex;
+    align-items: center;
+    min-height: $step-line;
+  }
+
   .step-row__edit {
     @include icon-button;
     @include icon-button-edit;
 
-    grid-area: edit;
-
     // Open, the pencil is an up chevron that closes the row. The owner's call: it is light, not the
     // pencil's green. It sits on the card's ground, so it takes the body ink (near-white in dark,
     // ink in light: literal white would fail on the light card), kept pointed at or focused.
-    // Open, Remove is hidden, so it takes Remove's place at the row's right edge (the owner's call).
+    // Open, Remove is hidden, so it ends the group at the row's right edge (the owner's call).
     &--close {
-      grid-area: remove;
-
       &,
       &:hover,
       &:focus-visible {
@@ -346,8 +360,8 @@ $step-ink-drop: 0.05rem;
 // border and ground (the owner's call, 2026-10-28: it was a dashed hairline on the
 // page's ground). Its field fills the row between the number and Remove.
 .step-row.step-row--instruction {
-  grid-template-areas: 'handle position field edit remove';
-  grid-template-columns: auto auto minmax(0, 1fr) auto auto;
+  grid-template-areas: 'handle position field controls';
+  grid-template-columns: auto auto minmax(0, 1fr) auto;
   align-items: start;
 
   // The handle, number and buttons line up with the text's first line: the number shares
@@ -386,7 +400,6 @@ $step-ink-drop: 0.05rem;
     @include icon-button;
     @include icon-button-edit;
 
-    grid-area: edit;
     margin-block-start: space(2) + ($step-line - $icon-size) / 2;
   }
 
@@ -408,8 +421,6 @@ $step-ink-drop: 0.05rem;
 
   // Open, the pencil is the Close chevron at the right edge, as on an ingredient row.
   .step-row__edit--close {
-    grid-area: remove;
-
     &,
     &:hover,
     &:focus-visible {

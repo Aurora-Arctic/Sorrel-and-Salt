@@ -581,7 +581,7 @@ test(
     await signInAgainAs(page, coven.users.B);
     await openBuilder(page, coven.slug);
     await page.getByRole('textbox', { name: 'Title' }).fill('Fixture Working');
-    await page.getByRole('button', { name: 'Add an Instruction' }).click();
+    await page.getByRole('button', { name: 'Add Instruction' }).click();
     const steps = stepList(page).getByRole('listitem');
     await steps.first().getByRole('textbox', { name: 'Instruction' }).fill('Light the candle');
     const withIngredient = await addIngredientStep(page, 'Rosemary');

@@ -10,7 +10,7 @@ import { BuilderStepRow } from './step-row';
 import type { SpellStepValue, SpellStepsValues } from './types';
 import { isInstruction, newInstruction, stepNameOf, warningOf } from './values';
 
-// The jar's steps (M10.15): the box that adds to them, the Add an Instruction button
+// The jar's steps (M10.15): the box that adds to them, the Add Instruction button
 // and the list, under the heading What Goes In. The steps are moved by a handle
 // each (M10.16), and an Add or a Remove is said in a live region of its own,
 // as a move is said in dnd-kit's. One step is open at a time, the newest at
@@ -35,7 +35,7 @@ export function SpellSteps({
 
   // Where focus goes once the row it names has been drawn: a new instruction's
   // field, or what is left after a Remove (the row now in that place, else the
-  // Add an Instruction button).
+  // Add Instruction button).
   const root = useRef<HTMLElement>(null);
   const focusAfter = useRef<{ index: number; target: 'handle' } | null>(null);
   useEffect(() => {
@@ -176,7 +176,7 @@ export function SpellSteps({
         </h4>
         {steps.length > 0 && <p className="spell-steps__summary">{counts}</p>}
       </div>
-      {/* One grid holds the list, then the add row: the box and Add an Instruction, beneath the
+      {/* One grid holds the list, then the add row: the box and Add Instruction, beneath the
           list where a new step lands (second design review, 2026-10-28). The button follows the
           box on a wide column and is a numbered line beneath it on a narrow one, by grid
           placement alone, so it is one button, in the one place in the markup. */}
@@ -202,7 +202,7 @@ export function SpellSteps({
           <span className="spell-steps__next" aria-hidden="true">
             {fields.length + 1}.
           </span>
-          Add an Instruction
+          Add Instruction
         </button>
       </div>
       <LiveRegion id={regionId} announcement={announcement} />
