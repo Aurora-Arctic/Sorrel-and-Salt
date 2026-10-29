@@ -110,7 +110,7 @@ variants:
         supports:
           - form
           - safetyNotes
-seedUpdate: 6300602e0c0ba63be60a34c03985113c499c8a8dedae8a8e4a2d7ebe53e45f1e
+seedUpdate: 09b34ecdc21804974214eafd5976f1c2c52a3dbdba92914509143633fbb64c38
 ---
 
 # Yew

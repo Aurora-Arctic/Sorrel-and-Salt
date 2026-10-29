@@ -193,7 +193,7 @@ variants:
           - form
           - description
           - categories
-seedUpdate: b9320d30bc08fe915091cbe27c3999a28a84d2d6d0d734e7daf8088c9389b700
+seedUpdate: 4bb79bb3a3c0a6d791f012a5216ae937e2035239773fb3660fda604e55f6940e
 ---
 
 # Rowan

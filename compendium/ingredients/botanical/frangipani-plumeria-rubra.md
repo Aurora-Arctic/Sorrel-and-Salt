@@ -53,7 +53,7 @@ variants:
         nameBasis: stated
         supports:
           - form
-seedUpdate: 5f6a3e845bcc55196c1cfdd839abcad5c92092c64392c4bc415b70164221b593
+seedUpdate: 6be4d56f9e9a660e1c6a16c60be1cc6e351e03839671d65ae017d10679861173
 ---
 
 # Frangipani

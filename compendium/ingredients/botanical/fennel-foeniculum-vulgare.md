@@ -159,7 +159,7 @@ variants:
         nameBasis: stated
         supports:
           - description
-seedUpdate: 6aba59ed637cc3ece52d34c53a5637da65eb1449850c2eb5db51b4edcd706edf
+seedUpdate: 18fc76459820e1601e1b710033642d58df7520d979e9a99e5671febf2094649c
 ---
 
 # Fennel

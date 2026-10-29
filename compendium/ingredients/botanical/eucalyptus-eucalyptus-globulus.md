@@ -142,7 +142,7 @@ variants:
         supports:
           - form
           - description
-seedUpdate: ef07ad397ee3877157350b878b24e7e4b0e5c8a147c7a83d42139bdf788c9e1a
+seedUpdate: ffd249e35f5146a7613a832f6833a903af7b092c4cbffe06eb9811d01e550baf
 ---
 
 # Eucalyptus

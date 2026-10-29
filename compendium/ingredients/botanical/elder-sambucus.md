@@ -164,7 +164,7 @@ variants:
         supports:
           - form
           - description
-seedUpdate: 8f74bd5211624d3a87d657e06fbbfcbbfefd461e245910530a342c1004839b59
+seedUpdate: 0e2dc36c43fb4269d65bb4767bd555d5b583db7adacd0b9f83ce5d5fb511c642
 ---
 
 # Elder
