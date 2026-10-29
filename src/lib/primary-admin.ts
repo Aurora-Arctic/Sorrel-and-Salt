@@ -32,9 +32,9 @@ export const PRIMARY_ADMIN_REFUSAL =
 
 /**
  * Why a grant or revoke is refused while the primary admin has paused admin
- * changes (MB.63): the service's refusal and the words a locked Grant or
+ * changes: the service's refusal and the words a locked Grant or
  * Revoke shows, one string so the two cannot drift. It names a role, not a
- * person (the owner's wording).
+ * person.
  */
 export const ADMIN_CHANGES_PAUSED_REFUSAL =
   'The primary admin has paused admin changes. Ask them to resume changes.';

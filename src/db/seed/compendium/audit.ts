@@ -10,9 +10,9 @@ import type {
 import type { LoadedCompendium } from './load';
 import { WORKS } from './works';
 
-// The attribution audit (M14.11): a read over every entry file that ranks the
+// The attribution audit: a read over every entry file that ranks the
 // citations whose source may describe another taxon than the entry's formal
-// name, for the owner to settle. It never decides a citation is wrong; it
+// name, for the curator to settle. It never decides a citation is wrong; it
 // finds the ones worth reading first. Pure: the files, the sources and the
 // fetched Wikipedia pages come in, a report goes out, and `audit-run.ts`
 // does the reading and writing. Each heuristic is a reason to doubt, not

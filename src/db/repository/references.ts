@@ -23,19 +23,19 @@ import type {
   ReferenceRow,
 } from './types';
 
-// A reference and the links that cite it (MB.151; claude-docs/db/references.md).
+// A reference and the links that cite it (claude-docs/db/references.md).
 // Two tiers, as ingredients are: every read is the compendium's and the
 // proofs' covens', and a link reads only where the tier rule lets its row's
 // readers look, so a link written past the service's rule shows nothing.
 
 /**
- * The live links of these rows of the sourced table `key` names (MB.207's
- * `SOURCED`), each beside the live reference it cites. An ingredient's read
+ * The live links of these rows of the sourced table `key` names (the
+ * `SOURCED` list), each beside the live reference it cites. An ingredient's read
  * exactly when it is, as `findManyOfIngredients` reads it — live, and in the
  * compendium or a coven one of `memberships` proves — and only where the
  * reference is one its readers may read: the compendium's, or its own
  * coven's. A variant's the same, through the variant to its ingredient
- * (`readableVariantParent`, MB.218): a variant is a coven's where its
+ * (`readableVariantParent`): a variant is a coven's where its
  * ingredient is, though it carries no `workspace_id`. Every other sourced table is global reference data, so its links
  * read while the row is live, and only to a compendium reference, the one
  * tier every reader shares. A link to a soft-deleted reference reads as
@@ -101,11 +101,11 @@ export function findManyReferences(
 
 /**
  * One page of the live references an ingredient may cite — the compendium's
- * and those of a coven one of `memberships` proves (MB.151) — whose authors,
+ * and those of a coven one of `memberships` proves — whose authors,
  * title or container is word-similar to `query`, each side accent-folded as
  * the compendium search folds names, best match first and keyed `[-score,
  * title]`. No proofs reads the compendium's alone, which is what a compendium
- * entry may cite (M5.5). A blank `query` lists the tiers read by title. The
+ * entry may cite. A blank `query` lists the tiers read by title. The
  * rendered citation exists only in TypeScript, so this matches the fields it
  * is rendered from (claude-docs/db/references.md).
  */
@@ -161,7 +161,7 @@ export function cites(key: SourcedKey): SQL {
 /**
  * A row of the sourced table `key` names with no reference it shows: no
  * live link to a live compendium reference, the bibliography a compendium
- * entry reads as empty — the admin's to-do list (M5.5). Correlated on the
+ * entry reads as empty — the admin's to-do list. Correlated on the
  * outer row of that table.
  */
 export function citesNothing(key: SourcedKey): SQL {

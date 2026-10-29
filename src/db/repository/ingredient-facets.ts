@@ -37,7 +37,7 @@ import type {
   WorkspaceIngredientFacets,
 } from './types';
 
-// M12.3: how many entries each value of each filter kind would list. A kind
+// How many entries each value of each filter kind would list. A kind
 // is counted under the list's own filter minus that kind's own choice, read
 // through the list's own arms, so a facet cannot match differently from the
 // list it narrows. One grouped read per kind, the seven run side by side,
@@ -55,7 +55,7 @@ import type {
  * included, in the vocabulary's own order. Forms, deities and categories list
  * the values some entry carries, and every chosen one, at zero if none does,
  * alphabetically in natural-language order and never by count: a category by
- * group then name, a deity by tradition then name (M12.52). A form is spelled
+ * group then name, a deity by tradition then name. A form is spelled
  * as the live curated form folding the same, else as its counted variants most
  * often spell it, ties alphabetically.
  *
@@ -63,9 +63,9 @@ import type {
  * themselves or a live form, under the rest of the filter: the filter's own
  * `withoutReferences` is set to true for it, so the count is the same whether
  * the switch is on or off. `withoutForms` is the same for the No Form switch:
- * how many entries have no live form (M12.30). Both come from one read.
+ * how many entries have no live form. Both come from one read.
  *
- * `withReview` is whether to read the Reviewed counts (M14.8), a curator's
+ * `withReview` is whether to read the Reviewed counts, a curator's
  * alone: false sends no statement for them and answers `reviewed: null`.
  */
 export async function findCompendiumFacets(
@@ -82,10 +82,10 @@ export async function findCompendiumFacets(
 }
 
 /**
- * How many of a coven's ingredients each filter value would list (M12.3): the
+ * How many of a coven's ingredients each filter value would list: the
  * rows `findWorkspaceIngredientPage` reads, a retired compendium entry the
- * coven still holds included (M12.32), counted as `findCompendiumFacets`
- * counts the compendium's, over the coven's overrides (M12.18): an entry's
+ * coven still holds included, counted as `findCompendiumFacets`
+ * counts the compendium's, over the coven's overrides: an entry's
  * elements, celestial bodies and zodiac signs are counted as its cupboard row
  * states them, an empty list under none. Categories have no override, so
  * they stay the compendium's.
@@ -425,7 +425,7 @@ async function switchCounts(
 }
 
 /**
- * How many entries are reviewed and how many need review (M14.8), in one pass
+ * How many entries are reviewed and how many need review, in one pass
  * under the rest of the filter, the Reviewed setting left out as each strip's
  * own is.
  */
@@ -513,7 +513,7 @@ function rankOf(
  * in code: a form chosen in the filter that no entry in the current results
  * uses joins the list here with a count of zero, and a group's label is
  * picked by `mostUsed`. ICU's English collation (`Intl.Collator`) gives the
- * order `NATURAL_COLLATION` gives the other kinds (M12.52).
+ * order `NATURAL_COLLATION` gives the other kinds.
  */
 function alphabetical(facets: FacetCount[]): FacetCount[] {
   const collator = new Intl.Collator('en-US');

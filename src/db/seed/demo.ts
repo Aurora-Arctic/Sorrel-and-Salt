@@ -41,7 +41,7 @@ import type {
 // (claude-docs/db/demo-scenario.md, "The demo scenario").
 // Writes go through the handle `seed()` was given — see minimal.ts.
 
-/** Story 29's one-field stub: a thing no naming system names, so `none`. */
+/** A one-field stub: a thing no naming system names, so `none`. */
 const HEARTH_ASH: SeedWorkspaceIngredient = {
   name: 'Hearth Ash',
   nomenclature: 'none',
@@ -51,12 +51,12 @@ const HEARTH_ASH: SeedWorkspaceIngredient = {
 };
 
 /**
- * The "Similar in the Compendium" case (M12.22): bought as "cat's claw" with no
+ * The "Similar in the Compendium" case: bought as "cat's claw" with no
  * formal name, so it is an own stub beside the compendium's five Cat's Claws
  * (four plants and the animal claw). A member can declare it to be one of the
- * five (M12.21). It is the one own entry here that shares a name with the
+ * five. It is the one own entry here that shares a name with the
  * compendium, and it hides none of the five: a name match hides nothing
- * (M12.28).
+ *.
  */
 const CATS_CLAW: SeedWorkspaceIngredient = {
   name: "Cat's Claw",
@@ -72,7 +72,7 @@ const CATS_CLAW: SeedWorkspaceIngredient = {
  * (which only `demo` seeds) relabelled, with a colour the compendium does not list,
  * and the two entries the spells below lay that `standard` does not hold. A spell
  * step names only what the coven holds (the recipe service's readable variants), and
- * the seed writes raw, so it holds them here (the owner, 2026-10-29).
+ * the seed writes raw, so it holds them here.
  */
 export const WORKSPACE_W_CUPBOARD: SeedCupboardEntry[] = [
   ...STANDARD_CUPBOARD,
@@ -267,7 +267,7 @@ export const DEMO_SPELLS: SeedSpell[] = [
       { body: 'Stitch the bag closed and keep it inside the pillowcase.' },
     ],
   },
-  // The shelf (M10.11): more than a page of each status for a member, so both
+  // The shelf: more than a page of each status for a member, so both
   // grimoire tabs page. Several titles share "Hearth", one spell reaches it
   // only through its intent, one title is accented, one draft is untitled,
   // and four spells are Fixture B's own and private, which no other member
@@ -746,7 +746,7 @@ export const DEMO_SPELLS: SeedSpell[] = [
     ],
   },
   {
-    // Untitled: a draft may be, a complete spell may not (M13.15).
+    // Untitled: a draft may be, a complete spell may not.
     id: '00000000-0000-0000-0002-000000000030',
     title: null,
     intent: 'Something for the new neighbours. Not sure what yet.',
@@ -1263,7 +1263,7 @@ async function insertMissingSpells(tx: SeedTransaction): Promise<void> {
 }
 
 /**
- * Each ingredient's first live variant in form order (MB.217), what a linked
+ * Each ingredient's first live variant in form order, what a linked
  * layer lays: every entry a jar names has exactly one, written by
  * `insertMissingVariants`; Rosemary's two are laid by no jar.
  */
@@ -1297,7 +1297,7 @@ const NO_LAYER = {
 
 /**
  * For a layer, exactly one of `ingredientId` and `name` is set, `variantId` rides with the
- * first (MB.217) and `form` with the second.
+ * first and `form` with the second.
  */
 function layerIdentity(
   ingredient: SeedLayerIngredient,

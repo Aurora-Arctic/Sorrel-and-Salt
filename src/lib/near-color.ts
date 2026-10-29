@@ -1,7 +1,7 @@
 import { colordx } from '@colordx/core';
 
 // Whether two groups' colours in one theme stand far enough apart to tell
-// their chips apart (M5.6b): the picker warns, it never refuses. Kept apart
+// their chips apart: the picker warns, it never refuses. Kept apart
 // from group-colors.ts because the validation schema reaches that file and,
 // through it, nothing but zod (claude-docs/validation.md).
 

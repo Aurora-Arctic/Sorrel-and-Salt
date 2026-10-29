@@ -6,7 +6,7 @@ import type { CitationFields } from '../../lib/types';
 import type { SeedTransaction } from './types';
 
 // The compendium-tier `references` rows a reference-data seed wants, shared by
-// the sources seed (MB.156) and the compendium seed (MB.242) so both key a
+// the sources seed and the compendium seed so both key a
 // work on one citation and a work the one wrote is linked, not twinned, by
 // the other (claude-docs/db/references.md, "How the seed reads the docs").
 

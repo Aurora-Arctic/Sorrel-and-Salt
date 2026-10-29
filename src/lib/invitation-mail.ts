@@ -3,7 +3,7 @@ import { adminInvitationMessage } from '../emails/admin-invitation';
 import { covenInvitationMessage } from '../emails/coven-invitation';
 import { requestOrigin } from './request-origin';
 
-// Where an invitation's token becomes a link and a mail (MB.70). The origin is
+// Where an invitation's token becomes a link and a mail. The origin is
 // Better Auth's, resolved from the request against its allowed hosts, as the
 // verification link's is: a forged Host cannot send someone a link to
 // another site carrying a live token. Handed to the service by the GraphQL

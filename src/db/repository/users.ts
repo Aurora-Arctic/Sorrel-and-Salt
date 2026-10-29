@@ -24,7 +24,7 @@ import type {
  * no proof, for the reason the first two do: an address is claimed site-wide,
  * so there is no workspace to hold a proof for. The service calling it decides
  * what a hit means; the index's export list is pinned, so the fourth,
- * `findCoMemberNamesIncludingSoftDeleted`, was a decision (MB.10).
+ * `findCoMemberNamesIncludingSoftDeleted`, was a decision.
  */
 export async function findUserByEmail(
   email: string,
@@ -43,7 +43,7 @@ function listedUsers(filter: UserFilter): SQL | undefined {
 
 /**
  * One page of the live users under `filter`, by name and then id: the admin
- * user list (MB.52). It takes the `SiteAdmin` proof, so no caller that has not
+ * user list. It takes the `SiteAdmin` proof, so no caller that has not
  * asserted the site role can read the list. The seed's bootstrap user is left
  * out: it stamps the seeded rows, nobody signs in as it, and nothing an admin
  * does to a person applies to it (claude-docs/auth/admin-users.md, "The user
@@ -60,7 +60,7 @@ export function findUserPage(
 /**
  * How many users `findUserPage` pages under `filter`, and how many come
  * before `start`, a page's first row, none on an empty page: the user list's
- * "Page X of Y" (MB.115).
+ * "Page X of Y".
  */
 export function findUserCount(
   _admin: SiteAdmin,
@@ -93,13 +93,13 @@ export async function findProvidersOfUsers(
 /**
  * The name of each of these users who holds or has held a seat in a coven
  * `viewerId` sits in now, and nothing else of the row: the display names a
- * member may read (MB.10). The fourth read that takes no proof, for the
+ * member may read. The fourth read that takes no proof, for the
  * reason `findMembershipsOfUsers` takes none: the viewer's covens are several,
  * so there is no one workspace to hold a proof for, and the viewer's own live
  * seat in a live coven is the scope instead. The service passes the session's
  * id as `viewerId`; a fifth proofless read is a decision.
  *
- * Rule 4's third named exception, after M5.3's and MB.138's: it skips the
+ * Rule 4's third named exception: it skips the
  * filter on the user's row, so a deleted user reads under the name their row
  * last held, and on the user's seat, so a removed member still counts. The
  * viewer's seat and the coven keep theirs, through `existsIn`. Read from the
@@ -144,7 +144,7 @@ const LEDGER_ORDER: readonly SortPart[] = [
 ];
 
 /**
- * One page of the privilege ledger under `filter`, newest first (MB.199):
+ * One page of the privilege ledger under `filter`, newest first:
  * `/admin/privilege-changes`. Under the `SiteAdmin` proof, as the user list
  * is, since who holds which privilege is an admin's business alone.
  */
@@ -159,7 +159,7 @@ export function findPrivilegeChangePage(
 /**
  * How many rows `findPrivilegeChangePage` pages under `filter`, and how
  * many come before `start`, a page's first row, none on an empty page: the
- * ledger page's "Page X of Y" (MB.200).
+ * ledger page's "Page X of Y".
  */
 export function findPrivilegeChangeCount(
   _admin: SiteAdmin,

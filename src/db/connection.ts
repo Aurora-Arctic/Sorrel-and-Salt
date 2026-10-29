@@ -15,7 +15,7 @@ function databaseUrl(): string {
 // module's scope: a module can be evaluated more than once in one process —
 // `vi.resetModules()` in the OAuth tests, a hot reload under `next dev` — and
 // each evaluation would otherwise open a pool that nothing ends, the earlier
-// ones idling on their connections until the server runs out (MB.179). Keyed
+// ones idling on their connections until the server runs out. Keyed
 // by the URL so a test that repoints `DATABASE_URL` still gets its own.
 const registry = globalThis as typeof globalThis & ClientRegistry;
 const clients = (registry.__sorrelPostgresClients ??= new Map());

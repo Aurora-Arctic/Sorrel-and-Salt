@@ -1,7 +1,7 @@
 @use '../../scss/variables' as *;
 @use '../../scss/mixins' as *;
 
-// The page bar (M12.33): a thin strip along the bottom edge of the global bar,
+// The page bar: a thin strip along the bottom edge of the global bar,
 // with a segment sweeping across it while a navigation is on its way. The
 // component (navigation-bar.tsx) decides when it shows; this only draws it.
 // It is `hidden` until then, and the 100ms hold-back is the component's timer,

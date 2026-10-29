@@ -2,7 +2,7 @@ import { and, eq, lt, not, or, sql } from 'drizzle-orm';
 import { accounts } from '../../modules/identity/schema/auth';
 import { userPrivilegeChanges } from '../../modules/identity/schema/user-privilege-changes';
 import { users } from '../../modules/identity/schema/users';
-// The choke point the rule exists to protect — enforced by lint as of M1.17.
+// The database client; why only the repository may import it: see `select.ts`.
 // oxlint-disable-next-line no-restricted-imports
 import { db } from '../connection';
 import { existsIn } from './select';
@@ -16,7 +16,7 @@ import { existsIn } from './select';
  * An account holding a `user_privilege_changes` row is kept, since an admin
  * has vouched for it. Not deleted with its rows: the ledger refuses the
  * delete, and its plain foreign key would fail the whole statement, and so
- * every later sweep (MB.204; claude-docs/db/provisional-account-delete.md).
+ * every later sweep (claude-docs/db/provisional-account-delete.md).
  *
  * Hard rather than soft, and outside `withAudit`: Better Auth finds a user by
  * address without our `deleted_at` filter, so a tombstone would go on

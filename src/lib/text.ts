@@ -14,7 +14,7 @@ export function joinAnd(items: readonly string[]): string {
 }
 
 /**
- * The refusal of a write whose slug another live row holds (MB.43): `holder`
+ * The refusal of a write whose slug another live row holds: `holder`
  * names that row, as the refusing service tells one apart, and `remedy` says
  * which fields make the address. One sentence for the curated vocabularies,
  * the compendium and a coven's ingredients, so the wording is one edit.
@@ -37,7 +37,7 @@ export const noMatchLead = (noun: string): string => `No ${noun} match `;
 
 /**
  * What to do when a filter matches nothing. A sentence of its own where something else has
- * already said nothing matched, as a coven's list does under its search sentence (M9.11).
+ * already said nothing matched, as a coven's list does under its search sentence.
  */
 export const NO_MATCH_HINT = 'Change or clear the filter to see more.';
 
@@ -45,7 +45,7 @@ export const NO_MATCH_HINT = 'Change or clear the filter to see more.';
 export const NO_MATCH_ADVICE = `. ${NO_MATCH_HINT}`;
 
 /**
- * What an admin list says when it shows no rows (MB.115). With a filter in
+ * What an admin list says when it shows no rows. With a filter in
  * force, `parts` names each filter as the caller phrases it — `“wort”`, `the
  * role Admin`, `No Refs` — and the sentence says nothing matches them and how
  * to see more: "No users match “ada” and the role Admin. Change or clear the

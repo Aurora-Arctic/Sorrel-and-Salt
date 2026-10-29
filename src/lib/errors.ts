@@ -8,7 +8,7 @@ import type { ValidationIssue } from './types';
 // src/graphql/errors.ts in the /api/graphql route. See claude-docs/auth/service-session.md,
 // "The service-level session, and the three errors". `InvalidCursor`, below
 // them, is bad input the pagination helper reports on its own, and
-// `StaleWrite`, last, is a revisioned write's lost race (M13.16).
+// `StaleWrite`, last, is a revisioned write's lost race.
 
 /**
  * The actor is known and the answer is no. Thrown by services (rule 1), and
@@ -62,7 +62,7 @@ export class InvalidCursor extends Error {
 
 /**
  * A save that named the revision it read, after another save had moved the
- * row on (M13.16). Neither refusal: the actor may write the row, and the input
+ * row on. Neither refusal: the actor may write the row, and the input
  * is sound, but it was built on a copy that is no longer the row's. Carries
  * the row's revision now, so the client can offer to keep its own version
  * over it (claude-docs/components/autosave.md, "The server's half").

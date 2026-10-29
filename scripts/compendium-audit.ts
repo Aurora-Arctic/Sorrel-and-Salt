@@ -1,9 +1,9 @@
 #!/usr/bin/env node
-// The compendium attribution audit (M14.11): ranks the citations whose source
+// The compendium attribution audit: ranks the citations whose source
 // may describe another taxon than the entry's formal name, by four
 // heuristics, and prints the table (claude-docs/db/compendium-seed/README.md,
 // "The attribution audit"). `--report`, the default, writes nothing.
-// `--apply`, run only after the owner has read the report, marks each
+// `--apply`, run only after the curator has read the report, marks each
 // flagged file `needs-review` and adds one Questions block per citation; a
 // second run adds nothing.
 //

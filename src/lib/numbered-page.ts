@@ -3,7 +3,7 @@ import { resolveNumberedPage } from './pagination';
 import { readableCursor, single } from './search-params';
 import type { Cursor, Page, PageCount, PageEntry, PagePosition, PageRequest } from './types';
 
-// Shared by the admin tabs and the members page's pending list (M7.6): each
+// Shared by the admin tabs and the members page's pending list: each
 // reads its cursors off its own query keys, since the members page already
 // spends `?after` and `?before` on its roll.
 

@@ -112,7 +112,7 @@ export async function resolvePage<T, Edge extends object = {}>(
  * none on an empty page — the total is returned beside it, for a list that says how many it
  * found, and the position is page floor(before / size) + 1
  * of ceil(total / size), never fewer than one. Every admin list page reads
- * through it, so the arithmetic is written once (MB.132).
+ * through it, so the arithmetic is written once.
  */
 export async function resolveNumberedPage<T, Edge extends object = {}>(
   { after, before }: { after?: string; before?: string },

@@ -221,3 +221,48 @@ which is how the M1.19 tests observe a setting the narrow `AuditWriter`
 gives them no other way to read — without widening the write API for the
 benefit of a test. The `missing_ok` second argument is what makes it null,
 rather than an error, when the setting was never set.
+
+### Writer methods and filter fields in full
+
+`src/db/repository/types.ts` states each writer method's contract in one to
+three lines. The parts that do not fit are here.
+
+- **`delete`** is for the join tables that carry no `deleted_at`. The type
+  rejects a table carrying one, and one carrying `workspace_id`. No table is
+  both today; the first that is adds its proof-scoped counterpart rather than
+  being hard-deleted unscoped. A `match` naming no column is refused, since it
+  would empty the table. `ColumnMatch` takes values rather than an `SQL`
+  predicate because a service may not import `drizzle-orm` at runtime, and a
+  join table keyed on its pair needs no other comparison.
+- **`updateById` and `updateByIdInWorkspace`** exist for the same reason: a
+  service cannot build the `where` the unkeyed methods want, so the writer
+  builds the predicate every entity update needs.
+- **`updateRevisioned`** throws `StaleWrite` (carrying the row's revision now)
+  only for a live row of the proof's workspace. A row that is absent, deleted
+  or another coven's answers `[]`, because `StaleWrite` would tell another
+  coven's reader the row exists. `expectedRevision: null` writes whatever the
+  row holds, the client's choice to keep its own version.
+- **`pauseAdminRoleChanges`** relies on the one-open unique index: a second
+  open pause is refused by the index, and the call returns no row rather than
+  failing the transaction. **`lockLiveAdmins`** and **`lockLiveMembers`** are
+  reads that live in the writer only so the `for update` lock is taken in the
+  transaction that writes; the last-admin and last-owner counts depend on it.
+- **`reviveMembership`** is the one writer that touches a deleted row, so it
+  reaches only a deleted one. It always sets `invited_by`, to null when no
+  sender is given, so an earlier inviter never lingers.
+- **The invitation accepts and declines** run under no proof because the
+  invitee holds neither a membership nor the site role yet. A link's token
+  admits `acceptInvitation`; the by-id calls (`acceptReceivedInvitation`,
+  `declineReceivedInvitation`) match the session user's verified address in SQL
+  and refuse a site-tier id, whose grant a link alone accepts.
+- **`revokeInvitation`** treats an invitation as open when it is pending, or
+  declined and not yet removed, whatever its expiry: Revoke acts on the first,
+  Remove on the second.
+- **`lockCovenStock`** is taken first in any write that adds a jar, counts
+  them on a cupboard remove, or converts them, and is per coven.
+- **Filter fields** on `IngredientFilter`: a list field (`forms`, `deityIds`,
+  `celestialBodies`, `elements`) matches any of its values, ignores blank
+  entries and is no filter when empty; `toxic`, `elements` and `forms` look at
+  live variants only. `source`, `inStock` and `lowStockOnly` are a coven's list
+  only, and the compendium read ignores them. `heldIn` and `notHeldIn` take a
+  `Membership` each so a coven the caller is not in cannot be named.

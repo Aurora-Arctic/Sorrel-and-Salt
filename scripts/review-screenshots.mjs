@@ -1,6 +1,6 @@
 #!/usr/bin/env node
 // A design review's screenshots: every page a review names, at two phone
-// widths, in both themes, full page, so the owner can compare a section's
+// widths, in both themes, full page, so the curator can compare a section's
 // states side by side without opening each one by hand. It drives the remote
 // browser the e2e runner uses (`PLAYWRIGHT_WS_ENDPOINT`), since no browser is
 // installed in the devcontainer, which is why the app is reached as
@@ -17,7 +17,7 @@
 // `--storage-state` is a Playwright storage-state file holding a signed-in
 // session's cookies, for the pages behind sign-in.
 //
-// Both widths are touch sign-offs (MB.115): each context is a touch phone,
+// Both widths are touch sign-offs: each context is a touch phone,
 // `hasTouch` and `isMobile`, so the page's `(hover: none)` query holds as it
 // does on a phone. Without it a desktop browser at phone width would draw
 // what no phone shows: the impersonation banner tucked away until a pointer

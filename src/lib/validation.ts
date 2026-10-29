@@ -2,7 +2,7 @@ import { type ZodType, z } from 'zod';
 import { ValidationError } from './errors';
 import type { ValidationIssue } from './types';
 
-// The Zod half of MB.43's ValidationError, and the id shape every module
+// The Zod half of `ValidationError`, and the id shape every module
 // checks. Kept out of errors.ts so that file stays schema-library-free, and out
 // of any one module because every module's schemas raise the same shape
 // (claude-docs/validation.md).

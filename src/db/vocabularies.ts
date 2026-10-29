@@ -50,6 +50,6 @@ export type FlatTable = (typeof FLAT)[keyof typeof FLAT];
 
 /**
  * A two-tier vocabulary an ingredient picks a row of by id — its form, its
- * deities (MB.167). Categories are assigned through a join table instead.
+ * deities. Categories are assigned through a join table instead.
  */
 export type PickedTable = (typeof TWO_TIER)['forms' | 'deities']['items'];

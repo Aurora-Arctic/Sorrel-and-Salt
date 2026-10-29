@@ -13,7 +13,7 @@ import type { CommonNameSuggestion } from './types';
  * folk names of live ingredients in the compendium or a coven one of
  * `memberships` proves that match `query`, folded to `lower(btrim(name))` and
  * offered once each, alphabetically. No proofs reads the compendium alone,
- * which is the admin's compendium form (M5.5). Each names the in-scope
+ * which is the admin's compendium form. Each names the in-scope
  * ingredients answering to it, formal names first. A formal name is not a
  * common name and is not read. A blank `query` matches everything.
  *

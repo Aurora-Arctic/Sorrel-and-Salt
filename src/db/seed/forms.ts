@@ -16,8 +16,8 @@ import type {
 // holding", not "how was it made": three by source (Botanical, Animal, Mineral),
 // three by state (Fluid, Curio, Substance), and no `Other` — an unfitting value
 // stays free text and surfaces for curation. No slug is written down; a group's
-// is `slugify(name)`, and a form's `formSlug` of its name and its group's
-// (M5.6a), since two live forms may share a name under two groups — a form's
+// is `slugify(name)`, and a form's `formSlug` of its name and its group's,
+// since two live forms may share a name under two groups — a form's
 // seed key stays `slugify(name)`, as every database seeded before holds it.
 // Where a value fits two groups the seed takes one sense and leaves the other
 // row for an admin (claude-docs/db/form-vocabulary-seed.md, "The form
@@ -26,7 +26,7 @@ import type {
 /**
  * §5's six groups in §5's order, which nothing reads — groups list
  * alphabetically — kept so the two compare by eye and by test. Each names the
- * icon that stands for it (M12.6), written only into a group the seed
+ * icon that stands for it, written only into a group the seed
  * inserts, so an admin's later choice survives a reseed; migration 0077
  * carried them onto databases seeded before.
  */

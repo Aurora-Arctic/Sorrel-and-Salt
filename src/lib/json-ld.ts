@@ -1,4 +1,4 @@
-// The structured data a public page carries (MB.84), as the text of a
+// The structured data a public page carries, as the text of a
 // `<script type="application/ld+json">`. One serialiser so the escape is made
 // once: the text sits inside a script element, so a `<` in an entry's name
 // ("</script>") would end it early. The escape for it is the same character to a JSON

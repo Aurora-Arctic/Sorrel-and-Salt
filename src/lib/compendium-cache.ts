@@ -11,7 +11,7 @@ import superjson from 'superjson';
 
 /**
  * The one tag every compendium cache entry carries — the curated reads' and,
- * through them, the public compendium pages' ISR entries (MB.80).
+ * through them, the public compendium pages' ISR entries.
  */
 export const COMPENDIUM_TAG = 'compendium';
 
@@ -56,7 +56,7 @@ export function cachedCompendiumRead<A extends unknown[], R>(
 
 /**
  * Expires every entry under `COMPENDIUM_TAG`, called by an admin's write to
- * anything the cache holds once the write has committed (M8.7). `{ expire: 0 }`
+ * anything the cache holds once the write has committed. `{ expire: 0 }`
  * rather than the recommended `'max'`, so the admin's next read is a miss
  * and not the stale answer `'max'` serves while it revalidates; `updateTag`,
  * which would do the same, throws outside a Server Action, and every write

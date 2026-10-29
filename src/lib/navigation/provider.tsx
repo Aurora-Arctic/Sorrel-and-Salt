@@ -35,7 +35,7 @@ export const NavigationActionsContext = createContext<NavigationActions | null>(
  * so nothing here settles by hand. Where two navigations overlap the later
  * one's value shows, and the value goes when the last of them has ended.
  * A navigation waits first on any mounted form with unsaved changes
- * (`useLeaveGuard`, M13.14); a refresh leaves the page where it is, so
+ * (`useLeaveGuard`); a refresh leaves the page where it is, so
  * nothing holds it.
  * claude-docs/design-decisions/m12.33-loading-standard.md
  */

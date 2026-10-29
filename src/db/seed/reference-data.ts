@@ -13,7 +13,7 @@ import { beginSeedTransaction } from './idempotent';
 import { seedVocabularySources } from './sources';
 import type { SeedDatabase } from './types';
 
-// M14.26: the six reference seeds — categories, forms, astrology, deities,
+// The six reference seeds — categories, forms, astrology, deities,
 // sources, compendium, in migrate.yml's order — in one transaction, for the
 // hand-started seed workflow (seed-environment.yml). One transaction rather
 // than six because a dry run rolls back: run apart, each seed's dry run would

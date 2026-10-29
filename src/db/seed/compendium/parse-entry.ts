@@ -4,7 +4,7 @@ import { frontmatterSchema, toEntry, withoutBlanks } from './file-schema';
 import { ingredientSlug } from '../../../lib/slugify';
 import type { CompendiumFileSections, SeedCompendiumEntry, SeedCompendiumFile } from '../types';
 
-// One compendium entry file to the entry the seed writes (M14.6): the
+// One compendium entry file to the entry the seed writes: the
 // frontmatter between the `---` lines, read by `yaml` (a duplicate key is
 // refused), then the body — one `# Name` heading, the description up to the
 // first `####` heading, and the two optional trailing sections

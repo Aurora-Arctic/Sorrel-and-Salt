@@ -1,6 +1,6 @@
 import { and, asc, count, desc, exists, gt, is, lt, sql, type SQL } from 'drizzle-orm';
 import { PgColumn, PgTable } from 'drizzle-orm/pg-core';
-// The choke point the rule exists to protect — enforced by lint as of M1.17.
+// The choke point the rule exists to protect: lint refuses any other import of the client (claude-docs/db/soft-delete.md, "Soft-delete filtering and the partial-index convention").
 // oxlint-disable-next-line no-restricted-imports
 import { db } from '../connection';
 import { InvalidCursor } from '../../lib/errors';
@@ -260,7 +260,7 @@ function countsOf({ count: order, start }: KeysetCount) {
  * Runs a keyset read, in a transaction under the thresholds its key says its
  * `where` reads: the search's word threshold for `wordMatch`, the similarity
  * threshold for `similarityMatch`. A page and its count both come through
- * here, and so does a tally over a list (M12.3), so all three read the same
+ * here, and so does a tally over a list, so all three read the same
  * rows: at the server's 0.6 a count would miss rows the pages hold.
  */
 function readKeyed<T>(
@@ -326,7 +326,7 @@ export function existsIn<TTable extends PgTable>(table: TTable, where: SQL | und
  * over `table` under `where` alone. Only for `inUseIngredientParent` in
  * `ingredient-parent.ts`, which puts the filter back on one arm and, on the
  * other, admits a retired compendium entry only while the reading coven's
- * cupboard names it (M12.24). Named as the escape hatches are, so no other
+ * cupboard names it. Named as the escape hatches are, so no other
  * caller reaches it unnoticed.
  */
 export function existsInIncludingSoftDeleted<TTable extends PgTable>(

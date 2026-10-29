@@ -5,7 +5,7 @@ import type { ExtraConfigColumn } from 'drizzle-orm/pg-core';
 import type { LiveTable, SeedKeyedTable, VocabularyTable } from './types';
 
 // The columns and indexes several tables declare alike, each built by one
-// function so that a table cannot drift from its siblings (MB.207).
+// function so that a table cannot drift from its siblings.
 // Client-free, like audit.ts, and nothing here may change a name: every
 // builder produces what the migrations already created, which `db:generate`
 // writing no migration proved (claude-docs/db/soft-delete.md, "Soft-delete
@@ -35,7 +35,7 @@ export function liveUnique(
 
 /**
  * The identity the reference seed gave the row, null on any other; never
- * changed after, so a reseed knows a row an admin has since edited (MB.171).
+ * changed after, so a reseed knows a row an admin has since edited.
  */
 export function seedKeyColumn() {
   return text('seed_key');

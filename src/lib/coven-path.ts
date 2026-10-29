@@ -1,12 +1,12 @@
 import type { NavigationTarget } from './navigation';
 
 // A workspace is named by the address alone, never by session state, so two
-// tabs can sit in two workspaces without disagreeing (M6.9). These read and
+// tabs can sit in two workspaces without disagreeing. These read and
 // rewrite that address: the segment after `/coven/` is the slug.
 const COVEN = 'coven';
 
 /**
- * The segment the create-workspace page sits at (M9.16). Beneath `/coven/`
+ * The segment the create-workspace page sits at. Beneath `/coven/`
  * like the workspaces, so a static segment beside `[slug]`; the slug rule
  * below keeps it from ever being a workspace's, or a coven named "New" could
  * never be reached.
@@ -16,17 +16,17 @@ const NEW = 'new';
 /**
  * The landing everyone who leaves a coven is sent to: where someone in no
  * coven lands, and which opens the first coven of someone who has another
- * (M2.8).
+ *.
  */
 export const COVEN_LANDING_PATH = `/${COVEN}`;
 
 /** The create-workspace page's address. */
 export const NEW_COVEN_PATH = `/${COVEN}/${NEW}`;
 
-/** The value of `?new` that opens the current grimoire's New Spell (M10.12). */
+/** The value of `?new` that opens the current grimoire's New Spell. */
 export const NEW_SPELL = 'spell';
 
-/** The value of `?new` that opens the default coven's Add Ingredient (M10.12). */
+/** The value of `?new` that opens the default coven's Add Ingredient. */
 export const NEW_INGREDIENT = 'ingredient';
 
 /**
@@ -77,7 +77,7 @@ export interface PathInCovenOptions {
   /**
    * The slugs of the covens the page being left also opens in, when it is one
    * the address cannot vouch for: an ingredient's page, whose row the page has
-   * read (M9.12). Absent, nothing beneath a section carries over.
+   * read. Absent, nothing beneath a section carries over.
    */
   opens?: readonly string[];
 }
@@ -109,7 +109,7 @@ export function pathInCoven(
 }
 
 /**
- * What each section's page draws while it is on its way (M12.33): the page
+ * What each section's page draws while it is on its way: the page
  * that arrives, its heading and then what it holds. Ingredients is its cards
  * under a filter, and the grimoire its cards under the tab row (Spells and
  * Drafts) and a filter; the people pages are a table under the tab row (Members and,
@@ -140,7 +140,7 @@ export function covenTarget(pathname: string): NavigationTarget {
     return { region: 'coven', shape: 'page', frame: 'with-nav', head: 'eyebrow' };
   if (slug && section === 'ingredients' && beneath)
     return { region: 'coven', shape: 'page', frame: 'entry', head: 'eyebrow' };
-  // The new-spell page is the spell builder, a form (M10.12).
+  // The new-spell page is the spell builder, a form.
   if (slug && section === 'grimoire' && beneath === 'new')
     return { region: 'coven', shape: 'form' };
   // Drafts is the grimoire's second tab, its list too; anything else beneath it is a spell's own page.

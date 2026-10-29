@@ -16,7 +16,7 @@ import type {
 // `users.id`, `users`' own rows included, and importing `users` from here
 // would make this module and the identity module's `users.ts` import each
 // other — a cycle that, entered from the wrong end, built `users` before
-// `auditColumns` existed and silently dropped its stamps (MB.60). The
+// `auditColumns` existed and silently dropped its stamps. The
 // instances live beside `users`, in src/modules/identity/schema/users.ts,
 // so this module depends on nothing in a module and any schema file can be
 // the first one loaded (claude-docs/db/audit-columns.md, "Audit columns and applyAudit").

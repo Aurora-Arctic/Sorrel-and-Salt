@@ -6,7 +6,7 @@ import { useLeaveGuard } from '@/lib/navigation';
 import { clearMirror, writeMirror } from './mirror';
 import type { Autosave, AutosaveOptions, AutosaveView, SaveContext, SaveResult } from './types';
 
-// Saves a form while it is being edited (M13.16): a timer per run of changes,
+// Saves a form while it is being edited: a timer per run of changes,
 // one save in flight, retries with backoff, and a pause on a lost race. It is
 // a plain closure held across renders rather than state and effects, because
 // timers and an in-flight promise must see one another's latest state, not a

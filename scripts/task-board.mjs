@@ -46,7 +46,7 @@ export const ghJson = (args, options) => JSON.parse(gh(args, options));
 // budget. The GraphQL listing carried every issue's labels and cost enough
 // that two lookups in a minute tripped GitHub's secondary rate limit.
 
-/** `M2.6 — `: the id plus the separator, so `M2.6` cannot match `M2.60 — …`. */
+/** `<id> — `: the id plus the separator, so a short id cannot match a longer one that starts with it. */
 export const titlePrefix = (id) => `${id.toUpperCase()} — `;
 
 export const matchesId = (title, id) => title.toUpperCase().startsWith(titlePrefix(id));
@@ -229,7 +229,7 @@ export function setEstimate(issue, hours, { item } = {}) {
 // there are, plans the fewest moves that restore it, and makes them one paced
 // mutation at a time (claude-docs/task-tracking.md, "Order").
 
-/** `M2.6` off `M2.6 — Title`, or null for a title that does not open with an id. */
+/** The id off `<id> — Title`, or null for a title that does not open with an id. */
 export const idOf = (title) => new RegExp(String.raw`^(${ID}) — `).exec(title)?.[1] ?? null;
 
 /** A REST milestone: the open count is what decides that a wave is done. */
@@ -330,7 +330,7 @@ export function planMoves(target) {
   return moves;
 }
 
-/** `Wave 08`: how a row's number opens its milestone's title. */
+/** A zero-padded wave number: how a row's number opens its milestone's title. */
 const waveTitle = (number) => `Wave ${String(number).padStart(2, '0')}`;
 
 /**

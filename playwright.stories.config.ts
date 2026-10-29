@@ -3,7 +3,7 @@ import { auditProjects } from './playwright.config';
 import { HTML_REPORT, baseConfig } from './tests/e2e/base-config';
 import { slotServers } from './tests/e2e/servers';
 
-// The story suite (M9.1): one browser flow per user story, under
+// The story suite: one browser flow per user story, under
 // tests/e2e/stories/, run by `npm run test:stories` and by the PR gate's
 // `stories` job, which is never a required check. It shares the slot servers,
 // databases and browser options with the gate suite (playwright.config.ts) and
@@ -21,7 +21,7 @@ export default defineConfig({
   passWithNoTests: true,
   reporter: [
     // Under Claude Code the per-test lines are dots; PW_REPORTER=list (or any
-    // value) restores them for timings (MB.142, M12.37).
+    // value) restores them for timings.
     [process.env.PW_REPORTER ?? (process.env.CLAUDECODE && !process.env.CI ? 'dot' : 'list')],
     ['./tests/support/story-playwright-reporter.ts', { outputFile: process.env.STORIES_JSON }],
     ...(process.env.CI ? ([['json'], ['html', HTML_REPORT]] as const) : []),

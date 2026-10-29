@@ -14,8 +14,8 @@ import type { SearchField, WeightedSearch } from './types';
  * so a row two of whose fields match is still one row, and its position is
  * that best arm's, earliest first among equal arms. The threshold is the
  * keyset read's, so the order using this must say `wordMatch`. Shared by the
- * compendium and coven ingredient search (`searchMatch`) and the grimoire's
- * (M10.11), so both rank one way (claude-docs/db/compendium-read.md, "The
+ * compendium and coven ingredient search (`searchMatch`) and the grimoire's,
+ * so both rank one way (claude-docs/db/compendium-read.md, "The
  * compendium read"). `query` is trimmed and never blank.
  */
 export function weightedSearch(

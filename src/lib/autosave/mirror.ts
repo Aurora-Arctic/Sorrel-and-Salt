@@ -1,7 +1,7 @@
 import type { MirrorEntry } from './types';
 
-// A copy of an autosaving form's value in this browser's localStorage
-// (M13.16): written on every change and cleared only once the server has
+// A copy of an autosaving form's value in this browser's localStorage:
+// written on every change and cleared only once the server has
 // confirmed a save, so a closed tab or a lost connection keeps what was typed.
 // Storage can be absent, full or refused (a private window, blocked site
 // data), so every access is in try/catch and a failure means no mirror.

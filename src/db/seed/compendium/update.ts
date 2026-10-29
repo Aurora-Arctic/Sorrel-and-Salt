@@ -35,7 +35,7 @@ import { spellSteps } from '../../../modules/grimoire/schema/spell-steps';
 import type { CitationFields } from '../../../lib/types';
 import type { SeedCompendiumEntry, SeedCompendiumVariant, SeedTransaction } from '../types';
 
-// The compendium seed's update path (M14.7): what happens to an entry that is
+// The compendium seed's update path: what happens to an entry that is
 // already present. The decision is the state table in
 // claude-docs/db/compendium-seed/README.md, "Write-once, and how a correction
 // lands"; this file reads what the decision needs in bulk (`readStates`),
@@ -49,7 +49,7 @@ import type { SeedCompendiumEntry, SeedCompendiumVariant, SeedTransaction } from
 // `writeChildren` keeps a variant's id across an edit. A removed form is
 // soft-deleted only when nothing holds it, and the entry is refused whole
 // otherwise. Folk names, deities, substitutes and reference links are
-// soft-deleted; category links are hard-deleted, as the table is (MB.34).
+// soft-deleted; category links are hard-deleted, as the table is.
 
 /** One approved entry file as the seed takes it. */
 export interface SeedItem {
@@ -60,7 +60,7 @@ export interface SeedItem {
   where: string;
   /** `contentHash(entry)`, computed when the file was read. */
   hash: string;
-  /** The hash the owner marked for update, when the file carries one. */
+  /** The hash the curator marked for update, when the file carries one. */
   seedUpdate?: string;
   /** Only beside `seedUpdate`: the update may overwrite a curator's or an editor's work. */
   overwriteEditor?: true;
@@ -97,7 +97,7 @@ export interface UpdateContext {
   /** The conversion manifest, identity to hash, or `null` when it is gone (load.ts). */
   manifest: Record<string, string> | null;
   /**
-   * The run's `--force` (M14.26): lifts refusals 1 to 4 for every marked
+   * The run's `--force`: lifts refusals 1 to 4 for every marked
    * entry, as `overwriteEditor` lifts 1 to 3 for one file.
    */
   force: boolean;
@@ -529,10 +529,10 @@ export function decide(item: SeedItem, state: PresentState, ctx: UpdateContext):
     // Forced with no baseline: `stored` stays null, so the entry goes on to
     // the mark check below as an edit, never a skip.
   }
-  // A matching hash (M14.1): a row that matches its file is skipped; one that
+  // A matching hash: a row that matches its file is skipped; one that
   // differs because a person worked on it is skipped quietly, keeping the work,
   // since the file has not changed since that work. Only the run's --force
-  // (M14.26) goes past that skip, to the mark check and the refusals it lifts:
+  // goes past that skip, to the mark check and the refusals it lifts:
   // the file's overwriteEditor does not, since it was already on the file when
   // the work was done. One that differs with nobody's work on it is drift, as
   // a row seeded before its file changed is, and goes on as a changed file does.

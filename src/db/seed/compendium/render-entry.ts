@@ -7,10 +7,9 @@ import type {
   SeedSubstitute,
 } from '../types';
 
-// An entry as a file (M14.6): the inverse of `parseEntryFile`, so a test can
-// prove a file reads back as the entry it was written from. The conversion
-// (M14.9) wrote every file through it; since M14.10 deleted the converter,
-// only the tests render, writing their fixture files the way the corpus is
+// An entry as a file: the inverse of `parseEntryFile`, so a test can
+// prove a file reads back as the entry it was written from. Only the tests
+// render it now, writing their fixture files the way the corpus is
 // written. The keys go in one fixed order with `status` first; the key order
 // a hand-edited file has is free.
 

@@ -12,7 +12,7 @@ import {
 } from './audit-resolve';
 import { loadCompendium } from './load';
 
-// The attribution audit's reading and writing (M14.11): the fetched Wikipedia
+// The attribution audit's reading and writing: the fetched Wikipedia
 // pages from disk, the compendium through the seed's own loader, and, on
 // `apply` alone, each flagged file written back. `report` writes nothing.
 

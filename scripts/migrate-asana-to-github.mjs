@@ -1,6 +1,6 @@
 #!/usr/bin/env node
-// One-off move of the Asana board onto GitHub Issues and the org Project
-// (MB.89). Every step is idempotent and resumable: `apply` looks each object
+// One-off move of the Asana board onto GitHub Issues and the org Project.
+// Every step is idempotent and resumable: `apply` looks each object
 // up before writing it, so a run that stops can be started again and picks
 // up where it left off. It has to, because GitHub's secondary rate limit for
 // content creation is about 80 writes a minute and 500 an hour, and the board
@@ -43,7 +43,7 @@ const ASANA_PROJECT = '1218814916390986';
 const ASANA_INTERVAL_MS = 450;
 const HOTFIX_LABEL = 'hotfix';
 
-// `▶ M2.6 — Title`, `◔ M2.6 - Title`: the marker was Asana's status column.
+// `▶ <id> — Title`, `◔ <id> - Title`: the marker was Asana's status column.
 const MARKER = /^[▶◔✓]\s+/;
 const ISSUE_NAME = new RegExp(String.raw`^(${ID})\s+[—-]\s+(.*)$`);
 const TIMESTAMP_BRACKET = /^\[\d{4}-\d{2}-\d{2} \d{2}:\d{2} UTC\]/;
@@ -143,7 +143,7 @@ export function buildPlan(rawBoard, tasksMd) {
   const plan = readTasksMd(tasksMd);
   const byGid = new Map(board.tasks.map((task) => [task.gid, task]));
   // GitHub lists milestones alphabetically and nothing else, so the wave number
-  // is padded to two digits or Wave 10 sorts between Wave 1 and Wave 2.
+  // is padded to two digits or `10` sorts between `1` and `2`.
   const padWave = (name) => name.replace(/^Wave (\d)(?=\D)/, 'Wave 0$1');
   const classify = (task) => {
     const name = stripMarker(task.name);

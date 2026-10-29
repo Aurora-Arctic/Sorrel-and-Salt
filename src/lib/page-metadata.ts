@@ -1,10 +1,10 @@
 import type { Metadata } from 'next';
 import { SITE_NAME, siteUrl } from './site';
 
-// The search-result text of a public page (MB.84): a description of about 160
+// The search-result text of a public page: a description of about 160
 // characters, and the Open Graph and Twitter tags that repeat the title and
 // description. Pure, so the three compendium pages share one wording and one
-// test. No image tag: the share image is M11.16's.
+// test. No image tag: the share image is another file's.
 
 /** The longest description a search result shows in full, near enough. */
 export const DESCRIPTION_LENGTH = 160;

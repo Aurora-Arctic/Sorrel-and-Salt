@@ -34,10 +34,10 @@ export function readableIngredientParent(
 /**
  * The live variant `variantColumn` names belongs to a readable ingredient, as
  * `readableIngredientParent` reads one, which holds `where` too: how a row one
- * form of an ingredient owns takes the ingredient's tier (MB.218). Through the
+ * form of an ingredient owns takes the ingredient's tier. Through the
  * variant rather than the row's own `ingredient_id`, so the form's tombstone
  * hides its rows as the ingredient's hides the ingredient's; the composite
- * key MB.217 built holds the two ids to one ingredient either way.
+ * key holds the two ids to one ingredient either way.
  */
 export function readableVariantParent(
   memberships: readonly Membership[],
@@ -55,7 +55,7 @@ export function readableVariantParent(
 
 /**
  * `readableIngredientParent`, or a compendium entry the curators have retired
- * while `heldBy`'s coven has a live cupboard entry naming it (M12.24): an
+ * while `heldBy`'s coven has a live cupboard entry naming it: an
  * entry a coven still uses, which the compendium no longer lists. The tier is
  * checked whatever the tombstone, so a cupboard row naming a coven's own
  * ingredient, which the table does not refuse, admits nothing. One `EXISTS`

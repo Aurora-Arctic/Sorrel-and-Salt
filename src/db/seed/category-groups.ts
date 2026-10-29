@@ -5,8 +5,8 @@ import type { SeedCategoryGroup } from './types';
 // where categories.ts reaches the database (claude-docs/workshop.md, ".storybook/").
 
 /**
- * The eight groups in §6's order, each with its hex pair. These are the owner's
- * hand-tuned pairs, and this file is their only source. M0.7's Sass formula,
+ * The eight groups in §6's order, each with its hex pair. These are hand-tuned
+ * pairs, and this file is their only source. A Sass formula,
  * which gave every group one saturation per theme, could not hold them
  * (claude-docs/styling.md, "Category-group colours"). categories.test.ts holds
  * each pair to the contrast floor, to one hue, and to its step of the rotation.

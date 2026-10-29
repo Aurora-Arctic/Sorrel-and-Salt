@@ -2,7 +2,7 @@ import { and, eq, getTableColumns, inArray, isNull, lte, sql, type SQL } from 'd
 import type { AnyPgColumn, PgTable } from 'drizzle-orm/pg-core';
 import { applyAudit, publishActor } from '../audit';
 import type { AuditSession, PrivilegeDeclaration } from '../types';
-// The choke point the rule exists to protect — enforced by lint as of M1.17.
+// The database client; why only the repository may import it: see `select.ts`.
 // oxlint-disable-next-line no-restricted-imports
 import { db } from '../connection';
 import { ingredientDeities } from '../../modules/ingredients/schema/ingredient-deities';
@@ -58,7 +58,7 @@ function writerFor(tx: Transaction, session: AuditSession): AuditWriter {
       .returning() as never;
 
   // An UPDATE that changes nothing keeps its stamps (the `set_updated_at()`
-  // trigger, MB.106); a touch is the one that must move them, and says so for
+  // trigger); a touch is the one that must move them, and says so for
   // its own statement through `app.touch_row`, then clears it so no later
   // write in the transaction reads it.
   const touch = async (table: PgTable, where: SQL | undefined) => {
@@ -102,7 +102,7 @@ function writerFor(tx: Transaction, session: AuditSession): AuditWriter {
   };
 
   // What a marked table's named writes are built from, in the repository file
-  // beside its finders (MB.198): spread in below, so a new marked table adds
+  // beside its finders: spread in below, so a new marked table adds
   // its writes there rather than here.
   const context: WriterContext = { tx, session, insert, update, softDelete };
 
@@ -181,7 +181,7 @@ function writerFor(tx: Transaction, session: AuditSession): AuditWriter {
       );
     },
     // One statement over the variants: no slug moves, since a slug carries no
-    // form (MB.220), so every pick takes the same rewrite. The entry's tier
+    // form, so every pick takes the same rewrite. The entry's tier
     // and liveness by the builder's correlated `EXISTS`, so a coven's variant
     // is never reached.
     carryFormRename: (_curator, formId, form) =>
@@ -227,7 +227,7 @@ function writerFor(tx: Transaction, session: AuditSession): AuditWriter {
 
 /**
  * `delete`'s predicate: each column of `match` equal to its value, null where
- * it is `null` (MB.217), or in its list; `undefined` when a list is empty,
+ * it is `null`, or in its list; `undefined` when a list is empty,
  * since the delete then matches nothing. A match naming no column, or a key that is not one of the table's
  * columns, throws: either would otherwise delete more than was asked.
  */
@@ -258,7 +258,7 @@ function matching<TTable extends PgTable>(
  * `app.current_user_id`, every stamp from `session` — never a request body —
  * and a rollback if `fn` throws. A write that changes a privilege column on
  * `users` declares how in `privilege`, or the trigger recording it refuses
- * the change (MB.195).
+ * the change.
  */
 export async function withAudit<T>(
   session: AuditSession,
@@ -272,10 +272,10 @@ export async function withAudit<T>(
   return db.transaction(async (tx) => {
     // The privilege trigger on `users` reads `app.current_user_id` as the
     // ledger row's actor and refuses a privilege change whose
-    // `app.privilege_route` is empty (MB.195), and the GUC is what makes the v2
+    // `app.privilege_route` is empty, and the GUC is what makes the v2
     // history trigger and deferred RLS one migration. **Do not remove it.**
-    // `app.impersonated_by` has no reader yet: the admin acting as `userId`
-    // (MB.53). Why each, and why `set_config(…, true)`:
+    // `app.impersonated_by` names the admin acting as `userId` and has no reader.
+    // Why each, and why `set_config(…, true)`:
     // claude-docs/db/write-path.md, "app.current_user_id, published per transaction".
     await publishActor(tx, {
       userId: session.userId,

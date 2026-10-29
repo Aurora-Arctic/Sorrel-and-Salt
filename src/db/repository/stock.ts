@@ -8,9 +8,9 @@ import { notSoftDeleted, scopedTo } from './predicates';
 import { existsIn, selectFrom } from './select';
 import type { AuditWriter, StockRow, WriterContext } from './types';
 
-// A coven's stock: one `inventory_items` row per form it holds (M9.3). Read
+// A coven's stock: one `inventory_items` row per form it holds. Read
 // through the form and its ingredient, both live and readable under the
-// proof, so the jar M5.3's ingredient delete leaves in place is in no read,
+// proof, so the jar an ingredient delete leaves in place is in no read,
 // and neither is the jar of a form deleted since. Not the generic
 // `findOneByIdInWorkspace`, which knows the row's own tombstone and no other
 // (claude-docs/db/stock.md, "The stock service").
@@ -24,7 +24,7 @@ export async function findStockById(
   return row;
 }
 
-/** The coven's live jars with these ids: M9.9's `saveStock` resolves a batch of them in one read. */
+/** The coven's live jars with these ids: `saveStock` resolves a batch of them in one read. */
 export function findStockByIds(
   membership: Membership,
   ids: readonly string[],
@@ -33,7 +33,7 @@ export function findStockByIds(
   return findManyStock(membership, inArray(inventoryItems.id, [...ids]));
 }
 
-/** The coven's live jars of these ingredients, every form of each: M9.4's `Ingredient.stock` batch. */
+/** The coven's live jars of these ingredients, every form of each: the `Ingredient.stock` batch. */
 export function findStockOfIngredients(
   membership: Membership,
   ingredientIds: readonly string[],
@@ -44,7 +44,7 @@ export function findStockOfIngredients(
 
 /**
  * The coven's live jars of these forms, at most one each: the spell save's
- * unit check reads every step's jar in one read (M13.2).
+ * unit check reads every step's jar in one read.
  */
 export function findStockOfVariants(
   membership: Membership,
@@ -57,7 +57,7 @@ export function findStockOfVariants(
 /**
  * The coven's live jars under `where`, each of a live form of an ingredient
  * the proof may read, or of a retired compendium entry its cupboard still
- * names (`inUseVariantParent`, M12.24), so the coven goes on reading, changing
+ * names (`inUseVariantParent`), so the coven goes on reading, changing
  * and emptying the jars of an entry it uses.
  */
 function findManyStock(membership: Membership, where: SQL): Promise<StockRow[]> {
@@ -81,7 +81,7 @@ function findManyStock(membership: Membership, where: SQL): Promise<StockRow[]> 
 export const COVEN_STOCK_LOCK_NAMESPACE = 0x53544b31;
 
 /**
- * The locked reads a conversion decides on (M12.21, M12.23), in the writer's
+ * The locked reads a conversion decides on, in the writer's
  * transaction so they see what the write has just made and hold what it
  * moves. Jars are locked in id order, so two writes moving the same jars
  * queue on the first rather than each holding one the other wants.

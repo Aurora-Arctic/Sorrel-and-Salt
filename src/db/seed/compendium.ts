@@ -43,11 +43,11 @@ import type {
   SeedTransaction,
 } from './types';
 
-// MB.242: the production compendium, seeded as reference data the way the
+// The production compendium, seeded as reference data the way the
 // curated vocabularies are — `migrate.yml` runs it after them and after the
 // sources seed. An absent entry is inserted whole, with its content hash
-// stored; a present one is left alone unless its file is marked for update
-// (M14.7), when it is reconciled in place or refused, by the state table in
+// stored; a present one is left alone unless its file is marked for update,
+// when it is reconciled in place or refused, by the state table in
 // claude-docs/db/compendium-seed/README.md, "Write-once, and how a correction
 // lands". Writes go through the handle the caller gives, not `withAudit` —
 // see minimal.ts. The rows an entry becomes are ./compendium/rows.ts's; the
@@ -65,7 +65,7 @@ export interface SeedCompendiumOptions {
   /**
    * Update every marked entry that refusals 1 to 4 would refuse — curator
    * reviewed, edited on the site, a child edited on the site, no baseline —
-   * as if each file said `overwriteEditor: true` (M14.26). It never lifts an
+   * as if each file said `overwriteEditor: true`. It never lifts an
    * identity change or a form in use, and never updates an unmarked file.
    */
   force?: boolean;

@@ -1,7 +1,7 @@
 import { MIN_CHIP_CONTRAST, channels, chipContrast } from './contrast';
 import type { AreaSpace, GroupColorColumn } from './types';
 
-// A category group's two colours as one family (M5.6b, the owner's call): the
+// A category group's two colours as one family: the
 // pair keeps one hue, as every seeded pair does to within a degree, and the
 // partner of a colour chosen first is derived from it rather than left to the
 // admin to match by eye. The derivation is the seeds' own rule: the hue kept,
@@ -185,7 +185,7 @@ export function failingRegion(
  * Where a label sits inside the low-contrast side of the area at `hue`:
  * across, at the side's own centre of area, kept within the area's middle
  * eight tenths so a centred label stays inside; down, at the middle of the
- * side's stretch in that column (the owner's calls). Where that stretch is
+ * side's stretch in that column. Where that stretch is
  * too shallow to hold a label, a fifth of the area's height, the nearest
  * column out from there that is deep enough, or else the deepest. In the
  * area's 0–100 box with y down; none when nothing fails.

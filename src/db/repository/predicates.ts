@@ -40,7 +40,7 @@ export function inCompendium<TTable extends PgTable & WorkspaceScoped>(table: TT
  * `readableIngredientParent` in `ingredient-parent.ts` reads it through
  * `existsIn`, which adds the parent's, so neither statement reads it twice.
  * Unfiltered by itself only in the spell hatch, whose ingredient may be
- * deleted (M5.3).
+ * deleted.
  */
 export function inTiers<TTable extends PgTable & WorkspaceScoped>(
   memberships: readonly Membership[],
@@ -72,8 +72,8 @@ export function notSoftDeleted<TTable extends PgTable>(table: TTable): SQL | und
 
 /**
  * An ingredient's own rows, `variant_id IS NULL`, on a table where one form
- * of it can own rows too, or `undefined` for a table with no variant column
- * (MB.218). The union rule as a predicate (DESIGN.md §5): an ingredient's
+ * of it can own rows too, or `undefined` for a table with no variant column.
+ * The union rule as a predicate (DESIGN.md §5): an ingredient's
  * lists are its own rows and a form's are its additions, and nothing reads
  * the two as one. Decided by the table's shape, as `notSoftDeleted` is.
  */
@@ -95,7 +95,7 @@ export function containsText(column: AnyPgColumn, query: string): SQL {
 
 /**
  * Each entry of a `text[]` column, trimmed and lower-cased as the suggestions
- * fold a value (MB.162), as a subquery: what an `inArray` matches a folded
+ * fold a value, as a subquery: what an `inArray` matches a folded
  * value against, so a list holds a value whatever spacing or case an entry
  * was written with.
  */
@@ -106,7 +106,7 @@ export function listFolds(list: SQLWrapper): SQL {
 
 /**
  * `value` trimmed and lower-cased: the fold a suggestion, a list entry and a
- * form are compared under (MB.162), and `ingredient_variants_form_unique`'s own.
+ * form are compared under, and `ingredient_variants_form_unique`'s own.
  * Raw, since neither function has a builder.
  */
 export function fold(value: SQLWrapper | string): SQL {
@@ -163,7 +163,7 @@ export function foldedWordMatch(query: string): WordMatch {
 
 /**
  * The natural-language collation every facet list and the category picker
- * sort names under (M12.52): case set aside, an accented letter beside its
+ * sort names under: case set aside, an accented letter beside its
  * plain one. Named rather than left to the database default, so the order is
  * the same wherever the server runs; it needs a Postgres built with ICU.
  */

@@ -1,7 +1,7 @@
 import { relative, sep } from 'node:path';
 
 // Seven rules that were Vitest guards reading the source as text or as an
-// abstract syntax tree (M14.27, claude-docs/testing/layer-ownership.md, "What a
+// abstract syntax tree (claude-docs/testing/layer-ownership.md, "What a
 // test may assert", rule 8). Each fails the same pattern its guard failed,
 // now in the editor and in `npm run lint` instead of in a test run.
 // `lint/sorrel-lint.js` spreads them into the `sorrel` plugin.
@@ -50,7 +50,7 @@ function* walk(node) {
 }
 
 export const rules = {
-  // CLAUDE.md rule 8's sweep for M12.33: the site navigates through
+  // CLAUDE.md rule 8's sweep: the site navigates through
   // `usePendingNavigation` or `PendingLink`, so the page bar and the skeletons
   // follow every move. A bare `router.push`, `replace` or `refresh` moves the
   // page with no signal. Next's `<Link>` is not covered. The old guard's
@@ -167,7 +167,7 @@ export const rules = {
         Program(program) {
           const code = codeOf(context);
           // `readableSpells`, and beside it the two helpers of the grimoire's
-          // Visibility facet (M13.22), which only narrow what it lets through.
+          // Visibility facet, which only narrow what it lets through.
           const predicates = [];
           if (file === PREDICATE_FILE) {
             for (const statement of program.body) {
@@ -208,7 +208,7 @@ export const rules = {
     },
   },
 
-  // M14.8 (the owner's change of 2026-10-23): only the curator's switch,
+  // Only the curator's switch,
   // `setCompendiumEntryReviewed`, writes a compendium entry's review mark. A
   // create, an edit or a promote leaves it as it was, so no service file names
   // the mark's columns, and the one repository writer that sets them is called
@@ -252,8 +252,8 @@ export const rules = {
     },
   },
 
-  // M8.17 (claude-docs/design-decisions/m8.17-plan.md, "Giving the focus
-  // back"): a modal gives the focus back to what opened it however it closes,
+  // A modal gives the focus back to what opened it however it closes
+  // (claude-docs/design-decisions/m8.17-plan.md, "Giving the focus back"),
   // and the mechanism is Modal's own (`modal.tsx`), with RouteModal's
   // fallbacks beside it. An owner names where the focus goes when its opener is
   // gone through `returnTo`, and focuses nothing itself. A `.focus()` in a file
@@ -314,12 +314,12 @@ export const rules = {
     },
   },
 
-  // M13.14 (story 32): a form that holds what someone typed asks before a tab
+  // A form that holds what someone typed asks before a tab
   // close, a reload or a link leaves it unsaved. The mechanism is
   // `useLeaveGuard` (src/lib/navigation/leave-guard.tsx), which
   // `useDiscardGuard` calls for every form already guarded in a modal, and
   // the spell builder's `useSaveOnClose` calls for a form that saves on close
-  // rather than asking (M10.12). A component that draws a `<form>`, renders
+  // rather than asking. A component that draws a `<form>`, renders
   // `FormActions` or calls react-hook-form's `useForm` must call one of the
   // three unless the list below says why not; a listed file that no longer needs its place is reported
   // too, so the list can only shrink.
@@ -361,7 +361,7 @@ export const rules = {
     },
   },
 
-  // M11.18: a spec file's tests spread across Playwright's workers, each with
+  // A spec file's tests spread across Playwright's workers, each with
   // its own database, so a test that reads what an earlier test wrote passes
   // only when both land on the same worker: an intermittent red, the worst
   // kind. The one shape every chained file had was a variable declared outside
