@@ -4,8 +4,7 @@ One line per entry: `<nomenclature>/<entry-file-slug>`. An entry with an ethics 
 
 ## M14.29
 
-Checked against: United Plant Savers Species At-Risk List (current page, 2026-10-29); the IUCN category and any other conservation statement printed in the entry's English Wikipedia page (revisions in `compendium/ethics/sources/`), by keyword scan for animal-part and closed-practice statements. CITES is NOT yet checked: it waits for the official Appendices PDF, and this list is regenerated after that sweep. An entry whose canonical name is blank (the unnamed mineral and chemical rows) or has no Wikipedia page is listed with no IUCN check.
-
+- Checked against: United Plant Savers Species At-Risk List (current page, 2026-10-29); the IUCN category and any other conservation statement printed in the entry's English Wikipedia page (revisions in `compendium/ethics/sources/`), by keyword scan for animal-part and closed-practice statements. CITES is NOT yet checked: it waits for the official Appendices PDF, and this list is regenerated after that sweep. An entry whose canonical name is blank (the unnamed mineral and chemical rows) or has no Wikipedia page is listed with no IUCN check.
 - botanical/adam-and-eve-root-aplectrum-hyemale
 - botanical/adders-tongue-erythronium-americanum
 - botanical/agrimony-agrimonia-eupatoria
@@ -451,3 +450,26 @@ Checked against: United Plant Savers Species At-Risk List (current page, 2026-10
 - zoological/egg-gallus-gallus-domesticus
 - zoological/red-coral-corallium
 - zoological/snakeskin-serpentes
+
+## M14.17
+
+- botanical/aerva-ouret-lanata
+- botanical/ajwain-trachyspermum-ammi
+- botanical/balloon-vine-cardiospermum-halicacabum
+- botanical/betel-leaf-piper-betle
+- botanical/butterfly-pea-clitoria-ternatea
+- botanical/country-mallow-sida-cordifolia
+- botanical/crown-flower-calotropis-gigantea
+- botanical/durva-grass-cynodon-dactylon
+- botanical/east-indian-globe-thistle-sphaeranthus-indicus
+- botanical/emilia-emilia-sonchifolia
+- botanical/gerards-jointfir-ephedra-gerardiana
+- botanical/indian-copperleaf-acalypha-indica
+- botanical/rosary-pea-abrus-precatorius
+- unknown/ashtadhatu
+- unknown/banalinga
+- unknown/bell-metal
+- unknown/cow-dung
+- unknown/cow-urine
+- unknown/ghee
+- zoological/chank-turbinella-pyrum
