@@ -20,7 +20,7 @@ export const ingredientDeities = pgTable(
     // still reads as its name, with no finder reaching the deleted row.
     name: text('name').notNull(),
     // Stored, never inferred from insertion order: the list keeps the order
-    // entered, as celestial bodies, signs and colours do (claude-docs/design-decisions/mb.165-record-the-picked-vocabulary-row.md, "The order rule").
+    // entered, as celestial bodies, signs and colours do (claude-docs/design-decisions/mb.165-record-the-picked-vocabulary-row.md, "Decided").
     position: integer('position').notNull(),
     ...auditColumns,
   },

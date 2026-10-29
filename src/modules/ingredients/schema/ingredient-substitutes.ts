@@ -29,7 +29,7 @@ export const ingredientSubstitutes = pgTable(
     // The read by parent, which takes links and names alike and so
     // implies neither unique index's predicate. Nothing reads back from a
     // linked ingredient to its linkers, so no index leads on `substitute_id`
-    // (claude-docs/design-decisions/mb.138-substitute-links.md, "The deletion rule").
+    // (claude-docs/design-decisions/mb.138-substitute-links.md, "Decided").
     index('ingredient_substitutes_ingredient_id')
       .on(table.ingredientId)
       .where(sql`${table.deletedAt} is null`),
