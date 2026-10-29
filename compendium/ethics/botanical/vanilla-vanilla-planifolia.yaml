@@ -12,3 +12,4 @@ listings:
     locator: 'Taxobox: status = EN, status_system = IUCN3.1; its status_ref reads: "Vanilla planifolia", Vega, M., 2020, 10.2305/IUCN.UK.2020-2.RLTS.T103090930A172970359.en'
 questions:
   - 'The CITES Appendices (valid from 5 March 2026) list the whole family Orchidaceae in Appendix II: p. 74, "ORCHIDACEAE spp. (Except the species included in Appendix I)", annotation #4. Vanilla planifolia is not printed by name; annotation #4 exempts "d) fruits, and parts and derivatives thereof, of naturalized or artificially propagated plants of the genus Vanilla (Orchidaceae)". Owner: say whether a family-wide listing may be recorded. Recommendation: no listing row for the species; keep this question.'
+  - 'Approved by the owner 2026-10-29: the entry stays under the cultivated exception to the no-endangered-species rule (M14.29), because its source says the trade supply is cultivated. Nothing more to ask.'
