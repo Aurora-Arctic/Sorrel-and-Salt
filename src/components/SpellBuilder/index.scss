@@ -730,7 +730,7 @@ body .spell-builder .collapsible-section__fields {
 // The recovery banner: a flex row like the save status's notices, with space(2) between the
 // sentence and its buttons, so the buttons wrap to their own line, not touch the text, when the
 // sentence fills the width.
-.spell-builder__restored {
+.spell-builder .spell-builder__restored {
   display: flex;
   flex-wrap: wrap;
   align-items: center;
