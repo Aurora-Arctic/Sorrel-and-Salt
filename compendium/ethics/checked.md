@@ -2,55 +2,55 @@
 
 Checked for everything except CITES (the M14.29 sweep covers CITES).
 
-botanical/aconitum-carmichaelii-aconitum-carmichaelii
-botanical/amur-cork-tree-phellodendron-amurense
-botanical/atractylodes-atractylodes-macrocephala
-botanical/baikal-skullcap-scutellaria-baicalensis
-botanical/capillary-wormwood-artemisia-capillaris
-botanical/chinese-bellflower-platycodon-grandiflorus
-botanical/chinese-cucumber-trichosanthes-kirilowii
-botanical/chinese-foxglove-rehmannia-glutinosa
-botanical/chinese-goldthread-coptis-chinensis
-botanical/chinese-liquorice-glycyrrhiza-uralensis
-botanical/chinese-motherwort-leonurus-japonicus
-botanical/chinese-mugwort-artemisia-argyi
-botanical/chinese-quince-pseudocydonia-sinensis
-botanical/chinese-yam-dioscorea-polystachya
-botanical/codonopsis-codonopsis-pilosula
-botanical/cornelian-cherry-cornus-officinalis
-botanical/cynomorium-cynomorium
-botanical/daidai-citrus-daidai
-botanical/danshen-salvia-miltiorrhiza
-botanical/dwarf-lilyturf-ophiopogon-japonicus
-botanical/evodia-tetradium-ruticarpum
-botanical/fish-mint-houttuynia-cordata
-botanical/forsythia-forsythia-suspensa
-botanical/goji-lycium-barbarum
-botanical/japanese-angelica-angelica-acutiloba
-botanical/japanese-honeysuckle-lonicera-japonica
-botanical/japanese-star-anise-illicium-anisatum
-botanical/kudzu-pueraria-montana
-botanical/meconopsis-aculeata-meconopsis-aculeata
-botanical/monk-fruit-siraitia-grosvenorii
-botanical/noble-dendrobium-dendrobium-nobile
-botanical/oriental-water-plantain-alisma-orientale
-botanical/pinellia-pinellia-ternata
-botanical/rhodiola-rhodiola
-botanical/safflower-carthamus-tinctorius
-botanical/salvia-nubicola-salvia-nubicola
-botanical/shiwei-pyrrosia-lingua
-botanical/snow-lotus-saussurea
-botanical/star-jasmine-trachelospermum-jasminoides
-botanical/szechuan-lovage-ligusticum-striatum
-chemical/arsenic-trioxide-arsenic-trioxide
-chemical/red-lead-leadiiiv-oxide
-fungal/cordyceps-militaris-cordyceps-militaris
-fungal/lingzhi-ganoderma-sichuanense
-fungal/poria-wolfiporia-extensa
-fungal/snow-fungus-tremella-fuciformis
-mineral/limonite-limonite
-mineral/mirabilite-mirabilite
-unknown/bamboo-salt
-unknown/cattle-gallstone
-unknown/cicada-shells
-zoological/silkworm-droppings-bombyx-mori
+- botanical/aconitum-carmichaelii-aconitum-carmichaelii
+- botanical/amur-cork-tree-phellodendron-amurense
+- botanical/atractylodes-atractylodes-macrocephala
+- botanical/baikal-skullcap-scutellaria-baicalensis
+- botanical/capillary-wormwood-artemisia-capillaris
+- botanical/chinese-bellflower-platycodon-grandiflorus
+- botanical/chinese-cucumber-trichosanthes-kirilowii
+- botanical/chinese-foxglove-rehmannia-glutinosa
+- botanical/chinese-goldthread-coptis-chinensis
+- botanical/chinese-liquorice-glycyrrhiza-uralensis
+- botanical/chinese-motherwort-leonurus-japonicus
+- botanical/chinese-mugwort-artemisia-argyi
+- botanical/chinese-quince-pseudocydonia-sinensis
+- botanical/chinese-yam-dioscorea-polystachya
+- botanical/codonopsis-codonopsis-pilosula
+- botanical/cornelian-cherry-cornus-officinalis
+- botanical/cynomorium-cynomorium
+- botanical/daidai-citrus-daidai
+- botanical/danshen-salvia-miltiorrhiza
+- botanical/dwarf-lilyturf-ophiopogon-japonicus
+- botanical/evodia-tetradium-ruticarpum
+- botanical/fish-mint-houttuynia-cordata
+- botanical/forsythia-forsythia-suspensa
+- botanical/goji-lycium-barbarum
+- botanical/japanese-angelica-angelica-acutiloba
+- botanical/japanese-honeysuckle-lonicera-japonica
+- botanical/japanese-star-anise-illicium-anisatum
+- botanical/kudzu-pueraria-montana
+- botanical/meconopsis-aculeata-meconopsis-aculeata
+- botanical/monk-fruit-siraitia-grosvenorii
+- botanical/noble-dendrobium-dendrobium-nobile
+- botanical/oriental-water-plantain-alisma-orientale
+- botanical/pinellia-pinellia-ternata
+- botanical/rhodiola-rhodiola
+- botanical/safflower-carthamus-tinctorius
+- botanical/salvia-nubicola-salvia-nubicola
+- botanical/shiwei-pyrrosia-lingua
+- botanical/snow-lotus-saussurea
+- botanical/star-jasmine-trachelospermum-jasminoides
+- botanical/szechuan-lovage-ligusticum-striatum
+- chemical/arsenic-trioxide-arsenic-trioxide
+- chemical/red-lead-leadiiiv-oxide
+- fungal/cordyceps-militaris-cordyceps-militaris
+- fungal/lingzhi-ganoderma-sichuanense
+- fungal/poria-wolfiporia-extensa
+- fungal/snow-fungus-tremella-fuciformis
+- mineral/limonite-limonite
+- mineral/mirabilite-mirabilite
+- unknown/bamboo-salt
+- unknown/cattle-gallstone
+- unknown/cicada-shells
+- zoological/silkworm-droppings-bombyx-mori
