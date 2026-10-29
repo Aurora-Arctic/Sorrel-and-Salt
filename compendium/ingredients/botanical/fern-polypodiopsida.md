@@ -13,6 +13,12 @@ deities:
   - Puck
 categories:
   - Protection
+  - Luck
+  - Youth
+  - Rain Magic
+  - Banishing
+  - Healing
+  - Wealth
 references:
   - source: cunningham-herbs
     locator: under "Fern"
@@ -82,7 +88,7 @@ variants:
         supports:
           - form
           - description
-seedUpdate: 771d191934e8c9441926414664678b86686e09b8eeb729bbabaf69383e19d392
+seedUpdate: 0360c7d00b04b8b1147c9fa7489f0c2c599a9907b250f299f8582ed47435ebf4
 ---
 
 # Fern

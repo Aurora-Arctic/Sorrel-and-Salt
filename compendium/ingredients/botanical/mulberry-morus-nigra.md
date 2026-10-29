@@ -36,6 +36,11 @@ categories:
   - Psychic Work
   - Success
   - Wisdom
+  - Luck
+  - Consecration
+  - Blessing
+  - Challenges
+  - Secrets
 references:
   - source: cunningham-herbs
     locator: under "Mulberry"; p. 266

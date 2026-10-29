@@ -26,6 +26,10 @@ categories:
   - Success
   - Psychic Work
   - Peace
+  - Wealth
+  - Banishing
+  - Luck
+  - Hex-Breaking
 references:
   - source: cunningham-herbs
     locator: under "Clover"; p. 266

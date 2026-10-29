@@ -20,6 +20,11 @@ categories:
   - Fidelity
   - Protection
   - Strength
+  - Wealth
+  - Security
+  - Manifestation
+  - Renewal
+  - Transformation
 references:
   - source: cunningham-herbs
     locator: under "Pecan"

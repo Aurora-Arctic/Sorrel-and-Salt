@@ -24,6 +24,10 @@ categories:
   - Fidelity
   - Protection
   - Strength
+  - Determination
+  - Negativity
+  - Challenges
+  - Secrets
 references:
   - source: kynes-plants
     locator: under "Locust"
@@ -94,7 +98,7 @@ variants:
         supports:
           - form
           - description
-seedUpdate: 807af5e191fb046506a237967603d0adf82e91c34893d3a1a795da775eaf7c52
+seedUpdate: e188145b2f2c5947eb42ccc58f2d59923116df2b82d56cf5fcc553a02797eeaf
 ---
 
 # Black Locust

@@ -24,6 +24,14 @@ categories:
   - Inspiration
   - Spirit Work
   - Wisdom
+  - Wealth
+  - Spirituality
+  - Security
+  - Renewal
+  - Challenges
+  - Emotions
+  - Growth
+  - Adaptability
 references:
   - source: kynes-plants
     locator: under "Spruce"

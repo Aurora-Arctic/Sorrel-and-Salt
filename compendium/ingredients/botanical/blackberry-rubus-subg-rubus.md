@@ -46,6 +46,14 @@ categories:
   - Knowledge
   - Prosperity
   - Purification
+  - Wealth
+  - Luck
+  - Funeral Rites
+  - Joy
+  - Awareness
+  - Challenges
+  - Growth
+  - Spirit Work
 references:
   - source: cunningham-herbs
     locator: under "Blackberry"; p. 266
@@ -219,7 +227,7 @@ variants:
         supports:
           - form
           - description
-seedUpdate: db6e108b3fe94b6d00176569852eca6847794601ffa6b5b8683ad5778c45549c
+seedUpdate: b75772d924fd78b45f75a6f5058b29b1eec946729657bfd3a3117ff177a22cea
 ---
 
 # Blackberry

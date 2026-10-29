@@ -27,6 +27,15 @@ categories:
   - Manifestation
   - Peace
   - Psychic Work
+  - Luck
+  - Trust
+  - Awareness
+  - Family
+  - Home Blessing
+  - Transformation
+  - Adaptability
+  - Spirit Work
+  - Rain Magic
 references:
   - source: cunningham-herbs
     locator: under "Heather"

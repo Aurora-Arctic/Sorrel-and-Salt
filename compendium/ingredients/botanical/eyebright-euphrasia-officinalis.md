@@ -30,6 +30,8 @@ categories:
   - Dream Work
   - Intuition
   - Truth
+  - Joy
+  - Skill
 references:
   - source: cunningham-herbs
     locator: under "Eyebright"; p. 266

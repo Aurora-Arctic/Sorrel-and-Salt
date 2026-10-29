@@ -38,6 +38,10 @@ categories:
   - Purification
   - Strength
   - Truth
+  - Negativity
+  - Hex-Breaking
+  - Challenges
+  - Leadership
 references:
   - source: cunningham-herbs
     locator: under "Sloe"; p. 266
@@ -179,7 +183,7 @@ variants:
         supports:
           - form
           - description
-seedUpdate: a0d8df5f4494e12a5ccb1c38222ef8e1bc51fac8feb6040521fd989fa706cd0c
+seedUpdate: cd02ef03de57b8ce6ca1e592e795a6e7c90ca65d98416905d6b98191a9ebe3be
 ---
 
 # Blackthorn

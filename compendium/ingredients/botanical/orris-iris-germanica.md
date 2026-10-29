@@ -37,6 +37,11 @@ categories:
   - Release
   - Success
   - Wisdom
+  - Luck
+  - Focus
+  - Determination
+  - Family
+  - Adaptability
 references:
   - source: cunningham-herbs
     locator: under "Orris"

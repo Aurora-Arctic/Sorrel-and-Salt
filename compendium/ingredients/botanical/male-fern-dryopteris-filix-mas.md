@@ -17,6 +17,7 @@ folkNames:
   - Marginal Fern
 categories:
   - Love
+  - Luck
 references:
   - source: cunningham-herbs
     locator: under "Male Fern"
@@ -60,7 +61,7 @@ variants:
           - description
           - safetyNotes
           - toxic
-seedUpdate: 451ac452ccea9c89cd465de818e82d9fa74887f56547dd9309276eb01d0eb54b
+seedUpdate: 94921fd435dabf8bd2f56fa45dac39111ff982be8d3364d2ce8f4e48056b0332
 ---
 
 # Male Fern

@@ -15,6 +15,9 @@ folkNames:
   - Virginian Snakeroot
 categories:
   - Hex-Breaking
+  - Wealth
+  - Luck
+  - Secrets
 references:
   - source: cunningham-herbs
     locator: under "Snakeroot"; p. 266
@@ -35,6 +38,7 @@ references:
       - toxic
       - safetyNotes
       - description
+      - categories
   - source: wikipedia-aristolochia-serpentaria
     nameBasis: stated
     supports:

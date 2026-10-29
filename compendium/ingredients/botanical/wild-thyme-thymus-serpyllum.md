@@ -8,6 +8,16 @@ folkNames:
   - Elfin Thyme
   - Mother-Thyme
   - Shepherd's Thyme
+categories:
+  - Luck
+  - Consecration
+  - Blessing
+  - Awareness
+  - Renewal
+  - Faerie Sight
+  - Adaptability
+  - Leadership
+  - Nightmare Protection
 references:
   - source: grieve-thyme-wild
     nameBasis: stated
@@ -23,6 +33,7 @@ references:
       - nomenclature
       - folkNames
       - description
+      - categories
   - source: wikipedia-thymus-serpyllum
     nameBasis: stated
     supports:

@@ -22,6 +22,7 @@ categories:
   - Confidence
   - Fertility
   - Healing
+  - Clarity
 references:
   - source: wikipedia-rhodonite
     nameBasis: stated
@@ -54,6 +55,7 @@ variants:
         nameBasis: stated
         supports:
           - form
+seedUpdate: 7e36e63f07f1770bb04478aa7987eefd295c0991267bb183316a6e0c25563aad
 ---
 
 # Rhodonite

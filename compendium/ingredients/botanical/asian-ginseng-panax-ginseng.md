@@ -16,6 +16,10 @@ categories:
   - Healing
   - Love
   - Protection
+  - Luck
+  - Manifestation
+  - Sex
+  - Sexuality
 references:
   - source: kynes-plants
     locator: under "Ginseng"
@@ -68,7 +72,7 @@ variants:
         supports:
           - form
           - description
-seedUpdate: 032811ba994c843db4b92490bbfbb252a889fc05066704fc74bda280b898cc6e
+seedUpdate: f4a6a21d50090aabdb7e06a501eeabec0eeb0b40176dd1a132cfbbdbff384690
 ---
 
 # Asian Ginseng

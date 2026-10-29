@@ -31,6 +31,12 @@ categories:
   - Love
   - Transformation
   - Confidence
+  - Funeral Rites
+  - Relationships
+  - Sex
+  - Sexuality
+  - Secrets
+  - Clarity
 references:
   - source: cunningham-herbs
     locator: under "Caraway"
@@ -99,6 +105,7 @@ variants:
         supports:
           - form
           - description
+seedUpdate: 2c41f579af60121c09cfc334f8a365e40cb667d11f01a2e39fed7e5dd193e0c3
 ---
 
 # Caraway

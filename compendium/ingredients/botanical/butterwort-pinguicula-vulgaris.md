@@ -17,6 +17,15 @@ categories:
   - Love
   - Prophecy
   - Home Blessing
+  - Luck
+  - Awareness
+  - Determination
+  - Relationships
+  - Negativity
+  - Hex-Breaking
+  - Challenges
+  - Family
+  - Adaptability
 references:
   - source: kynes-plants
     locator: under "Butterwort"
@@ -53,6 +62,7 @@ variants:
         supports:
           - form
           - description
+seedUpdate: 81a587041797d165806138f983eae0779e37c47053cfb080d83725004ae6c61d
 ---
 
 # Butterwort

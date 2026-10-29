@@ -21,6 +21,11 @@ categories:
   - Peace
   - Prosperity
   - Protection
+  - Wealth
+  - Luck
+  - Joy
+  - Secrets
+  - Faerie Sight
 references:
   - source: kynes-plants
     locator: under "Wood Sorrel"
@@ -61,6 +66,7 @@ variants:
         supports:
           - form
           - description
+seedUpdate: 8ece289aa577f6ea476382035c0ea6e1499d0e76c8207083b04f224f1101eb8e
 ---
 
 # Wood Sorrel

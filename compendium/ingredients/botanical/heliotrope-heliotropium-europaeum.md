@@ -32,6 +32,12 @@ categories:
   - Protection
   - Psychic Work
   - Release
+  - Awareness
+  - Hex-Breaking
+  - Leadership
+  - Prophetic Dreams
+  - Banishing
+  - Invisibility
 references:
   - source: cunningham-herbs
     locator: under "Heliotrope"

@@ -36,6 +36,8 @@ categories:
   - Protection
   - Purification
   - Truth
+  - Sex
+  - Sexuality
 references:
   - source: cunningham-herbs
     locator: under "Magnolia"; p. 266
@@ -151,7 +153,7 @@ variants:
         supports:
           - form
           - description
-seedUpdate: 70e556276c42ab8e7961a2333589727e81b9961c8b9751273c608b4a2e760bde
+seedUpdate: df47eb00fb9dc630b44f26caa26afc3e25a94468788347928abe74223f81d8f5
 ---
 
 # Magnolia

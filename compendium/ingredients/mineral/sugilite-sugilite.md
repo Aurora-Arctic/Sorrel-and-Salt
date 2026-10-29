@@ -25,6 +25,7 @@ categories:
   - Grounding
   - Protection
   - Truth
+  - Spirituality
 substitutes:
   - identity: lapis lazuli
 references:
@@ -71,6 +72,7 @@ variants:
         supports:
           - form
           - description
+seedUpdate: 4b0807a56aca50a0a7496b97a65ed0ad62929703766382da3ffe5c63cc2f200e
 ---
 
 # Sugilite

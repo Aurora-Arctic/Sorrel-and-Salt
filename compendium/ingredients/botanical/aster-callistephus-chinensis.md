@@ -27,6 +27,10 @@ categories:
   - Protection
   - Psychic Work
   - Truth
+  - Consecration
+  - Blessing
+  - Focus
+  - Negativity
 references:
   - source: cunningham-herbs
     locator: under "Aster"; p. 266
@@ -77,7 +81,7 @@ variants:
         supports:
           - form
           - colours
-seedUpdate: 0ee649dc1fac8061ba8bee23e118014dc34d53bd82cb83dea636342ce0927022
+seedUpdate: 5f31fb0e21983dc95725069b1a509ec147085276bc733adaa04bd2bd6f60da46
 ---
 
 # Aster

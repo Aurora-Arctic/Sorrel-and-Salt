@@ -68,6 +68,11 @@ categories:
   - Release
   - Success
   - Wisdom
+  - Wealth
+  - Security
+  - Manifestation
+  - Negativity
+  - Hex-Breaking
 references:
   - source: cunningham-herbs
     locator: under "Bay"; p. 266
@@ -169,7 +174,7 @@ variants:
         nameBasis: unaudited
         supports:
           - safetyNotes
-seedUpdate: 9618a5627f1433ee99bd0efb4a967f333c3eb1ebf2926c36eb1eed39698f6263
+seedUpdate: a16359b32b5eabadb7cdaf9967f9924573226fe231cd44eaf8171fc7a2ef78c5
 ---
 
 # Bay Laurel

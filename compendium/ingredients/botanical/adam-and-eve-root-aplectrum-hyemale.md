@@ -26,6 +26,7 @@ categories:
   - Fidelity
   - Psychic Work
   - Success
+  - Luck
 references:
   - source: kynes-plants
     locator: under "Orchid"
@@ -55,7 +56,7 @@ variants:
         nameBasis: unaudited
         supports:
           - form
-seedUpdate: 8cfb4b09a3c90a8770dbfae122c85136f7351e09628afb6e52373cd25fb596e3
+seedUpdate: 78c3563c27d2a4263dbff990d9456727532ebe70e15fae4b1a56936dc1115224
 ---
 
 # Adam and Eve Root

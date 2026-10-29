@@ -18,6 +18,7 @@ folkNames:
   - Popple
 categories:
   - Communication
+  - Wealth
   - Prosperity
   - Protection
 references:
@@ -64,7 +65,7 @@ variants:
         supports:
           - form
           - description
-seedUpdate: 262eb0e4a02b115a247d1df40a249c049ad17017b99f722aeec5bd1094af912b
+seedUpdate: 807ffcaf776ddd2d049e044e386cb20a3063e2d63e51b41824033a41f476cfb8
 ---
 
 # Aspen

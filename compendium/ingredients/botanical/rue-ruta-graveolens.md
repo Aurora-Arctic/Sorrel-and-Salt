@@ -47,6 +47,15 @@ categories:
   - Purification
   - Release
   - Wisdom
+  - Luck
+  - Consecration
+  - Blessing
+  - Relationships
+  - Negativity
+  - Emotions
+  - Faerie Sight
+  - Spirit Work
+  - Nightmare Protection
 references:
   - source: cunningham-herbs
     locator: under "Rue"; p. 266
@@ -188,7 +197,7 @@ variants:
         supports:
           - form
           - description
-seedUpdate: 979638d8111f4e88bbbb618f63ea9689fdcc0981c320f49f726e740dadebb257
+seedUpdate: 2339fb9101ca212c38cdaaa86ad05ef2cd1e3dc64948f7e67464ac788e731b55
 ---
 
 # Rue

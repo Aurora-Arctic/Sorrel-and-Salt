@@ -83,7 +83,8 @@ describe('seedCategories(db)', () => {
     expect(seeded).toEqual(
       [...CATEGORIES]
         .map((c) => ({ slug: slugify(c.name), group: slugify(c.group) }))
-        .sort((a, b) => a.slug.localeCompare(b.slug)),
+        // The database orders slugs without punctuation, so 'spirituality' precedes 'spirit-work'.
+        .sort((a, b) => a.slug.localeCompare(b.slug, 'en', { ignorePunctuation: true })),
     );
   });
 

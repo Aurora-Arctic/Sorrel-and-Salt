@@ -25,6 +25,11 @@ categories:
   - Lust
   - Spirit Work
   - Strength
+  - Joy
+  - Awareness
+  - Sex
+  - Sexuality
+  - Secrets
 references:
   - source: kynes-plants
     locator: under "Mushroom"

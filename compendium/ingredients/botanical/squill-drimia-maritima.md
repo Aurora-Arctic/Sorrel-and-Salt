@@ -17,6 +17,7 @@ folkNames:
 categories:
   - Protection
   - Hex-Breaking
+  - Wealth
 references:
   - source: cunningham-herbs
     locator: under "Squill"; p. 266

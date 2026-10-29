@@ -25,6 +25,14 @@ categories:
   - Fertility
   - Strength
   - Spirit Work
+  - Wealth
+  - Prophetic Dreams
+  - Funeral Rites
+  - Negativity
+  - Hex-Breaking
+  - Sex
+  - Sexuality
+  - Secrets
 references:
   - source: cunningham-herbs
     locator: under "Onion"
@@ -68,6 +76,7 @@ variants:
         supports:
           - form
           - description
+seedUpdate: ca180259a3d8987d011184945e3ead63628d6fcf2eb48fe5a3bf438edb58e676
 ---
 
 # Onion

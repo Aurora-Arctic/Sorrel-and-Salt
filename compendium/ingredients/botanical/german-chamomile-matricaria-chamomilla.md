@@ -41,6 +41,12 @@ categories:
   - Psychic Work
   - Purification
   - Release
+  - Wealth
+  - Consecration
+  - Blessing
+  - Negativity
+  - Hex-Breaking
+  - Emotions
 substitutes:
   - name: Roman Chamomile
 references:
@@ -127,7 +133,7 @@ variants:
         supports:
           - form
           - description
-seedUpdate: cc0edc67455263cc412893e972f4e3a5b6ea2a7fb95b02307e26db3c132291cc
+seedUpdate: 780d9b2da0b0443dcb978815ca9ecdcabff915f966fbbebb2db51e91b2ca9e41
 ---
 
 # German Chamomile

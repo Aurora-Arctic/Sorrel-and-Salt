@@ -8,6 +8,7 @@ celestialBodies:
   - Mars
 categories:
   - Purification
+  - Banishing
 references:
   - source: cunningham-herbs
     locator: under "Horseradish"
@@ -35,6 +36,7 @@ variants:
         supports:
           - form
           - description
+seedUpdate: cf48a6817d82ecb81f0f8f8637558b22f0688e7aed8eab7b1764563a622110de
 ---
 
 # Horseradish

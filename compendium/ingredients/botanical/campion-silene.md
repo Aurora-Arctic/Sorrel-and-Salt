@@ -28,6 +28,10 @@ categories:
   - Manifestation
   - Protection
   - Wisdom
+  - Focus
+  - Determination
+  - Relationships
+  - Challenges
 references:
   - source: kynes-plants
     locator: under "Campion"

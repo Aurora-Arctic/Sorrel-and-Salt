@@ -14,6 +14,7 @@ deities:
   - Ishtar
 categories:
   - Fertility
+  - Wealth
 references:
   - source: cunningham-herbs
     locator: under "Wheat"

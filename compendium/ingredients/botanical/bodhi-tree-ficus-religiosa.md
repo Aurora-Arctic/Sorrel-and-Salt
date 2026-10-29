@@ -33,6 +33,8 @@ categories:
   - Psychic Work
   - Transformation
   - Truth
+  - Spirituality
+  - Awareness
 references:
   - source: cunningham-herbs
     locator: under "Bodhi"
@@ -102,6 +104,7 @@ variants:
         supports:
           - form
           - description
+seedUpdate: 57a1e325b434f5aa37f4da0aff67d58104da7eb86431e503597360e21882aa2a
 ---
 
 # Bodhi Tree

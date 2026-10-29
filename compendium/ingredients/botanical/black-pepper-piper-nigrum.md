@@ -25,6 +25,9 @@ categories:
   - Legal Matters
   - Release
   - Strength
+  - Determination
+  - Renewal
+  - Challenges
 references:
   - source: cunningham-herbs
     locator: under "Pepper"; p. 266
@@ -100,7 +103,7 @@ variants:
         supports:
           - form
           - description
-seedUpdate: a45ef6813431f8b508147f02b974bf1ea1eb5501093745e2529ac2edb993d18a
+seedUpdate: 6de3cda729a56fd396de838a6217195102905e23580d750922ba7db124e725c7
 ---
 
 # Black Pepper

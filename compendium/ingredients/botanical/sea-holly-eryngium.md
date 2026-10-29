@@ -16,6 +16,8 @@ categories:
   - Love
   - Lust
   - Peace
+  - Safe Travel
+  - Luck
 references:
   - source: cunningham-herbs
     locator: under "Eryngo"; p. 266
@@ -67,7 +69,7 @@ variants:
         supports:
           - form
           - description
-seedUpdate: dee2cb82d1aaf32659aaf22e6792d063e1d34d4bbbbe461508c8751706c8287d
+seedUpdate: ad917615fafca3989ae19fa05d2a68ed4d0360c9b3c564b4bdd502d339d4eaaa
 ---
 
 # Sea Holly

@@ -25,6 +25,9 @@ categories:
   - Prosperity
   - Protection
   - Success
+  - Wealth
+  - Luck
+  - Joy
 substitutes:
   - name: Henna
 references:
@@ -107,6 +110,7 @@ variants:
         supports:
           - form
           - description
+seedUpdate: d7921a12b4a290e74f36e74853a05e58fe0500e5e70256611de8fbc948463839
 ---
 
 # Alkanet

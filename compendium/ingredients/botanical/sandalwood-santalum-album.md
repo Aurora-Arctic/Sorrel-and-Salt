@@ -40,6 +40,15 @@ categories:
   - Purification
   - Truth
   - Wisdom
+  - Spirituality
+  - Consecration
+  - Blessing
+  - Awareness
+  - Past-Life Work
+  - Hex-Breaking
+  - Sex
+  - Sexuality
+  - Spirit Work
 references:
   - source: cunningham-herbs
     locator: under "Sandalwood, White"
@@ -148,7 +157,7 @@ variants:
           - form
           - description
           - categories
-seedUpdate: c3c5f9deb94c918adc8a6747465e9187bacee3b13abdb857e6bfdaf664dd449f
+seedUpdate: 36712a9fcaf5f41abc10774c29f1b77b04395dc56676821893957c6680feb5aa
 ---
 
 # Sandalwood

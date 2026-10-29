@@ -23,6 +23,12 @@ categories:
   - Prosperity
   - Protection
   - Purification
+  - Wealth
+  - Luck
+  - Focus
+  - Determination
+  - Relationships
+  - Adaptability
 references:
   - source: kynes-plants
     locator: under "Bog Myrtle"
@@ -82,6 +88,7 @@ variants:
         supports:
           - form
           - description
+seedUpdate: d8555046727d77d07cf857658ff712633686bc4470f6021e48c49f1477badd62
 ---
 
 # Bog Myrtle

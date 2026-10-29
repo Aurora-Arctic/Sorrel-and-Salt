@@ -22,6 +22,7 @@ categories:
   - Meditation
   - Communication
   - Memory
+  - Dream Work
 references:
   - source: cunningham-crystals
     locator: under "Azurite"; p. 76
@@ -72,6 +73,7 @@ variants:
         supports:
           - form
           - description
+seedUpdate: 606d5d55cfb63b11fc7e68c4dd553523677ff943518214b6f3c0dcb270bb9651
 ---
 
 # Azurite

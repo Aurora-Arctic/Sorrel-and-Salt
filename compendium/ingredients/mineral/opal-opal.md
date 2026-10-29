@@ -22,6 +22,12 @@ categories:
   - Creativity
   - Love
   - Memory
+  - Wealth
+  - Luck
+  - Psychic Work
+  - Strength
+  - Beauty
+  - Astral Projection
 references:
   - source: wikipedia-opal
     nameBasis: stated

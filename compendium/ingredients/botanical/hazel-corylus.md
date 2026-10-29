@@ -44,6 +44,13 @@ categories:
   - Psychic Work
   - Truth
   - Wisdom
+  - Wealth
+  - Luck
+  - Awareness
+  - Past-Life Work
+  - Transformation
+  - Secrets
+  - Faerie Sight
 references:
   - source: cunningham-herbs
     locator: under "Hazel"; p. 266
@@ -139,6 +146,7 @@ variants:
         nameBasis: stated
         supports:
           - form
+seedUpdate: de257865d9b25e3c9af962ada4576cbe75db7873c5485e09d4653e7b021ce083
 ---
 
 # Hazel

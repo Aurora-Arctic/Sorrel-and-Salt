@@ -56,6 +56,10 @@ categories:
   - Peace
   - Release
   - Truth
+  - Awareness
+  - Relationships
+  - Challenges
+  - Emotions
 references:
   - source: cunningham-herbs
     locator: under "Foxglove"
@@ -138,7 +142,7 @@ variants:
         supports:
           - form
           - description
-seedUpdate: 1b33734269449a415c008d9ef7e6b25344e6135ba8e615a931a1319074d68a24
+seedUpdate: 5c8a7cc400d7280f67a52c8ca014db3c9c0071ab5c6d6c3eb135e632034e2a47
 ---
 
 # Foxglove

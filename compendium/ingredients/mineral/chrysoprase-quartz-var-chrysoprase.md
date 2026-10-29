@@ -30,6 +30,9 @@ categories:
   - Peace
   - Sleep
   - Fertility
+  - Wealth
+  - Luck
+  - Joy
 references:
   - source: cunningham-crystals
     locator: p. 83
@@ -87,7 +90,7 @@ variants:
           - form
           - description
           - categories
-seedUpdate: 23bdfc3077fdceb6912d2ba1eef9884a6d45b2307b188854fad261c211e6779f
+seedUpdate: b37a61c5b250a06d8c2b39f131f2ac6bbcbe3d8d37186f5de6551b508e1c48e9
 ---
 
 # Chrysoprase

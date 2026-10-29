@@ -22,6 +22,9 @@ categories:
   - Prosperity
   - Psychic Work
   - Spirit Work
+  - Wealth
+  - Luck
+  - Negativity
 references:
   - source: kynes-plants
     locator: under "Lichen"

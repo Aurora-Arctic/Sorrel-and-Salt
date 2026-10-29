@@ -25,6 +25,7 @@ deities:
 categories:
   - Creativity
   - Divination
+  - Secrets
 references:
   - source: kynes-plants
     locator: under "Nightshade"
@@ -113,7 +114,7 @@ variants:
         supports:
           - form
           - colours
-seedUpdate: 5e7195f0611f0afdedb3aab3563c6569a5e49a3cf3dd9e576e91ca89782d4a0d
+seedUpdate: 4d4ed5705e4af0c1136f365a063cc33b043a5be050207caca3252d2818fd76b5
 ---
 
 # Black Nightshade

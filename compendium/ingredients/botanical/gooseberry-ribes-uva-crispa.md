@@ -32,6 +32,7 @@ categories:
   - Healing
   - Peace
   - Success
+  - Challenges
 references:
   - source: kynes-plants
     locator: under "Gooseberry"

@@ -18,6 +18,7 @@ categories:
   - Grounding
   - Cleansing
   - Courage
+  - Beauty
 references:
   - source: cunningham-crystals
     locator: pp. 103–105

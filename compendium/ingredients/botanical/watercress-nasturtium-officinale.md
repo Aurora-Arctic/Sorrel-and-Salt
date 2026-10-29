@@ -10,6 +10,9 @@ folkNames:
   - Fen Cress
   - Watergrass
   - Well Cress
+categories:
+  - Consecration
+  - Blessing
 references:
   - source: grieve-watercress
     nameBasis: stated
@@ -35,6 +38,7 @@ references:
       - elements
       - folkNames
       - description
+      - categories
   - source: wikipedia-nasturtium-officinale
     nameBasis: stated
     supports:

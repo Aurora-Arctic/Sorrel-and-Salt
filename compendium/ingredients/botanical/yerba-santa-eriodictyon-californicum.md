@@ -13,6 +13,7 @@ categories:
   - Healing
   - Psychic Work
   - Protection
+  - Beauty
 references:
   - source: cunningham-herbs
     locator: under "Yerba Santa"

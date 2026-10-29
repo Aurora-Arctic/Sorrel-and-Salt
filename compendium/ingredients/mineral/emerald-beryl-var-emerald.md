@@ -29,6 +29,8 @@ categories:
   - Healing
   - Clarity
   - Truth
+  - Wealth
+  - Banishing
 substitutes:
   - identity: beryl var. aquamarine
   - identity: beryl
@@ -84,7 +86,7 @@ variants:
         supports:
           - form
           - description
-seedUpdate: 530d65a0cedd6ca52a12b6f67124731ac0a1393e6cf40c8e4da695c62919094d
+seedUpdate: 0effa01693d1d260412075f2acdccf516dea7e1e51dedc0c44de50bbfc8dd190
 ---
 
 # Emerald

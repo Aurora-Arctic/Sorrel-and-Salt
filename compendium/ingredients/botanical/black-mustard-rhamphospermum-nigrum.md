@@ -18,6 +18,8 @@ categories:
   - Justice
   - Legal Matters
   - Prosperity
+  - Wealth
+  - Clarity
 references:
   - source: cunningham-herbs
     locator: under "Mustard, Black"; p. 266
@@ -105,7 +107,7 @@ variants:
         supports:
           - form
           - description
-seedUpdate: edfd9b6b6b6ce35b7b57041a97ed5e91353338d5c1286d6ed7af318571830a5e
+seedUpdate: 7b59492132a0b6d0123a7db2f6b2b5f6da82029d62cfd7ff27be008b1b0d49d7
 ---
 
 # Black Mustard

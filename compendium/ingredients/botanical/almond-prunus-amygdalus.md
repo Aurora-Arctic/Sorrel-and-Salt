@@ -41,6 +41,16 @@ categories:
   - Knowledge
   - Love
   - Protection
+  - Wealth
+  - Luck
+  - Spirituality
+  - Hope
+  - Joy
+  - Awareness
+  - Renewal
+  - Sex
+  - Sexuality
+  - Spirit Work
 references:
   - source: cunningham-herbs
     locator: under "Almond"
@@ -145,7 +155,7 @@ variants:
         supports:
           - form
           - description
-seedUpdate: 17bfe209c5d59804b2830c215a19c65fde74a1f01b8484dbdae15e9d0b23c0e7
+seedUpdate: 8da2ae2e339ce725a385ead372bdb3c141280d04dd3f42458558732fb4480e30
 ---
 
 # Almond

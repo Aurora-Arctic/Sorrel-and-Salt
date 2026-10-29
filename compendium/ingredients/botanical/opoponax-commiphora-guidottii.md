@@ -16,7 +16,17 @@ folkNames:
   - Perfumed Myrrh
   - Perfumed Bdellium
   - Perfumery's Opopanax
-categories: []
+categories:
+  - Spirituality
+  - Funeral Rites
+  - Consecration
+  - Blessing
+  - Focus
+  - Awareness
+  - Past-Life Work
+  - Negativity
+  - Hex-Breaking
+  - Spirit Work
 references:
   - source: wikipedia-opopanax-perfumery
     nameBasis: unaudited
@@ -34,6 +44,7 @@ references:
     nameBasis: unaudited
     supports:
       - description
+      - categories
   - source: wikipedia-incense
     nameBasis: unaudited
     supports:

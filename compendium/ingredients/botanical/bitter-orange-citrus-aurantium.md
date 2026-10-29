@@ -10,6 +10,11 @@ folkNames:
   - Marmalade Orange
   - Bigarade
   - Bigaradier
+categories:
+  - Wealth
+  - Focus
+  - Joy
+  - Spirit Work
 references:
   - source: kynes-plants
     locator: under "Orange"
@@ -18,6 +23,7 @@ references:
       - canonicalName
       - folkNames
       - description
+      - categories
   - source: ahpa-safety
     locator: pp. 220–221, 223; pp. xxii–xxiii
     nameBasis: unaudited
@@ -111,7 +117,7 @@ variants:
         supports:
           - form
           - description
-seedUpdate: 1a0890fbb19089df6c78a7c90101c0e2914b880066f3c128146c41163439e98e
+seedUpdate: aaa86c495ef751fc7a494e3f490e4d37f605be1c9d70e7c0f1da4c4b3ac9a0fe
 ---
 
 # Bitter Orange

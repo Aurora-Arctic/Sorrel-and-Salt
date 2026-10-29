@@ -34,6 +34,15 @@ categories:
   - Love
   - Prosperity
   - Purification
+  - Wealth
+  - Luck
+  - Spirituality
+  - Consecration
+  - Blessing
+  - Determination
+  - Relationships
+  - Negativity
+  - Growth
 references:
   - source: cunningham-herbs
     locator: under "Allspice"; p. 266
@@ -142,7 +151,7 @@ variants:
         supports:
           - form
           - description
-seedUpdate: 5f7291ec4ba80a1641aec72707ea5fb8a8e889d2abe94580a51a717796f4c699
+seedUpdate: 59ccb12030a4c6359604dcff6e19dca9c3ed794b025eb7bb539a20963bc72591
 ---
 
 # Allspice

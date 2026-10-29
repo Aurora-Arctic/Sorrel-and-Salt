@@ -44,6 +44,9 @@ categories:
   - Protection
   - Psychic Work
   - Truth
+  - Hope
+  - Joy
+  - Negativity
 references:
   - source: cunningham-herbs
     locator: under "Bachelor's Buttons"; p. 266

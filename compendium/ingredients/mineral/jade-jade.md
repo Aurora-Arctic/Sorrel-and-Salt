@@ -30,6 +30,8 @@ categories:
   - Harmony
   - Cleansing
   - Fertility
+  - Wealth
+  - Garden Magic
 references:
   - source: cunningham-crystals
     locator: under "Jade"; pp. 102–103

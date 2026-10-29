@@ -34,6 +34,12 @@ categories:
   - Success
   - Wisdom
   - Manifestation
+  - Wealth
+  - Luck
+  - Consecration
+  - Blessing
+  - Sex
+  - Sexuality
 references:
   - source: cunningham-herbs
     locator: under "Pear"; p. 266
@@ -101,6 +107,7 @@ variants:
         supports:
           - form
           - description
+seedUpdate: 4c83b880f214d86cd4b2220872f5eaae166baed580ba69ab7f217a31c38644d2
 ---
 
 # Pear

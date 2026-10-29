@@ -10,6 +10,10 @@ folkNames:
   - Rěn Dōng Téng
   - Er Hua
   - Shuang Hua
+categories:
+  - Wealth
+  - Psychic Work
+  - Protection
 references:
   - source: wikipedia-lonicera-japonica
     nameBasis: stated
@@ -19,6 +23,11 @@ references:
       - folkNames
       - safetyNotes
       - toxic
+  - source: cunningham-herbs
+    locator: under "Honeysuckle"
+    nameBasis: stated
+    supports:
+      - categories
 variants:
   - form: Whole
     references:
@@ -26,6 +35,7 @@ variants:
         nameBasis: stated
         supports:
           - form
+seedUpdate: c8d7176d3431aa81e818a52b95af22fd86c86f4081d95d08eebcdc7cdc9b71d8
 ---
 
 # Japanese Honeysuckle

@@ -52,6 +52,16 @@ categories:
   - Strength
   - Transformation
   - Ancestor Work
+  - Wealth
+  - Funeral Rites
+  - Consecration
+  - Blessing
+  - Focus
+  - Awareness
+  - Past-Life Work
+  - Grief Work
+  - Renewal
+  - Growth
 references:
   - source: cunningham-herbs
     locator: under "Cypress"; p. 266
@@ -116,6 +126,7 @@ variants:
         supports:
           - form
           - description
+seedUpdate: e27ba000a49dac89bce64f575934ddbd16027306866be11dcb6c0e7b2b9bff5b
 ---
 
 # Cypress

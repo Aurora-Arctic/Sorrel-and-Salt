@@ -29,6 +29,12 @@ categories:
   - Love
   - Fidelity
   - Peace
+  - Luck
+  - Grief Work
+  - Negativity
+  - Challenges
+  - Faerie Sight
+  - Spirit Work
 references:
   - source: cunningham-herbs
     locator: under "Bluebell"
@@ -99,6 +105,7 @@ variants:
         supports:
           - form
           - description
+seedUpdate: 29cc0c6d99a1b887ee7895108aa05212a2ea47d7ea34c154fc12561407ad694d
 ---
 
 # Harebell

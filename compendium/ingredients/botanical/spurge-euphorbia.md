@@ -21,6 +21,7 @@ folkNames:
   - Wart Weed
 categories:
   - Protection
+  - Hex-Breaking
 references:
   - source: kynes-plants
     locator: under "Spurge"

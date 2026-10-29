@@ -25,6 +25,12 @@ categories:
   - Peace
   - Release
   - Truth
+  - Funeral Rites
+  - Renewal
+  - Hex-Breaking
+  - Family
+  - Home Blessing
+  - Emotions
 references:
   - source: cunningham-herbs
     locator: under "Bittersweet"

@@ -39,6 +39,11 @@ categories:
   - Fidelity
   - Protection
   - Psychic Work
+  - Joy
+  - Awareness
+  - Relationships
+  - Secrets
+  - Spirit Work
 references:
   - source: cunningham-herbs
     locator: under "Lemon"; p. 266
@@ -194,7 +199,7 @@ variants:
         supports:
           - form
           - description
-seedUpdate: 910e79bbdbbbfa772463fdad06334d29a7fe9a60ca38c6aebcb1ff1fd12708fd
+seedUpdate: 9f688f7dd7d19168b340cf7ec8571972c206089999b37ac6a492a1066940b680
 ---
 
 # Lemon

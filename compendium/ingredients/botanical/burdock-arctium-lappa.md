@@ -34,6 +34,7 @@ categories:
   - Peace
   - Purification
   - Release
+  - Negativity
 references:
   - source: cunningham-herbs
     locator: under "Burdock"

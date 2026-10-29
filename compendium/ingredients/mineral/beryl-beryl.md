@@ -29,6 +29,7 @@ categories:
   - Reconciliation
   - Friendship
   - Courage
+  - Energy
 substitutes:
   - identity: beryl var. aquamarine
   - identity: beryl var. emerald
@@ -83,7 +84,7 @@ variants:
         supports:
           - form
           - description
-seedUpdate: 704fbfd909f7c7a658f450d7a8fa42e3ecf1d74496e568a89c33ee41664b3557
+seedUpdate: 136e154cf60c8d2778c6bf27607d2df670a81fd3824d6b43faf960f849555d54
 ---
 
 # Beryl

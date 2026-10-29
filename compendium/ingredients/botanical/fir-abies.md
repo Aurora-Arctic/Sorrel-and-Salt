@@ -38,6 +38,13 @@ categories:
   - Protection
   - Purification
   - Transformation
+  - Spirituality
+  - Funeral Rites
+  - Joy
+  - Awareness
+  - Renewal
+  - Hex-Breaking
+  - Spirit Work
 references:
   - source: kynes-plants
     locator: under "Fir"
@@ -79,7 +86,7 @@ variants:
         nameBasis: unaudited
         supports:
           - form
-seedUpdate: 1d743548887de631f9a257174aeb15a1e7c03861e73764a001ca90fa002ace2b
+seedUpdate: 2bf1da6ae9b1e4690c965be11dfc7f4611e593cfae579efbdcbfd2a8d7d79bf9
 ---
 
 # Fir

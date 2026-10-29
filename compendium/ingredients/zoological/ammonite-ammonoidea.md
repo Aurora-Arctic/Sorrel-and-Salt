@@ -15,6 +15,7 @@ categories:
   - Longevity
   - Healing
   - Warding
+  - Past-Life Work
 references:
   - source: cunningham-crystals
     locator: pp. 96–97
@@ -44,6 +45,7 @@ variants:
         nameBasis: unaudited
         supports:
           - form
+seedUpdate: 9a64c7ae06a8ae5a9eb2e3e2062430738b5e8bb3afb2a0592f89af5900d669e5
 ---
 
 # Ammonite

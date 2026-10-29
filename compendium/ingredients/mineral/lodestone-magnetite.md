@@ -28,6 +28,10 @@ categories:
   - Grounding
   - Meditation
   - Intuition
+  - Wealth
+  - Luck
+  - Sex
+  - Strength
 references:
   - source: cunningham-crystals
     locator: under "Lodestone"; pp. 161–166

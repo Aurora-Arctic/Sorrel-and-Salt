@@ -41,6 +41,7 @@ categories:
   - Protection
   - Psychic Work
   - Purification
+  - Spirituality
 references:
   - source: cunningham-herbs
     locator: under "Acacia"; under "Arabic, Gum"

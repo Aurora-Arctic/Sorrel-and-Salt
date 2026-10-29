@@ -26,6 +26,15 @@ categories:
   - Prophecy
   - Psychic Work
   - Wisdom
+  - Luck
+  - Spirituality
+  - Focus
+  - Joy
+  - Past-Life Work
+  - Negativity
+  - Hex-Breaking
+  - Spirit Work
+  - Banishing
 references:
   - source: cunningham-herbs
     locator: under "Lilac"; p. 266
@@ -89,7 +98,7 @@ variants:
         supports:
           - form
           - description
-seedUpdate: 0c92a1b66819aa0e1fdecf15fa568f1cef69ea4bede6ce28d513288d4de3e100
+seedUpdate: 3605ef8219bdc0fb82ea676160047fdbed0c97d6007e18e600c68d12af7bb406
 ---
 
 # Lilac

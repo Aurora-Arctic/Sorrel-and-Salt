@@ -39,6 +39,8 @@ categories:
   - Harmony
   - Creativity
   - Fertility
+  - Sex
+  - Sexuality
 references:
   - source: kynes-plants
     locator: under "Lords and Ladies"
@@ -110,7 +112,7 @@ variants:
         nameBasis: unaudited
         supports:
           - colours
-seedUpdate: eee835e4116ec7b6b5b2c8b84bb5b888cf203ebebb4ce3d84a293dd1cd11281e
+seedUpdate: 8b13e7836b7e023268ff2ec7c1351dddc0eb26f78d6997c4e94e96a76f82b4be
 ---
 
 # Lords and Ladies

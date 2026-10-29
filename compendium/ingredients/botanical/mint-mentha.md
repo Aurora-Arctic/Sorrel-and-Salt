@@ -15,6 +15,9 @@ categories:
   - Healing
   - Lust
   - Protection
+  - Wealth
+  - Safe Travel
+  - Banishing
 references:
   - source: cunningham-herbs
     locator: under "Mint"

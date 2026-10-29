@@ -45,6 +45,17 @@ categories:
   - Psychic Work
   - Success
   - Transformation
+  - Luck
+  - Spirituality
+  - Consecration
+  - Blessing
+  - Focus
+  - Joy
+  - Awareness
+  - Past-Life Work
+  - Negativity
+  - Growth
+  - Spirit Work
 substitutes:
   - name: Rosemary
 references:
@@ -121,6 +132,7 @@ variants:
         nameBasis: unaudited
         supports:
           - form
+seedUpdate: 07ad50f50e527ed223bcef948e8238032f02ca315ed425f504daae5e545a542b
 ---
 
 # Frankincense

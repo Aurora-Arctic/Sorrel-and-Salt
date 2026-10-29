@@ -36,6 +36,13 @@ categories:
   - Purification
   - Release
   - Truth
+  - Wealth
+  - Luck
+  - Focus
+  - Security
+  - Hex-Breaking
+  - Secrets
+  - Spirit Work
 references:
   - source: cunningham-herbs
     locator: under "Moonwort"
@@ -82,6 +89,7 @@ variants:
         resolvedBy: wikipedia-botrychium
         supports:
           - form
+seedUpdate: 0210fbac089024490bcec334e34159a8369295061585b6fc3580c95cea9cb1cd
 ---
 
 # Moonwort

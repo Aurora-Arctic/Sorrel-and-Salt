@@ -12,6 +12,7 @@ categories:
   - Healing
   - Protection
   - Purification
+  - Emotions
 references:
   - source: kynes-plants
     locator: under "Tea Tree"
@@ -65,6 +66,7 @@ variants:
           - toxic
           - safetyNotes
           - description
+seedUpdate: a58638cb8057ed6d871bffbd8f7210a6135669bb1788809418276ebfb64366ec
 ---
 
 # Tea Tree

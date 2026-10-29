@@ -45,6 +45,15 @@ categories:
   - Prosperity
   - Psychic Work
   - Truth
+  - Wealth
+  - Clarity
+  - Garden Magic
+  - Consecration
+  - Blessing
+  - Joy
+  - Sex
+  - Sexuality
+  - Growth
 references:
   - source: cunningham-herbs
     locator: under "Grape"; p. 266

@@ -26,6 +26,12 @@ categories:
   - Fidelity
   - Wisdom
   - Manifestation
+  - Luck
+  - Funeral Rites
+  - Joy
+  - Renewal
+  - Negativity
+  - Hex-Breaking
 references:
   - source: cunningham-herbs
     locator: under "Peach"; p. 266

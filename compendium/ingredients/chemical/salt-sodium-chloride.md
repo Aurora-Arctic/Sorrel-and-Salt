@@ -21,6 +21,7 @@ categories:
   - Grounding
   - Cleansing
   - Warding
+  - Wealth
 references:
   - source: cunningham-crystals
     locator: pp. 129–131
@@ -70,7 +71,7 @@ variants:
         nameBasis: unaudited
         supports:
           - form
-seedUpdate: 39464958261abd2e89cd29bb20dece8a3e4b2dc5ad24cde2414a672ab3423ce8
+seedUpdate: 58d32bd595ab680e5397e6e93569011916a6f56da3a574e8b7c72124489ede93
 ---
 
 # Salt

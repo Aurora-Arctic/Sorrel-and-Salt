@@ -34,6 +34,10 @@ categories:
   - Knowledge
   - Peace
   - Spirit Work
+  - Wealth
+  - Security
+  - Awareness
+  - Hex-Breaking
 references:
   - source: cunningham-herbs
     locator: under "Periwinkle"; p. 266

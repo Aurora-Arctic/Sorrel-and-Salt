@@ -38,6 +38,8 @@ categories:
   - Divination
   - Longevity
   - Success
+  - Invisibility
+  - Garden Magic
 references:
   - source: cunningham-crystals
     locator: pp. 78–79

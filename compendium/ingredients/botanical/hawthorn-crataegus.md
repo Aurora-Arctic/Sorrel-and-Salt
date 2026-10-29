@@ -54,6 +54,20 @@ categories:
   - Protection
   - Purification
   - Wisdom
+  - Wealth
+  - Luck
+  - Consecration
+  - Blessing
+  - Hope
+  - Joy
+  - Relationships
+  - Negativity
+  - Sex
+  - Sexuality
+  - Challenges
+  - Growth
+  - Faerie Sight
+  - Chastity
 references:
   - source: cunningham-herbs
     locator: under "Hawthorn"; p. 266
@@ -161,6 +175,7 @@ variants:
         nameBasis: stated
         supports:
           - form
+seedUpdate: efe0221737aa43a8abfcd534ecd42bbb554a02fa947ce6c2500d20c66bf13ac2
 ---
 
 # Hawthorn

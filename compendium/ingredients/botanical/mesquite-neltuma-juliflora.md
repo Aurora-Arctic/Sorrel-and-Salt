@@ -32,6 +32,7 @@ categories:
   - Protection
   - Purification
   - Success
+  - Determination
 references:
   - source: cunningham-herbs
     locator: under "Mesquite"; p. 266
@@ -99,7 +100,7 @@ variants:
           - description
           - safetyNotes
           - toxic
-seedUpdate: dde3a2cfbed23bb448848d77bedc8da6daa0c655ff48a8f18b030e77d039d6a7
+seedUpdate: 5402a2c484b764b809c6738f0ce04270179a01164f1dea172770df150dcacfd3
 ---
 
 # Mesquite

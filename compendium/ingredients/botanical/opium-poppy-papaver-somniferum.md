@@ -39,6 +39,13 @@ categories:
   - Dream Work
   - Protection
   - Wisdom
+  - Wealth
+  - Luck
+  - Invisibility
+  - Funeral Rites
+  - Renewal
+  - Relationships
+  - Challenges
 references:
   - source: cunningham-herbs
     locator: under "Poppy"; p. 266

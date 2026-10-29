@@ -23,6 +23,7 @@ categories:
   - Intuition
   - Creativity
   - Healing
+  - Luck
 references:
   - source: wikipedia-pyrite
     nameBasis: stated

@@ -25,6 +25,11 @@ categories:
   - Harmony
   - Creativity
   - Healing
+  - Focus
+  - Relationships
+  - Family
+  - Home Blessing
+  - Emotions
 references:
   - source: cunningham-herbs
     locator: under "Scullcap"; p. 266
@@ -82,7 +87,7 @@ variants:
         supports:
           - form
           - description
-seedUpdate: ae8cbf647801aa1b033a8969628e87e86b1d248b4c948da765e79da57788971b
+seedUpdate: 8b2312fcc25e279ee70be28f962f5165e1fdf1ca5c02ef10eedc76e4895f4183
 ---
 
 # Skullcap

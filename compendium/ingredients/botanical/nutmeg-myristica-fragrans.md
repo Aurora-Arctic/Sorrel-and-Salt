@@ -27,6 +27,12 @@ categories:
   - Love
   - Fidelity
   - Prosperity
+  - Wealth
+  - Luck
+  - Focus
+  - Awareness
+  - Hex-Breaking
+  - Transformation
 references:
   - source: cunningham-herbs
     locator: under "Nutmeg"; p. 266
@@ -92,6 +98,7 @@ variants:
         supports:
           - form
           - description
+seedUpdate: 6fc4de76eab9927f963d29a9cb10aae64e65b0fa6068b2cec440dec4c0c1921d
 ---
 
 # Nutmeg

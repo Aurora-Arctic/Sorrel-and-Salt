@@ -23,6 +23,7 @@ categories:
   - Protection
   - Healing
   - Purification
+  - Luck
 references:
   - source: cunningham-herbs
     locator: under "Ti"

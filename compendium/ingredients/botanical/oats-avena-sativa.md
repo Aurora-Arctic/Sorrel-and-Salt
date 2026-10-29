@@ -12,6 +12,15 @@ folkNames:
   - Joulaf
 categories:
   - Prosperity
+  - Wealth
+  - Luck
+  - Funeral Rites
+  - Consecration
+  - Blessing
+  - Hope
+  - Trust
+  - Renewal
+  - Hex-Breaking
 references:
   - source: cunningham-herbs
     locator: under "Oats"
@@ -29,6 +38,7 @@ references:
     nameBasis: unresolved
     supports:
       - description
+      - categories
   - source: wikipedia-avena-sativa
     nameBasis: stated
     supports:

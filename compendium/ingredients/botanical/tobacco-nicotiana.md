@@ -22,6 +22,7 @@ categories:
   - Healing
   - Purification
   - Release
+  - Spirit Work
 references:
   - source: cunningham-herbs
     locator: under "Nicotiana spp."; p. 266

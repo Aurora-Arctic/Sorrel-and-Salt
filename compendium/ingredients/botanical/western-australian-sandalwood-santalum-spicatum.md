@@ -9,6 +9,26 @@ folkNames:
   - Uilarac
   - Wolgol
   - Wollgat
+categories:
+  - Awareness
+  - Harmony
+  - Banishing
+  - Clarity
+  - Consecration
+  - Blessing
+  - Healing
+  - Hex-Breaking
+  - Manifestation
+  - Past-Life Work
+  - Peace
+  - Protection
+  - Purification
+  - Sex
+  - Sexuality
+  - Spirit Work
+  - Spirituality
+  - Truth
+  - Wisdom
 references:
   - source: wikipedia-santalum-spicatum
     nameBasis: stated
@@ -17,6 +37,11 @@ references:
       - nomenclature
       - description
       - folkNames
+  - source: kynes-plants
+    locator: under "Sandalwood"
+    nameBasis: stated
+    supports:
+      - categories
 variants:
   - form: Wood
     description: Exported from the 1840s to China for incense, and distilled for oil.
@@ -42,6 +67,7 @@ variants:
         supports:
           - form
           - description
+seedUpdate: 364f0b2bafaa669814087e1d7d692217df9d4a0c41d2aee6f52c105e800d0f0b
 ---
 
 # Western Australian Sandalwood

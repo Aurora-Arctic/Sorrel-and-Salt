@@ -30,6 +30,14 @@ categories:
   - Manifestation
   - Protection
   - Psychic Work
+  - Luck
+  - Joy
+  - Negativity
+  - Hex-Breaking
+  - Challenges
+  - Faerie Sight
+  - Spirit Work
+  - Banishing
 references:
   - source: cunningham-herbs
     locator: under "Witch Grass"; p. 266
@@ -84,7 +92,7 @@ variants:
         supports:
           - form
           - colours
-seedUpdate: 80947f83d13dba11cfe72058ac7a9c85d60c38a24fc294edc3ad1962bb23725b
+seedUpdate: a38a309bff317dd1ad2f86b21bbc6b1c43495b2bfbeac168056618849114a1db
 ---
 
 # Couch Grass

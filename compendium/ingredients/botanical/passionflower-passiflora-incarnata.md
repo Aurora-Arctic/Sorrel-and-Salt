@@ -21,6 +21,9 @@ categories:
   - Confidence
   - Dream Work
   - Purification
+  - Spirituality
+  - Relationships
+  - Emotions
 references:
   - source: cunningham-herbs
     locator: under "Passion Flower"

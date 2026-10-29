@@ -33,6 +33,13 @@ categories:
   - Fertility
   - Psychic Work
   - Strength
+  - Focus
+  - Security
+  - Renewal
+  - Family
+  - Home Blessing
+  - Transformation
+  - Spirit Work
 references:
   - source: cunningham-herbs
     locator: under "Fennel"; p. 266
@@ -159,7 +166,7 @@ variants:
         nameBasis: stated
         supports:
           - description
-seedUpdate: 18fc76459820e1601e1b710033642d58df7520d979e9a99e5671febf2094649c
+seedUpdate: dad5b7f98dccd5596baa0571512b6a9d15ac4868659aa63071cddba045c8df96
 ---
 
 # Fennel

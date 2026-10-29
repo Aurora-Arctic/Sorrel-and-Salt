@@ -44,6 +44,12 @@ categories:
   - Protection
   - Success
   - Transformation
+  - Luck
+  - Spirituality
+  - Negativity
+  - Sex
+  - Sexuality
+  - Challenges
 references:
   - source: cunningham-herbs
     locator: under "Palm, Date"; p. 266
@@ -137,7 +143,7 @@ variants:
         supports:
           - form
           - description
-seedUpdate: 53ba66b8a5a36337d8168771609abe2c66d1eab76209ed2685e751ef83c47acd
+seedUpdate: 7b1e883358125d66ca2f740ebd3f5c061eee89fed409a876fa16d23b7109764f
 ---
 
 # Date Palm

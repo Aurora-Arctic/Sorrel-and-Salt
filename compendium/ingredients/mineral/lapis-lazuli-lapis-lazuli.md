@@ -26,6 +26,7 @@ categories:
   - Friendship
   - Dream Work
   - Truth
+  - Joy
 references:
   - source: cunningham-crystals
     locator: under "Lapis Lazuli"; pp. 107–109

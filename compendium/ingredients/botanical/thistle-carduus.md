@@ -28,6 +28,13 @@ categories:
   - Courage
   - Release
   - Truth
+  - Manifestation
+  - Trust
+  - Determination
+  - Negativity
+  - Challenges
+  - Spirit Work
+  - Nightmare Protection
 references:
   - source: cunningham-herbs
     locator: under "Carduus spp."

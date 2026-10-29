@@ -22,6 +22,11 @@ categories:
   - Lust
   - Protection
   - Strength
+  - Luck
+  - Negativity
+  - Sex
+  - Sexuality
+  - Challenges
 references:
   - source: cunningham-herbs
     locator: under "Chili Pepper"

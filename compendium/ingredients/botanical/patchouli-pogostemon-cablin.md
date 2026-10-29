@@ -40,6 +40,16 @@ categories:
   - Manifestation
   - Purification
   - Spirit Work
+  - Wealth
+  - Spirituality
+  - Consecration
+  - Blessing
+  - Protection
+  - Negativity
+  - Sex
+  - Sexuality
+  - Growth
+  - Skill
 references:
   - source: cunningham-herbs
     locator: under "Patchouly"
@@ -109,6 +119,7 @@ variants:
         supports:
           - form
           - description
+seedUpdate: f6d9d1f46d8475466a9d7f003fdbd3d3c483c1d59c3805576c35c060a36e9ae4
 ---
 
 # Patchouli

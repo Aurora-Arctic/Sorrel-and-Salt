@@ -34,6 +34,17 @@ categories:
   - Love
   - Prophecy
   - Psychic Work
+  - Youth
+  - Consecration
+  - Blessing
+  - Awareness
+  - Negativity
+  - Hex-Breaking
+  - Sex
+  - Sexuality
+  - Emotions
+  - Spirit Work
+  - Nightmare Protection
 references:
   - source: cunningham-herbs
     locator: under "Anise"; p. 266
@@ -164,7 +175,7 @@ variants:
         nameBasis: unaudited
         supports:
           - safetyNotes
-seedUpdate: 2fcf53e2ec76332c38b049f2ed526800ef38975434a706b177df42f4fff66712
+seedUpdate: 9ddfba90cf0b0ee465d972972ea94683f3446b96b72e475af376910c1a4a9234
 ---
 
 # Anise

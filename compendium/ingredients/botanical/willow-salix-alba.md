@@ -31,6 +31,12 @@ categories:
   - Love
   - Protection
   - Healing
+  - Funeral Rites
+  - Sex
+  - Sexuality
+  - Adaptability
+  - Spirit Work
+  - Divination
 references:
   - source: cunningham-herbs
     locator: under "Willow"
@@ -59,6 +65,7 @@ references:
       - nomenclature
       - folkNames
       - description
+      - categories
   - source: ahpa-safety
     locator: p. 765
     nameBasis: unresolved

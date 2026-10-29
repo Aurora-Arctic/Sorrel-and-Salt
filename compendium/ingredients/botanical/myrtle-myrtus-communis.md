@@ -38,6 +38,16 @@ categories:
   - Fidelity
   - Protection
   - Purification
+  - Wealth
+  - Youth
+  - Luck
+  - Funeral Rites
+  - Sex
+  - Sexuality
+  - Family
+  - Home Blessing
+  - Emotions
+  - Leadership
 references:
   - source: cunningham-herbs
     locator: under "Myrtle"; p. 266
@@ -102,6 +112,7 @@ variants:
         supports:
           - form
           - description
+seedUpdate: 69ca4813d840f604a8a1d1d5df13d72c126c2703c8087d3b31d67cae01b0168a
 ---
 
 # Myrtle

@@ -40,6 +40,7 @@ deities:
 categories:
   - Creativity
   - Divination
+  - Secrets
 references:
   - source: cunningham-herbs
     locator: under "Belladonna"; "How to Read the Entries"
@@ -116,7 +117,7 @@ variants:
           - description
           - safetyNotes
           - toxic
-seedUpdate: 515b151ee14f938a36b26c38f9c25ce86c7dc06fbdb053ca0506f47b21a77f31
+seedUpdate: 0d490e72172619b3376272254e0236e7d933d4518299af9700b3adb436c1cadd
 ---
 
 # Belladonna

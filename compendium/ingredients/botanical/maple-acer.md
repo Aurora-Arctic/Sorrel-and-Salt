@@ -33,6 +33,8 @@ categories:
   - Prosperity
   - Release
   - Transformation
+  - Wealth
+  - Grief Work
 references:
   - source: cunningham-herbs
     locator: under "Maple"; p. 266
@@ -135,7 +137,7 @@ variants:
         resolvedBy: wikipedia-maple
         supports:
           - form
-seedUpdate: 48e02f9e15188433cb27146bd5a6a9a54dc632b0078797cf88ff2314443b6a45
+seedUpdate: c46334d022ea709afba7e3b9505f072517025841ab41e01d3835c9c8ff3c746a
 ---
 
 # Maple

@@ -18,6 +18,10 @@ categories:
   - Prosperity
   - Protection
   - Strength
+  - Wealth
+  - Security
+  - Renewal
+  - Transformation
 references:
   - source: cunningham-herbs
     locator: under "Hickory"; p. 266
@@ -85,6 +89,7 @@ variants:
         supports:
           - form
           - description
+seedUpdate: 44a98cfc250ebf6473924fec9e06f941499de6757880a5e1836fbe0e91d6b29d
 ---
 
 # Hickory

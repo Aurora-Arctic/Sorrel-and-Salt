@@ -40,6 +40,12 @@ categories:
   - Psychic Work
   - Purification
   - Release
+  - Luck
+  - Security
+  - Negativity
+  - Hex-Breaking
+  - Sex
+  - Sexuality
 references:
   - source: cunningham-herbs
     locator: under "Nettle"
@@ -93,7 +99,7 @@ variants:
           - form
           - safetyNotes
           - description
-seedUpdate: 7330501ce20643f6882772cdf22accc366ad4b86d514ab4d450bd458f10d46a4
+seedUpdate: ccd1a381562a9a45f8d1d9cc08d07b3cfe85eddcb9ea1e217939a5379db6bf2e
 ---
 
 # Stinging Nettle

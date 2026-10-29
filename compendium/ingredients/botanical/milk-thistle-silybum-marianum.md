@@ -18,6 +18,16 @@ folkNames:
   - Variegated Thistle
   - Scotch Thistle
   - Dappled Thistle
+categories:
+  - Protection
+  - Manifestation
+  - Trust
+  - Determination
+  - Negativity
+  - Hex-Breaking
+  - Challenges
+  - Spirit Work
+  - Nightmare Protection
 references:
   - source: cunningham-herbs
     locator: under "Thistle, Milk"; p. 266
@@ -35,6 +45,7 @@ references:
       - canonicalName
       - folkNames
       - description
+      - categories
   - source: ahpa-safety
     locator: pp. 815–816; p. xxii
     nameBasis: unaudited
@@ -77,7 +88,7 @@ variants:
           - form
           - description
           - colours
-seedUpdate: 624edef31624a09f02eda21be540d493a136d60325369bb9726f6bd02ba471a0
+seedUpdate: 6fce9db6cf334f8de9ec662403183044308f8697c3148d74c633ccd9f016d241
 ---
 
 # Milk Thistle

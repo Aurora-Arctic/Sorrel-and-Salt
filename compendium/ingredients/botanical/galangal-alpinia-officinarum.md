@@ -41,6 +41,17 @@ categories:
   - Legal Matters
   - Prosperity
   - Success
+  - Wealth
+  - Healing
+  - Luck
+  - Consecration
+  - Blessing
+  - Awareness
+  - Negativity
+  - Sex
+  - Sexuality
+  - Challenges
+  - Secrets
 substitutes:
   - identity: zingiber officinale
 references:
@@ -112,7 +123,7 @@ variants:
         nameBasis: unaudited
         supports:
           - form
-seedUpdate: c145144832c2a07f147916f4e8d8d13962cb70ef72f4456077d01a32b074d290
+seedUpdate: ed04681117a0f60378e4c82e6b4d352466e6cc390e0c5484404fcbc55b93fd63
 ---
 
 # Galangal

@@ -46,6 +46,16 @@ categories:
   - Manifestation
   - Release
   - Transformation
+  - Spirituality
+  - Funeral Rites
+  - Consecration
+  - Blessing
+  - Focus
+  - Awareness
+  - Past-Life Work
+  - Negativity
+  - Hex-Breaking
+  - Spirit Work
 references:
   - source: cunningham-herbs
     locator: under "Myrrh"

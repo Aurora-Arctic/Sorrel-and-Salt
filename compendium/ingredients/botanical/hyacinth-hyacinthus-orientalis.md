@@ -29,6 +29,12 @@ categories:
   - Love
   - Peace
   - Protection
+  - Luck
+  - Joy
+  - Grief Work
+  - Negativity
+  - Emotions
+  - Nightmare Protection
 references:
   - source: cunningham-herbs
     locator: under "Hyacinth"
@@ -89,7 +95,7 @@ variants:
         supports:
           - form
           - description
-seedUpdate: d373b3e9b9844d79a54b1da75e4a108cc1b6f92f0c1392e332e3155f7a3457d3
+seedUpdate: 211a5c304d377857da9efe7f7293c5d9cf20ad79247e06ba75c1bdd51dcb8e95
 ---
 
 # Hyacinth

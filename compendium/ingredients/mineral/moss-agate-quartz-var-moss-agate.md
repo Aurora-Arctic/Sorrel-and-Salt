@@ -25,6 +25,7 @@ categories:
   - Communication
   - Intuition
   - Release
+  - Garden Magic
 references:
   - source: cunningham-crystals
     locator: pp. 66, 68

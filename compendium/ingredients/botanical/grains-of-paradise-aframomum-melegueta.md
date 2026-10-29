@@ -16,6 +16,9 @@ folkNames:
 categories:
   - Lust
   - Love
+  - Wealth
+  - Luck
+  - Manifestation
 references:
   - source: cunningham-herbs
     locator: under "Grains of Paradise"; p. 266
@@ -57,6 +60,7 @@ variants:
         resolvedBy: wikipedia-grains-of-paradise
         supports:
           - form
+seedUpdate: 0473e106b921464bd3abbf5b7668f583cc71a410f662ad6c679c97277651edd1
 ---
 
 # Grains of Paradise

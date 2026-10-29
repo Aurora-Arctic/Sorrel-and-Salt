@@ -22,6 +22,10 @@ folkNames:
 categories:
   - Prosperity
   - Psychic Work
+  - Wealth
+  - Luck
+  - Negativity
+  - Spirit Work
 references:
   - source: wikipedia-usnea
     nameBasis: stated
@@ -60,7 +64,7 @@ variants:
         nameBasis: unaudited
         supports:
           - form
-seedUpdate: 324c14367b22553681725e0ba1ff478833cc5c76963cfa6e9c73be9949092349
+seedUpdate: 4334f62179eecb1936dfea0dc55af6ac0ff099ab5481b61940363905e903b203
 ---
 
 # Beard Lichen

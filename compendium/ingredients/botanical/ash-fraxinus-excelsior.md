@@ -58,6 +58,14 @@ categories:
   - Prophecy
   - Strength
   - Wisdom
+  - Wealth
+  - Luck
+  - Focus
+  - Awareness
+  - Negativity
+  - Hex-Breaking
+  - Transformation
+  - Faerie Sight
 references:
   - source: cunningham-herbs
     locator: under "Ash"
@@ -176,7 +184,7 @@ variants:
         supports:
           - form
           - description
-seedUpdate: e63b1f0cf90e383c6aa60a4f8a93c8de351fb67df1b8afba4f66c3fb7f79da27
+seedUpdate: 73d961fe0019ea965e31dba21974b3eadb84cd31340f7c9da3602b3318d9cc55
 ---
 
 # Ash

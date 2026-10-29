@@ -26,6 +26,12 @@ categories:
   - Love
   - Protection
   - Harmony
+  - Luck
+  - Manifestation
+  - Determination
+  - Grief Work
+  - Relationships
+  - Emotions
 references:
   - source: kynes-plants
     locator: under "Anemone"

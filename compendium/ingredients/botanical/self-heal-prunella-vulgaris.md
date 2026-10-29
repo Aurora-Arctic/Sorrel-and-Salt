@@ -28,6 +28,9 @@ categories:
   - Healing
   - Peace
   - Release
+  - Spirituality
+  - Hope
+  - Growth
 references:
   - source: kynes-plants
     locator: under "Self Heal"
@@ -79,7 +82,7 @@ variants:
         nameBasis: stated
         supports:
           - form
-seedUpdate: 3ad60d3ad333d83087a662f5876e95f960b1e1c74723f0856bfb082c51f6cc8f
+seedUpdate: 02dd8e4c5dafdfcd638d7165d9443f753f2e280e565efaee2dd30443e403a247
 ---
 
 # Self-Heal

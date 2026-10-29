@@ -37,6 +37,14 @@ categories:
   - Peace
   - Prosperity
   - Truth
+  - Wealth
+  - Consecration
+  - Blessing
+  - Challenges
+  - Family
+  - Home Blessing
+  - Secrets
+  - Spirit Work
 references:
   - source: cunningham-herbs
     locator: under "Valerian"

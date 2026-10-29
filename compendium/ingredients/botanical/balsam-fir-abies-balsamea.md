@@ -2,6 +2,23 @@
 status: approved
 nomenclature: botanical
 canonicalName: Abies balsamea
+categories:
+  - Awareness
+  - Transformation
+  - Communication
+  - Creativity
+  - Funeral Rites
+  - Divination
+  - Joy
+  - Healing
+  - Hex-Breaking
+  - Inspiration
+  - Peace
+  - Protection
+  - Purification
+  - Renewal
+  - Spirit Work
+  - Spirituality
 references:
   - source: wikipedia-abies-balsamea
     nameBasis: stated
@@ -9,6 +26,11 @@ references:
       - canonicalName
       - nomenclature
       - description
+  - source: kynes-plants
+    locator: under "Fir"
+    nameBasis: stated
+    supports:
+      - categories
 variants:
   - form: Resin
     description: The resin is made into Canada balsam. It was traditionally a cold remedy and a glue for lenses and microscope mounts.
@@ -26,6 +48,7 @@ variants:
         supports:
           - form
           - description
+seedUpdate: 2e72914c485fdf2b1840e3f476307ec9ef893dfa46b562ce53490d791c67d734
 ---
 
 # Balsam Fir

@@ -34,6 +34,14 @@ categories:
   - Peace
   - Strength
   - Success
+  - Spirituality
+  - Consecration
+  - Blessing
+  - Renewal
+  - Negativity
+  - Hex-Breaking
+  - Growth
+  - Prophecy
 substitutes:
   - name: American Angelica
 references:
@@ -124,6 +132,7 @@ variants:
         supports:
           - form
           - description
+seedUpdate: 7688f7c72d5a853da9c3de32f6c17c7589ffd24f7cd18a5ddd6692e2f06b1559
 ---
 
 # Angelica

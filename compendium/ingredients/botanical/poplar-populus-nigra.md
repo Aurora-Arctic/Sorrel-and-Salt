@@ -30,6 +30,11 @@ categories:
   - Prophecy
   - Prosperity
   - Spirit Work
+  - Wealth
+  - Spirituality
+  - Funeral Rites
+  - Past-Life Work
+  - Grief Work
 references:
   - source: kynes-plants
     locator: under "Poplar"

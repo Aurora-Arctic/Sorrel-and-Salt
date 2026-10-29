@@ -35,6 +35,14 @@ categories:
   - Prosperity
   - Purification
   - Lust
+  - Wealth
+  - Trust
+  - Negativity
+  - Hex-Breaking
+  - Sex
+  - Sexuality
+  - Challenges
+  - Family
 references:
   - source: cunningham-herbs
     locator: under "Pennyroyal"
@@ -125,6 +133,7 @@ variants:
           - toxic
           - safetyNotes
           - description
+seedUpdate: 76340142cab21824856736b192463e9435c15bf383a74cc21e302aaa06d161c8
 ---
 
 # Pennyroyal

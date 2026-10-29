@@ -55,6 +55,16 @@ categories:
   - Success
   - Wisdom
   - Abundance
+  - Wealth
+  - Luck
+  - Sex
+  - Consecration
+  - Blessing
+  - Awareness
+  - Determination
+  - Sexuality
+  - Leadership
+  - Spirit Work
 references:
   - source: cunningham-herbs
     locator: under "Oak"; p. 266

@@ -58,6 +58,20 @@ categories:
   - Strength
   - Success
   - Wisdom
+  - Wealth
+  - Luck
+  - Funeral Rites
+  - Consecration
+  - Blessing
+  - Joy
+  - Security
+  - Renewal
+  - Relationships
+  - Sex
+  - Sexuality
+  - Spirit Work
+  - Garden Magic
+  - Longevity
 references:
   - source: cunningham-herbs
     locator: under "Apple"
@@ -174,7 +188,7 @@ variants:
         supports:
           - form
           - description
-seedUpdate: 91f0d0df4c143190610d7cf541149d253a54e4d72d81db7eaaae459f273eb646
+seedUpdate: e43d00eca81873095f0145d58ab265fc5ffb06adc9d8ad25aa75990735b12507
 ---
 
 # Apple

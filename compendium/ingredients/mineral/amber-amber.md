@@ -35,6 +35,8 @@ categories:
   - Peace
   - Creativity
   - Wisdom
+  - Luck
+  - Beauty
 references:
   - source: cunningham-crystals
     locator: under "Amber"; pp. 69–71
@@ -119,6 +121,7 @@ variants:
           - form
           - description
           - categories
+seedUpdate: 7c79efacc52147855074dc950c34e224c57e3a6d1a0ae262066eb1ec8f4560b0
 ---
 
 # Amber

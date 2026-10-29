@@ -28,6 +28,14 @@ categories:
   - Creativity
   - Psychic Work
   - Purification
+  - Focus
+  - Security
+  - Relationships
+  - Sex
+  - Sexuality
+  - Emotions
+  - Growth
+  - Healing
 references:
   - source: cunningham-herbs
     locator: under "Geranium"; p. 266
@@ -98,7 +106,7 @@ variants:
         supports:
           - form
           - description
-seedUpdate: 9153998a20c86447abc19213feae1ac3ad8b2b3ba78e9140dfed02301f754bea
+seedUpdate: b2df35b4861e9ab9fc73e112d910985dfb0a8e43546f36547cf95d854a373f20
 ---
 
 # Geranium

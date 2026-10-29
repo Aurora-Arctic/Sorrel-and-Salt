@@ -10,6 +10,7 @@ deities:
   - Cardea
 categories:
   - Protection
+  - Banishing
 references:
   - source: cunningham-herbs
     locator: under "Arbutus"

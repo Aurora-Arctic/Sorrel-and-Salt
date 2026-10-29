@@ -15,6 +15,7 @@ folkNames:
   - Qadb
 categories:
   - Prosperity
+  - Wealth
 references:
   - source: cunningham-herbs
     locator: under "Alfalfa"; p. 266
@@ -85,7 +86,7 @@ variants:
         supports:
           - form
           - description
-seedUpdate: a6f93f78ef4348e57065f9b8bdaa896197a198cb66646699420afde534c4a712
+seedUpdate: 235bc17216e82e3ec28ff8036a097dd0ac58e5a5d3b54f95e4ed8b5752daf293
 ---
 
 # Alfalfa

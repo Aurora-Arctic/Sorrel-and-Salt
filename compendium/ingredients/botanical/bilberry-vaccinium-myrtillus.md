@@ -44,6 +44,10 @@ categories:
   - Prophecy
   - Prosperity
   - Success
+  - Wealth
+  - Luck
+  - Family
+  - Home Blessing
 references:
   - source: cunningham-herbs
     locator: under "Huckleberry"
@@ -148,7 +152,7 @@ variants:
         supports:
           - form
           - safetyNotes
-seedUpdate: 4d4ab09606e0e065191866d646d0ac26acf2c00a147ab2751358b79bf649d128
+seedUpdate: 870b1b287d2f6422f3d0d9633b40c663ccc80224bcec2598fc04cd3dca02d8fe
 ---
 
 # Bilberry

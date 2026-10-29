@@ -40,6 +40,14 @@ categories:
   - Peace
   - Protection
   - Success
+  - Luck
+  - Spirituality
+  - Consecration
+  - Blessing
+  - Joy
+  - Challenges
+  - Emotions
+  - Skill
 references:
   - source: cunningham-herbs
     locator: under "Lily of the Valley"
@@ -55,6 +63,7 @@ references:
       - description
       - safetyNotes
       - toxic
+      - categories
   - source: kynes-plants
     locator: under "Lily of the Valley"
     nameBasis: resolved
@@ -119,7 +128,7 @@ variants:
         supports:
           - description
           - colours
-seedUpdate: 03fc74880fd2dd511f2331c57ea90a983ed4a7d8ac84d0cea92eb0d93b64f887
+seedUpdate: ba1dc23c5a7a6c75f903f7f7dab9cec903e62bf97b28ff9078be1b1973e24d1f
 ---
 
 # Lily of the Valley

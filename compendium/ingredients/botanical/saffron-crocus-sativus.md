@@ -41,6 +41,14 @@ categories:
   - Manifestation
   - Peace
   - Protection
+  - Joy
+  - Relationships
+  - Sex
+  - Sexuality
+  - Family
+  - Home Blessing
+  - Emotions
+  - Nightmare Protection
 references:
   - source: cunningham-herbs
     locator: under "Saffron"; p. 266

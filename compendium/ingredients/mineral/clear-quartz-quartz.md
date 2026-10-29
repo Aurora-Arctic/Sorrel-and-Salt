@@ -28,6 +28,7 @@ categories:
   - Meditation
   - Cleansing
   - Memory
+  - Strength
 substitutes:
   - identity: diamond
 references:
@@ -82,7 +83,7 @@ variants:
         supports:
           - form
           - description
-seedUpdate: 42e654e91d4bb7160433454a14a09eeecf93ad77460ad6a7510ca3abc07a0701
+seedUpdate: 37168b782b4c7ad315f1c5fc243677ec131738f6e5b5fc4a804d9b8e2626fb6f
 ---
 
 # Clear Quartz

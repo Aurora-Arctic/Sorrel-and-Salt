@@ -39,6 +39,12 @@ categories:
   - Prophecy
   - Protection
   - Psychic Work
+  - Luck
+  - Funeral Rites
+  - Awareness
+  - Renewal
+  - Secrets
+  - Spirit Work
 references:
   - source: cunningham-herbs
     locator: under "Agaric"
@@ -105,7 +111,7 @@ variants:
         nameBasis: stated
         supports:
           - form
-seedUpdate: 675661f086d23d1341ce5860522e7bfe3dba1823bd6a052e5a89a24782c575d6
+seedUpdate: 8c1e8dfd8d3fc543d3156ed34932ebd1ef0b2a618107874903ab576af7c146c8
 ---
 
 # Fly Agaric

@@ -9,6 +9,14 @@ folkNames:
   - Fairy Boots
   - Fairy Feet
   - White Dead-Nettle
+categories:
+  - Luck
+  - Determination
+  - Relationships
+  - Challenges
+  - Family
+  - Home Blessing
+  - Secrets
 references:
   - source: kynes-plants
     locator: under "Deadnettle"
@@ -18,6 +26,7 @@ references:
       - nomenclature
       - folkNames
       - description
+      - categories
   - source: wikipedia-lamium-album
     nameBasis: stated
     supports:

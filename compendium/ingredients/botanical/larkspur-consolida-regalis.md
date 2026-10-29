@@ -26,6 +26,11 @@ categories:
   - Fidelity
   - Psychic Work
   - Wisdom
+  - Awareness
+  - Negativity
+  - Leadership
+  - Spirit Work
+  - Healing
 references:
   - source: cunningham-herbs
     locator: under "Larkspur"; p. 266
@@ -95,7 +100,7 @@ variants:
         supports:
           - description
           - safetyNotes
-seedUpdate: 192a6731ee0a7c4d6f91b48e1394cb627d340ef3441c1e7b208d601ba906e4a7
+seedUpdate: 7b4e0e45509a4e917b383bd586ecf20b700f04ab7b3157161737e78a7944290b
 ---
 
 # Larkspur

@@ -1,7 +1,7 @@
 ## The category seed (M4.3)
 
 `src/db/seed/categories.ts` seeds DESIGN.md §6: eight `category_groups` rows,
-then the 63 `categories` that point at them. **It is not a scenario.**
+then the 101 `categories` that point at them. **It is not a scenario.**
 `minimal` leaves the compendium empty by definition and M1.22's `standard`
 consumes what this writes, which is why §6's seed lands a task ahead of it.
 `npm run db:seed:categories` runs it; that is `scripts/db-seed.ts` with a

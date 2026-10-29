@@ -10,6 +10,7 @@ folkNames:
 categories:
   - Prosperity
   - Spirit Work
+  - Wealth
 references:
   - source: cunningham-herbs
     locator: under "Pipsissewa"
@@ -40,6 +41,7 @@ variants:
         supports:
           - form
           - description
+seedUpdate: 6253ba663c64d5efe10ec98b4391c19c1662d292382bb5de74babb8ca90f6769
 ---
 
 # Pipsissewa

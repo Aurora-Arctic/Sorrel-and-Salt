@@ -27,6 +27,7 @@ categories:
   - Healing
   - Grief Work
   - Wisdom
+  - Chastity
 references:
   - source: cunningham-crystals
     locator: pp. 118–120
@@ -95,7 +96,7 @@ variants:
         supports:
           - form
           - description
-seedUpdate: 623b553aac76efa32af4ca69e2454c0cd22a12c92bb00cf13b265ee52a4660e4
+seedUpdate: e1fcf903eec192bd9ac7a3a26281f0d9b09f61eb8a852fa493495f743e5c887b
 ---
 
 # Onyx

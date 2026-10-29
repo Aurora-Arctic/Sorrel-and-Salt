@@ -43,6 +43,15 @@ categories:
   - Knowledge
   - Protection
   - Psychic Work
+  - Funeral Rites
+  - Grief Work
+  - Negativity
+  - Hex-Breaking
+  - Transformation
+  - Faerie Sight
+  - Skill
+  - Spirit Work
+  - Nightmare Protection
 references:
   - source: cunningham-herbs
     locator: under "Yew"
@@ -110,7 +119,7 @@ variants:
         supports:
           - form
           - safetyNotes
-seedUpdate: 09b34ecdc21804974214eafd5976f1c2c52a3dbdba92914509143633fbb64c38
+seedUpdate: 800d0f7a63dbb72f5da6d2d214aff0d13b0a8e17b53a79e52bcbbff361c8e6da
 ---
 
 # Yew

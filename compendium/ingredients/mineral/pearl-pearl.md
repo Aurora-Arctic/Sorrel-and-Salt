@@ -38,6 +38,7 @@ categories:
   - Fertility
   - Strength
   - Wealth
+  - Luck
 substitutes:
   - identity: feldspar var. moonstone
   - name: Mother-of-pearl

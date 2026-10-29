@@ -16,6 +16,8 @@ categories:
   - Protection
   - Divination
   - Sleep
+  - Chastity
+  - Love
 references:
   - source: cunningham-herbs
     locator: under "Lettuce"; p. 266
@@ -71,7 +73,7 @@ variants:
         supports:
           - form
           - description
-seedUpdate: 8de03f76cbbaf2177c50eb625981b6d241d6c70b580ffa26850d56734e30a269
+seedUpdate: 58574138d28557c4a0a48be2bf8e2ac0da4c9d5b46aa7dc6c6b8f23c18feee90
 ---
 
 # Lettuce

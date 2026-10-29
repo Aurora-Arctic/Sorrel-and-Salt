@@ -40,6 +40,14 @@ categories:
   - Psychic Work
   - Purification
   - Truth
+  - Funeral Rites
+  - Consecration
+  - Blessing
+  - Focus
+  - Manifestation
+  - Grief Work
+  - Secrets
+  - Spirit Work
 references:
   - source: cunningham-herbs
     locator: under "Sage"; p. 266
@@ -157,7 +165,7 @@ variants:
         supports:
           - form
           - description
-seedUpdate: 4310be87723ee1fb3cce8246df028fe8680c7a21d074d31c45fb860b84a81b69
+seedUpdate: ed1a3c4c1b96df38b7a83238a9dee20b5e1c781be2270e22186b8547193b6596
 ---
 
 # Sage

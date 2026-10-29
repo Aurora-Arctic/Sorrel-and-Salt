@@ -39,6 +39,17 @@ categories:
   - Peace
   - Protection
   - Nightmare Protection
+  - Luck
+  - Funeral Rites
+  - Consecration
+  - Blessing
+  - Security
+  - Renewal
+  - Relationships
+  - Negativity
+  - Family
+  - Home Blessing
+  - Spirit Work
 references:
   - source: cunningham-herbs
     locator: under "Daffodil"
@@ -128,7 +139,7 @@ variants:
           - form
           - safetyNotes
           - toxic
-seedUpdate: 99c32d9ae31e3d640eaba6923fe5f92a99dc6c38fad43ca5b19cb0303f69efa9
+seedUpdate: 0d228a925299467d3696a43481c5bf52475855d3a6b5d2e22482aef57d752e26
 ---
 
 # Daffodil
