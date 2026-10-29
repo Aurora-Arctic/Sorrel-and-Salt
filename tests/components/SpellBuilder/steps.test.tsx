@@ -1217,18 +1217,27 @@ describe('the spell builder’s Add to Jar categories', () => {
     ['Aid', 'Bind', 'Calm', 'Dawn', 'Ember'],
   );
 
-  it('folds the categories past the third into a +N chip that keeps their names', async () => {
-    suggest(MANY, MOCKROOT);
-    renderBuilder({}, offered('Aid', 'Bind', 'Calm', 'Dawn', 'Ember', 'Love', 'Protection'));
+  it('folds the categories past the first into a +N chip that keeps their names', async () => {
+    const ONE = suggestion(
+      'yours',
+      ID.rosewort,
+      'Fixture Onewort',
+      [{ id: ID.roseLeaf, form: 'dried leaf', icon: 'botanical' }],
+      ['Love'],
+    );
+    suggest(MANY, ONE);
+    renderBuilder({}, offered('Aid', 'Bind', 'Calm', 'Dawn', 'Ember', 'Love'));
 
     const many = await lookUp('Fixture', /Fixture Manywort/);
-    const mockroot = screen.getByRole('option', { name: /Fixture Mockroot/ });
+    const one = screen.getByRole('option', { name: /Fixture Onewort/ });
 
-    expect(many).toHaveTextContent('Aid · Bind · Calm · +2');
-    expect(within(many).getByText(/^\+2/)).toHaveTextContent('+2 more: Dawn, Ember');
-    // Why this could have folded: Mockroot has two, under the cap, and is whole.
-    expect(within(mockroot).queryByText(/^\+/)).toBeNull();
-    expect(mockroot).toHaveTextContent('Love · Protection');
+    expect(many).toHaveTextContent('Aid · +4');
+    expect(within(many).getByText(/^\+4/)).toHaveTextContent('+4 more: Bind, Calm, Dawn, Ember');
+    // Hover shows the folded names: a title, as a tooltip button would steal the option's role.
+    expect(within(many).getByText(/^\+4/)).toHaveAttribute('title', 'Bind, Calm, Dawn, Ember');
+    // Why this could have folded: Onewort has one, at the cap, and is whole.
+    expect(within(one).queryByText(/^\+/)).toBeNull();
+    expect(one).toHaveTextContent('Love');
   });
 
   it('lists the spell’s Missing categories first, its other assigned ones next, and the rest in their order', async () => {
@@ -1243,8 +1252,50 @@ describe('the spell builder’s Add to Jar categories', () => {
 
     // Nothing in the jar carries Ember or Bind yet, so both are Missing and lead, in the row's
     // order; Aid and Calm are not the spell's, and Dawn folds into the +N.
-    expect(many).toHaveTextContent('Bind · Ember · Aid · +2');
-    expect(many).toHaveTextContent('more: Calm, Dawn');
+    expect(many).toHaveTextContent('Bind · +4');
+    expect(many).toHaveTextContent('more: Ember, Aid, Calm, Dawn');
+  });
+
+  it('puts a Missing category before a Carried one once a step carries the other', async () => {
+    suggest(MANY);
+    const carrier: SpellBuilderSpell['steps'][number] = {
+      id: ID.savedRosewort,
+      name: 'Fixture Rosewort',
+      form: 'dried leaf',
+      quantity: 3,
+      unit: 'g',
+      body: null,
+      ingredient: {
+        id: ID.rosewort,
+        toxic: false,
+        safetyNotes: null,
+        categories: [category('Ember')],
+        stock: [],
+      },
+      variant: {
+        id: ID.roseLeaf,
+        toxic: false,
+        safetyNotes: null,
+        categories: [],
+        formChoice: null,
+      },
+    };
+    renderBuilder(
+      {
+        spell: {
+          ...answer('s3', 1, [carrier]),
+          categoryIds: [category('Ember').id, category('Bind').id],
+        },
+      },
+      offered('Aid', 'Bind', 'Calm', 'Dawn', 'Ember'),
+    );
+    openAll();
+
+    const many = await lookUp('Fixture', /Fixture Manywort/);
+
+    // The jar carries Ember, so Bind is the one still Missing: Bind, then Carried Ember, then the rest.
+    expect(many).toHaveTextContent('Bind · +4');
+    expect(many).toHaveTextContent('more: Ember, Aid, Calm, Dawn');
   });
 
   it('narrows the results to the pressed assigned categories, asking the server for them', async () => {

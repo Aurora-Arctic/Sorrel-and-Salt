@@ -39,7 +39,7 @@ const ONE_OFF_TAKEN = 'This ingredient is already in the jar';
 export const oneOffKey = (name: string): string => name.trim().toLocaleLowerCase();
 
 /** How many of a row's categories are drawn before the rest fold into a "+N" chip. */
-export const ROW_CATEGORY_CAP = 3;
+export const ROW_CATEGORY_CAP = 1;
 
 /**
  * A row's categories in three runs: the spell's assigned categories that Category Match counts
@@ -61,7 +61,8 @@ const assignedFirst = <T extends { id: string }>(
  * draws them, plain text until the colours land or for a category without a group. The first
  * `ROW_CATEGORY_CAP` are drawn and the rest fold into a neutral "+N" chip rather than an
  * ellipsis, a fixed count because a measured fit would need the row's laid-out width. The folded
- * names stay in the row's accessible name, as visually hidden text inside the chip.
+ * names stay in the row's accessible name, as visually hidden text inside the chip, and show on
+ * hover as the chip's `title` (a focusable tooltip button would take over the option's role).
  */
 const categoryNames = (
   categories: readonly { id: string; name: string }[],
@@ -93,7 +94,7 @@ const categoryNames = (
       {hidden.length > 0 && (
         <>
           {' · '}
-          <span className="chip chip--more">
+          <span className="chip chip--more" title={hidden.map(({ name }) => name).join(', ')}>
             +{hidden.length}
             <span className="visually-hidden">
               {' '}
