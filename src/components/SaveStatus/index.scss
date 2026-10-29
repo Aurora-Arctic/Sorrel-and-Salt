@@ -18,18 +18,23 @@
   color: $text-muted;
 }
 
-.save-status__failed {
-  display: inline-flex;
+// The failure is the site's error notice (bar, tint and wax ink), as the conflict is its caution
+// one, so it reads as an error and Retry sits in the notice's button ink. Doubled class to
+// outrank the notice's own bottom margin, which would lift it off the Save button's line.
+.save-status .save-status__failed {
+  display: flex;
+  flex-wrap: wrap;
   align-items: center;
   gap: space(2);
   margin: 0;
 }
 
-.save-status__conflict {
+.save-status .save-status__conflict {
   display: flex;
   flex-wrap: wrap;
   align-items: center;
   gap: space(2);
+  margin: 0;
 }
 
 .save-status__actions {
