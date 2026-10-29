@@ -66,9 +66,9 @@ export const BANDS_FULL = 8;
 
 /**
  * Height of the crest on each band edge, in drawing units. The aside's jar is 4rem wide for a
- * 48-unit drawing, so 1.3 units is about 1.7px there: below that the wave is not seen.
+ * 48-unit drawing, so 3 units is about 4px there: below that the wave is not plainly seen.
  */
-const CREST = 1.9;
+const CREST = 3;
 
 /** A band's top edge: one low crest across the jar. */
 const crest = `M-2 ${CREST}Q24 ${-CREST} 50 ${CREST}`;
@@ -140,7 +140,8 @@ export function JarDrawing({
                   d={bandPath(height, i === 0)}
                 />
                 <path
-                  className={`jar-shelf__band-edge${i === bands.length - 1 ? ' jar-shelf__band-edge--top' : ''}`}
+                  className={`jar-shelf__band-edge${ink ? ' jar-shelf__band-edge--group' : ''}${i === bands.length - 1 ? ' jar-shelf__band-edge--top' : ''}`}
+                  style={ink ? bandInk(ink) : undefined}
                   d={crest}
                 />
               </g>
