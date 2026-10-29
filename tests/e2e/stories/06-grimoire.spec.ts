@@ -54,8 +54,13 @@ function grimoireList(page: Page): Locator {
  * "Rosemary (Herb)", and returns the step's row in the list.
  */
 async function addIngredientStep(page: Page, name: string): Promise<Locator> {
-  await page.getByRole('combobox', { name: 'Search Ingredients' }).fill(name);
-  await page.getByRole('option', { name }).first().click();
+  await page.getByRole('combobox', { name: 'Add to Jar' }).fill(name);
+  // The box's first row offers the typed text as a one-off; it is not the ingredient.
+  await page
+    .getByRole('option', { name })
+    .filter({ hasNotText: 'as a one-off ingredient' })
+    .first()
+    .click();
   return stepList(page).getByRole('listitem').filter({ hasText: name });
 }
 
@@ -159,13 +164,17 @@ test(
     );
     await signInAgainAs(page, coven.users.B);
     await openBuilder(page, coven.slug);
-    const search = page.getByRole('combobox', { name: 'Search Ingredients' });
+    const search = page.getByRole('combobox', { name: 'Add to Jar' });
     await search.fill('Rose');
     const yours = page.getByRole('group', { name: 'Your Ingredients' });
     await expect(yours.getByRole('option', { name: /Rosemary \(Herb\)/ })).toBeVisible();
     await expect(page.getByRole('group', { name: 'Compendium' })).toBeVisible();
     await search.fill('Fixture Nothing Matches');
-    await expect(page.getByRole('option')).toHaveCount(0);
+    // Nothing matches, so the one row left offers the typed name as a one-off.
+    await expect(page.getByRole('option')).toHaveCount(1);
+    await expect(
+      page.getByRole('option', { name: 'Add "Fixture Nothing Matches" as a one-off ingredient' }),
+    ).toBeVisible();
   },
 );
 
@@ -268,21 +277,26 @@ test(
     });
     await signInAgainAs(page, coven.users.B);
     await openBuilder(page, coven.slug);
-    const panel = page.getByRole('complementary', { name: 'Intent Against Ingredients' });
+    const panel = page.getByRole('region', { name: 'Category Match' });
     await page
       .getByRole('group', { name: 'Categories', exact: true })
       .getByRole('combobox')
       .fill('Prosperity');
     await page.getByRole('option', { name: 'Prosperity' }).click();
-    await expect(panel.getByRole('list', { name: 'Intended, Not Carried' })).toContainText(
-      'Prosperity',
-    );
+    // The rows: Missing (intended, not in the jar) and Stray (in the jar, not intended).
+    const row = (label: string) => panel.locator('dt', { hasText: label });
+    await expect(row('Missing')).toBeVisible();
+    await expect(panel.getByText('Prosperity')).toBeVisible();
     await addIngredientStep(page, 'Mugwort');
-    await expect(panel.getByRole('list', { name: 'Carried, Not Intended' })).toContainText(
-      'Psychic Work',
+    await expect(row('Stray')).toBeVisible();
+    // Prosperity is still intended and nothing carries it: its chip says so in its tip.
+    await expect(panel.getByRole('button', { name: 'Prosperity' })).toHaveAccessibleDescription(
+      'Assigned to this spell, and nothing in the jar carries it',
     );
+    // The step just added is open: its pencil reads Close, and Remove is hidden until it is shut.
+    await page.getByRole('button', { name: /Close Mugwort/ }).click();
     await page.getByRole('button', { name: /Remove Mugwort/ }).click();
-    await expect(panel.getByRole('list', { name: 'Carried, Not Intended' })).toHaveCount(0);
+    await expect(row('Stray')).toHaveCount(0);
   },
 );
 
@@ -323,8 +337,12 @@ test(
     await signInAgainAs(page, coven.users.B);
     await openBuilder(page, coven.slug);
     // Rosemary is in the compendium and not in this coven's cupboard.
-    const step = await addIngredientStep(page, 'Rosemary (Herb)');
-    await expect(step.getByRole('button', { name: 'Out of Stock' })).toBeVisible();
+    await addIngredientStep(page, 'Rosemary (Herb)');
+    // In Coven Inventory says so in words, beside the step's name.
+    const hold = page.getByRole('region', { name: 'In Coven Inventory' });
+    const rosemary = hold.getByRole('listitem').filter({ hasText: 'Rosemary' });
+    await expect(rosemary).toContainText('hold none');
+    await expect(rosemary.getByRole('button', { name: 'Out' })).toBeVisible();
   },
 );
 
@@ -408,12 +426,12 @@ test(
     await signInAgainAs(page, coven.users.B);
     await openBuilder(page, coven.slug);
     await page.getByRole('textbox', { name: 'Title' }).fill('Fixture Working');
-    await page.getByRole('textbox', { name: 'One-Off Name' }).fill('Testwort');
-    await page.getByRole('textbox', { name: 'One-Off Form' }).fill('Dried Root');
-    await page.getByRole('button', { name: 'Add One-Off Ingredient' }).click();
-    await expect(
-      stepList(page).getByRole('listitem').filter({ hasText: 'Testwort' }),
-    ).toBeVisible();
+    await page.getByRole('combobox', { name: 'Add to Jar' }).fill('Testwort');
+    await page.getByRole('option', { name: 'Add "Testwort" as a one-off ingredient' }).click();
+    // The new step opens at once, for its form.
+    const oneOff = stepList(page).getByRole('listitem').filter({ hasText: 'Testwort' });
+    await oneOff.getByRole('textbox', { name: /^Form/ }).fill('Dried Root');
+    await expect(oneOff).toContainText('One-Off');
     const save = page.getByRole('button', { name: 'Save' });
     // The autosave may already have saved it by now, so the press is not waited for.
     await expect(page.getByRole('status').filter({ hasText: /^Draft saved/ })).toBeVisible({
@@ -482,6 +500,8 @@ test(
     const step = await addIngredientStep(page, 'Rosemary (Herb)');
     const unit = step.getByRole('combobox', { name: /^Unit/ });
     const save = page.getByRole('button', { name: 'Save' });
+    // The step starts in the unit the jar is kept in.
+    await expect(unit).toHaveText('g');
     // A volume is refused with a reason, and nothing can be saved.
     await pickUnit(step, 'ml');
     await expect(unit).toHaveAttribute('aria-invalid', 'true');
@@ -561,7 +581,7 @@ test(
     await signInAgainAs(page, coven.users.B);
     await openBuilder(page, coven.slug);
     await page.getByRole('textbox', { name: 'Title' }).fill('Fixture Working');
-    await page.getByRole('button', { name: 'Add a Step' }).click();
+    await page.getByRole('button', { name: 'Add an Instruction' }).click();
     const steps = stepList(page).getByRole('listitem');
     await steps.first().getByRole('textbox', { name: 'Instruction' }).fill('Light the candle');
     const withIngredient = await addIngredientStep(page, 'Rosemary');
@@ -575,10 +595,18 @@ test(
     // A saved spell opens with its sections shut (M10.12).
     await page.getByRole('button', { name: 'Open All' }).click();
     await expect(steps).toHaveCount(2);
+    // A saved instruction step is shut too, and reads as its text; its pencil opens the field.
+    await expect(steps.first()).toContainText('Light the candle');
+    await steps.first().getByRole('button', { name: 'Edit step 1' }).click();
     await expect(steps.first().getByRole('textbox', { name: 'Instruction' })).toHaveValue(
       'Light the candle',
     );
     await expect(steps.last()).toContainText('Rosemary');
+    // A saved ingredient step opens shut: its pencil shows its fields.
+    await steps
+      .last()
+      .getByRole('button', { name: /^Edit Rosemary/ })
+      .click();
     await expect(steps.last().getByRole('textbox', { name: 'Instruction' })).toHaveValue(
       'Crush it first',
     );

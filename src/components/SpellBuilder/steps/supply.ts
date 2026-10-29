@@ -17,7 +17,7 @@ export type StepSupply =
   /** The jar holds less than the step calls for, once both are in one unit. */
   | { kind: 'short'; held: number; unit: Unit }
   /** The step's amount cannot be set against the jar's, so no verdict is given. */
-  | { kind: 'cannot-compare' }
+  | { kind: 'units-differ' }
   /** The jar is at or below its own threshold: StockBadge's Low Stock. */
   | { kind: 'low'; jar: StepJar };
 
@@ -26,8 +26,15 @@ type SupplyInput = Pick<SpellStepValue, 'name' | 'ingredientId' | 'variantId' | 
   unit: string;
 };
 
-/** The step's supply, or null where there is nothing to flag (and for an instruction). */
-export function supplyOf(step: SupplyInput): StepSupply | null {
+/**
+ * The step's supply, or null where there is nothing to flag (and for an instruction).
+ * `steps` is the whole jar: a form laid in several steps is judged on the sum of what they
+ * all need, so each of its lines carries the same verdict (the owner, 2026-10-28).
+ */
+export function supplyOf(
+  step: SupplyInput,
+  steps: readonly SupplyInput[] = [step],
+): StepSupply | null {
   if (step.name === null) return null;
   if (step.ingredientId === null || step.variantId === null) return { kind: 'one-off' };
   const jar = step.jar;
@@ -35,13 +42,19 @@ export function supplyOf(step: SupplyInput): StepSupply | null {
   // Held but not weighed: nothing to compare against.
   if (jar.quantity === null) return null;
 
-  const needed = step.quantity.trim() === '' ? 0 : Number(step.quantity);
-  if (step.unit !== '' && Number.isFinite(needed) && needed > 0) {
-    if (jar.unit === null) return { kind: 'cannot-compare' };
-    const converted = unitConvert(needed, step.unit as Unit, jar.unit);
-    if (!converted.ok) return { kind: 'cannot-compare' };
-    if (converted.value > jar.quantity)
-      return { kind: 'short', held: jar.quantity, unit: jar.unit };
+  // Every step on this form, this one included, summed in the jar's unit. One that cannot be
+  // converted leaves the sum unknown, so no verdict on the amount is given.
+  let needed = 0;
+  for (const other of steps.filter((s) => s.variantId === step.variantId)) {
+    const amount = other.quantity.trim() === '' ? 0 : Number(other.quantity);
+    if (other.unit === '' || !Number.isFinite(amount) || amount <= 0) continue;
+    if (jar.unit === null) return { kind: 'units-differ' };
+    const converted = unitConvert(amount, other.unit as Unit, jar.unit);
+    if (!converted.ok) return { kind: 'units-differ' };
+    needed += converted.value;
+  }
+  if (jar.unit !== null && needed > jar.quantity) {
+    return { kind: 'short', held: jar.quantity, unit: jar.unit };
   }
   return stockState(jar.quantity, jar.threshold) === 'low' ? { kind: 'low', jar } : null;
 }

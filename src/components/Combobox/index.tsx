@@ -96,6 +96,7 @@ function arrange<O extends ComboboxOption>(
   typed: string,
   action: string | undefined,
   offerTyped: boolean,
+  actionFirst: boolean,
 ): {
   items: Item<O>[];
   buckets: Bucket<O>[];
@@ -136,7 +137,10 @@ function arrange<O extends ComboboxOption>(
       : null;
   const items: Item<O>[] = firstRow ? [firstRow] : [];
   items.push(...buckets.flatMap((bucket) => bucket.rows));
-  if (lastRow) items.push(lastRow);
+  if (lastRow) {
+    if (actionFirst) items.unshift(lastRow);
+    else items.push(lastRow);
+  }
   return { items, buckets, firstRow, lastRow };
 }
 
@@ -186,6 +190,17 @@ function statusOf(
   return suggestions.pending ? `Looking for ${noun}s` : `No ${noun}s`;
 }
 
+/**
+ * Downshift writes `aria-activedescendant=""` while no option is highlighted. An empty id
+ * points at nothing, and a checker reads it as a broken reference, so the attribute is left
+ * out instead (second design review, 2026-10-28, finding 6).
+ */
+function withoutEmptyDescendant<T extends { 'aria-activedescendant'?: string }>(props: T): T {
+  if (props['aria-activedescendant']) return props;
+  const { 'aria-activedescendant': _empty, ...rest } = props;
+  return rest as T;
+}
+
 function Combobox<O extends ComboboxOption = ComboboxOption>({
   id,
   label,
@@ -205,6 +220,7 @@ function Combobox<O extends ComboboxOption = ComboboxOption>({
   toggle = true,
   action,
   offerTyped = true,
+  actionFirst = false,
   highlightFirst = false,
   keepOpen = false,
   noun = 'suggestion',
@@ -234,8 +250,8 @@ function Combobox<O extends ComboboxOption = ComboboxOption>({
   const hasSource = suggestions !== undefined;
   const actionLabel = action?.label;
   const { items, buckets, firstRow, lastRow } = useMemo(
-    () => arrange(suggestions?.options ?? [], value.trim(), actionLabel, offerTyped),
-    [suggestions, value, actionLabel, offerTyped],
+    () => arrange(suggestions?.options ?? [], value.trim(), actionLabel, offerTyped, actionFirst),
+    [suggestions, value, actionLabel, offerTyped, actionFirst],
   );
   const isOpen = hasSource && wantsOpen && items.length > 0;
   // A settled lookup with nothing found, said aloud rather than left as a
@@ -406,7 +422,13 @@ function Combobox<O extends ComboboxOption = ComboboxOption>({
                 </>
               )}
             </span>
-            {item.note && <div className="combobox__note">{item.note}</div>}
+            {(item.note || item.meta) && (
+              <div className={item.meta ? 'combobox__note combobox__note--meta' : 'combobox__note'}>
+                {item.note}
+                {item.note && item.meta && ' · '}
+                {item.meta}
+              </div>
+            )}
           </>
         )}
       </li>
@@ -454,48 +476,50 @@ function Combobox<O extends ComboboxOption = ComboboxOption>({
           >
             <input
               className="combobox__input"
-              {...getInputProps({
-                ref: inputRef,
-                name,
-                placeholder,
-                'aria-required': required || undefined,
-                // One character wide of its own, so that the slot, not the
-                // browser's default of twenty, decides how wide the text is.
-                size: 1,
-                // The field's own description first, then the qualifier's, so a
-                // reader hears the hint before what the pick adds.
-                'aria-describedby':
-                  [
-                    describedBy,
-                    qualifier && `${qualifierId}-text`,
-                    detail && `${qualifierId}-detail`,
-                  ]
-                    .filter(Boolean)
-                    .join(' ') || undefined,
-                'aria-invalid': invalid,
-                'aria-busy': busy || undefined,
-                onKeyDown,
-                // Typing always wants the list, as Downshift's own input change
-                // says. Its open callback alone is not enough: it fires only
-                // when the open state differs from the props it last committed,
-                // so a key landing just after a pick closed the list, before
-                // that render committed, read as no change and the list stayed
-                // shut (story 51). See claude-docs/components/combobox.md.
-                onChange: () => setWantsOpen(true),
-                onFocus: () => {
-                  tip.show();
-                  onFocus?.();
-                },
-                onBlur: () => {
-                  tip.hide();
-                  // An open list is Downshift's to close on blur; one wanted
-                  // but empty is not open to it, so the wish is dropped here,
-                  // or the next answer would open the list and pull the
-                  // focus back from wherever it has gone.
-                  if (!isOpen) setWantsOpen(false);
-                  onBlur?.();
-                },
-              })}
+              {...withoutEmptyDescendant(
+                getInputProps({
+                  ref: inputRef,
+                  name,
+                  placeholder,
+                  'aria-required': required || undefined,
+                  // One character wide of its own, so that the slot, not the
+                  // browser's default of twenty, decides how wide the text is.
+                  size: 1,
+                  // The field's own description first, then the qualifier's, so a
+                  // reader hears the hint before what the pick adds.
+                  'aria-describedby':
+                    [
+                      describedBy,
+                      qualifier && `${qualifierId}-text`,
+                      detail && `${qualifierId}-detail`,
+                    ]
+                      .filter(Boolean)
+                      .join(' ') || undefined,
+                  'aria-invalid': invalid,
+                  'aria-busy': busy || undefined,
+                  onKeyDown,
+                  // Typing always wants the list, as Downshift's own input change
+                  // says. Its open callback alone is not enough: it fires only
+                  // when the open state differs from the props it last committed,
+                  // so a key landing just after a pick closed the list, before
+                  // that render committed, read as no change and the list stayed
+                  // shut (story 51). See claude-docs/components/combobox.md.
+                  onChange: () => setWantsOpen(true),
+                  onFocus: () => {
+                    tip.show();
+                    onFocus?.();
+                  },
+                  onBlur: () => {
+                    tip.hide();
+                    // An open list is Downshift's to close on blur; one wanted
+                    // but empty is not open to it, so the wish is dropped here,
+                    // or the next answer would open the list and pull the
+                    // focus back from wherever it has gone.
+                    if (!isOpen) setWantsOpen(false);
+                    onBlur?.();
+                  },
+                }),
+              )}
             />
           </span>
           {qualifier && (
@@ -598,6 +622,7 @@ function Combobox<O extends ComboboxOption = ComboboxOption>({
           })}
         >
           {isOpen && firstRow && row(firstRow)}
+          {isOpen && actionFirst && lastRow && row(lastRow)}
           {isOpen &&
             buckets.map((bucket) =>
               bucket.heading === null ? (
@@ -621,7 +646,7 @@ function Combobox<O extends ComboboxOption = ComboboxOption>({
                 // oxlint-enable jsx-a11y/prefer-tag-over-role
               ),
             )}
-          {isOpen && lastRow && row(lastRow)}
+          {isOpen && !actionFirst && lastRow && row(lastRow)}
         </ul>
       </Popup>
       {/* What the list holds, for a screen reader: the rows arrive after the

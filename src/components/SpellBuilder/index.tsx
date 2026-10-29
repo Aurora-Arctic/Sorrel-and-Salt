@@ -1,7 +1,7 @@
 'use client';
 
 import { zodResolver } from '@hookform/resolvers/zod';
-import { type ReactElement, type ReactNode, useEffect, useRef, useState } from 'react';
+import { type ReactElement, type ReactNode, useEffect, useId, useRef, useState } from 'react';
 import { FormProvider, type Resolver, useForm, useWatch } from 'react-hook-form';
 import { CollapsibleSection, FoldAll } from '../CollapsibleSection';
 import {
@@ -23,12 +23,12 @@ import {
   useFormHistory,
 } from '../Field';
 import { clockTime } from '../LastEdit/relative';
-import MoonPhaseIcon from '../MoonPhaseIcon';
+import { moonPhaseIcon } from './moon-phase-icon';
 import Notice from '../Notice';
 import SaveStatus from '../SaveStatus';
 import Skeleton from '../Skeleton';
 import { SpellCategoriesField, sameCategories, useCategoryName } from './categories-field';
-import { SpellComparison } from './comparison-panel';
+import { JarAside } from './jar-aside';
 import { DAYS_OF_THE_WEEK, MOON_PHASES } from './constants';
 import { saveSpell } from './autosave';
 import { useSaveOnClose } from './save-on-close';
@@ -202,12 +202,6 @@ const resolver: Resolver<SpellBuilderValues, unknown, SpellBuilderInput> = async
   } as Awaited<ReturnType<typeof resolver>>;
 };
 
-// A moon phase's drawing beside its name, null for a phase typed outside
-// the list so the box draws no empty mark. Module-level so the field's
-// suggestions are not rebuilt each render.
-const moonPhaseIcon = (phase: string): ReactElement | null =>
-  (MOON_PHASES as readonly string[]).includes(phase) ? <MoonPhaseIcon phase={phase} /> : null;
-
 /** Said in the jar's place while a saved spell's steps cannot be read. */
 const STEPS_FAILED =
   "The spell's steps could not be loaded, so nothing can be saved. Reload the page to try again.";
@@ -281,7 +275,8 @@ const SpellBuilder = ({
     ) ||
     stepsChanged(sendable, (defaultValues?.steps ?? []) as SpellBuilderValues['steps']);
   // A unit the jar cannot be measured in holds Save, as the service would refuse it.
-  const unitRefused = unitIssues(steps).size > 0;
+  const unitIssueSteps = unitIssues(steps);
+  const unitRefused = unitIssueSteps.size > 0;
   // A saved instruction cleared of its text cannot be left out (that would delete it), so the autosave waits.
   const blankSaved = steps.some(isBlankSavedInstruction);
 
@@ -511,6 +506,20 @@ const SpellBuilder = ({
       asked.current = false;
     }
   };
+  // Why Save Spell is off, said beside it as text (second design review, 2026-10-28), so a
+  // disabled button is never a silent one. Left out while a save is on its way.
+  const saveReasonId = useId();
+  const firstUnitIssue = [...unitIssueSteps.keys()][0];
+  const saveReason =
+    autosave.status === 'saving'
+      ? null
+      : firstUnitIssue !== undefined
+        ? `Fix the unit in step ${firstUnitIssue + 1} to save`
+        : !jarReady
+          ? 'Waiting for the jar to load'
+          : !dirty
+            ? 'Nothing to save yet'
+            : null;
   // Steps that could not be read leave nothing a save would take, so Close closes, unsaved.
   useSaveOnClose(dirty && stepsRead !== 'failed', saveForClose);
 
@@ -600,48 +609,63 @@ const SpellBuilder = ({
             {section(
               'Purpose',
               <>
-                <TextField<SpellBuilderValues>
-                  name="title"
-                  label="Title"
-                  placeholder="Add a title"
-                  autoComplete="off"
-                />
-                <TextField<SpellBuilderValues>
-                  name="intent"
-                  label="Intent"
-                  placeholder="Add an intent"
-                  multiline
-                  rows={3}
-                />
-                <SpellCategoriesField />
+                <div className="spell-purpose">
+                  <div className="spell-purpose__columns">
+                    <div className="spell-purpose__text">
+                      <TextField<SpellBuilderValues>
+                        name="title"
+                        label="Title"
+                        placeholder="Add a title"
+                        autoComplete="off"
+                      />
+                      <TextField<SpellBuilderValues>
+                        name="intent"
+                        label="Intent"
+                        placeholder="Add an intent"
+                        multiline
+                        rows={3}
+                      />
+                    </div>
+                    <SpellCategoriesField />
+                  </div>
+                </div>
               </>,
             )}
             {section(
               'Jar',
               <>
-                <TextField<SpellBuilderValues>
-                  name="jarDescription"
-                  label="Jar Description"
-                  placeholder="Add a description"
-                  autoComplete="off"
-                />
-                <TextField<SpellBuilderValues>
-                  name="sealWaxColor"
-                  label="Seal Wax Colour"
-                  placeholder="Add a colour"
-                  autoComplete="off"
-                />
-                {jarReady ? (
-                  <SpellSteps workspaceId={workspaceId} />
-                ) : stepsRead === 'failed' ? (
-                  <Notice kind="error">{STEPS_FAILED}</Notice>
-                ) : (
-                  <section className="spell-steps" aria-label="Steps" aria-busy="true">
-                    <Skeleton shape="line" />
-                  </section>
-                )}
-                {/* Intent against the jar's categories (M10.17), after the jar it reads. */}
-                {jarReady && <SpellComparison />}
+                <div className="spell-jar-layout">
+                  <div className="spell-jar-layout__list">
+                    {jarReady ? (
+                      <SpellSteps workspaceId={workspaceId} />
+                    ) : stepsRead === 'failed' ? (
+                      <Notice kind="error">{STEPS_FAILED}</Notice>
+                    ) : (
+                      <section className="spell-steps" aria-label="Steps" aria-busy="true">
+                        <Skeleton shape="line" />
+                      </section>
+                    )}
+                  </div>
+                  <JarAside
+                    ready={jarReady}
+                    descriptionField={
+                      <TextField<SpellBuilderValues>
+                        name="jarDescription"
+                        label="Jar Description"
+                        placeholder="Add a description"
+                        autoComplete="off"
+                      />
+                    }
+                    waxField={
+                      <TextField<SpellBuilderValues>
+                        name="sealWaxColor"
+                        label="Seal Wax"
+                        placeholder="Add a colour"
+                        autoComplete="off"
+                      />
+                    }
+                  />
+                </div>
               </>,
             )}
             {/* The recipe's timing: when to work the spell, not when it was worked,
@@ -649,34 +673,42 @@ const SpellBuilder = ({
             {section(
               'When to Work It',
               <>
-                <SpellSuggestField
-                  name="moonPhase"
-                  label="Moon Phase"
-                  placeholder="Add a phase"
-                  options={MOON_PHASES}
-                  icon={moonPhaseIcon}
-                />
-                <SpellSuggestField
-                  name="dayOfWeek"
-                  label="Day of the Week"
-                  placeholder="Add a day"
-                  options={DAYS_OF_THE_WEEK}
-                />
+                <div className="spell-main-column">
+                  <div className="spell-main-column__fields">
+                    <SpellSuggestField
+                      name="moonPhase"
+                      label="Moon Phase"
+                      placeholder="Add a phase"
+                      options={MOON_PHASES}
+                      icon={moonPhaseIcon}
+                    />
+                    <SpellSuggestField
+                      name="dayOfWeek"
+                      label="Day"
+                      placeholder="Add a day"
+                      options={DAYS_OF_THE_WEEK}
+                    />
+                  </div>
+                </div>
               </>,
             )}
             {section(
               'Notes',
               <>
-                <TextField<SpellBuilderValues>
-                  name="note"
-                  label="Note"
-                  placeholder="Add a note"
-                  multiline
-                />
-                <SpellVisibilityField
-                  created={opened !== undefined || createdId !== null}
-                  flush={flush}
-                />
+                <div className="spell-main-column">
+                  <div className="spell-main-column__fields">
+                    <TextField<SpellBuilderValues>
+                      name="note"
+                      label="Note"
+                      placeholder="Add a note"
+                      multiline
+                    />
+                    <SpellVisibilityField
+                      created={opened !== undefined || createdId !== null}
+                      flush={flush}
+                    />
+                  </div>
+                </div>
               </>,
             )}
           </div>
@@ -685,6 +717,7 @@ const SpellBuilder = ({
             dirty={dirty && !unitRefused && jarReady}
             submitting={autosave.status === 'saving'}
             onSave={() => void saveNow()}
+            saveDescribedBy={saveReason ? saveReasonId : undefined}
           >
             <SpellStatusField flush={flush} />
             <SaveStatus
@@ -699,6 +732,11 @@ const SpellBuilder = ({
               }}
               onKeepMine={() => void autosave.resolveConflict('keep-mine').catch(() => undefined)}
             />
+            {saveReason && (
+              <p id={saveReasonId} className="spell-builder__save-reason">
+                {saveReason}
+              </p>
+            )}
           </FormActions>
         </form>
       </FormHistoryContext.Provider>

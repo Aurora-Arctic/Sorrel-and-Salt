@@ -233,12 +233,12 @@ describe('the Grimoire tabs', () => {
     expect(countGrimoireFacets).toHaveBeenCalledWith(session, COVEN.id, facets);
   });
 
-  it('offers a member by name with their count, and Visibility as the pair whether or not a spell holds each', async () => {
+  it('keeps both visibilities in the chip whether or not a spell holds each, resting on Any when one holds none', async () => {
     await renderTab(SpellsPage);
     fireEvent.click(screen.getByRole('button', { name: /^Filters/ }));
-    fireEvent.click(screen.getByRole('combobox', { name: 'Visibility' }));
-    expect(screen.getByRole('option', { name: /^Private\D*1/ })).toBeInTheDocument();
-    expect(screen.getByRole('option', { name: /^Shared with the Coven/ })).toBeInTheDocument();
+    // The count read has Private only, so Shared is read as zero and the chip cannot narrow.
+    const group = screen.getByRole('group', { name: 'Visibility' });
+    expect(within(group).getByRole('button', { name: /Any/ })).toBeDisabled();
   });
 
   it('keeps the tab’s status over a status written into the address', async () => {

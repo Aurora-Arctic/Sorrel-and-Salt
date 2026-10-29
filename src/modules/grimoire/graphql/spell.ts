@@ -91,7 +91,6 @@ const SpellStepRef = builder.objectRef<SpellStepView>('SpellStep').implement({
     }),
     quantity: t.float({ nullable: true, resolve: (step) => amount(step.quantity) }),
     unit: t.expose('unit', { type: InventoryUnitEnum, nullable: true }),
-    note: t.exposeString('note', { nullable: true }),
     audit: t.field({ type: AuditInfo, resolve: (step) => step }),
   }),
 });
@@ -209,7 +208,6 @@ const SpellStepInputRef = builder.inputType('SpellStepInput', {
     form: t.string(),
     quantity: t.float(),
     unit: t.field({ type: InventoryUnitEnum }),
-    note: t.string(),
   }),
 });
 
@@ -237,7 +235,7 @@ const SpellInputRef = builder.inputType('SpellInput', {
 
 const UpdateSpellInputRef = builder.inputType('UpdateSpellInput', {
   description:
-    'Changes a spell: a field left out keeps its value, and null clears it. Visibility only widens.',
+    'Changes a spell: a field left out keeps its value, and null clears it. Visibility only widens once the spell is complete.',
   fields: (t) => ({
     title: t.string({ description: 'Required once the status is complete.' }),
     intent: t.string(),

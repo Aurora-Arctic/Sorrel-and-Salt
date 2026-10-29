@@ -16,8 +16,18 @@ import { graphql } from '../../../gql';
  * second request.
  */
 export const SpellIngredientSuggestionsDocument = graphql(`
-  query SpellIngredientSuggestions($workspaceId: ID!, $query: String, $first: Int) {
-    ingredientSuggestions(workspaceId: $workspaceId, query: $query, first: $first) {
+  query SpellIngredientSuggestions(
+    $workspaceId: ID!
+    $query: String
+    $first: Int
+    $categoryIds: [ID!]
+  ) {
+    ingredientSuggestions(
+      workspaceId: $workspaceId
+      query: $query
+      first: $first
+      categoryIds: $categoryIds
+    ) {
       edges {
         group
         node {
@@ -82,7 +92,6 @@ export const SpellBuilderStepsDocument = graphql(`
         form
         quantity
         unit
-        note
         body
         ingredient {
           id

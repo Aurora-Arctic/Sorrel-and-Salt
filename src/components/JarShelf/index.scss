@@ -323,6 +323,52 @@ $-shake-duration: 500ms;
   }
 }
 
+// The spell jar's ingredient bands: two tints of the one ink, alternating, with a thin line
+// along each boundary. The top band's upper edge is drawn as the level line of a held jar.
+.jar-shelf__band {
+  transition: transform 0.4s ease;
+
+  @include reduced-motion {
+    transition: none;
+  }
+}
+
+.jar-shelf__band-fill {
+  fill: $text-primary;
+}
+
+.jar-shelf__band--0 .jar-shelf__band-fill {
+  opacity: 0.08;
+}
+
+.jar-shelf__band--1 .jar-shelf__band-fill {
+  opacity: 0.18;
+}
+
+// A layer drawn in its category group's colours (data on the row, so read from custom
+// properties, as a chip does): 55% in the light theme and 65% in the dark, so the boundary
+// line and the top line stay legible over it.
+.jar-shelf__band .jar-shelf__band-fill--group {
+  fill: light-dark(
+    color-mix(in srgb, var(--band-light) 55%, transparent),
+    color-mix(in srgb, var(--band-dark) 65%, transparent)
+  );
+  opacity: 1;
+}
+
+.jar-shelf__band-edge {
+  fill: none;
+  stroke: $text-primary;
+  stroke-width: 0.5;
+  opacity: 0.25;
+}
+
+.jar-shelf__band-edge--top {
+  stroke: $accent;
+  stroke-width: 1.2;
+  opacity: 0.9;
+}
+
 // A form with no jar: the same vessel in dashes, its corks and cloths left off.
 .jar-shelf__jar--empty {
   .jar-shelf__glass,

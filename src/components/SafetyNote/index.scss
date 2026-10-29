@@ -47,3 +47,37 @@
     margin: 0;
   }
 }
+
+// The compact note (the spell builder's open step): the Caution heading is body-sized ink,
+// not the large fill that clears contrast only as 24px text, and runs on in line with the
+// notes, so a note is a line or two instead of a block. The bar in the fill and the word
+// Caution still say it, so the colour is not alone.
+// Block, not the page's stack of sections, so the heading can run on in the line.
+.safety-note--compact {
+  display: block;
+  padding-block: 0;
+  padding-inline-start: space(3);
+
+  .safety-note__heading {
+    display: inline;
+    margin: 0 space(2) 0 0;
+    font-size: type-size('caption');
+    font-weight: 700;
+    -webkit-text-stroke: 0;
+    color: $text-primary;
+  }
+
+  .safety-note__text {
+    display: inline;
+    font-size: type-size('caption');
+  }
+
+  .safety-note__forms {
+    gap: space(2);
+    margin-block-start: space(1);
+
+    dt {
+      margin-bottom: 0;
+    }
+  }
+}

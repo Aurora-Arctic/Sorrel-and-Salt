@@ -51,7 +51,6 @@ export function stepValueOf(step: SpellBuilderStep): SpellStepValue {
     unit: step.unit ?? '',
     savedUnit: step.unit,
     body: step.body,
-    note: step.note,
     icon: step.variant?.formChoice?.group.icon ?? null,
     categories: categoriesOf(step),
     safety:
@@ -74,7 +73,7 @@ export function stepValueOf(step: SpellBuilderStep): SpellStepValue {
   };
 }
 
-/** A new step, as the picker or the one-off adds it: no amount yet. */
+/** A new step, as the picker or the one-off adds it: no quantity yet, and the unit its jar is kept in. */
 export const newStep = (
   step: Pick<
     SpellStepValue,
@@ -92,10 +91,10 @@ export const newStep = (
   ...step,
   stepId: null,
   quantity: '',
-  unit: '',
+  // The unit its form is stocked in, where the coven holds some: a start the member can change.
+  unit: step.jarUnit ?? '',
   savedUnit: null,
   body: null,
-  note: null,
 });
 
 /** A new instruction-only step: no ingredient, and a blank text the member writes. */
@@ -174,7 +173,6 @@ export function stepInputOf(step: SpellStepValue): SpellStepSend {
     quantity: quantity === '' ? null : Number(quantity),
     unit: (step.unit || null) as Unit | null,
     body: step.body,
-    note: step.note,
   };
   const sent = present(
     step.ingredientId === null
@@ -184,7 +182,10 @@ export function stepInputOf(step: SpellStepValue): SpellStepSend {
   // A blank text is dropped from a step that has an ingredient, which needs
   // none, but kept on an instruction-only step so the schema refuses it at
   // its own field rather than as a step that says nothing (M13.3).
-  return isInstruction(step) ? { ...sent, body: step.body ?? '' } : sent;
+  if (isInstruction(step)) return { ...sent, body: step.body ?? '' };
+  // A one-off's name emptied in its Name field is still sent, so the schema refuses it at that
+  // field and not as a step with no identity.
+  return step.ingredientId === null && step.name !== null ? { ...sent, name: step.name } : sent;
 }
 
 /**

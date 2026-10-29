@@ -58,7 +58,6 @@ const ROSEWORT_STEP: SpellBuilderStep = {
   form: 'dried leaf',
   quantity: 3,
   unit: 'g',
-  note: null,
   body: null,
   ingredient: {
     id: '00000000-0000-4000-8000-000000000001',

@@ -1,4 +1,5 @@
-import { type ReactElement, useId } from 'react';
+import { type CSSProperties, type ReactElement, useId } from 'react';
+import type { GroupColors } from '../../lib/types';
 import { formLabel } from '@/modules/ingredients/validation/form-label';
 import { StockIcon, StockTip } from '../StockBadge';
 import { stockState } from '../StockBadge/stock-state';
@@ -7,6 +8,7 @@ import { StockJarButton } from '../StockDialog';
 import type { StockDialogProps } from '../StockDialog/types';
 import { fillOf } from './level';
 import { pick } from './pick';
+export { pick as pickJarShape } from './pick';
 import { SHAPES, lv, wv } from './shapes';
 import type { HeldJar, JarPart, JarShelfProps, ShelfForm } from './types';
 import './index.scss';
@@ -59,12 +61,45 @@ function Part({ part }: { part: JarPart }): ReactElement {
  * around the group that moves, since a clip on a transformed element moves
  * with it. Each jar's clip has an id of its own, as two on a page cannot share.
  */
-function Drawing({
+/** How many bands fill the spell's jar; past it the bands shrink to keep fitting. */
+export const BANDS_FULL = 8;
+
+/**
+ * Height of the crest on each band edge, in drawing units. The aside's jar is 4rem wide for a
+ * 48-unit drawing, so 1.3 units is about 1.7px there: below that the wave is not seen.
+ */
+const CREST = 1.9;
+
+/** A band's top edge: one low crest across the jar. */
+const crest = `M-2 ${CREST}Q24 ${-CREST} 50 ${CREST}`;
+
+/**
+ * One band, `height` tall: its top is the crest and its bottom is the same crest, so stacked
+ * bands tile with no gap. The lowest band is flat along the base.
+ */
+function bandPath(height: number, lowest: boolean): string {
+  const bottom = lowest
+    ? `V${height + 4}H-2z`
+    : `V${height + CREST}Q24 ${height - CREST} -2 ${height + CREST}z`;
+  return crest + bottom;
+}
+
+/** A group's colours on a band, for the stylesheet to pick from by theme; React types no custom property. */
+const bandInk = ({ colorDark, colorLight }: GroupColors): CSSProperties =>
+  ({ '--band-dark': colorDark, '--band-light': colorLight }) as CSSProperties;
+
+export function JarDrawing({
   shape,
   held,
+  bands = [],
 }: {
   shape: keyof typeof SHAPES;
-  held: HeldJar | null;
+  held: Pick<HeldJar, 'quantity' | 'threshold'> | null;
+  /**
+   * Equal horizontal bands stacked from the base, one per ingredient (the spell's jar); none
+   * draws none. A band holds the one group colour it is drawn in; null leaves it the muted ink.
+   */
+  bands?: readonly (GroupColors | null)[];
 }): ReactElement {
   const clip = `jar-shelf-clip-${useId().replace(/\W/g, '')}`;
   const S = SHAPES[shape];
@@ -87,6 +122,30 @@ function Drawing({
           <g className="jar-shelf__rise" style={{ transform: `translateY(${level}px)` }}>
             <rect className="jar-shelf__level" x={0} y={0} width={48} height={40} />
           </g>
+        </g>
+      )}
+      {bands.length > 0 && (
+        <g clipPath={url}>
+          {bands.map((ink, i) => {
+            const height = +((40 - S.full) / Math.max(bands.length, BANDS_FULL)).toFixed(2);
+            return (
+              <g
+                key={i}
+                className={`jar-shelf__band jar-shelf__band--${i % 2}`}
+                style={{ transform: `translateY(${+(40 - height * (i + 1)).toFixed(2)}px)` }}
+              >
+                <path
+                  className={`jar-shelf__band-fill${ink ? ' jar-shelf__band-fill--group' : ''}`}
+                  style={ink ? bandInk(ink) : undefined}
+                  d={bandPath(height, i === 0)}
+                />
+                <path
+                  className={`jar-shelf__band-edge${i === bands.length - 1 ? ' jar-shelf__band-edge--top' : ''}`}
+                  d={crest}
+                />
+              </g>
+            );
+          })}
         </g>
       )}
       {S.shaded && held && (
@@ -138,7 +197,7 @@ function Jar({
     : ' jar-shelf__jar--empty';
   return (
     <li className={`jar-shelf__jar${modifier}`}>
-      <Drawing shape={pick(seed, form)} held={jar} />
+      <JarDrawing shape={pick(seed, form)} held={jar} />
       {edit ? (
         // The button is the form's name, stretched over the whole jar by its `::after`, so a
         // press anywhere on the jar lands on it. A Low or Out amount is its own button (its

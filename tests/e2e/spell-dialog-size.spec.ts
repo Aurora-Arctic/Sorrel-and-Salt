@@ -64,5 +64,25 @@ for (const viewport of [
     expect(frames.length).toBeGreaterThan(10);
     expect(frames.every(({ form }) => form)).toBe(true);
     expect(new Set(frames.map(({ height }) => height)).size).toBe(1);
+
+    // The wide size (55rem of content and the dialog's 3rem of padding, 928px), held to the
+    // window's gap on a phone, where the jar's columns stack.
+    const width = await page
+      .getByRole('dialog', { name: 'New Spell' })
+      .evaluate((dialog) => Math.round(dialog.getBoundingClientRect().width));
+    if (viewport.width >= 1280) expect(width).toBe(928);
+    else expect(width).toBeLessThan(viewport.width);
+
+    // The Jar's two columns: side by side in the wide dialog, one above the other on a phone.
+    const list = await page.getByRole('heading', { name: 'What Goes In' }).boundingBox();
+    const aside = await page.getByRole('complementary', { name: 'The Jar' }).boundingBox();
+    if (!list || !aside) throw new Error('The Jar draws no columns');
+    if (viewport.width >= 1280) {
+      expect(aside.x).toBeGreaterThan(list.x + 200);
+      expect(Math.abs(aside.y - list.y)).toBeLessThan(40);
+    } else {
+      expect(aside.y).toBeGreaterThan(list.y);
+      expect(Math.abs(aside.x - list.x)).toBeLessThan(40);
+    }
   });
 }

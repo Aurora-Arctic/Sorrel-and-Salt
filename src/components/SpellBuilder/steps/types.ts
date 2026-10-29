@@ -28,9 +28,8 @@ export interface SpellStepValue {
   unit: string;
   /** The unit last saved, which the unit rule leaves alone, as the service does. */
   savedUnit: string | null;
-  /** An instruction step's text, and a step's note: kept and sent back untouched (M13.3). */
+  /** An instruction step's text, kept and sent back untouched (M13.3). */
   body: string | null;
-  note: string | null;
   /** The form's group icon; null draws the generic spoon. */
   icon: FormGroupIcon | null;
   /** The ingredient's categories and the form's own. */
@@ -75,7 +74,6 @@ export interface SpellStepSend {
   quantity?: number;
   unit?: Unit;
   body?: string;
-  note?: string;
 }
 
 /** The step list's order: the rows' keys and names, in order, and the rows. */

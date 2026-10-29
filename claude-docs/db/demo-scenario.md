@@ -191,7 +191,7 @@ middle leaves the ones below it renumbered, so the depth the seed wants is
 occupied by a different ingredient (the layer index) and the ingredient it
 wants is already at another depth
 (`spell_ingredients_spell_id_variant_id_unique` since MB.217, on the
-ingredient's variant). Either collision fails the
+ingredient's variant; dropped by `0087`, so only the layer collision remains). Either collision fails the
 whole scenario rather than the row.
 
 So a jar that already has layers is left exactly as it is — removed ones

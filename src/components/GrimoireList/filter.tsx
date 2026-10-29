@@ -1,10 +1,12 @@
 'use client';
 
 import type { Route } from 'next';
+import { moonPhaseIcon } from '../SpellBuilder/moon-phase-icon';
 import FacetCombobox from '../FacetCombobox';
 import CardDensitySwitch from '../CardDensitySwitch';
 import { type ReactElement, useMemo, useState } from 'react';
 import type { CategoryMode } from '@/modules/ingredients/schema/ingredient-enums';
+import { ChoiceChip } from '../FacetPanel/choice-chip';
 import { CategoryLine } from '../FacetPanel/category-line';
 import { FacetShell } from '../FacetPanel/shell';
 import { useApplyFilter } from '../FilterForm';
@@ -30,7 +32,7 @@ interface Held {
   categoryMode: CategoryMode;
   moonPhases: readonly string[];
   daysOfWeek: readonly string[];
-  visibilities: readonly string[];
+  visibility: GrimoireListFilter['visibility'];
   makers: readonly string[];
 }
 
@@ -39,14 +41,14 @@ const heldOf = ({
   categoryMode,
   moonPhases,
   daysOfWeek,
-  visibilities,
+  visibility,
   makers,
 }: GrimoireListFilter): Held => ({
   categories,
   categoryMode,
   moonPhases,
   daysOfWeek,
-  visibilities,
+  visibility,
   makers,
 });
 
@@ -55,7 +57,7 @@ const NONE: Held = {
   categoryMode: 'all',
   moonPhases: [],
   daysOfWeek: [],
-  visibilities: [],
+  visibility: '',
   makers: [],
 };
 
@@ -71,7 +73,7 @@ const hrefFor = (path: Route, filter: GrimoireListFilter, held: Held, query: str
         categoryMode: held.categories.length >= 2 ? held.categoryMode : 'all',
         moonPhases: [...held.moonPhases],
         daysOfWeek: [...held.daysOfWeek],
-        visibilities: [...held.visibilities] as GrimoireListFilter['visibilities'],
+        visibility: held.visibility,
         makers: [...held.makers],
       },
     ),
@@ -91,6 +93,7 @@ const PanelCategories = ({
   const apply = useApplyFilter();
   const { pending } = useListNavigation();
   const changed = JSON.stringify(held) !== JSON.stringify(heldOf(filter));
+  const visibilityStuck = facets.visibilities.some((choice) => choice.count === 0);
   const choices = useMemo(
     () =>
       categories.map(({ slug, name, group, count }) => ({
@@ -107,7 +110,7 @@ const PanelCategories = ({
         held.categories.length +
         held.moonPhases.length +
         held.daysOfWeek.length +
-        held.visibilities.length +
+        (held.visibility === '' ? 0 : 1) +
         held.makers.length
       }
       clearHref={path}
@@ -139,7 +142,10 @@ const PanelCategories = ({
             placeholder="Add Moon Phase"
             removeNoun="Moon Phase"
             loading={pending}
-            choices={facets.moonPhases}
+            choices={facets.moonPhases.map((choice) => ({
+              ...choice,
+              icon: moonPhaseIcon(choice.label),
+            }))}
             values={held.moonPhases}
             onChange={(moonPhases) => onHeld({ ...held, moonPhases })}
           />
@@ -161,19 +167,6 @@ const PanelCategories = ({
       <div className="facet-panel__line">
         <div className="facet-panel__grow">
           <FacetCombobox
-            label="Visibility"
-            name="visibility"
-            placeholder="Add Visibility"
-            removeNoun="Visibility"
-            loading={pending}
-            hideZeros={false}
-            choices={facets.visibilities}
-            values={held.visibilities}
-            onChange={(visibilities) => onHeld({ ...held, visibilities })}
-          />
-        </div>
-        <div className="facet-panel__grow">
-          <FacetCombobox
             label="Coven Member"
             name="maker"
             typeahead
@@ -183,6 +176,30 @@ const PanelCategories = ({
             choices={facets.makers}
             values={held.makers}
             onChange={(makers) => onHeld({ ...held, makers })}
+          />
+        </div>
+        <div className="facet-panel__quick">
+          <ChoiceChip
+            legend="Visibility"
+            name="visibility"
+            options={[
+              { value: '', label: 'Any' },
+              ...facets.visibilities.map(({ value, label, count }) => ({
+                value: value as Held['visibility'],
+                label,
+                count,
+              })),
+            ]}
+            // Drawn and placed as the compendium's Toxic is: both values always show, and with
+            // either at zero every spell shares one visibility, so the chip rests on Any.
+            value={visibilityStuck ? '' : held.visibility}
+            disabled={visibilityStuck}
+            chipHint={
+              visibilityStuck
+                ? 'Every matching spell shares the same visibility, so this filter cannot narrow further.'
+                : undefined
+            }
+            onChange={(visibility) => onHeld({ ...held, visibility })}
           />
         </div>
       </div>
