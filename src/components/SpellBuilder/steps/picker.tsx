@@ -6,6 +6,7 @@ import { Fragment, type ReactElement, type ReactNode, useId, useMemo, useState }
 import { useFormContext, useWatch } from 'react-hook-form';
 import { chipColors } from '../../../lib/chip-colors';
 import type { GroupColors } from '../../../lib/types';
+import { compareJar } from '../comparison-panel';
 import { useCategoryColors, useCategoryNames } from '../category-colors';
 import type { SpellBuilderValues } from '../types';
 import type { SpellIngredientSuggestionsQuery } from '../../../gql/graphql';
@@ -41,14 +42,17 @@ export const oneOffKey = (name: string): string => name.trim().toLocaleLowerCase
 export const ROW_CATEGORY_CAP = 3;
 
 /**
- * A row's categories, the spell's own (its Categories field) first and the rest in the order
- * given. Stable, so within each half the order is the one the server sent.
+ * A row's categories in three runs: the spell's assigned categories that Category Match counts
+ * Missing (none of the jar's steps carries them yet), then its other assigned ones (Carried),
+ * then the rest. Stable, so each run keeps the order the server sent.
  */
 const assignedFirst = <T extends { id: string }>(
   categories: readonly T[],
   assigned: ReadonlySet<string>,
+  missing: ReadonlySet<string>,
 ): T[] => [
-  ...categories.filter(({ id }) => assigned.has(id)),
+  ...categories.filter(({ id }) => missing.has(id)),
+  ...categories.filter(({ id }) => assigned.has(id) && !missing.has(id)),
   ...categories.filter(({ id }) => !assigned.has(id)),
 ];
 
@@ -63,9 +67,10 @@ const categoryNames = (
   categories: readonly { id: string; name: string }[],
   colors: ReadonlyMap<string, GroupColors>,
   assigned: ReadonlySet<string>,
+  missing: ReadonlySet<string>,
 ): ReactNode => {
   if (categories.length === 0) return undefined;
-  const ordered = assignedFirst(categories, assigned);
+  const ordered = assignedFirst(categories, assigned, missing);
   const shown = ordered.slice(0, ROW_CATEGORY_CAP);
   const hidden = ordered.slice(ROW_CATEGORY_CAP);
   return (
@@ -106,6 +111,7 @@ function pickRows(
   data: SpellIngredientSuggestionsQuery,
   colors: ReadonlyMap<string, GroupColors>,
   assigned: ReadonlySet<string>,
+  missing: ReadonlySet<string>,
 ): IngredientPickOption[] {
   return data.ingredientSuggestions.edges.flatMap(({ group, node }) =>
     // A retired entry is kept where a spell lays it, never added anew.
@@ -123,6 +129,7 @@ function pickRows(
               variant.categories.length > 0 ? variant.categories : node.categories,
               colors,
               assigned,
+              missing,
             ),
             heading: group === 'yours' ? YOUR_INGREDIENTS : COMPENDIUM_HEADING,
             key: variant.id,
@@ -158,13 +165,19 @@ export function StepPicker({ workspaceId, oneOffs, onAdd }: StepPickerProps): Re
   const { control } = useFormContext<SpellBuilderValues>();
   const assignedIds = useWatch({ control, name: 'categoryIds' });
   const assigned = useMemo(() => new Set(assignedIds ?? []), [assignedIds]);
+  // Category Match's Missing: assigned, and carried by no step in the jar yet.
+  const jarSteps = useWatch({ control, name: 'steps' });
+  const missing = useMemo(
+    () => new Set(compareJar([...assigned], jarSteps ?? []).intendedNotPresent),
+    [assigned, jarSteps],
+  );
   // The assigned categories pressed to narrow the results. One that is no longer assigned
   // drops out of the filter, so removing it from the field never leaves a hidden filter.
   const [pressed, setPressed] = useState<readonly string[]>([]);
   const narrowedBy = useMemo(() => pressed.filter((id) => assigned.has(id)), [pressed, assigned]);
   const shape = useMemo(
-    () => (data: SpellIngredientSuggestionsQuery) => pickRows(data, colors, assigned),
-    [colors, assigned],
+    () => (data: SpellIngredientSuggestionsQuery) => pickRows(data, colors, assigned, missing),
+    [colors, assigned, missing],
   );
   const suggestions = useLookup(
     SpellIngredientSuggestionsDocument,

@@ -1231,7 +1231,7 @@ describe('the spell builder’s Add to Jar categories', () => {
     expect(mockroot).toHaveTextContent('Love · Protection');
   });
 
-  it('lists the categories the spell already has first, the rest after in their order', async () => {
+  it('lists the spell’s Missing categories first, its other assigned ones next, and the rest in their order', async () => {
     suggest(MANY);
     renderBuilder(
       { spell: assigned('Ember', 'Bind') },
@@ -1241,7 +1241,8 @@ describe('the spell builder’s Add to Jar categories', () => {
 
     const many = await lookUp('Fixture', /Fixture Manywort/);
 
-    // Bind and Ember are the spell's; Aid and Calm follow, and Dawn folds into the +N.
+    // Nothing in the jar carries Ember or Bind yet, so both are Missing and lead, in the row's
+    // order; Aid and Calm are not the spell's, and Dawn folds into the +N.
     expect(many).toHaveTextContent('Bind · Ember · Aid · +2');
     expect(many).toHaveTextContent('more: Calm, Dawn');
   });
@@ -1282,12 +1283,12 @@ describe('the spell builder’s Add to Jar categories', () => {
       expect(screen.queryByRole('option', { name: /Fixture Mockroot/ })).not.toBeInTheDocument(),
     );
     expect(screen.getByRole('option', { name: /Fixture Rosewort/ })).toBeInTheDocument();
-    expect(asked.at(-1)).toEqual([category('Calm').id]);
+    expect(asked[asked.length - 1]).toEqual([category('Calm').id]);
 
     fireEvent.click(calm);
     expect(calm).toHaveAttribute('aria-pressed', 'false');
     expect(await screen.findByRole('option', { name: /Fixture Mockroot/ })).toBeInTheDocument();
-    await waitFor(() => expect(asked.at(-1)).toEqual([]));
+    await waitFor(() => expect(asked[asked.length - 1]).toEqual([]));
   });
 
   it('shows no filter while the spell has no categories of its own', async () => {
