@@ -23,7 +23,7 @@ except Steps, which says the spell has no steps.
 
 - An ingredient links to its coven page, unless it has been deleted since or the service
   withheld it ("Unavailable Ingredient").
-- A one-off ingredient (MB.40) shows its own name and form, a One-Off badge and no link.
+- A one-off ingredient (MB.40) shows its own name and form, a One-Off badge (the muted tint, `badge--retired`: grey in the light theme, pale in the dark; the owner's call, 2026-10-29) and no link.
 - The formal name shows in brackets only where two different ingredients in the spell share a
   label. The same ingredient in two forms does not get one.
 - No Delete control. The `action` slot takes the Edit control, which the page passes for a role

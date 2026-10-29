@@ -172,7 +172,7 @@ export function BuilderStepRow({
           <IconTip tip={ONE_OFF_TIP} placement="above" opensOnPress>
             <button
               type="button"
-              className="badge badge--local step-row__one-off"
+              className="badge badge--retired step-row__one-off"
               aria-describedby={`${fieldsId}-one-off`}
             >
               One-Off
