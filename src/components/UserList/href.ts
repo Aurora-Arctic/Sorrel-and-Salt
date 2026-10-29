@@ -3,12 +3,9 @@ import { listHref } from '../../lib/list-href';
 import type { PagerCursor } from '../../lib/types';
 import type { UserListFilterValue } from './types';
 
-// The address of `/admin/users` under a filter, at a cursor, with a user's
-// modal open over it or not: the page's pager, the filter's submit,
-// each row's name, the modal's close and each privilege-ledger row's link
-// build it. The pager and the filter leave `user` out, so they close the
-// modal as every list's drop `?edit=`.
-// `awaiting` is a bare flag, read by its presence, which `listHref` writes bare.
+// The address of `/admin/users` under a filter and cursor, with a user's modal open or not. The
+// pager and filter leave `user` out, closing the modal as every list's drop `?edit=`. `awaiting` is
+// a bare flag, read by its presence.
 
 /** The page itself, unfiltered: where the filter submits. */
 export const USERS_PATH: Route = '/admin/users';

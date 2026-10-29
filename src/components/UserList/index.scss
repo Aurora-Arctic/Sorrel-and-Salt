@@ -82,11 +82,9 @@
   @include tip-anchor;
 }
 
-// An `$icon-size` box, WCAG 2.2's 24px minimum, in the muted ink as InfoTip's ⓘ
-// is. Its hit area reaches `$control-height`, WCAG 2.5.5's 44px, through a
-// pseudo-element, so the row is no taller for it. Compounded with
-// `.user-list`: the typography's `body a` colours would outrank a lone
-// class in the app, though not in the workshop.
+// An `$icon-size` box (WCAG 2.2's 24px minimum) in the muted ink as InfoTip's ⓘ. Its hit area
+// reaches `$control-height` (WCAG 2.5.5's 44px) through a pseudo-element, so the row is no taller.
+// Compounded with `.user-list`, as `body a` would outrank a lone class in the app.
 .user-list .user-list__history-link {
   @include icon-button($icon-size, $glyph-size, radius('pill'));
 
@@ -120,11 +118,9 @@
   gap: space(2);
 }
 
-// The table above the stacking width: each row a
-// step taller than the primitive's, since a row holds buttons as well as
-// text, and the facts no control changes, Sign-In Methods and Signed Up,
-// muted at the caption size, so the eye goes to what can be acted on. Scoped
-// to this width because a card already leads each fact with its muted label.
+// The table above the stacking width: rows a step taller than the primitive's, since a row holds
+// buttons, and the facts no control changes (Sign-In Methods, Signed Up) muted at caption size.
+// Scoped here because a card already labels each fact.
 @container data-table (width > #{$table-stack-width}) {
   .user-list .user-list__fact {
     color: $text-muted;
@@ -132,12 +128,9 @@
   }
 }
 
-// The Impersonate column, heading and cells: the shared dangerous-action
-// column (`row-action-column`), red since
-// it is the one control in the table that acts as someone else. Still sticky
-// with the admin column at 80rem: the frame stops scrolling only from about
-// 77rem of table, so any window narrower than that, above the stacking width,
-// scrolls it still.
+// The Impersonate column: the shared dangerous-action column (`row-action-column`), red since it
+// acts as someone else. Still sticky with the admin column at 80rem, since the frame scrolls only
+// from about 77rem of table.
 .user-list__impersonate {
   @include row-action-column($sticky-column-layer);
 }

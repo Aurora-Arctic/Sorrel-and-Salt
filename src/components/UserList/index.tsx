@@ -74,11 +74,9 @@ const columns = (
   },
   {
     heading: 'Role',
-    // An admin's or a curator's role in bold: the rows to
-    // notice. On the right, the control that changes it, as
-    // Coven Creation holds its own: one column rather than a second saying the
-    // same thing. The primary admin is marked by a crown with a tip, and its
-    // Change Role's tip says why it cannot be used.
+    // An admin's or curator's role in bold, with the control that changes it on the right: one
+    // column, as Coven Creation holds its own. The primary admin carries a crown with a tip, and
+    // its Change Role's tip says why it cannot be used.
     cell: (user) => (
       <div className="user-list__role">
         <span className="user-list__role-name">

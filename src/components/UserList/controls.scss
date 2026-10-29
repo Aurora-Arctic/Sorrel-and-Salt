@@ -2,28 +2,21 @@
 @use '../../scss/mixins' as *;
 @use 'layers' as *;
 
-// The user list's controls that stand outside its table too: the
-// confirmation's warning and Reason field (`confirmed-action.tsx`) and the
-// locked control and the crown's tips (`locked-control.tsx`,
-// `primary-admin-mark.tsx`). Each of those files imports this, so
-// AdminInvitations, which uses the confirmation and the locked control,
-// takes their rules with them rather than the whole list's stylesheet.
+// Controls that stand outside the table too: the confirmation's warning and Reason field, the
+// locked control and the crown's tips. Each file imports this, so AdminInvitations takes only these
+// rules, not the whole list's stylesheet.
 
-// Approve's warning for an unverified address, given a step more room than a
-// notice's own zero margin leaves between the question and the buttons, so it
-// reads as its own statement. Compounded with `.notice`, whose primitive is
-// `body .notice` in the app: a lone class loses to it there, while the
-// workshop's unweighted frame scope would hide that. Not nested under
-// `.user-list`: the confirmation is a modal, which need not render inside it.
+// Approve's unverified-address warning, a step more room than a notice's zero margin. Compounded
+// with `.notice`, whose primitive is `body .notice` in the app (a lone class loses there; the
+// workshop's frame scope hides that). Not nested under `.user-list`, as a modal need not render
+// inside it.
 .notice.user-list__warning {
   margin-block: space(5);
 }
 
-// The confirmation's Reason field, given the warning's step of room above and
-// 2rem below, so it reads apart from the question and stands clear of
-// the buttons. A wrapper round the field's shell, which
-// takes no class of its own. The invite form's reason takes the same class,
-// through this stylesheet, which the invitations tab loads.
+// The confirmation's Reason field: the warning's step of room above and 2rem below. A wrapper round
+// the field's shell, which takes no class; the invite form's reason takes the same class through
+// this stylesheet.
 .user-list__note {
   margin-block: space(5) space(6);
 }

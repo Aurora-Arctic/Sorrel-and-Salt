@@ -6,11 +6,9 @@ import { UNTITLED_SPELL } from '../SpellCard';
 import SpellRecipeBody from './body';
 import type { SpellRecipeProps } from './types';
 
-// A saved spell as a page: what it is for, its four facts, then its steps in order, then its note
-// (those are `SpellRecipeBody`, which the Quick Look modal draws too). Read-only: Edit is the
-// `action` slot's, for a role that may update the spell, and there is no Delete. Presentational:
-// the page reads through the service and hands the values here. The steps are drawn here,
-// read-only. No print rules are set here. claude-docs/components/spell-recipe.md.
+// A saved spell as a page: purpose, four facts, steps, note (`SpellRecipeBody`, which Quick Look
+// also draws). Read-only; Edit is the `action` slot's and there is no Delete. No print rules are
+// set here (claude-docs/components/spell-recipe.md).
 
 const SpellRecipe = ({
   title,

@@ -10,11 +10,9 @@ import { workspaceRoleLabel, workspaceRoleRank } from './roles';
 import type { UserCoven, UserDetailProps } from './types';
 import './index.scss';
 
-// The body of the modal that opens over `/admin/users` on a user: the facts the users table holds,
-// read-only, the covens they belong to and, where registered, the action to act as them
-// (claude-docs/components/user-detail.md). The row's Grant or Revoke and Approve or Revoke sit
-// beside the facts they change, each asking over this modal. Laid out as the ingredient modal is,
-// in hairline-parted sections, since a table's labels repeat on every card; render-only.
+// The body of the modal over `/admin/users` on a user: the table's facts read-only, their covens
+// and the action to act as them (claude-docs/components/user-detail.md). Laid out as the ingredient
+// modal is, in hairline-parted sections; render-only.
 
 /**
  * Owners, then members, then viewers, each by coven name. Sorted here because

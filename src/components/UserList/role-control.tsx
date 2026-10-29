@@ -13,11 +13,9 @@ import { roleLabel, SITE_ROLE_ACCESS } from './roles';
 import { unverifiedWarning } from './warning';
 import type { RoleControlProps } from './types';
 
-// The row's Change Role beside the role it changes (one control for every role, curator included),
-// as the members page's is: a modal naming the user asks which role they move to, every role but
-// the one they hold, with an optional reason the ledger keeps. The primary admin's stays in view
-// but cannot be used, its reason in a tip that opens as InfoTip's does and said again when it is
-// tried; so does every one while admin changes are paused, to an admin the pause binds
+// The row's Change Role (one control for every role, curator included): a modal asks which role the
+// user moves to, with an optional ledger reason. The primary admin's, and every one while admin
+// changes are paused, stays in view but locked, its reason in a tip
 // (claude-docs/components/user-list.md).
 
 const SetUserRoleDocument = graphql(`

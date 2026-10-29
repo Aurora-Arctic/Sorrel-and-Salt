@@ -55,11 +55,9 @@ const ConfirmedAction = ({
     [anchorRef],
   );
 
-  // The focus goes to the modal's action when asked; Modal gives it back to
-  // the row's button as it closes, on Cancel or a refusal alike, so the
-  // callout is read with the focus on what it is about. In a modal, the
-  // overlay puts the focus on Cancel, its safe answer, and gives it back
-  // itself.
+  // The focus goes to the modal's action when asked; Modal returns it to the row's button on close,
+  // so the callout is read with focus on what it is about. In a modal the overlay focuses Cancel,
+  // its safe answer.
   useEffect(() => {
     if (!inModal && step === 'confirming') confirmRef.current?.focus();
   }, [step, inModal]);

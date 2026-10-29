@@ -1,10 +1,8 @@
 @use '../../scss/variables' as *;
 
-// The page's own column. The frame that centres it and caps it at the
-// reading measure is `.page-frame` on the page's `main`, as on every page
-// with no AppShell (claude-docs/styling.md, "The page frame"): three short
-// paragraphs and a button, so the width is the longest comfortable line
-// rather than a card.
+// The page's own column. `.page-frame` on the page's `main` centres it and caps it at the reading
+// measure (claude-docs/styling.md, "The page frame"): three paragraphs and a button, so the longest
+// comfortable line, not a card.
 .welcome {
   display: flex;
   flex-direction: column;

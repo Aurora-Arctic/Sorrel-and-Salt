@@ -133,11 +133,9 @@ $recipe-column: 48rem;
   margin: 0;
 }
 
-// The steps, as the Recipe Card mock-up draws them: a 1.5rem position column that
-// the numbers line up in, beside it the amount leading the name on the first line, and the
-// step's text and note on lines of their own, indented to the name rather than the number.
-// The position stays a flex item (an absolute one would not share the first line's
-// baseline), so the wrapped lines indent themselves by the column it takes.
+// The steps as the Recipe Card mock-up draws them: a 1.5rem position column, the amount leading the
+// name on the first line, the text and note on lines of their own indented to the name. The
+// position stays a flex item (an absolute one would not share the baseline).
 .spell-recipe__steps .step-row {
   align-items: baseline;
   gap: space(1) space(2);
