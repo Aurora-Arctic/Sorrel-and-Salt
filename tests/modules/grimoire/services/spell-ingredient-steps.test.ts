@@ -146,6 +146,57 @@ describe('an ingredient step', () => {
     expect((await liveStepsOf(spell.id)).map((row) => row.id)).toEqual([saved.id]);
   });
 
+  it('refuses a form the coven holds of a retired entry as a new layer, and keeps one already laid (M14.30)', async () => {
+    // A live form beneath a soft-deleted compendium entry, as migration 0090
+    // leaves a form a coven holds, and the coven's cupboard row naming it.
+    const rosewort = await formOf('Fixture Rosewort');
+    const cupboard = await insertCupboardEntry(
+      sql,
+      { workspaceId: WORKSPACE_W_ID, ingredientId: rosewort.ingredientId },
+      B.id,
+    );
+    const spell = await createSpell(asUser(B), WORKSPACE_W_ID, {
+      title: 'Fixture Working',
+      steps: [rosewort],
+    });
+    const [saved] = await liveStepsOf(spell.id);
+    await sql`
+      update ingredients set deleted_at = now(), deleted_by = ${E.id}
+      where id = ${rosewort.ingredientId}`;
+
+    // Why access could have succeeded: the coven's cupboard row is live, and
+    // so is the form; only the entry is retired.
+    const [held] =
+      await sql`select deleted_at from workspace_compendium_entries where id = ${cupboard}`;
+    const [form] =
+      await sql`select deleted_at from ingredient_variants where id = ${rosewort.variantId}`;
+    const [entry] =
+      await sql`select deleted_at from ingredients where id = ${rosewort.ingredientId}`;
+    expect(held.deleted_at).toBeNull();
+    expect(form.deleted_at).toBeNull();
+    expect(entry.deleted_at).not.toBeNull();
+
+    // The step already laid comes back with the save and is kept.
+    await updateSpell(asUser(B), WORKSPACE_W_ID, spell.id, {
+      expectedRevision: null,
+      steps: [{ id: saved.id as string, ...rosewort, quantity: 3, unit: 'g' }],
+    });
+    expect((await liveStepsOf(spell.id)).map((row) => row.id)).toEqual([saved.id]);
+
+    // The same form as a new step, on this spell or a new one, is refused.
+    const before = await revisionOf(spell.id);
+    await expect(
+      updateSpell(asUser(B), WORKSPACE_W_ID, spell.id, {
+        expectedRevision: null,
+        steps: [{ id: saved.id as string, ...rosewort }, rosewort],
+      }),
+    ).rejects.toMatchObject({ issues: [{ path: ['steps', 1, 'ingredientId'] }] });
+    expect(await revisionOf(spell.id)).toBe(before);
+    await expect(
+      createSpell(asUser(B), WORKSPACE_W_ID, { title: 'Fixture Second', steps: [rosewort] }),
+    ).rejects.toMatchObject({ issues: [{ path: ['steps', 0, 'ingredientId'] }] });
+  });
+
   it('lays one form in several steps, and keeps each through a reorder and a later save', async () => {
     const rosewort = await formOf('Fixture Rosewort');
     const spell = await createSpell(asUser(B), WORKSPACE_W_ID, {

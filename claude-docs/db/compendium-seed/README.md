@@ -249,7 +249,7 @@ The owner's rule (M14.29): "No endangered species in the compendium please." Fou
 3. **A cultivated supply is the exception.** Keep the entry when a source says its trade supply is cultivated (for example coffee and vanilla). The owner approves each one under M14.13.
 4. **The formal-name rule applies.** A listing counts only where the list prints the entry's formal name, or an authority maps its name to exactly that one. Doubt goes to "Uncertain" for the owner.
 
-A new content task checks each candidate against these before it writes the entry. The list of what to remove, keep, ask about and leave alone is `compendium/ethics/endangered-removals.md`. Removing a row that has already landed in a seeded database is its own task, because the seed never deletes a row whose file is gone. The record is `claude-docs/design-decisions/m14.29-no-endangered-species.md`.
+A new content task checks each candidate against these before it writes the entry. The list of what to remove, keep, ask about and leave alone is `compendium/ethics/endangered-removals.md`. Deleting the file is not enough for a row that has already landed in a seeded database, because the seed never deletes a row whose file is gone. A forward-only migration retires it by seed key (M14.30, `0090_retire-endangered-entries.sql`): it soft-deletes the entry and every variant no coven's stock row or spell layer names, and leaves the variants a coven holds live. Later seed runs report the key as `retired` and never revive it. Retire a later removal the same way, with a new migration. The record is `claude-docs/design-decisions/m14.29-no-endangered-species.md`.
 
 ### Conservation and closed-practice files
 
