@@ -866,6 +866,11 @@ type Mutation {
   """
   deleteZodiacSign(id: ID!): ID!
 
+  """
+  Copies a spell into a new private draft in the same coven, with its categories and live steps; the original is untouched.
+  """
+  duplicateSpell(id: ID!, workspaceId: ID!): Spell!
+
   """Lets a user with no invitation create a coven. Refused once they may."""
   grantWorkspaceCreation(note: String, userId: ID!): User!
 

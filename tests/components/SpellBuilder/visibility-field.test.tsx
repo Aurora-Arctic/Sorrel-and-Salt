@@ -113,7 +113,7 @@ function acceptUpdate() {
 // The words the one-way visibility rule refuses a narrowing with (visibility-rule.ts).
 const NARROWING_REFUSED =
   'This spell has been shared with the coven and cannot be made private again. ' +
-  'Delete it instead if it should not be there.';
+  'Duplicate it to get a private copy you can change, or delete it if it should not be there.';
 
 // The one-way rule binds a complete spell only; SPELL, with no status, is a draft.
 const COMPLETE: SpellBuilderSpell = { ...SPELL, status: 'complete' };
