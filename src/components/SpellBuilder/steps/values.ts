@@ -79,6 +79,23 @@ let rowKeys = 0;
 const newRowKey = (): string =>
   `new-${typeof crypto !== 'undefined' && 'randomUUID' in crypto ? crypto.randomUUID() : `${Date.now()}-${rowKeys++}`}`;
 
+/**
+ * Steps written back from stored values (an Undo or Redo, a recovered draft) made safe to
+ * save: a saved id the server no longer holds becomes none, so the save adds the step as a
+ * new one instead of being refused for naming a row the spell has not got; and a step with no
+ * row key (a draft kept before keys existed) is given one. `live` is the ids of the spell's
+ * steps as last saved.
+ */
+export const restoredSteps = (
+  steps: readonly SpellStepValue[],
+  live: ReadonlySet<string>,
+): SpellStepValue[] =>
+  steps.map((step) => {
+    const stepId = step.stepId !== null && !live.has(step.stepId) ? null : step.stepId;
+    const rowKey = step.rowKey ?? stepId ?? newRowKey();
+    return stepId === step.stepId && rowKey === step.rowKey ? step : { ...step, stepId, rowKey };
+  });
+
 /** A new step, as the picker or the one-off adds it: no quantity yet, and the unit its jar is kept in. */
 export const newStep = (
   step: Pick<

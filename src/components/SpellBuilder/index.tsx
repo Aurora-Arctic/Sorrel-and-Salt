@@ -46,6 +46,7 @@ import {
   isBlankNewInstruction,
   isBlankSavedInstruction,
   stepInputOf,
+  restoredSteps,
   stepValueOf,
   stepsChanged,
   unitIssues,
@@ -337,24 +338,25 @@ const SpellBuilder = ({
   const root = useRef<HTMLFormElement>(null);
   // An Undo or Redo writes saved steps back as they were; one a save has since removed is
   // gone from the server, so it comes back as a new step (no id) and the next save adds it.
-  const liveStepId = useCallback(
-    (id: unknown): boolean =>
-      typeof id === 'string' &&
-      ((methods.control._defaultValues.steps ?? []) as (SpellStepValue | undefined)[]).some(
-        (step) => step?.stepId === id,
+  const liveStepIds = useCallback(
+    (): Set<string> =>
+      new Set(
+        ((methods.control._defaultValues.steps ?? []) as (SpellStepValue | undefined)[]).flatMap(
+          (step) => (step?.stepId ? [step.stepId] : []),
+        ),
       ),
     [methods.control],
   );
   const prepareRestored = useCallback(
     (name: string, value: unknown): unknown => {
-      const dropDead = (step: SpellStepValue): SpellStepValue =>
-        step.stepId !== null && !liveStepId(step.stepId) ? { ...step, stepId: null } : step;
-      if (name === 'steps' && Array.isArray(value)) return value.map(dropDead);
-      if (/^steps\.\d+$/.test(name) && value) return dropDead(value as SpellStepValue);
-      if (/^steps\.\d+\.stepId$/.test(name)) return liveStepId(value) ? value : null;
+      if (name === 'steps' && Array.isArray(value))
+        return restoredSteps(value as SpellStepValue[], liveStepIds());
+      if (/^steps\.\d+$/.test(name) && value)
+        return restoredSteps([value as SpellStepValue], liveStepIds())[0];
+      if (/^steps\.\d+\.stepId$/.test(name)) return liveStepIds().has(value as string) ? value : null;
       return value;
     },
-    [liveStepId],
+    [liveStepIds],
   );
   const history = useFormHistory(methods, { root, prepare: prepareRestored, skip: isStepIdName });
 
@@ -600,7 +602,11 @@ const SpellBuilder = ({
   }, []);
   const keepRecovered = () => {
     if (!recovered) return;
-    reset(recovered.value, { keepDefaultValues: true });
+    // The draft may be older than a save that removed a step: its ids are checked against the saved ones.
+    reset(
+      { ...recovered.value, steps: restoredSteps(recovered.value.steps, liveStepIds()) },
+      { keepDefaultValues: true },
+    );
     setRecovered(null);
   };
   const discardRecovered = () => {
