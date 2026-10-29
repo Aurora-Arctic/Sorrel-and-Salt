@@ -29,6 +29,7 @@ export function recipeStepsOf(views: readonly SpellStepView[], hereHref: Route):
       name,
       form,
       formal: null,
+      variantId: linked ? view.variantId : null,
       quantity: view.quantity === null ? null : String(view.quantity),
       unit: view.unit,
       look:

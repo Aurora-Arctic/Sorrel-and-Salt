@@ -1,26 +1,39 @@
 import type { ReactElement } from 'react';
-import { amountOf } from '../StepRow';
+import { needOf } from '../SpellBuilder/steps/supply';
 import { labelOf } from './body';
-import type { RecipeStep } from './types';
+import type { IngredientRecipeStep, RecipeStep } from './types';
 
-// The Ingredients summary: the ingredient steps in order with their amounts, to gather from
-// before starting. Drawn for print alone (`_print.scss` hides it on screen, where the steps carry
-// the amounts and the side column holds the stock): nobody reads paper beside the jar by hunting
-// through the steps (M10.22). A formal name shows where two steps share a label, as in the steps.
+// The Ingredients summary: one line per form, at its first step's place, with the total the steps
+// need (`needOf`, as In Coven Inventory adds them), to gather from before starting. Drawn for
+// print alone (`_print.scss` hides it on screen, where the side column holds the same): stock marks
+// and buttons are left out. A formal name shows where two ingredients share a label, as in the steps.
 
 const SpellRecipeSummary = ({ steps }: { steps: readonly RecipeStep[] }): ReactElement | null => {
-  const lines = steps.flatMap((step) => (step.kind === 'ingredient' ? [step] : []));
+  const laid = steps.filter((step): step is IngredientRecipeStep => step.kind === 'ingredient');
+  const lines = laid.filter(
+    (step, index) =>
+      step.variantId === null || laid.findIndex((o) => o.variantId === step.variantId) === index,
+  );
   if (lines.length === 0) return null;
   return (
     <section className="spell-recipe__summary">
       <h2>Ingredients</h2>
       <ul aria-label="Ingredients">
-        {lines.map((step) => (
-          <li key={step.id}>
-            {amountOf(step.quantity, step.unit)} {labelOf(step)}
-            {step.formal !== null && <span> ({step.formal})</span>}
-          </li>
-        ))}
+        {lines.map((step) => {
+          const same =
+            step.variantId === null ? [step] : laid.filter((o) => o.variantId === step.variantId);
+          const need = needOf(
+            same.map((o) => ({ quantity: o.quantity ?? '', unit: o.unit ?? '' })),
+            null,
+          );
+          return (
+            <li key={step.id}>
+              {need !== null && `${need} `}
+              {labelOf(step)}
+              {step.formal !== null && <span> ({step.formal})</span>}
+            </li>
+          );
+        })}
       </ul>
     </section>
   );

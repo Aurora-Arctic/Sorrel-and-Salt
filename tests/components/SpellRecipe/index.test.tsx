@@ -22,6 +22,7 @@ const ingredient = (
   name: 'Testwort',
   form: null,
   formal: null,
+  variantId: null,
   quantity: null,
   unit: null,
   look: null,
@@ -84,7 +85,7 @@ describe('SpellRecipe', () => {
     expect(items[1]).toHaveTextContent('Testwort');
   });
 
-  it('lists the ingredient steps in order above the steps, for gathering on paper', () => {
+  it('lists each form once, in the order of its first step, with the total it needs, above the steps', () => {
     render(
       <SpellRecipe
         {...props({
@@ -92,11 +93,24 @@ describe('SpellRecipe', () => {
             instruction('a', 'Stir.'),
             ingredient('b', {
               name: 'Fixture Moss',
+              variantId: 'v1',
               form: 'dried_leaf',
-              quantity: '2.500',
+              quantity: '1.5',
               unit: 'tsp',
             }),
-            ingredient('c', { name: 'Testwort', formal: 'Testus wortus', quantity: '1' }),
+            ingredient('c', {
+              name: 'Testwort',
+              formal: 'Testus wortus',
+              variantId: 'v2',
+              quantity: '1',
+            }),
+            ingredient('d', {
+              name: 'Fixture Moss',
+              variantId: 'v1',
+              form: 'dried_leaf',
+              quantity: '1',
+              unit: 'tsp',
+            }),
           ],
         })}
       />,
@@ -108,7 +122,6 @@ describe('SpellRecipe', () => {
     expect(items[0]).toHaveTextContent('Fixture Moss');
     expect(items[1]).toHaveTextContent('Testwort');
     expect(items[1]).toHaveTextContent('Testus wortus');
-    // It comes before the steps in the page.
     const steps = screen.getByRole('list', { name: 'Steps' });
     expect(summary.compareDocumentPosition(steps) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy();
   });
