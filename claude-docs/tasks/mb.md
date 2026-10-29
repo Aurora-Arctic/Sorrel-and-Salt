@@ -4354,6 +4354,7 @@ _Acceptance criteria:_
 - Storybook and /design-sync: a separate agent, not the one doing the design review, updates every Storybook story that the review's changes affect, covering new states, changed props and removed variants (the stories follow the `States`-first convention). That same separate agent then runs `/design-sync`, so the Claude Design project matches, and every changed story grades `match` or `close`
 - Each component's doc updates its Styling section, and its stories show the reviewed design
 - The recipe view's print layout is reviewed on paper or as a PDF as well as on screen
+- At phone width, the recipe page shows the Ingredients summary first (moved from M10.22, 2026-10-29)
 - Reordering steps reads clearly by keyboard as well as by pointer
 - The deduction preview reads plainly, and a shortfall or a step not deducted is told apart without colour alone
 - The comparison panel reads without relying on colour alone
