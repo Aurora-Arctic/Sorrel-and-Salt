@@ -1,0 +1,11 @@
+# Gathered for M14.29; the seed never reads this folder.
+entry: botanical/night-flowering-jasmine-nyctanthes-arbor-tristis
+status: approved
+listings:
+  - list: iucn
+    name: IUCN Red List of Threatened Species, as printed in the Wikipedia taxobox
+    value: Least Concern
+    listedAs: Nyctanthes arbor-tristis
+    nameBasis: stated
+    source: wikipedia-nyctanthes-arbor-tristis
+    locator: 'taxobox "Conservation status": Least Concern (IUCN 3.1)'

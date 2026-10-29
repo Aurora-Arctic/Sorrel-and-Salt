@@ -1,0 +1,13 @@
+# Gathered for M14.29; the seed never reads this folder.
+entry: botanical/kutki-picrorhiza-kurroa
+status: needs-review
+listings:
+  - list: other
+    name: Wikipedia prose, no assessor named
+    value: harvested to near extinction
+    listedAs: Picrorhiza kurroa
+    nameBasis: stated
+    source: wikipedia-picrorhiza-kurroa
+    locator: Distribution paragraph
+questions:
+  - Wikipedia says "It has been reported that Picrorhiza has been harvested to near extinction" but names no assessor. Find the assessment, or drop the row?

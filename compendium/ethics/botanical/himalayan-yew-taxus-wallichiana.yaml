@@ -1,0 +1,11 @@
+# Gathered for M14.29; the seed never reads this folder.
+entry: botanical/himalayan-yew-taxus-wallichiana
+status: needs-review
+listings:
+  - list: iucn
+    name: IUCN Red List of Threatened Species, as printed in the Wikipedia taxobox
+    value: Endangered
+    listedAs: Taxus wallichiana
+    nameBasis: stated
+    source: wikipedia-taxus-wallichiana
+    locator: 'taxobox "Conservation status": Endangered (IUCN 3.1); The page also says exploitation of leaves and bark has caused declines of up to 90% reported in India and Nepal.'

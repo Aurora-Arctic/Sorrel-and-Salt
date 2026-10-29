@@ -1,0 +1,11 @@
+# Gathered for M14.29; the seed never reads this folder.
+entry: botanical/nutgrass-cyperus-rotundus
+status: approved
+listings:
+  - list: iucn
+    name: IUCN Red List of Threatened Species, as printed in the Wikipedia taxobox
+    value: Least Concern
+    listedAs: Cyperus rotundus
+    nameBasis: stated
+    source: wikipedia-cyperus-rotundus
+    locator: 'taxobox "Conservation status": Least Concern (IUCN 3.1)'
