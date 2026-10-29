@@ -169,7 +169,7 @@ export default async function AdminCompendiumPage({ searchParams }: AdminCompend
         {...pagerHrefs(page.pageInfo, (cursor) => compendiumHref({ ...filter, ...cursor }))}
       />
       {/* The details a Quick Look opens, in their own place beneath the edit modal's,
-          so an Edit pressed in them opens over them (M12.5). */}
+          so an Edit pressed in them opens over them. */}
       <DetailsDialog
         closeHref={compendiumHref(list, form)}
         opened={
@@ -204,7 +204,7 @@ export default async function AdminCompendiumPage({ searchParams }: AdminCompend
           to ?edit= keeps the modal open rather than fading it out and in; the
           form inside is keyed by the entry, so each opens on its own values.
           Rendered whatever the address opens, so a press opens it at once and
-          its form arrives in it (M9.18). */}
+          its form arrives in it. */}
       <CompendiumDialog
         place={here}
         lookUnder={form}

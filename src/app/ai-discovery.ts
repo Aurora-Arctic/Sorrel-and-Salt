@@ -3,22 +3,19 @@ import { describe } from '../lib/page-metadata';
 import { SITE_NAME, siteUrl } from '../lib/site';
 import type { CompendiumSlugEntry } from '@/modules/ingredients';
 
-// The two public files that describe the compendium to a crawler or an AI
-// agent: `/llms.txt`, and the catalog served at `/.well-known/ai-catalog.json`
-// and `/.well-known/ard.json`. They list the one public surface (MB.80) and
-// nothing else; every URL is built on `siteUrl`, never on the request's host.
-// The specs, their versions and the field choices are in
-// claude-docs/seo/ai-discovery.md.
+// The two public files that describe the compendium to a crawler or an AI agent: `/llms.txt`, and the
+// catalog at `/.well-known/ai-catalog.json` and `/.well-known/ard.json`. They list the public
+// compendium and nothing else, every URL built on `siteUrl` rather than the request's host
+// (claude-docs/seo/ai-discovery.md).
 
 /** The public compendium's own summary, shared by both files. */
 const SUMMARY =
   'A public reference of the ingredients used in spellwork, each entry with its sources.';
 
 /**
- * llms.txt text: the layout is https://llmstxt.org/ — an H1 with the site
- * name, a blockquote summary, then H2 sections of `- [name](url): notes`
- * lists, with `## Optional` for what a reader may skip. No heading is allowed
- * between the summary and the first H2, so the prose stays heading-free.
+ * llms.txt text, in the layout of https://llmstxt.org/: an H1 with the site name, a blockquote
+ * summary, then H2 sections of `- [name](url): notes` lists, `## Optional` for what a reader may
+ * skip. No heading is allowed between the summary and the first H2.
  */
 export function buildLlmsTxt(entries: readonly CompendiumSlugEntry[]): string {
   const lines = [
@@ -48,9 +45,8 @@ export function buildLlmsTxt(entries: readonly CompendiumSlugEntry[]): string {
 const linkText = (text: string) => text.replace(/[[\]\\]/g, (char) => `\\${char}`);
 
 /**
- * The `: note` after a link, from the entry's description, cut by the same
- * function the page's meta description uses (`describe`, which also joins the
- * text onto one line). An entry with no description gets no note at all.
+ * The `: note` after a link, from the entry's description cut by the page's meta description
+ * function (`describe`, which also joins the text onto one line); none for an entry without one.
  */
 function note(description: string | null): string {
   const text = description ? describe(description) : '';
@@ -76,12 +72,10 @@ export type AiCatalog = {
 };
 
 /**
- * One body that meets two specs at once: the AI Catalog draft needs
- * `specVersion`, `entries` and, per entry, `identifier`, `type` and one of
- * `url`/`data`; ARD v0.91 needs `identifier`, `displayName`, `type` and one of
- * `url`/`data` per entry. The entry is the compendium's HTML page, so its
- * `type` is `text/html`. `updatedAt` is the latest real change among the
- * entries, and is left out when there are none.
+ * One body that meets two specs: the AI Catalog draft needs `specVersion`, `entries` and, per
+ * entry, `identifier`, `type` and one of `url`/`data`; ARD v0.91 needs `identifier`, `displayName`,
+ * `type` and one of `url`/`data`. The entry is the compendium's HTML page, so `type` is
+ * `text/html`. `updatedAt` is the latest real change among the entries, left out when there are none.
  */
 export function buildAiCatalog(entries: readonly CompendiumSlugEntry[]): AiCatalog {
   const latest = entries.reduce<Date | null>(

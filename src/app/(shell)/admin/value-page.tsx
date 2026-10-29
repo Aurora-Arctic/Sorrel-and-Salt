@@ -165,7 +165,7 @@ export async function ValuePage({ kind, searchParams }: ValuePageProps): Promise
       />
       {/* One dialog in one place for an add and an edit alike, rendered
           whatever the address opens, so a press opens it at once and its form
-          arrives in it (M9.18). */}
+          arrives in it. */}
       <ValueDialog
         kind={kind}
         closeHref={closeHref}

@@ -129,7 +129,7 @@ export default async function AccountPage({ searchParams }: AccountPageProps) {
           <p className="lede">Covens that have invited this email address to join them.</p>
         </div>
         {/* The list is drawn even with no rows, so its own empty line is
-            live: the section is always on the page (M10.32). */}
+            live: the section is always on the page. */}
         <ReceivedInvitations
           invitations={invitations.edges.map(({ node }) => node)}
           position={invitations.position}

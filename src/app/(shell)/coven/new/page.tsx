@@ -11,16 +11,12 @@ export const metadata: Metadata = {
   title: 'Create Coven — Sorrel & Salt',
 };
 
-// The create-workspace page (M9.16): reached from `/coven` by a rights holder
-// with no coven yet (M2.8) and from the switcher's Create Coven (M6.9).
-// Inside the shell. It belongs to no one coven, so its context row holds the
-// switcher alone, with no section nav, and only for someone who already has a
-// coven to switch to; a first-time creator has nothing to switch between.
-// A static segment beside `[slug]`, which Next routes first, so the coven
-// layout and its guard do not run here; `new` is kept from ever being a slug
-// (`isReservedCovenSlug`). The right is read from the row, not the session,
-// since accepting an invitation sets it mid-session. Showing the form only to
-// a holder is presentation: `createWorkspace` is still the gate
+// The create-workspace page, reached from `/coven` by a rights holder with no coven yet and from the
+// switcher's Create Coven. It belongs to no one coven, so its context row holds the switcher alone,
+// and only for someone who already has a coven to switch to. A static segment beside `[slug]`, which
+// Next routes first, so the coven guard does not run here; `isReservedCovenSlug` keeps `new` from
+// being a slug. The right is read from the row, not the session, since accepting an invitation sets it
+// mid-session; showing the form only to a holder is presentation, as `createWorkspace` is the gate
 // (claude-docs/auth/coven-guard.md, "The create page").
 export default async function NewCovenPage() {
   const session = await requireSession();
@@ -35,7 +31,7 @@ export default async function NewCovenPage() {
         />
       )}
       {/* Centred in the narrow page frame, on a panel, as the email page's form
-          is (the owner's call, 2026-10-12). */}
+          is. */}
       <main className="page-frame page-frame--narrow">
         <div className="page-frame__section panel">
           <div className="header">

@@ -11,25 +11,15 @@ export const metadata: Metadata = {
   title: 'Your Coven — Sorrel & Salt',
 };
 
-// The post-sign-in landing (M2.8, MB.57): where a sign-in with no return path
-// ends for someone in no coven, and where the brand and Your Coven point for
-// them. Three states, one address. A member who opens it anyway (a bookmark,
-// leaving a coven) goes into the first coven the switcher lists; sign-in and
-// the shell's links send them there directly, skipping this redirect (MB.257). Someone with none who
-// holds the right to create one is offered the create page (M9.16). Anyone
-// else is told how to get in. An admin gets the same three, and with no coven
-// holds the right by CHECK (MB.177), so sees the second. Nothing here creates
-// a workspace; signing in never does. The right is read from the row through
-// `viewerOf`, not the session, since accepting an invitation sets it
-// mid-session.
-//
-// A non-member with coven invitations waiting for their verified address is
-// told so, with a link to the account page's Invitations section, where they
-// are listed and accepted (M10.32), so a lost or filtered mail does not block
-// them. The count is the one the shell's account menu shows, read once per
-// request by `viewerOf`. Nothing on the page sits on a card (the owner's
-// call, M10.32). An eyebrow says "Welcome" and the heading says the next step,
-// which differs by state (the owner's call, MB.119).
+// The post-sign-in landing, where a sign-in with no return path ends for someone in no coven. A member
+// who opens it goes into the first coven the switcher lists; someone with none who holds the right to
+// create one is offered the create page; anyone else is told how to get in (an admin holds the right
+// by CHECK, so sees the second). Nothing here creates a workspace. The right is read from the row
+// through `viewerOf`, not the session, since accepting an invitation sets it mid-session. A
+// non-member with coven invitations waiting for their verified address is pointed to the account
+// page's Invitations section, so a lost or filtered mail does not block them; the count is the one
+// the account menu shows, read once per request by `viewerOf`. Nothing sits on a card; an eyebrow says
+// "Welcome" and the heading says the next step for the state.
 export default async function CovenLandingPage() {
   await requireSession();
   const { viewer, workspaces } = await viewerOf();

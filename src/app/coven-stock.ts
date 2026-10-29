@@ -4,11 +4,10 @@ import type { Session } from '@/lib/session';
 import { stockOf, type StockRow } from '@/modules/ingredients';
 import { formLabel } from '@/modules/ingredients/validation/form-label';
 
-// The coven's jars of one entry, as the pages that draw Edit Stock read them: the coven's
-// Ingredients (its cards and Quick Look) and the entry's own page (M12.29). In one file so
-// both say the same, since a jar's amounts are numeric strings in the row and numbers on
-// the screen. Read per request through the stock service, never cached (CLAUDE.md rule 6).
-// claude-docs/components/stock-dialog.md.
+// The coven's jars of one entry, as the pages that draw Edit Stock read them: the coven's Ingredients
+// (its cards and Quick Look) and the entry's own page. One file so both say the same, since a jar's
+// amounts are numeric strings in the row and numbers on the screen. Read per request through the stock
+// service, never cached (CLAUDE.md rule 6). See claude-docs/components/stock-dialog.md.
 
 /** The coven's jars of the entry, read under the stock service's own check. */
 export async function covenJarsOf(

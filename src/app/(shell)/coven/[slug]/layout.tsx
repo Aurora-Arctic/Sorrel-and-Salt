@@ -23,16 +23,13 @@ export async function generateMetadata({ params }: CovenLayoutParams): Promise<M
   };
 }
 
-// The workspace is the URL segment's and nothing else's: never a cookie or a
-// "current workspace" on the session, so two tabs can sit in two covens. A
-// non-member and an unknown slug both get the 404 (claude-docs/auth/coven-guard.md,
-// "The coven guard"). Every page beneath calls the guard too, with its own
-// `params`: a layout does not re-run on client-side navigation. The section
-// nav is here rather than on each page, so every page beneath has it (M9.15),
-// in the context row beside the coven switcher (MB.7). The switcher's list is
-// the shell's own cached lookup, so it costs no second query. The provider
-// carries what a page beneath says about the covens it opens in up to the
-// switcher, which cannot see its children (M9.12).
+// The workspace is the URL segment's and nothing else's: never a cookie or a "current workspace" on
+// the session, so two tabs can sit in two covens. A non-member and an unknown slug both get the 404
+// (claude-docs/auth/coven-guard.md, "The coven guard"). Every page beneath calls the guard too, with
+// its own `params`, as a layout does not re-run on client-side navigation. The section nav sits in
+// the context row beside the coven switcher, whose list is the shell's own cached lookup (no second
+// query). The provider carries what a page beneath says about the covens it opens in up to the
+// switcher, which cannot see its children.
 export default async function CovenLayout({ children, params }: CovenLayoutProps) {
   const { slug } = await params;
   const { membership } = await requireCovenMembership(slug);

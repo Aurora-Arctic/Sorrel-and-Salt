@@ -3,10 +3,9 @@
 import ErrorPage from '../components/ErrorPage';
 import './globals.scss';
 
-// The boundary for an error in the root layout itself, which `error.tsx`
-// cannot catch. It replaces that layout, so it draws its own document and
-// imports the global styles. A plain anchor rather than `next/link`: the
-// router may be the thing that failed, and a full load starts clean.
+// The boundary for an error in the root layout itself, which `error.tsx` cannot catch. It replaces
+// that layout, so it draws its own document and imports the global styles. A plain anchor rather than
+// `next/link`: the router may be the thing that failed, and a full load starts clean.
 export default function GlobalError({ error }: { error: Error & { digest?: string } }) {
   return (
     <html lang="en">

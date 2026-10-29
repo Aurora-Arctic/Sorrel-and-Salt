@@ -6,16 +6,15 @@ import { covenRolesIfSignedIn, viewerIfSignedIn } from '@/lib/viewer';
 import { rolePermits } from '@/modules/coven';
 import { covensHoldingEntry, type HoldingCoven } from '@/modules/ingredients';
 
-// The plus beside an entry page's pencil (M9.12; the owner's call, 2026-10-20), on the public
-// page and a coven's alike: the viewer's covens, and which of them hold the entry. Per viewer,
-// so read per request through the services and never cached (CLAUDE.md rule 6); the held covens
-// are the one `covensHoldingEntry` read, which filters to the viewer's memberships in SQL.
-// claude-docs/components/ingredient-entry.md, "The plus".
+// The plus beside an entry page's pencil, on the public page and a coven's alike: the viewer's
+// covens, and which of them hold the entry. Per viewer, so read per request through the services and
+// never cached (CLAUDE.md rule 6); the held covens are the one `covensHoldingEntry` read, which
+// filters to the viewer's memberships in SQL. claude-docs/components/ingredient-entry.md, "The plus".
 
 /**
- * The viewer's covens that hold the entry, viewers' included: none signed out. The one held read
- * a page makes, feeding the shelf mark, the cupboard choices and the plus. A refusal reads as
- * none, and the write says no.
+ * The viewer's covens that hold the entry, viewers' included: none signed out. The one held read a
+ * page makes, feeding the shelf mark, the cupboard choices and the plus. A refusal reads as none,
+ * and the write says no.
  */
 export async function covensHolding(id: string): Promise<readonly HoldingCoven[]> {
   const session = await getSession();
@@ -29,10 +28,10 @@ export async function covensHolding(id: string): Promise<readonly HoldingCoven[]
 }
 
 /**
- * The plus's covens: every coven the viewer may add in, with those of them in `holding` held.
- * None where no coven may add (a viewer everywhere, a curator in no coven), so the page draws
- * neither the plus nor its check. `current` is the coven the page is in, the default where it
- * may add; otherwise the first.
+ * The plus's covens: every coven the viewer may add in, with those of them in `holding` held. None
+ * where no coven may add (a viewer everywhere, a curator in no coven), so the page draws neither the
+ * plus nor its check. `current` is the coven the page is in, the default where it may add;
+ * otherwise the first.
  */
 export async function plusCovensOf(
   holding: readonly HoldingCoven[],

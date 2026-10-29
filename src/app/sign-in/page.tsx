@@ -1,9 +1,9 @@
 import type { Metadata } from 'next';
 import SignInPanel from '../../components/SignInPanel';
 import { safeReturnPath, signInErrorMessage } from '../../lib/sign-in';
-// Server-only — see social-providers-config.ts's own header. This page is a
-// server component, so the env var names this reads never reach the client
-// bundle; only the resulting `configured` ids are passed as a prop.
+// Server-only, as social-providers-config.ts's own header says. This page is a server component, so
+// the env var names this reads never reach the client bundle; only the resulting `configured` ids are
+// passed as a prop.
 // oxlint-disable-next-line no-restricted-imports
 import { configuredProviders } from '../../lib/social-providers-config';
 import type { SignInPageProps } from './types';

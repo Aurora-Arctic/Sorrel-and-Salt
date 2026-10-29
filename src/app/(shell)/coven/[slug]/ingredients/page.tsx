@@ -183,7 +183,7 @@ export default async function CovenIngredientsPage({
           )}
         />
         {/* The details Quick Look opens, in their own place beneath the edit modal's,
-          so an Edit pressed in them opens over them (M12.5). Edit only on the
+          so an Edit pressed in them opens over them. Edit only on the
           coven's own entry, for a role that may edit it. */}
         <DetailsDialog
           closeHref={listHref}

@@ -12,9 +12,9 @@ import PrePaintScripts from './pre-paint-scripts';
 import Providers from './providers';
 import './globals.scss';
 
-// `metadataBase` resolves any relative address a page's metadata names against the
-// production origin, and the template puts the site's name after every page's own
-// title, so a page sets only what is particular to it (MB.84).
+// `metadataBase` resolves any relative address a page's metadata names against the production origin,
+// and the template puts the site's name after every page's own title, so a page sets only what is
+// particular to it.
 export const metadata: Metadata = {
   metadataBase: new URL(SITE_ORIGIN),
   title: { default: SITE_NAME, template: `%s | ${SITE_NAME}` },
@@ -40,10 +40,9 @@ export default function RootLayout({ children }: { children: ReactNode }) {
       </head>
       <body>
         {/* First, above what it describes; mounted only where impersonation is
-            registered, so production pays nothing for it (MB.53). */}
+            registered, so production pays nothing for it. */}
         {impersonationEnabled() && <ImpersonationBannerSlot />}
-        {/* Every page gets it, signed in or not — M2.6 moved it here from the
-            home page, which was the only page that existed yet. */}
+        {/* Every page gets it, signed in or not. */}
         <ThemeToggle />
         {/* The page's one status region, its <output> drawn ahead of the page so
             a screen reader is listening before a click says anything

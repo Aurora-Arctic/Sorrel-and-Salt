@@ -170,7 +170,7 @@ export default async function AdminUsersPage({ searchParams }: AdminUsersPagePro
         )}
       />
       {/* Rendered whatever the address opens, so a press on a name opens it at
-          once and the covens arrive in it (M9.18). */}
+          once and the covens arrive in it. */}
       <UserDialog
         closeHref={userListHref({ query, awaitingApproval, role }, cursorOf(after, before))}
         opened={opened}
