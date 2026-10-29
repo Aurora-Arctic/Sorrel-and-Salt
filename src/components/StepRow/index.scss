@@ -237,7 +237,14 @@ $step-ink-drop: 0.05rem;
     grid-area: controls;
     display: flex;
     align-items: flex-start;
+    justify-content: flex-end;
     gap: space(1);
+
+    // Always three slots wide (eye, Edit or Close, Remove), whichever are drawn, so the badges
+    // before it end at the same x on every row; a missing control leaves its slot empty and the
+    // rest keep their places at the right edge (owner, 2026-10-29).
+    inline-size: calc(#{$icon-size} * 3 + #{space(1)} * 2);
+    flex: none;
   }
 
   // The eye stands on the first line's centre like the marks and the buttons.
