@@ -26,7 +26,7 @@ is a `dl` under a hairline with up to four cells, Jar (`jarDescription`), Seal W
 (`sealWaxColor`), Moon Phase (`moonPhase`) and Day (`dayOfWeek`), each `dt` in the overline
 style; a blank or null value draws no cell and none set draws no strip. The moon phase carries the
 builder's `MoonPhaseIcon` before its text, which draws nothing for a phase outside the builder's
-list. Four columns, two per row in a column narrower than `$narrow-column` (a container query on
+list. The drawing is a third larger here than its 1.25em line size (the owner, 2026-10-29). Four columns, two per row in a column narrower than `$narrow-column` (a container query on
 the strip's box). There is no Ingredients section: the steps carry the amounts, the amount leading
 the name in weight 500 with the name in 400, and an instruction-only step's text is muted and fills
 the number's line. The steps are an `ol` named Steps with no visible heading, in `position`
@@ -67,6 +67,10 @@ Inventory (`SpellBuilder/inventory.tsx`), the builder's order reversed (the owne
 each with an `h2`
 (a prop; the builder keeps `h5` under its Jar heading) styled as the entry page's side blocks head
 themselves: the h3 size and no rule beneath (the owner, 2026-10-29).
+At tablet width and up the column starts level with the facts strip's rule, not with the purpose
+(the owner, 2026-10-29): the body is two boxes (`body.tsx`), the purpose and chips, then the rest,
+and the page lays them straight into its grid (`display: contents` on `.spell-recipe__main`), so the
+column takes the second row. With no purpose and no chips it starts at the top.
 The Quick Look modal draws neither. `SpellRecipe` takes the column as its `aside` slot and
 wraps it in an `aside` named The Jar (a landmark needs the name inside an `article`), beside the
 body in the ingredient entry page's columns (`entry-section` and `entry-side`: the same side

@@ -37,6 +37,15 @@ $recipe-column: 48rem;
   min-width: 0;
 }
 
+// The body's two boxes (body.tsx): the purpose and the chips, then the facts, steps and note,
+// each spaced as the body is.
+.spell-recipe__lead,
+.spell-recipe__rest {
+  @include stack(4);
+
+  min-width: 0;
+}
+
 // With the side column the article is the paragraphs' measure, the gutter and the column, no
 // wider: the body's sections are capped at the measure, so a wider body column would stand
 // empty before the gutter (the owner, 2026-10-29). The head stays over the body, so the Edit
@@ -47,6 +56,20 @@ $recipe-column: 48rem;
   @media (min-width: calc(#{$shell-tablet-width} + 0.01rem)) {
     > .spell-recipe__head {
       max-width: calc(100% - #{space(8)} - #{$side-column});
+    }
+
+    // The side column starts level with the facts strip, not the purpose (the owner,
+    // 2026-10-29): the body's two boxes become the grid's own items in the text column, the
+    // lead in the first row and the rest in the next, and the column, placed after them, takes
+    // the rest's row. With no lead the rest is the first row and the column starts at the top.
+    // The grid's row gap is the body's own space(4), so the body spaces as before.
+    .spell-recipe__main {
+      display: contents;
+    }
+
+    .spell-recipe__lead,
+    .spell-recipe__rest {
+      grid-column: 1;
     }
   }
 }
@@ -230,6 +253,13 @@ $recipe-column: 48rem;
     align-items: center;
     margin: 0;
     overflow-wrap: anywhere;
+  }
+
+  // The moon a third larger than its 1.25em line size (the owner, 2026-10-29), so the phase reads
+  // at a glance; the cell centres it on the name, so its sunk baseline plays no part here.
+  .moon-phase-icon {
+    width: calc(1.25em * 4 / 3);
+    height: calc(1.25em * 4 / 3);
   }
 }
 

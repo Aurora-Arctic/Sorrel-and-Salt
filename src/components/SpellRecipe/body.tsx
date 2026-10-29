@@ -80,59 +80,70 @@ const SpellRecipeBody = ({
   const text = (note ?? '').trim();
   return (
     <>
-      {purpose !== '' && <p className="spell-recipe__intent">{purpose}</p>}
-      <CategoryChips categories={categories} label={name} showAll />
-
-      {facts.length > 0 && (
-        <div className="spell-recipe__facts-box">
-          <dl className="spell-recipe__facts">
-            {facts.map(({ label, text }) => (
-              <div key={label}>
-                <dt>{label}</dt>
-                <dd>
-                  {/* The builder's drawing beside the phase; a phase outside its list draws nothing. */}
-                  {label === 'Moon Phase' && <MoonPhaseIcon phase={text} />}
-                  {text}
-                </dd>
-              </div>
-            ))}
-          </dl>
+      {/* Two boxes, so the recipe page can stand its side column level with the facts strip,
+          beside the second box and not the first (the owner, 2026-10-29). The lead is left out
+          when it holds nothing, so the column then starts at the top. */}
+      {(purpose !== '' || categories.length > 0) && (
+        <div className="spell-recipe__lead">
+          {purpose !== '' && <p className="spell-recipe__intent">{purpose}</p>}
+          <CategoryChips categories={categories} label={name} showAll />
         </div>
       )}
 
-      {steps.length === 0 ? (
-        <p className="meta">This spell has no steps yet.</p>
-      ) : (
-        <ol className="spell-recipe__steps" aria-label="Steps">
-          {steps.map((step: RecipeStep, i) =>
-            step.kind === 'instruction' ? (
-              <StepRow
-                key={step.id}
-                className="spell-recipe__instruction"
-                position={i + 1}
-                name={null}
-                body={step.body}
-              />
-            ) : (
-              <StepRow
-                key={step.id}
-                position={i + 1}
-                name={<Name step={step} />}
-                marks={<Marks step={step} />}
-                quantity={step.quantity}
-                unit={step.unit}
-                // An ingredient step's line is its note, drawn muted under the name (the owner,
-                // 2026-10-28); with `note` retired into `body` (PR #1308, migration 0088) the
-                // body is that line, drawn the same way, and `note` is read only until the
-                // column goes (M13.9). An instruction step is its text.
-                note={(step.note || step.body) && <p className="meta">{step.note || step.body}</p>}
-              />
-            ),
-          )}
-        </ol>
-      )}
+      <div className="spell-recipe__rest">
+        {facts.length > 0 && (
+          <div className="spell-recipe__facts-box">
+            <dl className="spell-recipe__facts">
+              {facts.map(({ label, text }) => (
+                <div key={label}>
+                  <dt>{label}</dt>
+                  <dd>
+                    {/* The builder's drawing beside the phase; a phase outside its list draws nothing. */}
+                    {label === 'Moon Phase' && <MoonPhaseIcon phase={text} />}
+                    {text}
+                  </dd>
+                </div>
+              ))}
+            </dl>
+          </div>
+        )}
 
-      {text !== '' && <p className="spell-recipe__note">{text}</p>}
+        {steps.length === 0 ? (
+          <p className="meta">This spell has no steps yet.</p>
+        ) : (
+          <ol className="spell-recipe__steps" aria-label="Steps">
+            {steps.map((step: RecipeStep, i) =>
+              step.kind === 'instruction' ? (
+                <StepRow
+                  key={step.id}
+                  className="spell-recipe__instruction"
+                  position={i + 1}
+                  name={null}
+                  body={step.body}
+                />
+              ) : (
+                <StepRow
+                  key={step.id}
+                  position={i + 1}
+                  name={<Name step={step} />}
+                  marks={<Marks step={step} />}
+                  quantity={step.quantity}
+                  unit={step.unit}
+                  // An ingredient step's line is its note, drawn muted under the name (the owner,
+                  // 2026-10-28); with `note` retired into `body` (PR #1308, migration 0088) the
+                  // body is that line, drawn the same way, and `note` is read only until the
+                  // column goes (M13.9). An instruction step is its text.
+                  note={
+                    (step.note || step.body) && <p className="meta">{step.note || step.body}</p>
+                  }
+                />
+              ),
+            )}
+          </ol>
+        )}
+
+        {text !== '' && <p className="spell-recipe__note">{text}</p>}
+      </div>
     </>
   );
 };
