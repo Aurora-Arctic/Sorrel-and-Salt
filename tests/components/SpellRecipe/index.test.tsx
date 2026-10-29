@@ -187,7 +187,10 @@ describe('SpellRecipe', () => {
     );
     expect(within(steps).getByText('Testwort').closest('a')).toBeNull();
     expect(within(steps).getByText(/Fixture Moss \(Fresh\)/)).toBeInTheDocument();
-    expect(within(steps).getByText(/One-Off/)).toBeInTheDocument();
+    const oneOff = within(steps).getByRole('button', { name: 'One-Off' });
+    expect(oneOff).toHaveAccessibleDescription(
+      'Used in this spell only; not kept in your cupboard.',
+    );
   });
 
   it('marks a toxic ingredient Toxic and one with safety notes Caution, and a one-off neither', () => {

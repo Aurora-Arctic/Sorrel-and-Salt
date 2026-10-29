@@ -32,8 +32,9 @@ order, the position column 2rem and right-aligned; an ingredient step draws its 
 colour (the owner, 2026-10-28). A unit with no quantity reads "— tsp", the dash muted (`StepRow`);
 the form icon `StepRow` draws is hidden here, as the mock-up's steps carry none. The marks sit
 right-aligned at the row's end: Toxic or Caution (`SafetyMark`, from the ingredient and the form
-laid) and, for a one-off, `badge badge--local`, the builder's `SupplyMark`'s, at the default
-badge size (the owner, 2026-10-28). The note is a
+laid) and, for a one-off, the One-Off badge (`OneOffBadge`, `src/components/StepRow/one-off-badge.tsx`,
+a button named One-Off whose tip and description read "Used in this spell only; not kept in your
+cupboard.", the owner, 2026-10-29) at the default badge size (the owner, 2026-10-28). The note is a
 muted paragraph under its own hairline, drawn only when there is one; the strip and the list are
 capped at the paragraphs' `$measure`, so the two hairlines end together on the page. A spell
 with no steps says so.

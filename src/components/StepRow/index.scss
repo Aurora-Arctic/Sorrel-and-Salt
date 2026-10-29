@@ -14,6 +14,12 @@
   color: $text-muted;
 }
 
+// The One-Off badge is a button so its tip is reached by focus; it reads as the badge it was.
+.step-row__one-off {
+  font-family: inherit;
+  cursor: default;
+}
+
 .step-row__body {
   flex: 1 1 100%;
   white-space: pre-wrap;

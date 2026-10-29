@@ -3,6 +3,7 @@ import CategoryChips from '../CategoryChips';
 import { QuickLookLink } from '../IconTip';
 import { DETAILS_PLACE, detailsHeading } from '../IngredientEntry/details';
 import StepRow from '../StepRow';
+import OneOffBadge from '../StepRow/one-off-badge';
 import MoonPhaseIcon from '../MoonPhaseIcon';
 import { SafetyMark } from '../SafetyNote';
 import { formLabel } from '../../modules/ingredients/validation/form-label';
@@ -47,8 +48,8 @@ const Marks = ({ step }: { step: IngredientRecipeStep }): ReactElement | null =>
   step.safety || step.oneOff ? (
     <span className="spell-recipe__marks">
       {step.safety && <SafetyMark {...step.safety} />}
-      {/* The mark the builder's SupplyMark gives a one-off, so the two read alike. */}
-      {step.oneOff && <span className="badge badge--local spell-recipe__one-off">One-Off</span>}
+      {/* The builder's One-Off badge, with its tip, so the two read alike. */}
+      {step.oneOff && <OneOffBadge className="spell-recipe__one-off" />}
     </span>
   ) : null;
 

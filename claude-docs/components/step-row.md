@@ -28,6 +28,8 @@ It renders an `<li>`, so the caller wraps it in an `<ol>` it names.
 
 An instruction-only step (`name` null) never draws an amount, `marks` or `note`, whatever it is given.
 
+**The One-Off badge** (`one-off-badge.tsx`, `OneOffBadge`) is a button named One-Off in an `IconTip`, its tip and description "Used in this spell only; not kept in your cupboard." (the owner, 2026-10-29). The recipe draws it in its marks; the builder draws the same once PR #1308 lands, so the two say the same thing.
+
 ## Testing
 
 `tests/components/StepRow/index.test.tsx`: what each kind of step draws, and that a control
