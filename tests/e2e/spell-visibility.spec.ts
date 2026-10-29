@@ -60,7 +60,7 @@ test('a new spell starts private, a draft moves between private and shared freel
   // Share it, and mark it complete: that save starts the lock.
   await visibility.check();
   await page.getByRole('button', { name: 'Mark Complete' }).click();
-  await expect(page.getByRole('button', { name: 'Reopen as Draft' })).toBeVisible();
+  await expect(page.getByText(/^Complete\./)).toBeVisible();
   await expect(visibility).toBeChecked();
   await expect(visibility).toBeDisabled();
   await expect(visibility).toHaveAccessibleDescription(/cannot be made private again/);
