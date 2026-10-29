@@ -118,6 +118,18 @@ export async function touchDragVertically(handle: HTMLElement, y: number, holdMs
   const at = (clientY: number) => ({ touches: [{ clientX: 20, clientY }] });
   const from = top + height / 2;
   fireEvent.touchStart(handle, at(from));
+  if (holdMs <= 0) {
+    // A swipe is fired in one synchronous burst: awaiting between the touch and
+    // its moves would let a loaded machine take longer than the hold delay, and
+    // the swipe would then count as a held drag.
+    act(() => {
+      fireEvent.touchMove(document, at(from + 2));
+      fireEvent.touchMove(document, at(y));
+      fireEvent.touchEnd(document, { touches: [], changedTouches: [{ clientX: 20, clientY: y }] });
+    });
+    await act(() => new Promise<void>((resolve) => setTimeout(resolve, 60)));
+    return;
+  }
   await act(() => new Promise<void>((resolve) => setTimeout(resolve, holdMs)));
   fireEvent.touchMove(document, at(from + 2));
   await tick();
