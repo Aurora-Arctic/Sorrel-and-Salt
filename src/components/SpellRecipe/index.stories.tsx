@@ -37,6 +37,7 @@ export const Complete: Story = {
           name: 'Testwort',
           form: 'Dried Leaf',
           formal: 'Testus wortus',
+          variantId: 'fixture-variant',
           quantity: '2',
           unit: 'tsp',
           look: {
@@ -57,6 +58,7 @@ export const Complete: Story = {
           name: 'Fixture Moss',
           form: 'Fresh',
           formal: null,
+          variantId: null,
           quantity: null,
           unit: null,
           look: null,

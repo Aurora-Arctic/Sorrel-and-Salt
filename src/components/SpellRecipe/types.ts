@@ -33,6 +33,8 @@ export interface IngredientRecipeStep {
    * same label, so the two can be told apart. Null otherwise.
    */
   formal: string | null;
+  /** The form laid, as an id: steps sharing one are one line in the print summary. Null for a one-off. */
+  variantId: string | null;
   /** The amount, as written; null for none ("a pinch" has no number). */
   quantity: string | null;
   unit: string | null;

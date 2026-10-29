@@ -22,6 +22,7 @@ const ingredient = (
   name: 'Testwort',
   form: null,
   formal: null,
+  variantId: null,
   quantity: null,
   unit: null,
   look: null,
@@ -55,6 +56,11 @@ describe('SpellRecipe', () => {
     );
   });
 
+  it('offers Print Spell with no action given, so a viewer can print', () => {
+    render(<SpellRecipe {...props()} />);
+    expect(screen.getByRole('button', { name: 'Print Spell' })).toBeInTheDocument();
+  });
+
   it('calls a spell with no title Untitled Spell', () => {
     render(<SpellRecipe {...props({ title: null, status: 'draft' })} />);
     expect(screen.getByRole('heading', { level: 1, name: 'Untitled Spell' })).toBeInTheDocument();
@@ -79,16 +85,50 @@ describe('SpellRecipe', () => {
     expect(items[1]).toHaveTextContent('Testwort');
   });
 
-  it('draws no Ingredients section, the steps carrying the amounts', () => {
+  it('lists each form once, in the order of its first step, with the total it needs, above the steps', () => {
     render(
       <SpellRecipe
-        {...props({ steps: [instruction('a', 'Stir.'), ingredient('b', { quantity: '1' })] })}
+        {...props({
+          steps: [
+            instruction('a', 'Stir.'),
+            ingredient('b', {
+              name: 'Fixture Moss',
+              variantId: 'v1',
+              form: 'dried_leaf',
+              quantity: '1.5',
+              unit: 'tsp',
+            }),
+            ingredient('c', {
+              name: 'Testwort',
+              formal: 'Testus wortus',
+              variantId: 'v2',
+              quantity: '1',
+            }),
+            ingredient('d', {
+              name: 'Fixture Moss',
+              variantId: 'v1',
+              form: 'dried_leaf',
+              quantity: '1',
+              unit: 'tsp',
+            }),
+          ],
+        })}
       />,
     );
-    expect(screen.queryByRole('heading', { name: 'Ingredients' })).toBeNull();
+    const summary = screen.getByRole('list', { name: 'Ingredients' });
+    const items = within(summary).getAllByRole('listitem');
+    expect(items).toHaveLength(2);
+    expect(items[0]).toHaveTextContent('2.5 tsp');
+    expect(items[0]).toHaveTextContent('Fixture Moss');
+    expect(items[1]).toHaveTextContent('Testwort');
+    expect(items[1]).toHaveTextContent('Testus wortus');
+    const steps = screen.getByRole('list', { name: 'Steps' });
+    expect(summary.compareDocumentPosition(steps) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy();
+  });
+
+  it('draws no Ingredients list for a spell with no ingredient step', () => {
+    render(<SpellRecipe {...props({ steps: [instruction('a', 'Stir.')] })} />);
     expect(screen.queryByRole('list', { name: 'Ingredients' })).toBeNull();
-    expect(screen.queryByRole('heading', { name: 'Steps' })).toBeNull();
-    expect(screen.getAllByRole('list')).toHaveLength(1);
   });
 
   it('draws the facts that are set as a strip, and leaves out blank ones', () => {

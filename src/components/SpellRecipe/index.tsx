@@ -4,11 +4,13 @@ import LastEdit from '../LastEdit';
 import LinkHint from '../LinkHint';
 import { UNTITLED_SPELL } from '../SpellCard';
 import SpellRecipeBody from './body';
+import PrintButton from './print-button';
+import SpellRecipeSummary from './summary';
 import type { SpellRecipeProps } from './types';
 
 // A saved spell as a page: purpose, four facts, steps, note (`SpellRecipeBody`, which Quick Look
-// also draws). Read-only; Edit and Delete Spell are the `action` slot's, for roles that may. No
-// print rules are set here (claude-docs/components/spell-recipe.md).
+// also draws). Read-only; Edit and Delete Spell are the `action` slot's, for roles that may. Its print
+// layout is `src/scss/_print.scss` (claude-docs/components/spell-recipe.md).
 
 const SpellRecipe = ({
   title,
@@ -48,8 +50,11 @@ const SpellRecipe = ({
             {visibility === 'private' && <span className="badge badge--private">Private</span>}
           </div>
         )}
+        {/* Every role may print, so the button is the component's own, not the action slot's. */}
+        <PrintButton />
         {action}
       </header>
+      <SpellRecipeSummary steps={steps} />
       <div className="spell-recipe__columns">
         <div className="spell-recipe__main">
           <SpellRecipeBody

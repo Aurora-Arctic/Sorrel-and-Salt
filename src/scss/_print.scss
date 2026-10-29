@@ -1,0 +1,91 @@
+@use './variables' as *;
+@use './mixins' as *;
+
+// The one print stylesheet: the spell recipe page (M10.22), the only view with print rules.
+// Every rule sits behind `:has(.spell-recipe)`, the page's own article, so no other page prints
+// differently; the Quick Look modal draws only the body and has no such article. A browser
+// without `:has()` simply prints the screen layout.
+
+.spell-recipe__summary {
+  display: none;
+}
+
+@media print {
+  // Paper is light whatever the theme: the light tokens, so text is dark on white.
+  html:has(.spell-recipe) {
+    @include theme-light;
+
+    font-size: 11pt;
+    scroll-padding: 0;
+  }
+
+  body:has(.spell-recipe) {
+    background: $surface-page;
+    color: $text-primary;
+
+    // Chrome that does nothing on paper.
+    .skip-link,
+    .skip-target,
+    .app-shell__bar,
+    .section-nav,
+    .spell-recipe__back,
+    .spell-recipe__actions,
+    .spell-recipe__print,
+    .spell-recipe__aside,
+    .icon-tip__look,
+    .specimen__badges,
+    [role='dialog'],
+    [role='tooltip'] {
+      display: none !important;
+    }
+
+    .app-shell__main {
+      padding: 0;
+    }
+
+    .spell-recipe {
+      max-width: none;
+      margin: 0;
+      padding: 0;
+      gap: space(2);
+    }
+
+    // One column: the side column is hidden, and the body takes the page.
+    .spell-recipe__columns {
+      display: block;
+    }
+
+    .spell-recipe__main,
+    .spell-recipe__lead,
+    .spell-recipe__rest {
+      display: flex;
+      flex-direction: column;
+      gap: space(2);
+    }
+
+    .spell-recipe__summary {
+      display: block;
+
+      h2 {
+        margin: 0;
+        font-size: 1.1em;
+      }
+
+      ul {
+        margin: space(1) 0 0;
+        padding-inline-start: 1.25em;
+      }
+    }
+
+    // A step or a heading is not split across pages.
+    .step-row,
+    .spell-recipe__summary li {
+      break-inside: avoid;
+    }
+
+    a {
+      color: inherit;
+      text-decoration: none;
+    }
+  }
+}
