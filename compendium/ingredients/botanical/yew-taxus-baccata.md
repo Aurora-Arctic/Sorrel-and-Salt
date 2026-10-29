@@ -112,3 +112,11 @@ seedUpdate: 6300602e0c0ba63be60a34c03985113c499c8a8dedae8a8e4a2d7ebe53e45f1e
 # Yew
 
 Yew is an evergreen conifer of the family Taxaceae, native to much of Europe and to parts of West Asia, the Caucasus and north-west Africa. It is a small to medium tree, often with several trunks, thin reddish-brown bark that flakes away, and flat, glossy, dark green needles that are paler beneath. Each seed sits almost enclosed in a soft, bright red cup, the aril, which ripens in autumn. Yews can live for many centuries, and some British trees are thought to be older than the tenth century; they are a familiar sight in the churchyards of Britain, Ireland and Normandy. The wood was prized for longbows and lutes. Kynes traces its long tie to death and the underworld among the Greeks and Romans, alongside hope and rebirth; its sacredness to the Celts of Gaul and the Druids; yew branches carried at French funerals; amulets of yew worn against bewitchment in Germanic lands; and Welsh and Scottish lore of faeries seen beneath it. Cunningham places it under Saturn and water and says it is used to call up the spirits of the dead, though rarely, because it is so poisonous. Kynes adds air and fire, Jupiter, Mars and Capricorn, and ties it to ancestors, divination and protection.
+
+#### Edit Notes for Claude
+
+- Deity gap: Badb (Kynes's Plants, under "Yew"), not in the vocabulary; link once M14.15 adds it.
+- Deity gap: Banba (Kynes's Plants, under "Yew"), not in the vocabulary; link once M14.15 adds it.
+- Deity gap: Cailleach Bheur (Kynes's Plants, under "Yew"), not in the vocabulary; link once M14.15 adds it.
+- Deity gap: Dôn (Kynes's Plants, under "Yew"), not in the vocabulary; link once M14.15 adds it.
+- Deity gap: the Furies (Kynes's Plants, under "Yew"), not in the vocabulary; link once M14.15 adds it.

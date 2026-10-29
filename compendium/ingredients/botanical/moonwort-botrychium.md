@@ -85,3 +85,9 @@ variants:
 # Moonwort
 
 Moonworts are the small ferns of the genus Botrychium, in the family Ophioglossaceae. Each has fleshy roots and a leaf in two parts: a sterile, fern-like blade and a fertile stalk carrying clusters of spore cases, which shed their spores into the air. The leaves stand only two to ten centimetres above the soil, and most of a population lives out of sight underground, where a plant fed by mycorrhizal fungi can lie dormant for up to ten years; that dependence also makes moonworts hard to grow. They are found in prairies, forests and mountains, and some species are rare. Common moonwort carries up to nine pairs of fan- or half-moon-shaped leaves, and their crescent outline led German alchemists to credit it with the moon's power, call it lunary and use it to draw silver out of mercury. English and Irish legend said it could pull the shoes off a horse that trod on it, and Culpeper repeated a tale of thirty horseshoes found torn from the Earl of Essex's horses on a Devon down; pushed into a keyhole, it was said to open the lock. In magical practice it is put in boxes and bags to bring silver and used in money and love spells. Because common moonwort is endangered, Kynes suggests working with a picture of it instead.
+
+#### Edit Notes for Claude
+
+- Deity gap: Ariadne (Kynes's Plants, under "Moonwort"), not in the vocabulary; link once M14.15 adds it.
+- Deity gap: Nanna (Kynes's Plants, under "Moonwort"), not in the vocabulary; link once M14.15 adds it.
+- Deity gap: Luna (Kynes's Plants, under "Moonwort"), not in the vocabulary; link once M14.15 adds it.
