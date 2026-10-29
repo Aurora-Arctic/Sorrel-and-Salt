@@ -664,14 +664,25 @@ body .spell-builder .collapsible-section__fields > section {
   }
 }
 
-// The recovery banner: a flex row like the save status's notices, with space(2) between the
-// sentence and its buttons, so the buttons wrap to their own line, not touch the text, when the
-// sentence fills the width.
-.spell-builder .spell-builder__restored {
+// The recovery banner: a warning (the owner's call, 2026-10-29), a flex row like the save
+// status's notices, so the buttons wrap to their own line, not touch the text, when the
+// sentence fills the width. Doubled to outrank the notice's margin; its own class rather than
+// the form's, since in a dialog it is portalled under the title (M13.18). The room is the
+// conflict notice's (SaveStatus's index.scss says why the triangle moves with it), so the two
+// line up when both show.
+.spell-builder__restored.spell-builder__restored {
   display: flex;
   flex-wrap: wrap;
   align-items: center;
-  gap: space(2);
+  gap: space(3);
+  margin: 0;
+  padding-block: space(3);
+  padding-inline: calc(#{space(4)} + 1.0125rem + #{space(2)}) space(4);
+
+  &::before {
+    inset-block-start: calc(#{space(3)} + 0.05rem);
+    inset-inline-start: space(4);
+  }
 }
 
 // The recovery banner's two choices (M13.17), side by side after the sentence.
