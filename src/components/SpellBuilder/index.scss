@@ -574,12 +574,6 @@ body .spell-builder .collapsible-section__fields > section {
   }
 }
 
-// Why Save Spell is off, beside it in the form's action row: muted text, not a tooltip.
-.spell-builder__save-reason {
-  margin: 0;
-  color: $text-muted;
-}
-
 // The recovery banner: a flex row like the save status's notices, with space(2) between the
 // sentence and its buttons, so the buttons wrap to their own line, not touch the text, when the
 // sentence fills the width.

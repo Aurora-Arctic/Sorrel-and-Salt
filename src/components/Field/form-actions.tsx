@@ -1,5 +1,6 @@
-import type { ReactElement } from 'react';
+import { type ReactElement, useId } from 'react';
 import BusyButton from '../BusyButton';
+import IconTip from '../IconTip';
 import type { FormActionsProps } from './types';
 
 /**
@@ -14,6 +15,10 @@ import type { FormActionsProps } from './types';
  * `aside` takes Delete's place for a form with other choices to set apart.
  * Save is renamed where the form does something other than save: the admin
  * invitation form's Send Invitation (MB.119).
+ * `saveReason` says why Save is off, in a tip on the button that opens on hover, focus and a
+ * tap (IconTip), and as its description. The button is then `aria-disabled` and not `disabled`,
+ * which would take it out of the tab order and give it no hover or focus to open the tip from;
+ * it looks the same, and the press does nothing.
  */
 export function FormActions({
   noun,
@@ -24,6 +29,7 @@ export function FormActions({
   busy = submitting,
   saveValue,
   saveDescribedBy,
+  saveReason,
   onSave,
   onCancel,
   holdCancel = false,
@@ -31,22 +37,39 @@ export function FormActions({
   children,
   aside,
 }: FormActionsProps): ReactElement {
-  return (
-    <div className="form__actions">
+  const reasonId = useId();
+  const off = !dirty || submitting;
+  // Told only while Save is off for a reason the form can say.
+  const told = off && saveReason ? saveReason : null;
+  const save = (
       <BusyButton
         // The form's submit, unless the form is a panel inside another and
         // so has none of its own to press.
-        type={onSave ? 'button' : 'submit'}
+        type={onSave || told ? 'button' : 'submit'}
         value={saveValue}
         className="btn btn--solid"
-        disabled={!dirty || submitting}
+        disabled={off && !told}
+        aria-disabled={told ? true : undefined}
         busy={busy}
         busyLabel={busyLabel}
-        aria-describedby={saveDescribedBy}
-        onClick={onSave}
+        aria-describedby={[saveDescribedBy, told ? reasonId : undefined].filter(Boolean).join(' ') || undefined}
+        onClick={told ? undefined : onSave}
       >
         {label}
       </BusyButton>
+  );
+  return (
+    <div className="form__actions">
+      {told ? (
+        <IconTip tip={told} placement="above" opensOnPress>
+          {save}
+          <span id={reasonId} className="visually-hidden">
+            {told}
+          </span>
+        </IconTip>
+      ) : (
+        save
+      )}
       {children}
       {onCancel && (
         <button

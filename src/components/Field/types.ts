@@ -214,6 +214,11 @@ export interface FormActionsProps {
   saveValue?: string;
   /** Save's description, a note above the row about what saving will do. */
   saveDescribedBy?: string;
+  /**
+   * Why Save is off, said in a tip on the button (hover, focus and a tap) and as its description.
+   * The button is then `aria-disabled` so it keeps focus. Left out, an off Save is plain `disabled`.
+   */
+  saveReason?: string;
   /** Save as a plain button calling this, for a panel inside another form, rather than the form's submit. */
   onSave?: () => void;
   /** Cancel, drawn when given: the form's way out, through its discard guard. */

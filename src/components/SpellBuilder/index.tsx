@@ -6,7 +6,6 @@ import {
   type ReactNode,
   useCallback,
   useEffect,
-  useId,
   useRef,
   useState,
 } from 'react';
@@ -543,9 +542,10 @@ const SpellBuilder = ({
       asked.current = false;
     }
   };
-  // Why Save Spell is off, said beside it as text (second design review, 2026-10-28), so a
-  // disabled button is never a silent one. Left out while a save is on its way.
-  const saveReasonId = useId();
+  // Why Save Spell is off, a tip on the button (the owner's call, 2026-10-29; it was text beside
+  // it from the second design review), so a disabled button is never a silent one. Left out while
+  // a save is on its way, and once an edit has been autosaved: the save left nothing to save, and
+  // "Nothing to save yet" is for a spell not yet edited.
   const firstUnitIssue = [...unitIssueSteps.keys()][0];
   const saveReason =
     autosave.status === 'saving'
@@ -554,7 +554,7 @@ const SpellBuilder = ({
         ? `Fix the unit in step ${firstUnitIssue + 1} to save`
         : !jarReady
           ? 'Waiting for the jar to load'
-          : !dirty
+          : !dirty && autosave.status === 'idle'
             ? 'Nothing to save yet'
             : null;
   // Steps that could not be read leave nothing a save would take, so Close closes, unsaved.
@@ -740,7 +740,7 @@ const SpellBuilder = ({
             dirty={dirty && !unitRefused && jarReady}
             submitting={autosave.status === 'saving'}
             onSave={() => void saveNow()}
-            saveDescribedBy={saveReason ? saveReasonId : undefined}
+            saveReason={saveReason ?? undefined}
           >
             <SpellStatusField flush={flush} />
             <SaveStatus
@@ -755,11 +755,6 @@ const SpellBuilder = ({
               }}
               onKeepMine={() => void autosave.resolveConflict('keep-mine').catch(() => undefined)}
             />
-            {saveReason && (
-              <p id={saveReasonId} className="spell-builder__save-reason">
-                {saveReason}
-              </p>
-            )}
           </FormActions>
         </form>
       </FormHistoryContext.Provider>
