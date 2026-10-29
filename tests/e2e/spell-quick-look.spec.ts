@@ -72,6 +72,13 @@ test('the eye opens a spell in a modal over the list, and the modal is closed, e
   await expect(page).toHaveURL(`${grimoire}?query=fixture&spell=${shared}`);
   await expect(details).toHaveCount(0);
   await expect(look).toBeVisible();
+  // Focus is back on the step's eye, whose tip opens with it; the next Escape is the tip's,
+  // which keeps the modal open around it (claude-docs/components/icon-tip.md, "Behaviour").
+  const stepEye = look.getByRole('link', { name: 'Quick Look Testwort' });
+  await expect(stepEye).toBeFocused();
+  await page.keyboard.press('Escape');
+  await expect(look).toBeVisible();
+  await expect(stepEye).toBeFocused();
 
   // Escape returns to the list as it was, with focus back on the eye.
   await page.keyboard.press('Escape');
