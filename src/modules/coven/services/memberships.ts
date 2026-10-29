@@ -6,9 +6,8 @@ import { workspaces } from '../schema/workspaces';
 import type { MembershipWithWorkspace } from '../types';
 
 /**
- * The live memberships of each user named, in order: a DataLoader's batch. A caller may list their own covens and a site admin anyone's,
- * by workspace and role alone; any other id is a `Forbidden` in its own slot. The admin read yields no `Membership` proof
- * (claude-docs/design-decisions/m9.19-admin-sees-user-covens.md); its role is read off the session because `coven` may import only `identity`'s index.
+ * The live memberships of each user named, in order: a DataLoader's batch. A caller lists their own covens and a site admin anyone's, by workspace and role alone;
+ * any other id is a `Forbidden` in its own slot. The admin read yields no `Membership` proof (claude-docs/design-decisions/m9.19-admin-sees-user-covens.md).
  */
 export async function membershipsOf(
   session: Session,
