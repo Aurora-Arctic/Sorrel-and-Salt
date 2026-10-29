@@ -1,11 +1,8 @@
 import altairPackage from 'altair-static/package.json';
 
 // The IDE a browser gets at GET /api/graphql outside production. Served by the
-// app rather than installed, because a same-origin page sends the session
-// cookie the browser already holds — the one credential Better Auth accepts
-// (claude-docs/manual-api-testing.md). Rendered here rather than through Yoga's
-// `renderGraphiQL`, which never sees the request: <base> points at the CDN, so
-// the endpoint must be absolute, and the dev server answers on more than one host.
+// app, not installed, so the session cookie rides along (claude-docs/manual-api-testing.md).
+// Rendered here, not by Yoga's `renderGraphiQL`, which never sees the request and so cannot make the endpoint absolute.
 
 /** Altair's built assets, from the package version that renders the shell. */
 export const ALTAIR_ASSETS_URL = `https://cdn.jsdelivr.net/npm/altair-static@${altairPackage.version}/build/dist/`;
@@ -15,11 +12,7 @@ export function isBrowserNavigation(request: Request): boolean {
   return request.method === 'GET' && (request.headers.get('accept') ?? '').includes('text/html');
 }
 
-/**
- * The origin the browser used. From the Host header rather than `request.url`:
- * `next dev --hostname 0.0.0.0` reports its bind address there, and a cookie
- * set for `localhost` is not sent to `0.0.0.0`.
- */
+/** The origin the browser used, read from Host: `next dev --hostname 0.0.0.0` reports its bind address in `request.url`. */
 function requestOrigin(request: Request): string {
   const url = new URL(request.url);
   return `${url.protocol}//${request.headers.get('host') ?? url.host}`;

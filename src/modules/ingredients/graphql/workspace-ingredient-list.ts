@@ -7,12 +7,8 @@ import { categoryArgs, facetArgs } from './compendium';
 import { IngredientRef, IngredientSourceEnum } from './ingredient';
 import { IngredientFacetsRef } from './ingredient-facets';
 
-// The list: a coven's own entries and the compendium entries its
-// cupboard holds, a page at a time, each entry's jars read through
-// `Ingredient.stock` and its cupboard row primed from the page;
-// and beside it how many entries each filter value would list. The
-// resolvers refuse only a missing session; who may read which coven is the
-// service's check (claude-docs/graphql/schema.md, "workspaceIngredients").
+// The list: a coven's own entries and the compendium entries its cupboard holds, a page at a time, with how many entries each filter value would list.
+// The resolvers refuse only a missing session; the service checks the coven (claude-docs/graphql/schema.md, "workspaceIngredients").
 
 // The two settings only a coven's list has, so not in `facetArgs`,
 // which the compendium shares.

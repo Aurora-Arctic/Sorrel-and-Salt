@@ -10,13 +10,9 @@ import { createStock, deleteStock, saveStock, updateStock } from '../services/st
 import type { StockRow } from '../types';
 import { IngredientRef, IngredientVariantRef } from './ingredient';
 
-// The jars over the wire: what a coven holds of each form, the
-// three writes that change one jar and `saveStock`, which changes an
-// ingredient's jars together, and `Ingredient.stock`, which reads it a page
-// at a time. The resolvers refuse only a missing session; who may read or
-// write which coven's jars is the stock service's check
-// (claude-docs/graphql/schema.md, "Stock: InventoryItem, Ingredient.stock and
-// the three stock writes").
+// The jars over the wire: what a coven holds of each form, the three single-jar writes, `saveStock` for an ingredient's jars together,
+// and `Ingredient.stock`, paged. The resolvers refuse only a missing session; the stock service checks the coven
+// (claude-docs/graphql/schema.md, "Stock: InventoryItem, Ingredient.stock and the three stock writes").
 
 export const InventoryUnitEnum = builder.enumType('InventoryUnit', { values: UNITS });
 

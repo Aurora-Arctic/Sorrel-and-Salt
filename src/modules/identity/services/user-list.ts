@@ -50,10 +50,8 @@ function trimmedFilter({ query, awaitingApproval, role }: UserFilter): UserFilte
 }
 
 /**
- * The providers linked to each user named, sorted, one answer per id in the
- * order given: a DataLoader's batch, and the page's. A site admin's alone, a
- * user's own row included: every slot of anyone else's batch is a `Forbidden`.
- * One query whatever the batch size.
+ * The providers linked to each user named, sorted: a DataLoader's batch. A site admin's alone, their own row included:
+ * every slot of anyone else's batch is a `Forbidden`.
  */
 export async function providersOf(
   session: Session,

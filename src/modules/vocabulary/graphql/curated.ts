@@ -11,18 +11,12 @@ import type {
   LoaderName,
 } from './types';
 
-// A curated vocabulary's type, its input and its three admin writes, written
-// once for the seven, as the astrology file once looped over its two
-// (claude-docs/graphql/schema.md, "Curated vocabularies"). The writes are the
-// site admin's, scoped here and refused again by the service, which is the
-// real gate. Every description is the caller's, passed through, so the SDL is
-// what each file declared by hand.
+// A curated vocabulary's type, its input and its three admin writes, written once for the seven (claude-docs/graphql/schema.md, "Curated vocabularies").
+// The writes are scoped to the site admin here and refused again by the service, the real gate. Every description is the caller's, so the SDL is what each file declared by hand.
 
 /**
- * Implements `ref` as `id`, `name`, `slug`, `description`, the parent and
- * `fields`; registers `<Type>Input`, written whole with no slug, which follows
- * the name; and the `create<Type>`, `update<Type>` and `delete<Type>`
- * mutations, the delete answering the id. Answers the implemented ref.
+ * Implements `ref` as `id`, `name`, `slug`, `description`, the parent and `fields`; registers `<Type>Input` (whole, no slug, which follows the name)
+ * and the create, update and delete mutations, the delete answering the id. Answers the implemented ref.
  */
 export function curatedVocabularyWrites<
   Row extends CuratedRow & Record<Key, string>,
@@ -111,11 +105,7 @@ export function curatedVocabularyWrites<
   return vocabulary.ref;
 }
 
-/**
- * Each loader named, emptied: root mutation fields run in turn within one
- * request, so an earlier one may have read the row written, or a row it moved
- * or re-slugged, and what follows must read this write's.
- */
+/** Each loader named, emptied: root mutation fields run in turn within one request, so what follows a write must read that write's rows. */
 function clear(loaders: Loaders, names: readonly LoaderName[]): void {
   for (const name of names) loaders[name].clearAll();
 }

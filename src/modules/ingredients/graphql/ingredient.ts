@@ -18,11 +18,8 @@ import type {
   SubstituteRow,
 } from '../types';
 
-// `Ingredient` as DESIGN.md §7 sketches it, over the row the services return:
-// every correspondence field, the tier as `isGlobal`, and the six children
-// through the request's loaders, its forms among them as `variants`.
-// `identityKey` and `workspaceId` stay off the wire: the key is the
-// database's own, and the tier is a flag.
+// `Ingredient` as DESIGN.md §7 sketches it, over the row the services return: every correspondence field, the tier as `isGlobal`,
+// and the six children through the request's loaders, its forms as `variants`. `identityKey` and `workspaceId` stay off the wire.
 
 export const NomenclatureEnum = builder.enumType('Nomenclature', { values: NOMENCLATURE_KINDS });
 // A search's toxic setting, an argument rather than a field.
@@ -124,10 +121,8 @@ export const IngredientDeityRef = builder
   });
 
 /**
- * One form of an ingredient (DESIGN.md §7): what it adds to its
- * ingredient, never what it overrides, so a client shows both. `ingredientId`
- * and `workspaceId` stay off the wire: a variant is read beneath its
- * ingredient, whose tier it takes.
+ * One form of an ingredient (DESIGN.md §7): what it adds to its ingredient, never what it overrides.
+ * `ingredientId` and `workspaceId` stay off the wire; a variant is read beneath its ingredient, whose tier it takes.
  */
 IngredientVariantRef.implement({
   description:

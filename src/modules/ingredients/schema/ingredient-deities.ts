@@ -5,11 +5,8 @@ import { deities } from '../../vocabulary/schema/deities';
 import { ingredients } from './ingredients';
 import { idColumn, liveUnique } from '../../../db/schema-parts';
 
-// The deities an ingredient names, one row per entry in the order entered:
-// a name, and beside it a link to the curated deity the member
-// picked, so Greek and Roman Hecate stay told apart after a save. A child
-// table rather than `ingredients.deities text[]`, which a link cannot live in. Full `auditColumns`, as substitutes: an entry is content, not a pairing
-// of two curated rows (DESIGN.md §5, `ingredient_deities`).
+// The deities an ingredient names, one row per entry in order: a name, and a link to the curated deity picked, so Greek and Roman Hecate stay apart.
+// A child table, as a link cannot live in `text[]`. Full `auditColumns`: an entry is content, not a pairing (DESIGN.md §5, `ingredient_deities`).
 export const ingredientDeities = pgTable(
   'ingredient_deities',
   {

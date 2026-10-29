@@ -65,10 +65,8 @@ export async function memberEmails(
 }
 
 /**
- * `memberEmails` for a batch of members across covens, one answer per key:
- * the address, null for someone the coven no longer seats, or the
- * `Forbidden` the coven's check gave, so one coven refused leaves another
- * answered. One check and one read per coven named.
+ * `memberEmails` for a batch of members across covens, one answer per key: the address, null for someone no longer seated,
+ * or the coven's `Forbidden`, so one refused coven leaves another answered.
  */
 export async function emailsOfMembers(
   session: Session,

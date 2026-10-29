@@ -16,12 +16,8 @@ import {
 import type { DeityRow, DeityTraditionRow } from '../types';
 import { curatedVocabularyWrites } from './curated';
 
-// A curated deity and its tradition, as an ingredient's picked deity reads
-// them: the shape `IngredientFormValue` and its group have, since a
-// tradition tells two same-named deities apart as a group does two forms.
-// Public reference data, so no scope and no session in the readers;
-// tests/db/graphql-query-scopes.test.ts holds every other query to its
-// refusal. The writes are the site admin's.
+// A curated deity and its tradition, as an ingredient's picked deity reads them: the shape `IngredientFormValue` and its group have, since a tradition
+// tells two same-named deities apart as a group does two forms. Public, so no scope in the readers; tests/db/graphql-query-scopes.test.ts holds every other query to its refusal.
 
 export const DeityTraditionRef = curatedVocabularyWrites({
   ref: builder.objectRef<DeityTraditionRow>('DeityTradition'),

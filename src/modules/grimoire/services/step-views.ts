@@ -9,19 +9,8 @@ import type { Membership } from '@/modules/coven';
 import type { SpellStepView } from '../types';
 
 /**
- * The live steps of each readable spell named, in recipe order, each with its
- * ingredient and the form it lays: what `stepsOfSpells`, `Spell.steps`'
- * batch, answers. Internal to the module, so not exported from its
- * index.
- *
- * A linked ingredient is read through the finder that keeps a deleted one,
- * and its forms through the one that keeps deleted forms, each marked
- * `deleted`: a spell records a working, so what went into the jar stays in
- * it, whether the ingredient or only its form was deleted since. A link to another coven's ingredient reads `null`, as
- * the finder withholds it. Four statements whatever the number of spells: the
- * steps, the ingredients, and the forms, which read their parents again.
- *
- * Order is `position`.
+ * The live steps of each readable spell named, in recipe order, each with its ingredient and the form it lays.
+ * Internal to the module. Deleted ingredients and forms are kept and marked `deleted` (claude-docs/db/grimoire.md, "Grimoire service and schema details").
  */
 export async function stepsInSpells(
   membership: Membership,

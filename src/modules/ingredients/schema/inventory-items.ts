@@ -16,14 +16,9 @@ export const inventoryUnit = pgEnum('inventory_unit', UNITS);
 
 export const unitDimension = pgEnum('unit_dimension', UNIT_DIMENSIONS);
 
-// "A row whose dimension contradicts its unit cannot be written" (§5), built
-// from the same map as the enums. Literal SQL for ingredients.ts's reason; only
-// this module's constants are interpolated. The first conjunct is not optional:
-// a CHECK passes on NULL, so without the `is null` biconditional a half-null
-// row would slip through (claude-docs/db/stock.md, "The dimension stored beside the unit").
-// `unit::text`, not `unit`: compared as the enum, each literal is cast to
-// `inventory_unit`, and Postgres refuses a value added in the same transaction
-// (55P04), which is how migration 0072 adds `fl_oz_us`.
+// "A row whose dimension contradicts its unit cannot be written" (§5), built from the same map as the enums. The `is null` biconditional is not optional:
+// a CHECK passes on NULL, so a half-null row would slip through (claude-docs/db/stock.md, "The dimension stored beside the unit").
+// `unit::text`, not `unit`: Postgres refuses an enum value added in the same transaction (55P04), as migration 0072 adds `fl_oz_us`.
 const UNIT_MATCHES_DIMENSION = sql.raw(
   [
     '(unit is null) = (unit_dimension is null)',

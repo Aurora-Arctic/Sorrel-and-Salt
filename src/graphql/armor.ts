@@ -6,11 +6,8 @@ import type { Plugin } from 'graphql-yoga';
 export const MAX_DEPTH = 7;
 
 /**
- * The limits on what a client may ask. Depth, aliases, directives and tokens
- * hold everywhere; cost is the complexity plugin's, priced after variables are
- * bound, which armor's check is not. Introspection and field suggestions are off
- * wherever `production` holds, which is every deploy, staging included, and
- * a local production build too (claude-docs/graphql/protections.md, "Protections").
+ * The limits on what a client may ask. Cost is the complexity plugin's; the rest hold everywhere.
+ * Introspection and suggestions are off wherever `production` holds (claude-docs/graphql/protections.md).
  */
 export function protections({
   production,

@@ -12,11 +12,8 @@ import type { IngredientFormValueRow } from '../types';
 import { curatedVocabularyWrites } from './curated';
 import { IngredientFormGroupRef } from './ingredient-form-groups';
 
-// `IngredientFormValue`, not `IngredientForm`: one row is one permitted value
-// of `ingredient_variants.form`, and `IngredientForm` is the entry-form component
-// (DESIGN.md §7). Public, so no scope and no session in the readers;
-// tests/db/graphql-query-scopes.test.ts holds every other query to its refusal.
-// The writes are the site admin's.
+// `IngredientFormValue`, not `IngredientForm`: one row is one permitted value of `ingredient_variants.form`, and `IngredientForm` is the entry-form component (DESIGN.md §7).
+// Public, so no scope in the readers; tests/db/graphql-query-scopes.test.ts holds every other query to its refusal. The writes are the site admin's.
 
 export const IngredientFormValueRef = curatedVocabularyWrites({
   ref: builder.objectRef<IngredientFormValueRow>('IngredientFormValue'),

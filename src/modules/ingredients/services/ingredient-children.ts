@@ -28,9 +28,8 @@ import type {
 } from '../types';
 
 /**
- * The categories each ingredient is filed under (its own pairs, not its forms'), one answer per ref in order, sorted by name: a DataLoader batch.
- * Two reads whatever the batch size, plus one role lookup per coven named. A compendium entry answers anyone; a coven's answers its
- * members, and any other caller gets a `Forbidden` in that ref's slot (claude-docs/db/ingredient-children.md, "Ingredient children").
+ * The categories each ingredient is filed under (its own pairs, not its forms'), sorted by name: a DataLoader batch. A compendium entry answers anyone,
+ * a coven's its members; any other caller gets a `Forbidden` in that slot (claude-docs/db/ingredient-children.md, "Ingredient children").
  */
 export async function categoriesOf(
   session: Session | null,
@@ -157,9 +156,8 @@ export async function variantsOf(
 }
 
 /**
- * The check the reads share, over ingredients or variants: a proof for every coven the refs name that this session may read,
- * a `Forbidden` for the rest. Every read is one query whatever the batch size. `heldBy` is the reading coven's proof for a
- * retired compendium entry its cupboard names, so the entry's children read too.
+ * The check the reads share, over ingredients or variants: a proof for every coven the refs name that this session may read, a `Forbidden` for the rest.
+ * `heldBy` is the reading coven's proof for a retired compendium entry its cupboard names.
  */
 async function admit<K extends IngredientKey | VariantKey>(
   session: Session | null,

@@ -94,14 +94,8 @@ export const { categoriesByVariant, substitutesByVariant, referencesByVariant } 
   VARIANT_CHILD_LOADERS;
 
 /**
- * Clears `row` from every child loader of the request's `loaders`, and
- * empties its variants' child loaders, since the write may have changed any
- * of the row's variants and the request does not know which it loaded. An
- * ingredient write calls it before answering: root mutation fields run in
- * turn within one request, so an earlier one may have read this entry's
- * children, and the answer must be this write's. `loaders` is typed by the
- * record, so a loader added to it and not registered with the request
- * context fails to compile at each caller.
+ * Clears `row` from every child loader of the request's `loaders`, and empties its variants' child loaders. An ingredient write calls it
+ * before answering: root mutation fields run in turn, so an earlier one may have read this entry's children.
  */
 export function clearIngredientChildren(
   loaders: Built<typeof CHILD_LOADERS & typeof VARIANT_CHILD_LOADERS>,

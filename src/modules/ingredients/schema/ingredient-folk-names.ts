@@ -4,11 +4,8 @@ import { auditColumns } from '../../identity/schema/users';
 import { ingredients } from './ingredients';
 import { idColumn, liveUnique } from '../../../db/schema-parts';
 
-// The regional and common names an ingredient also answers to.
-// A child table rather than `folkNames text[]`: `array_to_string` is STABLE on
-// Postgres 18, so it is legal in neither an expression index nor a generated
-// column, where `text` rows take a trigram index trivially. Full
-// `auditColumns`, unlike the join tables — a folk name is content, not a link.
+// The regional and common names an ingredient also answers to. A child table rather than `folkNames text[]`: `array_to_string` is STABLE on Postgres 18,
+// so it is legal in neither an expression index nor a generated column. Full `auditColumns`: a folk name is content, not a link.
 export const ingredientFolkNames = pgTable(
   'ingredient_folk_names',
   {

@@ -16,11 +16,7 @@ import { ingredientInputFields } from './ingredient-input';
 // category writes are. Neither input names a tier or a stamp — the
 // compendium is the mutation, and the stamps are the session's.
 
-/**
- * A compendium entry as the admin's form sends it: `IngredientInput`'s fields,
- * with `nomenclature` required, since the compendium declares one for every
- * entry and the shared schema gives it no default here.
- */
+/** A compendium entry as the admin's form sends it: `IngredientInput`'s fields with `nomenclature` required, as the compendium declares one for every entry. */
 const CompendiumIngredientInput = builder.inputType('CompendiumIngredientInput', {
   fields: (t) => ingredientInputFields(t, { tier: 'compendium', whole: false }),
 });

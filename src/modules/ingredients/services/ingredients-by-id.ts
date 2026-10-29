@@ -8,14 +8,8 @@ import { proofFor } from './ingredient-rows';
 import type { IngredientKey, IngredientRow } from '../types';
 
 /**
- * Each ingredient named, one answer per ref in the order given: a DataLoader's
- * batch. A ref is the row that holds the id (a stock row, a spell layer) and
- * so names the coven it is read in; the ingredient is a compendium entry or
- * that coven's own. Anything else is null, never an error: an id no live row
- * holds, a soft-deleted row, a row of another coven than the ref's, and a
- * coven's row when the caller holds no seat there, so an id learns nothing
- * from the difference. One read whatever the batch size, plus one role lookup
- * per coven named.
+ * Each ingredient named, in order: a DataLoader's batch. A ref is the row that holds the id and so names the coven it is read in. Anything not
+ * readable is null, never an error, so an id learns nothing from the difference: missing, soft-deleted, another coven's, or a coven the caller holds no seat in.
  */
 export async function ingredientsOf(
   session: Session,

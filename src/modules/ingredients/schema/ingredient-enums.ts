@@ -1,8 +1,5 @@
-// DESIGN.md §5's closed sets for an ingredient and its references, written
-// down once: the pgEnums in ingredients.ts and references.ts, and the Zod
-// schemas in ../validation/, are built from these lists. Like units.ts it
-// imports nothing, so a client component reaches it without dragging in
-// drizzle-orm.
+// DESIGN.md §5's closed sets for an ingredient and its references, written once: the pgEnums and the Zod schemas are built from these lists.
+// Like units.ts it imports nothing, so a client component reaches it without dragging in drizzle-orm.
 
 // `unknown` and `none` are both answers, not absences (ingredients.ts).
 export const NOMENCLATURE_KINDS = [
@@ -26,11 +23,7 @@ export const NAMELESS_KIND = 'none' satisfies NomenclatureKind;
  */
 export const UNSETTLED_KIND = 'unknown' satisfies NomenclatureKind;
 
-/**
- * The kinds whose formal name is a binomial, printed in italics; a mineral's
- * or a chemical's is set upright, and so is an unsettled kind's, since the
- * italics follow a settled classification (claude-docs/styling.md, "Type").
- */
+/** The kinds whose formal name is a binomial, printed in italics; a mineral's, a chemical's and an unsettled kind's are upright (claude-docs/styling.md, "Type"). */
 export const BINOMIAL_KINDS: ReadonlySet<string> = new Set<NomenclatureKind>([
   'botanical',
   'fungal',

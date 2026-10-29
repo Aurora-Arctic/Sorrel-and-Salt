@@ -19,11 +19,8 @@ export function foldVocabularyValue(value: string): string {
 }
 
 /**
- * The live curated spelling each of `values` folds to, keyed by the fold, for
- * the ingredient field `field` draws on; a value no live row curates is
- * absent. A public read, so no session: the vocabularies are global. Two
- * live rows sharing a name give the spelling of the first by id, so the
- * choice is stable.
+ * The live curated spelling each of `values` folds to, keyed by the fold, for the ingredient field `field`; a value no live row curates is absent.
+ * A public read. Two live rows sharing a name give the first by id, so the choice is stable.
  */
 export async function curatedSpellings(
   field: CuratedField,
@@ -41,12 +38,7 @@ export async function curatedSpellings(
   return spellings;
 }
 
-/**
- * The name of each of `ids` that a curated row of `field`'s vocabulary holds
- * — live, under a live group or tradition — keyed by id; an id naming none is
- * absent. How a pick is checked before it is written. A public read,
- * as `curatedSpellings` is.
- */
+/** The name of each of `ids` that a live curated row of `field`'s vocabulary holds (under a live group or tradition), keyed by id: how a pick is checked before it is written. A public read. */
 export async function curatedNames(
   field: PickedField,
   ids: readonly string[],
@@ -56,11 +48,8 @@ export async function curatedNames(
 }
 
 /**
- * The curated forms by id, one answer per id in the order given: the row, or
- * null where no curated form carries the id — none ever did, or it or its
- * group is retired since it was picked, which `IngredientVariant.formChoice` reads
- * as no pick. One read whatever the batch size, and public, as the
- * forms are.
+ * The curated forms by id, in order: the row, or null where no curated form carries the id or it or its group is retired since it was picked
+ * (which `IngredientVariant.formChoice` reads as no pick). One read whatever the batch size, and public.
  */
 export async function formChoicesOf(
   ids: readonly string[],

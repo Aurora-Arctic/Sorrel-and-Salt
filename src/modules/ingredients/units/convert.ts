@@ -14,13 +14,9 @@ import type { Decimal, UnitConversion } from './types';
 
 type Convertible = Exclude<UnitDimension, 'count'>;
 
-// Each unit's size in its dimension's base unit, milligrams for weight and
-// millilitres for volume. Spoons and cups are metric,
-// as a British kitchen measures them, and both fluid ounces are listed.
-// Decimal text rather than numbers, so 29.5735295625 is held exactly and not
-// as the nearest double. Keyed by dimension, so no factor joins two: count has
-// none, and there is no density table. `satisfies` makes a unit added to the
-// vocabulary a type error here until it is given a size.
+// Each unit's size in its dimension's base unit, milligrams for weight and millilitres for volume. Spoons and cups are metric, and both fluid ounces are listed.
+// Decimal text, so 29.5735295625 is held exactly. Keyed by dimension, so no factor joins two: count has none, and there is no density table.
+// `satisfies` makes a unit added to the vocabulary a type error here until it is given a size.
 const SIZE_IN_BASE_UNIT = {
   weight: { mg: '1', g: '1000', kg: '1000000', oz: '28349.523125', lb: '453592.37' },
   volume: {
@@ -65,11 +61,8 @@ function divideRounded(numerator: bigint, denominator: bigint): bigint {
 }
 
 /**
- * `value` in `from`, converted to `to` and rounded once, at the end, to the
- * stock columns' three decimals. Weight converts to weight and volume to
- * volume; any other pair is refused, never guessed. Throws only on a negative
- * or non-finite value, which the stock schema refuses before a caller gets
- * here.
+ * `value` in `from`, converted to `to` and rounded once, at the end, to the stock columns' three decimals. Weight to weight and volume to volume;
+ * any other pair is refused, never guessed. Throws only on a negative or non-finite value, which the stock schema refuses first.
  */
 export function unitConvert(value: number, from: Unit, to: Unit): UnitConversion {
   if (!Number.isFinite(value) || value < 0) throw new RangeError(`Cannot convert ${value}`);

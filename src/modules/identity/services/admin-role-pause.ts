@@ -7,12 +7,8 @@ import { assertSiteAdmin, type SiteAdmin } from './site-admin';
 import { actsAsPrimaryAdmin } from './primary-admin';
 import type { AdminRoleChangePauseState } from '../types';
 
-// The primary admin's switch on admin grants and revokes, so a rogue
-// admin can neither make admins nor remove the good ones while it is dealt
-// with. Only the primary admin may flip it, being the one account a rogue
-// admin cannot become; `setUserRole` reads it. Each pause is a row of the
-// pause ledger, opened and ended through the writer's named calls, stamped from the
-// session (claude-docs/auth/admin-users.md, "Pausing admin changes").
+// The primary admin's switch on admin grants and revokes, so a rogue admin can neither make admins nor remove the good ones.
+// Only the primary admin may flip it; `setUserRole` reads it (claude-docs/auth/admin-users.md, "Pausing admin changes").
 
 const REFUSAL = 'Only a site admin may see or change whether admin changes are paused';
 const NOT_PRIMARY_REFUSAL = 'Only the primary admin may pause or resume admin changes';

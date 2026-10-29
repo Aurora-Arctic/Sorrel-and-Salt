@@ -17,18 +17,8 @@ import { QUANTITY_PRECISION, QUANTITY_SCALE } from '../../ingredients/schema/qua
 import { spells } from './spells';
 import { idColumn, liveUnique } from '../../../db/schema-parts';
 
-// A spell's recipe, one ordered list: a step is an
-// instruction, an ingredient laid in the jar, or both. A step that lays an
-// ingredient is a layer: either an ingredient the workspace knows or a name
-// written for this one jar. One table rather than a steps table beside an
-// ingredients one, because one ordered list cannot span two tables
-// (claude-docs/design-decisions/m13.1-spell-steps.md).
-//
-// It references the ingredient, never the inventory item: stock is what a
-// workspace holds today, and a recipe pointing at it would be damaged by
-// running out. Soft-deleted, unlike the other two join tables: a
-// spell is a record of a working, so a step taken out of it is a tombstone
-// (claude-docs/db/grimoire.md, "The grimoire").
+// A spell's recipe, one ordered list: a step is an instruction, an ingredient laid in the jar, or both. It references the
+// ingredient, never the inventory item, and is soft-deleted as a tombstone (claude-docs/db/grimoire.md, "Grimoire service and schema details").
 export const spellSteps = pgTable(
   'spell_steps',
   {
@@ -70,11 +60,8 @@ export const spellSteps = pgTable(
     // sweeping `position + 1`.
     liveUnique('spell_steps_spell_id_position_unique', table, table.spellId, table.position),
 
-    // No unique index on a jar's forms: a spell may lay one form in several
-    // steps, at different depths or for different purposes. A custom row is still
-    // identified by its name, below.
-    // Its mirror over the custom rows, on name alone: a custom row is matched
-    // against nothing, so `form` is part of no key.
+    // No unique index on a jar's forms: a spell may lay one form in several steps.
+    // Its mirror over the custom rows, on name alone, so `form` is part of no key.
     uniqueIndex('spell_steps_spell_id_custom_name_unique')
       .on(table.spellId, sql`lower(${table.name})`)
       .where(sql`${table.ingredientId} is null and ${table.deletedAt} is null`),

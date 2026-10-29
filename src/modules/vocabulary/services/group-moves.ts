@@ -4,12 +4,8 @@ import { ValidationError } from '../../../lib/errors';
 import { violatedUniqueIndex } from '../../../lib/unique-violation';
 import type { GroupMove, MovedRows } from '../types';
 
-// What a group's rename or delete does to the rows filed under it when their
-// slug carries the group's name: a form's and a deity's. Each
-// row moves to the slug its name and the group's new name give it, and a move
-// onto another live row's address is refused, naming both. `curated-writes.ts`'s
-// `updateGroup` and `deleteGroup` call it for every group; internal to the
-// module.
+// What a group's rename or delete does to the rows filed under it when their slug carries the group's name (a form's and a deity's): each moves to the slug
+// its name and the group's new name give it, and a move onto another live row's address is refused, naming both. Called by `updateGroup` and `deleteGroup`; internal to the module.
 
 /**
  * How a write refuses a moved row's collision: on which field, and the words
@@ -27,11 +23,8 @@ export function refusal(rows: MovedRows, path: string[], lead: (row: GroupMove['
 }
 
 /**
- * Refuses a move that would put a row on another live row's address, naming
- * both. Read before the write, and again after one the slug index refused,
- * since two admins can race: then `error` is that write's, and anything but
- * that collision passes through untouched. A collision the second read cannot
- * place is refused in general terms.
+ * Refuses a move that would put a row on another live row's address, naming both. Read before the write, and again after one the slug index refused,
+ * since two admins can race: then `error` is that write's, and anything but that collision passes through.
  */
 export async function refuseCollidingMoves(
   rows: MovedRows,

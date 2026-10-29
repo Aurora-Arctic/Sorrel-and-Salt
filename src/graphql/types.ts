@@ -62,9 +62,8 @@ export interface ErrorExtensions {
 }
 
 /**
- * `t.pagedConnection`'s options. Generic over Pothos's own `SchemaTypes`, not
- * the app's above: the `RootFieldBuilder` augmentation in pagination.ts passes
- * its own `Types`, and a merged declaration keeps Pothos's type parameters.
+ * `t.pagedConnection`'s options. Generic over Pothos's own `SchemaTypes`, because the `RootFieldBuilder`
+ * augmentation in pagination.ts passes its own `Types`.
  */
 export interface PagedConnectionOptions<
   Types extends CoreSchemaTypes,
@@ -82,11 +81,7 @@ export interface PagedConnectionOptions<
    * check in front of a service that refuses again.
    */
   authScopes?: FieldAuthScopes<Types, ParentShape, InputShapeFromFields<Args>>;
-  /**
-   * One page from a keyset finder. It receives a decoded, clamped
-   * `PageRequest` and never the client's `first`/`after`, so it cannot skip
-   * the maximum or read a cursor as an offset.
-   */
+  /** One page from a keyset finder. It gets a decoded, clamped `PageRequest`, never the client's `first`/`after`. */
   resolve: (
     parent: ParentShape,
     args: InputShapeFromFields<Args>,
@@ -96,10 +91,8 @@ export interface PagedConnectionOptions<
   /** Fields of the edge beside `cursor` and `node`, read off what each entry carries. */
   edgeFields?: ObjectFieldsShape<Types, { cursor: string; node: Node } & Edge>;
   /**
-   * The list's size under the field's arguments, and how many of its rows
-   * come before `start` — the page's first row, none on an empty page.
-   * Emitted as `totalCount` and `countBefore`, and called once per
-   * connection, only when one of the two is selected.
+   * The list's size under the field's arguments, and how many rows come before `start`.
+   * Called once per connection, only when `totalCount` or `countBefore` is selected.
    */
   count?: (
     parent: ParentShape,

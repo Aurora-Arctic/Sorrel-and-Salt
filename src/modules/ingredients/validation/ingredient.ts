@@ -137,8 +137,7 @@ function asEntries<
 
 /**
  * One form the ingredient comes in (DESIGN.md §5, `ingredient_variants`) with its own lists, each held to the ingredient's rules and pathed beneath the variant.
- * `id` names a form already held, so a save keeps the row across a respelling; every other field is sent (`""` or `[]` for none) because an entry replaces its row.
- * The parse keeps `""` and `[]` as sent and `resolvePicks` reads each as none.
+ * `id` names a form already held; every other field is sent (`""` or `[]` for none) because an entry replaces its row, and `resolvePicks` reads each as none.
  */
 const variant = z
   .object({
@@ -212,11 +211,7 @@ const nomenclature = z.enum(NOMENCLATURE_KINDS, {
       : 'Not a classification',
 });
 
-/**
- * The rules across fields: the database's kind↔name CHECK — `none` takes no
- * formal name, a named kind needs one, `unknown` takes either — a folk name
- * that is neither the name nor another folk name, and each list entry once.
- */
+/** The rules across fields: the database's kind-to-name CHECK, a folk name that is neither the name nor another folk name, and each list entry once. */
 function crossFieldRules(value: Parsed, ctx: z.RefinementCtx) {
   const kind = value.nomenclature;
   const named = value.canonicalName != null;

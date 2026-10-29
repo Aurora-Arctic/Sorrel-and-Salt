@@ -199,9 +199,7 @@ export function heldDeities(
 }
 
 /**
- * The input's picks checked against the vocabularies, and its forms and deities as they are written
- * (claude-docs/db/ingredient-children.md, "Ingredient row writes").
- *
+ * The input's picks checked against the vocabularies, and its forms and deities as written (claude-docs/db/ingredient-children.md, "Ingredient row writes").
  * @returns the fields, the checked lists `writeChildren` takes, and every issue found, pathed to the sent entry.
  */
 export async function resolvePicks(

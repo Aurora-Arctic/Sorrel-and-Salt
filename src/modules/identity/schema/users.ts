@@ -13,23 +13,17 @@ import { auditStampColumnsReferencing, deletionColumnsReferencing } from '../../
 import type { UsersIdReference } from '../../../db/types';
 import { idColumn, liveUnique } from '../../../db/schema-parts';
 
-// The audit column instances every table spreads, built here because each
-// references `users.id` — `users` included, so the thunk resolves the table
-// below after it exists. Import them from this file, never from db/audit.ts,
-// which exports only the factories (claude-docs/db/audit-columns.md, "Audit
-// columns and applyAudit").
+// The audit column instances every table spreads, built here because each references `users.id` — `users` included.
+// Import them from this file, never from db/audit.ts, which exports only the factories (claude-docs/db/audit-columns.md).
 const usersId: UsersIdReference = () => users.id;
 export const auditStampColumns = auditStampColumnsReferencing(usersId);
 // The four stamps plus two, spread from the same instance, so the six-column
 // set has one definition and the two cannot drift (CLAUDE.md rule 3).
 export const auditColumns = { ...auditStampColumns, ...deletionColumnsReferencing(usersId) };
 
-// A counter the database adds one to on every UPDATE, through the shared
-// `bump_revision()` trigger function each table carrying it attaches in its
-// own migration (0084). A save names the revision it read and is refused if
-// the row has moved since. Named `revision`, not `version`, which v2 keeps
-// for a saved snapshot a person can open (claude-docs/db/grimoire.md,
-// "Revision"; claude-docs/design-decisions/m13.14-autosave.md).
+// A counter the database adds one to on every UPDATE, through the shared `bump_revision()` trigger each table attaches in its
+// own migration. A save names the revision it read and is refused if the row has moved. Named `revision`, not `version`, which v2
+// keeps for a saved snapshot (claude-docs/db/grimoire.md, "Revision"; claude-docs/design-decisions/m13.14-autosave.md).
 export const revisionColumn = () => integer('revision').notNull().default(1);
 
 // Admins curate the global vocabularies and manage the people page; curators
@@ -63,12 +57,9 @@ export const users = pgTable(
     // the same, so the unique index above is case-insensitive in effect and at
     // most one live row can match ADMIN_BOOTSTRAP_EMAIL.
     check('users_email_lower_case', sql`${table.email} = lower(${table.email})`),
-    // The flag is what lets anyone create a workspace, admins and curators
-    // included, so every role but `user` holds it and the gate never reads
-    // `role` beside it. Not partial: it states a fact about the row, deleted or
-    // not (claude-docs/design-decisions/mb.177-admins-hold-workspace-creation.md,
-    // m11.20-curator-role.md). It names `user` rather than the privileged roles
-    // so the migration adding `curator` need not use the new value it adds.
+    // The flag lets anyone create a workspace, so every role but `user` holds it and the gate never reads `role` beside it.
+    // Not partial: it states a fact about the row, deleted or not (claude-docs/design-decisions/mb.177-admins-hold-workspace-creation.md).
+    // It names `user`, not the privileged roles, so the migration adding `curator` need not use the new value it adds.
     check(
       'users_privileged_can_create_workspace',
       sql`${table.role} = 'user' or ${table.canCreateWorkspace}`,

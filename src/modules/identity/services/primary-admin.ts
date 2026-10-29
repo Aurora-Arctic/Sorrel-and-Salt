@@ -5,12 +5,8 @@ import type { Session } from '../../../lib/session';
 import { users } from '../schema/users';
 import type { UserRow } from '../types';
 
-// Who the primary admin is, asked of a row or of the session: read
-// from ADMIN_BOOTSTRAP_EMAIL at each check, never stored, so the protection
-// follows whatever the variable names now
-// (claude-docs/design-decisions/m2.9-granting-admin.md, "The primary admin").
-// Its own file so the role service and the pause both ask it without either
-// importing the other.
+// Who the primary admin is: read from ADMIN_BOOTSTRAP_EMAIL at each check, never stored (claude-docs/design-decisions/m2.9-granting-admin.md,
+// "The primary admin"). Its own file so the role service and the pause both ask it without importing each other.
 
 /**
  * Whether `user` is the primary admin: a live admin whose email matches
