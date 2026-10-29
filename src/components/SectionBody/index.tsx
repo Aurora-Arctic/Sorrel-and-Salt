@@ -12,12 +12,9 @@ import {
 } from '../SkeletonFade';
 import type { SectionBodyProps } from './types';
 
-// The frame under a section's context row (the coven's, or the admin area's). While a navigation
-// aimed at this region is on its way, the old page is hidden and unreachable at once, so nobody
-// acts on the wrong coven's data, and the destination's skeleton stands over it; not a
-// `loading.tsx`, whose boundary would turn the guards' 404 and 403 into 200s. The skeleton brings a
-// `<main>` and a hidden level-one heading, so neither landmark vanishes
-// (claude-docs/components/section-body.md).
+// The frame under a section's context row. While a navigation into it is on its way the old page is
+// hidden and unreachable, and the destination's skeleton stands over it; not a `loading.tsx`, which
+// would turn the guards' 404 and 403 into 200s (claude-docs/components/section-body.md).
 export default function SectionBody({
   region,
   className,

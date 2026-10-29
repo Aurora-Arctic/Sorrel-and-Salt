@@ -98,11 +98,9 @@
   }
 }
 
-// The disabled look itself is `.btn[aria-disabled='true']` (_primitives.scss); Facebook's mark is a
-// white shape with the "f" as a hole (icons.tsx), so the chip's own blue is dropped while disabled
-// and the hole shows the greyed button. Scoped off the button's own `aria-disabled`, not a brand
-// class: a disabled button carries no `--facebook` class (see `className` in provider-button.tsx),
-// but `FacebookIcon` still renders its chip.
+// Facebook's mark is a white shape with the "f" as a hole (icons.tsx), so the chip's blue is
+// dropped while disabled and the hole shows the greyed button. Scoped off `aria-disabled`, since a
+// disabled button carries no `--facebook` class but `FacebookIcon` still renders its chip.
 .sign-in-panel__button[aria-disabled='true'] .sign-in-panel__icon-chip--facebook {
   background-color: transparent;
 }

@@ -3,12 +3,9 @@ import type { ProviderId } from '../../lib/types';
 import type { ProviderArt } from '../ProviderMark/types';
 import './icons.scss';
 
-// Each provider's own brand mark, sourced from that provider's published assets rather than
-// approximated; claude-docs/components/sign-in-panel.md, "Provider branding" names where each
-// came from. The fills inside each SVG are part of the artwork, so they stay as the provider
-// drew them; the grounds the marks sit on (a button's fill, Facebook's chip, the list's
-// circle) are the provider's colours too, from `$brand-palettes` (_variables.scss) rather
-// than our tokens.
+// Each provider's own brand mark, from its published assets
+// (claude-docs/components/sign-in-panel.md, "Provider branding"). The fills are the artwork's, and
+// the grounds the marks sit on are the provider's colours from `$brand-palettes`, not our tokens.
 
 // Google's "G" logo, as published for "Sign in with Google" buttons. No chip: the mark is
 // multicolour and reads on any ground.
@@ -67,11 +64,8 @@ export function FacebookIcon(): ReactElement {
   );
 }
 
-// The same Meta asset filled Facebook's own blue, with no chip, for a list rather than a
-// button (/admin/users' Sign-In Methods): Facebook's standard blue circle with a white "f",
-// where FacebookIcon's white fill needs the blue chip behind it. The path's "f" is a hole, so
-// a white disc sits behind it, inset (r 245 against the path's 250) so no white fringe
-// antialiases around the blue edge.
+// The Meta asset on Facebook's own blue for a list: the path's "f" is a hole, so a white disc sits
+// behind it, inset (r 245 against 250) so no white fringe antialiases around the blue edge.
 export function FacebookMark(): ReactElement {
   return (
     <svg viewBox="0 0 500 499" width="24" height="24" aria-hidden="true">

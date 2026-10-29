@@ -12,12 +12,9 @@
   margin: 0;
 }
 
-// The values the sentence names are a quiet mark: the sentence's own weight, in a hairline
-// box like a key on a keyboard. The box is there from the start, its edge transparent, so
-// the text never moves; it shows (`is-boxed`) once the value is whole, and while the sentence
-// types it fades in. The fade is on `is-boxed` alone, so a box lost to backspacing goes at once. There is no weight token, the scale is raw numbers. The
-// padding is the box's own geometry, in em so it follows the text size, so it stays off the
-// spacing scale. The bottom is deeper than the top so a descender (g, p, y) clears the edge.
+// The values the sentence names sit in a hairline box like a key, transparent until the value is
+// whole (`is-boxed`) so the text never moves; the fade is on `is-boxed` alone, so backspacing
+// removes it at once. The em padding is deeper below so a descender clears the edge.
 .search-sentence__value {
   font-weight: inherit;
   padding: 0.02em 0.3em 0.14em;

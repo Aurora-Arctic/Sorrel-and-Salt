@@ -8,11 +8,9 @@ import Spinner from '../Spinner';
 import type { SaveStatusProps } from './types';
 import './index.scss';
 
-// Where an autosaving form says how its saves go: inline beside the primary action, never a toast,
-// since it describes this form and stays until the next save. Only the conflict notice may go
-// elsewhere (`conflictInto`), under a dialog's title, as it asks for a decision. The visible line
-// updates on every change; screen readers hear only a burst's first save.
-// claude-docs/components/autosave.md.
+// Where an autosaving form says how its saves go: inline beside the primary action, never a toast.
+// Only the conflict notice may go elsewhere (`conflictInto`), as it asks for a decision. Screen
+// readers hear only a burst's first save (claude-docs/components/autosave.md).
 
 /** A save more than this long after the last one starts a new burst, and is announced. */
 export const BURST_GAP_MS = 60_000;
