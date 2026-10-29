@@ -38,7 +38,7 @@ test('a member edits a saved spell from its card and its recipe page, and a view
   const edit = page.getByRole('dialog', { name: 'Edit Spell, Fixture Working' });
   await edit.getByRole('button', { name: 'Open All' }).click();
   await edit.getByRole('textbox', { name: 'Title' }).fill('Fixture Working Renamed');
-  await page.getByRole('combobox', { name: 'Search Ingredients' }).fill('Rosemary (Herb)');
+  await page.getByRole('combobox', { name: 'Add to Jar' }).fill('Rosemary (Herb)');
   await page.getByRole('option', { name: 'Rosemary (Herb)' }).first().click();
   await edit.getByRole('button', { name: 'Close', exact: true }).click();
   await expect(page).toHaveURL(grimoire);
