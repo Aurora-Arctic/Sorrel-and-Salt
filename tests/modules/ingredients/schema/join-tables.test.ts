@@ -10,12 +10,8 @@ import { spellCategories } from '@/modules/grimoire/schema/spell-categories';
 import { withAudit } from '@/db/repository';
 import { FIXTURE_USERS } from '@/db/seed/standard';
 
-// The two category join tables, one template: a pair keyed on itself, four
-// stamps and no tombstone, hard-deleted (claude-docs/db/hard-delete-join-tables.md,
-// "Hard delete on two join tables"). Foreign keys, NOT NULL and index names
-// are the drift test's; the stamps are the audit-columns sweep's. An
-// ingredient's pair may also name one of its forms, the rows below
-// the template.
+// The two category join tables, one template: a pair keyed on itself, four stamps and no tombstone, hard-deleted (claude-docs/db/hard-delete-join-tables.md, "Hard delete on two join tables").
+// Foreign keys, NOT NULL and index names are the drift test's; the stamps are the audit-columns sweep's. An ingredient's pair may also name one of its forms, in the rows below the template.
 
 const AUTHOR = FIXTURE_USERS.A.id;
 const SECOND_AUTHOR = FIXTURE_USERS.B.id;

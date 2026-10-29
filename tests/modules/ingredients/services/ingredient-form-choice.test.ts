@@ -13,12 +13,8 @@ import { useTestDatabase } from '../../../support/db/database';
 import { insertIngredient } from '../../../support/db/insert-ingredient';
 import { makeIngredient, makeVariant, variantInput } from '../../../support/fixtures';
 
-// The curated form a member picked, recorded beside the form's text in
-// its variant's `form_id` (DESIGN.md §5, `ingredient_forms`), so Wax under
-// _Animal_ and Wax under _Substance_ stay told apart after a save; and
-// `formChoicesOf`, the batch behind `IngredientVariant.formChoice`. The
-// ingredients are emptied per test; a form or group a test adds or retires is
-// put back.
+// The curated form a member picked, recorded beside the form's text in its variant's `form_id` (DESIGN.md §5, `ingredient_forms`), so Wax under _Animal_ and Wax under _Substance_ stay told apart after a save.
+// Also `formChoicesOf`, the batch behind `IngredientVariant.formChoice`. Ingredients are emptied per test; a form or group a test adds or retires is put back.
 
 let sql: postgres.Sql;
 useTestDatabase((client) => {

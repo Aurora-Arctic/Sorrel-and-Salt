@@ -23,10 +23,8 @@ import {
 } from '../../../support/fixtures';
 import { useCompendiumEntryInput } from '../../../support/db/compendium-entry-input';
 
-// The compendium service, its vocabulary half: what a compendium entry's curated
-// lists and forms are held to (claude-docs/db/compendium-writes.md). Split from
-// compendium-entries.test.ts, which holds the writes. The table is emptied per
-// test, so every row a result could come from is one this file wrote.
+// The compendium service, its vocabulary half: what a compendium entry's curated lists and forms are held to (claude-docs/db/compendium-writes.md). Split from compendium-entries.test.ts, which holds the writes.
+// The table is emptied per test, so every row a result could come from is one this file wrote.
 
 let sql: postgres.Sql;
 useTestDatabase((client) => {
@@ -55,11 +53,8 @@ const countIngredients = async () => {
 
 const admin = asUser(E);
 
-// A compendium entry's form and
-// deities each pick a curated row, and its celestial bodies and signs name one, where a
-// coven's ingredients keep free text (claude-docs/db/compendium-writes.md).
-// Retired vocabulary rows are put back after each test, since the clone is
-// shared by the file and the seed retires nothing.
+// A compendium entry's form and deities each pick a curated row, and its celestial bodies and signs name one, where a coven's ingredients keep free text (claude-docs/db/compendium-writes.md).
+// Retired vocabulary rows are put back after each test, since the clone is shared by the file and the seed retires nothing.
 describe('the curated vocabularies a compendium entry is held to', () => {
   afterEach(async () => {
     for (const table of [
@@ -310,10 +305,8 @@ describe('the curated vocabularies a compendium entry is held to', () => {
   });
 });
 
-// A compendium entry's forms are written inside its own save, each a
-// curated pick with its own curated celestial bodies and signs (DESIGN.md §5, "The
-// compendium is held to the vocabularies"). The write's mechanics — matching
-// and unchanged rows — are the coven's file's, on the one shared path.
+// A compendium entry's forms are written inside its own save, each a curated pick with its own curated celestial bodies and signs (DESIGN.md §5, "The compendium is held to the vocabularies").
+// The write's mechanics (matching, unchanged rows) are the coven's file's, on the one shared path.
 describe('its forms', () => {
   let herb: string;
   let oil: string;

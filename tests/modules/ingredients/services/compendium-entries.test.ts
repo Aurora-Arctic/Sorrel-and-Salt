@@ -46,10 +46,8 @@ import {
 } from '../../../support/fixtures';
 import { useCompendiumEntryInput } from '../../../support/db/compendium-entry-input';
 
-// The compendium's writes, which the site admin makes and
-// nobody else does, whatever their standing in a coven (claude-docs/db/compendium-writes.md,
-// "Compendium writes"). The table is emptied per test, so every row a result
-// could come from is one this file wrote.
+// The compendium's writes, which only the site admin makes whatever their standing in a coven (claude-docs/db/compendium-writes.md, "Compendium writes").
+// The table is emptied per test, so every row a result could come from is one this file wrote.
 
 let sql: postgres.Sql;
 useTestDatabase((client) => {
@@ -404,10 +402,8 @@ describe('a deleted entry', () => {
 
   const member = asUser(B);
 
-  // Every exported read an entry reaches anyone through — signed out, and a
-  // coven's member typing into a form — each asked whether it still shows
-  // this one: what owns the soft-delete filter of each, so no reader carries
-  // a one-off of its own.
+  // Every exported read an entry reaches anyone through (signed out, and a coven member typing into a form) is asked whether it still shows this one.
+  // That is what owns the soft-delete filter of each, so no reader carries a one-off of its own.
   const READS: [string, (id: string) => Promise<boolean>][] = [
     [
       'the compendium list',
@@ -551,10 +547,8 @@ describe('a deleted entry', () => {
     expect(await shows(id)).toBe(false);
   });
 
-  // The partial index, through the service: without its `deleted_at IS
-  // NULL`, deleting an entry would reserve its identity for good. On the
-  // formal name, since two live entries may share a label anyway, so a label
-  // coming back proves nothing about the index.
+  // The partial index, through the service: without its `deleted_at IS NULL`, deleting an entry would reserve its identity for good.
+  // It is tested on the formal name, since two live entries may share a label anyway, so a label coming back proves nothing about the index.
   it('frees its formal name for a new entry under another label', async () => {
     const id = await seed();
     const again = entry({ name: 'Fixture Leaf' });

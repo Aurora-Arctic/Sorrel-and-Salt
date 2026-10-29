@@ -3,10 +3,8 @@ import { applyCupboardEntry } from '@/modules/ingredients';
 import type { CupboardEntryRow, IngredientRow } from '@/modules/ingredients';
 import { entryDetail } from '../../../support/entry-detail';
 
-// `applyCupboardEntry`: a coven's cupboard entry laid over the
-// compendium entry it names. Per column, a null override is the compendium's
-// value, a set one the coven's, and an empty list a list cleared on purpose;
-// everything else is the compendium's, whatever the row says.
+// `applyCupboardEntry`: a coven's cupboard entry laid over the compendium entry it names. Per column, a null override is the compendium's value, a set one the coven's, and an empty list a list cleared on purpose.
+// Everything else is the compendium's, whatever the row says.
 
 const STAMPS = {
   createdAt: new Date('2026-02-01T00:00:00Z'),

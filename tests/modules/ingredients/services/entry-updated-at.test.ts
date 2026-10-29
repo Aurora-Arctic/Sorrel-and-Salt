@@ -18,11 +18,8 @@ import {
 } from '../../../support/fixtures';
 import { curatedFormId } from '../../../support/db/curated-ids';
 
-// `updated_at` moves only when an entry really changed (migration
-// 0079), and a change to a child list (folk names, categories, references,
-// forms) moves the parent's, so the New/Updated marker reads it. Rows are
-// backdated with the trigger off (a plain update of the stamps is itself a
-// no-op to it), then the service under test is run.
+// `updated_at` moves only when an entry really changed (migration 0079), and a change to a child list (folk names, categories, references, forms) moves the parent's, so the New/Updated marker reads it.
+// Rows are backdated with the trigger off (a plain update of the stamps is itself a no-op to it), then the service under test is run.
 
 let sql: postgres.Sql;
 useTestDatabase((client) => {

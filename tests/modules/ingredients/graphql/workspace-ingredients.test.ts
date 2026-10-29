@@ -19,14 +19,9 @@ import {
 import { run } from '../../../support/graphql/run';
 import type { WorkspaceIngredientNode } from './types';
 
-// Over the wire: the three mutations a coven's
-// ingredient form saves and deletes through. This file holds the transport's
-// half (claude-docs/testing/layer-ownership.md): the SDL's own refusals, the
-// answer as a fresh read gives it, the loaders cleared between two writes in
-// one request, and one refusal per error code per mutation, read as the browser
-// reads it. Which roles are refused at which rows, and every Zod rule, are
-// services/workspace-ingredients.test.ts's and validation/ingredient.test.ts's;
-// a signed-out caller at every field is tests/db/graphql-query-scopes.test.ts's.
+// Over the wire: the three mutations a coven's ingredient form saves and deletes through (the transport's half, claude-docs/testing/layer-ownership.md).
+// That is the SDL's own refusals, the answer as a fresh read gives it, the loaders cleared between two writes in one request, and one refusal per error code per mutation.
+// Roles and Zod rules are services/workspace-ingredients.test.ts's and validation/ingredient.test.ts's; a signed-out caller is tests/db/graphql-query-scopes.test.ts's.
 
 let sql: postgres.Sql;
 useTestDatabase((client) => {
@@ -86,10 +81,7 @@ function local(overrides: Overrides<IngredientFixture> = {}): IngredientFixture 
 
 const seed = (fixture: IngredientFixture) => insertIngredient(sql, fixture, A.id);
 
-/**
- * The whole ingredient as the update input takes it: every field sent, and
- * an empty value where the fixture has none.
- */
+/** The whole ingredient as the update input takes it: every field sent, and an empty value where the fixture has none. */
 function wholeInput(fixture: IngredientFixture): Record<string, unknown> {
   return {
     name: fixture.name,

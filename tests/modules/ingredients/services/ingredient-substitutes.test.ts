@@ -20,12 +20,8 @@ import { useTestDatabase } from '../../../support/db/database';
 import { insertIngredient, insertSubstituteLink } from '../../../support/db/insert-ingredient';
 import { type IngredientFixture, type Overrides, makeIngredient } from '../../../support/fixtures';
 
-// An ingredient's substitutes, each a link to another ingredient or a
-// typed name (DESIGN.md §5, `ingredient_substitutes`), written in the
-// ingredient's own transaction by either tier's service and read back through
-// `substitutesOf`, the batch behind `Ingredient.substitutes`. The table is
-// emptied per test, so every row a result could come from is one this file
-// wrote.
+// An ingredient's substitutes, each a link to another ingredient or a typed name (DESIGN.md §5, `ingredient_substitutes`), written in the ingredient's own transaction by either tier's service and read back through `substitutesOf`, the batch behind `Ingredient.substitutes`.
+// The table is emptied per test, so every row a result could come from is one this file wrote.
 
 let sql: postgres.Sql;
 useTestDatabase((client) => {

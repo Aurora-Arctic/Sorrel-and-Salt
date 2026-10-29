@@ -29,22 +29,13 @@ import {
 } from '../../../support/db/insert-reference';
 import { makeIngredient, makeVariant } from '../../../support/fixtures';
 
-// The service half: the compendium's reads take no session, and
-// a signed-out caller (a null session) is refused every read that names a
-// coven. The reads below are every one a null session can reach that can name
-// a coven: the batch reads behind an entry's fields, and the page body's
-// `ingredientDetailOf` for a compendium entry read under a coven, live or
-// retired. Every other workspace read takes a `Session`, never null, and the
-// GraphQL `signedIn` scope stands in front of it.
+// The service half: the compendium's reads take no session, and a signed-out caller (a null session) is refused every read that names a coven.
+// The reads below are every one a null session can reach that can name a coven: the batch reads behind an entry's fields, and the page body's `ingredientDetailOf` for a compendium entry read under a coven, live or retired.
+// Every other workspace read takes a `Session`, never null, and the GraphQL `signedIn` scope stands in front of it.
 //
-// Asserted elsewhere, once: the compendium read with no session
-// (compendium.test.ts, "answers the compendium without a session" and
-// "answers a compendium entry to anyone, signed out included"; each child read
-// signed out in compendium-entries.test.ts's soft-delete sweep);
-// `getIngredient(null, …)` refused a coven's entry (compendium.test.ts,
-// "refuses a coven's entry to everyone else"); and `ingredientDetailOf(null, …)`
-// refused a coven's own entry (ingredient-detail.test.ts, "reads a coven's own
-// entry for a member, and refuses a member of an unrelated coven").
+// Asserted elsewhere, once: the compendium read with no session (compendium.test.ts, "answers the compendium without a session" and "answers a compendium entry to anyone, signed out included");
+// each child read signed out (compendium-entries.test.ts's soft-delete sweep); `getIngredient(null, …)` refused a coven's entry (compendium.test.ts, "refuses a coven's entry to everyone else");
+// and `ingredientDetailOf(null, …)` refused a coven's own entry (ingredient-detail.test.ts, "reads a coven's own entry for a member, and refuses a member of an unrelated coven").
 
 let sql: postgres.Sql;
 useTestDatabase((client) => {

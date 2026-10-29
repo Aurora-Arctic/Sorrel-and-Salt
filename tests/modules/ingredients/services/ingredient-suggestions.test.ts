@@ -9,10 +9,8 @@ import { insertIngredient } from '../../../support/db/insert-ingredient';
 import { type IngredientFixture, type Overrides, makeIngredient } from '../../../support/fixtures';
 import type { PageRequest } from '@/lib/types';
 
-// The substitute picker's search: ingredients a member may link, from
-// the compendium and the caller's own coven, matched as the compendium search
-// matches so a typed prefix finds its entry. The table is emptied per test, so
-// every row a result could come from is one this file wrote.
+// The substitute picker's search: ingredients a member may link, from the compendium and the caller's own coven, matched as the compendium search matches so a typed prefix finds its entry.
+// The table is emptied per test, so every row a result could come from is one this file wrote.
 
 let sql: ReturnType<typeof postgres>;
 

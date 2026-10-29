@@ -16,12 +16,9 @@ import { useTestDatabase } from '../../../support/db/database';
 import { insertDeityLink, insertIngredient } from '../../../support/db/insert-ingredient';
 import { type IngredientFixture, type Overrides, makeIngredient } from '../../../support/fixtures';
 
-// An ingredient's deities, each the curated deity a member picked or a
-// name typed, in the order entered (DESIGN.md §5, `ingredient_deities`),
-// written in the ingredient's own transaction by either tier's service and
-// read back through `deitiesOf`, the batch behind `Ingredient.deities`. The
-// ingredients are emptied per test; a deity or tradition a test adds or
-// retires is put back after it, since the vocabularies are the file's clone's.
+// An ingredient's deities, each the curated deity a member picked or a name typed, in the order entered (DESIGN.md §5, `ingredient_deities`).
+// Either tier's service writes them in the ingredient's own transaction, and `deitiesOf`, the batch behind `Ingredient.deities`, reads them back.
+// Ingredients are emptied per test; a deity or tradition a test adds or retires is put back after it, since the vocabularies are the file's clone's.
 
 let sql: postgres.Sql;
 useTestDatabase((client) => {

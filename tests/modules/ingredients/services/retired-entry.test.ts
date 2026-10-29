@@ -22,14 +22,9 @@ import { insertIngredient } from '../../../support/db/insert-ingredient';
 import { insertStock } from '../../../support/db/insert-stock';
 import { makeIngredient } from '../../../support/fixtures';
 
-// A compendium entry the curators retire (soft-delete) stays readable
-// to exactly the covens whose cupboard names it, through the one hatch
-// `findCupboardEntryIncludingSoftDeleted`, and leaves every other read at once
-// (claude-docs/db/workspace-compendium-entries.md, "When the compendium
-// retires the entry"). Coven W holds the entry and a jar of its one form;
-// coven X holds a jar of the same form but no cupboard row, which no service
-// writes but the table does not refuse, so X is the coven that could have read
-// it and must not.
+// A compendium entry the curators retire (soft-delete) stays readable to exactly the covens whose cupboard names it, through the one hatch `findCupboardEntryIncludingSoftDeleted`, and leaves every other read at once
+// (claude-docs/db/workspace-compendium-entries.md, "When the compendium retires the entry"). Coven W holds the entry and a jar of its one form.
+// Coven X holds a jar of the same form but no cupboard row, which no service writes but the table does not refuse, so X is the coven that could have read it and must not.
 
 let sql: postgres.Sql;
 useTestDatabase((client) => {

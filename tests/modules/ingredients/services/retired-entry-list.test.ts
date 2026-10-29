@@ -16,15 +16,9 @@ import { insertStock } from '../../../support/db/insert-stock';
 import { makeIngredient, makeVariant } from '../../../support/fixtures';
 import { run } from '../../../support/graphql/run';
 
-// A compendium entry the curators retired (soft-deleted) stays on a
-// coven's Ingredients list, its count and its facet counts while that coven's
-// live cupboard row names it, by the retired-entry rule
-// (claude-docs/db/workspace-compendium-entries.md, "When the compendium
-// retires the entry"). Coven W holds the entry; coven X holds a jar of its
-// form but no cupboard row, which no service writes but the table does not
-// refuse, so X is the coven that could have listed it and must not. Every
-// test retires the entry first, so each reads the list as it stands after a
-// curator's delete.
+// A compendium entry the curators retired (soft-deleted) stays on a coven's Ingredients list, its count and its facet counts while that coven's live cupboard row names it
+// (claude-docs/db/workspace-compendium-entries.md, "When the compendium retires the entry"). Coven W holds the entry; coven X holds a jar of its form but no cupboard row.
+// No service writes such a jar but the table does not refuse it, so X is the coven that could have listed the entry and must not. Every test retires the entry first.
 
 let sql: postgres.Sql;
 useTestDatabase((client) => {
@@ -68,11 +62,7 @@ async function softDelete(
   });
 }
 
-/**
- * The preconditions every assertion below leans on: the entry exists and is
- * retired, it is the compendium's, and W's cupboard row naming it is live
- * (or, with `rowLive` false, tombstoned).
- */
+/** The preconditions every assertion leans on: the entry exists, is retired and is the compendium's, and W's cupboard row naming it is live (or tombstoned, with `rowLive` false). */
 async function expectPreconditions(rowLive = true) {
   const [entry] = await sql`
     select workspace_id, deleted_at from ingredients where id = ${entryId}`;

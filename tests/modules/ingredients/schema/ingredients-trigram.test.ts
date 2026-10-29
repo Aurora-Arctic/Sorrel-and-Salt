@@ -4,11 +4,8 @@ import { useTestDatabase } from '../../../support/db/database';
 import { FIXTURE_USERS } from '@/db/seed/standard';
 import { ingredientSlug } from '@/lib/slugify';
 
-// §9's one multicolumn gin index serves a predicate on either column alone.
-// That it is reached is proved on the SQL the services send, in
-// common-names-plan.test.ts and duplicates-plan.test.ts; what stays
-// here is the negative control that makes those plans meaningful — claude-docs/db/fuzzy-matching.md, "Fuzzy matching:
-// one index, and a rule every caller is bound by".
+// §9's one multicolumn gin index serves a predicate on either column alone. That it is reached is proved on the SQL the services send, in common-names-plan.test.ts and duplicates-plan.test.ts.
+// What stays here is the negative control that makes those plans meaningful (claude-docs/db/fuzzy-matching.md, "Fuzzy matching: one index, and a rule every caller is bound by").
 const TRIGRAM_INDEX = 'ingredients_trgm';
 const AUTHOR = FIXTURE_USERS.A.id;
 
@@ -42,10 +39,8 @@ async function fillWithDecoys(): Promise<void> {
   await sql`analyze ingredients`;
 }
 
-// `explain` as one string, with sequential scans disabled: on a table this
-// size the planner would seq-scan past a usable index because the heap costs
-// less, and the question is "can this predicate reach the index at all". With
-// seq scans on, the `similarity()` assertion below would prove nothing.
+// `explain` as one string, with sequential scans disabled: on a table this size the planner would seq-scan past a usable index because the heap costs less, and the question is whether the predicate can reach the index at all.
+// With seq scans on, the `similarity()` assertion below would prove nothing.
 async function planFor(query: string, threshold = 0.4): Promise<string> {
   return await sql.begin(async (tx) => {
     await tx.unsafe(`set local pg_trgm.similarity_threshold = ${threshold}`);
@@ -77,11 +72,8 @@ describe('ingredients trigram index', () => {
       await fillWithDecoys();
     });
 
-    // §9's trap: `similarity(a, b) > 0.4` is a function call no trigram index
-    // can answer. Seq scans are already off, so a seq scan here is the planner
-    // having no alternative rather than preferring one. Why the plan tests
-    // could have passed wrongly: if `%` could not reach the index either,
-    // their plans would read like this one.
+    // §9's trap: `similarity(a, b) > 0.4` is a function call no trigram index can answer. Seq scans are already off, so a seq scan here is the planner having no alternative rather than preferring one.
+    // Why the plan tests could have passed wrongly: if `%` could not reach the index either, their plans would read like this one.
     it('cannot be reached by a similarity() comparison, where % reaches it', async () => {
       const functionPlan = await planFor(
         `select id from ingredients where similarity(name, 'Mugwart') > 0.4`,

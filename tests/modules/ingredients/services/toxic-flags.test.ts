@@ -19,12 +19,8 @@ import {
   variantInput,
 } from '../../../support/fixtures';
 
-// An ingredient and each of its forms carry a toxic flag of their
-// own, written by whoever may write the row. Who may write it is the write path's
-// own test (workspace-ingredients.test.ts, compendium-entries.test.ts). The two are
-// independent — the one property that does not follow DESIGN.md §5's union
-// rule — so each test reads both back. The table is emptied per test, so
-// every row a result could come from is one this file wrote.
+// An ingredient and each of its forms carry a toxic flag of their own, written by whoever may write the row; who may is the write path's own test (workspace-ingredients.test.ts, compendium-entries.test.ts).
+// The two are independent, the one property that does not follow DESIGN.md §5's union rule, so each test reads both back. The table is emptied per test, so every row a result could come from is one this file wrote.
 
 let sql: postgres.Sql;
 useTestDatabase((client) => {
@@ -58,10 +54,7 @@ const local = () =>
 /** Seeds a row through the shared inserter, stamped by A — not through the code under test. */
 const seed = (fixture: IngredientFixture) => insertIngredient(sql, fixture, A.id);
 
-/**
- * The fixture as a whole-row write, the ingredient's flag as `toxic` and
- * each form's as `toxicForms` names it, every form kept by its id.
- */
+/** The fixture as a whole-row write, the ingredient's flag as `toxic` and each form's as `toxicForms` names it, every form kept by its id. */
 async function input(
   id: string,
   fixture: IngredientFixture,

@@ -11,13 +11,9 @@ import { makeIngredient, makeVariant } from '../../../support/fixtures';
 import { run } from '../../../support/graphql/run';
 import type { InventoryItemNode } from './types';
 
-// Over the wire: the three mutations a coven's jars are
-// written through, `InventoryItem` as they answer it, and `Ingredient.stock`.
-// This file holds the transport's half (claude-docs/testing/layer-ownership.md):
-// the answer as a fresh read gives it, the stock loader cleared between two
-// writes in one request, and one refusal per error code per field, read as the
-// browser reads it. Which roles are refused at which jars is
-// services/stock.test.ts's, and every Zod rule validation/stock.test.ts's.
+// Over the wire: the three mutations a coven's jars are written through, `InventoryItem` as they answer it, and `Ingredient.stock` (the transport's half, claude-docs/testing/layer-ownership.md).
+// That is the answer as a fresh read gives it, the stock loader cleared between two writes in one request, and one refusal per error code per field.
+// Which roles are refused at which jars is services/stock.test.ts's, and every Zod rule is validation/stock.test.ts's.
 
 let sql: postgres.Sql;
 useTestDatabase((client) => {

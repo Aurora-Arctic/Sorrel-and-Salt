@@ -12,11 +12,8 @@ import type { Overrides } from '../../../support/fixtures';
 import { run as runOperation } from '../../../support/graphql/run';
 
 // The two queries, `compendiumFacets` and `workspaceIngredientFacets`.
-// How each value is counted, and who may read which coven's counts, is
-// services/ingredient-facets.test.ts's and tests/db/repository/ingredient-facets.test.ts's;
-// this file holds the transport's half — the arguments reaching the service,
-// each value typed as its argument, and the one refusal on the wire. The
-// signed-out answers are tests/db/graphql-query-scopes.test.ts's.
+// How each value is counted, and who may read which coven's counts, is services/ingredient-facets.test.ts's and tests/db/repository/ingredient-facets.test.ts's.
+// Here: the arguments reaching the service, each value typed as its argument, and the one refusal on the wire. Signed-out answers are tests/db/graphql-query-scopes.test.ts's.
 
 interface FacetCount {
   value: string;
@@ -45,10 +42,7 @@ useTestDatabase((client) => {
 let hecate: string;
 let protection: string;
 
-/**
- * Two compendium entries, one toxic, linked to Hecate, filed in Protection
- * and fire, and both coming as a resin; and W's own entry in a form of its own.
- */
+/** Two compendium entries, one toxic, linked to Hecate, filed in Protection and fire, and both coming as a resin; and W's own entry in a form of its own. */
 beforeEach(async () => {
   await sql`truncate ingredients cascade`;
   [{ id: hecate }] = await sql`select id from deities where name = 'Hecate' and deleted_at is null`;
