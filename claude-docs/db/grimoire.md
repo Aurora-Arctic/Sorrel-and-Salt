@@ -45,6 +45,15 @@ criterion that could be tested rather than one an empty table satisfied for
 free (TASKS.md, "Breaking the M1.23 ↔ M10.3 cycle"). The rule it carries is
 ["Spell visibility"](spell-visibility.md).
 
+### Workings (M13.4)
+
+A spell is the recipe; a working is the record of one time it was made ([`m13.4-spell-workings.md`](../design-decisions/m13.4-spell-workings.md)). Migration `0091_spell-workings.sql` adds three tables and the `working_status` enum, each table with its own `set_updated_at` trigger.
+
+- **`spell_workings`** spreads `...auditColumns` and is soft-deleted. `visibility` reuses `spell_visibility`. Index `spell_workings_spell_id_worked_on_idx` on `(spell_id, worked_on DESC) WHERE deleted_at IS NULL`. CHECKs `spell_workings_note_not_blank` and `spell_workings_completed_at_with_status` (`(status = 'complete') = (completed_at IS NOT NULL)`).
+- **`spell_working_participants`** spreads `...auditStampColumns`. CHECK `spell_working_participants_one_identity` (`num_nonnulls(user_id, name) = 1`) and `..._name_not_blank`. Two plain unique indexes, on `(working_id, user_id)` and `(working_id, lower(name))`.
+- **`spell_working_deductions`** spreads `...auditStampColumns`. Its foreign key to `inventory_items` is named by hand (`spell_working_deductions_inventory_item_fk`), because the generated name is past Postgres's 63-character limit.
+- A working of a deleted spell is read through the spell's own filter, so `findManyInSpell` cannot reach it.
+
 ### The join names the ingredient, never the stock row
 
 `spell_steps.ingredientId` references `ingredients`. Stock is what a
