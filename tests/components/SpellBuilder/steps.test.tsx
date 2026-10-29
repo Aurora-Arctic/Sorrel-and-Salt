@@ -1235,6 +1235,11 @@ describe('the spell builder’s Add to Jar categories', () => {
     expect(within(many).getByText(/^\+4/)).toHaveTextContent('+4 more: Bind, Calm, Dawn, Ember');
     // Hover shows the folded names: a title, as a tooltip button would steal the option's role.
     expect(within(many).getByText(/^\+4/)).toHaveAttribute('title', 'Bind, Calm, Dawn, Ember');
+    // Hovering the chip shows the folded names in the app's tip, not a native title.
+    fireEvent.mouseEnter(within(many).getByText(/^\+4/));
+    expect(await within(many).findByRole('tooltip', { hidden: true })).toHaveTextContent(
+      'Bind, Calm, Dawn, Ember',
+    );
     // Why this could have folded: Onewort has one, at the cap, and is whole.
     expect(within(one).queryByText(/^\+/)).toBeNull();
     expect(one).toHaveTextContent('Love');
@@ -1318,7 +1323,7 @@ describe('the spell builder’s Add to Jar categories', () => {
     renderBuilder({ spell: assigned('Calm', 'Protection') }, offered('Calm', 'Love', 'Protection'));
     openAll();
 
-    const filter = screen.getByRole('group', { name: 'Filter by category' });
+    const filter = screen.getByRole('group', { name: 'Filter By Category' });
     const calm = await within(filter).findByRole('button', { name: 'Calm' });
     expect(within(filter).getByRole('button', { name: 'Protection' })).toHaveAttribute(
       'aria-pressed',
@@ -1347,6 +1352,6 @@ describe('the spell builder’s Add to Jar categories', () => {
     renderBuilder({}, offered('Calm'));
     await lookUp('Fixture', /Fixture Rosewort/);
 
-    expect(screen.queryByRole('group', { name: 'Filter by category' })).toBeNull();
+    expect(screen.queryByRole('group', { name: 'Filter By Category' })).toBeNull();
   });
 });

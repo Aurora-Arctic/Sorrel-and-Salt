@@ -231,8 +231,22 @@ $spell-columns-switch: $spell-main-min + $spell-columns-gap + $spell-side;
 .spell-steps__filter {
   display: flex;
   flex-wrap: wrap;
+  align-items: center;
+  gap: space(1) space(2);
+  margin-block-start: space(2);
+}
+
+// The caption beside the chips, the muted style Category Match's row labels wear.
+.spell-steps__filter-label {
+  color: $text-muted;
+  font-size: type-size('caption');
+  font-weight: 500;
+}
+
+.spell-steps__filter-chips {
+  display: flex;
+  flex-wrap: wrap;
   gap: space(1);
-  margin-block-end: space(2);
 }
 
 .spell-steps__filter-chip {

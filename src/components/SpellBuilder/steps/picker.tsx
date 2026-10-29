@@ -12,6 +12,8 @@ import type { SpellBuilderValues } from '../types';
 import type { SpellIngredientSuggestionsQuery } from '../../../gql/graphql';
 import type { FormGroupIcon } from '@/modules/vocabulary/schema/form-group-icons';
 import Combobox from '../../Combobox';
+import InfoTip from '../../InfoTip';
+import IconTip from '../../IconTip/icon-tip';
 import { FieldError } from '../../Field';
 import FormIcon from '../../FormIcon';
 import { useLookup } from '../../IngredientForm/suggestions';
@@ -61,8 +63,8 @@ const assignedFirst = <T extends { id: string }>(
  * draws them, plain text until the colours land or for a category without a group. The first
  * `ROW_CATEGORY_CAP` are drawn and the rest fold into a neutral "+N" chip rather than an
  * ellipsis, a fixed count because a measured fit would need the row's laid-out width. The folded
- * names stay in the row's accessible name, as visually hidden text inside the chip, and show on
- * hover as the chip's `title` (a focusable tooltip button would take over the option's role).
+ * names stay in the row's accessible name, as visually hidden text inside the chip, and shown on hover
+ * in the app's own IconTip bubble, which draws on a chip that is not a button: the option keeps its role.
  */
 const categoryNames = (
   categories: readonly { id: string; name: string }[],
@@ -221,34 +223,6 @@ export function StepPicker({ workspaceId, oneOffs, onAdd }: StepPickerProps): Re
 
   return (
     <div className="field">
-      {/* Above the box, since an open list covers whatever is beneath it. Each is a toggle:
-          none pressed is no filter, one or more keeps ingredients carrying any of them. */}
-      {assigned.size > 0 && (
-        <div role="group" aria-label="Filter by category" className="spell-steps__filter">
-          {[...assigned].flatMap((categoryId) => {
-            const name = names.get(categoryId);
-            if (name === undefined) return [];
-            const on = narrowedBy.includes(categoryId);
-            const pair = colors.get(categoryId);
-            return [
-              <button
-                key={categoryId}
-                type="button"
-                className="chip spell-steps__filter-chip"
-                style={pair ? chipColors(pair) : undefined}
-                aria-pressed={on}
-                onClick={() =>
-                  setPressed(
-                    on ? narrowedBy.filter((id) => id !== categoryId) : [...narrowedBy, categoryId],
-                  )
-                }
-              >
-                {name}
-              </button>,
-            ];
-          })}
-        </div>
-      )}
       <Combobox<IngredientPickOption>
         id={`${id}-search`}
         label="Add to Jar"
@@ -277,6 +251,48 @@ export function StepPicker({ workspaceId, oneOffs, onAdd }: StepPickerProps): Re
         aria-invalid={refused || undefined}
         aria-describedby={refused ? `${id}-error` : undefined}
       />
+      {/* Beneath the box; the open list is layered over them (z-index, Combobox). Each is a toggle:
+          none pressed is no filter, one or more keeps ingredients carrying any of them. */}
+      {assigned.size > 0 && (
+        <div className="spell-steps__filter">
+          <span id={`${id}-filter-label`} className="spell-steps__filter-label">
+            Filter By Category
+          </span>
+          <InfoTip id={`${id}-filter-tip`} label="Filter By Category">
+            Show only ingredients in any of the pressed categories.
+          </InfoTip>
+          <div
+            role="group"
+            aria-labelledby={`${id}-filter-label`}
+            className="spell-steps__filter-chips"
+          >
+            {[...assigned].flatMap((categoryId) => {
+              const name = names.get(categoryId);
+              if (name === undefined) return [];
+              const on = narrowedBy.includes(categoryId);
+              const pair = colors.get(categoryId);
+              return [
+                <button
+                  key={categoryId}
+                  type="button"
+                  className="chip spell-steps__filter-chip"
+                  style={pair ? chipColors(pair) : undefined}
+                  aria-pressed={on}
+                  onClick={() =>
+                    setPressed(
+                      on
+                        ? narrowedBy.filter((id) => id !== categoryId)
+                        : [...narrowedBy, categoryId],
+                    )
+                  }
+                >
+                  {name}
+                </button>,
+              ];
+            })}
+          </div>
+        </div>
+      )}
       <FieldError id={`${id}-error`} message={refused ? ONE_OFF_TAKEN : undefined} />
     </div>
   );
