@@ -208,6 +208,17 @@ $spell-columns-switch: $spell-main-min + $spell-columns-gap + $spell-side;
   border-color: $hairline;
 }
 
+// A row's category chips may wrap onto a second line rather than be clipped (the owner's call,
+// 2026-10-29): the one-line clip would cut the pills' tops. The line height gives wrapped lines
+// the room the chips have side to side, and the block padding keeps the first line clear of the
+// name above. Only a note holding chips, so a plain-text note keeps its single ellipsised line.
+.combobox__list .combobox__note--meta:has(.chip) {
+  padding-block: space(1);
+  line-height: 2;
+  overflow: visible;
+  white-space: normal;
+}
+
 // The picker's category filter, above the box: the spell's assigned categories as toggles. Off
 // is an outline in the group's colours; on is the full wash with a heavier ring, so the state is
 // not carried by colour alone.
