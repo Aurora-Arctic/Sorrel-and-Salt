@@ -293,7 +293,7 @@ async function stampsOfSlug(id: string) {
   return row;
 }
 
-describe('the Reviewed filter (M14.8)', () => {
+describe('the Reviewed filter', () => {
   const PAGE = { limit: 26, inverted: false } as const;
 
   /** A compendium entry of its own name and no formal one, so several can stand together. */

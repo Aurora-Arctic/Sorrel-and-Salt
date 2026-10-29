@@ -36,7 +36,7 @@ function declarations(css: string, selector: string): Record<string, string> {
   );
 }
 
-describe('MB.36: a group colour the write check admits is legible on its theme', () => {
+describe('a group colour the write check admits is legible on its theme', () => {
   /** The page and card surfaces a theme mixin sets. */
   function surfaces(theme: 'dark' | 'light'): { page: string; card: string } {
     const tokens = declarations(

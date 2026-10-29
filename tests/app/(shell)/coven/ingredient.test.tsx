@@ -615,7 +615,7 @@ describe('the coven ingredient page title', () => {
   });
 });
 
-describe('the coven ingredient page’s stock (M12.29)', () => {
+describe('the coven ingredient page’s stock', () => {
   const VARIANT_ID = '00000000-0000-4000-8000-0000000000c1';
   const STAMPS = {
     createdAt: new Date('2026-01-01T00:00:00Z'),

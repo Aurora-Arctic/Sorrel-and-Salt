@@ -98,7 +98,7 @@ function counts(facets: IngredientFacets, kind: Kind): Record<string, number> {
 
 // The order of each kind's values, the same on the compendium's read and a coven's: names alphabetical in natural-language order (case set aside, an accented letter beside its plain one), a category under its group, a deity under its tradition,
 // signs and bodies by curated position then unpositioned by name; never by count (claude-docs/design-decisions/m12.52-facet-sort-order.md). Each list's counts run against its alphabetical order, so a count order and a code-unit order would each read differently.
-describe("the order of each kind's values (M12.52)", () => {
+describe("the order of each kind's values", () => {
   /** Ids of the invented curated rows, by name. */
   const ids = new Map<string, string>();
   const idsOf = (...names: string[]) => names.map((name) => ids.get(name) as string);
@@ -504,7 +504,7 @@ describe('findCompendiumFacets', () => {
     expect(any.categories).toEqual(unchosen.categories);
   });
 
-  it('orders a dynamic kind by value, whatever the counts (M12.52)', async () => {
+  it('orders a dynamic kind by value, whatever the counts', async () => {
     await seedEntries();
 
     const facets = await findCompendiumFacets({});
@@ -608,7 +608,7 @@ describe('findCompendiumFacets', () => {
       for (const reads of coven) expect(reads.length).toBeLessThanOrEqual(11);
     });
 
-    it('sends no Reviewed counts read unless asked for them (M14.8)', async () => {
+    it('sends no Reviewed counts read unless asked for them', async () => {
       await seedEntries();
       const filter: IngredientFilter = { zodiacSigns: ['leo'] };
 

@@ -144,7 +144,7 @@ describe('an ingredient step', () => {
     expect((await liveStepsOf(spell.id)).map((row) => row.id)).toEqual([saved.id]);
   });
 
-  it('refuses a form the coven holds of a retired entry as a new layer, and keeps one already laid (M14.30)', async () => {
+  it('refuses a form the coven holds of a retired entry as a new layer, and keeps one already laid', async () => {
     // A live form beneath a soft-deleted compendium entry, as migration 0090
     // leaves a form a coven holds, and the coven's cupboard row naming it.
     const rosewort = await formOf('Fixture Rosewort');

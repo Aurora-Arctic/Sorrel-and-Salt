@@ -88,7 +88,7 @@ beforeEach(async () => {
 
 describe('references table', () => {
   // A closed list is the database's and the code's alike.
-  it('holds the five kinds MB.151 settled, as the code declares them', async () => {
+  it('holds the five kinds, as the code declares them', async () => {
     const [row] = await sql`select enum_range(null::reference_kind)::text[] as kinds`;
 
     expect(row.kinds).toEqual(referenceKind.enumValues);

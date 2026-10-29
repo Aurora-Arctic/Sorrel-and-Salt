@@ -95,7 +95,7 @@ describe('covensOpeningEntry', () => {
     expect(await slugsFor(D, retiredHeldByW)).toEqual([]);
   });
 
-  it('gives an admin or a curator in no coven nothing (M6.6)', async () => {
+  it('gives an admin or a curator in no coven nothing', async () => {
     expect(await slugsFor(E, live)).toEqual([]);
     expect(await slugsFor(F, live)).toEqual([]);
   });

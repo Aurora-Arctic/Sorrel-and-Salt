@@ -128,7 +128,7 @@ async function softDelete(id: string) {
   await sql`update ingredients set deleted_at = now(), deleted_by = ${E.id} where id = ${id}`;
 }
 
-describe('findCupboardEntryIncludingSoftDeleted (M12.24)', () => {
+describe('findCupboardEntryIncludingSoftDeleted', () => {
   it('reads a retired compendium entry beside the live cupboard entry naming it', async () => {
     const entry = await compendiumEntry('Testwort', 'Fixtura testalis');
     const id = await insertCupboardEntry(
@@ -225,7 +225,7 @@ describe('findCompendiumMatchesByName', () => {
   });
 });
 
-describe('countCovensUsing (M12.25)', () => {
+describe('countCovensUsing', () => {
   const curator = () => assertCurator(asUser(E));
 
   it('counts the covens with a live row naming the entry, and no other row', async () => {

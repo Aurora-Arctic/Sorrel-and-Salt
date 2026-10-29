@@ -15,7 +15,7 @@ const rows = [
   { slug: 'fixture-alpha', name: 'Fixture Alpha', canonicalName: null, lastModified: new Date(0) },
 ];
 
-describe('M12.2: the public file handlers', () => {
+describe('the public file handlers', () => {
   it('serves llms.txt as UTF-8 Markdown from the cached read', async () => {
     listCompendiumSlugs.mockResolvedValue(rows);
 

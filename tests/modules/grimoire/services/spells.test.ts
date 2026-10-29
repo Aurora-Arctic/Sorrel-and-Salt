@@ -749,7 +749,7 @@ describe('updateSpell, with its recipe', () => {
     );
   });
 
-  it('lets a draft narrow and widen freely (M10.20)', async () => {
+  it('lets a draft narrow and widen freely', async () => {
     const draft = await createSpell(asUser(B), WORKSPACE_W_ID, {
       status: 'draft',
       visibility: 'workspace',
@@ -917,7 +917,7 @@ describe('a spell’s assigned categories', () => {
   });
 });
 
-describe('updateSpell, against the revision it was read at (M13.18)', () => {
+describe('updateSpell, against the revision it was read at', () => {
   /** A spell two members have both read at the same revision. */
   async function readByBoth() {
     const id = await seed(A, 'workspace', { title: 'Shared Jar' });

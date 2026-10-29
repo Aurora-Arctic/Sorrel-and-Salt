@@ -219,7 +219,7 @@ describe('reviveMembership', () => {
   });
 });
 
-describe('handing a coven over, then leaving (M6.16)', () => {
+describe('handing a coven over, then leaving', () => {
   it('promotes first, so the leave that follows finds a second owner and the coven keeps one', async () => {
     const covenId = await insertCoven('Fixture Handover Coven', [
       [A.id, 'owner'],

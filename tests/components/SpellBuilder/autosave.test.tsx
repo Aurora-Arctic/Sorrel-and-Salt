@@ -285,7 +285,7 @@ describe('the recovery banner', () => {
   });
 });
 
-describe('a save someone else got in first (M13.18)', () => {
+describe('a save someone else got in first', () => {
   /** Opens the saved spell, types an intent, and presses Save into a stale-write refusal. */
   async function conflict() {
     const sends = accept();

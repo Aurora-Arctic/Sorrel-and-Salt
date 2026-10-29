@@ -38,7 +38,7 @@ const PAGE: PageRequest = { limit: 26, inverted: false };
 const names = async (filter = {}) =>
   (await listCompendium(filter, PAGE)).map((entry) => entry.node.name);
 
-describe('M8.6: the compendium read is cached under the compendium tag', () => {
+describe('the compendium read is cached under the compendium tag', () => {
   it('answers a repeat read of the page and its count from the cache', async () => {
     await seed('Fixture Alpha');
     expect(await names()).toEqual(['Fixture Alpha']);
@@ -81,7 +81,7 @@ describe('M8.6: the compendium read is cached under the compendium tag', () => {
   });
 });
 
-describe('M12.3: the compendium facets are cached under the compendium tag', () => {
+describe('the compendium facets are cached under the compendium tag', () => {
   const forms = async () => (await compendiumFacets({})).forms;
 
   it('answers a repeat read from the cache, and reads Postgres again after an admin delete', async () => {
@@ -100,7 +100,7 @@ describe('M12.3: the compendium facets are cached under the compendium tag', () 
   });
 });
 
-describe('M8.19: the public entry read is cached under the compendium tag', () => {
+describe('the public entry read is cached under the compendium tag', () => {
   const nameAt = async (slug: string) => {
     const page = await readCompendiumEntry(slug);
     if (page.kind !== 'entry') throw new Error('Expected an entry');

@@ -422,7 +422,7 @@ describe('workspaceIngredientFacets', () => {
     });
   });
 
-  describe('the Low Stock Only count (M9.8)', () => {
+  describe('the Low Stock Only count', () => {
     /** W: a low jar, an out jar, a healthy jar, an unweighed one, a held compendium entry low; X: its own out jar. */
     async function seedLow(): Promise<void> {
       const form = (name: string, workspaceId?: string) =>

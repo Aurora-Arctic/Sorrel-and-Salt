@@ -269,7 +269,7 @@ describe('workspaceIngredientFacets', () => {
   });
 });
 
-describe('compendiumFacets covenIds (M12.55)', () => {
+describe('compendiumFacets covenIds', () => {
   const heldToxic = async (session: Session | null) => {
     const result = await runOperation<{ compendiumFacets: Facets }>(
       session,

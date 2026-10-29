@@ -204,7 +204,7 @@ describe('the facet counts as the list takes them', () => {
     expect(counts.withoutForms).toBe(5);
   });
 
-  it('names both review settings with their counts for a curator, and leaves the strip off without them (M14.8)', () => {
+  it('names both review settings with their counts for a curator, and leaves the strip off without them', () => {
     const counts = compendiumFacetCounts(
       {
         ...EMPTY,
@@ -223,7 +223,7 @@ describe('the facet counts as the list takes them', () => {
   });
 });
 
-describe("a coven's facet counts as its panel takes them (M9.7)", () => {
+describe("a coven's facet counts as its panel takes them", () => {
   const covenCounts: WorkspaceIngredientFacets = {
     ...EMPTY,
     source: [

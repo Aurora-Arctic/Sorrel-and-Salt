@@ -276,7 +276,7 @@ describe('SpellBuilder visibility', () => {
   });
 });
 
-describe('SpellBuilder visibility on a saved draft (M10.20)', () => {
+describe('SpellBuilder visibility on a saved draft', () => {
   it('switches a shared draft off and on with no question, saved with the rest', async () => {
     const calls = acceptUpdate();
     renderBuilder({ spell: { ...SPELL, visibility: 'workspace' } });

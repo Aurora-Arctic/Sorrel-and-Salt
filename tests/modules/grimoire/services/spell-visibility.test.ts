@@ -138,7 +138,7 @@ describe('setSpellVisibility', () => {
     });
   });
 
-  describe('a draft (M10.20)', () => {
+  describe('a draft', () => {
     it('narrows and widens as often as its author likes', async () => {
       const spellId = await cast(B, 'workspace', WORKSPACE_W_ID, 'draft');
       // Preconditions: it is a shared draft, the very row a complete one would refuse.

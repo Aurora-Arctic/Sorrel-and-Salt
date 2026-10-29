@@ -380,7 +380,7 @@ describe('setCompendiumEntryReviewed', () => {
     expect(await rowOf(id)).toMatchObject({ curator_reviewed_at: null, curator_reviewed_by: null });
   });
 
-  it('shows anyone the date of the mark, signed in or not, and never who set it (M14.8)', async () => {
+  it('shows anyone the date of the mark, signed in or not, and never who set it', async () => {
     const id = await seed();
     const READ = 'query ($id: ID!) { ingredient(id: $id) { reviewedAt } }';
     expect(await run(null, READ, { id })).toEqual({ data: { ingredient: { reviewedAt: null } } });

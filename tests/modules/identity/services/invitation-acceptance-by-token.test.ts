@@ -286,7 +286,7 @@ describe('a link that cannot be used', () => {
     expect((await invitation()).accepted_at).toBeNull();
   });
 
-  describe('a coven’s invitation (M7.5)', () => {
+  describe('a coven’s invitation', () => {
     const memberRows = (userId: string) =>
       sql`select role::text, joined_at, deleted_at, invited_by from workspace_members
         where workspace_id = ${WORKSPACE_W_ID} and user_id = ${userId}`;

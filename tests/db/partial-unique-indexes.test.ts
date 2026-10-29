@@ -368,7 +368,7 @@ describe('every partial unique index', () => {
 });
 
 describe('every seed-key index', () => {
-  it('leaves the rows no seed wrote unconstrained, however many there are (MB.171)', async () => {
+  it('leaves the rows no seed wrote unconstrained, however many there are', async () => {
     const indexes = (await partialUniqueIndexes()).filter(({ index }) =>
       index.endsWith('_seed_key_unique'),
     );

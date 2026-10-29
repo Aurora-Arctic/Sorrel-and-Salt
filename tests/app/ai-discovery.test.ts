@@ -19,7 +19,7 @@ const entry = (
   lastModified: new Date('2026-03-01T00:00:00Z'),
 });
 
-describe('M12.2: buildLlmsTxt', () => {
+describe('buildLlmsTxt', () => {
   const entries = [
     entry('Fixture Alpha', 'fixture-alpha', 'Fixtura alpha'),
     entry('Fixture Beta', 'fixture-beta'),
@@ -96,7 +96,7 @@ describe('M12.2: buildLlmsTxt', () => {
   });
 });
 
-describe('M12.2: buildAiCatalog', () => {
+describe('buildAiCatalog', () => {
   it('carries the required fields of the AI Catalog draft and of ARD', () => {
     const catalog = buildAiCatalog([entry('Fixture Alpha', 'fixture-alpha')]);
 

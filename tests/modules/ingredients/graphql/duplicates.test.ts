@@ -103,7 +103,7 @@ describe('possibleDuplicates', () => {
   });
 
   describe('pages', () => {
-    it('by cursor, through the M3.6 helper', async () => {
+    it('by cursor, through the cursor helper', async () => {
       await addIngredient({ name: 'Mugwort', canonicalName: 'Artemisia vulgaris' });
       await addIngredient({ name: 'Mugwart', workspaceId: WORKSPACE_W_ID });
 

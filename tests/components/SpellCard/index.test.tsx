@@ -164,7 +164,7 @@ describe('SpellCard', () => {
     expect(within(chips).getByText('Testward')).toBeInTheDocument();
   });
 
-  it('is not a link until the spell page exists (MB.6)', () => {
+  it('is not a link until the spell page exists', () => {
     render(<SpellCard {...BASE} />);
     expect(screen.queryByRole('link')).not.toBeInTheDocument();
   });

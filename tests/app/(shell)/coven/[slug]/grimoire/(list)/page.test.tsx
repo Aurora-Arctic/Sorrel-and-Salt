@@ -298,7 +298,7 @@ describe('the Grimoire tabs', () => {
     await expect(renderTab(SpellsPage)).rejects.toThrow('Forbidden');
   });
 
-  it('says what a delete removed, from ?deleted, above the list, as a status (M13.11)', async () => {
+  it('says what a delete removed, from ?deleted, above the list, as a status', async () => {
     await renderTab(SpellsPage, { deleted: 'Fixture Working' });
     // Among the page's other status regions, the one carrying the deleted spell's name.
     const notice = screen

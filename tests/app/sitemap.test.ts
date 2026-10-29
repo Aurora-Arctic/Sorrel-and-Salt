@@ -12,7 +12,7 @@ vi.mock('@/modules/ingredients', () => ({
   ]),
 }));
 
-describe('MB.84: sitemap', () => {
+describe('sitemap', () => {
   it('lists the home page, the compendium, sign-in and one absolute address per current entry, dated by its last change', async () => {
     expect(await sitemap()).toEqual([
       { url: 'https://sorrelandsalt.com/' },

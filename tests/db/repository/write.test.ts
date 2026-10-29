@@ -138,7 +138,7 @@ describe('withAudit', () => {
   });
 });
 
-describe('app.current_user_id (M1.19)', () => {
+describe('app.current_user_id', () => {
   it('exposes the acting user to SQL running inside the transaction', async () => {
     const [row] = await withAudit(session, (write) => write.insert(herbs, { name: 'Vervain' }));
 
@@ -185,7 +185,7 @@ describe('app.current_user_id (M1.19)', () => {
     expect(value ?? null).toBeNull();
   });
 
-  it('publishes the impersonating admin as app.impersonated_by, stamping the user acted as (MB.53)', async () => {
+  it('publishes the impersonating admin as app.impersonated_by, stamping the user acted as', async () => {
     const acting = { userId: session.userId, impersonatedBy: impostor.userId };
 
     const [row] = await withAudit(acting, (write) => write.insert(herbs, { name: 'Mugwort' }));
@@ -196,7 +196,7 @@ describe('app.current_user_id (M1.19)', () => {
     expect(row.impersonatingAdmin).toBe(impostor.userId);
   });
 
-  it('publishes app.impersonated_by empty on every other write, so none inherits a pooled value (MB.53)', async () => {
+  it('publishes app.impersonated_by empty on every other write, so none inherits a pooled value', async () => {
     await withAudit({ ...session, impersonatedBy: impostor.userId }, (write) =>
       write.insert(herbs, { name: 'Tansy' }),
     );
@@ -210,7 +210,7 @@ describe('app.current_user_id (M1.19)', () => {
     for (const [row] of rows) expect(row.impersonatingAdmin).toBe('');
   });
 
-  it('publishes a declared route and note as app.privilege_route and app.privilege_note (MB.195)', async () => {
+  it('publishes a declared route and note as app.privilege_route and app.privilege_note', async () => {
     const [row] = await withAudit(session, (write) => write.insert(herbs, { name: 'Yarrow' }), {
       via: 'admin',
       note: 'Keeps the herb garden',
@@ -221,7 +221,7 @@ describe('app.current_user_id (M1.19)', () => {
     expect(row.actingUser).toBe(session.userId);
   });
 
-  it('publishes both empty when nothing is declared, so none inherits a pooled value (MB.195)', async () => {
+  it('publishes both empty when nothing is declared, so none inherits a pooled value', async () => {
     await withAudit(session, (write) => write.insert(herbs, { name: 'Woad' }), {
       via: 'manual',
       note: 'Fixed by hand',
@@ -239,7 +239,7 @@ describe('app.current_user_id (M1.19)', () => {
     }
   });
 
-  it('publishes an empty note when a route is declared without one (MB.195)', async () => {
+  it('publishes an empty note when a route is declared without one', async () => {
     const [row] = await withAudit(session, (write) => write.insert(herbs, { name: 'Madder' }), {
       via: 'bootstrap',
     });
@@ -248,7 +248,7 @@ describe('app.current_user_id (M1.19)', () => {
     expect(row.privilegeNote).toBe('');
   });
 
-  it('leaves the route and note unset on a connection outside any withAudit transaction (MB.195)', async () => {
+  it('leaves the route and note unset on a connection outside any withAudit transaction', async () => {
     await withAudit(session, (write) => write.insert(herbs, { name: 'Agrimony' }), {
       via: 'admin',
       note: 'Transaction-local',
@@ -274,7 +274,7 @@ describe('app.current_user_id (M1.19)', () => {
 
 // `write.delete` is how the two hard-deleted join tables are written, typed so it cannot
 // be pointed at anything else.
-describe('hard delete on a table with no delete columns (MB.34)', () => {
+describe('hard delete on a table with no delete columns', () => {
   const herbId = '22222222-2222-2222-2222-222222222222';
   const charmId = '33333333-3333-3333-3333-333333333333';
   const otherCharmId = '44444444-4444-4444-4444-444444444444';

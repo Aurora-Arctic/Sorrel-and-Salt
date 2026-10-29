@@ -48,7 +48,7 @@ const bodies = async () => [
   await (await ard()).text(),
 ];
 
-describe('M12.2: what the public files list', () => {
+describe('what the public files list', () => {
   // What the read lists, its description included, is compendium-slugs.test.ts's,
   // and how a link is written is tests/app/ai-discovery.test.ts's: this holds
   // that the files list only what the public read answers.

@@ -139,7 +139,7 @@ describe('a sign-in with no return path', () => {
     expect(cookieHeader(response)).toMatch(/session_token=/);
   });
 
-  it('lands a verified curator on the admin area, as an admin (M11.20)', async () => {
+  it('lands a verified curator on the admin area, as an admin', async () => {
     await insertVerified(CURATOR, 'curator');
 
     const response = await signIn('google', { sub: 'g-curator', email: CURATOR, verified: true });

@@ -22,7 +22,7 @@ const { invite, roleOf, ledger } = setUpInvitationAcceptance((client) => {
   sql = client;
 });
 
-describe('acceptInvitationById (M10.32)', () => {
+describe('acceptInvitationById', () => {
   // The deleted-coven test below deletes the coven; each test starts with it live.
   beforeEach(async () => {
     await sql`update workspaces set deleted_at = null, deleted_by = null where id = ${WORKSPACE_W_ID}`;

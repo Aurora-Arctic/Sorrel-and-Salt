@@ -14,7 +14,7 @@ interface Project {
   test: { name: string; include: string[]; exclude?: string[] };
 }
 
-describe('MB.41, MB.64, MB.97: where a test file lives', () => {
+describe('where a test file lives', () => {
   it('puts every test file in exactly one project, and every spec under tests/e2e/', () => {
     const files = inject('repoFiles');
     const projects = (config.test?.projects ?? []) as Project[];

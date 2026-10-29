@@ -13,7 +13,7 @@ vi.mock('@/modules/ingredients', () => ({
 
 afterEach(() => vi.unstubAllEnvs());
 
-describe('MB.84: robots', () => {
+describe('robots', () => {
   // Next runs a metadata route once at build and keeps the answer unless it opts out, which
   // would freeze `VERCEL_ENV` at build time. Per request, the runtime's value decides.
   it('is read per request, so the runtime VERCEL_ENV decides and not the build', () => {

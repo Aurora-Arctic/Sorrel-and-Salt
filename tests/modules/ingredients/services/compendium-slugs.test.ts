@@ -41,7 +41,7 @@ const seed = (
     A.id,
   );
 
-describe('MB.84: listCompendiumSlugs', () => {
+describe('listCompendiumSlugs', () => {
   it('lists every live compendium entry by name, with its formal name, description and last change', async () => {
     await seed('Fixture Beta', { description: 'A fixture herb.' });
     await seed('Fixture Alpha', { formal: true });

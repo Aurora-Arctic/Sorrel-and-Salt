@@ -62,7 +62,7 @@ describe('readCompendiumDetails', () => {
   });
 });
 
-describe('readCompendiumHeldIn and readFacetsHeldIn (M12.55)', () => {
+describe('readCompendiumHeldIn and readFacetsHeldIn', () => {
   const SESSION = { userId: 'user-fixture' } as never;
   const VARIABLES = JSON.stringify({ query: 'wort', covenIds: ['w-1', 'w-2'] });
 

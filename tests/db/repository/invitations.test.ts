@@ -221,7 +221,7 @@ describe('acceptInvitation', () => {
   );
 });
 
-describe('acceptInvitation into a deleted workspace (M6.14)', () => {
+describe('acceptInvitation into a deleted workspace', () => {
   it('returns no row, though the invitation is pending and the address matches', async () => {
     const { slug } = makeWorkspace({ name: 'Fixture Coven Invite Razed' });
     const [workspace] = await withAudit(asUser(A), (write) =>
@@ -328,7 +328,7 @@ describe('revokeInvitation, by tier', () => {
   });
 });
 
-describe('the owner’s list and a declined invitation (M10.34)', () => {
+describe('the owner’s list and a declined invitation', () => {
   const FULL = { limit: 101, inverted: false };
   const listed = async (proof: Membership = inW) =>
     (await findPendingWorkspaceInvitationPage(proof, FULL)).map(({ node }) => node.id);
@@ -507,7 +507,7 @@ describe('the pending lists', () => {
 
 // The session's own received invitations. Every finder keeps the workspace tier, the session's verified address and a live coven in SQL, as the token-less accept by id does.
 // Each exclusion is shown to be the cause: remove that one fact and the same row appears.
-describe('the received invitations (M10.32)', () => {
+describe('the received invitations', () => {
   const FULL = { limit: 101, inverted: false };
   const sorted = (list: string[]) => [...list].sort();
   const pageIds = async (user: SessionUser = A) =>
@@ -815,7 +815,7 @@ describe('the received invitations (M10.32)', () => {
     );
   });
 
-  describe('declineReceivedInvitation (M10.34)', () => {
+  describe('declineReceivedInvitation', () => {
     it('declines a pending invitation by id for the verified holder, stamped from the session', async () => {
       const declined = await declineAs(A, control.id);
 

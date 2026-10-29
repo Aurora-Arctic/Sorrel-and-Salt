@@ -35,7 +35,7 @@ import {
 
 useProbeTables();
 
-describe('soft-delete filtering (M1.20)', () => {
+describe('soft-delete filtering', () => {
   it('findMany excludes a soft-deleted row', async () => {
     const [kept] = await withAudit(session, (write) => write.insert(herbs, { name: 'Comfrey' }));
     const [gone] = await withAudit(session, (write) => write.insert(herbs, { name: 'Foxglove' }));
@@ -117,7 +117,7 @@ describe('soft-delete filtering (M1.20)', () => {
 // CLAUDE.md rule 5's second layer. The proofs below are real ones, minted by
 // `assertMembership` against the seeded cast: there is no other way to get one,
 // which is the property under test.
-describe('the Membership proof (M6.3)', () => {
+describe('the Membership proof', () => {
   let inW: Membership;
   let inX: Membership;
 

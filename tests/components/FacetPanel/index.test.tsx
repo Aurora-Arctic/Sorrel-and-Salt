@@ -343,7 +343,7 @@ describe('FacetPanel', () => {
     expect(within(match()).getByRole('radio', { name: 'Any' })).toBeChecked();
   });
 
-  describe('the choice chips (M9.7)', () => {
+  describe('the choice chips', () => {
     const openPanel = (
       filter: Partial<FacetPanelFilter> = {},
       more: Partial<FacetPanelProps> = {},
@@ -444,7 +444,7 @@ describe('FacetPanel', () => {
     expect(screen.getByRole('switch', { name: /^No Refs/ })).toBeInTheDocument();
   });
 
-  describe('In My Covens (M12.55)', () => {
+  describe('In My Covens', () => {
     const COVENS = [
       { id: 'coven-w', name: 'Testhollow' },
       { id: 'coven-v', name: 'Testwren' },
@@ -590,7 +590,7 @@ describe('FacetPanel', () => {
     });
   });
 
-  describe("the coven's Source, In Stock and Low Stock Only controls (M9.7, M9.8)", () => {
+  describe("the coven's Source, In Stock and Low Stock Only controls", () => {
     const COVEN = { source: '', inStock: false, lowStockOnly: false } as const;
     const open = (filter: Partial<FacetPanelFilter> = {}, more: Partial<FacetPanelProps> = {}) => {
       stubViewport(true);
@@ -849,7 +849,7 @@ describe('FacetPanel', () => {
     expect(screen.queryByRole('switch', { name: /^No Form/ })).toBeNull();
   });
 
-  describe("the admin's Reviewed strip (M14.8)", () => {
+  describe("the admin's Reviewed strip", () => {
     const REVIEWED: CompendiumFacetCounts['reviewed'] = [
       { value: 'reviewed', label: 'Reviewed', count: 4 },
       { value: 'needs_review', label: 'Needs Review', count: 7 },

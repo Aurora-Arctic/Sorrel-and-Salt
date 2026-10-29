@@ -27,7 +27,7 @@ const { invite, roleOf, ledger } = setUpInvitationAcceptance((client) => {
   sql = client;
 });
 
-describe('declineInvitationById (M10.34)', () => {
+describe('declineInvitationById', () => {
   const memberRows = (userId: string) =>
     sql`select role::text from workspace_members
       where workspace_id = ${WORKSPACE_W_ID} and user_id = ${userId}`;

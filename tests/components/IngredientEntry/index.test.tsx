@@ -1081,7 +1081,7 @@ describe('IngredientEntry edit', () => {
 
 // The three kinds of entry on a coven's page: the coven's own, the
 // compendium's held in its cupboard, and the compendium's not held.
-describe("IngredientEntry's review mark (M14.8)", () => {
+describe("IngredientEntry's review mark", () => {
   it('says a compendium entry needs review, to a visitor with no account', () => {
     renderEntry();
 
@@ -1214,7 +1214,7 @@ describe('IngredientEntry on the public page, held in a coven', () => {
   });
 });
 
-describe('IngredientEntry recency (MB.106)', () => {
+describe('IngredientEntry recency', () => {
   const daysAgo = (days: number) => new Date(Date.now() - days * 24 * 60 * 60 * 1000);
 
   it('marks a compendium entry created lately New', () => {
@@ -1233,7 +1233,7 @@ describe('IngredientEntry recency (MB.106)', () => {
   });
 });
 
-describe('IngredientEntry stock (M12.29)', () => {
+describe('IngredientEntry stock', () => {
   // The fixture's two forms, by id, so a jar can name one.
   const variants = [variantRow('testroot'), variantRow('testoil')];
   const [root, oil] = variants.map(({ variant }) => variant.id) as [string, string];
@@ -1278,7 +1278,7 @@ describe('IngredientEntry stock (M12.29)', () => {
     expect(lineOf('Testoil')).toHaveTextContent('No Jar');
   });
 
-  it('puts Stock first, above Details, in the page and in the jump menu (MB.121)', () => {
+  it('puts Stock first, above Details, in the page and in the jump menu', () => {
     renderStock([jar(root, 250)]);
 
     const headings = screen

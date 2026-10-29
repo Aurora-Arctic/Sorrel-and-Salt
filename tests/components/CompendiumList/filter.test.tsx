@@ -357,7 +357,7 @@ describe('CompendiumList filter', () => {
     expect(unsourcedSwitch()).not.toBeChecked();
   });
 
-  describe('In My Covens on the public list (M12.55)', () => {
+  describe('In My Covens on the public list', () => {
     const COVENS = [
       { id: 'coven-w', name: 'Testhollow' },
       { id: 'coven-v', name: 'Testwren' },

@@ -66,7 +66,7 @@ describe('covensHoldingEntry', () => {
     expect(await covensHoldingEntry(asUser(C), both)).toEqual([await coven(WORKSPACE_W_ID)]);
   });
 
-  it('gives an admin or a curator in no coven nothing, though covens hold the entry (M6.6)', async () => {
+  it('gives an admin or a curator in no coven nothing, though covens hold the entry', async () => {
     // Why they could be listed: W holds it, and A reads it.
     expect(await covensHoldingEntry(asUser(A), both)).toHaveLength(1);
 

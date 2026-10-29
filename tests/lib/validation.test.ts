@@ -37,7 +37,7 @@ describe('parseInput', () => {
     });
   });
 
-  it('throws ValidationError, the type MB.43 maps, rather than a ZodError', () => {
+  it('throws ValidationError rather than a ZodError', () => {
     const error = thrown(() => parseInput(Layer, { name: '', tags: [] }));
 
     expect(error).toBeInstanceOf(ValidationError);

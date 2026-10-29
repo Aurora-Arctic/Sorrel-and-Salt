@@ -156,7 +156,7 @@ describe('the toxic parameter', () => {
   });
 });
 
-describe('the No Form parameter (M12.30)', () => {
+describe('the No Form parameter', () => {
   it('reads 1 as on and anything else as off, and writes only the on', () => {
     expect(COMPENDIUM_PARAMS.read({ withoutForms: '1' }).withoutForms).toBe(true);
     expect(COMPENDIUM_PARAMS.read({ withoutForms: 'true' }).withoutForms).toBe(false);
@@ -177,7 +177,7 @@ describe('the No Form parameter (M12.30)', () => {
   });
 });
 
-describe('the Reviewed parameter (M14.8)', () => {
+describe('the Reviewed parameter', () => {
   const reviewed = entries.reviewed;
 
   it('reads 1 as reviewed and 0 as needs review, and anything else as no filter', () => {
@@ -231,7 +231,7 @@ describe('the whole table', () => {
   });
 });
 
-describe('the covens parameter (M12.55)', () => {
+describe('the covens parameter', () => {
   it('reads repeated coven ids, repeats dropped', () => {
     expect(entries.covens.read(['w-id', 'v-id', 'w-id'])).toEqual(['w-id', 'v-id']);
     expect(entries.covens.read(undefined)).toEqual([]);
@@ -254,7 +254,7 @@ describe('the covens parameter (M12.55)', () => {
   });
 });
 
-describe('the covensNot parameter (M12.55, Not In)', () => {
+describe('the covensNot parameter (Not In)', () => {
   it('is written 1 for Not In, and absent for In', () => {
     expect(COMPENDIUM_PARAMS.href('/compendium', { covensNot: true })).toBe(
       '/compendium?covensNot=1',

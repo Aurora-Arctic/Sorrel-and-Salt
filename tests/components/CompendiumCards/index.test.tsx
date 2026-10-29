@@ -312,7 +312,7 @@ describe('CompendiumCards', () => {
 
   // The viewer's covens, every role, for the In My Covens field, apart from the
   // writable ones the plus's menu lists; and each card's holding covens, counted on its mark.
-  describe('the viewer’s covens (M12.55)', () => {
+  describe('the viewer’s covens', () => {
     const MINE = [
       { id: 'coven-w', name: 'Testhollow' },
       { id: 'coven-v', name: 'Testwren' },

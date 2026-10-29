@@ -135,7 +135,7 @@ describe('revokeWorkspaceInvitation', () => {
 // A declined invitation is the invitee's answer, not a lapse. It stays on
 // the owner's list, whatever its expiry, until the owner removes it, and Remove
 // is the revoke.
-describe('a declined invitation (M10.34)', () => {
+describe('a declined invitation', () => {
   it('is listed and counted for the owner beside a pending one, and carries when it was declined', async () => {
     const pending = await insertInvitation(coven, 'pending', 'pending', A.id, 2);
     const declined = await insertInvitation(coven, 'declined', 'declined', A.id, 1);

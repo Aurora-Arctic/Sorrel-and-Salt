@@ -173,7 +173,7 @@ describe('EntryMarks badge order', () => {
   });
 });
 
-describe('RecencyMark (MB.106)', () => {
+describe('RecencyMark', () => {
   it.each([
     ['new', 'New', 'Updated'],
     ['updated', 'Updated', 'New'],

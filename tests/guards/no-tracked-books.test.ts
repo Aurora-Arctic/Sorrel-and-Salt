@@ -8,7 +8,7 @@ import { REPO_ROOT } from '../support/paths';
 
 const BOOK = /\.(pdf|epub)$/i;
 
-describe('MB.240: no book is tracked', () => {
+describe('no book is tracked', () => {
   it('lists no .pdf or .epub in the repo, and ignores the library folder', () => {
     const files = inject('repoFiles');
 

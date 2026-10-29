@@ -423,7 +423,7 @@ describe('spell_steps table', () => {
     });
   });
 
-  describe('the unit vocabulary is M9.2’s', () => {
+  describe('the unit vocabulary', () => {
     it('stores the column as the inventory_unit type, not a second enum', async () => {
       const [row] = await sql`
         select udt_name from information_schema.columns

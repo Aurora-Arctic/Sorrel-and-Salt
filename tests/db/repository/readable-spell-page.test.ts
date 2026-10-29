@@ -257,7 +257,7 @@ describe('findManyInSpells', () => {
   });
 });
 
-describe('the grimoire search and category filter (M10.11)', () => {
+describe('the grimoire search and category filter', () => {
   /** A spell with an intent and assigned categories, by name. */
   const spellWith = (
     author: User,
@@ -469,7 +469,7 @@ describe('the grimoire search and category filter (M10.11)', () => {
   });
 });
 
-describe('the grimoire facets (M13.22)', () => {
+describe('the grimoire facets', () => {
   /** A spell of W by `author`, with the facet fields written as given. */
   const made = (
     author: User,

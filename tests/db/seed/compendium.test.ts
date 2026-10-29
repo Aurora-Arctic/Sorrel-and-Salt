@@ -509,7 +509,7 @@ describe('seedCompendium', () => {
 
 // A present entry is updated only when its file says so (`seedUpdate`, the hash of the file as read) and nobody's work on the site stands in the way.
 // Each case seeds the two fixture entries, runs the seed again on an edited copy and reads the rows back.
-describe('the update path (M14.7)', () => {
+describe('the update path', () => {
   const PATH = entryFilePath(TESTWORT);
   const A_ID = FIXTURE_USERS.A.id;
 

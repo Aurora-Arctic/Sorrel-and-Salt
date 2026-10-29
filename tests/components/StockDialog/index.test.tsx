@@ -530,7 +530,7 @@ describe('StockDialog', () => {
   });
 });
 
-describe('StockDialog openOn (M12.29)', () => {
+describe('StockDialog openOn', () => {
   it('opens on the form it is given, a jar held, with the jars as they are', () => {
     open({ openOn: OIL });
 
@@ -574,7 +574,7 @@ describe('StockDialog openOn (M12.29)', () => {
   });
 });
 
-describe('StockJarButton (M12.29)', () => {
+describe('StockJarButton', () => {
   it('is a button of the given name that opens the same dialog on its form', () => {
     render(
       <StockJarButton {...PROPS} openOn={OIL} ariaLabel="Edit Stock, Testwort, Oil">

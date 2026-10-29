@@ -33,7 +33,7 @@ const SOURCE = /^src\/.*\.tsx?$/;
 /** A feature check on the line: `typeof Promise.try`, `'try' in Promise`. */
 const FEATURE_CHECK = /\btypeof\b|['"][\w$]+['"]\s+in\s/;
 
-describe('M10.24: the browser floor in client-reachable source', () => {
+describe('the browser floor in client-reachable source', () => {
   const clientFiles = inject('repoFiles').filter(
     (file) => SOURCE.test(file) && !SERVER_ONLY.some((server) => server.test(file)),
   );

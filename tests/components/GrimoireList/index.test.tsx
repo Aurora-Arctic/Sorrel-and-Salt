@@ -246,7 +246,7 @@ describe('GrimoireList', () => {
     expect(screen.queryByRole('option', { name: /^Testmending/ })).not.toBeInTheDocument();
   });
 
-  describe('the four facets (M13.22)', () => {
+  describe('the four facets', () => {
     const open = () => {
       fireEvent.click(screen.getByRole('button', { name: /^Filters/ }));
     };

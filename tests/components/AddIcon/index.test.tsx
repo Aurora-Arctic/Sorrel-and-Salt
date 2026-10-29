@@ -79,7 +79,7 @@ describe('the held check names its entry', () => {
 
 // The plus and the check say how many of the viewer's covens hold the entry, every
 // membership counted, and name them in the tip; nothing at all where none does.
-describe('the holding covens (M12.55)', () => {
+describe('the holding covens', () => {
   /** The badge: the number drawn on the mark, kept from the accessibility tree as its name says it. */
   const badgeOf = (control: HTMLElement) => control.querySelector('.add-icon__count')?.textContent;
 

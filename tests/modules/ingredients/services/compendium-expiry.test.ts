@@ -41,7 +41,7 @@ const groupId = async () => {
   return row.id;
 };
 
-describe('M8.7: an admin write expires the compendium tag', () => {
+describe('an admin write expires the compendium tag', () => {
   it('expires it once, with { expire: 0 }, after a vocabulary write', async () => {
     const category = {
       name: 'Testcraft',

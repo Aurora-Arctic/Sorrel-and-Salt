@@ -189,7 +189,7 @@ describe('the spell recipe page', () => {
     ]);
   });
 
-  describe('editing (M13.10)', () => {
+  describe('editing', () => {
     const as = (role: 'owner' | 'member' | 'viewer') =>
       requireCovenMembership.mockResolvedValue({ workspace: COVEN, membership: { role } });
     const SAVED = {
@@ -253,7 +253,7 @@ describe('the spell recipe page', () => {
     });
   });
 
-  describe('deleting (M13.11)', () => {
+  describe('deleting', () => {
     const as = (role: 'owner' | 'member' | 'viewer') =>
       requireCovenMembership.mockResolvedValue({ workspace: COVEN, membership: { role } });
 

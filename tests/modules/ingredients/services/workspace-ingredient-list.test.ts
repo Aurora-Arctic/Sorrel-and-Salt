@@ -90,7 +90,7 @@ async function idsListed(
   return page.edges.map(({ node }) => node.id);
 }
 
-describe('listWorkspaceIngredients under source and inStock (M9.7)', () => {
+describe('listWorkspaceIngredients under source and inStock', () => {
   /** A local entry, a held compendium entry and a local one with no jar. */
   async function seedSources(): Promise<void> {
     await stock(await add('Covenwort', { workspaceId: WORKSPACE_W_ID }));
@@ -181,7 +181,7 @@ describe('listWorkspaceIngredients under source and inStock (M9.7)', () => {
   });
 });
 
-describe('listWorkspaceIngredients under lowStockOnly (M9.8)', () => {
+describe('listWorkspaceIngredients under lowStockOnly', () => {
   /** A held entry with one jar of `quantity` against `threshold`. */
   async function jarred(
     name: string,

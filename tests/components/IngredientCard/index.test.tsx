@@ -246,7 +246,7 @@ describe('IngredientCard', () => {
   });
 
   describe('the jar-line slot', () => {
-    it('renders what the caller passes, M9.8 stock badges included, inside the card', () => {
+    it('renders what the caller passes, stock badges included, inside the card', () => {
       render(
         <IngredientCard {...BASE} kind="own">
           <ul aria-label="Jars">
@@ -351,7 +351,7 @@ describe('IngredientCard navigation', () => {
   });
 });
 
-describe('IngredientCard recency (MB.106)', () => {
+describe('IngredientCard recency', () => {
   it.each([['new', 'New']] as const)('shows %s as text on a compendium entry', (recency, shown) => {
     render(<IngredientCard {...BASE} kind="compendium" recency={recency} />);
 
@@ -392,7 +392,7 @@ describe('IngredientCard recency (MB.106)', () => {
   });
 });
 
-describe('IngredientCard last edit (M6.18)', () => {
+describe('IngredientCard last edit', () => {
   const AT = '2026-09-01T10:30:00.000Z';
 
   it('shows the latest edit when given one, holding its moment', () => {
