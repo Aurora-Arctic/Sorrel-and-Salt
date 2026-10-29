@@ -15,9 +15,9 @@ export interface UserListEntry {
   /** Provider ids, as the service sorted them. */
   providers: readonly string[];
   emailVerified: boolean;
-  /** Whether this is the primary admin, whom no one can revoke (MB.59). */
+  /** Whether this is the primary admin, whom no one can revoke. */
   primaryAdmin: boolean;
-  /** This page with the user’s modal open over it, `?user=<id>` (M9.19). */
+  /** This page with the user’s modal open over it, `?user=<id>`. */
   openHref: Route;
   /** The modal’s head, shown at once on a press: the one the loaded modal carries. */
   heading: ModalHeading;
@@ -35,10 +35,10 @@ export interface UserListProps extends Partial<PagerHrefs<Route>> {
 
   /** Where this page stands, the pager's "Page X of Y"; none when left out. */
   position?: PagePosition;
-  /** Whether impersonation is registered here, so each non-admin row offers it (MB.53). */
+  /** Whether impersonation is registered here, so each non-admin row offers it. */
   canImpersonate?: boolean;
   /**
-   * The pause on admin changes and whether this admin may flip it (MB.63):
+   * The pause on admin changes and whether this admin may flip it:
    * while paused, a viewer who may not has every Change Role locked. The
    * switch itself is the page's, beside its heading.
    */
@@ -55,7 +55,7 @@ export interface UserListFilterProps {
 /** The filter as the address carries it: what `userListHref` writes. */
 export type UserListFilterValue = UserListFilterProps;
 
-/** A row's link to its user's privilege history (MB.200). */
+/** A row's link to its user's privilege history. */
 export interface HistoryLinkProps {
   /** The user's address, which the ledger's search is opened with. */
   email: string;
@@ -63,7 +63,7 @@ export interface HistoryLinkProps {
   name: string;
 }
 
-/** A row’s name, the link that opens its user’s modal (M9.19). */
+/** A row’s name, the link that opens its user’s modal. */
 export interface UserLinkProps {
   href: Route;
   heading: ModalHeading;
@@ -76,7 +76,7 @@ export interface ImpersonateButtonProps {
   name: string;
 }
 
-/** What a row's creation control does: approve a user awaiting it, or revoke it (M5.8). */
+/** What a row's creation control does: approve a user awaiting it, or revoke it. */
 export type CreationAction = 'approve' | 'revoke';
 
 /** Where a confirmed action is: offering itself, asking to confirm, or waiting on the answer. */
@@ -126,20 +126,13 @@ export interface ConfirmedActionProps {
   /** Close the modal on success, for a control the re-read does not replace. */
   closeOnSent?: boolean;
   /**
-   * Drawn inside a modal already, the user's (M9.19): asks over that modal's
-   * body through its confirm layer rather than opening a second modal on top,
-   * and says a refusal in a plain notice beside the control, inside that
-   * dialog, rather than in a callout over it (M12.31's rule 6), unless
-   * `refusalInModal` says otherwise.
+   * Drawn inside the user's modal: asks through its confirm layer and says a refusal in a plain notice, unless `refusalInModal` says otherwise
+   * (claude-docs/components/user-list.md, "Notes from code comments: inside a modal").
    */
   inModal?: boolean;
   /**
-   * How a refusal is said inside a modal: a plain notice (the default), which
-   * a button row lifts above its buttons, or the callout under the control, as
-   * outside one. The callout is for a control that stands beside a fact rather
-   * than in a button row: the user modal's Change Role and Approve or Revoke
-   * (the owner's exception to M12.31's rule 6, 2026-10-20). Outside a modal
-   * a refusal is always the callout.
+   * How a refusal is said inside a modal: a plain notice (default), or the callout under the control; outside a modal it is always the callout
+   * (claude-docs/components/user-list.md, "Notes from code comments: refusal display").
    */
   refusalInModal?: 'notice' | 'callout';
 }
@@ -158,24 +151,24 @@ export interface ConfirmAnswersProps {
   onCancel: () => void;
 }
 
-/** What a row's role control does: make a user an admin, or stop one being one (MB.59). */
+/** What a row's role control does: make a user an admin, or stop one being one. */
 export interface RoleControlProps {
   userId: string;
   /** The user's name, completing the button's accessible name and the question. */
   name: string;
-  /** Whether the user's address is verified; a promotion warns when it is not (MB.205). */
+  /** Whether the user's address is verified; a promotion warns when it is not. */
   emailVerified: boolean;
   /** Whether this is the primary admin, whose Change Role says why it cannot be used. */
   primaryAdmin: boolean;
   /**
-   * Whether admin changes are paused for the viewing admin (MB.63): paused,
+   * Whether admin changes are paused for the viewing admin: paused,
    * and the viewer not the primary admin, whom the pause exempts. Change
    * Role then says why it cannot be used.
    */
   paused?: boolean;
   /** The role the user holds now, which Change Role does not offer. */
   role: UserRole;
-  /** Drawn in the user's modal, so it asks over the modal's body (M9.19). */
+  /** Drawn in the user's modal, so it asks over the modal's body. */
   inModal?: boolean;
 }
 
@@ -183,27 +176,27 @@ export interface CreationControlProps {
   userId: string;
   /** The user's name, completing the button's accessible name and the question. */
   name: string;
-  /** Whether the user's address is verified; Approve warns when it is not (MB.205). */
+  /** Whether the user's address is verified; Approve warns when it is not. */
   emailVerified: boolean;
   /**
-   * Whether admin changes are paused for the viewing admin (MB.63, amended on
-   * the owner's call to cover coven creation): its Approve or Revoke then
+   * Whether admin changes are paused for the viewing admin, coven creation
+   * included: its Approve or Revoke then
    * says why it cannot be used.
    */
   paused?: boolean;
   action: CreationAction;
-  /** Drawn in the user's modal, so it asks over the modal's body (M9.19). */
+  /** Drawn in the user's modal, so it asks over the modal's body. */
   inModal?: boolean;
 }
 
-/** The pause on admin grants and revokes, as the page read it (MB.63). */
+/** The pause on admin grants and revokes, as the page read it. */
 export interface PauseControlProps {
   paused: boolean;
   /** Whether the viewing admin is the primary admin, the only one who may flip it. */
   canToggle: boolean;
 }
 
-/** A control in view but unusable, and the reason it says why (MB.59, MB.63). */
+/** A control in view but unusable, and the reason it says why. */
 export interface LockedControlProps {
   label: string;
   /** The button's accessible name, opening with `label`. */

@@ -12,16 +12,9 @@ const PANEL_MIN_PX = 192;
 /** Space kept between the panel and the window's edge. */
 const EDGE_PX = 8;
 
-// The card's +N button and the panel of categories behind it: a toggletip, so the card's
-// height never changes (the panel floats over the chip row). Focus opens it at once, and
-// a hover once the pointer has rested `TIP_OPEN_DELAY_MS`, as every tip does, so a
-// pointer crossing the card opens nothing. A click (a tap) pins it open at once, and a
-// second click closes it. Escape closes it and returns focus to the button; a press
-// outside or leaving (after a short grace, so the pointer can cross into the panel)
-// closes it too: WCAG 1.4.13, dismissible, hoverable and persistent. The hover's wait
-// and the leave's grace share one timer, so a leave cancels a pending open. A client
-// child of its own so `IngredientCard` stays server-compatible.
-// claude-docs/components/ingredient-card.md.
+// The card's +N button and the panel behind it: a toggletip floating over the chip row, so the card's
+// height never changes (WCAG 1.4.13). A client child so `IngredientCard` stays server-compatible
+// (claude-docs/components/category-chips.md, "The +N toggletip").
 
 const GRACE_MS = 120;
 

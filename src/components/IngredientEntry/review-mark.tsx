@@ -11,13 +11,9 @@ import Notice from '../Notice';
 import type { ReviewMarkProps } from './types';
 import './review-mark.scss';
 
-// The admin's review switch on a compendium entry (M14.8), in the foot of the entry's details on
-// the admin list: it marks or clears the review. The badge saying where the entry stands is the
-// entry's own mark, drawn for everyone (EntryMarks).
-// A switch rather than a button that flips its label, so the state is the control's own to a
-// screen reader.  The mark is the seed's: the seed never rewrites an entry a curator has reviewed
-// (claude-docs/db/compendium-seed/README.md, "Write-once, and how a correction lands"). The
-// service is the guard; this is only the control (claude-docs/components/ingredient-entry.md).
+// The admin's review switch on a compendium entry, in the foot of the entry's details on the admin
+// list; the badge saying where the entry stands is drawn for everyone (EntryMarks)
+// (claude-docs/components/ingredient-entry.md, "Component notes").
 
 const SetCompendiumEntryReviewedDocument = graphql(`
   mutation SetCompendiumEntryReviewed($id: ID!, $reviewed: Boolean!) {

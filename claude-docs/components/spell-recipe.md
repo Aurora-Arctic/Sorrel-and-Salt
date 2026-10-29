@@ -124,3 +124,15 @@ sets no `supply`, since its column already says it.
 
 - The form is stored lower case and set in title case by the component. The form icon is not drawn on steps, as the step view carries no form group.
 - A spell search row's `match` reuses `IngredientSearchMatch`, with `slug` set to the spell id.
+
+## Notes from code comments: the Quick Look dialog
+
+The Quick Look modal a grimoire card's eye opens over the list, the spell's twin of the ingredient details modal: the spell read in the shared body, the last edit over its title, a link through to the recipe page at the foot's start, and, for a role that may update the spell, Edit Spell at its end. Edit Spell is a plain link to the list's address with `?edit=<id>` in place of `?spell=<id>`, which the spell builder's dialog answers, so one dialog shows at a time and closing the builder returns to the list rather than to this modal. A client part because RouteModal takes its body as a function, which a server page cannot hand down; the body arrives as the page's rendered children.
+
+## Notes from code comments: the aside
+
+The recipe page's side column: Category Match and In Coven Inventory, the builder's Jar aside panels, read for the saved spell and laid out as the ingredient entry page lays its side column, beside the text past a tablet's width and beneath it on a phone. The page alone draws it; the Quick Look modal keeps to the recipe body. Both panels are read-only here, as they are in the builder: the page hands them the saved steps. A client part because the panels are; the landmark around them is SpellRecipe's own. claude-docs/components/spell-recipe.md, "The side column".
+
+## Notes from code comments: the inventory panel
+
+In Coven Inventory, in the spell's recipe page's side column: one line for each form, at its first step's place, saying what all its steps need together (`needOf`) against what the coven's jar holds, as `supplyOf` judges it; a one-off keeps a line for each step, and a step with an instruction only has none. The verdict's mark (`VerdictMark`) stands at the right end of the name's line, so the name is cut short before it is. A line may carry doors (`doorsOf`): a Quick Look eye in a column of its own at the line's right, and Edit Stock behind the jar and the name (a `StockJarButton` stretched over both, as the entry page's shelf stretches it over a jar). The builder draws no stock, so this serves the page alone. See claude-docs/components/spell-recipe.md, "The side column".

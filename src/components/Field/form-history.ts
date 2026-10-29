@@ -7,10 +7,8 @@ import type {
   HistoryStep,
 } from './types';
 
-// The pure half of a form's undo and redo (M12.9): the two stacks and the
-// rules for what a new change does to them. The hook owns everything that
-// touches the form, the DOM or the clock; this file is tested directly
-// (claude-docs/design-decisions/m12.9-plan.md).
+// The pure half of a form's undo and redo: the two stacks and the rules for what a new change
+// does to them. The hook owns everything that touches the form, the DOM or the clock.
 
 export const initialHistory: HistoryState = { past: [], future: [] };
 
@@ -62,12 +60,9 @@ export function historyReducer(state: HistoryState, action: HistoryAction): Hist
 }
 
 /**
- * What a change does to the newest step. In the same tick it joins it: one
- * action that sets several fields is one step. Typing in the one box that
- * the step is typing in, within the pause and with nothing in between,
- * extends it. Every change after the first of one pointer hold, a drag on a
- * slider, joins that step too: the picker reports each pointer move.
- * Anything else, a select pick included, starts a step.
+ * What a change does to the newest step. In the same tick it joins it (one action setting several
+ * fields is one step), as does typing in the same box within the pause, and every change of one pointer
+ * hold (a slider drag). Anything else, a select pick included, starts a step.
  */
 export function decideMerge({
   newest,

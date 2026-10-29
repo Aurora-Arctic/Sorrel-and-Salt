@@ -11,18 +11,14 @@ import SiteNav from './site-nav';
 import type { AppShellProps, SiteLink } from './types';
 import './index.scss';
 
-// The frame around every signed-in page (MB.7): a skip link, the global bar,
-// and the page. The context row (the coven's switcher or "Admin", beside the
-// section nav) is the layouts' to render, since only they know which area the
-// page is in. A server component: it reads nothing itself, the viewer and
-// their covens come in as props from `src/app/(shell)/layout.tsx`, and only
-// the account menu and the current-page marking are client code.
-// See claude-docs/components/app-shell.md.
+// The frame around every signed-in page: a skip link, the global bar and the page. The layouts render
+// the context row, as only they know the area. A server component: only the account menu and the
+// current-page marking are client code (claude-docs/components/app-shell.md).
 
 const AppShell = ({ viewer, workspaces, children }: AppShellProps): ReactElement => {
-  // The Compendium is public (MB.80), so its link is everyone's, an
-  // unverified account's included: it leads to a page that never sends them to
-  // the email page. The other two are for a verified curator or admin.
+  // The Compendium is public, so its link is everyone's, an unverified account's
+  // included: it leads to a page that never sends them to the email page. The other
+  // two are for a verified curator or admin.
   const compendium: SiteLink = { label: 'Compendium', href: '/compendium', base: '/compendium' };
   const links: SiteLink[] =
     viewer.verified && viewer.canCurate
@@ -65,7 +61,7 @@ const AppShell = ({ viewer, workspaces, children }: AppShellProps): ReactElement
               links={links}
               pendingInvitations={viewer.pendingInvitations}
             />
-            {/* In the bar at every width (the owner's call, M10.32). */}
+            {/* In the bar at every width. */}
             <span className="app-shell__theme">
               <ThemeToggle variant="inline" />
             </span>

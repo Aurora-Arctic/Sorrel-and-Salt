@@ -30,12 +30,9 @@ import { fromForm, toForm, type CupboardFormValues } from './form-values';
 import type { CupboardEntryFormProps, CupboardField, TextField } from './types';
 import './index.scss';
 
-// The coven's override form for a compendium entry it holds (M12.17): seven
-// fields, each showing the coven's own value or the compendium's, each with
-// a "Restore Original" that hands the field back. On react-hook-form,
-// with the four lists the own-entry form's own fields and its undo and redo;
-// null (the compendium's) and an empty list (cleared) are told apart in
-// `changes.ts`, not by the library (claude-docs/components/cupboard-entry-form.md).
+// The coven's override form for a compendium entry it holds: seven fields, each with a "Restore
+// Original", on react-hook-form. Null (the compendium's) and an empty list (cleared) are told apart in
+// `changes.ts` (claude-docs/components/cupboard-entry-form.md).
 
 const AnnotateCupboardEntryDocument = graphql(`
   mutation AnnotateCupboardEntry(
@@ -49,10 +46,8 @@ const AnnotateCupboardEntryDocument = graphql(`
   }
 `);
 
-// A field keeps a tip only for a rule its label does not say (the owner's
-// call, 2026-10-20; info-tip.md, "When a field gets a tip"): Label's
-// uniqueness, and the lists' "empty says none". Description and Safety Notes
-// say what they are.
+// A field keeps a tip only for a rule its label does not say (info-tip.md, "When a
+// field gets a tip"): Label's uniqueness, and the lists' "empty says none".
 const TEXT: Record<TextField, { label: string; hint?: string; placeholder: string }> = {
   label: {
     label: 'Label',
@@ -70,10 +65,8 @@ const TEXT: Record<TextField, { label: string; hint?: string; placeholder: strin
 };
 
 /**
- * A list's tip, one wording for all four: the list is the coven's own, and an
- * emptied one says the entry has none rather than handing back to the
- * Compendium's. Colours adds that a colour is what it corresponds to in a
- * working, not the colour the ingredient is.
+ * A list's tip, one wording for all four: the list is the coven's own, and an emptied one says the
+ * entry has none. Colours adds that a colour is what it corresponds to in a working.
  */
 const listHint = (things: string, how = ''): string =>
   `The ${things} your coven ties it to${how}, in place of the Compendium's. An empty list says it has none.`;

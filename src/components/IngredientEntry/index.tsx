@@ -8,8 +8,7 @@ import { SafetyMark } from '../SafetyNote';
 import FormIcon from '../FormIcon';
 import HeldMark from './held-mark';
 import BackLink from './back-link';
-// From its own client file: the Modal index re-exports modules a server
-// component cannot import.
+// From its own client file: the Modal index re-exports modules a server component cannot import.
 import { RouteModalProvider } from '../Modal/route-modal-provider';
 import Notice from '../Notice';
 import PageHeader from '../PageHeader';
@@ -51,13 +50,9 @@ import {
 } from './blocks';
 import './index.scss';
 
-// An ingredient's page body, the same on the public compendium route and a
-// coven's (M8.19): the entry's own fields, then one section per form. No
-// hook and no client directive, so either server page renders it directly;
-// the ids are built from the entry's own data rather than `useId`, since a
-// page holds one entry. Edit is the exception in kind only: it is two small
-// client parts, a link and the modal it opens, which this server component
-// renders. claude-docs/components/ingredient-entry.md.
+// An ingredient's page body, the same on the public compendium and a coven's: its fields, then a section
+// per form. No hook, so a server page renders it; ids come from the entry's data, not `useId`
+// (claude-docs/components/ingredient-entry.md).
 
 const substituteLabel = ({ name, form }: SubstituteDetail): string =>
   form ? `${name} (${formLabel(form)})` : name;
@@ -67,9 +62,8 @@ function substituteItems(
   hrefOf: IngredientEntryProps['hrefOf'],
 ): ReactNode[] {
   return substitutes.map((substitute, at) => {
-    // A typed name, or a link whose ingredient was deleted, reads as text
-    // under its last name (MB.138, MB.140); so does one the caller has no
-    // page for.
+    // A typed name, or a link whose ingredient was deleted, reads as text under its last name; so
+    // does one the caller has no page for.
     const href = substitute.ingredient ? hrefOf(substitute.ingredient) : undefined;
     const label = substituteLabel(substitute);
     return (
@@ -87,11 +81,7 @@ function substituteItems(
   });
 }
 
-/**
- * Each form's anchor: its name through `slugify`, as DESIGN.md §9 has it
- * (`#form-oil`). Two forms are unique by their trimmed lower-cased names,
- * which can still slug alike ("oil" and "oil."), so a repeat takes a count.
- */
+/** Each form's anchor: its name through `slugify` (`#form-oil`); names that still slug alike ("oil", "oil.") take a count. */
 function formAnchors(variants: readonly VariantDetail[]): string[] {
   const seen = new Map<string, number>();
   return variants.map(({ variant }) => {
@@ -116,8 +106,8 @@ function FormSection({
 }): ReactElement {
   const { variant, icon, categories, substitutes } = detail;
   const nameId = `${anchor}-name`;
-  // Only what the form adds: the ingredient's own fields stand above, and a
-  // form inherits them by the union rule (DESIGN.md §5).
+  // Only what the form adds: the ingredient's own fields stand above, and a form inherits them
+  // (DESIGN.md §5).
   const rows = correspondences(variant).filter((row) => row.values.length > 0);
   const hasLists = rows.length > 0 || categories.length > 0 || substitutes.length > 0;
   const addsNothing =
@@ -173,16 +163,9 @@ function FormSection({
   );
 }
 
-// The side column's link to the compendium (M12.12), for both cases: a coven's
-// own entry lists the compendium entries it replaces, and a compendium entry
-// viewed in a coven lists itself, once, at its public page. The page chooses the
-// ⓘ sentence for each, so the component does not branch on tier. A block headed
-// like its siblings (an h3, and no entry in the jump menu, which lists sections),
-// with one ⓘ beside the heading saying why they are shown, and not one per
-// link; the list is described by it, as a field is by its hint. Each link is the
-// entry's own title, so the titles tell them apart and nothing is hidden.
-// Three at most, then "See All" to the compendium search for the label: a
-// paragraph after the list, not an item in it, since it is not an entry.
+// The side column's links to the compendium entries this entry replaces, or to itself once; the
+// page chooses the ⓘ sentence, so this does not branch on tier
+// (claude-docs/components/ingredient-entry.md, "Component notes").
 function ReplacesBlock({
   replaces,
   heading = 'In the Compendium',
@@ -197,7 +180,7 @@ function ReplacesBlock({
 }): ReactElement {
   const block = blockOf('details', heading === 'In the Compendium' ? 'compendium' : 'similar');
   const whyId = `${block.id}-why`;
-  // Directly under the list, in both blocks (the owner's call, 2026-10-19).
+  // Directly under the list, in both blocks.
   const seeAll = replaces.allHref && replaces.total > replaces.entries.length && (
     <p className="ingredient-entry__see-all">
       <PendingLink
@@ -251,23 +234,21 @@ const IngredientEntry = ({
   stock,
 }: IngredientEntryProps): ReactElement => {
   const { cupboardEntry, folkNames, categories, deities, substitutes, variants, retired } = detail;
-  // `entry` is the row as the compendium has it, which edit and identity use;
-  // `shown` lays the coven's cupboard entry over it for what the page says.
-  // Three kinds: ours (a coven's row, Local), the compendium's held in this
-  // cupboard (the marks), and the compendium's not held (neither).
+  // `entry` is the row as the compendium has it, which edit and identity use; `shown` lays the
+  // coven's cupboard entry over it for what the page says. Three kinds: ours (a coven's row,
+  // Local), the compendium's held here (marked), and the compendium's not held (neither).
   const { entry } = detail;
   const shown = applyCupboardEntry(entry, cupboardEntry);
   const local = entry.workspaceId !== null;
   const held = !local && cupboardEntry != null;
-  // The curators' review mark, shown to everyone on a compendium entry (M14.8).
+  // The curators' review mark, shown to everyone on a compendium entry.
   const reviewedAt = reviewedAtOf(detail);
   // Either page's cupboard choices, which take the curator's Edit into their menu.
   const choices = cupboard ?? covens;
   // New or Updated reads off the compendium entry's own stamps; a coven's own entry has none.
   const recency = local ? null : entryRecency(entry.createdAt, entry.updatedAt);
   const toxic = entry.toxic || variants.some(({ variant }) => variant.toxic);
-  // Caution as the card counts it (M8.14): notes on the entry, as this coven
-  // reads them, or on any form (the owner's call, 2026-10-19).
+  // Caution as the card counts it: notes on the entry as this coven reads them, or on any form.
   const caution = [shown.safetyNotes, ...variants.map(({ variant }) => variant.safetyNotes)].some(
     (notes) => said(notes),
   );
@@ -294,10 +275,9 @@ const IngredientEntry = ({
     >
       <header className="ingredient-entry__head">
         {(back || recency || toxic || caution) && (
-          // One row for the way back (left, first for a screen reader), the New / Updated
-          // marker (right: the top right of the text column) and the one safety badge, just
-          // right of the marker or in its place without one (the owner's call, 2026-10-20).
-          // The row stands for the badge alone where there is no way back and no marker.
+          // One row for the way back (left, first for a screen reader), the New / Updated marker
+          // (top right) and the one safety badge beside the marker or in its place; the badge alone
+          // where neither else shows.
           <div className="ingredient-entry__bar">
             {back && (
               <BackLink href={back.href}>
@@ -312,10 +292,9 @@ const IngredientEntry = ({
             />
           </div>
         )}
-        {/* Above the names, left-aligned; Quick Look draws it in the same place (the owner's call, 2026-10-21). */}
+        {/* Above the names, left-aligned; Quick Look draws it in the same place. */}
         {lastEdit && <LastEdit by={lastEdit.by} at={lastEdit.at} />}
-        {/* The formal name and the name together, so the Edit pencil, read after the
-            heading, can stand at the end of the formal name's line (index.scss). */}
+        {/* The formal name and the name together, so the Edit pencil can stand at the end of the formal name's line (index.scss). */}
         <div className="ingredient-entry__naming">
           <FormalName entry={entry} />
           <PageHeader
@@ -325,13 +304,12 @@ const IngredientEntry = ({
               (edit || cupboard || covens) && (
                 <>
                   {edit && !(choices && !local) && edit.coven ? (
-                    // A coven's own entry: Edit and Delete in one menu (M8.17).
+                    // A coven's own entry: Edit and Delete in one menu.
                     <OwnEntryActions edit={edit} entry={editable} />
                   ) : (
                     edit &&
                     !(choices && !local) && (
-                      // Edit alone, as for a curator in no coven: the pencil everyone's Edit is,
-                      // a link straight into the dialog (the owner's call, 2026-10-20).
+                      // Edit alone, as for a curator in no coven: a link straight into the dialog.
                       <EditPencil href={edit.href} entry={editable} eyebrow={editEyebrow(edit)} />
                     )
                   )}
@@ -344,8 +322,7 @@ const IngredientEntry = ({
                       {...cupboardFormValues(entry, cupboardEntry)}
                     />
                   )}
-                  {/* The public page's (M9.12): the same buttons across the viewer's
-                    covens, the curator's Edit among them, and none of the marks. */}
+                  {/* The public page's buttons across the viewer's covens, the curator's Edit among them, and none of the marks. */}
                   {covens && !cupboard && !local && (
                     <CupboardActions
                       {...covens}
@@ -395,12 +372,10 @@ const IngredientEntry = ({
               href: `#${anchors[at]}` as const,
               label: formLabel(variant.form),
               group: 'Forms',
-              // The forms take the line References takes, so each part of
-              // the menu opens the same way.
+              // The forms take the line References takes, so the menu opens each the same way.
               apart: at === 0,
             })),
-            // With notes the section has two blocks to list; with none it has
-            // nothing to list, so it is one link.
+            // With notes the section lists two blocks; with none it is one link.
             ...(notes.notes.length > 0
               ? [
                   {
@@ -420,10 +395,9 @@ const IngredientEntry = ({
         />
       )}
 
-      {/* One box round the sections, so past a tablet's width their text and
-          their side columns run as two independent columns (`entry-body`). */}
+      {/* One box round the sections, so past a tablet's width text and side columns run as two independent columns (`entry-body`). */}
       <div className="ingredient-entry__body">
-        {/* What the coven has of it, first, ahead of what the entry is (the owner chose this, MB.121). */}
+        {/* What the coven has of it, first, ahead of what the entry is. */}
         {stock && (
           <StockSection
             stock={stock}
@@ -450,8 +424,7 @@ const IngredientEntry = ({
             <NoteMarks section={DETAILS} numbers={notes.numbersOf(DETAILS)} />
           </div>
         </section>
-        {/* A plain div, not an aside: one complementary landmark per section
-          would be noise, and each block is already headed and labelled. */}
+        {/* A plain div, not an aside: one complementary landmark per section would be noise. */}
         <div className="ingredient-entry__side">
           {replaces && <ReplacesBlock replaces={replaces} />}
           {similar && <ReplacesBlock replaces={similar} heading="Similar in the Compendium" />}
@@ -489,9 +462,7 @@ const IngredientEntry = ({
           </ListBlock>
         </div>
 
-        {/* The forms, headed so
-          the forms read as one part of the page (the owner's call), each
-          form a level beneath. */}
+        {/* The forms, headed so they read as one part of the page, each form a level beneath. */}
         {variants.length > 0 && (
           <section id="forms" className="ingredient-entry__forms" aria-labelledby="forms-heading">
             <h2 id="forms-heading">Forms</h2>
@@ -513,10 +484,9 @@ const IngredientEntry = ({
     </article>
   );
 
-  // The provider holds a pressed Edit on its way, shared by the link and the
-  // dialog (M9.18). The admin layout has one above its pages; these two routes
-  // have none, and a provider already above is kept, so this one is safe
-  // beneath any. An entry that can be edited, or annotated from a coven, needs it.
+  // The provider holds a pressed Edit on its way, shared by the link and the dialog. The admin
+  // layout has one above its pages, these two routes have none, and a provider already above is
+  // kept.
   return edit || cupboard || covens ? (
     <RouteModalProvider>
       {page}

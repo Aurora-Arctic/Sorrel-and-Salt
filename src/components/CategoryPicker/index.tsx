@@ -7,13 +7,9 @@ import InfoTip from '../InfoTip';
 import type { CategoryOption, CategoryPickerProps, PickerCategory } from './types';
 import './index.scss';
 
-// The categories picked from one box, as a list field's entries are (MB.126):
-// typing narrows the live categories, listed under their groups, and a pick
-// adds one as a chip inside the control in its group's colour, the owner's
-// call. Data-free and controlled — ids in, ids out through `onChange` —
-// rather than bound to react-hook-form, because M8.11 reuses it as the
-// ingredients filter. Nothing can be typed in as a category, so there is no
-// Add and no typed row (claude-docs/components/category-picker.md).
+// The categories picked from one box: typing narrows the live categories under their groups, and a
+// pick adds a chip in its group's colour. Controlled (ids in, ids out through `onChange`), not bound to
+// react-hook-form, as the ingredients filter reuses it (claude-docs/components/category-picker.md).
 
 /**
  * The rows the box offers for `text`: the categories not yet picked whose
@@ -124,9 +120,8 @@ const CategoryPicker = ({
             count={category?.count}
             loading={loading}
             removeNoun={removeNoun}
-            // Its group after the name on the tooltip's first line, the
-            // owner's call, since the colour alone cannot name it, and the
-            // description beneath; both read as its x's description.
+            // Its group after the name on the tooltip's first line, since the colour alone
+            // cannot name it, and the description beneath; both read as its x's description.
             qualifier={category?.group.name}
             detail={category?.description ?? undefined}
             colors={category?.group}
@@ -166,8 +161,8 @@ const CategoryPicker = ({
           if (option) add(option.category);
         }}
         onCommit={commit}
-        // Each pick adds a chip, so the list stays open for the next, in the facet and in a
-        // form alike (M12.54).
+        // Each pick adds a chip, so the list stays open for the next, in the facet and in
+        // a form alike.
         keepOpen
         onRemoveLast={() => {
           const last = value[value.length - 1];

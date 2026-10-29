@@ -11,17 +11,9 @@ import { editEyebrow } from './edit-heading';
 import EditStock from './edit-stock';
 import type { OwnEntryActionsProps } from './types';
 
-// A coven's own entry's actions beside its title (M8.17), drawn as a list card's foot draws
-// them (the owner's call, 2026-10-20): the pencil, a link to the page's own `?edit`, which opens
-// its dialog over it, and Delete Ingredient, which asks in a dialog in place, shared with the
-// card's (`delete-entry.tsx`), since a confirmation has nothing to share as an address (option
-// A, the owner's call, 2026-10-20). Delete alone is the bin, as the card has it: a lone choice is
-// its own icon, and a menu holding it would cost two presses for one. Where the role may also
-// update stock, Edit Stock joins it and the two become the three dots, Edit Stock first (the
-// owner's call, 2026-10-21, as on a compendium entry's page): the dialog opens at once, for this
-// coven, with no coven to choose. A refusal is the callout under the bin or the dots (M12.31's
-// design F), which floats rather than taking the row's room.
-// claude-docs/components/ingredient-entry.md.
+// A coven's own entry's actions beside its title, drawn as a list card's foot draws them: the
+// pencil, Delete Ingredient (the bin when alone) and, where the role may update stock, Edit Stock
+// in the three dots (claude-docs/components/ingredient-entry.md, "Component notes").
 
 export default function OwnEntryActions({ edit, entry }: OwnEntryActionsProps): ReactElement {
   const [asking, setAsking] = useState<'stock' | 'delete'>();

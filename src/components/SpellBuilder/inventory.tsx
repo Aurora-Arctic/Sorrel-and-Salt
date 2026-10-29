@@ -12,18 +12,12 @@ import type { SpellStepValue } from './steps/types';
 import { verdictOf, type VerdictKind, VerdictMark } from './verdict-mark';
 import { isInstruction, stepNameOf } from './steps/values';
 
-// In Coven Inventory, in the spell's recipe page's side column (M13.21): one line for each form,
-// at its first step's place, saying what all its steps need together (`needOf`) against what the
-// coven's jar holds, as `supplyOf` judges it; a one-off keeps a line for each step, and a step
-// with an instruction only has none. The verdict's mark (`VerdictMark`) stands at the right end
-// of the name's line, so the name is cut short before it is. A line may carry doors (`doorsOf`):
-// a Quick Look eye in a column of its own at the line's right, and Edit Stock behind the jar and
-// the name (a `StockJarButton` stretched over both, as the entry page's shelf stretches it over a
-// jar). The builder draws no stock (the owner's call, 2026-10-29), so this serves the page alone.
-// See claude-docs/components/spell-recipe.md, "The side column".
+// In Coven Inventory: one line per form, at its first step's place, setting `needOf` against the jar's `supplyOf`, with a `VerdictMark` and `doorsOf` doors; used by the recipe page alone
+// (claude-docs/components/spell-recipe.md, "The side column" and "Notes from code comments: the inventory panel").
 
 // A one-off holds no stock, but its jar is drawn with something in it, as a stocked jar is: an
-// unmeasured jar stands at the middling level, in muted ink (index.scss). The One-Off badge says why.
+// unmeasured jar stands at the middling level, in muted ink (index.scss). The One-Off badge says
+// why.
 const ONE_OFF_HELD = { quantity: null, threshold: null };
 
 /** What a line opens, where the page offers it: the Quick Look eye, and the Edit Stock dialog. */
@@ -32,7 +26,7 @@ export interface LineDoors {
   edit?: StockDialogProps;
 }
 
-/** The line's words after the name, as the parts to join: need, have, the verdict ("have", not "hold": the owner, 2026-10-29). */
+/** The line's words after the name, as the parts to join: need, have, the verdict ("have", not "hold"). */
 export function holdWords(
   step: SpellStepValue,
   steps: readonly SpellStepValue[] = [step],
@@ -74,7 +68,7 @@ function HoldLine({
   const jar = step.jar;
   // The form only picks the vessel's shape here; it is not shown.
   const { form: formKey } = step;
-  // A form with no jar is drawn as the shelf draws one, dashed (the owner, 2026-10-29).
+  // A form with no jar is drawn as the shelf draws one, dashed.
   const state = jar ? stockState(jar.quantity, jar.threshold) : 'empty';
   const modifier = oneOff || state === 'ok' ? '' : `jar-shelf__jar--${state}`;
   return (
@@ -100,7 +94,7 @@ function HoldLine({
         )}
       </span>
       {/* The eye in a column of its own at the line's right, so it stands in one place down the
-          list whatever the name's length (the owner, 2026-10-29, the mock's Option C). */}
+          list whatever the name's length. */}
       {doors?.look && <span className="spell-inventory__look">{doors.look}</span>}
       <span className="spell-inventory__words">
         {/* The verdict's mark opens the words it is about: the need and the have. */}

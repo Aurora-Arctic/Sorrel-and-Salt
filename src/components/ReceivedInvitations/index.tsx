@@ -9,13 +9,11 @@ import DeclineControl from './decline-control';
 import type { ReceivedInvitationsProps } from './types';
 import './index.scss';
 
-// The coven invitations addressed to the signed-in account, in the account
-// page's Invitations section (M10.32): coven, role, who sent it and what they
-// wrote, expiry, with Accept and Decline (M10.34) on each, each saying a
-// refusal in a callout under itself (M12.31). No region of its own: the
-// page's section is the region, named by its heading. The page reads them
-// through a service filtered to the session's own verified address; nothing
-// here decides who may see a row
+// The coven invitations addressed to the signed-in account, in the account page's Invitations
+// section: coven, role, who sent it and what they wrote, expiry, with Accept and Decline on
+// each, each saying a refusal in a callout under itself. No region of its own: the page's
+// section is the region, named by its heading. The page reads them through a service
+// filtered to the session's own verified address; nothing here decides who may see a row
 // (claude-docs/components/received-invitations.md).
 
 const ReceivedInvitations = ({
@@ -59,7 +57,7 @@ const ReceivedInvitations = ({
             },
             {
               heading: 'Answer',
-              // At a card's top right, beside the coven (the owner's call, M10.32).
+              // At a card's top right, beside the coven.
               action: 'corner',
               cell: (invitation) => (
                 <div className="received-invitations__answer">

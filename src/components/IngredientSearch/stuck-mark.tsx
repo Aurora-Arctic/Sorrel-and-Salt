@@ -2,13 +2,9 @@
 
 import { type ReactElement, useEffect, useRef } from 'react';
 
-// Marks the search row `data-stuck` while it is stuck to the top, so its shadow can fade in
-// (the owner's call, 2026-10-19). CSS cannot tell a stuck row from a resting one, and a scroll
-// listener would run on every frame, so a one-pixel sentinel sits at the row's resting place
-// and an IntersectionObserver reports when it has scrolled up past the row's `top`. A client
-// child of its own, so `IngredientSearch` stays a server component. The attribute is set on
-// the `<search>` beside it, which the consumer's client form draws and React does not own.
-// See claude-docs/components/ingredient-search.md.
+// Marks the search row `data-stuck` while it is stuck to the top, so its shadow can fade in, by a
+// sentinel and an IntersectionObserver. A client child, so `IngredientSearch` stays a server
+// component (claude-docs/components/ingredient-search.md).
 
 const StuckMark = (): ReactElement => {
   const sentinel = useRef<HTMLDivElement>(null);

@@ -5,14 +5,9 @@ import MenuButton, { Chevron } from '../MenuButton';
 import type { MenuButtonItem, MenuSection } from '../MenuButton/types';
 import type { AddDestination } from './types';
 
-// The chevron beside Add Ingredient and the menu of places it can go, drawn by
-// MenuButton (the APG menu-button pattern: the focus moves to the first item,
-// the arrows, Home and End rove, Escape and a press outside close) rather than
-// a second hand-built menu (M14.27). The chevron alone shows, its words hidden
-// but still its name. Where the viewer may add to both the compendium and a
-// coven, the places are drawn in two labelled groups, the side they are on
-// first (the owner's call, 2026-10-20); one kind of place is a plain list.
-// claude-docs/components/app-shell.md, "Add Ingredient".
+// The chevron beside Add Ingredient and its menu of places, drawn by MenuButton rather than a second
+// hand-built menu; the chevron alone shows, its words hidden but still its name. With both kinds of place
+// they are two labelled groups, otherwise a plain list (claude-docs/components/app-shell.md, "Add Ingredient").
 
 export default function AddIngredientMenu({
   sections,

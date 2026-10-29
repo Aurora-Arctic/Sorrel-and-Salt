@@ -65,17 +65,9 @@ import {
   variantSectionsWithErrors,
 } from './values';
 
-// The Variants section (MB.221): the forms an ingredient comes in, each a
-// group of what that form adds to the ingredient — never overrides
-// (MB.215) — and the New Form box that adds one. A form is added from the
-// box as a list's entry is, refused there when the ingredient already comes
-// in it, and taken out by its own Remove. Each variant is one summary line
-// until its Edit opens it, one at a time (MB.115, the owner's call): its
-// fields stay in the page while closed, hidden, so nothing typed in them,
-// an open reference panel included, is lost by closing it. They are the
-// ingredient's own field components at its place in the values,
-// `variants.1.celestialBodies`, so they validate, err and focus as the ingredient's
-// do (claude-docs/components/ingredient-form.md, "The variants").
+// The Variants section: the forms an ingredient comes in, each a group of what that form adds to
+// the ingredient, and the New Form box that adds one. Each variant is one summary line until its
+// Edit opens it (claude-docs/components/ingredient-form.md, "Notes behind the code").
 
 const BOX = 'drafts.variants';
 
@@ -91,13 +83,8 @@ const sameVariant = (a: RestoredVariant, b: RestoredVariant): boolean =>
   a.variantId && b.variantId ? a.variantId === b.variantId : folded(a.form) === folded(b.form);
 
 /**
- * Which of each variant's own sections are open (MB.115): a list beside the
- * variants, by place, kept in step as the New Form box adds one first and a
- * Remove takes one out. Held by the form, as its own sections' state is, so
- * that a save opens the section holding an error and Open All / Close All
- * reaches each variant's. A variant added here opens with every section open,
- * as a new entry does; one an edit opened with, past the list's end, with
- * every one closed, as an edit does.
+ * Which of each variant's own sections are open, by place, kept in step as a form is added or
+ * removed; a variant added here opens fully (claude-docs/components/ingredient-form.md, "Notes behind the code").
  */
 export function useVariantFolds(): VariantFolds {
   const [folds, setFolds] = useState<VariantFoldList>([]);
@@ -164,7 +151,7 @@ export function useVariantFolds(): VariantFolds {
 }
 
 export function VariantsField({ workspaceId, fold, folds }: VariantsFieldProps): ReactElement {
-  // The compendium holds curated forms alone (MB.162): its box offers those
+  // The compendium holds curated forms alone: its box offers those
   // rows and no typed row, and a pick is the only way in.
   const compendium = workspaceId === null;
   const { control, getValues, setValue, setError, clearErrors, getFieldState, trigger } =
@@ -200,7 +187,7 @@ export function VariantsField({ workspaceId, fold, folds }: VariantsFieldProps):
   const { card: open, setCard: setOpen } = folds;
   const error: string | undefined = get(errors, BOX)?.message;
   // Shown while a compendium entry has no form: it saves, but as information
-  // only, which nothing can stock or lay in a spell (MB.215).
+  // only, which nothing can stock or lay in a spell.
   const prompting = compendium && fields.length === 0;
   const describedBy = [hintId, prompting && promptId, error && errorId].filter(Boolean).join(' ');
 
@@ -224,17 +211,16 @@ export function VariantsField({ workspaceId, fold, folds }: VariantsFieldProps):
       refuse('repeat', why);
       return;
     }
-    // Cleared before the prepend, not after: the field array tells the form's
-    // history of its new row in an effect, later, while setValue tells it at
-    // once, so clearing second would fold the row into the clear's step and
-    // hide it from undo.
+    // Cleared before the prepend, not after: the field array tells the form's history of its new
+    // row in an effect, later, while setValue tells it at once, so clearing second would fold the
+    // row into the clear's step and hide it from undo.
     setValue(BOX, '');
     // Not focused by the field array, which would take the new Form box: the
     // New Form box keeps it, ready for the next. The new variant goes first,
-    // just beneath the box, and opens, the owner's call, closing whichever was.
+    // just beneath the box, and opens, closing whichever was.
     prepend({ ...EMPTY_VARIANT, form, formLink: link }, { shouldFocus: false });
     setOpen(0);
-    // Every section open, as a new entry opens (MB.115).
+    // Every section open, as a new entry opens.
     folds.added();
     clearErrors(BOX);
     setAnnouncement(`Added ${formLabel(form)}`);
@@ -282,7 +268,7 @@ export function VariantsField({ workspaceId, fold, folds }: VariantsFieldProps):
             id={`${id}-box`}
             label="New Form"
             // Its label is hidden, as a list box's is: the placeholder says what
-            // it is for, at the head of the section (MB.115).
+            // it is for, at the head of the section.
             placeholder="Add a form"
             value={field.value}
             onChange={(typed) => {
@@ -393,10 +379,9 @@ function VariantFieldset({
   );
   // What a substitute copy skipped, for the notice beneath the list.
   const { onSkip, copyButton, skipped, onDone } = useSkippedCopy(variant.substitutes);
-  // Its own sections, each a disclosure as the ingredient's are (MB.115),
-  // flagged while one holds an error a field draws, and opened by a save
-  // that finds one.
-  // Standing still through a press, as the fields' errors do.
+  // Its own sections, each a disclosure as the ingredient's are, flagged while one holds an error
+  // a field draws, and opened by a save that finds one. Standing still through a press, as the
+  // fields' errors do.
   const erring = useSettledWhilePressed(
     variantSectionsWithErrors(
       get(errors, at),
@@ -423,7 +408,7 @@ function VariantFieldset({
   const fieldsElement = useRef<HTMLDivElement>(null);
   // Edit takes the focus into the opened fields, to the first: the Form box
   // while Identity is open, else Identity's heading, closed, as an edit's
-  // sections open (MB.115). Done takes it back to Edit.
+  // sections open. Done takes it back to Edit.
   const focusOnOpen = useRef(false);
   useEffect(() => {
     if (!open || !focusOnOpen.current) return;
@@ -458,7 +443,7 @@ function VariantFieldset({
           />
         </div>
         <div className="ingredient-form__variant-actions">
-          {/* The reference rows' pencil and × (MB.115, the owner's call),
+          {/* The reference rows' pencil and ×,
             each named for its form, as a list entry's × is for its entry. */}
           <IconTip tip="Edit">
             <button
@@ -493,10 +478,8 @@ function VariantFieldset({
         className="ingredient-form__variant-fields"
         hidden={!open}
       >
-        {/* The ingredient's sections, in its order and under its names, as
-          far as a form's fields go (MB.115, the owner's call): its Form is
-          its identity. A level beneath the Variants heading, each folding
-          as the ingredient's do, its closed line read as theirs is. */}
+        {/* The ingredient's sections, in its order and under its names as far as a form's fields
+          go, a level beneath the Variants heading, each folding as the ingredient's do. */}
         <div className="collapsible-sections">
           <CollapsibleSection
             title="Identity"
@@ -504,7 +487,7 @@ function VariantFieldset({
             fold={fold('identity')}
             summary={summary('identity')}
           >
-            {/* On the compendium the form must be a pick (MB.162). */}
+            {/* On the compendium the form must be a pick. */}
             <FormField workspaceId={workspaceId} at={at} pickOnly={compendium} />
           </CollapsibleSection>
           <CollapsibleSection
@@ -519,7 +502,7 @@ function VariantFieldset({
               placeholder="What sets this form apart"
               action={<CopyFromIngredient at={at} field="description" />}
               multiline
-              // Seven lines, matching the ingredient's Description (MB.115).
+              // Seven lines, matching the ingredient's Description.
               rows={7}
             />
             <TextField<IngredientFormValues>
@@ -529,8 +512,7 @@ function VariantFieldset({
               action={<CopyFromIngredient at={at} field="safetyNotes" />}
               multiline
             />
-            {/* Its own flag, never copied from the ingredient's: the two are
-                independent, the one exception to the union rule (M11.21). */}
+            {/* Its own flag, never copied from the ingredient's: the one exception to the union rule. */}
             <ToggleField name={`${at}.toxic`} label="Toxic" />
           </CollapsibleSection>
           <CollapsibleSection
@@ -595,16 +577,13 @@ function VariantFieldset({
                 <CopyFromIngredient at={at} field="categoryIds" announce={announce} />
               )}
             />
-            {/* A form of any ingredient may stand in for a form, this one's
-            other forms included; those in this form, or in its group, are
-            offered first (MB.215). Each row is one form of an ingredient, so
-            a pick names the form at once and needs no second picker, and a
-            link always names one (MB.115, the owner's call). A copy that
-            skips the ingredient's substitutes in no such form says so
-            beneath the list, with Copy Anyway. */}
+            {/* A form of any ingredient may stand in for a form, those in this form or its group offered
+            first; a pick names the form at once, so a link always names one. A copy that skips the
+            ingredient's substitutes in no such form says so beneath, with Copy Anyway. */}
             <LookupListField
               workspaceId={workspaceId}
-              // Fixed for the form's life, since its tier is, so the hook called is always the same.
+              // Fixed for the form's life, since its tier is, so the hook called is always the
+              // same.
               useSuggestions={compendium ? useCompendiumSubstitutes : useSubstituteSuggestions}
               rank={rank}
               name={`${at}.substitutes`}

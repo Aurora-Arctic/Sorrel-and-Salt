@@ -13,23 +13,9 @@ import type { MenuButtonItem } from '../MenuButton/types';
 import Notice from '../Notice';
 import type { CardMoreProps } from './types';
 
-// A coven card's More (M8.17): the vertical dots beside Edit or Annotate,
-// opening a menu downward of the card's further writes. On the coven's own
-// entry, Delete Ingredient; on a compendium entry the cupboard holds, Make It
-// Ours and Remove. Each asks in place, in the dialogs the entry page shares
-// (option A, the owner's call, 2026-10-20), since a confirmation has nothing
-// to share as an address. A lone Delete or Remove is its own bin instead of a
-// menu (the owner's call, 2026-10-20, later that day, which brought
-// the bin back): a menu holding a single choice costs two presses for what
-// one press can do. That is the coven's own entry now that Link to the
-// Compendium has gone from the card (a v2 feature). A lone Make It Ours stays
-// a menu: it needs the delete permission too, so no role reaches it alone,
-// and no icon is built for a case that cannot happen. The menu draws its
-// choices under the one "Coven" section label, as every More does though all
-// its choices are the coven's (the owner's call, 2026-10-20). A write that takes the
-// card away reads the list again, and the focus then goes to the page's
-// heading, the card's More (or bin) having gone with it; a refusal gives that
-// control the focus back. claude-docs/components/coven-cards.md.
+// A coven card's More menu: Delete Ingredient on the coven's own entry; Make It Ours and Remove on a
+// held compendium entry. A lone Delete or Remove is its own bin, as a one-choice menu costs two presses
+// (claude-docs/components/coven-cards.md, "Source notes").
 
 type Asking = 'delete' | 'makeOurs' | 'remove';
 

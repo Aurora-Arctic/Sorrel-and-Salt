@@ -1,10 +1,9 @@
 @use '../../scss/variables' as *;
 @use '../../scss/mixins' as *;
 
-// Design F (claude-docs/components/click-feedback.md): a callout under the
-// control that failed, and a badge on the control that brings it back. Both
-// are placed by script (position.ts) and taken out of the flow, so neither
-// moves anything as it comes or goes.
+// A callout under the control that failed, and a badge on the control that brings it back
+// (claude-docs/components/click-feedback.md). Both are placed by script (position.ts) and out of the
+// flow, so neither moves anything.
 
 // The warning triangle's size in the callout, as an error notice draws it.
 $callout-mark: 1.0125rem;
@@ -20,13 +19,9 @@ $badge-reach: calc(#{$dismiss-size} - #{$badge-size});
 $arrow-size: 12px;
 $arrow-rise: 7px;
 
-// Each fades in at the short step once placed, and out by a keyframe of its
-// own, as MenuButton's menu does; under reduced motion neither fades. The fade
-// in waits for `is-placed`: started at the mount, it would run while the piece
-// is still hidden, and be spent before it shows on a page slow to place it.
-// The fade out is a second name, not the first reversed: a finished animation
-// whose name stays is updated in place, so reversing it jumps to its start
-// instead of running again (claude-docs/components/click-feedback.md, "Fades").
+// Each fades in at the short step once placed (`is-placed`, or it would be spent before it shows) and
+// out by its own keyframe, as reversing a finished animation jumps to its start; reduced motion: no
+// fade (claude-docs/components/click-feedback.md, "Fades").
 @mixin fades {
   // Until the script has placed it, it would stand at the corner of its box.
   &:not(.is-placed) {

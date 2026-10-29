@@ -24,11 +24,7 @@ export interface IngredientSearchOption extends ComboboxOption {
   match?: IngredientSearchMatch;
 }
 
-/**
- * What the type-ahead suggests from. The compendium is the default; a coven's
- * cupboard suggests its own ingredients by the coven's label; a coven's grimoire
- * suggests its spells by title, of the tab's status when given (M10.11).
- */
+/** What the type-ahead suggests from: the compendium (default), a coven's cupboard by its label, or a coven's grimoire by spell title. */
 export type SearchSource =
   | { kind: 'compendium' }
   | { kind: 'cupboard'; workspaceId: string }
@@ -60,22 +56,11 @@ export interface IngredientSearchFormProps {
   shown: readonly FilterValue[];
   /** The list with `query` set to `text` and the other filters kept, from the first page. */
   searchHref: (text: string) => Route;
-  /**
-   * Where a picked ingredient opens: on a list with a Quick Look, its details
-   * modal over the list as it stands (M12.5). Left out, a pick applies its
-   * row's text as the search. The Grimoire list's picks open the spell's Quick Look (M13.21).
-   */
+  /** Where a picked ingredient opens: on a list with a Quick Look, its details modal over the list as it stands. Left out, a pick applies its row's text as the search. */
   pickHref?: (match: IngredientSearchMatch) => Route;
-  /**
-   * The head of the route modal a pick opens, shown at once while the
-   * modal's content loads. Given, a pick opens `pickHref` as a route modal
-   * over the list as it stands; left out, a pick is a plain navigation.
-   */
+  /** The head of the route modal a pick opens, shown while its content loads. Given, a pick opens `pickHref` as a route modal; left out, a plain navigation. */
   pickHeading?: (match: IngredientSearchMatch) => ModalHeading;
-  /**
-   * The page's place for the modal a pick opens (`RouteModalProps.place`), where the page has
-   * more than one: the details modal's `DETAILS_PLACE`, so its head shows at once there.
-   */
+  /** The page's place for the modal a pick opens (`RouteModalProps.place`), where the page has more than one. */
   pickPlace?: string;
   /** What the type-ahead suggests from: the compendium when left out. */
   source?: SearchSource;
@@ -125,15 +110,15 @@ export type SearchSentenceFacet =
 /** The filter as the address holds it: the chosen values of each kind. Anything left out is not chosen. */
 export interface SearchSentenceFilter {
   query?: string | null;
-  /** The public compendium only (M12.55): ids of the viewer's covens an entry is held in, any of them. */
+  /** The public compendium only: ids of the viewer's covens an entry is held in, any of them. */
   covens?: readonly string[];
-  /** Not In (M12.55): held in none of the picked covens, or with none picked none of the viewer's. */
+  /** Held in none of the picked covens, or with none picked none of the viewer's. */
   covensNot?: boolean;
   /** Category slugs. */
   categories?: readonly string[];
   /** `all` (the default) lists entries in every category, `any` in at least one. */
   categoryMode?: 'all' | 'any';
-  /** The grimoire's moon phases, as the spells word them (M13.22). */
+  /** The grimoire's moon phases, as the spells word them. */
   moonPhases?: readonly string[];
   /** The grimoire's days of the week, as the spells word them. */
   daysOfWeek?: readonly string[];
@@ -161,7 +146,7 @@ export interface SearchSentenceFilter {
   withoutReferences?: boolean;
   /** Admin lists only. */
   withoutForms?: boolean;
-  /** Admin lists only (M14.8): `reviewed`, `needs_review`, or left out for either. */
+  /** Admin lists only: `reviewed`, `needs_review`, or left out for either. */
   reviewed?: 'reviewed' | 'needs_review' | null;
 }
 
@@ -182,10 +167,7 @@ export type SearchSentenceLabels = Partial<
   Record<SearchSentenceLabelFacet, Readonly<Record<string, string>>>
 >;
 
-/**
- * One piece of the sentence: plain text, a chosen value, or a join, the bare word ("or",
- * "and") that links two values in a list. A join is the word alone; the spaces round it are text.
- */
+/** One piece of the sentence: plain text, a chosen value, or a join, the bare word ("or", "and") between two values; the spaces round a join are text. */
 export type SearchSentenceFragment =
   | { kind: 'text'; text: string }
   | { kind: 'join'; text: string }

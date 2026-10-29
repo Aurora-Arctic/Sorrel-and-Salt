@@ -59,19 +59,10 @@ import type {
 } from './types';
 import './index.scss';
 
-// The spell builder (M10.12): a spell's title, intent, jar and note, in a
-// modal over the grimoire (./spell-dialog.tsx), opened empty by New Spell and
-// on a saved spell by its Edit. Its fields sit in four folding sections, as
-// Add Ingredient's do: open on a new spell, shut on a saved one, each shut
-// line naming what it holds, and Open All / Close All in the dialog's head. Moon phase and day of the week suggest a
-// fixed list and still take what is typed (./constants). No field is
-// required: a draft may be saved with any of them, and a title is asked for
-// only when the spell is marked complete (M10.20). The builder autosaves
-// (M13.17, ./autosave.ts): a change saves 3 s after the last, Save saves at
-// once, and the first save creates the spell, after which the builder holds
-// its id and revision and `onCreated` moves the dialog's address to it. There
-// is no Cancel: Close saves what is unsaved, then closes (./save-on-close.ts).
-// See claude-docs/components/spell-builder.md.
+// The spell builder: a spell's title, intent, jar and note in four folding sections, inside the
+// dialog (./spell-dialog.tsx). It autosaves (./autosave.ts) and Close saves first
+// (./save-on-close.ts). (claude-docs/components/spell-builder.md, "Notes from code comments: the
+// builder")
 
 /** A step's saved id, set by a save's answer: bookkeeping, never a step of the history. */
 const isStepIdName = (name: string): boolean => /^steps\.\d+\.stepId$/.test(name);
@@ -125,7 +116,7 @@ function lineOfField(
     case 'visibility':
       return values.visibility === 'workspace' ? 'Shared' : 'Private';
     case 'steps': {
-      // The steps that lay something: an instruction step (M13.3) has no name.
+      // The steps that lay something: an instruction step has no name.
       const laid = (values.steps ?? []).filter((step) => step.name !== null).length;
       if (laid === 0) return '';
       return laid === 1 ? '1 ingredient' : `${laid} ingredients`;
@@ -148,7 +139,7 @@ function valuesOf(spell?: Partial<SpellBuilderSpell>): SpellBuilderValues {
     steps: (spell?.steps ?? []).map(stepValueOf),
     // A new spell is the coven's unless chosen otherwise (§5).
     visibility: spell?.visibility ?? 'private',
-    // A new spell is a draft (M10.20).
+    // A new spell is a draft.
     status: spell?.status ?? 'draft',
     categoryIds: [...(spell?.categoryIds ?? [])],
   };
@@ -166,7 +157,7 @@ const schemaResolver = zodResolver(SpellInput) as unknown as Resolver<
 >;
 
 /**
- * The schema's reading of the steps as a save sends them, and story 77's unit
+ * The schema's reading of the steps as a save sends them, and the unit
  * rule, which needs the coven's jars and so is not the schema's: a refused
  * unit is said beside it, under the step's `unit`, as the service says it.
  */
@@ -240,14 +231,15 @@ const SpellBuilder = ({
   const look = covenSlug === undefined ? undefined : { workspaceId, covenSlug };
   const [opened] = useState(spell);
   const [createdId, setCreatedId] = useState<string | null>(null);
-  // True while a save the person asked for runs: the resolver then checks a blank new instruction too.
+  // True while a save the person asked for runs: the resolver then checks a blank new instruction
+  // too.
   const asked = useRef(false);
   const methods = useForm<SpellBuilderValues, unknown, SpellBuilderInput>({
     defaultValues: valuesOf(spell),
     resolver,
     context: asked,
     // A field is checked when it is first left, and on every change after,
-    // as the ingredient form's are (M5.9).
+    // as the ingredient form's are.
     mode: 'onTouched',
     reValidateMode: 'onChange',
   });
@@ -266,7 +258,7 @@ const SpellBuilder = ({
   // Something to save: a field that reads differently from the last save,
   // blank and spaces alike reading as none, as the schema reads them, or a
   // visibility or status other than the last save's, which is a choice worth
-  // saving on its own (the owner's call, 2026-10-27), a changed category pick,
+  // saving on its own, a changed category pick,
   // or a changed step.
   const typed = useWatch({ control, name: [...FIELDS] });
   const picked = useWatch({ control, name: 'categoryIds' });
@@ -276,7 +268,8 @@ const SpellBuilder = ({
   const steps = useWatch({ control, name: 'steps' });
   const values = useWatch({ control }) as SpellBuilderValues;
   const categoryName = useCategoryName();
-  // The autosave never sends a blank new instruction: it stays in the form, unsaved and unmentioned.
+  // The autosave never sends a blank new instruction: it stays in the form, unsaved and
+  // unmentioned.
   const sendable = steps.filter((step) => !isBlankNewInstruction(step));
   const dirty =
     categoriesChanged ||
@@ -289,11 +282,12 @@ const SpellBuilder = ({
   // A unit the jar cannot be measured in holds Save, as the service would refuse it.
   const unitIssueSteps = unitIssues(steps);
   const unitRefused = unitIssueSteps.size > 0;
-  // A saved instruction cleared of its text cannot be left out (that would delete it), so the autosave waits.
+  // A saved instruction cleared of its text cannot be left out (that would delete it), so the
+  // autosave waits.
   const blankSaved = steps.some(isBlankSavedInstruction);
 
   // A new spell opens every section, to be filled in order; a saved one opens
-  // them shut, each line saying what it holds, as Add Ingredient's do (M8.16).
+  // them shut, each line saying what it holds, as Add Ingredient's do.
   const [open, setOpen] = useState<ReadonlySet<SectionName>>(
     () => new Set(spell ? [] : SECTION_NAMES),
   );
@@ -396,7 +390,8 @@ const SpellBuilder = ({
       { ...valuesOf(answer), categoryIds: sent.categoryIds },
       { keepValues: true, keepErrors: true },
     );
-    // The save left out any blank new instruction, so its steps are placed among the form's that were sendable.
+    // The save left out any blank new instruction, so its steps are placed among the form's that
+    // were sendable.
     const now = getValues('steps')
       .map((step, at) => ({ step, at }))
       .filter(({ step }) => !isBlankNewInstruction(step));
@@ -432,7 +427,8 @@ const SpellBuilder = ({
    * its field, or above them all, and is thrown for the autosave to report.
    */
   const persist = async (sent: SpellBuilderValues, context: SaveContext): Promise<SaveResult> => {
-    // The checks run on the form as it is now; the values sent are the ones the autosave handed over.
+    // The checks run on the form as it is now; the values sent are the ones the autosave handed
+    // over.
     const checked = (await trigger())
       ? SpellInput.safeParse({ ...sent, steps: sent.steps.map(stepInputOf) })
       : null;
@@ -441,7 +437,7 @@ const SpellBuilder = ({
       throw fieldsRefused();
     }
     // The categories go only when the picks differ from the last save: left
-    // out, the service keeps the spell's set as it is (M10.14).
+    // out, the service keeps the spell's set as it is.
     const { categoryIds: picks = [], ...rest } = checked.data;
     const input = rest as unknown as SpellBuilderInput;
     if (!sameCategories(picks, defaultValues?.categoryIds)) input.categoryIds = picks;
@@ -452,7 +448,7 @@ const SpellBuilder = ({
         workspaceId,
         id === null
           ? { kind: 'new' }
-          : // After Keep My Version the engine's revision is the one the refusal reported (M13.18).
+          : // After Keep My Version the engine's revision is the one the refusal reported.
             { kind: 'spell', id, revision: context.revision },
         input,
       );
@@ -542,10 +538,9 @@ const SpellBuilder = ({
       asked.current = false;
     }
   };
-  // Why Save Spell is off, a tip on the button (the owner's call, 2026-10-29; it was text beside
-  // it from the second design review), so a disabled button is never a silent one. Left out while
-  // a save is on its way, and once an edit has been autosaved: the save left nothing to save, and
-  // "Nothing to save yet" is for a spell not yet edited.
+  // Why Save Spell is off, a tip on the button, so a disabled button is never a silent one. Left
+  // out while a save is on its way, and once an edit has been autosaved: the save left nothing to
+  // save, and "Nothing to save yet" is for a spell not yet edited.
   const firstUnitIssue = [...unitIssueSteps.keys()][0];
   const saveReason =
     autosave.status === 'saving'
@@ -603,7 +598,8 @@ const SpellBuilder = ({
   }, []);
   const keepRecovered = () => {
     if (!recovered) return;
-    // The draft may be older than a save that removed a step: its ids are checked against the saved ones.
+    // The draft may be older than a save that removed a step: its ids are checked against the saved
+    // ones.
     reset(
       { ...recovered.value, steps: restoredSteps(recovered.value.steps, liveStepIds()) },
       { keepDefaultValues: true },
@@ -617,14 +613,14 @@ const SpellBuilder = ({
   // Where the two notices that ask for a decision go, the recovery banner and
   // the conflict notice: under the dialog's title, in view however far the
   // form has scrolled, since in the footer and above the fields they were
-  // missed (the owner's call, 2026-10-29). Outside a modal they stay in the
+  // missed. Outside a modal they stay in the
   // form's flow.
   const headerNote = useModalHeaderNote();
   const recovery = recovered && jarReady && (
     <Notice kind="warn" block className="spell-builder__restored">
       <span>Restored unsaved changes from {clockTime(recovered.at)}</span>
       <span className="spell-builder__recovered">
-        {/* One primary: Keep, the choice that loses no typing; Discard sits back, quiet (the owner's call, 2026-10-29). */}
+        {/* One primary: Keep, the choice that loses no typing; Discard sits back, quiet. */}
         <button type="button" className="btn btn--small btn--solid" onClick={keepRecovered}>
           Keep
         </button>
@@ -636,11 +632,8 @@ const SpellBuilder = ({
   );
 
   /**
-   * Reload Latest, after someone else's save got in first (M13.18): the spell
-   * as the server has it now replaces the form, what was typed into it
-   * included, and the form starts clean from it. The engine takes the revision
-   * the refusal reported; a save made since is met as the next conflict. A read
-   * that fails leaves the conflict and the typing as they are, and says so.
+   * Reload Latest, after a stale save: replaces the form, typing included, with the spell as the server has it; a failed read leaves the conflict as it is
+   * (claude-docs/components/spell-builder.md, "Notes from code comments: reload latest").
    */
   const reloadLatest = async () => {
     const id = createdId ?? opened?.id;
@@ -732,7 +725,7 @@ const SpellBuilder = ({
               </>,
             )}
             {/* The recipe's timing: when to work the spell, not when it was worked,
-                which a working's own date gives (M13.4). */}
+                which a working's own date gives. */}
             {section(
               'When to Work It',
               <>

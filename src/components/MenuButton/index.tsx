@@ -16,23 +16,14 @@ import Spinner from '../Spinner';
 import type { MenuButtonItem, MenuButtonProps, MenuSection } from './types';
 import './index.scss';
 
-// A labelled button with a chevron that opens a menu of choices, none of them
-// the button's own: the APG menu-button pattern, as the bar's Add Ingredient
-// chevron has it (claude-docs/components/app-shell.md). Opening moves the
-// focus to the first item; the arrows, Home and End rove; Escape closes and
-// hands the focus back; Tab and a press outside close. An item is a link or
-// an action, and choosing either closes the menu first; an action may be disabled, shown and
-// reached but not choosable, with a note saying why. It fades in and out
-// over the short motion (the owner's call, 2026-10-19): a closing menu stays
-// drawn, inert and hidden from assistive technology, until its fade ends. It
-// is placed as a Combobox's list is (MB.154), on Floating UI: hung from the
-// button's end edge, below it, or above it when there is more room there, as
-// at the foot of a dialog or the window, and shifted to stay on the screen,
-// clear of the phone's bottom bar; fixed, so a scrolling dialog cannot clip
-// it, and following a scroll or a resize while open. Which side it opens
-// toward is the room's to decide (M8.17). claude-docs/components/menu-button.md.
+// A labelled button with a chevron opening a menu of choices, the APG menu-button pattern
+// (claude-docs/components/menu-button.md). Focus moves to the first item and the arrows, Home and
+// End rove; Escape, Tab and a press outside close; a disabled action is shown with a note saying
+// why. Placed on Floating UI, fixed so a scrolling dialog cannot clip it; a closing menu stays
+// drawn, inert, until its fade ends.
 
-// Exported for a caller that draws the chevron alone as its `icon`: the bar's Add Ingredient split button.
+// Exported for a caller that draws the chevron alone as its `icon`: the bar's Add Ingredient split
+// button.
 export const Chevron = (): ReactElement => (
   <svg
     className="menu-button__chevron"
@@ -65,9 +56,8 @@ const fadesAreOff = (): boolean =>
   window.matchMedia('(prefers-reduced-motion: reduce)').matches;
 
 /**
- * The items as drawn: the green one, marked `primary`, first,
- * and the rest in the caller's order (the owner's call, 2026-10-20). Done here
- * rather than asked of every caller, so no menu can put its green item
+ * The items as drawn: the green one, marked `primary`, first, and the rest in the caller's
+ * order. Done here rather than asked of every caller, so no menu can put its green item
  * elsewhere. The keys read the page, so they follow this order too.
  */
 const greenFirst = (items: readonly MenuButtonItem[]): MenuButtonItem[] => {
@@ -254,9 +244,10 @@ export default function MenuButton({
         aria-expanded={open}
         aria-controls={open ? menuId : undefined}
         aria-busy={busy || undefined}
-        // `aria-disabled`, not `disabled`, while busy (MB.120): a browser drops the focus of a
-        // control disabled under it to the body, so the keyboard would lose its place while an
-        // add runs. Read as unavailable all the same, and the press and ArrowDown refuse here.
+        // `aria-disabled`, not `disabled`, while busy: a browser drops the focus of a
+        // control disabled under it to the body, so the keyboard would lose its place while
+        // an add runs. Read as unavailable all the same, and the press and ArrowDown refuse
+        // here.
         aria-disabled={busy || undefined}
         onClick={() => {
           if (!busy) setOpen((was) => !was);
@@ -270,8 +261,8 @@ export default function MenuButton({
       >
         {busy && <Spinner />}
         {icon ? (
-          // An icon alone (a list card's More, M8.17): the words still name the
-          // button, hidden, and no chevron, as the row's other icons have none.
+          // An icon alone (a list card's More): the words still name the button, hidden,
+          // and no chevron, as the row's other icons have none.
           <>
             {!busy && icon}
             <span className="visually-hidden">{busy ? (busyLabel ?? label) : label}</span>

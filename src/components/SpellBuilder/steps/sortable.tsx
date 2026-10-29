@@ -18,14 +18,8 @@ import {
 } from '@/lib/sortable';
 import type { SortableStepsProps } from './types';
 
-// The jar's steps in their order (M10.16, story 51): each moved by its handle,
-// on the dnd-kit setup the combobox's chips use (src/lib/sortable), in a
-// column of its own. The pointer drags a step onto another's place; the
-// keyboard lifts it with Space or Enter, moves it a place with Up and Down, or
-// to either end with Home and End, and puts it down with Space or Enter, or
-// back with Escape. Each step is said in dnd-kit's live region and the focus
-// stays on the moved step's handle. See claude-docs/components/spell-builder.md,
-// "Reordering".
+// The jar's steps in order, each moved by a handle on the dnd-kit setup of `src/lib/sortable`; keyboard Space or Enter lifts, arrows, Home and End move, Escape cancels
+// (claude-docs/components/spell-builder.md, "Notes from code comments: reordering steps").
 
 /** The keys that move a lifted step: a column has no Left or Right. */
 const STEP_KEYS = new Set(['ArrowUp', 'ArrowDown', 'Home', 'End']);

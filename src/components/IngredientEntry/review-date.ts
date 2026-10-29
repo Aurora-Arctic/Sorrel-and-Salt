@@ -1,12 +1,6 @@
 import type { IngredientDetail } from '@/modules/ingredients';
 
-/**
- * The entry's review mark as the badge takes it (M14.8; `EntryMarks`' `reviewedAt`): an ISO
- * string once a curator has marked a compendium entry reviewed, `null` while it needs review,
- * and `undefined` for a coven's own entry, which nobody reviews. Read off the entry row, whose
- * date reaches a client component as a string after the compendium's cache (a Date before it),
- * so both are accepted. The date only: the row never carries who marked it.
- */
+/** The entry's review mark: an ISO string once reviewed, `null` while it needs review, `undefined` for a coven's own entry; a Date from before the cache is accepted too. */
 export function reviewedAtOf({
   entry,
 }: Pick<IngredientDetail, 'entry'>): string | null | undefined {

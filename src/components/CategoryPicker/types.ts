@@ -2,7 +2,7 @@ import type { ReactNode } from 'react';
 import type { GroupColors } from '../../lib/types';
 import type { ComboboxOption } from '../Combobox/types';
 
-/** The group a category is filed under: the heading its row sits under, and the colour its entry wears (MB.36). */
+/** The group a category is filed under: the heading its row sits under, and the colour its entry wears. */
 export interface PickerGroup extends GroupColors {
   id: string;
   name: string;

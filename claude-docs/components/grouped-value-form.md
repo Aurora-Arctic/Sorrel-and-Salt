@@ -286,3 +286,9 @@ modal shows once open is this file's. `tests/e2e/admin.spec.ts`
 adds, renames and deletes a category, a form and a celestial body through the real server, adds
 a deity under a new tradition and moves it when the tradition goes, and is
 refused deleting Protection, which seeded compendium entries are filed under.
+
+## Source notes
+
+Comments in the source that point here; each is the detail behind a one-line comment.
+
+- `index.tsx`: The admin's form for a curated value: grouped (a category, an ingredient form or a deity) or flat where the kind has no group (a celestial body or a zodiac sign). One for every such vocabulary, as GroupForm is for their groups, so a new one is a `KINDS` entry: a name, a description and, for a grouped kind, the group it is filed under, validated by the shared schema before the mutation and again by the service, and on an existing value a delete behind a confirmation. A kind whose rename reaches further than its row says so. No rename moves a compendium entry's address, so none asks to end a redirect. It holds no modal of its own; the page puts it in one (claude-docs/components/grouped-value-form.md).

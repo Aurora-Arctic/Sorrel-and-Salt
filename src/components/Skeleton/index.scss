@@ -1,9 +1,9 @@
 @use '../../scss/variables' as *;
 @use '../../scss/mixins' as *;
 
-// The shared loading skeleton (M12.33), of the shapes the site waits on:
-// `table`, `cards`, `form` and `page`. It was the tab panel's skeleton
-// (MB.115) and the route modal's (M9.18); both now draw it. Each shape is
+// The shared loading skeleton, of the shapes the site waits on:
+// `table`, `cards`, `form` and `page`. The tab panel and the route modal
+// both draw it. Each shape is
 // the shared `skeleton-shape` (_mixins.scss), a quiet fill with a lighter
 // band passing across it, and a single slow pulse where motion is reduced.
 
@@ -71,7 +71,7 @@
 
 // The filter row: the search box and a narrower select, a control's height
 // each, wrapping as `.filter-row` does, edge to edge. No button: the real row has
-// none, its search submitting from the magnifier inside its box (MB.115).
+// none, its search submitting from the magnifier inside its box.
 .skeleton__filter {
   display: flex;
   flex-wrap: wrap;

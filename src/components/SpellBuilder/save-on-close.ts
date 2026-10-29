@@ -3,15 +3,8 @@
 import { useContext, useEffect, useRef } from 'react';
 import { CloseGuardContext } from '../Modal/close-guard';
 
-// The spell builder's way out of its modal (M10.12): Close, Escape and a click
-// outside save what is unsaved, then close, and ask nothing. The owner's call
-// on 2026-10-27, an exception to M13.14's Discard question for this form
-// alone, since a spell's draft is kept rather than thrown away
-// (claude-docs/design-decisions/m10.12-spell-builder-modal.md). The close is
-// held while the save runs: a refused save keeps the modal open with the
-// refusal shown, so nothing typed is lost. Closing the tab or reloading is
-// the autosave's to guard (`useAutosave` asks the browser, and saves as the
-// tab hides), which no page can answer by saving.
+// The modal's way out: Close, Escape and an outside click save what is unsaved, then close, with no Discard question; a refused save keeps it open
+// (claude-docs/components/spell-builder.md, "Notes from code comments: closing the modal").
 
 /**
  * Puts the save-on-close guard in the modal's slot. `unsaved` is whether

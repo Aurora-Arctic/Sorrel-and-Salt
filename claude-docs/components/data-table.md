@@ -98,3 +98,7 @@ sentence; Foot Action And Icon Chip adds a foot action and an icon chip. The too
 No test of its own: each list's test asserts the table it draws — its rows,
 its columns and its empty state — by role and label, which covers the
 scaffold through every list that uses it.
+
+## Notes from code comments: the group chip
+
+A group's name in its own chip, as the category picker shows it, where the group carries both colours; plain text otherwise, a tradition having none. A form group's name leads with its icon, the generic where it has none: `icon` is `undefined` for a group of another kind, which draws no icon. A table's cell, the group list's and the value list's (claude-docs/components/data-table.md).

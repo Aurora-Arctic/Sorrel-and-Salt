@@ -22,11 +22,10 @@ import type { SectionNavItem, SectionNavProps } from './types';
 // the browser. The list is the server's, passed in as plain data
 // (claude-docs/components/section-nav.md).
 
-// How many sections stay in view on a phone, and what the server and the
-// first client render show; the stylesheet's `--extra` class hides the rest,
-// so the number lives here once and the stylesheet is told by the class, not
-// by a second count. Wider than the phone a measured count replaces it, and
-// until that is known the stylesheet shows every tab (`index.scss`).
+// How many sections stay in view on a phone, and what the server and the first client render
+// show; the stylesheet's `--extra` class hides the rest, so the number lives here once. Wider
+// than the phone a measured count replaces it, and until that is known the stylesheet shows
+// every tab (`index.scss`).
 const VISIBLE = 4;
 
 // Wider than the phone (`$shell-phone-width`, 40rem; `_variables.scss`): the
@@ -85,14 +84,12 @@ const measureNatural = (list: HTMLElement): Natural | null => {
   };
 };
 
-// The most leading tabs, never fewer than one, that fit `available` beside
-// More; all of them when they fit without it. More is reserved at its own
-// width, unless the current page's tab is among those it would hide: then More
-// wears that tab's label, so it is reserved at that tab's width plus the gap
-// inside the button and the chevron, or at its own if that is wider. Not at the
-// widest tab it would hide, which tucked a tab away while the row still had
-// room for it (M10.11): More wears no other tab's label, and a navigation
-// measures the row afresh.
+// The most leading tabs, never fewer than one, that fit `available` beside More; all of them
+// when they fit without it. More is reserved at its own width, unless the current page's tab
+// is among those it would hide: then More wears that tab's label, so it is reserved at that
+// tab's width plus the gap inside the button and the chevron, or at its own if that is wider.
+// Not at the widest tab it would hide, which tucks a tab away while the row still has room
+// for it: More wears no other tab's label, and a navigation measures the row afresh.
 const countThatFit = (
   { widths, current, currentWidth, gap, more, buttonGap, chevron }: Natural,
   available: number,
@@ -110,10 +107,10 @@ const countThatFit = (
 const isCurrent = (pathname: string, { href, exact, matches = [] }: SectionNavItem): boolean =>
   exact ? pathname === href : [href, ...matches].some((each) => isAtPath(pathname, each));
 
-// A browser without a visual viewport has no keyboard to answer to. The on-screen keyboard is up when it has taken a quarter of the window: the
-// visual viewport shrinks, the layout viewport does not, which is how a fixed
-// bar ends up sitting on top of the keyboard. Subscribed as an external
-// store so the server and the first client render agree (no keyboard).
+// A browser without a visual viewport has no keyboard to answer to. The on-screen keyboard is
+// up when it has taken a quarter of the window: the visual viewport shrinks, the layout
+// viewport does not, which is how a fixed bar ends up sitting on top of the keyboard.
+// Subscribed as an external store so the server and the first client render agree (no keyboard).
 const subscribeToKeyboard = (notify: () => void): (() => void) => {
   const viewport = window.visualViewport;
   viewport?.addEventListener('resize', notify);

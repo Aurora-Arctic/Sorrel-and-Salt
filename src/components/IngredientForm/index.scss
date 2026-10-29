@@ -6,26 +6,18 @@
 $skeleton-delay: 200ms;
 $skeleton-fade: 300ms;
 
-// What the ingredient form draws beyond the form primitives (_primitives.scss)
-// and the Combobox, which own its fields, label rows, notices, buttons, the
-// confirm in place of the saves and Delete set apart: the form's column, its
-// folding sections and a variant's, a list's spacing, the row a box shares with Add, the
-// duplicate warning's region, the references' rows and the new reference
-// panel, the Variants section, the substitutes' second pickers, and what a
-// linked substitute's summary holds, inside the Combobox's panel.
+// What the ingredient form draws beyond the form primitives (_primitives.scss) and the Combobox: its
+// column, folding sections, the duplicate warning, the references, the Variants section, the
+// substitutes' second pickers and a linked substitute's summary.
 
-// A column narrower than the measure, as the other forms keep: wide enough
-// for a formal name and a line of description, and no wider, wherever the
-// form is put. A dialog's column, the width the form reads at in the modal
-// the compendium opens it in, which is no wider (MB.115, the owner's call).
+// A column narrower than the measure, as the other forms keep: wide enough for a formal name and a line
+// of description, and the width the form reads at in the modal the compendium opens it in.
 .ingredient-form {
   width: 100%;
   max-width: $dialog-column;
 
-  // A list's legend, its entries and its box, a step further apart than a
-  // single field's label and control: the entries are a group of their own
-  // between the two, and at the field's spacing the three run together.
-  // Nested, to outweigh the primitives' `body .fieldset`.
+  // A list's legend, entries and box sit a step further apart than a single field's label and control, as
+  // at the field's spacing the three run together. Nested, to outweigh the primitives' `body .fieldset`.
   .ingredient-form__list {
     gap: space(3);
 
@@ -35,11 +27,9 @@ $skeleton-fade: 300ms;
   }
 }
 
-// A switch here, Toxic on the ingredient and on each variant, stands at the
-// start of its column, its label and hint above it at the start too, as the
-// fields above it do (the owner's call, 2026-10-16). Not the primitive's
-// centring, which lines a filter bar's switch up under its label among
-// boxes; here it sits alone on its row beneath full-width fields.
+// A switch here (Toxic, on the ingredient and each variant) stands at the start of its column with its
+// label and hint above it, not the primitive's centring, which lines a filter bar's switch up under its
+// label; here it sits alone on its row.
 .ingredient-form .switch {
   align-items: flex-start;
 
@@ -60,12 +50,9 @@ $skeleton-fade: 300ms;
   }
 }
 
-// The duplicate warning beneath the name. The region is always in the page,
-// as a live region must be, so it cancels the field's gap while empty and its
-// notice puts the gap back. Being always there, it opens by height round the
-// first warning, grid rows 0fr to 1fr as the facet panel opens, while the
-// notice fades in (the owner's call, 2026-10-18), and closes the same way
-// round the last rows as they fade.
+// The duplicate warning beneath the name. The region is always in the page, as a live region must be, so
+// it cancels the field's gap while empty and its notice puts it back. It opens by height round the first
+// warning (grid rows 0fr to 1fr, as the facet panel does) and closes the same way round the last rows.
 .ingredient-form__duplicates {
   display: grid;
   grid-template-rows: 0fr;
@@ -107,17 +94,15 @@ $skeleton-fade: 300ms;
     align-items: flex-start;
     gap: space(2);
     margin-top: space(2);
-    // A step deeper beneath the button than the notice's own padding, so the
-    // button sits clear of the tint's foot without a well beneath it (the
-    // owner's calls, the second on 2026-10-18); and no margin under the
-    // notice in the held state, where the error notice's own would double the
-    // form's gap and leave the two states different heights.
+    // A step deeper beneath the button than the notice's padding, so it sits clear of the tint's foot; and no
+    // margin under the notice in the held state, where the error notice's would double the form's gap and
+    // leave the two states different heights.
     padding-bottom: space(3);
     margin-bottom: 0;
   }
 
   // The list and the button out of the triangle's gutter, flush with the
-  // triangle itself (the owner's call): the notice indents everything past
+  // triangle itself: the notice indents everything past
   // its icon, and only the sentence stays there.
   .ingredient-form__matches + .btn {
     will-change: transform;
@@ -130,7 +115,7 @@ $skeleton-fade: 300ms;
   }
 
   // The warning's text tight to the notice's top, and its triangle set to that
-  // first line, which runs at the body's taller line height (the owner's call).
+  // first line, which runs at the body's taller line height.
   .notice--warn p {
     margin-top: 0;
   }
@@ -139,9 +124,8 @@ $skeleton-fade: 300ms;
     inset-block-start: space(3);
   }
 
-  // One match a row, its title at the left and its +, Open It or Quick Look at the
-  // right, rather than buttons run into a sentence (the owner's call at the
-  // cupboard review).
+  // One match a row, its title at the left and its +, Open It or Quick Look at the right, rather
+  // than buttons run into a sentence.
   .ingredient-form__matches {
     display: grid;
     gap: space(2);
@@ -151,7 +135,7 @@ $skeleton-fade: 300ms;
       margin: 0;
     }
 
-    // Clear of the sentence above and the button below (the owner's call).
+    // Clear of the sentence above and the button below.
     // The ◆ on the list's own edge and the title a step in, as typography-base
     // lays a list out.
     ul {
@@ -165,12 +149,9 @@ $skeleton-fade: 300ms;
       position: relative;
     }
 
-    // In a coven's form the matches come in two headed groups, the coven's
-    // own and the compendium's (the owner's call). Each group opens and
-    // closes by height round its rows, 0fr to 1fr as the region itself does,
-    // so its heading never stands alone over an emptied list. The gutter pull
-    // moves from the list onto the group, so the heading sits flush with the
-    // diamonds' edge.
+    // In a coven's form the matches come in two headed groups, each opening and closing by height (0fr to
+    // 1fr) so a heading never stands alone over an emptied list. The gutter pull moves from the list onto
+    // the group, so the heading sits flush with the diamonds' edge.
     .ingredient-form__group {
       display: grid;
       grid-template-rows: 0fr;
@@ -194,11 +175,9 @@ $skeleton-fade: 300ms;
       margin-top: space(2);
     }
 
-    // In a coven's form, the Quick Look eye of a held match, the one a + turns into included,
-    // in the add's green ($accent, the check's) rather than the cards' ink (the owner's call,
-    // M12.48), in every state; the green wash under it on hover and focus is icon-button-edit's,
-    // as for the +. At least 3.9:1 on either notice's tint and on the wash, in both themes
-    // (claude-docs/components/ingredient-form.md, "The + in the duplicate warning").
+    // In a coven's form, the Quick Look eye of a held match (a + turned eye included) is in the add's green
+    // ($accent), not the cards' ink, in every state; the hover and focus wash is icon-button-edit's. At
+    // least 3.9:1 on either notice's tint and the wash (claude-docs/components/ingredient-form.md, "The + in the duplicate warning").
     .ingredient-form__group .icon-tip__look {
       &,
       &:hover,
@@ -213,10 +192,9 @@ $skeleton-fade: 300ms;
       overflow: hidden;
     }
 
-    // A label over its list, not a section of the page: set as a fieldset's
-    // legend is (`.fieldset__legend`), Lexend at the small size and 500, over
-    // the h4's heading face. No colour of its own: it takes the notice's ink,
-    // which each kind has checked on its tint (the muted ink read faded).
+    // A label over its list, not a section of the page: set as a fieldset's legend (`.fieldset__legend`),
+    // Lexend at the small size and 500. No colour of its own: it takes the notice's ink, checked on each
+    // kind's tint (the muted ink read faded).
     .ingredient-form__group-heading {
       margin: 0;
       font-family: $font-body;
@@ -225,25 +203,9 @@ $skeleton-fade: 300ms;
       letter-spacing: normal;
     }
 
-    // Another name's answer on its way: each row the answer will replace
-    // cross-fades to the skeleton's shapes (`skeleton-shape`, _mixins.scss),
-    // laid over the row, a bar where the title was and, where the row had a
-    // control, its shape: a bar in the small button's own padding, border and
-    // type for Open It, an icon's box for a + or a Quick Look, so
-    // the row keeps its height and nothing jumps when the answer lands. The
-    // fade in waits $skeleton-delay, so an answer back sooner never shows the
-    // shapes at all, and the fade out is as slow, so a late one never flashes
-    // (the owner's findings). Under reduced motion the swap is instant but
-    // still waits.
-    // Between answers the list's own height slides, set on it by script
-    // (duplicates.tsx, as a height that is otherwise auto can be moved), and
-    // clips meanwhile: a row the answer dropped stays whole and fades while
-    // the list's bottom slides up over it, and a new row fades in as the
-    // bottom slides down to show it (the owner's call, over each row
-    // shrinking on its own, which ended in a jump). On its own layer: text
-    // below a moving edge snapped to whole pixels, a jitter (the owner's
-    // finding); composited, it glides. The button under the list goes the
-    // same way, above.
+    // Another name's answer on its way: each row it replaces cross-fades to the skeleton's shapes
+    // (`skeleton-shape`) after $skeleton-delay, on its own layer, so a quick answer shows none
+    // (claude-docs/components/ingredient-form.md, "Notes behind the code").
     .ingredient-form__match {
       position: relative;
       will-change: transform;
@@ -263,15 +225,9 @@ $skeleton-fade: 300ms;
       position: relative;
     }
 
-    // A place showing another entry now (the owner's call): the new row
-    // fades in while the last entry's text lies over it fading out, as text
-    // alone, until the slide settles. Both linear, so that between them the
-    // place is always just covered: eased, both sit half-faded together in
-    // the middle and the text dims and brightens (the owner's finding). The
-    // fade in is only for a row over a fading one, so a list's first rows
-    // fade in once, as their places do. Filled backwards only: filled
-    // forwards too, the fade's end would hold the row opaque over the
-    // cross-fade to the shapes above.
+    // A place showing another entry now: the new row fades in while the last entry's text lies over it fading
+    // out. Both linear, so the place is always just covered (eased, both sit half-faded and the text dims).
+    // Only for a row over a fading one; filled backwards only, as forwards would hold the row opaque.
     .ingredient-form__row--arriving {
       animation: list-frame-fade-in $skeleton-fade linear backwards;
 
@@ -386,10 +342,8 @@ $skeleton-fade: 300ms;
       block-size: $icon-size-large;
     }
 
-    // The ◆ centred on the row, not on a line of text: a row here is as tall
-    // as its control, its title centred in it. The row is the li's body, which
-    // after the first row starts space(1) down (the rule above), so the
-    // centre moves down half that.
+    // The ◆ centred on the row, not on a line of text: a row is as tall as its control. The row is the li's
+    // body, which after the first row starts space(1) down (the rule above), so the centre moves half that.
     li::before {
       top: 50%;
       @include theme-transition(background-color);
@@ -399,9 +353,8 @@ $skeleton-fade: 300ms;
       top: calc(50% + #{space(1)} / 2);
     }
 
-    // The title link in the body ink with the faded underline the entry
-    // page's links wear (`faded-underline`; the owner's call): by its class,
-    // so neither Open It's `.btn` nor the Quick Look eye takes it.
+    // The title link in the body ink with the faded underline the entry page's links wear
+    // (`faded-underline`), by its class, so neither Open It's `.btn` nor the Quick Look eye takes it.
     .ingredient-form__title {
       color: $text-primary;
       @include faded-underline;
@@ -425,12 +378,9 @@ $skeleton-fade: 300ms;
   }
 }
 
-// The references (MB.154): rows beneath the search box rather than chips
-// inside it, so a citation can read whole. Each row is one line, closed
-// (MB.115, the owner's call): the citation cut at its end, the locator, and
-// the edit and remove icons; open, the citation wraps whole and the tier and
-// the Locator box sit beneath it, so the row holds at 320px with no line run
-// sideways.
+// The references: rows beneath the search box rather than chips inside it, so a citation can read whole.
+// Closed, a row is one line (citation cut at its end, locator, edit and remove icons); open, the citation
+// wraps whole with the tier and Locator box beneath, so the row holds at 320px.
 .ingredient-form__references {
   display: flex;
   flex-direction: column;
@@ -506,7 +456,7 @@ $skeleton-fade: 300ms;
   }
 
   // A variant's pencil, a reference row's and its Edit Source, in the
-  // accent green every Edit control wears (MB.115, the owner's call).
+  // accent green every Edit control wears.
   &.ingredient-form__edit {
     @include icon-button-edit;
   }
@@ -559,11 +509,9 @@ $skeleton-fade: 300ms;
   }
 }
 
-// The new reference panel: a group set off from the field it opens beneath,
-// its own fields at the form's spacing.
-// How far a reference panel's top border stops short of the legend's words
-// and of the head's marks, one step so the two cannot drift apart. Undo's
-// `.btn--small` inline padding is this step too.
+// The new reference panel: a group set off from the field it opens beneath, its fields at the form's
+// spacing. How far its top border stops short of the legend's words and the head's marks is one step, so
+// the two cannot drift; Undo's `.btn--small` inline padding is the same step.
 $panel-head-gap: space(3);
 
 .ingredient-form .ingredient-form__panel {
@@ -576,27 +524,17 @@ $panel-head-gap: space(3);
   // the top edge, still in view.
   scroll-margin-top: space(5);
 
-  // An icon button's height, and no gap under it but the panel's padding, so
-  // the head's buttons below can sit centred on the same border line. The
-  // border stops `$panel-head-gap` short of its words on either side, as
-  // it does of the buttons' marks (the owner's call, 2026-10-20).
+  // An icon button's height, and no gap under it but the panel's padding, so the head's buttons below sit
+  // centred on the same border line. The border stops `$panel-head-gap` short of its words and the marks.
   .fieldset__legend {
     margin-bottom: 0;
     padding: 0 $panel-head-gap;
     line-height: $icon-size;
   }
 
-  // Its head (MB.258; the owner's calls, 2026-10-20): the note, if there is
-  // one, and the panel's Undo and Redo, the How to Cite tip and the ×, the
-  // tip and the × abutting, each its full `$icon-size` target. Narrow, they
-  // are one line, the group at the end; where the note would be squeezed
-  // under 14rem the group drops to a line of its own straight beneath it,
-  // still at the right (the owner liked the split). Wide enough for the
-  // legend and the group side by side, the group goes up onto the top
-  // border at its right end, level with the legend and, like it, on the
-  // card's surface so the line stops either side of it; the note is then
-  // the first line inside. A container query, since it is the panel's
-  // width that decides, not the window's.
+  // The head: the note if any, and the panel's Undo, Redo, How to Cite tip and ×, each a full
+  // `$icon-size` target. Narrow, the group drops under a note squeezed below 14rem; wide enough, it
+  // goes up onto the top border. A container query, as the panel's width decides, not the window's.
   position: relative;
   container-type: inline-size;
 
@@ -623,7 +561,7 @@ $panel-head-gap: space(3);
   }
 
   // The content width at which "New Reference", the longer legend, and the
-  // group still have a step of border between them (measured 2026-10-20).
+  // group still have a step of border between them.
   @container (min-width: 18rem) {
     // Absolutely placed against the fieldset, so the head is no box of its
     // own: without a note it would otherwise still take a gap above Kind.
@@ -659,13 +597,13 @@ $panel-head-gap: space(3);
   }
 
   // Its buttons a little further from its fields than they are from each
-  // other, and as far again from its edge, as a form's are (M5.5).
+  // other, and as far again from its edge, as a form's are.
   > .form__actions {
     margin-block: space(2);
   }
 }
 
-// How to Cite's rules, one to a line (the owner's call, 2026-10-20), a
+// How to Cite's rules, one to a line, a
 // small step apart. Spans given the list roles, so they are made blocks
 // here; the bubble's own `max-content` width keeps it to the longest rule.
 .ingredient-form__cite-rules {
@@ -678,8 +616,8 @@ $panel-head-gap: space(3);
   display: block;
 }
 
-// The Variants section (MB.221): each form a card, one summary line with its
-// Edit and Remove while closed (MB.115), its fields beneath while open.
+// The Variants section: each form a card, one summary line with its
+// Edit and Remove while closed, its fields beneath while open.
 .ingredient-form .ingredient-form__variants {
   gap: space(3);
 }
@@ -765,7 +703,7 @@ $panel-head-gap: space(3);
   }
 }
 
-// A variant's sections (MB.115, the owner's calls): the ingredient's folds,
+// A variant's sections: the ingredient's folds,
 // under `h4`s a step smaller, and each spacing a step closer, for the
 // narrower card.
 .ingredient-form .ingredient-form__variant-fields {
@@ -783,10 +721,8 @@ $panel-head-gap: space(3);
   }
 }
 
-// A variant field's Copy From Ingredient (MB.115, the owner's call), at the
-// right end of its label row or legend, which span the card for it. It is a
-// `.field__label-action` (_primitives.scss): it stays on the label's line at
-// every width and never changes the row's height (the owner's call, 2026-10-19).
+// A variant field's Copy From Ingredient, at the right end of its label row or legend, which span the card
+// for it: a `.field__label-action` (_primitives.scss), staying on the label's line at every width.
 .ingredient-form .ingredient-form__variant-fields {
   .field__label-row,
   .fieldset__legend {
@@ -794,11 +730,9 @@ $panel-head-gap: space(3);
   }
 }
 
-// The notice of what a variant's substitute copy skipped (MB.115, the
-// owner's call), beneath the list. The region is always in the page, as a
-// live region must be, so while empty it cancels the list's gap. Its words
-// first, then Copy Anyway and the dismissing × at its end, which wrap
-// beneath the words on a phone rather than squeeze them.
+// The notice of what a variant's substitute copy skipped, beneath the list. The region is always in the
+// page, as a live region must be, so while empty it cancels the list's gap. Copy Anyway and the dismissing
+// × wrap beneath the words on a phone rather than squeeze them.
 .ingredient-form__copy-skipped {
   display: block;
 
@@ -839,20 +773,17 @@ $panel-head-gap: space(3);
   gap: space(3);
 }
 
-// The summary while it reads: a tip's width, which a summary with a
-// description grows to. The panel is as wide as its content, and the
-// skeleton is as wide as its container, so neither can set the width and
-// both collapse without a width given here.
+// The summary while it reads: a tip's width, which a summary with a description grows to. The panel is as
+// wide as its content and the skeleton as its container, so neither sets the width and both collapse
+// without one here.
 .entry-summary__loading {
   width: $tip-width;
   max-width: 100%;
 }
 
-// A linked substitute's summary (MB.115), inside the Combobox's panel: the
-// name, the formal name muted beneath it, the description cut to three
-// lines, then a term and its value to a
-// line, the term muted, and a link to the entry. Muted text on the card, the
-// panel's ground, clears 4.5:1 (tests/scss/tokens.test.ts).
+// A linked substitute's summary, inside the Combobox's panel: the name, the formal name muted beneath
+// it, the description cut to three lines, then terms and values, and a link to the entry. Muted text
+// on the card, the panel's ground, clears 4.5:1 (tests/scss/tokens.test.ts).
 .entry-summary__name {
   display: flex;
   flex-direction: column;
@@ -871,7 +802,8 @@ $panel-head-gap: space(3);
   margin: 0 0 space(2);
   -webkit-box-orient: vertical;
   -webkit-line-clamp: 3;
-  // stylelint-disable-next-line plugin/use-baseline -- enhancement: -webkit-line-clamp above already clamps, the unprefixed form is for engines that drop the prefix, not yet Baseline
+  // stylelint-disable-next-line plugin/use-baseline -- enhancement: -webkit-line-clamp above
+  // already clamps, the unprefixed form is for engines that drop the prefix, not yet Baseline
   line-clamp: 3;
 }
 
@@ -914,12 +846,9 @@ $panel-head-gap: space(3);
   }
 }
 
-// The promote question (M12.1), in four tiers told apart by type, not space
-// alone: the question set larger, as the card's heading; the swap on a tinted
-// panel, each term an overline (the .eyebrow's look) above its name, so the
-// names carry the weight; the compendium's reach as a muted caption; and the
-// unsaved-changes question ruled off above the buttons that answer it.
-// Not nested in the form: the question is drawn in the modal's layer.
+// The promote question, in four tiers told apart by type, not space: the question larger, the swap on
+// a tinted panel, the compendium's reach as a muted caption, the unsaved-changes question ruled off
+// above its buttons. Not nested in the form: it is drawn in the modal's layer.
 .promote-question__title {
   display: block;
   font-size: 1.125rem;
@@ -970,7 +899,7 @@ $panel-head-gap: space(3);
   border-top: 1px solid $hairline;
 }
 
-// A renamed form's Use and Keep, beneath its Form box (M8.17).
+// A renamed form's Use and Keep, beneath its Form box.
 .ingredient-form__renamed {
   display: flex;
   flex-wrap: wrap;

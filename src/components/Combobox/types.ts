@@ -10,45 +10,23 @@ export interface ComboboxOption {
   label?: string;
   /** A second line, also part of the name: what already claims the value, or a curated row's description. */
   note?: string;
-  /**
-   * More small print on the note's line, after it, muted: an ingredient's categories.
-   * The line stays one line and ends in an ellipsis where it runs long. Part of the name.
-   * A node rather than text so a caller can draw its words in colour (the spell picker's
-   * categories, in their groups' chips); only its text counts toward the name.
-   */
+  /** Muted small print after the note, one line with an ellipsis; a node so a caller can colour it, and only its text names the option. */
   meta?: ReactNode;
   /** Which bucket it is in, curated or in use; left out by a source with one bucket. */
   curated?: boolean;
-  /**
-   * The heading of the bucket it is listed under, a category's group
-   * (MB.126): a source naming its own buckets, in place of `curated`'s two.
-   */
+  /** The heading of the bucket it is listed under, in place of `curated`'s two (claude-docs/components/combobox.md, "Prop notes"). */
   heading?: string;
   /** What tells it from a row that reads the same — an ingredient's id — where its text cannot. */
   key?: string;
-  /**
-   * Its group's colour pair, a category's (the owner's call): the row is
-   * edged in it, so the colour its chip will wear is seen before the pick.
-   */
+  /** Its group's colour pair: the row is edged in it, so a category chip's colour shows before the pick. */
   colors?: GroupColors;
-  /**
-   * A mark drawn before the label, outside the option's accessible name: a
-   * form's group icon. A `ReactNode` rather than a typed name, so the
-   * combobox knows no icon set; the caller hands over a drawn, decorative one.
-   */
+  /** A decorative mark before the label, outside the accessible name; a `ReactNode` so the combobox knows no icon set. */
   icon?: ReactNode;
-  /**
-   * A mark at the end of the label's line, after the count: information only (the spell picker's
-   * In Jar badge). Its text counts toward the name, so a caller gives its words for a reader.
-   */
+  /** A mark at the end of the label's line, after the count; its text counts toward the name. */
   badge?: ReactNode;
-  /** How many results picking it would match (M12.4): read after the label, "Wax (3)", part of the option's name. */
+  /** How many results picking it would match: read after the label, "Wax (3)", part of the name. */
   count?: number;
-  /**
-   * Shown and read but not pickable (`aria-disabled`, stepped over by the
-   * arrow keys, a press does nothing). Giving the reason in `note` keeps the
-   * row from being a mystery. The caller orders it: the box lists rows as given.
-   */
+  /** Shown and read but not pickable (`aria-disabled`, skipped by the arrow keys); the caller orders it and gives the reason in `note`. */
   disabled?: boolean;
 }
 
@@ -72,96 +50,37 @@ export interface ComboboxProps<O extends ComboboxOption = ComboboxOption> {
   onBlur?: () => void;
   /** A suggestion chosen, or the typed row, which comes with no option. The text is the caller's to change. */
   onPick: (value: string, option: O | null) => void;
-  /**
-   * Enter with no suggestion highlighted: a list's add. Without it, Enter
-   * closes an open list and otherwise reaches the form, as a text box's does.
-   */
+  /** Enter with no suggestion highlighted: a list's add. Without it, Enter closes an open list and otherwise reaches the form. */
   onCommit?: (value: string) => void;
   /** Backspace or Delete in an empty box: a list takes its last entry. */
   onRemoveLast?: () => void;
   /** The suggestions for the text; left out for a box with no source, which never opens. */
   suggestions?: Suggestions<O>;
-  /**
-   * What an open list says once its lookup has settled with no rows and the
-   * text is not blank. Left out, the default: No match for “text”. Pass a
-   * more specific sentence where the caller knows more ("Keep typing to
-   * search"), or `false` where saying nothing is right. Drawn in the popup
-   * outside the listbox (it is no option), and read by the status. The typed
-   * row counts as a row, so a caller wanting the message passes
-   * `offerTyped={false}`. A typed box never closes for having nothing to show.
-   */
+  /** The message of an open list with no rows for non-blank text; `false` says nothing (claude-docs/components/combobox.md, "The empty message"). */
   empty?: string | false;
   /** The entries a list holds, drawn inside the control ahead of the box. */
   entries?: ReactNode;
-  /**
-   * A control that empties the box, on the control's right. `empty` while
-   * there is nothing to clear: the clear, and the separator beside it, keep
-   * their room but are hidden, out of the accessibility tree and the tab
-   * order, so the control's width never changes as it fills or empties.
-   */
+  /** A control that empties the box; `empty` hides it but keeps its room (claude-docs/components/combobox.md, "Prop notes"). */
   clear?: { label: string; onClear: () => void; empty: boolean };
-  /**
-   * A caller's own control drawn inside the control box, before the text and
-   * before any entries: a form's submit, say. A slot rather than a built-in
-   * because Combobox knows nothing about forms or what the caller wants
-   * pressed. A button given here should be styled `combobox__indicator` to
-   * match the others; a press on it is inside the box, so it neither closes an
-   * open list nor moves the focus.
-   */
+  /** A caller's own control inside the control box before the text, such as a submit (claude-docs/components/combobox.md, "Prop notes"). */
   leading?: ReactNode;
-  /**
-   * Whether a box with `suggestions` draws its chevron button. Left out
-   * (`false`) for a free-text search that opens as you type, where a chevron
-   * promises a set to browse. Typing still opens the list. Defaults to true.
-   */
+  /** Whether a box with `suggestions` draws its chevron button; true unless said, false for free-text search that opens as you type. */
   toggle?: boolean;
-  /**
-   * A last row that does something rather than picking a suggestion, there
-   * whatever is typed and in place of the typed row, set off in italics as the
-   * typed row is. Two callers use it: "New Reference" makes something new for
-   * a list whose entries can only be picked (MB.154; last since MB.115), and
-   * "See all results." applies the search to the list (M8.10). Reached by the
-   * arrow keys and picked by Enter or a click, which call `onSelect`; it is
-   * no result, so the status does not count it.
-   */
+  /** A last row that does something rather than picking a suggestion; `onSelect` runs on Enter or a click (claude-docs/components/combobox.md, "The action row"). */
   action?: { label: string; onSelect: () => void };
-  /**
-   * Whether the typed row is offered: false for text the caller would
-   * refuse, a list's repeat (MB.174). Enter still reaches `onCommit`, which
-   * says why. Offered unless said otherwise.
-   */
+  /** Whether the typed row is offered (true unless said): false for text the caller would refuse, where Enter still reaches `onCommit`. */
   offerTyped?: boolean;
-  /**
-   * Put the action row first rather than last, the row nearest the box where the list
-   * opens beneath it: for an action that stands for what was typed, such as the spell
-   * builder's one-off ingredient. Last unless said otherwise.
-   */
+  /** Put the action row first rather than last, for an action standing for what was typed. */
   actionFirst?: boolean;
-  /**
-   * Whether the list opens and narrows with its first row highlighted, so
-   * Enter takes it: a closed set's type-ahead. Free text highlights nothing.
-   */
+  /** Whether the list opens and narrows with its first row highlighted, so Enter takes it: a closed set's type-ahead. */
   highlightFirst?: boolean;
-  /**
-   * Whether a pick leaves the list open for the next one, as the multi-select
-   * box does: a box that adds each pick to a list (the Forms filter, a list
-   * field) rather than holding one value. Escape, Tab and a press outside
-   * still close it, and the focus stays in the text. A single-value box closes
-   * on a pick, the default.
-   */
+  /** Whether a pick leaves the list open for the next, as the multi-select box does; Escape, Tab and a press outside still close it. */
   keepOpen?: boolean;
-  /**
-   * What a row is called, singular: the list's name, its chevron's and its
-   * status's count. "suggestion" unless said; a closed set's are "choice"s.
-   */
+  /** What a row is called, singular: the list's name, its chevron's and its status's count. "suggestion" unless said. */
   noun?: string;
   /** The mark on the typed row, "Use what you typed": the same slot as an option's `icon`. */
   typedIcon?: ReactNode;
-  /**
-   * A mark drawn before the text, decorative: the type-ahead box's chosen
-   * icon, there while the box reads the chosen label, as the select-only
-   * box's closed value draws its choice's (M12.7).
-   */
+  /** A decorative mark before the text, there while the box reads the chosen label. */
   icon?: ReactNode;
   /** Shown, muted, while the box is empty. */
   placeholder?: string;
@@ -169,10 +88,7 @@ export interface ComboboxProps<O extends ComboboxOption = ComboboxOption> {
   required?: boolean;
   /** What a pick leaves out of the text, drawn muted in brackets after it: a picked form's group. */
   qualifier?: ComboboxQualifier;
-  /**
-   * What the open list spans and opens beside: a list field's row, its box
-   * and its Add together. The control when left out (MB.154).
-   */
+  /** What the open list spans and opens beside: a list field's row, its box and its Add together. The control when left out. */
   listAnchor?: HTMLElement | null;
   inputRef?: Ref<HTMLInputElement>;
   name?: string;
@@ -180,11 +96,7 @@ export interface ComboboxProps<O extends ComboboxOption = ComboboxOption> {
   'aria-invalid'?: boolean;
 }
 
-/**
- * What a pick leaves out of the box's text, "Substance" for a picked "Wax"
- * (MB.169): drawn after the text, muted and in brackets, "Wax (Substance)",
- * and read as the box's description.
- */
+/** What a pick leaves out of the box's text, drawn after it muted in brackets, "Wax (Substance)", and read as the box's description. */
 export interface ComboboxQualifier {
   /** Unbracketed: the box adds the brackets. */
   text: string;
@@ -192,11 +104,7 @@ export interface ComboboxQualifier {
   detail?: string;
 }
 
-/**
- * A button a chip carries before its x, for a list whose entries can be acted
- * on one by one: promoting a folk name to the display name (M12.1). Generic,
- * so the entry knows nothing of what it does.
- */
+/** A button a chip carries before its x, for acting on one entry at a time; generic, so the entry knows nothing of what it does. */
 export interface EntryAction {
   /** The button's accessible name: "Make Hedge Fixture the Display Name". */
   label: string;
@@ -214,70 +122,30 @@ export interface ComboboxEntryProps {
   value: string;
   /** The list's error element, when this entry is one it names: it marks the chip and describes its x. */
   errorId?: string;
-  /**
-   * What the chip leaves out, "Dried leaf · Compendium entry": shown beneath
-   * the text in its tooltip, which then opens whether the text is cut off or
-   * not, and read as its x's description.
-   */
+  /** What the chip leaves out, "Dried leaf · Compendium entry": in its tooltip beneath the text (which then always opens), and read as its x's description. */
   detail?: string;
-  /**
-   * What tells the entry from a namesake, a category's group (MB.126): read
-   * after the text on the tooltip's first line, "Testward (Wards & Fixtures)",
-   * as a picked deity's pill reads its tradition, and as the x's description
-   * before the detail. The tooltip then opens whether the text is cut off or
-   * not, as it does for a detail.
-   */
+  /** What tells it from a namesake: read after the text on the tooltip's first line, "Testward (Wards & Fixtures)", and before the detail in the x's description. */
   qualifier?: string;
-  /**
-   * Its group's colour pair, from the row (MB.126): the chip is filled solid
-   * with it, its text and x inverted, as the solid-fill rule asks.
-   */
+  /** Its group's colour pair: the chip is filled solid with it, its text and x inverted. */
   colors?: GroupColors;
-  /**
-   * What the entry opens beside its chip, a linked substitute's summary
-   * (MB.115): its text becomes a button, led by a link mark and underlined,
-   * that opens and shuts a small panel anchored to the chip. Left out of a
-   * sortable entry, whose text is already its handle.
-   */
+  /** What the entry opens beside its chip: its text becomes a button toggling a panel (claude-docs/components/combobox.md, "A linked entry's summary"). Not for a sortable entry. */
   summary?: EntrySummary;
-  /**
-   * What kind of entry it is, read after its text by a screen reader and
-   * never shown: "name only" on a substitute typed rather than linked, which
-   * the eye tells by its want of a link mark.
-   */
+  /** What kind of entry it is, read after its text by a screen reader and never shown: "name only" on a typed substitute. */
   note?: string;
-  /**
-   * A mark drawn before the text, decorative and outside the chip's name: a
-   * form's group icon (M12.4). Handed over drawn, as `ComboboxOption.icon` is.
-   */
+  /** A decorative mark before the text, outside the chip's name; handed over drawn, as `ComboboxOption.icon` is. */
   icon?: ReactNode;
   /** How many results the value matches, "(12)" after the text, outside the cross's name. */
   count?: number;
-  /**
-   * A search is running, so a count is on its way: a shimmering placeholder
-   * stands where the count goes, hidden from assistive technology, and holds
-   * still under reduced motion. The cross's name is the same either way.
-   */
+  /** A count is on its way: a shimmering placeholder, hidden from assistive technology and still under reduced motion, stands where it goes. */
   loading?: boolean;
-  /**
-   * Drawn as an outlined chip (no fill, an ink border) instead of the filled
-   * one. A chip with `colors` stays filled in them.
-   */
+  /** Drawn as an outlined chip (no fill, an ink border); a chip with `colors` stays filled in them. */
   outlined?: boolean;
-  /**
-   * What the value is of, "Element": the cross reads "Remove Element: Water"
-   * and not the bare "Remove Water", so a column of chips from several
-   * boxes still says what each one removes.
-   */
+  /** What the value is of, "Element": the cross reads "Remove Element: Water", not "Remove Water". */
   removeNoun?: string;
   onRemove: () => void;
   /** A button before the x, for acting on this entry: left out, the chip has the x alone. */
   action?: EntryAction;
-  /**
-   * The chip's place in a sortable list, from dnd-kit's `useSortable`: it
-   * draws a handle to move the chip by. Set by `ComboboxSortableEntries`,
-   * never by a list itself.
-   */
+  /** The chip's place in a sortable list, from dnd-kit's `useSortable`; set by `ComboboxSortableEntries`, never by a list itself. */
   sortable?: ReturnType<typeof useSortable>;
 }
 
@@ -325,7 +193,7 @@ export interface ComboboxSortableEntry extends Omit<ComboboxEntryProps, 'sortabl
   id: string;
 }
 
-/** A list whose order means something, its chips moved by a handle each (MB.170). */
+/** A list whose order means something, its chips moved by a handle each. */
 export interface ComboboxSortableEntriesProps {
   entries: ComboboxSortableEntry[];
   /** An entry put down at another place, by keyboard or by pointer: indexes into `entries`. */
@@ -359,46 +227,19 @@ export interface Bucket<O extends ComboboxOption> {
 export interface ComboboxChoice {
   value: string;
   label: string;
-  /**
-   * What the choice is besides its label, a member's role (M6.16): its row
-   * reads "Fixture B (Member)", and once chosen the box shows the label with
-   * the qualifier after it, muted, its detail in a tooltip. Typing matches the
-   * label alone, never the qualifier.
-   */
+  /** What the choice is besides its label, a member's role: its row reads "Fixture B (Member)", the chosen box shows it muted after the label; typing matches the label alone. */
   qualifier?: ComboboxQualifier;
-  /**
-   * The choice makes something new rather than picking one (the switcher's
-   * Create Coven): its row is set off from the rest by a rule and led by a
-   * plus. The caller decides what choosing it does.
-   */
+  /** The choice makes something new rather than picking one (the switcher's Create Coven): its row is set off by a rule and led by a plus. */
   create?: boolean;
-  /**
-   * A mark drawn before the label, in its row and in the closed value, outside
-   * the accessible name: a form group's icon. Handed over drawn and decorative,
-   * as `ComboboxOption.icon` is.
-   */
+  /** A decorative mark before the label in its row and the closed value, outside the accessible name; handed over drawn. */
   icon?: ReactNode;
-  /**
-   * How many results choosing it would match (M12.4): read after the label in
-   * its row and on its chip, "Water (7)", part of the option's accessible name.
-   * Left out where the number is not known (yet): the row and the chip then show
-   * none, which is not a zero. Drawn by the multi-select box only.
-   */
+  /** How many results choosing it would match, read after the label, "Water (7)"; left out where unknown (no zero is shown). Multi-select box only. */
   count?: number;
-  /**
-   * The row is shown and read but cannot be chosen (`aria-disabled`, stepped
-   * over by the arrow keys). The caller sets it by hand. Honoured by the
-   * multi-select box, which lists a disabled row after the others, and by the
-   * select-only box, which keeps the order given (M9.12's coven picker).
-   */
+  /** Shown and read but not chosen (`aria-disabled`, skipped by the arrow keys); the multi-select box lists it last, the select-only box keeps the order given. */
   disabled?: boolean;
   /** A second line under the row, also part of its name: why a disabled choice is out. */
   note?: string;
-  /**
-   * The heading its row is listed under, a deity's tradition (M12.4). Drawn by
-   * the facet box's typing form only, which sets the rows of one heading
-   * together; the native select before hydration makes it an `optgroup`.
-   */
+  /** The heading its row is listed under, a deity's tradition; drawn by the facet box's typing form only, and an `optgroup` in the native select. */
   group?: string;
 }
 
@@ -420,7 +261,7 @@ export interface ComboboxSelectProps {
   required?: boolean;
   /** The box, which takes the focus: a `div`, since nothing is typed into it. */
   inputRef?: Ref<HTMLDivElement>;
-  /** A change this box started is on its way (M12.33): the box is `aria-busy` and carries a spinner. */
+  /** A change this box started is on its way: the box is `aria-busy` and carries a spinner. */
   busy?: boolean;
   /** Shut: `aria-disabled`, out of the tab order, deaf to the pointer and the keys, drawn as a disabled input. */
   disabled?: boolean;
@@ -428,10 +269,7 @@ export interface ComboboxSelectProps {
   'aria-invalid'?: boolean;
 }
 
-/**
- * The type-ahead box: a closed set, chosen by typing to narrow the list. The
- * text is its own; only a choice is ever the value.
- */
+/** The type-ahead box: a closed set, chosen by typing to narrow the list. The text is its own; only a choice is ever the value. */
 export interface ComboboxTypeaheadProps {
   /** The box's id, which a label element's `htmlFor` names. */
   id: string;
@@ -443,13 +281,7 @@ export interface ComboboxTypeaheadProps {
   value: string;
   /** Every change of value, typing included: text naming a choice in full chooses it. */
   onChange: (value: string) => void;
-  /**
-   * The value once the person is done with the box, never mid-typing: a pick
-   * from the list, the clear (`''`), or leaving the box (the choice its text
-   * names in full, or `''`). Called whether or not the value changed; a
-   * filter, which applies a choice rather than each letter typed, compares it
-   * with the one it shows.
-   */
+  /** The value once the person is done with the box (a pick, the clear, or leaving), never mid-typing; called whether or not it changed, so a filter can compare. */
   onSettle?: (value: string) => void;
   onBlur?: () => void;
   /** Every choice, in order; typing narrows them to those whose label holds the text. */
@@ -457,11 +289,7 @@ export interface ComboboxTypeaheadProps {
   /** Shown, muted, while the box is empty, and not itself a choice. */
   placeholder?: string;
   required?: boolean;
-  /**
-   * A clear on the control's right, "Clear Tradition", offered while the box
-   * holds text or a choice, and its room kept while it does not: a filter's
-   * way back to every group.
-   */
+  /** A clear on the control's right, "Clear Tradition", offered while the box holds text or a choice, its room kept otherwise. */
   clearable?: boolean;
   /** The text box, which takes the focus. */
   inputRef?: Ref<HTMLInputElement>;
@@ -469,11 +297,7 @@ export interface ComboboxTypeaheadProps {
   'aria-invalid'?: boolean;
 }
 
-/**
- * The multi-select box: a closed set holding several values, chosen from the
- * select-only box and drawn as chips inside its control, as a list's entries
- * are.
- */
+/** The multi-select box: a closed set holding several values, chosen as in the select-only box and drawn as chips inside its control. */
 export interface ComboboxMultiSelectProps {
   /** The box's id, which a label element's `htmlFor` names. */
   id: string;
@@ -495,10 +319,7 @@ export interface ComboboxMultiSelectProps {
   required?: boolean;
   /** The box, which takes the focus: a `div`, since nothing is typed into it. */
   inputRef?: Ref<HTMLDivElement>;
-  /**
-   * Leave out the choices with a `count` of 0 (M12.4). A value already chosen
-   * keeps its chip and its cross whatever its count.
-   */
+  /** Leave out the choices with a `count` of 0; a value already chosen keeps its chip whatever its count. */
   hideZeros?: boolean;
   /** A search is running: the chips show a count placeholder, as `ComboboxEntry`'s `loading`. */
   loading?: boolean;

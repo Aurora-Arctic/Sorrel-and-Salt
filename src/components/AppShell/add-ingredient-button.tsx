@@ -16,27 +16,13 @@ import { NEW, NEW_COMPENDIUM_ENTRY, askedCoven, closedHref, openHref } from './a
 import AddIngredientMenu from './add-ingredient-menu';
 import type { AddDestination, AddIngredientButtonProps } from './types';
 
-// The bar's one global action (MB.7, M8.16). The places a new ingredient can go
-// are the compendium, for someone who curates, and each coven they may write
-// to. One place is a plain button; two or more make it a split button, the
-// main part opening the default place and the chevron a menu of them all. The
-// dialog for a coven names it in its head and cannot change it.
-//
-// A coven's dialog is opened by the page's address, as the admin pages' are
-// (the owner's call, 2026-10-18): `?new=ingredient-coven-<slug>` on any page in
-// the shell, admin pages included, opens that coven's, and `?new=ingredient` the
-// default coven's, as does a bare `?new` off the admin pages (the owner's call,
-// 2026-10-28). So a reload keeps it, Back leaves it and the address can be
-// shared. The press writes the address with the browser's own `pushState`,
-// which Next's router follows, rather than a navigation: nothing on the server
-// needs re-reading to draw the form, and picking a coven never changes the page.
-// The compendium's New Entry lives on `/admin/compendium`, so choosing it is a
-// navigation there with `?new=ingredient-compendium`.
-// claude-docs/components/modal.md, "Add Ingredient".
+// The bar's one global action: a plain button for one place to add, a split button for two or more. A
+// coven's dialog opens at `?new=ingredient-coven-<slug>` by `pushState`; the compendium's New Entry
+// is a navigation (claude-docs/components/modal.md, "Add Ingredient").
 
 const LABEL = 'Add Ingredient';
-// The solid green at the medium size (the owner's call, M8.16): the bar's one
-// action, taller than a small button and shorter than a field.
+// The solid green at the medium size: the bar's one action, taller than a small
+// button and shorter than a field.
 const CLASSES = 'btn btn--solid btn--medium app-shell__add';
 const MORE_CLASSES = `${CLASSES} app-shell__add--more`;
 
@@ -87,10 +73,9 @@ function AddIngredientBody({
 }
 
 /**
- * Every place the viewer can add to, the compendium first, which one the bar's
- * main part opens, and which coven `?new=ingredient` opens. On an admin page a
- * curator's main part opens the compendium; otherwise the coven the address
- * names, else the first writable one. A coven the viewer may only read is not a destination.
+ * Every place the viewer can add to, the compendium first: the bar's main part opens a curator's compendium
+ * on an admin page, otherwise the coven the address names, else the first writable one. A read-only coven is
+ * no destination.
  */
 function destinationsOf(
   viewer: AddIngredientButtonProps['viewer'],
@@ -146,17 +131,16 @@ const AddIngredientButton = ({
     workspaces,
     pathname,
   );
-  // The menu's groups, the side the viewer is on first: a coven's page the covens, any
-  // other page the compendium, as the bar has always led with it.
+  // The menu's groups, the side the viewer is on first: a coven's page the covens,
+  // any other page the compendium.
   const sections = sectionsFor(
     { compendium, coven: covens },
     covenSlugOf(pathname) ? 'coven' : 'compendium',
   );
   const onAdmin = pathname.startsWith('/admin');
-  // The coven whose dialog the address opens: `?new=ingredient` (or a bare
-  // `?new` off an admin page) the default coven, `?new=ingredient-coven-<slug>`
-  // that coven, and nothing for a slug the viewer cannot write to or for any
-  // other value, a spell's or an admin page's own.
+  // The coven whose dialog the address opens: `?new=ingredient` (or a bare `?new`
+  // off an admin page) the default coven, `?new=ingredient-coven-<slug>` that
+  // coven, and nothing for a slug the viewer cannot write to or any other value.
   const asked = askedCoven(params.get(NEW), onAdmin);
   const adding =
     asked === null

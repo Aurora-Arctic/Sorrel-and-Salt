@@ -130,3 +130,21 @@ the compendium page specs.
 
 The GET form, the address state and the debounce that applies a change are the
 caller's (`CompendiumList`'s filter). The panel does not read the address.
+
+## Styling notes
+
+The longer reasons behind `FacetPanel/index.scss`, kept here so each rule carries a short comment.
+
+**The halves of the Forms line.** For a viewer with covens, the public compendium's Forms line is two lines of its own inside the outer one: Forms growing beside Toxic in the left half, In My Covens growing beside its In / Not In choice in the right. Both halves grow alike, so each takes half, and they stack below the tablet width as every line does. They need no rule of their own.
+
+**The chip's end-of-row menu.** A chip at the end of a row would open a menu wider than itself past the panel's right edge, where the slide's clip cuts it. `choice-chip.tsx` measures on open and adds `facet-chip__menu--end` when that would happen; the menu then hangs from the chip's right edge and opens leftward. Which chip ends a row varies (Match, Toxic, No Refs, Source), so the CSS alone cannot say.
+
+**The tray's own scroll.** The search row sticks (IngredientSearch), so the tray opens under a row that may be at the window's top. Taller than the room below it, the tray scrolls inside itself rather than running off the window. This applies only once open: the `--open` class arrives as the slide starts, and a short box with `overflow: auto` shows a scrollbar for the whole opening. So the animation holds the clip for the slide's length and the scroll comes after it (a browser that cannot animate `overflow` shows the bar through the slide).
+
+**The modal sheet.** Below the tablet width the dialog is a full-height drawer from the right. Its foot sticks to the bottom, and the sheet scrolls with room kept above it so that a focused control is never hidden behind it (WCAG 2.4.11). It is `position: fixed`, as a modal dialog is by default, not the overlay's absolute: an absolute box translated past the right edge widens the page, which then scrolled sideways. It slides in from the right edge and back out to it while the backdrop fades as a Modal's does: in is CSS alone, from `@starting-style` as `showModal()` shows it; out is `.is-closing`, which the component sets and waits on (the sheet's `transform`) before it closes the dialog. A slide rather than a fade, since a drawer comes from its edge. `$sheet-slide` is longer than a dialog's fade because the sheet travels its own width; `shell.tsx` waits up to `LEAVE_LIMIT_MS` for it, which must stay longer.
+
+**Tips open below.** A tip in the panel opens below its label, not above it as everywhere else (`--tip-placement`, read by `useTip` and inherited by every tip in the panel). The panel's clip ends at the first row's top edge, and although a placed tip is fixed and so never clipped, one above Match would cover the panel's own header. Where there is no room below it flips; where it would run past a side of the screen it shifts back, so a chip at a row's end needs no rule of its own.
+
+**The compact scale.** Every input in the panel is a step shorter than the app's forms (`$control-height`), so the panel takes less room. It is scoped to the panel: the primitives, Field and Combobox stay as the ingredient form draws them. Only heights and the strip's side padding change; type stays at the body and small sizes, and colours and focus rings are the primitives' own. The height is a custom property so the workshop can compare scales. Chips keep their own size: they already fit inside a box this tall.
+
+**The clip.** The slide clip uses `overflow: clip` where known, not `hidden`: a hidden box can still be scrolled by the browser's focus step, which moves a dialog's first control into view as it opens and slid the content up inside a still-short panel, so its top rose and then fell back. A clipped box cannot scroll at all. `hidden` is the older browsers' fallback.

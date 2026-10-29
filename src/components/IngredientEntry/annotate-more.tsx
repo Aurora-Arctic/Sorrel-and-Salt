@@ -16,19 +16,9 @@ import {
 } from './cupboard-writes';
 import type { AnnotateMoreProps } from './types';
 
-// The Annotate dialog's Make It Ours and Remove (M8.17), set apart at the
-// form's foot in Delete's place, each offered on the member's permission. With
-// both, a More menu (the owner's call of 2026-10-19), drawn as every menu is,
-// with Remove in its destructive item style, both in the one Coven section every More draws
-// (the owner's call, 2026-10-20), and both items in the button's
-// own type (the owner's call of 2026-10-20), opening above the button at the
-// dialog's foot, where the room is (MenuButton); with one, that one as a
-// button of its own, Remove destructive, so a menu never holds a single choice. Either asks in the
-// form's own confirmation card, the card, scrim and focus handling of Delete
-// and of "You have unsaved changes", not in a second dialog over this one
-// (the owner's call, 2026-10-20). A write leaves the dialog with whatever it
-// held unsaved: Remove deletes the annotations, and Make It Ours copies the
-// saved ones, which its confirmation says while the form holds changes.
+// The Annotate dialog's Make It Ours and Remove at the form's foot: a More menu with both, a button
+// with one, each asking in the form's own confirmation card
+// (claude-docs/components/ingredient-entry.md, "Component notes").
 
 interface AnnotateMoreBodyProps extends AnnotateMoreProps {
   workspaceId: string;
@@ -40,10 +30,7 @@ interface AnnotateMoreBodyProps extends AnnotateMoreProps {
   onRefused: (message: string) => void;
   /** The form holds unsaved changes. */
   dirty: boolean;
-  /**
-   * The form's unsaved-changes confirmation is asking: the confirmation here steps
-   * aside, both being drawn in the one place, and comes back on Keep Editing.
-   */
+  /** The form's unsaved-changes confirmation is asking, so this one steps aside until Keep Editing. */
   discardAsking: boolean;
 }
 
@@ -61,9 +48,8 @@ export default function AnnotateMore({
   discardAsking,
 }: AnnotateMoreBodyProps): ReactElement | null {
   const [asking, setAsking] = useState<'remove' | 'own'>();
-  // The menu's button or the single one. The card hands the focus back to
-  // whatever held it as it opened, and a menu item that chose goes with its
-  // menu, so the focus is put on this first.
+  // The menu's button or the single one takes the focus first: the card hands it back to whatever
+  // held it, and a chosen item goes with its menu.
   const trigger = useRef<HTMLButtonElement>(null);
   const ask = (what: 'remove' | 'own') => {
     trigger.current?.focus();

@@ -10,15 +10,11 @@ import { workspaceRoleLabel, workspaceRoleRank } from './roles';
 import type { UserCoven, UserDetailProps } from './types';
 import './index.scss';
 
-// The body of the modal that opens over `/admin/users` on a user (M9.19): the
-// facts the users table holds about them, read-only, then the covens they
-// belong to and, where impersonation is registered, the action to act as them
-// (claude-docs/components/user-detail.md). The row's Grant or Revoke and
-// Approve or Revoke sit beside the facts they change (the owner's call), each
-// asking over this modal rather than opening another. Laid out as the ingredient modal
-// is, sections parted by hairlines under a small heading, rather than as a
-// table: a table's labels repeat on every card at a modal's width. Render-only:
-// the page reads the memberships through the coven service.
+// The body of the modal that opens over `/admin/users` on a user: the facts the users table holds,
+// read-only, the covens they belong to and, where registered, the action to act as them
+// (claude-docs/components/user-detail.md). The row's Grant or Revoke and Approve or Revoke sit
+// beside the facts they change, each asking over this modal. Laid out as the ingredient modal is,
+// in hairline-parted sections, since a table's labels repeat on every card; render-only.
 
 /**
  * Owners, then members, then viewers, each by coven name. Sorted here because
@@ -36,9 +32,8 @@ const Day = ({ at }: { at: Date }): ReactElement => (
 );
 
 /**
- * A yes-or-no as its word, then the table's mark after it, a green check or a
- * red cross (the owner's call): the table's column heading says what the mark
- * means, and here nothing else would.
+ * A yes-or-no as its word, then the table's mark after it, a green check or a red cross: the
+ * table's column heading says what the mark means, and here nothing else would.
  */
 const Answer = ({ value, children }: { value: boolean; children: ReactNode }): ReactElement => (
   <span className="user-detail__answer">
@@ -102,8 +97,7 @@ const UserDetail = ({
             <Answer value={user.canCreateWorkspace}>
               {user.canCreateWorkspace ? 'Yes' : 'No'}
             </Answer>
-            {/* None for an admin or a curator, whom the users CHECK holds to the
-                flag (MB.177, M11.20). */}
+            {/* None for an admin or a curator, whom the users CHECK holds to the flag. */}
             {user.role === 'user' && (
               <CreationControl
                 key={user.canCreateWorkspace ? 'revoke' : 'approve'}
@@ -158,7 +152,7 @@ const UserDetail = ({
         </ul>
       )}
     </section>
-    {/* Not on an admin: the endpoint refuses one (MB.53). */}
+    {/* Not on an admin: the endpoint refuses one. */}
     {canImpersonate && user.role !== 'admin' && <ImpersonateAction user={user} />}
   </div>
 );

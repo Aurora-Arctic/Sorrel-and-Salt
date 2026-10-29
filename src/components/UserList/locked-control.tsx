@@ -5,22 +5,13 @@ import { useTip } from '../InfoTip/use-tip';
 import type { LockedControlProps } from './types';
 import './controls.scss';
 
-// MB.59's locked Revoke, shared since MB.63 locks more controls the same way
+// The locked Revoke, shared by every control that locks the same way
 // (claude-docs/components/user-list.md).
 
 /**
- * A control that cannot be used, and says why: the primary admin's Change Role,
- * every Change Role while admin changes are paused to an admin the pause
- * binds, and the pause switch itself to any admin but the primary one (MB.63).
- * `aria-disabled` rather than `disabled`, so it keeps its place in the tab
- * order and a click still lands, which says why rather than doing nothing. The reason is the button's description, in a tip
- * that opens on hover, focus and a tap, stays open while the pointer is on it
- * and closes on Escape (WCAG 1.4.13), through InfoTip's `useTip`. Each
- * attempt also mounts the tip afresh as an alert, so a screen reader hears the
- * reason again. The tip is placed against the viewport rather than its cell:
- * the table's frame scrolls, so it would clip whatever reaches past it, and the
- * reason is taller than the heading row above the top row; `useTip` places it
- * fixed, and it follows the button through a scroll.
+ * A control that cannot be used, and says why. `aria-disabled` keeps it in the tab order, and
+ * its reason is a tip placed against the viewport (claude-docs/components/user-list.md,
+ * "Notes from code comments: locked control").
  */
 const LockedControl = ({
   label,

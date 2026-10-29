@@ -7,16 +7,9 @@ import InfoTip from '../InfoTip';
 import type { RadioGroupFieldProps } from './types';
 
 /**
- * One choice from a few, each with its own line of explanation: a native
- * radio group in a `.fieldset`, its legend the group's name. Native, so the
- * arrow keys move the choice and a screen reader hears "2 of 3". The
- * explanation is the radio's description, read after its name. Controlled by
- * `value`; the caller holds the state. A `note` is the group's own line, read
- * with it, for what holds for every choice. `layout="strip"` draws the options
- * as one bar of icon-only segments with the chosen name printed beneath, still
- * a native radio underneath. `layout="segmented"` draws them as the same kind of
- * bar with each choice's name in text and, if it has one, its count, as the
- * compendium filter's Match and Toxic (claude-docs/components/field.md).
+ * One choice from a few, each with its own line of explanation: a native radio group in a `.fieldset`,
+ * so the arrow keys move the choice. Controlled by `value`. `note` is the group's own line; `layout`
+ * `strip` or `segmented` draws a bar (claude-docs/components/field.md).
  */
 export function RadioGroupField<T extends string>({
   legend,
@@ -63,7 +56,7 @@ export function RadioGroupField<T extends string>({
           <div className="radio-strip">
             {/* Each segment's name in a tip above it, on hover and on its
                 radio's focus, for a sighted person who cannot tell the icons
-                apart before choosing (the owner's call, 2026-10-16). */}
+                apart before choosing. */}
             {options.map((option) => (
               <IconTip key={option.value} tip={option.label} placement="above">
                 <label className="radio radio--segment" {...pressFeedback}>

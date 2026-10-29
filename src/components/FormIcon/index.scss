@@ -1,12 +1,6 @@
-// The mark takes the text's size and colour: one and a quarter em square, so
-// a caller sets its size by the font size of the line it sits in and never by
-// a class per surface, and sunk a quarter em below the baseline so its centre
-// sits level with lowercase text rather than standing on the line. A quarter
-// over the text's own size because the icons are a thin line drawing, which
-// at one em read too small beside a name (the owner's call, 2026-10-16); at
-// body size it comes to `$glyph-size-large`. The nav sizes its own copy of
-// the spoon, `.section-nav__icon`. `flex: none` keeps a flex row from
-// squeezing it beside a long name.
+// The mark takes the text's size and colour: 1.25em square (the thin line drawing read too small at
+// 1em; `$glyph-size-large` at body size), sunk a quarter em so its centre sits level with lowercase text.
+// The nav sizes its own copy, `.section-nav__icon`; `flex: none` stops a flex row squeezing it.
 .form-icon {
   flex: none;
   width: 1.25em;

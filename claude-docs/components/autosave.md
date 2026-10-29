@@ -212,3 +212,9 @@ against one revision, that a non-member's stale save is `Forbidden` and never
 The workshop's States story (`Feedback / Save Status`) renders every state,
 and the workshop's every-story check (`npm run workshop:check`) scans it with
 axe.
+
+## Source notes
+
+Comments in the source that point here; each is the detail behind a one-line comment.
+
+- `index.tsx`: Where an autosaving form says how its saves are going: inline beside the form's primary action, never a toast, because it describes this form and stays until the next save. The conflict notice alone may go elsewhere (`conflictInto`): under a dialog's title, where a long form's footer is out of view, since it asks for a decision rather than reporting. The visible line updates on every change; screen readers hear only the first save of a burst, from a live region of its own, since a save every few seconds read out each time would drown what the person is typing. claude-docs/components/autosave.md.

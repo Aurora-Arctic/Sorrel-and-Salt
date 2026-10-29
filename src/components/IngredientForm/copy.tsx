@@ -20,14 +20,9 @@ import type {
   VariantFormValues,
 } from './types';
 
-// A variant's Copy From Ingredient (MB.115, the owner's call): a small quiet
-// button at the right end of a field's label row that brings the
-// ingredient's own value for that field into the variant's, so a form that
-// shares most of what its ingredient says need not have it typed twice. It
-// adds and never takes away: a list gains the ingredient's entries it lacks,
-// after its own, and a text gains the ingredient's after a blank line. Shut
-// while the ingredient's field, as the form holds it now, is empty
-// (claude-docs/components/ingredient-form.md, "Copying from the ingredient").
+// A variant's Copy From Ingredient: a quiet button at the right end of a field's label row that
+// adds the ingredient's value to the variant's, never taking away (claude-docs/components/
+// ingredient-form.md, "Copying from the ingredient").
 
 /** The text `own` takes from `theirs`: theirs into an empty box, else after a blank line, once. */
 function copiedText(own: string, theirs: string): string {
@@ -57,11 +52,9 @@ const substituteKey = ({ link, value }: SubstituteListEntry): string =>
   link ? `link:${link.id}` : `name:${fold(value)}`;
 
 /**
- * The ingredient's substitute as this variant's, "the same form": a link
- * names the linked ingredient's form that folds alike to `form`, Oil for
- * Oil, and is undefined where it comes in none such, since a variant's link
- * names a form, never the whole ingredient (MB.115, the owner's call); a name
- * stays a name.
+ * The ingredient's substitute as this variant's, "the same form": a link names the linked
+ * ingredient's form that folds alike to `form`, undefined where it has none such, since a
+ * variant's link names a form, never the whole ingredient; a name stays a name.
  */
 function sameForm(entry: SubstituteListEntry, form: string): SubstituteListEntry | undefined {
   if (!entry.link) return { value: entry.value };
@@ -146,11 +139,9 @@ function said(field: CopiedField, added: number, skipped = 0, form = ''): string
 }
 
 /**
- * The button: shut while the ingredient's `field` is empty, and on a press
- * the copy, marked dirty, revalidated once a save has been tried, and said
- * through `announce`, the list's own live region, or else one of its own.
- * The focus stays on it. A variant's substitutes tell `onSkip` what the copy
- * skipped, for the notice beneath the list.
+ * The button: shut while the ingredient's `field` is empty; on a press, the copy, marked dirty,
+ * revalidated once a save has been tried, and said through `announce` or a live region of its own.
+ * The focus stays on it. A variant's substitutes tell `onSkip` what the copy skipped.
  */
 export function CopyFromIngredient({
   at,
@@ -209,11 +200,9 @@ export function CopyFromIngredient({
 }
 
 /**
- * The notice of what a variant's substitute copy skipped, and its own state:
- * `onSkip` for the variant's Copy From Ingredient, `copyButton` for its
- * `buttonRef`, and the props for the `SkippedNotice` beneath the list.
- * Once the list changes other than by its Copy Anyway, the notice goes: what
- * it named may be listed now, or removed on purpose.
+ * The state of the notice of what a variant's substitute copy skipped: `onSkip` for the Copy From
+ * Ingredient, `copyButton` for its `buttonRef`, and the props for `SkippedNotice`. The notice goes
+ * once the list changes other than by its Copy Anyway: what it named may be listed now.
  */
 export function useSkippedCopy(listed: readonly SubstituteListEntry[]) {
   const [skipped, setSkipped] = useState<SkippedCopy | null>(null);
@@ -230,13 +219,9 @@ export function useSkippedCopy(listed: readonly SubstituteListEntry[]) {
 }
 
 /**
- * Beneath a variant's substitutes, after a copy that skipped some (MB.115,
- * the owner's call): which of the ingredient's substitutes were left out for
- * having no form like the variant's, with Copy Anyway, which adds them as
- * names only, since a variant's link must name a form, and a × to dismiss
- * it. Either takes the focus back to Copy From Ingredient, since the pressed
- * button goes with the notice. The region is always in the page, as a live
- * region must be to be heard, as the duplicate warning's is.
+ * Beneath a variant's substitutes, after a copy that skipped some: those left out for having no
+ * form like the variant's, with Copy Anyway (adds them as names only) and a × to dismiss it. Either
+ * returns the focus to Copy From Ingredient. The region is always in the page, to be heard.
  */
 export function SkippedNotice({
   at,

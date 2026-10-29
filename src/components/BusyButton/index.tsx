@@ -2,14 +2,9 @@ import type { ReactElement } from 'react';
 import Spinner from '../Spinner';
 import type { BusyButtonProps } from './types';
 
-// A button whose action can be in flight: `aria-busy`, the `.spinner` ahead
-// of the label, and the label saying what is happening ("Saving Name"), the
-// owner's call for every Save (M5.6; claude-docs/styling.md, "Buttons").
-// Written once because the same three pieces had been copied into
-// twenty-three buttons, and one that forgot `aria-busy` looked busy without
-// saying so. It leaves `disabled` to the caller: most turn it on while busy,
-// but one whose focus must stay (Stop Impersonating) uses `aria-disabled` instead
-// (claude-docs/components/busy-button.md).
+// A button whose action can be in flight: `aria-busy`, the `.spinner` ahead of the label, and a label
+// saying what is happening ("Saving Name"), for every Save (claude-docs/styling.md, "Buttons"). It
+// leaves `disabled` to the caller (claude-docs/components/busy-button.md).
 const BusyButton = ({
   busy,
   busyLabel,

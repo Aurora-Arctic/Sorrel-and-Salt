@@ -68,3 +68,7 @@ replaces its plain text. The builder's controls are tested with the builder
 ([`spell-builder.md`](spell-builder.md), "Steps").
 
 **Spacing under the name, and the narrow list (owner, 2026-10-29).** The summary line and, open, the fields stand `space(3)` below the name (it was `space(2)`, the name's own padding). At the list's narrow width a closed or open card keeps its six-column template, the name column `minmax(6rem, 1fr)`. The narrow rule that moves the amount beneath the name now applies only to a card with no open state: it matched closed and open cards too, and being the more specific it replaced their template with four columns, so the marks and pencil had no area and overlapped, and the name, given the leftover width, wrapped a letter a line.
+
+## Notes from code comments: the card
+
+The card: a step on the ingredient form's variant card, the muted-ink edge, the surface radius and ground, the same padding. On one row it holds the handle, the step's number, the form's icon and name, the amount, and Remove, level along the bottoms of their fields so that the name sits on the line of the boxes and not of their labels. What the step has beyond that stands beneath, in the name's column and at its width: the marks, then the instruction, then the safety note. The marks are words as well as colour, so nothing here carries a state alone.

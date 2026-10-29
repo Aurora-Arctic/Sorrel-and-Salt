@@ -1,15 +1,11 @@
 @use '../../scss/variables' as *;
 @use '../../scss/mixins' as *;
 
-// The formal name over a heading as an eyebrow, its tip beside it; the term
-// ("Botanical Name") is read, not seen (the owner's call). Drawn on the entry's
-// page and in the details modal's head (formal-name.tsx), so both load it from here.
+// The formal name as an eyebrow over a heading, its tip beside it; the term ("Botanical Name") is
+// read, not seen. Both the entry page and the details modal's head load it from here.
 .ingredient-entry__formal {
-  // The side its tip opens, read by `useTip` as it opens (`--tip-placement`):
-  // below the mark rather than above it, where the shell's sticky bar would
-  // cover it at the top of the page; it covers the heading while open. The
-  // hook places it, so nothing here moves the bubble itself: a rule that did
-  // would shift it off the hook's 4px gap.
+  // The side the tip opens (`--tip-placement`): below the mark, where the shell's sticky bar cannot
+  // cover it. `useTip` places the bubble, so no rule here moves it off the hook's 4px gap.
   --tip-placement: bottom-start;
 
   @include stack(2);
@@ -29,9 +25,8 @@
     max-width: $measure;
   }
 
-  // Beside the mark where there is room, so it covers nothing, level with its
-  // middle. A phone keeps it below, where 18rem to the right of the mark would
-  // run off the screen.
+  // Beside the mark where there is room; a phone keeps it below, as 18rem to the right would run
+  // off the screen.
   @media (min-width: calc(#{$shell-tablet-width} + 0.01rem)) {
     --tip-placement: right;
   }

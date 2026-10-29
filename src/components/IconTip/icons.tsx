@@ -1,9 +1,6 @@
 import type { ReactElement } from 'react';
 
-// The pencil every Edit control shows (MB.115): drawn at the icon size in
-// the control's own ink, and hidden from assistive technology, since the
-// control around it is what names it. The ingredient form's rows and the
-// admin lists' rows share it.
+// The pencil every Edit control shows, in the control's own ink and hidden from assistive technology, as the control around it names it.
 
 /** A pencil: open this to change it. */
 export function PencilIcon(): ReactElement {
@@ -37,7 +34,7 @@ export function PlusIcon(): ReactElement {
   );
 }
 
-/** A tick: this is already held. A compendium card's In Every Cupboard (M9.12). */
+/** A tick: this is already held, as a compendium card's In Every Cupboard shows. */
 export function CheckIcon(): ReactElement {
   return (
     <svg viewBox="0 0 16 16" aria-hidden="true" focusable="false">
@@ -53,15 +50,11 @@ export function CheckIcon(): ReactElement {
   );
 }
 
-/**
- * The mystic eye: look at this without leaving the list (M12.5's Quick
- * Look). An almond eye whose iris is a tilted waxing crescent, with a small
- * four-point star in the crescent's open side (the owner's pick, 2026-10-20).
- */
+/** The mystic eye: look at this without leaving the list (Quick Look); an almond eye whose iris is a tilted waxing crescent with a four-point star. */
 export function MysticEyeIcon(): ReactElement {
   return (
     <svg viewBox="0 0 16 16" aria-hidden="true" focusable="false">
-      {/* Stroke 1, not the set's 1.5, on purpose: the owner asked for a thinner outline. */}
+      {/* Stroke 1, not the set's 1.5, on purpose: a thinner outline. */}
       <path
         d="M1 8C2.8 5 5.2 3.5 8 3.5S13.2 5 15 8C13.2 11 10.8 12.5 8 12.5S2.8 11 1 8z"
         fill="none"
@@ -100,8 +93,7 @@ export function LinkIcon(): ReactElement {
   );
 }
 
-// Undo and redo, mirror images on the same 16-unit box. Sized by attribute,
-// since a bare svg in a `.btn` has no size of its own.
+// Undo and redo, mirror images on the same 16-unit box, sized by attribute since a bare svg in a `.btn` has no size of its own.
 
 /** An arrow curving back: undo. */
 export function UndoIcon(): ReactElement {
@@ -135,7 +127,7 @@ export function RedoIcon(): ReactElement {
   );
 }
 
-/** Two overlapping sheets: copy what another holds into this. Restore Original and Copy From Ingredient wear it and the undo arrow (the owner's call, 2026-10-19). */
+/** Two overlapping sheets: copy what another holds into this; Restore Original and Copy From Ingredient wear it. */
 export function CopyIcon(): ReactElement {
   return (
     <svg viewBox="0 0 16 16" aria-hidden="true" focusable="false">
@@ -152,12 +144,8 @@ export function CopyIcon(): ReactElement {
 }
 
 /**
- * An open book with lines on its left page and a pencil over its right:
- * Annotate (M8.17), which writes the coven's notes over a compendium entry
- * rather than changing it, so not Edit's bare pencil. The owner's choice
- * (2026-10-19), drawn at stroke width 1.25 rather than the set's usual 1.5,
- * also the owner's call, so the book's lines sit apart at 16px; the pencil
- * is filled, with no stroke. Every Annotate control draws this one function.
+ * An open book with lines on its left page and a pencil over its right: Annotate, which writes the coven's notes over a compendium entry.
+ * Stroke 1.25, not the set's 1.5, so the lines sit apart at 16px; the pencil is filled.
  */
 export function AnnotateIcon(): ReactElement {
   return (
@@ -181,10 +169,7 @@ export function AnnotateIcon(): ReactElement {
   );
 }
 
-/**
- * Three dots stacked, ⋮: more choices, in a menu. A list card's More (M8.17,
- * the owner's call, 2026-10-20); a More drawn with words keeps its chevron.
- */
+/** Three dots stacked, ⋮: more choices, in a menu; a More drawn with words keeps its chevron. */
 export function DotsIcon(): ReactElement {
   return (
     <svg viewBox="0 0 16 16" aria-hidden="true" focusable="false">
@@ -195,7 +180,7 @@ export function DotsIcon(): ReactElement {
   );
 }
 
-/** A bin: delete or remove this. A list card's lone Delete or Remove (M8.17). */
+/** A bin: delete or remove this, a list card's lone Delete or Remove. */
 export function BinIcon(): ReactElement {
   return (
     <svg viewBox="0 0 16 16" aria-hidden="true" focusable="false">
@@ -211,12 +196,7 @@ export function BinIcon(): ReactElement {
   );
 }
 
-/**
- * A jar with a cloth tied over its mouth, the cloth's hem wavy: the coven's
- * stock of an ingredient. Edit Stock (M9.9) wears it rather than the pencil,
- * which Edit already shows beside it in a card's foot, so stock has a mark of
- * its own there (the owner's pick, 2026-10-20).
- */
+/** A jar with a cloth tied over its mouth, the cloth's hem wavy: the coven's stock of an ingredient, worn by Edit Stock in place of the pencil. */
 export function StockIcon(): ReactElement {
   return (
     <svg className="stock-icon" viewBox="0 0 16 16" aria-hidden="true" focusable="false">
@@ -224,7 +204,7 @@ export function StockIcon(): ReactElement {
         d="M4.5 6V5.125Q4.5 4.125 5.5 4.125h5Q11.5 4.125 11.5 5.125V6M4.25 6h7.5M4.5 6L3.5 8.5M11.5 6l1 2.5M3.5 8.5q1.125.75 2.25 0t2.25 0 2.25 0 2.25 0M4 9.25v3a1.75 1.75 0 0 0 1.75 1.75h4.5A1.75 1.75 0 0 0 12 12.25v-3"
         fill="none"
         stroke="currentColor"
-        strokeWidth="1.2" // the owner's calls, 2026-10-21: thinner than the pencil's 1.5, as the jar is drawn larger
+        strokeWidth="1.2" // thinner than the pencil's 1.5, as the jar is drawn larger
         strokeLinecap="round"
         strokeLinejoin="round"
       />

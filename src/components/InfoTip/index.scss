@@ -16,16 +16,9 @@
   }
 }
 
-// The tip-bubble mixin's: the muted ink tinted into the surface, so it reads
-// as a note beside the label rather than as another field, faded in and out.
-// Its ground is an opaque mix, so the control beneath it does not show through.
-//
-// Placed by `useTip` when it opens, above the ⓘ where there is room and kept
-// on the screen: the bubble is as wide as its text up to `$tip-width` (18rem),
-// and shifted along the line until it is inside the window. Above, not below,
-// by default: the tip opens while its field has focus, and below it would
-// cover what is typed. A region may ask for another side with
-// `--tip-placement`.
+// The tip-bubble mixin's muted ink tinted into the surface, faded in and out, on an opaque ground.
+// Placed by `useTip`: above the ⓘ by default so it does not cover typing, up to `$tip-width` wide;
+// `--tip-placement` picks another side (claude-docs/components/info-tip.md, "Placement").
 .info-tip__bubble {
   @include tip-above;
 }

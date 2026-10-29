@@ -173,3 +173,11 @@ plus 101), and its live-reload socket the one after (`WORKSHOP_HMR_PORT`,
 8103), not the review workshop's 61002; `npm run e2e` leaves them out.
 
 Not verified: a real screen reader, and any browser but Chromium.
+
+## Source notes
+
+Comments in the source that point here; each is the detail behind a one-line comment.
+
+- `index.scss`: Each fades in at the short step once placed, and out by a keyframe of its own, as MenuButton's menu does; under reduced motion neither fades. The fade in waits for `is-placed`: started at the mount, it would run while the piece is still hidden, and be spent before it shows on a page slow to place it. The fade out is a second name, not the first reversed: a finished animation whose name stays is updated in place, so reversing it jumps to its start instead of running again (claude-docs/components/click-feedback.md, "Fades").
+- `position.ts`: The box the callout keeps inside: the nearest ancestor marked `data-tip-boundary`, as a tip's is, or the `<dialog>` the control sits in, else the screen. A dialog, since a callout running past its edge reads as loose from it; the callout is fixed, so the dialog clips nothing of it and the box is a measure only. Asked of the node rather than `instanceof Element`: a story Storybook draws into an iframe runs its script in the page around it, whose `Element` the frame's nodes are not.
+- `position.ts`: In a box narrower than the callout at its widest (a dialog on a phone), the callout narrows to the larger of the rooms either alignment leaves it, so it still stands start or end under the control rather than pinned across the box. A box that holds it at its widest leaves it as it is: there, room for neither alignment pins it. Set on the element, as Floating UI's `size` does, so the rects can be measured again at the new width.

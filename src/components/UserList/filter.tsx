@@ -8,15 +8,8 @@ import { USERS_PATH, userListHref } from './href';
 import { ROLES, ROLE_LABELS } from './roles';
 import type { UserListFilterProps, UserListFilterValue } from './types';
 
-// The user list's filter (MB.52, MB.115), in the shared `FilterForm`. Only
-// the search text is held here, until the magnifier or Enter sends it. The
-// Role dropdown, a select-only box once hydrated (`FilterSelectField`), and
-// the Needs Approval switch start from the filter shown and apply the moment
-// they change, softly and from the first page, carrying the search text
-// along, so there is no Filter button to press. Before hydration the form
-// submits natively: the switch, a native checkbox, as `awaiting=`, which the
-// page reads the same as the bare flag, and the server's native role select,
-// whose "All Roles" is `role=`, which the page reads as no role.
+// The user list's filter in `FilterForm`: search text is sent by the magnifier or Enter; Role and Needs Approval apply on change
+// (claude-docs/components/user-list.md, "Notes from code comments: the filter").
 const UserListFilter = ({ query, awaitingApproval, role }: UserListFilterProps): ReactElement => {
   const [draftQuery, setDraftQuery] = useState(query);
   const apply = useApplyFilter();

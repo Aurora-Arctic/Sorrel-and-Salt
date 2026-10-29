@@ -17,14 +17,11 @@ import { workspaceRoleLabel } from '../UserDetail/roles';
 import { LeaveWorkspaceDocument } from './documents';
 import type { OwnerExitProps, WayOut } from './types';
 
-// The only owner's Leave (M6.16). The last-owner guard (M6.8) would refuse
-// them, so the button explains instead of refusing: it opens a dialog asking
-// what happens to the coven, handing it to someone or deleting it, the way
-// Change Role asks which role (the owner's call at the design review). The
-// button stays enabled so nobody concludes they are stuck. Promote-then-leave
-// is two requests in this order on purpose: if the leave fails after the
-// promotion, the coven has two owners, never none. The service is still the
-// guard (claude-docs/components/leave-workspace-button.md).
+// The only owner's Leave. The last-owner guard would refuse them, so the button explains
+// instead: it opens a dialog asking what happens to the coven, handing it to someone or
+// deleting it, the way Change Role asks which role. Promote-then-leave is two requests in
+// this order on purpose: if the leave fails after the promotion, the coven has two owners,
+// never none. The service is still the guard (claude-docs/components/leave-workspace-button.md).
 
 const PromoteSuccessorDocument = graphql(`
   mutation PromoteSuccessor($workspaceId: ID!, $userId: ID!, $role: WorkspaceRole!) {
@@ -47,9 +44,8 @@ const OwnerExit = ({ workspaceId, name, successors }: OwnerExitProps): ReactElem
 type Report = (message: string | undefined) => void;
 
 /**
- * The dialog's body, which says Promote and Leave's refusal at its top, a
- * plain notice inside the dialog rather than a callout over it (M12.31's rule
- * 6); Delete says its own on a line above the buttons. Its own component, so the
+ * The dialog's body. Promote and Leave's refusal is a plain notice at its top, not a callout
+ * over the dialog; Delete says its own on a line above the buttons. Its own component, so the
  * refusal goes when the dialog closes.
  */
 const ExitDialog = ({
@@ -112,8 +108,8 @@ const Options = ({
   const { navigate, refresh } = usePendingNavigation();
   const id = useId();
   const ownerField = fieldDescription({ id: `${id}-owner` });
-  // One other member is offered by name, with nothing to search (the owner's
-  // call); more than one are searched by name.
+  // One other member is offered by name, with nothing to search; more than one are searched
+  // by name.
   const only = successors.length === 1 ? successors[0] : undefined;
   const [way, setWay] = useState<WayOut>('hand');
   const [picked, setPicked] = useState(only?.userId ?? '');
@@ -208,7 +204,7 @@ const Options = ({
             Promote and Leave
           </BusyButton>
         ) : (
-          // The confirm for this choice: it asks M6.14's question over the
+          // The confirm for this choice: it asks the delete-coven question over the
           // dialog, and nothing is deleted from the dialog itself.
           <DeleteWorkspaceButton workspaceId={workspaceId} name={name} inModal onlyOwner />
         )}

@@ -4,12 +4,8 @@ import { chipColors } from '../../lib/chip-colors';
 import type { GroupChipProps } from './types';
 
 /**
- * A group's name in its own chip, as the category picker shows it, where the
- * group carries both colours; plain text otherwise, a tradition having none.
- * A form group's name leads with its icon, the generic where it has none:
- * `icon` is `undefined` for a group of another kind, which draws no icon.
- * A table's cell, the group list's and the value list's
- * (claude-docs/components/data-table.md).
+ * A group's name in a chip where it has both colours, plain text otherwise; a form group's name leads with its icon
+ * (claude-docs/components/data-table.md, "Notes from code comments: the group chip").
  */
 const GroupChip = ({ name, colors, icon }: GroupChipProps): ReactElement => {
   const label =

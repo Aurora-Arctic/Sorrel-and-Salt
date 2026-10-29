@@ -236,3 +236,29 @@ and the modal second, the tip kept out of the accessibility tree, and
 `EditLink`'s role and name. Each list's test finds its Edit links by their
 names, and the ingredient form's tests its buttons, so a renamed control
 fails there.
+
+## Component notes
+
+- The tip's text is drawn for a sighted user and never read aloud, since the control's own name says it.
+- `placement` is `side` (the default, left of the control), `below` (its right edge on the control's) or `above` (centred over it). `side` suits every Edit, which stands at the end of its line, so to its left is room the line already has. `above` suits a segment of the radio strip, where a tip to the side would cover the next segment and one below would cover the chosen name printed under the bar. `below` suits a mark at a row's right end with rows beneath it, such as the account menu's count, where a tip to the left would cover the row's words and one centred under it would run past the edge a menu panel clips at.
+- `opensOnPress` opens the tip on a press, for a status mark whose button does nothing else. It opens rather than toggles, and is not for a control with its own press.
+- `EditLink` is a list row's icon link into a dialog: a press opens the row's modal at once under the given heading, over a skeleton while the form loads, and the link still works as an address. It is named by its verb and the row's name in hidden text.
+- Edit in Compendium, on a compendium entry for an admin or a curator, is named and tipped "Edit in Compendium" so it cannot be taken for a coven's own choice.
+- Annotate in a coven's list wears `AnnotateIcon`, an open book with a pencil, not Edit's pencil, since it writes the coven's notes over a compendium entry. Its stroke is 1.25 rather than the set's 1.5 so the lines sit apart at 16px; the pencil is filled.
+- `QuickLookLink` is the eye beside an entry's name, in its own class as it sits in the name's line. `QuickLookButton` serves where the details open in the page rather than at an address, such as over the Add Ingredient form's held duplicates.
+- `MoreButton` is the three dots: a menu of further choices, always in labelled Compendium and Coven sections. A lone Delete or Remove is the bin instead. A More drawn with words keeps its chevron.
+- The icon controls that are buttons rather than links are shared by the coven cards' foot, the entry page and the Quick Look window so the places cannot differ.
+- The tip wrapper is also the tip's anchor, kept to ask whether a menu is open under it. Hover is read on the wrapper rather than the control, so any control can be the child without its props being taken over; focus bubbles there too. A focus inside the control's own menu also bubbles there and is ignored, since the open menu says what the control does.
+- A closing tip is no longer open but still in the page for the fade, and a timer clears it.
+- Icons: the mystic eye (Quick Look) is an almond eye whose iris is a tilted waxing crescent with a four-point star. The copy icon is two overlapping sheets, for Restore Original and Copy From Ingredient. The undo and redo icons are mirror images on the same 16-unit box, sized by attribute since a bare svg in a `.btn` has no size of its own. The jar icon is a jar with a cloth tied over its mouth, the cloth's hem wavy, worn by Edit Stock in place of the pencil; its stroke is 1.2 as the jar is drawn larger.
+
+## Style notes
+
+- The wrapper is middle-aligned, so a mark taller than its row's text sits level with it rather than on its baseline.
+- `side` is the default: to the left of the control and level with it. In a table row the tip is centred above the control, because level with it the tip covered the row's own text. A phone card keeps the left. The placement is a flat property on the wrapper rather than JavaScript's guess, since only the container query knows which the table is showing.
+- The tip is fixed, so a table frame's sideways scroll clips nothing. It fades in from its starting style over `$icon-tip-fade` rather than every other tip's `$tip-fade`. It takes no pointer: the tip is heard on its control alone and closes the moment the pointer leaves, so a bubble that caught the pointer would only cover what is beneath it.
+- The `above` and `below` placements are described under "Component notes".
+- A coven card foot's Edit and Annotate icons use `$text-primary` (chalk on the dark page, the body text on the light one, where pure white would vanish on a card) in place of the accent green, which its Edit Stock pencil keeps. The hover and focus tint stays the edit pencil's.
+- The three dots use `$card-more-ink` wherever they stand (a card's foot, the entry page, the Quick Look window), at rest and pressed alike, where the pencil and bin beside them keep their green and wax. The compendium card's Edit in Compendium wears the same ink (`icon-tip__edit--ink`); its hover and focus tint stays the edit pencil's green and the focus ring is the link's own.
+- The Quick Look eye is `$glyph-size-large` * 4 / 3 in the same 2rem box as the pencil, so the foot's height and the eye's line with the pencil stay put. `math.div` is used since Sass has dropped `/` for division. In the card foot it takes the dots' ink, set after the green so it wins.
+- The action icons of a card's foot, an entry page's head and the Quick Look window's head are 13% larger than the large size (`$action-icon-size`): the pencils (Edit, Annotate, Edit Stock), the plus and its held check, the bin, the three dots and the eye. The eye's mark is 11% past the pencil's there, and the jar of Edit Stock is 11% past the others, each in the same box. The same classes in a list row, a table or a form stay at `$icon-size-large`. Each place that works a gap out from the box (the stock lines' badge inset, the entry's title room, the window's controls row) reads `$action-icon-size` too.

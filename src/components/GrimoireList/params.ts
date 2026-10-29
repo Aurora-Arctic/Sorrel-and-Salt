@@ -8,14 +8,9 @@ import {
   textListParam,
 } from '../../lib/search-param-table';
 
-// The grimoire's search parameters (M10.11, M13.22): the compendium's search text and its
-// category filter with the match mode, taken as they are, so the filter row and the
-// pager write the grimoire's address the way they write every other list's
-// (claude-docs/components/ingredient-search.md, "The parameter table"). No status:
-// Spells and Drafts are two tabs, two addresses, so the address never carries one.
-// The four facets beside them: Moon Phase and Day of Week are free text (a spell's own
-// words, so an uncurated value stays valid), Visibility is one of a fixed pair, and Coven Member
-// is the ids of the members who made the spells, each checked as an id and a repeat dropped.
+// The grimoire's search parameters: the compendium's text and category filter with the match mode (claude-docs/components/ingredient-search.md,
+// "The parameter table"), no status, plus Moon Phase and Day of Week (free text), Visibility (a fixed
+// pair) and Coven Member (makers' ids, each checked, repeats dropped).
 const { query, categories, categoryMode } = COMPENDIUM_PARAMS.entries;
 
 /** The two visibilities a spell has, as the address spells them. */
@@ -27,9 +22,8 @@ export const GRIMOIRE_PARAMS = defineSearchParams({
   categoryMode,
   moonPhases: textListParam('moonPhase', 'moonPhases'),
   daysOfWeek: textListParam('dayOfWeek', 'daysOfWeek'),
-  // One value, not a list (the owner, 2026-10-28): a three-way toggle whose Any is the address
-  // with no `visibility` in it. The query still reads a list, so the one pick travels as a
-  // one-item list.
+  // One value, not a list: a three-way toggle whose Any is the address with no `visibility`
+  // in it. The query still reads a list, so the one pick travels as a one-item list.
   visibility: {
     ...choiceParam('visibility', VISIBILITIES, 'visibilities'),
     toVariable: (value: (typeof VISIBILITIES)[number] | '') => (value ? [value] : undefined),

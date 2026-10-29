@@ -148,3 +148,10 @@ closing on Escape with focus back on the button, on a press outside and not on
 one inside, and after the address changes; and `data-keyboard` set from a stubbed
 `visualViewport`. Which tabs show at which width, More naming the current page
 when it is hidden, and the bar's placement need layout, which happy-dom has none of. `tests/e2e/shell.spec.ts` proves them in Chromium, among them that across the tablet band neither the coven row nor the admin row puts a tab behind More while it has room for it.
+
+## Source notes
+
+Comments in the source that point here; each is the detail behind a one-line comment.
+
+- `index.scss`: Wider than the phone, before the script has fitted the row (no `data-fit`), the server's phone count of four is the wrong guess, so the row shows every tab and hides More; the tabs that do not fit wrap onto further lines. The list is taken out of the flow to fill the nav, whose height the context row gives it, so those lines add no height and the list's clipping keeps them out of sight. Waiting for the script instead flashes a folded row on every load. The phone never gets `data-fit`, so it is excluded by width, at the script's own `TABLET_BAND`. The measuring render (`data-measuring`) is the exception: it draws More so that its width is read, and does not wrap, so the row is measured as it will be fitted.
+- `index.scss`: Wider than the phone: as many leading tabs as fit the context row, the rest behind More (Priority+). Which fit is measured in the browser, since the lead and the labels set the room (section-links.tsx); the client part marks the others `--extra`. The count is not fixed here: four labelled tabs and More overflow the row from 642px up. ---------------------------------------------------------------------------

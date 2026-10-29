@@ -1,9 +1,8 @@
 import type { EditableEntry } from './types';
 
-// The browser tab's title: the name, then the formal name in brackets when the
-// entry has one that says something more. Plain text, as a title carries no
-// italics. "Equal" folds case as `identity_key` does, so a label that only
-// repeats the formal name is not shown twice.
+// The browser tab's title: the name, then the formal name in brackets when it says something more.
+// Plain text, and "equal" folds case as `identity_key` does, so a label that only repeats the
+// formal name is not shown twice.
 export const pageTitleOf = ({
   name,
   canonicalName,

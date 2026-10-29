@@ -59,13 +59,8 @@
   @include sticky-action-column($sticky-column-layer);
 }
 
-// The Categories column's floor: the widest row of chips any seeded entry shows, measured in
-// Chromium at a 16px root with the final compact, dot-less chips: Aspen's Ancestor Work and
-// Communication with its +8 button and the row's 4px gaps, 266px (16.625rem), rounded up to
-// the next 0.25rem. The cell's own inset is added each side. Only where the table is wide:
-// below that the table scrolls rather than wraps its chips, so the floor keeps the column from
-// being squeezed under them; as a card (under `$table-stack-width`) it never applies and the
-// chips wrap.
+// The Categories column's minimum width, 16.625rem plus the cell inset, so a wide table scrolls rather than squeezes the chips; unused when stacked as cards
+// (claude-docs/components/compendium-list.md, "Notes from code comments: the categories column floor").
 $categories-floor: 16.75rem;
 $categories-wide: 75rem;
 

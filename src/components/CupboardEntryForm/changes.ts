@@ -85,11 +85,9 @@ export function isOwn(
 }
 
 /**
- * The fields that changed. A field handed back sends null when the coven held
- * an override; a text field cleared sends null, as the server reads blank; a
- * field the coven did not override sends its value only once it differs from
- * the compendium's; one it did sends its value once it differs from its own.
+ * The fields that changed: null for a field handed back or a text field cleared; a value once it differs from the compendium's (or, if overridden, its own).
  * An emptied list is sent as `[]`: the coven cleared it on purpose.
+ * (claude-docs/components/cupboard-entry-form.md, "Notes from code comments: the changed fields").
  */
 export function changesOf(
   values: CupboardValues,

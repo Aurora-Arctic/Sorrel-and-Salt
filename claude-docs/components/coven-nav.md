@@ -93,3 +93,9 @@ row is `ContextRow`'s Coven cell and the workshop's shell frame.
 `tests/components/CovenNav/index.test.tsx`: the nav, named "Coven", links the
 index at the slug's address, marks it current there and not on a page beneath
 it, and links the ingredients page for every caller, and the members page only for one who may read members.
+
+## Source notes
+
+Comments in the source that point here; each is the detail behind a one-line comment.
+
+- `sections.ts`: The coven's sections, in order: the one list the nav reads (claude-docs/components/coven-nav.md). A row is added with the page it links to, since `typedRoutes` refuses a link to a route the build does not contain. Grimoire is current on its Drafts tab too, which lies beneath it. Members is shown by what the caller's role may do (`member: read`), passed in as a boolean by the layout: this file loads in the workshop's browser build, where the server-only access-control module cannot. Never by a rank, so a viewer is not offered a page that 404s them.

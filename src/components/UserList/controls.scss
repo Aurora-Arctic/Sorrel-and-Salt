@@ -21,7 +21,7 @@
 
 // The confirmation's Reason field, given the warning's step of room above and
 // 2rem below, so it reads apart from the question and stands clear of
-// the buttons (the owner's call). A wrapper round the field's shell, which
+// the buttons. A wrapper round the field's shell, which
 // takes no class of its own. The invite form's reason takes the same class,
 // through this stylesheet, which the invitations tab loads.
 .user-list__note {

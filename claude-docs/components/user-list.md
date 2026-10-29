@@ -478,3 +478,77 @@ modal; and, tagged `@story-19`, opens a user's modal from their name, finds
 their coven and role in it, no link to the coven and no Impersonate (the run
 registers none), axe over it, and Close back to the filtered list, then
 `?user=not-an-id` showing the notice and no dialog.
+
+## Notes from code comments: confirmed action
+
+An action that asks first, in a modal, shared by the creation control
+, the role control, Impersonate, the pause switch
+and the invitations' Revoke: the modal's confirm sends the
+write and stays busy until the page is read again, or left; a success
+says its `announcement` in the page's status region, for a screen reader,
+beside the result the page shows. A refusal closes the modal, gives the
+focus back to the button that opened it, and says why in a callout under
+that button (`useClickFeedback`), which floats rather
+than taking room in a row. Inside a modal already, the user's, it
+asks over that modal's body through `ConfirmOverlay` instead, as the
+forms' questions do, rather than open a second modal on top, and its
+refusal stays in that dialog as a plain notice, or,
+for a control beside a fact (the user modal's role and creation
+controls), is the same callout under it. The
+service is the guard; this only puts it where an admin looks
+(claude-docs/components/user-list.md).
+
+## Notes from code comments: locked control
+
+A control that cannot be used, and says why: the primary admin's Change Role,
+every Change Role while admin changes are paused to an admin the pause
+binds, and the pause switch itself to any admin but the primary one.
+`aria-disabled` rather than `disabled`, so it keeps its place in the tab
+order and a click still lands, which says why rather than doing nothing. The reason is the button's description, in a tip
+that opens on hover, focus and a tap, stays open while the pointer is on it
+and closes on Escape (WCAG 1.4.13), through InfoTip's `useTip`. Each
+attempt also mounts the tip afresh as an alert, so a screen reader hears the
+reason again. The tip is placed against the viewport rather than its cell:
+the table's frame scrolls, so it would clip whatever reaches past it, and the
+reason is taller than the heading row above the top row; `useTip` places it
+fixed, and it follows the button through a scroll.
+
+## Notes from code comments: the filter
+
+The user list's filter, in the shared `FilterForm`. Only the search text is held here, until the magnifier or Enter sends it. The Role dropdown, a select-only box once hydrated (`FilterSelectField`), and the Needs Approval switch start from the filter shown and apply the moment they change, softly and from the first page, carrying the search text along, so there is no Filter button to press. Before hydration the form submits natively: the switch, a native checkbox, as `awaiting=`, which the page reads the same as the bare flag, and the server's native role select, whose "All Roles" is `role=`, which the page reads as no role.
+
+## Notes from code comments: the primary admin mark
+
+The primary admin's mark beside its role: a crown named "Primary Admin", with a tip saying so that behaves as InfoTip's does, through the same `useTip`: opened by hover, focus or a tap, kept open while the pointer is on it, and closed on Escape (WCAG 1.4.13). The mark is a button, as InfoTip's ⓘ is, so the keyboard reaches the tip too. The tip says no more than the button's name, so it is hidden from assistive technology while closed, as InfoTip's is (claude-docs/components/user-list.md).
+
+## Notes from code comments: the user link
+
+A row's name, opening the user's modal over the list, `?user=<id>` . A press opens it at once under `heading`, the user's covens arriving with the navigation; a link still, so a new tab, or a press before the script loads, opens the address. A client file of its own so the list stays a server component.
+
+## Notes from code comments: inside a modal
+
+Drawn inside a modal already, the user's: asks over that modal's body through its confirm layer rather than opening a second modal on top, and says a refusal in a plain notice beside the control, inside that dialog, rather than in a callout over it, unless `refusalInModal` says otherwise.
+
+## Notes from code comments: refusal display
+
+How a refusal is said inside a modal: a plain notice (the default), which a button row lifts above its buttons, or the callout under the control, as outside one. The callout is for a control that stands beside a fact rather than in a button row: the user modal's Change Role and Approve or Revoke. Outside a modal a refusal is always the callout.
+
+## Notes from code comments: the vouching warning
+
+The warning before vouching for an unverified address: an admin's approval or grant vouches for whoever holds it, and the ledger row it writes keeps the account from the sweep of lapsed unverified accounts. A warning rather than a refusal, since confirming who someone is is left to the admin. `verb` is the act's own, "Approving" or "Promoting".
+
+## Notes from code comments: the stylesheet
+
+The user list's own rules: its cells' alignment, the marks and logos with their tips, the history link, the role and creation cells, the sticky Impersonate column and how it gives way when the table stacks into cards, and the pause beside the page's heading. The column, filter, table and pager are primitives (`.list-frame`, `.filter-row`, `.data-table` with `--stack`, `.pager`). Above the stacking width the seven columns keep their order, restyled: rows a step taller, the read-only facts muted at the caption size, every control at the end of its cell.
+
+## Notes from code comments: the table styles
+
+No cell wraps, heading or body, since the table scrolls inside its frame: a row stays one line however narrow the screen, and its rows are a step taller (`.data-table--nowrap` and `--roomy`, through DataTable). Separate borders, not the primitive's collapsed ones, so each rule belongs to its own cell: a collapsed rule belongs to the table's grid, and the headings' muted hairline was drawn across the sticky Impersonate heading's red one as the columns scrolled beneath it.
+
+## Notes from code comments: the hint
+
+A mark or a logo that says what it is in a tip bubble on hover (the provider logos, and the yes-or-no marks whose column heading does not say it). The bubble is the eye's copy, hidden from assistive technology, since the mark carries its word as hidden text. It opens on hover only, as before it was CSS's; it is placed by `useTip` so it stays on the screen, centred over the mark where there is room. It takes no pointer, so it never blocks the row it overlaps (claude-docs/components/user-list.md).
+
+## Notes from code comments: the history link
+
+A row's way into the privilege ledger narrowed to its user: the ledger's search opened with their address, lower-cased as every address is held. An icon before the name, named "Privilege changes for <name>", with a tip reading Privilege Changes, the ledger's one name, that behaves as InfoTip's does, through the same `useTip`: opened by hover, focus or a tap, kept open while the pointer is on it, and closed on Escape (WCAG 1.4.13). The tip says less than the link's name, so it describes nothing, and is hidden from assistive technology while closed, as InfoTip's is (claude-docs/components/user-list.md).

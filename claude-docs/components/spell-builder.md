@@ -609,3 +609,109 @@ keyboard and reads the saved order from the database. No story walks the visibil
 story, so `tests/e2e/spell-visibility.spec.ts` is its gate spec: a spell written private,
 then shared in one confirmed action and the control shut, each step read from the
 database. Story 56 checks the Private badge on the author's card.
+
+## Notes from code comments: the spell dialog
+
+The spell builder as a modal over the grimoire, in step with Add Ingredient: New Spell opens it
+under `?new=spell-<slug>` (or `?new=spell`, the current grimoire's), and a spell's Edit under
+`?edit=<id>` (claude-docs/design-decisions/m10.12-spell-builder-modal.md). A draft's first save
+replaces `?new` with its own `?edit=<id>`, so a reload or Back opens the saved draft, never an
+empty form. The builder reports that save through `onCreated`, whichever way it was made, so
+the autosave moves the address the same way.
+Close saves first (./save-on-close.ts). A client part because the
+builder's handlers are functions, which a server page cannot hand down.
+New Spell's press writes `?new=spell-<slug>` with the browser's pushState (AddAction's
+`drawnHere`), so the dialog reads the address itself and draws the empty builder at
+once, at its full size, as Add Ingredient does: a skeleton the server's form replaced
+grew the centred dialog and moved it under the pointer. Any other `?new` is Add
+Ingredient's, and holds a saved spell's dialog back until it closes.
+A saved spell's steps are read here, through /api/graphql, once it opens: the page's
+server read gives its fields alone, and the builder sends nothing until the steps
+land, since an update's steps are the whole recipe.
+
+## Notes from code comments: the builder
+
+The spell builder: a spell's title, intent, jar and note, in a
+modal over the grimoire (./spell-dialog.tsx), opened empty by New Spell and
+on a saved spell by its Edit. Its fields sit in four folding sections, as
+Add Ingredient's do: open on a new spell, shut on a saved one, each shut
+line naming what it holds, and Open All / Close All in the dialog's head. Moon phase and day of the week suggest a
+fixed list and still take what is typed (./constants). No field is
+required: a draft may be saved with any of them, and a title is asked for
+only when the spell is marked complete. The builder autosaves
+(./autosave.ts): a change saves 3 s after the last, Save saves at
+once, and the first save creates the spell, after which the builder holds
+its id and revision and `onCreated` moves the dialog's address to it. There
+is no Cancel: Close saves what is unsaved, then closes (./save-on-close.ts).
+
+## Notes from code comments: status and visibility
+
+A spell is a draft until it is marked complete. A draft shows one
+button, Mark Complete; a click saves everything the form holds as complete, as Share With
+the Coven does, so the status is never a pick left pending. A complete spell needs a title
+(a database CHECK): its absence is said on the title field, before anything is sent. Marking
+complete flushes the autosave with the other status, which carries every unsaved change in
+the same save.
+A complete spell shows its statement and no button: there is no Reopen as Draft. Once
+complete, a spell's workings are recorded against it and its visibility lock has started,
+so reopening would undo both. To vary a complete spell, the copy (Duplicate a Spell)
+is the way. This is the control only: the service still accepts complete -> draft.
+
+Who can see a spell: its author alone, or every member of the coven.
+A switch, Share With the Coven, on for the coven and off for private, with a line under it saying what its state means. A new spell
+starts private (the autosave would otherwise share
+it 3 s after the first keystroke), and takes either, and the choice goes out with
+its first save. A draft moves either way, as often as wanted, with no question
+: sharing it is reversible. A complete spell obeys DESIGN.md §5's one-way
+rule, held by the service: a private one is shared by switching it on, which asks
+first and then saves at once, so that one action with its confirmation shares it;
+a shared one never goes back, so the control then reads only and says so, rather
+than leave a person to find out from a refusal.
+
+## Notes from code comments: stored step values
+
+Steps written back from stored values (an Undo or Redo, a recovered draft) made safe to save: a saved id the server no longer holds becomes none, so the save adds the step as a new one instead of being refused for naming a row the spell has not got; and a step with no row key (a draft kept before keys existed) is given one. `live` is the ids of the spell's steps as last saved.
+
+## Notes from code comments: step documents
+
+The builder's GraphQL for its steps: the picker's lookup, and the saved steps' read. A saved step's selection is written out in full here and in both save mutations (../index.tsx) rather than shared as a fragment: graphql-armor counts a fragment spread as a level (`flattenFragments` is off), and through a spread the jar's `stock { variant { id } }` and the form's `formChoice { group { icon } }` are 8 deep, past DESIGN.md §7's 7. Written out, they are 6. The three copies cannot drift apart unseen: each answer is typed as `SpellBuilderStep` (../types.ts) where the builder reads it, and tests/guards/document-depth.test.ts holds every document to the limit.
+
+## Notes from code comments: the saved steps read
+
+A saved spell's steps, each as the builder opens it: what it lays and how much, the form's icon, the categories it adds to the spell's derived ones, and the coven's jar units, which a step's unit is checked against, the jar list being the ingredient's for the coven `$workspaceId` names. The dialog reads them once it opens on `?edit=<id>`: the dialog reads once it opens on `?edit=<id>`: the page's server read gives the fields alone, and an update's steps are the whole recipe, so the builder sends nothing until these land.
+
+## Notes from code comments: the supply total
+
+What a form's steps need together, for its one line in In Coven Inventory: "3 tsp". One amount stays as it was typed; amounts in one unit add as they are (a count too, since nothing is converted); amounts in two units of one dimension add in the jar's unit through `unitConvert`; anything else is listed, "1 tsp + 2 pinch", rather than guessed. A blank amount adds nothing, and no amount at all is null.
+
+## Notes from code comments: reordering steps
+
+The jar's steps in their order: each moved by its handle, on the dnd-kit setup the combobox's chips use (src/lib/sortable), in a column of its own. The pointer drags a step onto another's place; the keyboard lifts it with Space or Enter, moves it a place with Up and Down, or to either end with Home and End, and puts it down with Space or Enter, or back with Escape. Each step is said in dnd-kit's live region and the focus stays on the moved step's handle. See claude-docs/components/spell-builder.md, "Reordering".
+
+## Notes from code comments: the steps list
+
+The jar's steps: the box that adds to them, the Add Instruction button and the list, under the heading What Goes In. The steps are moved by a handle each, and an Add or a Remove is said in a live region of its own, as a move is said in dnd-kit's. One step is open at a time, the newest at once; the rest are a line each. What the jar holds and the spell's intent set against it are the aside's (inventory.tsx, comparison-panel.tsx). See claude-docs/components/spell-builder.md, "Steps".
+
+## Notes from code comments: the comparison panel rows
+
+Category Match, in the Jar's aside: the categories the author assigned set beside the ones the jar's ingredients carry, in three rows. Carried is intended and present, Missing intended and absent from the jar, Extra present but not intended. A row with nothing in it is left out. The words lead each row and carry it alone. It reads what the builder holds now, saved or not, through the pure comparison. See claude-docs/components/spell-builder.md, "The comparison panel".
+
+## Notes from code comments: closing the modal
+
+The spell builder's way out of its modal: Close, Escape and a click outside save what is unsaved, then close, and ask nothing: unlike other forms there is no Discard question, since a spell's draft is kept rather than thrown away (claude-docs/design-decisions/m10.12-spell-builder-modal.md). The close is held while the save runs: a refused save keeps the modal open with the refusal shown, so nothing typed is lost. Closing the tab or reloading is the autosave's to guard (`useAutosave` asks the browser, and saves as the tab hides), which no page can answer by saving.
+
+## Notes from code comments: the save module
+
+The spell builder's save: the one call every way of saving goes through, the autosave's, Save's, Close's and Mark Complete's. It takes a target rather than assuming "the row", so that a later edit to a complete spell can go into a draft revision (spell history, v2) by naming another target. Today both targets are the spell's one row, draft or complete. Beside it, the read Reload Latest makes after a stale write: the spell as the server has it now, fields, categories and steps, which the builder puts in the form in place of what was typed. claude-docs/components/spell-builder.md, "Saving" and "Two people, one spell".
+
+## Notes from code comments: the save call
+
+Saves `input` to `target`: `createSpell` for a new spell, otherwise `updateSpell` against the revision the target names. A `null` revision writes over whatever the row is at; the builder never sends one, since Keep My Version names the revision the refusal reported, so a third save in between is met as a conflict too rather than written over.
+
+## Notes from code comments: reload latest
+
+Reload Latest, after someone else's save got in first: the spell as the server has it now replaces the form, what was typed into it included, and the form starts clean from it. The engine takes the revision the refusal reported; a save made since is met as the next conflict. A read that fails leaves the conflict and the typing as they are, and says so.
+
+## Notes from code comments: the suggest field
+
+A spell field whose box suggests from a fixed list (./constants) as it is typed in: a pick fills the field with the name, and anything else typed is kept as typed, so a value saved before the list existed ("Full") opens unchanged. The ingredient form's SuggestField is bound to that form's values and asks a server lookup, so this is the builder's own.

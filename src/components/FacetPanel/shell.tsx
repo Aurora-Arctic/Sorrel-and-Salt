@@ -21,31 +21,17 @@ import { FacetCount } from './facet-count';
 import type { FacetShellProps } from './types';
 import './index.scss';
 
-// The Filters button and the panel it opens (M12.4). The panel is a native `<dialog>`:
-// from the tablet width up `show()` opens it over the results, sliding down without moving
-// them, with no scrim and no inert page; below it `showModal()` opens it as a drawer sheet,
-// and the browser supplies the backdrop, the inert page and Escape. Before the script runs
-// nothing can open it, so it is drawn inline and open, and every control submits through
-// the GET form around it; the Filters control is a link to it until then. See
-// claude-docs/components/facet-panel.md.
+// The Filters button and the panel it opens, a native `<dialog>`: `show()` from the tablet width
+// up, `showModal()` below it. Before the script it is drawn inline and open, and every control
+// submits through the GET form (claude-docs/components/facet-panel.md).
 
-/**
- * How long a leaving sheet waits for its slide out to end before it closes anyway: longer than
- * the slide (`$sheet-slide` in index.scss), for a browser that never reports its end.
- */
+/** How long a leaving sheet waits for its slide out before it closes anyway (longer than `$sheet-slide` in index.scss), for a browser that never reports the end. */
 const LEAVE_LIMIT_MS = 400;
 
-/**
- * The shell's tablet width and up, where the panel stops being a sheet and drops down over the
- * results. A script cannot read a Sass variable, so this repeats `$shell-tablet-width`
- * (`_variables.scss`); a test fails if the two part.
- */
+/** The tablet width and up, where the panel drops down over the results instead of being a sheet. Repeats `$shell-tablet-width` (`_variables.scss`), as a script cannot read Sass; a test fails if the two part. */
 export const WIDE = '(min-width: 56rem)';
 
-/**
- * The Filters button, the Clear All beside it and the panel they open, around whatever filters a
- * list passes it: the ingredient lists pass FacetPanel's, the grimoire its categories (M10.11).
- */
+/** The Filters button, the Clear All beside it and the panel they open, around whatever filters a list passes: FacetPanel's for the ingredient lists, its categories for the grimoire. */
 export function FacetShell({
   count,
   clearHref,
@@ -71,12 +57,9 @@ export function FacetShell({
     const dialog = dialogRef.current;
     if (dialog && dialog.contains(document.activeElement)) buttonRef.current?.focus();
   };
-  // The panel shuts, and what was changed in it is applied once: whichever way it shuts, the
-  // Filters button, Escape, Close, the sheet's own Escape or the width changing under it.
-  // Nothing happens when it is already shut, so a close that follows a close applies nothing twice.
-  // `snap` shuts with no motion at all; otherwise the sheet slides out right and the panel slides up.
-  // The sheet slides out before it closes, as a Modal waits out its fade; the panel slides, and motion turned
-  // down, or no way to ask, closes either at once.
+  // The panel shuts and what was changed in it is applied once, whichever way it shuts. Nothing
+  // happens when it is already shut. `snap` shuts with no motion; otherwise the sheet slides out
+  // right and the panel up, and motion turned down (or no way to ask) closes either at once.
   const leave = () => {
     if (!modal.current || fadesAreOff()) {
       slide.close(modal.current);

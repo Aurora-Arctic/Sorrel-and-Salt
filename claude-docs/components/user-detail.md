@@ -96,3 +96,9 @@ no links, no coven list when empty, Impersonate present for a user and absent fo
 admin or when off, the question before any send, Cancel, a confirm sending
 `{ userId }` then landing on `/`, and a refusal showing an alert and not
 navigating.
+
+## Source notes
+
+Comments in the source that point here; each is the detail behind a one-line comment.
+
+- `index.tsx`: The body of the modal that opens over `/admin/users` on a user: the facts the users table holds about them, read-only, then the covens they belong to and, where impersonation is registered, the action to act as them (claude-docs/components/user-detail.md). The row's Grant or Revoke and Approve or Revoke sit beside the facts they change, each asking over this modal rather than opening another. Laid out as the ingredient modal is, in sections parted by hairlines, since a table's labels repeat on every card at a modal's width. Render-only: the page reads the memberships through the coven service.

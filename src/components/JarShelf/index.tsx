@@ -13,25 +13,10 @@ import { SHAPES, lv, wv } from './shapes';
 import type { HeldJar, JarPart, JarShelfProps, ShelfForm } from './types';
 import './index.scss';
 
-// A shelf of small drawn jars, one per form of an ingredient (M12.29): what the coven
-// holds of each, at a glance. A form with a jar draws it with its level, a dashed mark at
-// the low-stock threshold and a wave on the level; a form with none draws a dashed empty
-// jar. Under each: the form, then its amount. A Low or Out jar is told by the jar itself
-// (amber glass, level and mark for Low; a solid red empty outline for Out) and by its amount
-// in the same colour, which is a button opening the same tip the badge has. For a
-// role that may edit, a jar is a button opening the Edit Stock dialog on that form, an
-// empty one too (it adds the form). The drawing is the owner's mock, the Fillets bracket
-// only, with no idle motion: the level's rise is the one transition.
-// claude-docs/components/jar-shelf.md.
+// A shelf of small drawn jars, one per form of an ingredient, showing what the coven holds of each
+// (claude-docs/components/jar-shelf.md, "Component notes").
 
-/**
- * The amount of a Low or Out jar, as the button that opens its tip: the badge's
- * `StockTip`, on text and not a box. Its name is the amount and the state
- * ("40 g, Low Stock"), so a screen reader has both without opening the tip, and Low's
- * statement is its description, as on the badge. The badge's drawing sits before the amount,
- * so Low and Out are told by a symbol as well as by colour, the same symbol the card shows
- * (MB.121, proposal P1; WCAG 1.4.1).
- */
+/** The amount of a Low or Out jar as the button that opens its tip: the badge's `StockTip` on text, named by amount and state. */
 function AmountTip({ jar, state }: { jar: HeldJar; state: 'low' | 'out' }): ReactElement {
   const amount = amountText(jar.quantity, jar.unit);
   return (
@@ -55,37 +40,22 @@ function Part({ part }: { part: JarPart }): ReactElement {
   return <path className={className} {...part.attrs} />;
 }
 
-/**
- * The drawing. `aria-hidden`: the form and amount beside it say everything it
- * does. The clip is the body's outline, applied to an untransformed group
- * around the group that moves, since a clip on a transformed element moves
- * with it. Each jar's clip has an id of its own, as two on a page cannot share.
- */
 /** How many bands fill the spell's jar; past it the bands shrink to keep fitting. */
 export const BANDS_FULL = 8;
 
 /** Half a period of the wave, in drawing units: four full periods across the 48-unit jar. */
 const HALF = 6;
 
-/** The most a wave rises above its boundary, in drawing units (amplitudes run 0.65 to 0.8),
- * plus the 0.6 the top band's level line sits above its fill so none of the line is over the layer. */
+/** The most a wave rises above its boundary, in drawing units, plus the 0.6 the top band's level line sits above its fill. */
 const MAX_RISE = 2.2;
 
-/**
- * The top band's level line is 1.2 wide and centred on its path, so the path is lifted by half of
- * that: the line then lies wholly above the top layer's fill and nothing is drawn across it.
- */
+/** The top band's level line is 1.2 wide and centred on its path, so the path is lifted by half of that to lie wholly above the fill. */
 const TOP_LINE_LIFT = 0.6;
 
 /**
- * One boundary between two layers, as a wave. Boundary `k` (k = 0 is the base, which is flat and
- * never drawn) has a phase of `k` units and an amplitude that alternates 0.8, 0.65, so
- * neighbouring edges run nearly parallel with a slight drift, and it is the same every render (no randomness). The wave
- * lies wholly above its baseline, between 0 and 2 x amplitude, so it adds to the layer above
- * rather than cutting into the top layer's own height. Each half period is one quadratic curve
- * whose control point is on the far side of the middle line, and each joins the next on the same
- * slope, so there is no corner. It runs from beyond the jar's left edge to beyond its right (the
- * clip trims it), so a band's closing sides are never seen.
+ * One boundary between two layers, as a wave: boundary `k` (0 is the flat, undrawn base) has phase
+ * `k` and an amplitude alternating 0.8, 0.65, the same every render
+ * (claude-docs/components/jar-shelf.md, "Component notes").
  */
 type Wave = { start: number; end: number; amp: number; segments: readonly Segment[] };
 type Segment = { from: number; to: number; cx: number; cy: number };
@@ -118,11 +88,7 @@ const waveBack = (w: Wave, dy: number): string =>
     .map((g) => `Q${g.cx} ${+(dy + g.cy).toFixed(2)} ${g.from} ${+(dy - w.amp).toFixed(2)}`)
     .join('');
 
-/**
- * One band, `height` tall: its top is boundary `top`'s wave and its bottom is boundary
- * `top - 1`'s, which is the wave the band below draws as its own top, so stacked bands tile with
- * no gap. The lowest band is flat along the base.
- */
+/** One band, `height` tall: its top is boundary `top`'s wave and its bottom the wave below, so stacked bands tile with no gap. */
 function bandPath(height: number, index: number): string {
   const top = waveOf(index + 1);
   const closing =
@@ -139,6 +105,7 @@ function bandPath(height: number, index: number): string {
 const bandInk = ({ colorDark, colorLight }: GroupColors): CSSProperties =>
   ({ '--band-dark': colorDark, '--band-light': colorLight }) as CSSProperties;
 
+/** The jar's drawing, `aria-hidden` because the form and amount beside it say everything it does (claude-docs/components/jar-shelf.md, "Component notes"). */
 export function JarDrawing({
   shape,
   held,
@@ -146,10 +113,7 @@ export function JarDrawing({
 }: {
   shape: keyof typeof SHAPES;
   held: Pick<HeldJar, 'quantity' | 'threshold'> | null;
-  /**
-   * Equal horizontal bands stacked from the base, one per ingredient (the spell's jar); none
-   * draws none. A band holds the one group colour it is drawn in; null leaves it the muted ink.
-   */
+  /** Equal bands stacked from the base, one per ingredient (the spell's jar), each holding one group colour or null for the muted ink. */
   bands?: readonly (GroupColors | null)[];
 }): ReactElement {
   const clip = `jar-shelf-clip-${useId().replace(/\W/g, '')}`;
@@ -254,9 +218,8 @@ function Jar({
     <li className={`jar-shelf__jar${modifier}`}>
       <JarDrawing shape={pick(seed, form)} held={jar} />
       {edit ? (
-        // The button is the form's name, stretched over the whole jar by its `::after`, so a
-        // press anywhere on the jar lands on it. A Low or Out amount is its own button (its
-        // tip), so it sits beside this one rather than inside, raised above the stretch.
+        // The button is the form's name, stretched over the whole jar by its `::after`; a Low or
+        // Out amount is its own button beside it.
         <StockJarButton
           {...edit}
           openOn={variantId}

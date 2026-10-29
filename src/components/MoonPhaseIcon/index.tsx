@@ -3,16 +3,12 @@ import { HALVES, LIT_PARTS, MARIA } from './icons';
 import type { MoonLayer, MoonPhaseIconProps } from './types';
 import './index.scss';
 
-// The small drawing of the moon beside a moon phase's name in the spell
-// builder: on FormIcon's 24-unit square. Its fills are three theme tokens
-// rather than `currentColor`, so the lit part is the paler of the two in
-// either theme (the owner, 2026-10-27): the shadowed disc, the lit part, and
-// the maria clipped to the lit part. The outline is the text's ink. Dark
-// Moon is the outline alone, with no shadowed disc, so it reads apart from
-// New Moon (the owner, 2026-10-27). Waxing Moon and Waning Moon stack their
-// half's three lit parts at rising strength, the crescent at full (icons.tsx, HALVES). Hidden from assistive technology, since
-// the phase's name always stands beside it.
-// claude-docs/components/spell-builder.md, "The fields".
+// The small drawing of the moon beside a moon phase's name in the spell builder, on
+// FormIcon's 24-unit square. Its fills are three theme tokens rather than `currentColor`: the
+// shadowed disc, the lit part, and the maria clipped to the lit part. The outline is the
+// text's ink. Waxing Moon and Waning Moon stack their half's three lit parts at rising
+// strength (icons.tsx, HALVES). Hidden from assistive technology, since the phase's name
+// always stands beside it. claude-docs/components/spell-builder.md, "The fields".
 
 const MoonPhaseIcon = ({ phase, className }: MoonPhaseIconProps): ReactElement | null => {
   // An id per icon, so two on one page clip each to its own lit part; a
@@ -59,9 +55,8 @@ const MoonPhaseIcon = ({ phase, className }: MoonPhaseIconProps): ReactElement |
           </g>
         );
       })}
-      {/* Last, over the lit part and the maria: thin and half-strength in
-          the text's ink, so the lit part's own edge is the shape seen (the
-          owner, 2026-10-27). */}
+      {/* Last, over the lit part and the maria: thin and half-strength in the text's ink, so
+                the lit part's own edge is the shape seen. */}
       <circle cx="12" cy="12" r="8" stroke="currentColor" strokeOpacity="0.5" strokeWidth="1" />
     </svg>
   );

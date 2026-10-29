@@ -1,8 +1,7 @@
 import type { JarPart, JarShape, JarShapeName } from './types';
 
-// The vessels, ported from the owner's approved mock (M12.29): each is drawn in a
-// 48 by 40 box. Data and not markup, so a test can read it and the drawing is
-// plain SVG elements. claude-docs/components/jar-shelf.md.
+// The vessels, each drawn in a 48 by 40 box, as data so a test can read it and the drawing is plain
+// SVG elements (claude-docs/components/jar-shelf.md).
 
 const lid = (
   el: JarPart['el'],
@@ -150,12 +149,7 @@ export const JARS: readonly JarShapeName[] = [
 /** Where a liquid's vessel is drawn from. */
 export const BOTTLES: readonly JarShapeName[] = ['bottle', 'flask', 'erlen', 'vial'];
 
-/**
- * A wave of period `p` and amplitude `a`, drawn one period past each side of the
- * glass (the box is 48 wide) so it could slide by a period and still cover the
- * body. The shelf does not slide it; the width is kept so the drawing is the
- * mock's.
- */
+/** A wave of period `p` and amplitude `a`, drawn one period past each side of the glass, so it could slide and still cover the body. */
 export function wv(p: number, a: number): string {
   let d = `M${-p} 0q${p / 4} ${-a} ${p / 2} 0`;
   for (let x = -p / 2; x < 48 + p; x += p / 2) d += `t${p / 2} 0`;

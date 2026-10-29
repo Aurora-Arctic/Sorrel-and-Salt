@@ -46,7 +46,7 @@
   }
 }
 
-// A wait (MB.271): the page stays where it was, at its full height, and the
+// A wait: the page stays where it was, at its full height, and the
 // skeleton is laid over it. `visibility` rather than `display: none`, which
 // would collapse the page and clamp the scroll before the browser saves it for
 // Back; `heldPage` puts the page out of reach as well (`inert`).

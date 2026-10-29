@@ -10,7 +10,7 @@ import { FieldError } from '../Field';
 import { CategoriesDocument } from '../IngredientForm/categories';
 import type { SpellBuilderValues } from './types';
 
-// The categories a spell is assigned (M10.14, story 48): what it intends,
+// The categories a spell is assigned: what it intends,
 // picked from every live category, under their groups, each pick a chip in
 // its group's colour. Never the categories its ingredients bring, which are
 // read from them and shown apart (claude-docs/components/spell-builder.md,

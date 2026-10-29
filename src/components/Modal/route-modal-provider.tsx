@@ -5,15 +5,9 @@ import { type MouseEvent, type ReactElement, createContext, useContext, useState
 import { usePendingNavigation } from '../../lib/navigation';
 import type { ModalHeading, RouteModalOpener, RouteModalProviderProps } from './types';
 
-// A route modal pressed open and on its way (M9.18, the owner's call: a press
-// should open the modal at once, loading as a filter does). The press opens
-// the modal with its head over a skeleton, and the navigation to its address
-// runs in this transition, so the skeleton holds until Next has rendered the
-// page with the modal's contents, which arrive in the same dialog. The
-// contents still come with the navigation, from the server page's own reads,
-// rather than through GraphQL: a read with a navigation is the server
-// component's (CLAUDE.md rule 1; claude-docs/components/modal.md,
-// "Opening at once").
+// A route modal pressed open and on its way: the press opens the modal with its head over a
+// skeleton, and the navigation runs in this transition so the skeleton holds until the page
+// renders (claude-docs/components/modal.md, "Opening at once").
 
 /**
  * The modal on its way, shared by the links that open it and the page's
@@ -53,11 +47,9 @@ export function useRouteModalOpener(): RouteModalOpener | undefined {
 }
 
 /**
- * A link's click that opens its route modal at once, in `place` where the
- * page has more than one (`RouteModalProps.place`), under a provider: a
- * plain press of the main button. A press with a modifier or another button
- * is the browser's, a new tab or window, so it is left to the link, as is
- * every press outside a provider and before the page's script has loaded.
+ * A link's click that opens its route modal at once, in `place` where the page has more than one,
+ * under a provider: a plain press of the main button. A press with a modifier or another button,
+ * and every press outside a provider or before the page's script has loaded, is left to the link.
  */
 export function useOpenModalClick(
   href: Route,

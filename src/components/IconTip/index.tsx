@@ -1,5 +1,4 @@
-// An icon control's tip, the list rows' Edit link that wears it, and the
-// pencil they share (claude-docs/components/icon-tip.md).
+// An icon control's tip, the list rows' Edit link that wears it, and the pencil they share (claude-docs/components/icon-tip.md).
 export { default } from './icon-tip';
 export { AnnotateLink, CompendiumEditLink, EditLink, QuickLookLink } from './edit-link';
 export { AnnotateButton, BinButton, MoreMenu, QuickLookButton } from './icon-button';

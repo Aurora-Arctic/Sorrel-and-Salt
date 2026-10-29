@@ -11,19 +11,8 @@ import {
 } from '@floating-ui/react-dom';
 import { useEffect, useState } from 'react';
 
-// Where an open list sits (MB.154, the owner's calls): beneath the box, as
-// wide as what it is anchored to — a list field's whole row, its box and its
-// Add together, or the box alone — and never off the screen: it flips above
-// when there is more room there, and is no taller than the room it has. On
-// Floating UI, the standard tool, rather than measuring by hand: the flip,
-// the room, and following a scroll or a resize while open are its own. Fixed
-// rather than absolute, so a scrolling ancestor — M8.16's modal — cannot
-// clip it (claude-docs/components/combobox.md, "Where the list opens"). An
-// entry's summary opens on the same placement, as wide as its own content
-// rather than its chip (`matchWidth: false`). MenuButton's menu opens on the
-// same rules from its button's end edge (`placement: 'bottom-end'`, M8.17), or
-// its start edge when the caller asks for `auto` and the button is in the
-// window's start half, further off it (`gap`) and as wide as its items.
+// Where an open list sits: beneath the box, as wide as its anchor, flipped above when there is more room there, on Floating UI, fixed so a scrolling ancestor cannot clip it
+// (claude-docs/components/combobox.md, "Where the list opens").
 
 /** Space kept between the list and the edge of the screen. */
 const EDGE_PX = 8;
@@ -36,15 +25,7 @@ const edges = () => ({
   bottom: EDGE_PX + bottomBarPx(),
 });
 
-/**
- * Room the phone's fixed bottom bar takes from the foot of the window, or 0
- * when it is not shown. Measured rather than restated from the Sass tokens,
- * because the bar's height includes the device's safe area, which only the
- * browser knows. Found by its class, the one name the shell's own stylesheets
- * already key on (`html:has(.section-nav)`), rather than a prop threaded
- * through every Combobox; it is read when a list is placed, so the bar
- * appearing at a narrower window is picked up on the next resize.
- */
+/** Room the phone's fixed bottom bar takes from the foot of the window, or 0; measured because its height includes the device's safe area (claude-docs/components/combobox.md, "Component notes"). */
 function bottomBarPx(): number {
   const bar = document.querySelector('.section-nav');
   if (!bar || getComputedStyle(bar).position !== 'fixed') return 0;
@@ -77,16 +58,12 @@ export function useListPosition(
     strategy: 'fixed',
     middleware: [
       offset(gap),
-      // A function, so the bar is measured at every placement. Its room is
-      // taken off the foot of the window: a list that would open behind it
-      // flips above instead.
+      // A function, so the bar is measured at every placement; a list that would open behind it flips above.
       flip(() => ({ padding: edges() })),
       shift(() => ({ padding: edges() })),
       size(() => ({
         padding: edges(),
-        // As wide as what it is anchored to, unless told not to be, and no
-        // taller than the room it has: the stylesheet caps it at its own
-        // height besides.
+        // As wide as the anchor unless told not to be, no taller than the room it has.
         apply({ rects, availableHeight, elements: { floating } }) {
           if (matchWidth) floating.style.width = `${rects.reference.width}px`;
           floating.style.setProperty('--combobox-list-room', `${Math.max(0, availableHeight)}px`);
@@ -95,8 +72,7 @@ export function useListPosition(
     ],
   });
 
-  // Followed only while open: every box's list is always in the page, as
-  // Downshift asks, and a closed one has nothing to follow.
+  // Followed only while open: a closed list has nothing to follow.
   const { reference, floating } = elements;
   useEffect(() => {
     if (!isOpen || !reference || !floating) return;

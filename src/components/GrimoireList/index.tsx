@@ -9,11 +9,9 @@ import '../CompendiumList/index.scss';
 import '../IngredientCardList/index.scss';
 import './index.scss';
 
-// A coven's Grimoire list (M10.11), one tab of it, Spells or Drafts: the filter row, one card
-// per spell, and the pager, on the same list shell as the coven's Ingredients (CovenCards).
-// Render-only: the page reads one page and hands it here. The list is drawn here rather than
-// by IngredientCardList so that each item takes its spell's title as its name. An empty tab
-// is EmptyGrimoire's. claude-docs/components/grimoire-list.md.
+// One tab (Spells or Drafts) of a coven's Grimoire list: the filter row, a card per spell and the pager,
+// on the coven Ingredients' list shell (CovenCards). Render-only; drawn here so each item takes its
+// spell's title as its name (claude-docs/components/grimoire-list.md).
 
 const GrimoireList = ({
   path,

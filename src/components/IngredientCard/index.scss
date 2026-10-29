@@ -3,10 +3,8 @@
 @use '../../scss/mixins' as *;
 @use 'compact' as *;
 
-// The Foundations specimen (`.specimen` in _primitives.scss) carries the
-// layout; this adds the surface, which `.modal` gives the specimen there (its padding too) but
-// a list item should not (it is not a dialog), and the forms line's spacing.
-// Tokens only (signed off in MB.120, 2026-10-20).
+// The Foundations specimen (`.specimen` in _primitives.scss) carries the layout; this adds the surface,
+// which `.modal` gives the specimen there but a list item should not have, and the forms line's spacing.
 .ingredient-card {
   @include modal-surface($shadow-floating);
 
@@ -20,10 +18,8 @@
   cursor: pointer;
 }
 
-// The whole card is the link: the name's one `<a>` stretches an empty `::after`
-// over the article. Not an `<a>` around the card, which a screen reader would
-// read whole as the link's name and which cannot hold the Low badge's button.
-// Plain ink with no underline, at rest or on hover.
+// The whole card is the link: the name's one `<a>` stretches an empty `::after` over the article. Not an
+// `<a>` around the card, which a screen reader would read whole and which cannot hold the Low badge's button.
 .ingredient-card .ingredient-card__name a {
   color: $text-primary;
   text-decoration: none;
@@ -50,11 +46,9 @@
   }
 }
 
-// The slot: the hole in the cabinet the card's face sits in. It never moves or changes size;
-// it takes the list item's whole cell, so a row of cards still ends on one line. Its
-// interior shows only in the strip the face leaves as it slides down. It is a wrapper and not
-// the card's own box so the card keeps no clipping ancestor: a `clip-path` or `overflow` here
-// would cut off the tips and the category panel that open above the card's top edge.
+// The slot: the hole in the cabinet the card's face sits in. It never moves or resizes, so a row of cards
+// ends on one line, and is a wrapper so the card has no clipping ancestor: a `clip-path` or `overflow`
+// would cut off the tips and category panel opening above the card.
 .ingredient-card-slot {
   position: relative;
   display: flex;
@@ -65,10 +59,9 @@
   box-shadow: $drawer-slot-shadow;
 }
 
-// The drawer: the box the face is the front of, seen from above. This span is only the
-// clip that hides it at rest, and `::before` is the box. A sibling before the card in the DOM,
-// not a negative-`z-index` child of it: that paints over its parent's own background, which
-// put the box in front of the card. aria-hidden and out of the pointer's way.
+// The drawer: the box the face fronts, seen from above. This span only clips it at rest and `::before` is
+// the box. A sibling before the card in the DOM, not a negative-`z-index` child, which would paint the box
+// in front of the card. aria-hidden and out of the pointer's way.
 .ingredient-card-slot__drawer {
   position: absolute;
   inset: 0;
@@ -86,10 +79,9 @@
     inset-block-start: calc(1px - #{$drawer-travel});
     block-size: calc(#{$drawer-travel} + #{$drawer-inset});
     transition: inset-block-start $motion-medium ease;
-    // Top of the stack first. Straight bands, not blurred shadows: a blur piles up in the
-    // corners and reads as a curve. The face's cast shadow is dark in the inset under it and
-    // fades out by twice that and a bit; a wash of one inset shades in from each wall (shade colours are theme tokens:
-    // lighter in light); side walls; then the back wall, a seam easing into the floor and the floor.
+    // Top of the stack first. Straight bands, not blurred shadows, as a blur piles up in the corners and
+    // reads as a curve: the face's cast shadow, a wash shading in from each wall (theme tokens: lighter
+    // in light), the side walls, then the back wall's seam easing into the floor.
     background:
       linear-gradient(
         0deg,
@@ -114,16 +106,13 @@
   }
 }
 
-// Under the pointer, or with the link focused, the face lightens and slides down out of the
-// slot, showing the drawer. Driven from the slot, not the card: the face leaves the pointer's
-// place as it moves, and the slot stays put under it, so the hover does not flicker. The slide
-// needs no `:has()`: `:focus-within` catches the link's focus, and also a click's, which
-// is harmless; only `:focus-visible` on the link itself draws the ring.
+// Under the pointer, or with the link focused, the face lightens and slides down out of the slot.
+// Driven from the slot, which stays put under the pointer, so the hover does not flicker. `:focus-within`
+// catches the link's focus (a click's too, harmlessly); only the link's `:focus-visible` draws the ring.
 .ingredient-card {
-  // The slide moves `inset-block-start`, not `transform`: a transformed ancestor becomes
-  // the containing block of a `position: fixed` tip bubble inside it (the Low badge's,
-  // the marks'), and Floating UI does not re-place a bubble when an ancestor's transform
-  // starts or ends, so a quick move between cards left a bubble in the wrong place.
+  // The slide moves `inset-block-start`, not `transform`: a transformed ancestor becomes the containing
+  // block of a `position: fixed` tip bubble, and Floating UI does not re-place a bubble when an ancestor's
+  // transform changes, so a quick move between cards left a bubble misplaced.
   inset-block-start: 0;
   transition:
     inset-block-start $motion-medium ease,
@@ -176,27 +165,18 @@
   }
 }
 
-// The name block and the safety badge share the top row until the name's first word
-// no longer fits beside the badge; only then does the badge wrap below (the owner's
-// call, 2026-10-20). A flex row wraps on its items' narrowest widths, and the name
-// block's is made its first word's: from a zero basis it grows into the spare room, and
-// its content-based minimum (`min-width: auto`) is its min-content width. Every other
-// word may break anywhere (`overflow-wrap: anywhere`), so it counts as no wider than a
-// letter there, and the badge row below counts as nothing; the first word breaks only
-// when it overflows (`break-word`) and never by the dictionary (`hyphens: manual`), so
-// it counts whole. Not the longest word, which `flex-wrap` alone keys on, nor the whole
-// name, which a `flex-basis: auto` keys on. `max-width` lets a first word wider than
-// the card still break rather than spill. All Baseline Widely Available.
+// The name block and safety badge share the top row until the name's first word no longer fits beside the
+// badge. Other words may break anywhere (`overflow-wrap: anywhere`), the first only when it overflows
+// (`break-word`, `hyphens: manual`), and `max-width` lets an over-wide first word break. Baseline.
 .ingredient-card__heading {
   flex: 1 1 0;
   max-width: 100%;
   overflow-wrap: anywhere;
 }
 
-// The pending dot takes only its start margin on the line, its own width hanging into
-// the gap beside the safety badge, so it never wraps alone onto a blank line under a
-// name that just fits (the narrower block made that common). Hidden but for a slow
-// navigation; the gap holds it. No no-break space: Chrome breaks before the dot anyway.
+// The pending dot takes only its start margin on the line, its width hanging into the gap beside the
+// safety badge, so it never wraps alone under a name that just fits. Hidden but for a slow navigation.
+// No no-break space: Chrome breaks before the dot anyway.
 .ingredient-card__name .link-hint {
   margin-inline-end: -0.6em;
 }
@@ -216,7 +196,7 @@
   min-block-size: map.get($badge-sizes, 'medium', 'min-block-size');
 }
 
-// New and Updated pass a click through to the name link's overlay (MB.272): the mark's
+// New and Updated pass a click through to the name link's overlay: the mark's
 // words and icon are `position: relative` for their optical nudge, which paints them above
 // the overlay. The mark is words, not a button or a tip, so nothing is lost.
 .ingredient-card .recency-mark {
@@ -241,12 +221,9 @@
   font-size: heading-size(3);
 }
 
-// The jar lines pass a click through to the name link's overlay (MB.272): the list reset makes
-// each line's `li` `position: relative`, which paints it above the overlay, so a press on a
-// jar's words went nowhere. Not a higher `z-index` on the overlay, for the reason the forms
-// line gives. The stock badge's button is handed the pointer back and raised above the
-// overlay, so it keeps its own hover and focus (it opens an icon tip) instead of following
-// the card's link.
+// The jar lines pass a click through to the name link's overlay: the list reset makes each `li`
+// `position: relative`, which paints it above the overlay. Not a higher `z-index` on the overlay, as the
+// forms line explains. The stock badge's button is raised above it to keep its hover, focus and icon tip.
 .ingredient-card .specimen__stock {
   pointer-events: none;
 }
@@ -275,19 +252,15 @@
   // (the stock section's `margin-top` is this token too, each beside the
   // specimen's own 12px gap), so the two read as equal.
   margin-block-start: $ingredient-card-forms-air;
-  // A click passes through to the name link’s stretched `::after` beneath. The mixin’s
-  // `clip-path` and relative items paint above that overlay, so the line swallowed the click. Not
-  // a higher `z-index` on the overlay: that would cover the Low badge, the marks and the
-  // actions, which must stay above it. The line holds no button, tip or link.
+  // A click passes through to the name link's stretched `::after` beneath, as the mixin's `clip-path` and
+  // relative items paint above it. Not a higher `z-index` on the overlay, which would cover the Low badge,
+  // marks and actions. The line holds no button, tip or link.
   pointer-events: none;
 }
 
-// The plain category chips pass a click through to the name link's overlay (the owner,
-// 2026-10-21): the chip row's `list-reset` makes each `li` `position: relative`, which
-// paints it above the overlay, so a chip swallowed the click. Not a higher `z-index` on the
-// overlay, for the reason the forms line gives. Only the chips' `li`s, not the row: the
-// +N item is left out so its button keeps its press, hover and focus (it is raised above the
-// overlay in CategoryChips). A plain chip is text, not a link, button or tip, so nothing is lost.
+// The plain category chips pass a click through to the name link's overlay, as the forms line explains.
+// Only the chips' `li`s, not the row: the +N item keeps its press, hover and focus (raised in
+// CategoryChips). A plain chip is text, so nothing is lost.
 .ingredient-card .specimen__chips > li:not(.category-more-item) {
   pointer-events: none;
 }
@@ -305,11 +278,9 @@
   @include badge-size('medium');
 }
 
-// The corner centred on the name's first line, as the forms line's icons are
-// centred on theirs: the specimen tops them flush (`align-items: flex-start`), which sat the
-// 24px badge above a taller line of name. Half the name's line box less the badge's height,
-// so the step follows the name's size (`heading-size(3)` here, `heading-size(4)` compact).
-// It shows only beside the name; wrapped beneath it, it adds that much to the row gap.
+// The corner centred on the name's first line, as the forms line's icons are: the specimen tops them
+// flush, which sat the 24px badge above a taller name. Half the name's line box less the badge's height,
+// so it follows the name's size. Wrapped beneath the name, it adds that much to the row gap.
 .ingredient-card .ingredient-card__corner {
   margin-block-start: calc(
     (#{heading-size(3)} * 1.15 - #{map.get($badge-sizes, 'medium', 'min-block-size')}) / 2

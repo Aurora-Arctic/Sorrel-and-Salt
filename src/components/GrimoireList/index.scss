@@ -1,9 +1,7 @@
 @use '../../scss/variables' as *;
 
-// A grimoire tab with no card to show (M10.11), laid out as the coven's empty cupboard
-// (CovenCards/index.scss): the empty tab's sentence centred and set down from the filter
-// row, larger than body copy; a filter matching nothing, what to do, in muted body copy.
-// Tokens only, before the section's design review.
+// A grimoire tab with no card, laid out as the coven's empty cupboard (CovenCards/index.scss): the empty
+// tab's sentence centred and larger than body copy; a filter matching nothing says what to do, muted.
 .grimoire-list__empty {
   display: block;
   margin-block-start: space(7);

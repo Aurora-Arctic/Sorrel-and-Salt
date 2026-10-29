@@ -1,14 +1,13 @@
 @use '../../scss/variables' as *;
 
-// The marks' own styles, imported by icons.tsx rather than the panel's
-// stylesheet, so a mark shown anywhere — the admin user list, say — brings its
-// backing with it. The colour is Facebook's, from `$brand-palettes`
-// (_variables.scss).
+// The marks' own styles, imported by icons.tsx rather than the panel's stylesheet, so a mark
+// shown anywhere, the admin user list say, brings its backing with it. The colour is
+// Facebook's, from `$brand-palettes` (_variables.scss).
 
-// A small backing circle behind Facebook's mark, whose own path is the
-// circle's outline merged with the "f" as a hole in it (icons.tsx) — filled
-// white, the "f" is only visible where this chip's own blue shows through.
-// 1.5rem is the mark's own geometry, the `.provider-mark` circle's size.
+// A small backing circle behind Facebook's mark, whose own path is the circle's outline
+// merged with the "f" as a hole in it (icons.tsx): filled white, the "f" is only visible
+// where this chip's own blue shows through. 1.5rem is the mark's own geometry, the
+// `.provider-mark` circle's size.
 .sign-in-panel__icon-chip {
   display: inline-flex;
   align-items: center;

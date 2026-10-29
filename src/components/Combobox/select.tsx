@@ -8,12 +8,8 @@ import { ChevronIcon, PlusIcon } from './icons';
 import { useListPosition } from './position';
 import type { ComboboxChoice, ComboboxSelectProps } from './types';
 
-// The combobox's closed-set sibling: the same control and list, on
-// Downshift's `useSelect`, for a field nothing is typed into. The hook owns
-// the ARIA — a select-only combobox, as ARIA 1.2 has it — and the keyboard:
-// the arrows, Enter and Space to choose, Escape to close, and a letter to jump
-// to the choice it starts. See claude-docs/components/combobox.md, "The
-// select-only box".
+// The combobox's closed-set sibling, on Downshift's `useSelect`, for a field nothing is typed into
+// (claude-docs/components/combobox.md, "The select-only box").
 
 export function ComboboxSelect({
   id,
@@ -42,14 +38,13 @@ export function ComboboxSelect({
       labelId,
       menuId: `${id}-list`,
       getItemId: (index) => `${id}-row-${index}`,
-      // Shown and read, but stepped over by the arrows and refused a press (a coven that
-      // already holds the entry, in M9.12's picker).
+      // Shown and read, but stepped over by the arrows and refused a press.
       isItemDisabled: (choice) => Boolean(choice?.disabled),
       onSelectedItemChange: ({ selectedItem }) => {
         if (selectedItem) onChange(selectedItem.value);
       },
     });
-  // Floated as the suggesting box's is, so a modal holding it does not stretch (M5.6).
+  // Floated as the suggesting box's is, so a modal holding it does not stretch.
   const { setControl, setList, listStyle, placement } = useListPosition(isOpen);
 
   return (
@@ -69,8 +64,7 @@ export function ComboboxSelect({
           onBlur,
           onKeyDown: (event: KeyboardEvent<HTMLElement>) => {
             keepEscapeInList(isOpen)(event);
-            // Ctrl+Z is the form's undo (M12.9), not a letter to search the
-            // list for; Downshift would take it and open the list.
+            // Ctrl+Z is the form's undo, not a letter to search the list for.
             if (event.ctrlKey || event.metaKey) {
               (
                 event as KeyboardEvent<HTMLElement> & { preventDownshiftDefault?: boolean }
@@ -82,9 +76,7 @@ export function ComboboxSelect({
           'aria-invalid': invalid,
           'aria-required': required,
           'aria-busy': busy ? true : undefined,
-          // Downshift leaves the click and key handlers off a disabled box, and
-          // would write `disabled` onto the div, where it means nothing: the
-          // box says it with `aria-disabled` and leaves the tab order instead.
+          // Downshift leaves the click and key handlers off a disabled box and would write `disabled` onto the div, so the box says it with `aria-disabled` and leaves the tab order.
           disabled,
         })}
         {...(disabled && { disabled: undefined, 'aria-disabled': true, tabIndex: -1 })}

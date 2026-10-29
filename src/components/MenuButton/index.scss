@@ -1,16 +1,16 @@
 @use '../../scss/variables' as *;
 @use '../../scss/mixins' as *;
 
-// The menu, the bar's Add Ingredient menu among its callers. Where it sits is the script's, on Floating UI: hung
-// from the button's end edge, below it or above, fixed (index.tsx).
+// The menu, the bar's Add Ingredient menu among its callers. Where it sits is the script's,
+// on Floating UI: hung from the button's end edge, below it or above, fixed (index.tsx).
 // claude-docs/components/menu-button.md.
 
 .menu-button {
   display: inline-flex;
 }
 
-// The button fills the box when a layout stretches it, as a narrow form's
-// stacked foot does (M8.17); otherwise the box is the button's own width.
+// The button fills the box when a layout stretches it, as a narrow form's stacked foot does;
+// otherwise the box is the button's own width.
 .menu-button > [aria-haspopup] {
   flex-grow: 1;
 }
@@ -23,16 +23,16 @@
 .menu-button__menu {
   z-index: layer('floating');
   min-width: $menu-min-width;
-  // A step of air all round, so an item's hover, focus and chosen fill sits
-  // inset from the panel's edge and is never cut by it (the owner's call,
-  // 2026-10-20). The panel needs no clipping now: nothing touches its corners.
+  // A step of air all round, so an item's hover, focus and chosen fill sits inset from the
+  // panel's edge and is never cut by it. The panel needs no clipping: nothing touches its
+  // corners.
   padding: space(1);
   border: 1px solid $text-muted;
   border-radius: radius('surface');
   background-color: $surface-card;
   box-shadow: $shadow-floating;
-  // Fades in as it comes and out as it goes, over the short motion (the
-  // owner's call, 2026-10-19); the script unmounts it when the fade-out ends.
+  // Fades in as it comes and out as it goes, over the short motion; the script unmounts it
+  // when the fade-out ends.
   animation: menu-button-fade-in $motion-short ease-out both;
 
   &.is-closing {
@@ -60,9 +60,9 @@
   }
 }
 
-// A section's name, discreet (the owner's call, 2026-10-20): small muted caption text above
-// its items, in the item's own side padding so the two line up, and not an item, so neither the
-// arrows nor a press reach it. The rule between sections is a hairline inset like the items' fill.
+// A section's name, discreet: small muted caption text above its items, in the item's own
+// side padding so the two line up, and not an item, so neither the arrows nor a press reach
+// it. The rule between sections is a hairline inset like the items' fill.
 .menu-button__heading {
   padding: space(1) space(4);
   color: $text-muted;
@@ -83,9 +83,8 @@
   box-sizing: border-box;
   width: 100%;
   padding: space(2) space(4);
-  // All four corners of the fill rounded, one step tighter than the panel's
-  // `surface` radius it is inset within, so the two corners nest (the owner's
-  // call, 2026-10-20).
+  // All four corners of the fill rounded, one step tighter than the panel's `surface` radius
+  // it is inset within, so the two corners nest.
   border-radius: radius('control');
   color: $text-primary;
   font-size: type-size('small');
@@ -94,9 +93,8 @@
   white-space: nowrap;
   @include theme-transition(background-color);
 
-  // Grey, the quiet fill: green marks a menu's one primary action alone
-  // (`--primary`, below), so every other plain item is pointed at, focused
-  // and chosen in the grey (the owner's call, 2026-10-20).
+  // Grey, the quiet fill: green marks a menu's one primary action alone (`--primary`, below),
+  // so every other plain item is pointed at, focused and chosen in the grey.
   &:hover,
   &:focus-visible,
   .is-closing &.is-chosen {
@@ -117,9 +115,8 @@
   }
 }
 
-// What destroys something, in the colour `.btn--destructive` wears, and
-// filled with it on hover and focus as that button is (the owner's call,
-// 2026-10-19).
+// What destroys something, in the colour `.btn--destructive` wears, and filled with it on
+// hover and focus as that button is.
 .menu-button__item--destructive {
   color: $secondary;
   @include theme-transition(background-color, color);
@@ -136,9 +133,8 @@
   }
 }
 
-// A menu's one primary action, Edit Ingredient on the ingredient page:
-// the green highlight pointed at, focused and chosen, where every other item
-// takes the grey (the owner's call, 2026-10-20).
+// A menu's one primary action, Edit Ingredient on the ingredient page: the green highlight
+// pointed at, focused and chosen, where every other item takes the grey.
 .menu-button__item--primary {
   &:hover,
   &:focus-visible,
@@ -147,10 +143,9 @@
   }
 }
 
-// Shown and reached, but not choosable (`aria-disabled`): a coven that already holds the entry
-// (the owner's call, 2026-10-20). In the muted ink, as a disabled Combobox row's note is, with no
-// pointer and no wash under the pointer; the focus keeps its fill and ring, so the arrows still
-// show where they are.
+// Shown and reached, but not choosable (`aria-disabled`): a coven that already holds the
+// entry. In the muted ink, as a disabled Combobox row's note is, with no pointer and no wash
+// under the pointer; the focus keeps its fill and ring, so the arrows still show where they are.
 .menu-button__item[aria-disabled='true'] {
   color: $text-muted;
   cursor: default;
@@ -165,8 +160,7 @@
 }
 
 // The check after a marked item's label (`mark`): HeldMark's green tick, at the glyph size,
-// standing on the label's line however muted the disabled label beside it is (the owner's
-// call, 2026-10-20).
+// standing on the label's line however muted the disabled label beside it is.
 .menu-button__mark {
   display: inline-flex;
   margin-inline-start: space(2);
@@ -179,12 +173,11 @@
   }
 }
 
-// The items in the button's own type, top and bottom padding and height, as
-// `.btn` sets them (`buttonType`): the Annotate dialog's More, whose items
-// are the actions of the dialog's foot (the owner's calls of 2026-10-20). The
-// sides take one step less than the button's space(5), not so wide in a list.
-// The label is centred by the flex box, as `.btn` centres its own. Every
-// other menu keeps the lighter, shorter item.
+// The items in the button's own type, top and bottom padding and height, as `.btn` sets them
+// (`buttonType`): the Annotate dialog's More, whose items are the actions of the dialog's
+// foot. The sides take one step less than the button's space(5), not so wide in a list. The
+// label is centred by the flex box, as `.btn` centres its own. Every other menu keeps the
+// lighter, shorter item.
 .menu-button__menu--button-type .menu-button__item {
   display: flex;
   align-items: center;

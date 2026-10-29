@@ -4,10 +4,9 @@ import type { FormGroupIcon } from '@/modules/vocabulary/schema/form-group-icons
 import type { z } from 'zod';
 
 /**
- * Which curated vocabulary the form writes. Three are grouped: the
- * categories, filed under category groups; the ingredient forms, filed under
- * form groups; and the deities, filed under traditions (MB.132). Two are
- * flat, filed under nothing: the celestial bodies and the zodiac signs (MB.95).
+ * Which curated vocabulary the form writes. Three are grouped: the categories, filed
+ * under category groups; the ingredient forms, under form groups; and the deities, under
+ * traditions. Two are flat, filed under nothing: the celestial bodies and the zodiac signs.
  */
 export type GroupedValueKind = 'category' | 'form' | 'deity' | 'celestialBody' | 'zodiacSign';
 
@@ -29,11 +28,8 @@ export interface GroupedValueValues {
   description: string;
   groupId: string;
   /**
-   * A deity's other names (M14.23), empty for every other kind, which never
-   * shows or sends them. Under the ingredient form's `folkNames` key and its
-   * box at `drafts.folkNames`, because the field is that form's `ListField`,
-   * whose paths are its own: so the list also refuses the value's own name, as
-   * a folk name refuses its ingredient's.
+   * A deity's other names, empty for every other kind. Under the ingredient form's `folkNames` key and
+   * `drafts.folkNames`, as the field is that form's `ListField`, so the list also refuses the value's own name.
    */
   folkNames: { value: string }[];
   drafts: { folkNames: string };
@@ -53,7 +49,7 @@ export interface GroupedValueFormProps {
   kind: GroupedValueKind;
   /** The value to edit; none adds one. */
   value?: EditedGroupedValue;
-  /** Every live group of the kind, alphabetical (MB.35); none for a flat kind. */
+  /** Every live group of the kind, alphabetical; none for a flat kind. */
   groups?: readonly GroupedValueGroupChoice[];
   /** Called once the value is saved or deleted, and on Cancel: the owner closes it. */
   onDone: () => void;
@@ -86,7 +82,7 @@ export interface GroupedValueCopy {
   deleteNote: string;
   /** What a rename says above the actions, for a kind whose rename reaches further than its row. */
   renameNote?: string;
-  /** The Other Names list's hint, for the kind that has the list: a deity (M14.23). */
+  /** The Other Names list's hint, for the kind that has the list: a deity. */
   otherNamesHint?: string;
   /**
    * A field's key in the kind's input, where it is not the field's own: a

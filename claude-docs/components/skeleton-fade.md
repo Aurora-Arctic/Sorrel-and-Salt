@@ -28,3 +28,11 @@ During a wait the old page stays mounted, hidden, at its full height, and the sk
 - **No skeleton, no fade.** A navigation with no skeleton target (a refresh) leaves the page standing and nothing fades: the page was never replaced.
 - **The page is not wrapped to fade in.** Its fade-in is the overlay fading out over it, on the page's ground: wrapping the arriving page in a box to run `arrived` on it would put a box round it that the section layouts' flex columns would feel. The same keyframe (`list-frame-fade-in`) runs backwards.
 - **Reduced motion** follows `arrived`: it shows the new content at once, so the overlay is `display: none` and nothing fades.
+
+## Notes from code comments: the fade out
+
+The skeleton's way out: when a wait ends, the bodies (`MainBody`, `SectionBody`) do not drop the skeleton at once but keep the last one over the page that has arrived, and it fades away while the page shows through. A client part, since the timer is the browser's. A fade rather than the page fading in, since wrapping the arriving page would put a box round it that the section layouts' flex columns would feel; the overlay is out of layout and unmounts when it has gone. claude-docs/components/skeleton-fade.md
+
+## Notes from code comments: holding the page
+
+The props that hold the page during a wait: the page stays mounted at its full height, unseen (`visibility`, which keeps its box, where `display: none` or React's `<Activity>` would collapse it) and out of reach (`inert`, `aria-hidden`), while `SkeletonCover` stands over it. Not taken away, because the browser saves the scroll position into the history entry when the navigation writes it, after the skeleton is up: a page swapped for a shorter skeleton clamps the scroll first, and Back returns to the clamped one. The same element whether waiting or not, so React keeps the page mounted.

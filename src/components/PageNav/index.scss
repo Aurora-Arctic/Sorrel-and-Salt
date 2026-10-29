@@ -52,22 +52,20 @@
     font-weight: 500;
     letter-spacing: 0.16em;
     text-transform: uppercase;
-    // The body ink, not the eyebrow's muted one: the entries under it are
-    // muted, and the label stands apart by being darker (the owner's call).
+    // The body ink, not the eyebrow's muted one: the entries under it are muted, and the label
+    // stands apart by being darker.
     color: $text-primary;
   }
 
-  // The smallest step of air between the label and its first entry: the
-  // label belongs to its entries, so it sits nearer them than the break above
-  // it (the owner's call, a step closer than it was).
+  // The smallest step of air between the label and its first entry: the label belongs to its
+  // entries, so it sits nearer them than the break above it.
   .page-nav__group + ul {
     margin-block-start: space(1);
   }
 
-  // A group's entries are not stepped in from its label at any width: the
-  // label alone sets them apart (the owner's call at M8.19; a step in read
-  // as too much room to their left on a phone, and on a wide screen, where
-  // the text is right-aligned, pushed them off the column's edge).
+  // A group's entries are not stepped in from its label at any width: the label alone sets
+  // them apart. A step in read as too much room to their left on a phone, and on a wide
+  // screen, where the text is right-aligned, pushed them off the column's edge.
 
   // Beside a group, a top-level entry is the page's own section and reads a
   // step above body copy, as the group's entries do not: a size between
@@ -76,20 +74,10 @@
     font-size: $nav-link-size;
   }
 
-  // An item set apart (an ingredient's Forms, and its References, one link or
-  // a group of Notes and Bibliography) takes a break a step wider than a group
-  // label's, so the line in it has air on both sides (the owner's call). A
-  // group's label carries its own break, so here the item takes the gap and
-  // the label gives its own up, which keeps the gap from being doubled and
-  // does not lean on margins collapsing.
-  //
-  // A short hairline sits halfway through that gap, drawn by a
-  // pseudo-element so the list gains no element: it starts at the entries' own
-  // inset and, where the menu is right-aligned, ends there. The entries above
-  // and the item itself both pad their text by space(1) top and bottom, so
-  // the middle of the margin is the middle between the two texts. The rule is
-  // 1px tall and hangs below its offset, so half a pixel is taken off to put
-  // its centre, not its top edge, on the middle.
+  // An item set apart takes a gap a step wider than a group label's, the label giving up its own
+  // break so the gap is not doubled. A short hairline halfway through the gap is a pseudo-element
+  // from the entries' inset; half a pixel is taken off so the 1px rule's centre sits on the
+  // middle.
   .page-nav__apart {
     $break: space(6);
 

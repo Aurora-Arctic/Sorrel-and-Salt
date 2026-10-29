@@ -110,3 +110,9 @@ with neither, the row starting again from a filter shown anew, no table when the
 `tests/app/(shell)/admin/(people)/privilege-changes/page.test.tsx` covers what the page hands
 it, and `tests/e2e/admin/privilege-changes.spec.ts` the page against the built
 server, with axe.
+
+## Source notes
+
+Comments in the source that point here; each is the detail behind a one-line comment.
+
+- `filter.tsx`: The ledger's filter, in the shared `FilterForm`, as the user list's is. Only the search text, part of the subject's name or email, is held here, until the magnifier or Enter sends it. The Privilege dropdown, a select-only box once hydrated (`FilterSelectField`), starts from the filter shown and applies the moment a choice is picked, softly and from the first page, carrying the search text along, so there is no Filter button. Before hydration the server's native select submits, "All Privileges" as `privilege=`, which the page reads as no privilege.

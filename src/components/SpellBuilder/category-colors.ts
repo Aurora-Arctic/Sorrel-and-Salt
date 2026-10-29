@@ -25,7 +25,7 @@ export function useCategoryColors(): ReadonlyMap<string, GroupColors> {
   );
 }
 
-/** Each category's name by category id, from the same request as the colours. Empty until it lands. */
+/** Each category's name by category id, from the same request as the colours. Empty until the request answers. */
 export function useCategoryNames(): ReadonlyMap<string, string> {
   const { data } = useQuery({ ...graphqlQuery(CategoriesDocument), throwOnError: false });
   return useMemo(

@@ -21,10 +21,9 @@ const ProviderButton = ({
   const { anchorRef, report, feedback } = useClickFeedback({ name });
   const busy = signingIn === provider.id;
   const noteId = `sign-in-panel__note-${provider.id}`;
-  // The familiar per-provider "Continue with X" mark, matched to each
-  // provider's own brand button rather than the app's own icon set —
-  // claude-docs/components/sign-in-panel.md, "Provider branding".
-  // Facebook's white "f" sits on its blue chip on a button.
+  // The familiar per-provider "Continue with X" mark, matched to each provider's own brand
+  // button rather than the app's icon set (claude-docs/components/sign-in-panel.md, "Provider
+  // branding"). Facebook's white "f" sits on its blue chip on a button.
   const Mark = PROVIDER_MARKS[provider.id];
 
   const press = async (): Promise<void> => {
@@ -40,12 +39,10 @@ const ProviderButton = ({
         ref={anchorRef}
         busy={busy}
         busyLabel="Signing In"
-        // The brand colour class is dropped entirely once unavailable, rather
-        // than layered under a disabled modifier: `.btn[aria-disabled='true']`
-        // (_primitives.scss) is what styles this state, and a brand-colour
-        // class sitting alongside it would tie in specificity — the winner
-        // then depending on which stylesheet loads second, exactly what
-        // "unavailable" must never be.
+        // The brand colour class is dropped entirely once unavailable, rather than layered
+        // under a disabled modifier: `.btn[aria-disabled='true']` (_primitives.scss) styles
+        // this state, and a brand-colour class alongside it would tie in specificity, the
+        // winner then depending on which stylesheet loads second.
         className={
           available
             ? `btn sign-in-panel__button sign-in-panel__button--${provider.id}`
