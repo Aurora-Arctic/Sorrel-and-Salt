@@ -404,6 +404,8 @@ name is cut short with an ellipsis before the verdict is; the words line keeps "
 Every verdict is a symbol alone, its words the name of the button around it and, in an `IconTip`, a sentence saying why (the control for an icon-only mark, as `StockTip` uses it): Out takes StockBadge's symbol and colour (the jar is empty), Low its symbol and colour (the jar is at or below the coven’s Low mark), Not Enough a small jar outline with a level part-way up, in Low's ink (`$stock-low-ink`) (the jar holds less than the step needs), and Units Differ a struck equals sign in `$text-muted` (the units do not match, so it cannot tell whether there is enough). The last two are drawn as `StockIcon` is and kept in `supply-icon.tsx`, being spell-builder-only (owner's call 2026-10-28). All four share one branch in `inventory.tsx`, a `mark` on the verdict. `steps/supply-mark.tsx` is used nowhere and was left as it was. All four are worded as in Supply below. With no steps it
 reads that nothing is held yet.
 
+**Decision record:** on 2026-10-29 the owner chose icon-only verdicts with tooltips over the second design review's finding 3 (show the verdicts as words). Do not read the review as current on this point.
+
 ## The comparison panel
 
 `comparison-panel.tsx` (M10.17, story 52) sets what the spell intends beside what its jar
