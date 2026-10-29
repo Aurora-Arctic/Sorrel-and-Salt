@@ -1867,7 +1867,7 @@ The page also carries:
 - The steps are drawn with `StepRow`, the presentation component M13.3 adds under `src/components/` (M13.3 lands before this task). This page renders it read-only, with no editing controls.
 - Picking a spell from the grimoire search's suggestions opens its recipe page, through `IngredientSearch`'s `pickHref`. Once M13.21 builds the spell's Quick Look, a pick opens that instead, under the owner's rule of 2026-10-27 that a pick opens the item's Quick Look, as an ingredient pick does (M13.21). Until this task a pick applies the title as the search (M10.11). `pick()` in `src/components/IngredientSearch/search-box.tsx` falls back to the search when a row carries no `match`, and a spell suggestion row carries none today, so this task gives spell rows a `match` holding the spell's id as well as passing `pickHref` (added 2026-10-27, from the M10.11 review).
 
-**Amended 2026-10-16 by the spell steps and workings plan** ([`design-decisions/m13.1-plan.md`](../design-decisions/m13.1-plan.md)): the page renders the spell's numbered steps in `position` order, an ingredient step with its quantity and unit and an instruction-only step as its text, plus an Ingredients summary above them, the ingredient steps in order, for gathering before starting (M13.1). It shows the spell's `note`, and it is the page M13.7's Record a Working control and M13.8's Workings section attach to.
+**Amended 2026-10-16 by the spell steps and workings plan** ([`design-decisions/m13.1-plan.md`](../design-decisions/m13.1-plan.md)): the page renders the spell's numbered steps in `position` order, an ingredient step with its quantity and unit and an instruction-only step as its text. The page has no on-screen Ingredients summary: its In Coven Inventory panel lists each form once, with the amount needed, for gathering (owner, 2026-10-29). The print layout has its own summary (M10.22). It shows the spell's `note`, and it is the page M13.7's Record a Working control and M13.8's Workings section attach to.
 
 _Acceptance criteria:_
 
@@ -1875,7 +1875,7 @@ _Acceptance criteria:_
 - Visibility is enforced in SQL: a private spell is reachable only by its author
 - A non-member receives 404, consistent with the rest of `/coven/[slug]`
 - Steps render numbered in `position` order, an ingredient step with its quantity and unit
-- The Ingredients summary lists the ingredient steps in order
+- The page draws no on-screen Ingredients summary; the In Coven Inventory panel lists each form once with the amount needed
 - Two ingredients sharing a label are disambiguated by their formal name, not by hover
 - A custom, one-off ingredient (MB.40) renders its own name and form in `position` order with the rest, marked as one-off, and links to no ingredient page
 - The page calls `requireSession()` and shows `LastEdit` under the title
@@ -4354,7 +4354,6 @@ _Acceptance criteria:_
 - Storybook and /design-sync: a separate agent, not the one doing the design review, updates every Storybook story that the review's changes affect, covering new states, changed props and removed variants (the stories follow the `States`-first convention). That same separate agent then runs `/design-sync`, so the Claude Design project matches, and every changed story grades `match` or `close`
 - Each component's doc updates its Styling section, and its stories show the reviewed design
 - The recipe view's print layout is reviewed on paper or as a PDF as well as on screen
-- At phone width, the recipe page shows the Ingredients summary first (moved from M10.22, 2026-10-29)
 - Reordering steps reads clearly by keyboard as well as by pointer
 - The deduction preview reads plainly, and a shortfall or a step not deducted is told apart without colour alone
 - The comparison panel reads without relying on colour alone
