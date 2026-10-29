@@ -25,23 +25,9 @@ import {
 import { COMPENDIUM_PARAMS } from './params';
 import type { CompendiumListFilterProps } from './types';
 
-// The compendium's filter row (M12.4, on IngredientSearchForm): the name search, then the
-// Filters (n) button with its Clear All link and the panel of facets it opens, and above the
-// results the search sentence that says what the list is searching for. The panel covers the
-// results, so a change in it is held and nothing applies until it shuts: Apply Filters, Escape
-// and every other close apply the held facets in one soft navigation (Back steps through,
-// reload restores), and nothing held is thrown away. While it is open its counts follow the
-// held filter (live-facets.ts); the list and the sentence do not move. Clear All, which sits
-// where the page is in view, applies at once. Before hydration the panel is drawn open
-// inside this GET form, each facet a native control under the name the parameter table
-// reads, and Apply Filters (or Enter in the search box) submits them all. Picking a name in
-// the search box's dropdown opens that entry's Quick Look, its details modal (M12.5), over the
-// list as it is shown, its page kept and the typed text not applied (the owner's rule of
-// 2026-10-27, for every list with a Quick Look). The row has no Clear of its own.
-// A coven's list (M9.6, `audience="coven"`) is the same row on COVEN_PARAMS: it adds the Source,
-// In Stock and Low Stock Only choices, reads its live counts from the coven's cupboard, suggests
-// from it.
-// See claude-docs/components/compendium-list.md.
+// The compendium's filter row: the name search, the Filters button with its panel of facets and the
+// search sentence. The panel holds its changes until it shuts; a coven's list is the same row on
+// COVEN_PARAMS (claude-docs/components/compendium-list.md, "Notes from code comments: the filter row").
 
 type Held = CompendiumListFilterProps['filter'];
 
@@ -63,7 +49,7 @@ const whereOf = ({
 
 /**
  * The facets of a filter, the part the panel shows; a coven's adds its three choices, and the
- * admin's its Reviewed strip (M14.8).
+ * admin's its Reviewed strip.
  */
 const panelOf = (filter: Held, coven: boolean, admin: boolean): FacetPanelFilter => ({
   covens: filter.covens ?? [],
@@ -279,7 +265,7 @@ const CompendiumListFilterRow = ({
         panel={panel}
         onPanel={setPanel}
       />
-      {/* The coven's cards can be compact or regular (M9.6); a view setting, so it sits in the
+      {/* The coven's cards can be compact or regular; a view setting, so it sits in the
           row with the filters, inside the search landmark, and submits nothing. Rendered here, not
           passed in as a slot: both are client components and the props stay plain data. */}
       {coven ? <CardDensitySwitch /> : null}
@@ -307,7 +293,7 @@ function labelsOf({
       ]),
     ),
     elements: named(facets.elements),
-    // Only the viewer's own covens have a name here, so only they are named (M12.55).
+    // Only the viewer's own covens have a name here, so only they are named.
     covens: Object.fromEntries(covens.map(({ id, name }) => [id, name])),
   };
 }
@@ -336,7 +322,8 @@ const CompendiumListFilterWithSentence = ({
   cursor,
   total,
 }: CompendiumListFilterProps & { total: number }): ReactElement => {
-  // Only a filter's navigation retypes the sentence: a pager press changes the page, not the search.
+  // Only a filter's navigation retypes the sentence: a pager press changes the page, not the
+  // search.
   const { searching, target } = useListNavigation();
   // The page still shows the previous search while the new one is read, so the sentence names the
   // term and the facets of the address the navigation is opening, not those of `filter`.

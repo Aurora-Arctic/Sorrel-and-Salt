@@ -1,14 +1,10 @@
 @use '../../scss/variables' as *;
 @use '../../scss/mixins' as *;
 
-// The "Back to …" link's look (the owner's calls, 2026-10-19), with the link in back-link.tsx:
-// the ingredient entry page's and the spell recipe page's one and the same (the owner,
-// 2026-10-29). Where it sits on the page is each page's own (`.ingredient-entry__bar`,
-// `.spell-recipe__back`).
+// The "Back to …" link's look, shared by the ingredient entry page and the spell recipe page
+// (claude-docs/components/ingredient-entry.md, "Component notes").
 .back-link {
-  // The chevron's drawing starts inside its box, which reads as an indent;
-  // this pulls the stroke to the column's edge, a little past it to the eye
-  // (the owner's call, 2026-10-19).
+  // The chevron's drawing starts inside its box; this pulls the stroke to the column's edge.
   margin-inline-start: -$back-chevron-pull;
   display: inline-flex;
   align-items: center;
@@ -22,11 +18,8 @@
     transition: none;
   }
 
-  // The chevron steps back and grows a little on hover and focus, pointing
-  // the way the link goes, in place of an underline (the owner's call,
-  // 2026-10-19). Twice the short motion, which read as a twitch here: this is
-  // a flourish, not a control answering a press. Motion only: under reduced
-  // motion it holds still.
+  // The chevron steps back and grows on hover and focus, in place of an underline, at twice the
+  // short motion; it holds still under reduced motion.
   > svg {
     flex: none;
     transition: transform calc(#{$motion-short} * 2) ease-out;

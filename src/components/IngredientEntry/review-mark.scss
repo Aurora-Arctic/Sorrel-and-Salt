@@ -1,7 +1,6 @@
 @use '../../scss/variables' as *;
 
-// The admin's review switch in the details' foot (M14.8), beside the link to the entry's page.
-// Tokens only, before the section's design review.
+// The admin's review switch in the details' foot, beside the link to the entry's page.
 .review-mark {
   display: flex;
   flex-direction: column;

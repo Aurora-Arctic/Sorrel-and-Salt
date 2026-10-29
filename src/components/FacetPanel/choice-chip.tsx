@@ -18,11 +18,9 @@ import InfoTip from '../InfoTip';
 import { useTip } from '../InfoTip/use-tip';
 import { FacetCount } from './facet-count';
 
-// One choice from a few, drawn as a chip reading "Match: All" that opens a small menu of
-// radios (M9.7). A `<details>` so that it opens before the script runs, its radios native so
-// the GET form around it sends the choice; once hydrated, the menu fades in and out as other
-// dropdowns do, and closes on Escape, on a press outside and on a choice. The menu stays
-// mounted while it fades, as a `<details>` keeps `open` until the fade ends (see useSlide).
+// One choice from a few, drawn as a chip reading "Match: All" that opens a menu of radios. A
+// `<details>` so it opens before the script runs, with native radios so the GET form sends the
+// choice; hydrated, the menu fades and stays mounted until the fade ends (see useSlide).
 
 /** How long a leaving menu waits for its fade to end before it closes anyway. */
 const FADE_LIMIT_MS = 400;
@@ -32,10 +30,7 @@ export const fadesAreOff = (): boolean =>
   typeof window.matchMedia !== 'function' ||
   window.matchMedia('(prefers-reduced-motion: reduce)').matches;
 
-/**
- * The right edge of the nearest ancestor that clips its children (the panel's slide clip), or
- * the viewport's when none does.
- */
+/** The right edge of the nearest ancestor that clips its children (the panel's slide clip), or the viewport's. */
 const clipRight = (from: HTMLElement): number => {
   for (let el = from.parentElement; el; el = el.parentElement) {
     if (getComputedStyle(el).overflowX !== 'visible') return el.getBoundingClientRect().right;
@@ -60,16 +55,11 @@ export interface ChoiceChipProps<T extends string> {
   options: ReadonlyArray<ChoiceChipOption<T>>;
   value: T;
   onChange: (value: T) => void;
-  /**
-   * Rests on its value and cannot be changed; the chip does not open and takes no focus.
-   */
+  /** Rests on its value and cannot be changed; the chip does not open and takes no focus. */
   disabled?: boolean;
   /** What the choice means, behind an InfoTip beside the chip. */
   hint?: string;
-  /**
-   * What the choice means, shown in a tip bubble when the pointer is on the chip or, while
-   * enabled, the chip has focus, with no icon beside it. Hidden while the menu is open, so it never covers it.
-   */
+  /** What the choice means, in a tip bubble on pointer or (while enabled) focus, with no icon; hidden while the menu is open. */
   chipHint?: string;
 }
 
@@ -131,10 +121,9 @@ export function ChoiceChip<T extends string>({
 
   const shown = phase === 'opening' || phase === 'open';
 
-  // Left-aligned is the menu's rest place. Each time it opens, if that box would end past what
-  // clips it (a chip at a row's end), it hangs from the chip's right edge instead. Measured
-  // from the chip's left and the menu's own width, so the answer does not depend on the last
-  // placement. Before the script runs the menu stays left-aligned.
+  // Left-aligned is the menu's rest place. Each time it opens, if it would end past what clips
+  // it, it hangs from the chip's right edge instead, measured from the chip's left and the menu's
+  // own width so the answer ignores the last placement. Before the script it stays left-aligned.
   const [alignEnd, setAlignEnd] = useState(false);
   const menuRef = useRef<HTMLDivElement>(null);
   useLayoutEffect(() => {

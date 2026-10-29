@@ -8,10 +8,9 @@ import {
 import type { IngredientRow } from '@/modules/ingredients';
 import './formal-name.scss';
 
-// The formal name as an eyebrow over an entry's heading, with its tip: drawn by the entry's
-// page and by the details modal's head, so the two cannot differ. No hook and no client
-// directive of its own, so a server page renders it and a client part builds it alike.
-// claude-docs/components/ingredient-entry.md.
+// The formal name as an eyebrow over an entry's heading, with its tip: drawn by the entry page and
+// the details modal's head so they cannot differ. No hook and no client directive, so server and
+// client parts alike build it.
 
 /** Each settled nomenclature's formal name, as its label says it. */
 const NAME_LABELS: Partial<Record<NomenclatureKind, string>> = {
@@ -22,11 +21,7 @@ const NAME_LABELS: Partial<Record<NomenclatureKind, string>> = {
   chemical: 'Chemical Name',
 };
 
-/**
- * What the formal name is, said in the tip beside it, since the page shows
- * the name alone (the owner's call): which naming system governs it, as
- * DESIGN.md §5's nomenclature table states each kind.
- */
+/** What the formal name is, said in the tip beside it: which naming system governs it (DESIGN.md §5's nomenclature table). */
 const NAME_TIPS: Partial<Record<NomenclatureKind, string>> = {
   botanical: 'Its botanical name, under the ICN.',
   fungal: 'Its fungal name, under the ICN.',
@@ -37,11 +32,7 @@ const NAME_TIPS: Partial<Record<NomenclatureKind, string>> = {
 const FORMAL_NAME_TIP = 'Its formal name; which naming system it belongs to is not yet settled.';
 const NO_FORMAL_NAME_TIP = 'No naming system names it.';
 
-/**
- * The formal name beside the label, never blank (MB.161): italics only for a
- * binomial; an unsettled kind's name upright and marked unconfirmed; and
- * "None" where there is none, the tip beside it saying why.
- */
+/** The formal name beside the label, never blank (claude-docs/components/ingredient-entry.md, "Component notes"). */
 export default function FormalName({
   entry,
 }: {
@@ -67,9 +58,8 @@ export default function FormalName({
     value = `${formal} (unconfirmed)`;
   }
   return (
-    // The name alone, as an eyebrow over the heading, with what it is in a
-    // tip beside it (the owner's call). Still a term and its definition, the
-    // term hidden from sight, so a screen reader hears "Botanical Name" first.
+    // The name alone as an eyebrow, with what it is in a tip
+    // (claude-docs/components/ingredient-entry.md, "Component notes").
     <dl className="ingredient-entry__formal">
       <div>
         <dt>{label}</dt>

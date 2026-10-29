@@ -1,12 +1,7 @@
 import type { FlowShape, FlowSlot } from './types';
 
-// Where a sortable list's chips sit in a given order (MB.170): the wrapping
-// row of `.combobox__entries` worked out by hand, from the chips' widths and
-// the row's shape measured as a move starts. dnd-kit's `rectSortingStrategy`
-// moves each chip onto the box of the chip whose place it takes, which suits
-// a grid of equal cells; chips of different widths then overlap, or leave
-// gaps (the owner's report). Laid out as the row would lay them out, a chip
-// making way lands where it will sit once the move is put down.
+// Where a sortable list's chips sit in a given order: the wrapping row worked out by hand, since dnd-kit's `rectSortingStrategy` overlaps chips of different widths
+// (claude-docs/components/combobox.md, "Component notes").
 
 // Sub-pixel widths sum a hair past the row a browser still fits them on.
 const ROUNDING_PX = 0.5;
@@ -64,10 +59,8 @@ export function flow(
 }
 
 /**
- * The place a key moves the chip at `at` to, among `slots` laid out with it
- * there: Left and Right a place along the list, whichever row that is on;
- * Up and Down onto the row above or below, to the place nearest beneath or
- * above it; Home and End to either end. Past either end, it stays.
+ * The place a key moves the chip at `at` to, among `slots` laid out with it there: Left and Right a place along the list, Up and Down the row above or below,
+ * Home and End to either end; past either end it stays.
  */
 export function placeFor(key: string, at: number, slots: FlowSlot[]): number {
   const last = slots.length - 1;

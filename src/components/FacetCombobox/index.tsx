@@ -10,12 +10,9 @@ import type { FacetComboboxProps } from './types';
 import '../Combobox/index.scss';
 import './index.scss';
 
-// A filter's closed set with how many entries each value would leave (M12.4):
-// the multi-select box with its counts, a value with none left out, the chosen values chips inside the control, outlined, and each
-// one a hidden input of the filter's GET form. Before the script loads the
-// server draws a native multiple select instead, so that a press on the
-// search's magnifier sends the choice, as `FilterSelectField` does for a
-// single value. See claude-docs/components/facet-combobox.md.
+// A filter's closed set with each value's count: the multi-select box, a value with none left out, the
+// chosen as outlined chips, each a hidden input of the GET form. Before the script loads the server
+// draws a native multiple select (claude-docs/components/facet-combobox.md).
 
 export default function FacetCombobox({
   label,

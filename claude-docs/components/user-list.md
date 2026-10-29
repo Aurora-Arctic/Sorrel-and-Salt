@@ -478,3 +478,37 @@ modal; and, tagged `@story-19`, opens a user's modal from their name, finds
 their coven and role in it, no link to the coven and no Impersonate (the run
 registers none), axe over it, and Close back to the filtered list, then
 `?user=not-an-id` showing the notice and no dialog.
+
+## Notes from code comments: confirmed action
+
+An action that asks first, in a modal, shared by the creation control
+, the role control, Impersonate, the pause switch
+and the invitations' Revoke: the modal's confirm sends the
+write and stays busy until the page is read again, or left; a success
+says its `announcement` in the page's status region, for a screen reader,
+beside the result the page shows. A refusal closes the modal, gives the
+focus back to the button that opened it, and says why in a callout under
+that button (`useClickFeedback`), which floats rather
+than taking room in a row. Inside a modal already, the user's, it
+asks over that modal's body through `ConfirmOverlay` instead, as the
+forms' questions do, rather than open a second modal on top, and its
+refusal stays in that dialog as a plain notice, or,
+for a control beside a fact (the user modal's role and creation
+controls), is the same callout under it. The
+service is the guard; this only puts it where an admin looks
+(claude-docs/components/user-list.md).
+
+## Notes from code comments: locked control
+
+A control that cannot be used, and says why: the primary admin's Change Role,
+every Change Role while admin changes are paused to an admin the pause
+binds, and the pause switch itself to any admin but the primary one.
+`aria-disabled` rather than `disabled`, so it keeps its place in the tab
+order and a click still lands, which says why rather than doing nothing. The reason is the button's description, in a tip
+that opens on hover, focus and a tap, stays open while the pointer is on it
+and closes on Escape (WCAG 1.4.13), through InfoTip's `useTip`. Each
+attempt also mounts the tip afresh as an alert, so a screen reader hears the
+reason again. The tip is placed against the viewport rather than its cell:
+the table's frame scrolls, so it would clip whatever reaches past it, and the
+reason is taller than the heading row above the top row; `useTip` places it
+fixed, and it follows the button through a scroll.

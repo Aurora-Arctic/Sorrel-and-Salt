@@ -3,19 +3,15 @@ import type { ProviderId } from '../../lib/types';
 import type { ProviderArt } from '../ProviderMark/types';
 import './icons.scss';
 
-// Each provider's own brand mark, sourced from that provider's own published
-// assets rather than approximated from memory —
-// claude-docs/components/sign-in-panel.md, "Provider branding" names where
-// each one came from: Google's identity branding guidelines, Discord's and
-// Facebook's own brand-resource downloads, Microsoft's identity platform
-// guidelines. The fills inside each SVG are part of the artwork, so they stay
-// here as the provider drew them; the grounds the marks sit on — a button's
-// fill, Facebook's chip, the list's circle — are the provider's colours too,
-// and come from `$brand-palettes` (_variables.scss) rather than our tokens.
+// Each provider's own brand mark, sourced from that provider's published assets rather than
+// approximated; claude-docs/components/sign-in-panel.md, "Provider branding" names where each
+// came from. The fills inside each SVG are part of the artwork, so they stay as the provider
+// drew them; the grounds the marks sit on (a button's fill, Facebook's chip, the list's
+// circle) are the provider's colours too, from `$brand-palettes` (_variables.scss) rather
+// than our tokens.
 
-// Google's "G" logo, as published for "Sign in with Google" buttons
-// (Google's identity branding guidelines). No chip: the mark is multicolour
-// and reads on any ground.
+// Google's "G" logo, as published for "Sign in with Google" buttons. No chip: the mark is
+// multicolour and reads on any ground.
 export function GoogleIcon(): ReactElement {
   return (
     <svg viewBox="0 0 18 18" width="18" height="18" aria-hidden="true">
@@ -39,11 +35,9 @@ export function GoogleIcon(): ReactElement {
   );
 }
 
-// Discord's current "Symbol" mark, traced from the SVG in Discord's own
-// brand-asset download (discord.com/branding → Logo → Symbol), not the
-// retired "Clyde" face icon older buttons around the web still show. Drawn
-// in white directly on the blurple button, the way Discord's own site does
-// it — the mark needs no chip.
+// Discord's current "Symbol" mark, traced from the SVG in Discord's brand-asset download
+// (discord.com/branding, Logo, Symbol), not the retired "Clyde" face icon. Drawn in white
+// directly on the blurple button, as Discord's own site does; the mark needs no chip.
 export function DiscordIcon(): ReactElement {
   return (
     <svg viewBox="0 0 126.644 96" width="21" height="15.75" aria-hidden="true">
@@ -55,11 +49,10 @@ export function DiscordIcon(): ReactElement {
   );
 }
 
-// Meta's own "Secondary Logo" asset (meta.com/brand/resources/facebook/logo)
-// — one path that traces the circle's own outer edge and the "f" together,
-// so filling it white over a blue backing circle leaves the "f" as a hole
-// the blue shows through, rather than a separate letterform drawn on top.
-// The chip below supplies that backing circle in Facebook's own blue.
+// Meta's "Secondary Logo" asset (meta.com/brand/resources/facebook/logo): one path that
+// traces the circle's outer edge and the "f" together, so filling it white over a blue
+// backing circle leaves the "f" as a hole the blue shows through. The chip below supplies
+// that backing circle in Facebook's own blue.
 export function FacebookIcon(): ReactElement {
   return (
     <span className="sign-in-panel__icon-chip sign-in-panel__icon-chip--facebook">
@@ -74,12 +67,11 @@ export function FacebookIcon(): ReactElement {
   );
 }
 
-// The same Meta asset filled Facebook's own blue, with no chip, for a list
-// rather than a button (/admin/users' Sign-In Methods, MB.63): Facebook's
-// standard blue circle with a white "f", on the owner's call, where
-// FacebookIcon's white fill needs the blue chip behind it. The path's "f" is
-// a hole, so a white disc sits behind it, inset (r 245 against the path's
-// 250) so no white fringe antialiases around the blue edge.
+// The same Meta asset filled Facebook's own blue, with no chip, for a list rather than a
+// button (/admin/users' Sign-In Methods): Facebook's standard blue circle with a white "f",
+// where FacebookIcon's white fill needs the blue chip behind it. The path's "f" is a hole, so
+// a white disc sits behind it, inset (r 245 against the path's 250) so no white fringe
+// antialiases around the blue edge.
 export function FacebookMark(): ReactElement {
   return (
     <svg viewBox="0 0 500 499" width="24" height="24" aria-hidden="true">
@@ -93,8 +85,7 @@ export function FacebookMark(): ReactElement {
   );
 }
 
-// Microsoft's four-colour square mark, as published for "Sign in with
-// Microsoft" buttons (Microsoft identity platform branding guidelines). No
+// Microsoft's four-colour square mark, as published for "Sign in with Microsoft" buttons. No
 // chip: it sits directly on the button's own white ground.
 export function MicrosoftIcon(): ReactElement {
   return (
@@ -107,11 +98,10 @@ export function MicrosoftIcon(): ReactElement {
   );
 }
 
-// Every provider's mark by id, the one table SignInPanel's buttons and the
-// ProviderMark circle both read, so a provider added to `ProviderId` fails
-// to compile until it has one. Facebook's two forms are a prop rather than
-// two entries, since every caller wants "Facebook's mark" and only the
-// ground it sits on differs.
+// Every provider's mark by id, the one table SignInPanel's buttons and the ProviderMark
+// circle both read, so a provider added to `ProviderId` fails to compile until it has one.
+// Facebook's two forms are a prop rather than two entries, since only the ground it sits on
+// differs.
 export const PROVIDER_MARKS: Record<ProviderId, ProviderArt> = {
   google: GoogleIcon,
   discord: DiscordIcon,

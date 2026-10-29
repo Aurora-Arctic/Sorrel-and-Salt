@@ -7,12 +7,7 @@ import { CompendiumEditLink } from '../IconTip';
 import { EDIT_ENTRY_EYEBROW } from './edit-heading';
 import type { EditableEntry } from './types';
 
-/**
- * Edit in Compendium as the one icon, where it is the page head's only action (a curator in no
- * coven, M9.12): the same pencil as the cards', named for the compendium it changes (the owner's
- * call, 2026-10-20), a link straight into the edit dialog. It is the page's main icon: on the
- * compendium's page the compendium edit is always its own button, never folded into a menu.
- */
+/** Edit in Compendium as the one icon where it is the page head's only action (a curator in no coven): the cards' pencil, named for the compendium, linking into the edit dialog. */
 export function EditPencil({
   href,
   entry,

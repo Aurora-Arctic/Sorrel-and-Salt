@@ -8,18 +8,9 @@ import { ConfirmQuestion } from '../Modal';
 import type { SpellBuilderInput, SpellBuilderValues, SpellVisibilityFieldProps } from './types';
 import type { SpellVisibility } from '@/modules/grimoire';
 
-// Who can see a spell (M10.13): its author alone, or every member of the coven.
-// A switch, Share With the Coven, on for the coven and off for private (the owner's
-// call, 2026-10-27), with a line under it saying what its state means. A new spell
-// starts private (the owner's call, 2026-10-28: the autosave would otherwise share
-// it 3 s after the first keystroke), and takes either, and the choice goes out with
-// its first save. A draft moves either way, as often as wanted, with no question
-// (M10.20): sharing it is reversible. A complete spell obeys DESIGN.md §5's one-way
-// rule, held by the service: a private one is shared by switching it on, which asks
-// first and then saves at once, so that one action with its confirmation shares it;
-// a shared one never goes back, so the control then reads only and says so, rather
-// than leave a person to find out from a refusal.
-// claude-docs/components/spell-builder.md, "Visibility".
+// Who can see a spell: its author alone, or every member of the coven, by the Share With the Coven
+// switch. A new spell starts private. A complete spell's visibility only widens, held by the
+// service. claude-docs/components/spell-builder.md, "Visibility".
 
 /** What each state means, said under the switch. */
 const MEANS = {
@@ -27,7 +18,7 @@ const MEANS = {
   private: 'Only you can see it, until you share it with the coven.',
 } as const satisfies Record<SpellVisibility, string>;
 
-/** Said under the shut control, and why it is shut in a tip beside it, with the way to a private copy (M13.20). */
+/** Said under the shut control, and why it is shut in a tip beside it, with the way to a private copy. */
 const SHARED_FOR_GOOD = 'Shared with the coven';
 const SHARED_FOR_GOOD_TIP = 'It cannot be made private again. Duplicate makes a private copy.';
 

@@ -152,3 +152,24 @@ as any warm tint on parchment is. On the hovered card the intent measures 6.95:1
 and 7.99:1 (dark), the title 15.56:1 and 12.20:1.
 
 The Workshop's `Hover` story holds the effect lit on one card and leaves a second to hover.
+
+## Notes from code comments: the smouldering edge
+
+What burns is gone: a hole in the card's foot corner, through the card's face and its
+shadow both, so the page shows through and no edge of the whole card is left. The face
+and its shadow are a layer of their own (`.spell-card__face`): the face is the spread
+shadow of a hole-shaped box, so it is everything but the hole, and the shadow is a
+`drop-shadow()` of that, so it follows the burnt edge, not the rectangle. Over the content,
+a thin bright ember line and a thin dark char rim run round the burn front, and one SVG
+filter (`#spell-card-burn`, from `SpellCardFilters`) tears the hole and the rim alike,
+so their edges meet. Faint embers glow in the burnt part itself, brightest along the
+ember line and fading towards the corner; a little warmth spills onto the table below
+the card, behind it, and shows through the hole.
+The burn creeps along the bottom edge for 1.3s, then holds while the ember glows
+unevenly. On leaving, the burn fades while the hole and the spill shrink back to the
+corner, so a quick return burns on from where they have shrunk to.
+
+Nothing warm sits under text: the hole is under 1rem deep, half of it past the card's
+edge, so with its rim and the tearing it stays inside the card's padding. Only at the
+corner does it climb higher, about 1.25rem up the right edge, where no text runs. The card's
+face takes IngredientCard's hover tint and lifted shadow and nothing else.

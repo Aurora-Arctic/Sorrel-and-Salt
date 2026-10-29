@@ -11,7 +11,7 @@ import type { SpellRecipeAsideProps } from './types';
 // mounts the builder's dialog too, but the column loads them itself rather than by that chance.
 import '../SpellBuilder/index.scss';
 
-// The recipe page's side column (M13.21; the owner, 2026-10-29): Category Match and In Coven
+// The recipe page's side column: Category Match and In Coven
 // Inventory, the builder's Jar aside panels, read for the saved spell and laid out as the
 // ingredient entry page lays its side column, beside the text past a tablet's width and beneath
 // it on a phone. The page alone draws it; the Quick Look modal keeps to the recipe body. Both
@@ -27,7 +27,7 @@ export default function SpellRecipeAside({
 }: SpellRecipeAsideProps): ReactElement {
   const colours = useMemo(() => new Map(groups), [groups]);
   const doorsByStep = useMemo(() => new Map(doors.map((door) => [door.stepId, door])), [doors]);
-  // A line's doors (the owner, 2026-10-29): the Quick Look eye, as the recipe's steps carry it,
+  // A line's doors: the Quick Look eye, as the recipe's steps carry it,
   // opening the ingredient's details over the page, and Edit Stock behind the jar and the name.
   const doorsOf = (step: SpellStepValue): LineDoors | undefined => {
     const door = step.stepId === null ? undefined : doorsByStep.get(step.stepId);
@@ -46,7 +46,7 @@ export default function SpellRecipeAside({
   };
   return (
     <>
-      {/* Category Match first, over the inventory (the owner, 2026-10-29): the builder's order reversed. */}
+      {/* Category Match first, over the inventory: the builder's order reversed. */}
       <ComparisonPanel intended={intended} steps={steps} groups={colours} heading="h2" />
       <InCovenInventory steps={steps} doorsOf={doorsOf} />
     </>

@@ -6,14 +6,11 @@ import ProviderMark from '../ProviderMark';
 import { ProviderUnavailableNote } from '../ProviderMark/unavailable-note';
 import type { ProviderRowProps } from './types';
 
-// One provider in the account's list of sign-in methods, in one of three
-// states, each told apart by its control and its words rather than by hue:
-// linked has Remove (greyed for the only method left, with a line saying why;
-// or, from a stale session, nothing, since the list says why once),
-// addable has Add, and unavailable has a greyed Add with the note saying why.
-// A press's failure is a callout under the control pressed; a failed link's
-// callback error, which no press here raised, sits in the row beneath the
-// controls as a `Notice`. claude-docs/components/sign-in-methods.md, "The rows".
+// One provider in the account's sign-in methods, in one of three states told apart by control and
+// words, not hue: linked (Remove, greyed with a reason for the only method left), addable (Add),
+// unavailable (greyed Add with a note). A press's failure is a callout under the control; a failed
+// link's callback error sits beneath the controls as a `Notice`.
+// claude-docs/components/sign-in-methods.md, "The rows".
 export function ProviderRow({
   provider,
   state,
@@ -67,9 +64,9 @@ export function ProviderRow({
             Remove
           </BusyButton>
         ) : removal === 'last' ? (
-          // Greyed rather than gone, as an unavailable Add is: the reason
-          // beneath it then sits under the control it explains (the owner,
-          // 2026-10-11), and a screen reader hears it as the button's description.
+          // Greyed rather than gone, as an unavailable Add is: the reason beneath it then
+          // sits under the control it explains, and a screen reader hears it as the
+          // button's description.
           <button
             type="button"
             className="btn btn--destructive btn--small"
@@ -83,8 +80,8 @@ export function ProviderRow({
       ) : (
         <BusyButton
           ref={anchorRef}
-          // Small and quiet, as Remove is small and in the wax: a row's action,
-          // not a page's (the owner, 2026-10-11).
+          // Small and quiet, as Remove is small and in the wax: a row's action, not a
+          // page's.
           className="btn btn--quiet btn--small"
           aria-label={`Add ${provider.label}`}
           // Not `disabled`, as on /sign-in: it stays in the tab order.

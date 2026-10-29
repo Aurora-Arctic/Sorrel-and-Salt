@@ -8,7 +8,7 @@ import { USERS_PATH, userListHref } from './href';
 import { ROLES, ROLE_LABELS } from './roles';
 import type { UserListFilterProps, UserListFilterValue } from './types';
 
-// The user list's filter (MB.52, MB.115), in the shared `FilterForm`. Only
+// The user list's filter, in the shared `FilterForm`. Only
 // the search text is held here, until the magnifier or Enter sends it. The
 // Role dropdown, a select-only box once hydrated (`FilterSelectField`), and
 // the Needs Approval switch start from the filter shown and apply the moment

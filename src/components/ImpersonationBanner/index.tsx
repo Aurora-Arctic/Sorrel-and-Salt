@@ -7,9 +7,9 @@ import { useClickFeedback } from '../ClickFeedback';
 import type { ImpersonationBannerProps } from './types';
 import './index.scss';
 
-// MB.53's way out, on every page while a session is an impersonation. It
-// cannot live in the admin nav: impersonating a non-admin costs the admin
-// `/admin` until they stop (claude-docs/components/impersonation-banner.md).
+// The way out, on every page while a session is an impersonation. It cannot live in the
+// admin nav: impersonating a non-admin costs the admin `/admin` until they stop
+// (claude-docs/components/impersonation-banner.md).
 
 // Where the admin picked the user, as a full load: the session cookie is the
 // admin's again, and every server component must read it afresh.
@@ -70,9 +70,8 @@ const ImpersonationBanner = ({ name, email }: ImpersonationBannerProps): ReactEl
       <p className="impersonation-banner__text">
         You are impersonating <strong>{name}</strong> ({email}).
       </p>
-      {/* Busy until the admin's own page opens (MB.115, a sub-hour fix the
-          owner asked for). `aria-disabled` rather than `disabled`, which
-          would drop the focus to the page and leave a keyboard nowhere. */}
+      {/* Busy until the admin's own page opens. `aria-disabled` rather than `disabled`,
+                which would drop the focus to the page and leave a keyboard nowhere. */}
       <BusyButton
         ref={anchorRef}
         className="btn btn--quiet btn--small"

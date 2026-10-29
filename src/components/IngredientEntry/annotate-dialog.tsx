@@ -8,13 +8,9 @@ import AnnotateMore from './annotate-more';
 import { ANNOTATE_HEADING } from './annotate-heading';
 import type { AnnotateDialogProps } from './types';
 
-// The coven's Annotate dialog (M12.17), opened from the address's `?annotate`: on the
-// compendium entry's own page, and over the coven's Ingredients list (M8.17). It shows
-// while the address asks for it (`opened`), or at once while an Annotate press is loading
-// it, with the skeleton under Annotate's heading; Edit's press loads its own. Closing goes
-// to `closeHref`, and the focus goes back the way RouteModal gives it. `more` adds Make
-// It Ours and Remove at the form's foot (M8.17): a More menu with both, a
-// button with one.
+// The coven's Annotate dialog, opened from the address's `?annotate` (on the entry page and over
+// the Ingredients list). It shows while the address asks for it (`opened`) or while an Annotate
+// press loads it; `more` adds Make It Ours and Remove at the form's foot.
 
 export default function AnnotateDialog({
   closeHref,

@@ -18,14 +18,9 @@ import type { Duplicate } from './types';
 import { applyCupboardEntry } from '@/modules/ingredients/validation/cupboard-merge';
 import type { IngredientDetail } from '@/modules/ingredients';
 
-// The Quick Look a duplicate row the coven already holds opens (M12.48, the
-// owner's call): the entry's details modal over the Add Ingredient form, read in
-// the page through /api/graphql, so nothing typed into the form is lost to a
-// navigation. One read of the `ingredient` query, which serves an entry by id in a
-// coven's own tier and the compendium's and never another coven's, under the
-// service's own check; nothing new on the server. Not the list's DetailsDialog,
-// which is a route modal its server page fills: this one has no route to change.
-// claude-docs/components/ingredient-form.md, "The duplicate warning".
+// The Quick Look a duplicate row the coven already holds opens: the entry's details modal over the
+// Add Ingredient form, read through /api/graphql so nothing typed is lost to a navigation
+// (claude-docs/components/ingredient-form.md, "The duplicate warning").
 
 const DuplicateQuickLookDocument = graphql(`
   query DuplicateQuickLook($id: ID!, $workspaceId: ID!) {
@@ -107,10 +102,8 @@ const DuplicateQuickLookDocument = graphql(`
 type Looked = DuplicateQuickLookQuery['ingredient'];
 
 /**
- * The answer as the entry page's own shape, so the modal's head and body are the
- * details modal's own components. The rows are cast: the summary and its marks read
- * only the fields asked for above, and the rest of each row (its audit ids, its
- * slugs) is nothing they draw. Substitutes and references are the page's alone.
+ * The answer as the entry page's own shape, so the modal's head and body are the details modal's
+ * own components. The rows are cast: the parts drawn read only the fields asked for above.
  */
 export function detailOf(looked: Looked, workspaceId: string): IngredientDetail {
   const tier = looked.isGlobal ? null : workspaceId;
@@ -166,9 +159,9 @@ type QuickLookNames = Pick<Duplicate, 'name'> &
   );
 
 /**
- * The head before the entry arrives. With the formal name known it is the details' own head; with
- * it unknown, a line skeleton stands where the formal name goes (while the read is out), or
- * nothing does (after a failed read): never "Not yet looked up", which would say the entry has none.
+ * The head before the entry arrives: the details' own head if the formal name is known; if not, a
+ * line skeleton where it goes while the read is out, and nothing after a failed read, never
+ * "Not yet looked up", which would say the entry has none.
  */
 function pendingHeading(entry: QuickLookNames, loading = true): ReturnType<typeof detailsHeading> {
   if (entry.canonicalName !== undefined && entry.nomenclature !== undefined) {
@@ -183,7 +176,7 @@ function pendingHeading(entry: QuickLookNames, loading = true): ReturnType<typeo
 
 /**
  * The modal itself: open at once under the row's name, loading by the standard's
- * skeleton (M12.33), then the entry; a failed read says so, with Try Again.
+ * skeleton, then the entry; a failed read says so, with Try Again.
  */
 export function DuplicateQuickLook({
   id,
@@ -195,10 +188,9 @@ export function DuplicateQuickLook({
 }: {
   id: string;
   /**
-   * The row's names, for the head while the read is out: the details' own head, as
-   * the list's Quick Look opens under, so nothing in it jumps when they arrive. A caller
-   * that does not know the formal name leaves `canonicalName` and `nomenclature` out: the
-   * head then draws a one-line skeleton where the formal name goes, until the entry arrives.
+   * The row's names, for the head while the read is out, as the list's Quick Look opens under, so
+   * nothing jumps when the entry arrives. A caller that does not know the formal name leaves
+   * `canonicalName` and `nomenclature` out, and the head draws a one-line skeleton in its place.
    */
   entry: QuickLookNames;
   workspaceId: string;

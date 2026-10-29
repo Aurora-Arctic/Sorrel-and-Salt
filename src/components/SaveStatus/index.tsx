@@ -8,15 +8,11 @@ import Spinner from '../Spinner';
 import type { SaveStatusProps } from './types';
 import './index.scss';
 
-// Where an autosaving form says how its saves are going (M13.16): inline
-// beside the form's primary action, never a toast, because it describes this
-// form and stays until the next save. The conflict notice alone may go
-// elsewhere (`conflictInto`): under a dialog's title, where a long form's
-// footer is out of view, since it asks for a decision rather than reporting
-// (the owner's call, 2026-10-29). The visible line updates on every
-// change; screen readers hear only the first save of a burst, from a live
-// region of its own, since a save every few seconds read out each time would
-// drown what the person is typing. claude-docs/components/autosave.md.
+// Where an autosaving form says how its saves go: inline beside the primary action, never a toast,
+// since it describes this form and stays until the next save. Only the conflict notice may go
+// elsewhere (`conflictInto`), under a dialog's title, as it asks for a decision. The visible line
+// updates on every change; screen readers hear only a burst's first save.
+// claude-docs/components/autosave.md.
 
 /** A save more than this long after the last one starts a new burst, and is announced. */
 export const BURST_GAP_MS = 60_000;
@@ -77,7 +73,7 @@ const SaveStatus = ({
     <Notice kind="warn" block className="save-status__conflict">
       <span>{conflictMessage}</span>
       <span className="save-status__actions">
-        {/* One primary: Reload Latest, the safe choice; Keep My Version sits back, quiet (the owner's call, 2026-10-29). */}
+        {/* One primary: Reload Latest, the safe choice; Keep My Version sits back, quiet. */}
         <button type="button" className="btn btn--small btn--solid" onClick={onReload}>
           Reload Latest
         </button>

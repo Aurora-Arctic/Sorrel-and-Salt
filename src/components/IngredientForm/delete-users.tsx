@@ -12,12 +12,9 @@ const CompendiumEntryUsersDocument = graphql(`
 `);
 
 /**
- * How many covens hold the compendium entry, said inside the curator's delete
- * question (M12.25): a count, never a coven's name. Mounted only while the
- * question is asked, so the read goes out when it opens, and it says nothing
- * until the number has arrived, so a count of none is never guessed. It is
- * not kept after the question closes: the next one asks again. A failed read
- * leaves the question unadorned, since the delete itself needs no count.
+ * How many covens hold the compendium entry, said inside the curator's delete question: a count,
+ * never a coven's name. Mounted only while the question is asked and read afresh each time, it says
+ * nothing until the number arrives, so none is never guessed; a failed read leaves it bare.
  */
 export function DeleteUsers({ id }: { id: string }): ReactElement | null {
   const { data } = useQuery({

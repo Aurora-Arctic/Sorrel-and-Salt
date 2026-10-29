@@ -6,7 +6,7 @@ import { privilegeLedgerHref } from '../PrivilegeLedger/href';
 import { HistoryIcon } from './icons';
 import type { HistoryLinkProps } from './types';
 
-// A row's way into the privilege ledger narrowed to its user (MB.200): the
+// A row's way into the privilege ledger narrowed to its user: the
 // ledger's search opened with their address, lower-cased as every address is
 // held. An icon before the name, named "Privilege changes for <name>",
 // with a tip reading Privilege Changes, the ledger's one name, that behaves as InfoTip's does,

@@ -192,3 +192,19 @@ redirect, and the forms read past their first page, each name once. The Categori
 - **The Categories column has a floor where the table is wide.** At a frame of 75rem or more the column is at least 16.75rem of content (plus the cell inset), measured against the widest row of chips any of the 313 seeded entries shows with the final compact, dot-less chips: Aspen's Ancestor Work and Communication with its +8 button, 266px (16.625rem), rounded up to the next 0.25rem. Narrower, the floor does not apply and the table scrolls instead of wrapping the chips; as a card the rule never applies.
 - **A row stays on one line while the table is a table** (2026-10-19, the owner's call). The table takes `data-table--nowrap`, so no cell wraps and the table scrolls sideways in its frame. That class alone does not hold the two flex rows, so the Form column's `.compendium-list__forms` and the Categories cell's chip row are set to `flex-wrap: nowrap` too (the chip rule is scoped to the Categories cell, so cards elsewhere still wrap). As a card (the frame under `$table-stack-width`) the cells, the forms and the chips all wrap again.
 - **The dot between forms is centred on the form's own box** (`inset-block: 0; margin-block: auto`), and the table's form wrapper is a flex box so that box is as tall as the form. Measured in Chromium: the dot's centre equals the icon's centre on the card and in the table; the lowercase x-height centre sits 0.5px (card) and 1.5px (table) lower.
+
+## Notes from code comments: the filter row
+
+The filter row is the name search, then the Filters (n) button with its Clear All link and the panel of facets it opens, and above the results the search sentence that says what the list is searching for.
+
+- **The panel covers the results**, so a change in it is held and nothing applies until it shuts. Apply Filters, Escape and every other close apply the held facets in one soft navigation (Back steps through, reload restores), and nothing held is thrown away. While it is open its counts follow the held filter (`live-facets.ts`); the list and the sentence do not move. Clear All, which sits where the page is in view, applies at once.
+- **Before hydration** the panel is drawn open inside the GET form, each facet a native control under the name the parameter table reads, and Apply Filters (or Enter in the search box) submits them all.
+- **Picking a name in the search box's dropdown** opens that entry's Quick Look, its details modal, over the list as it is shown, with its page kept and the typed text not applied. This holds for every list with a Quick Look. The row has no Clear of its own.
+- **A coven's list** (`audience="coven"`) is the same row on `COVEN_PARAMS`: it adds the Source, In Stock and Low Stock Only choices, reads its live counts from the coven's cupboard, and suggests from it.
+
+## Source notes
+
+Comments in the source that point here; each is the detail behind a one-line comment.
+
+- `types.ts`: Every filter's choices with their counts, read for the filter the page shows (the compendium's `compendiumFacets`, public like the list). Each list is in the order to offer them: forms, deities and categories most entries first, then by label, and only the values some entry carries plus the ones chosen, which sit at zero if none does; signs, celestial bodies and elements all of them, zeros included, in the vocabulary's order; toxic as toxic, then not toxic.
+- `index.tsx`: The empty list, naming the filters in use so an admin sees what to change: "No entries match “wort”, the form “Oil” and the element Fire. Change or clear the filter to see more." With no filter it says how to begin the compendium. A node, as the values are bold; `noMatchText` stays the string form for the other admin lists, and both build from `noMatchLead` and `NO_MATCH_ADVICE`.

@@ -7,7 +7,7 @@ import type { SafetyMarkProps } from '../../SafetyNote/types';
 
 // The step list's values: a saved step as the builder holds it, a held step as
 // a save sends it, and what the list works out from its steps — the unit rule
-// (story 77) and the derived categories. No React here.
+// and the derived categories. No React here.
 
 /** The categories a step brings: its ingredient's and its form's, once each. */
 const categoriesOf = (step: SpellBuilderStep): StepCategory[] => [
@@ -205,7 +205,7 @@ export function stepInputOf(step: SpellStepValue): SpellStepSend {
   ) as SpellStepSend;
   // A blank text is dropped from a step that has an ingredient, which needs
   // none, but kept on an instruction-only step so the schema refuses it at
-  // its own field rather than as a step that says nothing (M13.3).
+  // its own field rather than as a step that says nothing.
   if (isInstruction(step)) return { ...sent, body: step.body ?? '' };
   // A one-off's name emptied in its Name field is still sent, so the schema refuses it at that
   // field and not as a step with no identity.
@@ -213,7 +213,7 @@ export function stepInputOf(step: SpellStepValue): SpellStepSend {
 }
 
 /**
- * Story 77 ahead of the save: each step whose unit its coven's jar cannot be
+ * Ahead of the save: each step whose unit its coven's jar cannot be
  * measured in, by index, as the service judges it — a step with no unit, no
  * jar or a jar with no unit passes, and so does a saved step's unchanged unit.
  */

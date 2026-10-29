@@ -609,3 +609,61 @@ keyboard and reads the saved order from the database. No story walks the visibil
 story, so `tests/e2e/spell-visibility.spec.ts` is its gate spec: a spell written private,
 then shared in one confirmed action and the control shut, each step read from the
 database. Story 56 checks the Private badge on the author's card.
+
+## Notes from code comments: the spell dialog
+
+The spell builder as a modal over the grimoire, in step with Add Ingredient: New Spell opens it
+under `?new=spell-<slug>` (or `?new=spell`, the current grimoire's), and a spell's Edit under
+`?edit=<id>` (claude-docs/design-decisions/m10.12-spell-builder-modal.md). A draft's first save
+replaces `?new` with its own `?edit=<id>`, so a reload or Back opens the saved draft, never an
+empty form. The builder reports that save through `onCreated`, whichever way it was made, so
+the autosave moves the address the same way.
+Close saves first (./save-on-close.ts). A client part because the
+builder's handlers are functions, which a server page cannot hand down.
+New Spell's press writes `?new=spell-<slug>` with the browser's pushState (AddAction's
+`drawnHere`), so the dialog reads the address itself and draws the empty builder at
+once, at its full size, as Add Ingredient does: a skeleton the server's form replaced
+grew the centred dialog and moved it under the pointer. Any other `?new` is Add
+Ingredient's, and holds a saved spell's dialog back until it closes.
+A saved spell's steps are read here, through /api/graphql, once it opens: the page's
+server read gives its fields alone, and the builder sends nothing until the steps
+land, since an update's steps are the whole recipe.
+
+## Notes from code comments: the builder
+
+The spell builder: a spell's title, intent, jar and note, in a
+modal over the grimoire (./spell-dialog.tsx), opened empty by New Spell and
+on a saved spell by its Edit. Its fields sit in four folding sections, as
+Add Ingredient's do: open on a new spell, shut on a saved one, each shut
+line naming what it holds, and Open All / Close All in the dialog's head. Moon phase and day of the week suggest a
+fixed list and still take what is typed (./constants). No field is
+required: a draft may be saved with any of them, and a title is asked for
+only when the spell is marked complete. The builder autosaves
+(./autosave.ts): a change saves 3 s after the last, Save saves at
+once, and the first save creates the spell, after which the builder holds
+its id and revision and `onCreated` moves the dialog's address to it. There
+is no Cancel: Close saves what is unsaved, then closes (./save-on-close.ts).
+
+## Notes from code comments: status and visibility
+
+A spell is a draft until it is marked complete. A draft shows one
+button, Mark Complete; a click saves everything the form holds as complete, as Share With
+the Coven does, so the status is never a pick left pending. A complete spell needs a title
+(a database CHECK): its absence is said on the title field, before anything is sent. Marking
+complete flushes the autosave with the other status, which carries every unsaved change in
+the same save.
+A complete spell shows its statement and no button: there is no Reopen as Draft. Once
+complete, a spell's workings are recorded against it and its visibility lock has started,
+so reopening would undo both. To vary a complete spell, the copy (Duplicate a Spell)
+is the way. This is the control only: the service still accepts complete -> draft.
+
+Who can see a spell: its author alone, or every member of the coven.
+A switch, Share With the Coven, on for the coven and off for private, with a line under it saying what its state means. A new spell
+starts private (the autosave would otherwise share
+it 3 s after the first keystroke), and takes either, and the choice goes out with
+its first save. A draft moves either way, as often as wanted, with no question
+: sharing it is reversible. A complete spell obeys DESIGN.md §5's one-way
+rule, held by the service: a private one is shared by switching it on, which asks
+first and then saves at once, so that one action with its confirmation shares it;
+a shared one never goes back, so the control then reads only and says so, rather
+than leave a person to find out from a refusal.

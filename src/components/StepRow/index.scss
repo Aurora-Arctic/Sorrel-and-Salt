@@ -1,7 +1,7 @@
 @use '../../scss/variables' as *;
 @use '../../scss/mixins' as *;
 
-// A step's row (M13.3): the read-only line the recipe page draws, with the
+// A step's row: the read-only line the recipe page draws, with the
 // slots a caller fills. A caller that edits asks for the card (`step-row--card`,
 // below), which is the spell builder's.
 .step-row {
@@ -11,10 +11,10 @@
   gap: 0.5rem;
 }
 
-// The dash standing for a missing quantity, faded so the unit reads first (the owner, 2026-10-28).
+// The dash standing for a missing quantity, faded so the unit reads first.
 .step-row__dash {
   color: $text-muted;
-  // At the text's own weight: the amount's heavier face made the dash read dark (the owner, 2026-10-29).
+  // At the text's own weight: the amount's heavier face made the dash read dark.
   font-weight: 400;
 }
 
@@ -41,7 +41,7 @@
   align-items: center;
   gap: 0.25rem 0.5rem;
 
-  // The owner's call (second design review): the Caution, Toxic and One-Off badges take the
+  // The Caution, Toxic and One-Off badges take the
   // site's compact size, the one the compact ingredient card uses, so they read as one quiet pair.
   .badge {
     @include badge-size('small');
@@ -63,7 +63,7 @@
   min-width: 0;
 }
 
-// The card (M10.19's design pass): a step on the ingredient form's variant card,
+// The card: a step on the ingredient form's variant card,
 // the muted-ink edge, the surface radius and ground, the same padding. On one
 // row it holds the handle, the step's number, the form's icon and name, the
 // amount, and Remove, level along the bottoms of their fields so that the name
@@ -79,8 +79,7 @@
   align-items: end;
   padding: space(2) space(2) space(2) space(3);
   // A hairline, not `$text-muted`: the card is a container, not a control, so
-  // it needs no 3:1 edge, and the fields inside keep theirs (design review,
-  // 2026-10-28, finding 3). It was `$text-muted` before.
+  // it needs no 3:1 edge, and the fields inside keep theirs.
   border: 1px solid $hairline;
   border-radius: radius('surface');
   background-color: $surface-card;
@@ -159,11 +158,13 @@ $step-ink-drop: 0.05rem;
 .step-row.step-row--card {
   &.step-row--closed,
   &.step-row--open {
-    // The name's line, then the amount and the instruction on one muted line beneath it, in the name's column (the look of a closed section's summary).
+    // The name's line, then the amount and the instruction on one muted line beneath it, in the
+    // name's column (the look of a closed section's summary).
     grid-template-areas:
       'handle position name marks controls'
       '. . summary summary summary';
-    // The name keeps a sane minimum, so the marks beside it can never squeeze it to a letter a line.
+    // The name keeps a sane minimum, so the marks beside it can never squeeze it to a letter a
+    // line.
     grid-template-columns: auto auto minmax(6rem, 1fr) auto auto;
 
     // Everything on the first line sits on that line's centre, and not on the
@@ -239,7 +240,7 @@ $step-ink-drop: 0.05rem;
   }
 
   // The Quick Look eye, Edit (or Close) and Remove: one tight group at the right of the first
-  // line, `space(1)` apart and not a grid column gap (`space(3)`) apart (owner, 2026-10-29).
+  // line, `space(1)` apart and not a grid column gap (`space(3)`) apart.
   .step-row__controls {
     grid-area: controls;
     display: flex;
@@ -249,7 +250,7 @@ $step-ink-drop: 0.05rem;
 
     // Always three slots wide (eye, Edit or Close, Remove), whichever are drawn, so the badges
     // before it end at the same x on every row; a missing control leaves its slot empty and the
-    // rest keep their places at the right edge (owner, 2026-10-29).
+    // rest keep their places at the right edge.
     inline-size: calc(#{$icon-size} * 3 + #{space(1)} * 2);
     flex: none;
   }
@@ -267,10 +268,10 @@ $step-ink-drop: 0.05rem;
     @include icon-button;
     @include icon-button-edit;
 
-    // Open, the pencil is an up chevron that closes the row. The owner's call: it is light, not the
+    // Open, the pencil is an up chevron that closes the row. It is light, not the
     // pencil's green. It sits on the card's ground, so it takes the body ink (near-white in dark,
     // ink in light: literal white would fail on the light card), kept pointed at or focused.
-    // Open, Remove is hidden, so it ends the group at the row's right edge (the owner's call).
+    // Open, Remove is hidden, so it ends the group at the row's right edge.
     &--close {
       &,
       &:hover,
@@ -354,7 +355,8 @@ $step-ink-drop: 0.05rem;
     margin-block-start: space(2);
   }
 
-  // The one-off line: caption size in muted ink, as the compact safety note's text, no block padding.
+  // The one-off line: caption size in muted ink, as the compact safety note's text, no block
+  // padding.
   .step-row__aside {
     margin-block-end: 0;
     padding-block: 0;
@@ -367,8 +369,8 @@ $step-ink-drop: 0.05rem;
 }
 
 // An instruction is words, not a thing laid in the jar, but it keeps the card's own
-// border and ground (the owner's call, 2026-10-28: it was a dashed hairline on the
-// page's ground). Its field fills the row between the number and Remove.
+// border and ground, not a dashed hairline on the
+// page's. Its field fills the row between the number and Remove.
 .step-row.step-row--instruction {
   grid-template-areas: 'handle position field controls';
   grid-template-columns: auto auto minmax(0, 1fr) auto;
@@ -494,7 +496,8 @@ $step-ink-drop: 0.05rem;
     }
   }
 
-  // An open or closed card keeps its areas; the opened fields stack: Form whole, Quantity and Unit half each, Instruction whole.
+  // An open or closed card keeps its areas; the opened fields stack: Form whole, Quantity and Unit
+  // half each, Instruction whole.
   .step-row.step-row--card.step-row--closed,
   .step-row.step-row--card.step-row--open {
     // Two badges stack and keep the right edge, so the name keeps the width they would take.

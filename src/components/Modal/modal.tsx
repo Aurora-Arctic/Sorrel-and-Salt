@@ -20,24 +20,19 @@ import { HeaderNoteContext, HeaderSlotContext } from './header-slot';
 import type { ConfirmLayer, ModalPhase, ModalProps } from './types';
 import './index.scss';
 
-// A dialog over the page on the native element's modal mode: `showModal()`
-// puts it in the top layer and makes the rest of the page inert, which is the
-// focus trap, and turns Escape into a `cancel` event — none of it hand-built.
-// The owner decides when it closes, by unmounting it, so the address of a
-// URL-driven modal never says open while it is shut
-// (claude-docs/components/modal.md).
+// A dialog on the native element's modal mode: `showModal()` gives the top layer, the inert page
+// (the focus trap) and the `cancel` event for Escape. The owner closes it by unmounting it, so a
+// URL-driven modal's address never says open while it is shut (claude-docs/components/modal.md).
 
 /**
- * How long the fade out may take before the owner is asked to close it anyway:
- * past the transition's own length (index.scss), for a browser that never
- * reports its end.
+ * How long the fade out may take before the owner is asked to close it anyway, for a browser that
+ * never reports its end (past the transition's own length, index.scss).
  */
 const FADE_LIMIT_MS = 400;
 
 /**
- * How soon after one modal is taken away, open and not faded out, another that
- * opens takes its place: a link in the first one's foot opening the second
- * (Quick Look's Edit Spell) unmounts the one and mounts the other in one commit.
+ * How soon after one modal goes, open and not faded out, another that opens takes its place: a link
+ * in the first one's foot opening the second unmounts one and mounts the other in one commit.
  */
 const HANDOVER_MS = 100;
 
@@ -56,12 +51,9 @@ function isOutside(dialog: HTMLDialogElement, { clientX, clientY }: MouseEvent):
 }
 
 /**
- * Back to what opened the modal, if it is still in the page and not hidden
- * (an item of a menu since closed is), or else to where
- * the owner says, or else, with the opener gone and the owner naming nowhere,
- * as after a row's Remove takes the row away, to the page's heading; and only
- * if nothing has taken the focus meanwhile, as a page a save opens may. The
- * dialog is already out of the page, so a focus that was in it is on the body.
+ * Back to what opened the modal if it is still in the page and not hidden, else where the owner
+ * says, else the page's heading; only if nothing took the focus meanwhile (a page a save opens
+ * may). The dialog is already out of the page, so a focus that was in it is on the body.
  */
 function giveFocusBack(opener: Element | null, returnTo: ModalProps['returnTo']): void {
   const now = document.activeElement;
@@ -96,11 +88,9 @@ const Modal = ({
   const eyebrowId = useId();
   const body = useRef<HTMLDivElement>(null);
   const footRef = useRef<HTMLDivElement>(null);
-  // What held the focus as it opened, taken once, before showModal() moves
-  // it: the focus goes back there as it closes (APG, "Dialog (Modal)"). The
-  // modal does it, rather than each owner, because the owner closes it by
-  // unmounting it, so the dialog element never closes in place and the
-  // browser's own return never runs.
+  // What held the focus as it opened, taken before showModal() moves it, for the focus to go back
+  // to as it closes (APG, "Dialog (Modal)"). Modal does it, not each owner, because the owner
+  // unmounts the dialog, so the browser's own return never runs.
   const opener = useRef<Element | null>(null);
   const taken = useRef(false);
   const fallback = useRef(returnTo);
@@ -108,11 +98,9 @@ const Modal = ({
     fallback.current = returnTo;
   });
 
-  // Whether it has begun to close itself, set by `close` below, for the open
-  // effect's cleanup: a modal unmounted while still open was replaced, or left
-  // behind by a navigation, and the next to open takes its place. A ref set in
-  // the event, not a mirror of `phase`: under reduced motion the owner unmounts
-  // it in the same render, before any effect could copy the phase across.
+  // Set by `close` for the open effect's cleanup: a modal unmounted while still open was replaced
+  // or left behind by a navigation. A ref set in the event, not a mirror of `phase`: under reduced
+  // motion the owner unmounts it in the same render, before an effect could copy the phase across.
   const shutting = useRef(false);
 
   useEffect(() => {
@@ -129,22 +117,13 @@ const Modal = ({
       }
       // Measured before showModal(), while the scrollbar it is to replace is still there.
       release = holdPage();
-      // One modal in place of another keeps the page dimmed: the backdrop shows
-      // at once, and only the box fades in (index.scss). Without it the page
-      // shows undimmed for a frame between the one going and the other fading in.
+      // One modal in place of another keeps the page dimmed: the backdrop shows at once and only
+      // the box fades in (index.scss).
       if (performance.now() - handedAt < HANDOVER_MS) dialog.dataset.handover = '';
       dialog.showModal();
-      // showModal() puts the focus on the first thing that takes it, which is
-      // Close, in the header; the person opened the dialog to fill it in, so
-      // it goes to the body's first field, or with none to the dialog itself,
-      // whose name is read and from which Tab reaches Close. Here, after
-      // showModal(), since React's autoFocus runs before it and is overridden.
-      // In a microtask the cleanup below can cancel, not at once: in
-      // development React unmounts and remounts, and closing the dialog blurs
-      // a field already focused, which a form reads as touched, so its
-      // required error showed on a direct load (a blur cannot be undone).
-      // Contents that put the focus somewhere in the body themselves meanwhile,
-      // as a confirmation puts it on its action, keep it there.
+      // The focus goes to the body's first field, or the dialog itself with none, not to Close.
+      // After showModal() since autoFocus runs before it, and in a microtask the cleanup can cancel
+      // (claude-docs/components/modal.md, "Notes behind the code"). Contents that take it keep it.
       queueMicrotask(() => {
         if (cancelled || body.current?.contains(document.activeElement)) return;
         (firstShownField(body.current ?? dialog) ?? dialog).focus();
@@ -162,10 +141,8 @@ const Modal = ({
     };
   }, []);
 
-  // Contents that arrive after it opened (M9.18), a route modal's form in
-  // place of its skeleton, take the focus as contents there from the start
-  // do: their first field, if the focus is still on the dialog itself and
-  // not on Close, where a person may have tabbed while it loaded.
+  // Contents that arrive after it opened (a route modal's form in place of its skeleton) take the
+  // focus on their first field, if it is still on the dialog itself and not on Close.
   const wasLoading = useRef(loading);
   useEffect(() => {
     const dialog = ref.current;
@@ -175,10 +152,8 @@ const Modal = ({
     wasLoading.current = loading;
   }, [loading]);
 
-  // It fades out before the owner is asked to close it, the owner's call
-  // during M5.5: the owner's unmount would take it away at once. Asked once,
-  // however many ways — the end of the fade, or the limit if that never comes.
-  // Open, fading, then closed: closed asks the owner, once, in an effect, so
+  // It fades out before the owner is asked to close it: open, fading, then closed, and closed asks
+  // the owner once, in an effect, however many ways it came (the fade's end, or the limit), so
   // nothing a render reaches reads a ref (the close is handed to the contents).
   const [phase, setPhase] = useState<ModalPhase>('open');
   // With no fade to wait on the owner is asked at once, in the event, as it
@@ -206,22 +181,17 @@ const Modal = ({
     return () => clearTimeout(limit);
   }, [phase, finish]);
 
-  // The Close button, Escape and a click outside ask the contents' guard
-  // first: a form with unsaved changes asks before it goes, and closes the
-  // modal itself if the answer is to (claude-docs/components/modal.md,
-  // "Unsaved changes"). The close handed to the contents is not guarded, so
-  // a save or a delete goes at once. Nothing is asked once it is closing.
+  // The Close button, Escape and a click outside ask the contents' guard first (claude-docs/
+  // components/modal.md, "Unsaved changes"). The close handed to the contents is not guarded, so a
+  // save or a delete goes at once. Nothing is asked once it is closing.
   const [guard] = useState(closeGuardSlot);
   // Held in state, so the contents redraw into it once it is in the page.
   const [headerSlot, setHeaderSlot] = useState<HTMLElement | null>(null);
   const [headerNote, setHeaderNote] = useState<HTMLElement | null>(null);
 
-  // A question a form asks over itself (ConfirmOverlay, MB.115) is drawn in
-  // the layer over the body, and holds the body and the control beside the
-  // title inert while it shows; the title and the Close button stay live, so
-  // a way out tried meanwhile still reaches the guard. The attribute is set
-  // on the elements rather than through a render, so it is on before the
-  // question takes the focus and off before the focus goes back.
+  // A question a form asks over itself (ConfirmOverlay) is drawn in the layer over the body, which
+  // holds the body and the header control inert while it shows. The attribute is set on the
+  // elements, not through a render, so it is on before the question takes the focus.
   const [layerHost, setLayerHost] = useState<HTMLElement | null>(null);
   const holds = useRef(0);
   const slotRef = useRef<HTMLElement | null>(null);
@@ -259,9 +229,8 @@ const Modal = ({
     request();
   };
 
-  // A click outside asks the owner to close it, as Escape does, the owner's
-  // call during M5.5 — but only a press that began there too, so a selection
-  // dragged out of a field and let go over the backdrop keeps the form.
+  // A click outside asks the owner to close it, as Escape does, but only a press that began there
+  // too, so a selection dragged out of a field and let go over the backdrop keeps the form.
   const pressedOutside = useRef(false);
   const handleMouseDown = (event: MouseEvent<HTMLDialogElement>): void => {
     pressedOutside.current =
@@ -293,8 +262,7 @@ const Modal = ({
     </button>
   );
 
-  // The backdrop's click is the pointer's alone; Escape is its keyboard
-  // equivalent, handled above.
+  // The backdrop's click is the pointer's alone; Escape is its keyboard equivalent, handled above.
   // oxlint-disable jsx-a11y/click-events-have-key-events, jsx-a11y/no-noninteractive-element-interactions
   return (
     <dialog
@@ -326,9 +294,8 @@ const Modal = ({
           .filter(Boolean)
           .join(' ')}
       >
-        {/* An edit dialog's head (MB.115): what it does to what kind, then
-            which entry. The hidden commas are for the dialog's name alone,
-            which a screen reader would otherwise run together. */}
+        {/* An edit dialog's head: what it does to what kind, then which entry. The hidden commas
+            are for the dialog's name alone, which a screen reader would otherwise run together. */}
         <div className="header modal-dialog__heading">
           {/* The top line, with Close on it, first in the head as it is on screen. */}
           {topEnd !== undefined && (

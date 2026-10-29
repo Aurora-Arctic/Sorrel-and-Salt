@@ -38,18 +38,9 @@ import type {
 } from './types';
 import './index.scss';
 
-// The admin's form for a curated value: grouped — a category (M5.6), an
-// ingredient form (M5.6a) or a deity (MB.132) — or flat where the kind has no
-// group, a celestial body or a zodiac sign (MB.95). One for every such vocabulary, as
-// GroupForm is for their groups, so a new one is a `KINDS` entry rather than
-// another copy (MB.132; the flat kinds folded in at MB.115): a name, a
-// description and, for a grouped kind, the group it is filed under,
-// validated by the shared schema before the mutation and again by the
-// service, and on an existing value a delete behind a confirmation. A kind
-// whose rename reaches further than its row says so (MB.162). No rename here
-// moves a compendium entry's address since MB.220, so none asks to end a
-// redirect. It holds no modal of its own; the page puts it in one
-// (claude-docs/components/grouped-value-form.md).
+// The admin's form for a curated value, grouped (category, ingredient form, deity) or flat (celestial
+// body, zodiac sign): a name, a description and, if grouped, the group, validated by the shared schema
+// and the service. No rename moves an entry's address (claude-docs/components/grouped-value-form.md).
 
 const CreateCategoryDocument = graphql(`
   mutation CreateCategory($input: CategoryInput!) {
@@ -205,15 +196,13 @@ function defineKind<Input extends object>({
 }
 
 /**
- * What a curated value's delete leaves behind, for every kind a compendium
- * entry uses: picked, as a form or a deity is, or listed, as a celestial body or a
- * zodiac sign is. A coven's ingredient that wrote the value keeps it, as a
- * value of its own rather than a curated one.
+ * What a curated value's delete leaves behind, for each kind a compendium entry uses: picked (a form, a
+ * deity) or listed (a body, a sign). A coven's ingredient that wrote the value keeps it as its own.
  */
 const USED_DELETE_NOTE =
   "You can't delete it while a compendium entry uses it. Covens' ingredients keep what they wrote, as their own value.";
 
-/** What saving a renamed value does, for every kind a compendium entry uses (MB.162). */
+/** What saving a renamed value does, for every kind a compendium entry uses. */
 const USED_RENAME_NOTE = 'Saving renames it on every compendium entry that uses it.';
 
 /**
@@ -234,25 +223,23 @@ const withGroup = ({ name, description, groupId }: GroupedValueValues) => ({
 const withoutGroup = ({ name, description }: GroupedValueValues) => ({ name, description });
 
 /**
- * What differs between the vocabularies: their copy, their schema and input,
- * and their mutations. A kind whose input names the group otherwise maps it
- * back with `inputKeys` and `toInput`; the category and form inputs name it
- * as the values do, and a flat kind has no group at all.
+ * What differs between the vocabularies: copy, schema, input and mutations. A kind whose input names
+ * the group otherwise maps it with `inputKeys` and `toInput`; a flat kind has no group.
  */
 const KINDS: Record<GroupedValueKind, GroupedValueFormKind> = {
   category: defineKind({
     noun: LIST_KINDS.category.label,
-    // No Description tip: its label and placeholder say it (the owner's
-    // call, 2026-10-20). The searched kinds keep theirs, a flow.
+    // No Description tip: its label and placeholder say it. The searched kinds keep
+    // theirs, a flow.
     describe: 'What this category covers',
     group: {
       label: 'Group',
       placeholder: 'Choose a group',
       hint: "The family it is filed under. Its chip wears the group's colours.",
     },
-    // Deleting a category removes nothing of a coven's: an entry filed under
-    // it keeps its link and stops reading the category, so the entry stays in
-    // its list and only the filter loses the category (the MB.115 sign-off).
+    // Deleting a category removes nothing of a coven's: an entry filed under it keeps its
+    // link and stops reading the category, so the entry stays in its list and only the
+    // filter loses the category.
     deleteNote:
       "Covens' ingredients and spells filed under it stay in their lists, but can no longer be filtered by it.",
     schema: CategoryInput,
@@ -272,9 +259,8 @@ const KINDS: Record<GroupedValueKind, GroupedValueFormKind> = {
       hint: "What kind of thing it is. The ingredient form's suggestions list the forms under their groups.",
     },
     deleteNote: USED_DELETE_NOTE,
-    // A rename carries onto every compendium entry that picked the form
-    // (MB.162), though no entry's address moves: a form is no part of one
-    // since MB.220.
+    // A rename carries onto every compendium entry that picked the form, though no
+    // entry's address moves: a form is no part of one.
     renameNote: USED_RENAME_NOTE,
     schema: IngredientFormValueInput,
     toInput: withGroup,
@@ -295,8 +281,8 @@ const KINDS: Record<GroupedValueKind, GroupedValueFormKind> = {
       hint: 'The people or religion that honours them. A god several honour is filed under one, and the description names the others.',
     },
     deleteNote: USED_DELETE_NOTE,
-    // A rename carries onto every compendium entry that picked the deity
-    // (MB.162), though no entry's address moves: a deity is no part of one.
+    // A rename carries onto every compendium entry that picked the deity, though no
+    // entry's address moves: a deity is no part of one.
     renameNote: USED_RENAME_NOTE,
     // The input calls the group its tradition, and the other names
     // `otherNames`; the form's fields stay `groupId` and `folkNames`, a
@@ -316,9 +302,8 @@ const KINDS: Record<GroupedValueKind, GroupedValueFormKind> = {
     update: UpdateDeityDocument,
     remove: DeleteDeityDocument,
   }),
-  // The flat kinds (MB.95): filed under nothing, and no part of an entry's
-  // address, so a rename moves none; it still carries onto the entries
-  // listing the value (MB.162).
+  // The flat kinds: filed under nothing, and no part of an entry's address, so a rename
+  // moves none; it still carries onto the entries listing the value.
   celestialBody: defineKind({
     noun: LIST_KINDS.celestialBody.label,
     describe: 'What this body is, and the other names it goes by',
@@ -332,7 +317,7 @@ const KINDS: Record<GroupedValueKind, GroupedValueFormKind> = {
     remove: DeleteCelestialBodyDocument,
   }),
   zodiacSign: defineKind({
-    // The long form on every button (the MB.115 sign-off): Save Zodiac Sign.
+    // The long form on every button: Save Zodiac Sign.
     noun: LIST_KINDS.zodiacSign.label,
     describe: 'What this sign is, and the other names it goes by',
     descriptionHint: SEARCHED_DESCRIPTION_HINT,
@@ -378,10 +363,10 @@ const GroupedValueForm = ({
     formState: { errors, isSubmitting, isDirty },
   } = methods;
   const [confirming, setConfirming] = useState(false);
-  // Cancel, and every other way out of the modal, asks first while the form
-  // has changes (MB.115, the owner's call); a save or a delete does not.
+  // Cancel, and every other way out of the modal, asks first while the form has changes;
+  // a save or a delete does not.
   const discard = useDiscardGuard(isDirty);
-  // Undo and redo (M12.9), off while a question is up over the form.
+  // Undo and redo, off while a question is up over the form.
   const root = useRef<HTMLFormElement>(null);
   const history = useFormHistory(methods, { root, enabled: !discard.asking && !confirming });
   const [alert, setAlert] = useState<string>();
@@ -499,14 +484,14 @@ const GroupedValueForm = ({
               hint={group.hint}
               placeholder={group.placeholder}
               options={choices}
-              // Typed into to narrow the groups, the owner's call (MB.115).
+              // Typed into to narrow the groups.
               typeahead
               required
             />
           )}
           {actions()}
-          {/* A question over the form, its buttons left beneath it (MB.115,
-            the owner's call): the unsaved changes' first, then the delete's. */}
+          {/* A question over the form, its buttons left beneath it: the unsaved changes'
+                      first, then the delete's. */}
           <ConfirmQuestion
             guard={discard}
             asked={confirming}

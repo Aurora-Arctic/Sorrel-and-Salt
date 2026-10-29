@@ -16,16 +16,13 @@ import type { NamedAddIconProps } from './types';
 import { ADD, HELD_MARK } from './wording';
 import './index.scss';
 
-// The plus: Add to My Ingredients as an icon (M9.12, the owner's calls, 2026-10-20), at a
-// compendium card's bottom right and beside the public entry page's pencil, so both are one
-// control. Its tip and its accessible name are both ADD and then the entry's name (the name in
-// `visually-hidden`), so a list of buttons tells one card's plus from the next and the words on
-// screen are the name (MB.120; the owner's call, 2026-10-20, that the tip says the name too). A client component of its own, because the card stays a server component and a press
-// needs the browser. claude-docs/components/compendium-cards.md, "Contracts".
+// Add to My Ingredients as an icon, at a compendium card's bottom right and beside the entry page's
+// pencil. Tip and accessible name are ADD then the entry's name; a client component of its own so the
+// card stays a server component (claude-docs/components/compendium-cards.md, "Contracts").
 
 /**
- * How long the check holds after a success before it fades back to the plus (the owner's call,
- * 2026-10-20: "about 1s"). Long enough to be seen, short enough that the plus is soon back.
+ * How long the check holds after a success before it fades back to the plus:
+ * about 1s, long enough to be seen, short enough that the plus is soon back.
  */
 export const ADDED_HOLD_MS = 1000;
 
@@ -67,17 +64,9 @@ const Glyph = ({
   );
 
 /**
- * The plus. Where the viewer may write in one coven alone it adds there directly, with no
- * quantity: it sends `addCupboardEntry` for that coven and reads the page again, which then draws
- * the check in its place. With two or more it is always a menu of every one of them by name (the
- * owner’s calls of 2026-10-20: over the modal picker it first opened, and never adding at once
- * because one coven alone lacks the entry), and choosing one adds there at once. A coven that
- * holds the entry is shown disabled, with a green check after its name, and is named "<coven>,
- * in its cupboard" (the owner’s calls, 2026-10-20; the words MB.120's); the plus's own check says when every one holds
- * it. A refusal is said in a callout under the plus (M12.31), and the focus is given back to the
- * plus for it, since the chosen item went with the menu. The plus is `aria-disabled` and not
- * `disabled` while it works, the lone plus here and the menu's button in MenuButton, so the focus
- * stays on it (MB.120).
+ * The plus: with one writable coven it adds there directly, with no quantity, and the page reads
+ * again; with two or more it opens a menu of every coven, never adding at once. A refusal is a
+ * callout under the plus (claude-docs/components/add-icon.md, "Source notes").
  */
 const AddIcon = ({
   name: entry,
@@ -87,9 +76,9 @@ const AddIcon = ({
   heldIn,
   holding: holders = [],
 }: NamedAddIconProps): ReactElement => {
-  // "Add to My Ingredients: Testwort, Formalis testis", the tip and the name alike, so the words
-  // on screen are the name (WCAG 2.5.3), and a colon, since a formal name holds a comma of its own.
-  // Then how many of the viewer's covens hold it, and which (M12.55): nothing where none does.
+  // "Add to My Ingredients: Testwort, Formalis testis", the tip and the name alike,
+  // so the words on screen are the name (WCAG 2.5.3), and a colon, since a formal
+  // name holds a comma of its own. Then how many covens hold it, and which.
   const label = `${ADD}: ${entry}${holdingText(holders)}`;
   const { pending, refresh } = usePendingNavigation();
   const feedback = useClickFeedback({ name: label });
@@ -102,11 +91,9 @@ const AddIcon = ({
     },
     [anchorRef],
   );
-  // The check after a success (the owner's call, 2026-10-20): it holds for ADDED_HOLD_MS and
-  // until the page has been read again, then fades back to the plus, unless the add left every
-  // coven holding the entry, when it stays until the page draws the held mark in its place, so
-  // nothing jumps. `useFade` keeps it drawn while it fades, and drops the fade under reduced
-  // motion, so the plus is back at once there.
+  // The check after a success: it holds for ADDED_HOLD_MS and until the page has been read again, then
+  // fades back to the plus, unless the add left every coven holding the entry, when it stays until the
+  // held mark replaces it. `useFade` keeps it drawn while it fades and drops the fade under reduced motion.
   const [added, setAdded] = useState<Added | null>(null);
   const [held, setHeld] = useState(false);
   const name = (to: string): string => covens.find(({ id }) => id === to)?.name ?? 'My Ingredients';

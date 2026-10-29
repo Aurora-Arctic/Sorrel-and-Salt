@@ -15,12 +15,8 @@ import { ELEMENT_OPTIONS, NOMENCLATURE_OPTIONS, labelOf } from './options';
 import type { EntryHref, SubstituteListEntry, SubstituteSummaryProps } from './types';
 import { tierOf } from './values';
 
-// A linked substitute's summary (MB.115, the owner's ask): what the
-// ingredient is, read when its chip is pressed and not before, so a list of
-// chips asks nothing until one is opened. One read of the `ingredient` query
-// through /api/graphql, which already serves an entry by id in the
-// compendium's tier or a coven's own and the compendium's, and never another
-// coven's (claude-docs/components/ingredient-form.md, "A linked substitute's
+// A linked substitute's summary: what the ingredient is, read when its chip is pressed and not
+// before, through /api/graphql (claude-docs/components/ingredient-form.md, "A linked substitute's
 // summary").
 
 const IngredientSummaryDocument = graphql(`
@@ -61,7 +57,7 @@ const IngredientSummaryDocument = graphql(`
  */
 export const EntryHrefContext = createContext<EntryHref | undefined>(undefined);
 
-/** The ingredient's values beside a form's, which add to them and never take away (MB.215). */
+/** The ingredient's values beside a form's, which add to them and never take away. */
 const joined = (own: readonly string[] | null, form: readonly string[] | null | undefined) => [
   ...new Set([...(own ?? []), ...(form ?? [])]),
 ];
@@ -136,7 +132,7 @@ export function SubstituteSummary({
           <span className="entry-summary__formal">{ingredient.canonicalName}</span>
         )}
       </p>
-      {/* Cut to its first lines on screen, the owner's call (MB.115); read
+      {/* Cut to its first lines on screen; read
           whole, since a screen reader has no ellipsis to see. */}
       {ingredient.description && (
         <p className="entry-summary__description">{ingredient.description}</p>

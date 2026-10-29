@@ -1,9 +1,8 @@
 import type { ReactElement } from 'react';
 
-// How many of the viewer's covens hold a compendium entry, and which (M12.55): every membership
-// counts, a viewer's coven too, so it is not the plus's menu, which lists only the covens the
-// viewer may write in. The plus and the held check both carry it, as a badge and in their tips.
-// claude-docs/components/compendium-cards.md, "The holding count".
+// How many of the viewer's covens hold a compendium entry, and which: every membership counts, a
+// viewer's coven too, unlike the plus's menu, which lists only covens the viewer may write in
+// (claude-docs/components/compendium-cards.md, "The holding count").
 
 /** What the tip and the name add: ". In 2 covens: Testhollow, Testwren"; nothing where none holds it. */
 export const holdingText = (holding: readonly string[]): string =>

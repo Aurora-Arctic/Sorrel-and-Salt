@@ -6,12 +6,9 @@ import Modal from './modal';
 import type { ModalButtonProps } from './types';
 
 /**
- * A button that opens a modal, and the focus back on the button however the
- * modal closes: its Close, Escape, a click outside, or its contents' own
- * close (MB.119, lifted from InviteDialog). Modal restores nothing itself,
- * because its owner unmounts it rather than closing the `<dialog>` in place,
- * so the browser's own return never runs (claude-docs/components/modal.md,
- * "Focus"). A modal opened by its address is RouteModal's instead.
+ * A button that opens a modal, and the focus back on it however the modal closes. Modal restores
+ * nothing itself, as its owner unmounts it (claude-docs/components/modal.md, "Focus"). A modal
+ * opened by its address is RouteModal's instead.
  */
 export default function ModalButton({
   label,

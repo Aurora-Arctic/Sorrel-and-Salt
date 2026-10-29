@@ -10,9 +10,9 @@ import { BuilderStepRow } from './step-row';
 import type { SpellStepValue, SpellStepsValues } from './types';
 import { isInstruction, newInstruction, stepNameOf, warningOf } from './values';
 
-// The jar's steps (M10.15): the box that adds to them, the Add Instruction button
+// The jar's steps: the box that adds to them, the Add Instruction button
 // and the list, under the heading What Goes In. The steps are moved by a handle
-// each (M10.16), and an Add or a Remove is said in a live region of its own,
+// each, and an Add or a Remove is said in a live region of its own,
 // as a move is said in dnd-kit's. One step is open at a time, the newest at
 // once; the rest are a line each. What the jar holds and the spell's intent set
 // against it are the aside's (inventory.tsx, comparison-panel.tsx).
@@ -180,7 +180,7 @@ export function SpellSteps({
         {steps.length > 0 && <p className="spell-steps__summary">{counts}</p>}
       </div>
       {/* One grid holds the list, then the add row: the box and Add Instruction, beneath the
-          list where a new step lands (second design review, 2026-10-28). The button follows the
+          list where a new step lands. The button follows the
           box on a wide column and is a dashed line beneath it on a narrow one, by grid
           placement alone, so it is one button, in the one place in the markup. */}
       <div className="spell-steps__body">

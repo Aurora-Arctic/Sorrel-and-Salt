@@ -10,8 +10,8 @@ import {
 } from './impersonation';
 import type { ImpersonateButtonProps } from './types';
 
-// The row's Impersonate (MB.53), asking first as every other row action does
-// (MB.115, on the owner's call): acting as someone else is the table's one
+// The row's Impersonate, asking first as every other row action does:
+// acting as someone else is the table's one
 // dangerous control, so the modal says what it means and how it ends. Better
 // Auth's endpoint is the guard: it refuses a non-admin and an admin target
 // whatever this shows. A success swaps the session cookie, so the next page

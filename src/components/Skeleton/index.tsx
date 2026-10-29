@@ -2,7 +2,7 @@ import type { ReactElement } from 'react';
 import type { SkeletonHead, SkeletonProps, SkeletonShape } from './types';
 import './index.scss';
 
-// The one skeleton every region wait uses (M12.33): placeholder shapes drawn
+// The one skeleton every region wait uses: placeholder shapes drawn
 // as the layout they stand in for, so the page does not snap from one to the
 // next. The shapes are for the eye alone, `aria-hidden`; a screen reader
 // hears the `<output>`, a status by its tag, saying "Loading", the only

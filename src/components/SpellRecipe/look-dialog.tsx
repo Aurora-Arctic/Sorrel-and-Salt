@@ -10,14 +10,14 @@ import { SPELL_LOOK_PLACE, UNTITLED_SPELL } from '../SpellCard';
 import type { SpellLookDialogProps } from './types';
 import './index.scss';
 
-// The Quick Look modal a grimoire card's eye opens over the list (M13.21), the spell's twin of
-// the ingredient details modal (M12.5): the spell read in the shared body, the last edit over
-// its title, a link through to the recipe page at the foot's start, and, for a role that may
-// update the spell, Edit Spell at its end. Edit Spell is a plain link to the list's address with `?edit=<id>` in
-// place of `?spell=<id>`, which the spell builder's dialog (M10.12) answers, so one dialog shows
-// at a time and closing the builder returns to the list rather than to this modal. A client
-// part because RouteModal takes its body as a function, which a server page cannot hand down;
-// the body arrives as the page's rendered children.
+// The Quick Look modal a grimoire card's eye opens over the list, the spell's twin of the
+// ingredient details modal: the spell read in the shared body, the last edit over its title, a link
+// through to the recipe page at the foot's start, and, for a role that may update the spell, Edit
+// Spell at its end. Edit Spell is a plain link to the list's address with `?edit=<id>` in place of
+// `?spell=<id>`, which the spell builder's dialog answers, so one dialog shows at a time and
+// closing the builder returns to the list rather than to this modal. A client part because
+// RouteModal takes its body as a function, which a server page cannot hand down; the body arrives
+// as the page's rendered children.
 
 export default function SpellLookDialog({
   closeHref,

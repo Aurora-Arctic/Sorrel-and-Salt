@@ -8,12 +8,11 @@ import { DuplicateQuickLook } from '../IngredientForm/quick-look';
 export type QuickLookCoven = { workspaceId: string; covenSlug: string };
 
 // The small Quick Look eye of an ingredient step, drawn in a step row and in In Coven Inventory
-// alike so the two match (the owner's call, 2026-10-29). It opens the entry's details in a modal
-// over the builder (`DuplicateQuickLook`, which needs no route), so nothing typed is lost to a
-// navigation; the focus goes back to the eye when it closes. The modal's head reads only the name
-// until the entry arrives, with a line skeleton where the formal name goes: a step carries no formal
-// name, and saying "Not yet looked up" would be false.
-// claude-docs/components/spell-builder.md.
+// alike so the two match. It opens the entry's details in a modal over the builder
+// (`DuplicateQuickLook`, which needs no route), so nothing typed is lost to a navigation; the focus
+// goes back to the eye when it closes. The modal's head reads only the name until the entry
+// arrives, with a line skeleton where the formal name goes: a step carries no formal name, and
+// saying "Not yet looked up" would be false. claude-docs/components/spell-builder.md.
 export function StepQuickLook({
   ingredientId,
   name,

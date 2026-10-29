@@ -2,18 +2,9 @@ import type { ReactElement } from 'react';
 import { HELD_TIP } from '../AddIcon/wording';
 import IconTip from '../IconTip';
 
-// The shelf of two bottles before an entry's name, saying the coven's
-// cupboard holds it: every coven's own entry, and a compendium entry the
-// cupboard names (the owner's calls, 2026-10-19). Compendium says where an
-// entry is from, held or not, so this mark is what tells the two apart. Not
-// a jar: a jar is stock. A button to carry its tip, as Retired and Annotated
-// are, and outside the `h1` so the heading reads as the name alone. The tip
-// opens on hover, on focus, and on a press, as InfoTip's ⓘ does, so a tap shows
-// it on touch (the owner's call, 2026-10-20); the press does nothing else.
-// The words are the compendium's one noun for "you hold this", the cupboard (MB.120, the
-// owner's call, 2026-10-20). claude-docs/components/ingredient-entry.md, "In Your Cupboard".
-
-// Exported for the details modal's In Your Cupboards links, which each lead with it.
+// The shelf of two bottles before an entry's name, saying the coven's cupboard holds it: a button
+// to carry its tip, outside the `h1`, that opens on hover, focus and press
+// (claude-docs/components/ingredient-entry.md, "Component notes").
 export const ShelfIcon = (): ReactElement => (
   <svg
     viewBox="0 0 32 32"

@@ -71,3 +71,10 @@ The cards have no stylesheet of their own. The card is [`IngredientCard`](ingred
 Stories: one `States` story, drawn inside the app shell (the signed-out header of a visitor with no session for Default, With Markers, Last Page and Empty, which show no account-only control) under the page's Reference eyebrow, Compendium heading and lede, with a control that chooses Default, Can Add, Held, In Several Covens, Can Add Edit And More, Curator Can Edit, Middle Page, With Markers (New and Updated), Last Page and Empty. Tests: `tests/components/CompendiumCards/index.test.tsx` and `tests/app/(public)/compendium/page.test.tsx`; the browser flow is `tests/e2e/public-compendium.spec.ts`.
 
 Each `CompendiumCardEntry` carries `recency` (`new`, `updated` or null), worked out by the page with `entryRecency` and shown by the card's `EntryMarks` (MB.106).
+
+## Source notes
+
+Comments in the source that point here; each is the detail behind a one-line comment.
+
+- `card-more.tsx`: The three dots on a compendium card, after the plus and, for a curator, Edit in Compendium: Edit Stock first (the coven card's own dialog, opened at once for one coven and after a question of which for several), then Annotate, Make It Ours and Remove, in the dialogs the entry page shares. The plus and Edit in Compendium are not in here, so `choicesFor`'s Compendium section is empty and left out; the coven's choices sit under the one "Coven" label every More draws. Drawn only when it holds a choice. The Quick Look window carries `leaveHref`, where a remove leads. claude-docs/components/compendium-cards.md.
+- `held-mark.tsx`: The check: every coven the viewer may write in holds this entry. A status mark, not a link (the details modal's In Your Cupboards list carries the links), tipped "In Every Cupboard: Testwort, Formalis testis" so a list of buttons tells one card's check from the next. A button to carry its tip: the tip opens on hover, on focus (WCAG 2.1.1) and on a press, so a tap shows it on touch. The press does nothing else.

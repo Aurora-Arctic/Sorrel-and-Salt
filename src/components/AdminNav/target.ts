@@ -6,14 +6,9 @@ type Parts = Omit<NavigationTarget, 'region'>;
 const CURATED: Parts = { shape: 'table', title: true, tabs: true, action: true, filter: true };
 
 /**
- * What each admin page draws while it is on its way (M12.33), keyed by the
- * address the nav and the index link it at, its first tab. The admin area has
- * its own body under its context row, so every wait is the `admin` region's
- * and the row with its nav stays. The wait is the page that arrives: its
- * heading, the action at the heading's end, its filter row, then the list.
- * The index is sections of links and draws its own heading. A tabbed page draws its tab
- * row between the heading and the action; the Compendium has one tab and so
- * no row.
+ * What each admin page draws while it is on its way, keyed by its first tab's address: the page that
+ * arrives (heading, action, filter row, list) under the `admin` row. The index draws its own heading;
+ * a tabbed page draws its tab row between heading and action (claude-docs/components/admin-nav.md).
  */
 const PARTS: Record<string, Parts> = {
   '/admin': { shape: 'contents' },

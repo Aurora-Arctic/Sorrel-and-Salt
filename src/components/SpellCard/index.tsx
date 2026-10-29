@@ -8,15 +8,16 @@ import LinkHint from '../LinkHint';
 import type { SpellCardProps } from './types';
 import './index.scss';
 
-// One spell in the grimoire's list (M10.11): its title, its intent, a Draft badge on
-// a draft, a Private badge on a private spell (M10.13), the categories its author assigned it, and who last edited it. Presentational, in IngredientCard's
-// pattern: the Foundations specimen for the layout and the card's surface, with no
-// drawer. The title links to the spell's recipe page (MB.6) where the caller gives `href`. claude-docs/components/spell-card.md.
+// One spell in the grimoire's list: its title, its intent, a Draft badge on a draft, a Private
+// badge on a private spell, the categories its author assigned it, and who last edited it.
+// Presentational, in IngredientCard's pattern: the Foundations specimen for the layout and the
+// card's surface, with no drawer. The title links to the spell's recipe page where the caller gives
+// `href`. claude-docs/components/spell-card.md.
 
 /** What a spell with no title is called, here and wherever it is listed. */
 export const UNTITLED_SPELL = 'Untitled Spell';
 
-/** The modal place the Quick Look shows in, apart from the spell builder's (M13.21). */
+/** The modal place the Quick Look shows in, apart from the spell builder's. */
 export const SPELL_LOOK_PLACE = 'look';
 
 /** The id of a spell's title heading, which the list item names itself by. */
@@ -60,7 +61,7 @@ const SpellCard = ({
                 against the article, and unpositioned words would paint under the smouldering
                 face (index.scss). */}
             {href ? (
-              // The recipe page draws its own frame while it loads, so the link names it (MB.6).
+              // The recipe page draws its own frame while it loads, so the link names it.
               // The link stretches over the whole card, as an ingredient card's name does.
               <PendingLink href={href} navigationTarget={ingredientLinkTarget(href)}>
                 <span className="spell-card__title-text">
@@ -72,9 +73,9 @@ const SpellCard = ({
             )}
           </Heading>
           {/* Only a draft is marked: complete is the default, so a Complete badge would
-              say nothing (the owner, 2026-10-27). Likewise only a private spell: the
+              say nothing. Likewise only a private spell: the
               coven is the default, and a private one lists to its author alone, so
-              the badge tells them no one else sees it (M10.13). Under the title, as the
+              the badge tells them no one else sees it. Under the title, as the
               marks sit under an ingredient card's name. */}
           {(status === 'draft' || visibility === 'private') && (
             <div className="specimen__badges">

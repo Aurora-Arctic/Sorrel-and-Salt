@@ -11,22 +11,9 @@ import Notice from '../Notice';
 import type { ConfirmAnswersProps, ConfirmedActionProps, ConfirmStep } from './types';
 import './controls.scss';
 
-// An action that asks first, in a modal, shared by the creation control
-// (M5.8), the role control (MB.59), Impersonate (MB.53), the pause switch
-// (MB.63) and the invitations' Revoke (MB.70): the modal's confirm sends the
-// write and stays busy until the page is read again, or left; a success
-// says its `announcement` in the page's status region, for a screen reader,
-// beside the result the page shows. A refusal closes the modal, gives the
-// focus back to the button that opened it, and says why in a callout under
-// that button (`useClickFeedback`, M12.31's design F), which floats rather
-// than taking room in a row. Inside a modal already, the user's (M9.19), it
-// asks over that modal's body through `ConfirmOverlay` instead, as the
-// forms' questions do, rather than open a second modal on top, and its
-// refusal stays in that dialog as a plain notice (the rule's item 6), or,
-// for a control beside a fact (the user modal's role and creation
-// controls), is the same callout under it (the owner's exception). The
-// service is the guard; this only puts it where an admin looks
-// (claude-docs/components/user-list.md).
+// An action that asks first, in a modal: the confirm sends the write and stays busy until the
+// page is read again. A refusal closes the modal and says why in a callout under the button.
+// (claude-docs/components/user-list.md, "Notes from code comments: confirmed action")
 
 const ConfirmedAction = ({
   label,
@@ -79,7 +66,7 @@ const ConfirmedAction = ({
 
   // Outside a modal, a callout under the control. Inside one, a plain notice
   // in that dialog, which a button row's style lifts onto its own line above
-  // the buttons (the owner's call), unless the control asks for the callout.
+  // the buttons, unless the control asks for the callout.
   function report(message: string | undefined) {
     if (inModal && refusalInModal === 'notice') setFailure(message);
     else feedback.report(message);
@@ -163,7 +150,7 @@ const ConfirmedAction = ({
       </button>
       {feedback.feedback}
       {failure && <Notice kind="error">{failure}</Notice>}
-      {/* Asks first, in a modal, on the owner's call. A success leaves it open,
+      {/* Asks first, in a modal. A success leaves it open,
           busy, until the refresh replaces this control; a refusal closes it
           and says why under the control. */}
       {step !== 'idle' &&

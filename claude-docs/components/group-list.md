@@ -59,3 +59,9 @@ Render-only, no test ids, no snapshots.
 ## Testing
 
 `tests/components/GroupList/index.test.tsx` covers the rows and their Edit links, no table when there is no group, a form group's icon or the spoon beside its name and a category group's none, through the shared filter rows (`tests/support/filter-form.tsx`, [`filter-form.md`](filter-form.md)) the search opening its first page on Search with the query in the address, Clear opening the bare page and drawn only while a search is shown, no search for a kind not handed one, and `groupsHref`, the search ahead of the cursor and a blank one written as none. What the search matches is `findGroupPage`'s, in `tests/db/repository/vocabularies.test.ts`. The chip's colours and the cards are presentation, owned by the stories, and paging is Pager's. The pages' half is `tests/app/(shell)/admin/group-page.test.tsx` ([`group-form.md`](group-form.md), "Testing").
+
+## Source notes
+
+Comments in the source that point here; each is the detail behind a one-line comment.
+
+- `index.tsx`: A group page's table and pager, for every group vocabulary, a deity's traditions included. Render-only: the page reads one page of groups through the service. A category group's name is drawn in its own chip, which is how a reader meets the pair. A name search heads the list for a kind whose page hands it a `filter`: the traditions' (thirty-five in the seed), not the category or form groups' (eight and six). Each Edit is an address, the page opens its modal from the URL, so a modal can be linked to and Back closes it. The table turns each row into a card at phone width (claude-docs/components/group-list.md).

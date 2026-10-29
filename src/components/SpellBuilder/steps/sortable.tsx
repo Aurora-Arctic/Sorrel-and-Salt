@@ -18,7 +18,7 @@ import {
 } from '@/lib/sortable';
 import type { SortableStepsProps } from './types';
 
-// The jar's steps in their order (M10.16, story 51): each moved by its handle,
+// The jar's steps in their order: each moved by its handle,
 // on the dnd-kit setup the combobox's chips use (src/lib/sortable), in a
 // column of its own. The pointer drags a step onto another's place; the
 // keyboard lifts it with Space or Enter, moves it a place with Up and Down, or

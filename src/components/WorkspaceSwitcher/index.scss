@@ -1,29 +1,24 @@
 @use '../../scss/variables' as *;
 @use '../../scss/mixins' as *;
 
-// The closed box's narrowest width, so a short coven name still reads as a
-// control with room before its chevron rather than shrinking to the word. A
-// width, not a gap, so off the space scale; MB.124 weighs it, and the list's
-// below, against AccountMenu's 13rem for one floating-panel width.
+// The closed box's narrowest width, so a short coven name still reads as a control with room
+// before its chevron rather than shrinking to the word. A width, not a gap, so off the space
+// scale; the list's below, like AccountMenu's 13rem, is a floating-panel width.
 $switcher-min-width: 12rem;
 // The open list's narrowest width: wider than the closed box, so under a
 // short chosen name the list still has room for a longer one and for the
 // Create Coven row with its plus.
 $switcher-list-min-width: 15rem;
 
-// The coven's name set as the context row's lead (MB.7): the chosen name in
-// the display face with a chevron inside a hairline border, so the row reads
-// "Whitethorn Coven" and the name is also the control. The Combobox's select
-// is restyled from here rather than given a variant: every part of it is
-// reached by its own class, and the compound `.input.combobox__control` is
-// outweighed by one more class. It looks the same on a phone as on a
-// desktop; a long name wraps to two lines rather than being cut.
+// The coven's name as the context row's lead: the chosen name in the display face with a chevron
+// inside a hairline border, so the name is also the control; a long one wraps to two lines. The
+// Combobox's select is restyled from here rather than given a variant: each part has its own class,
+// and the compound `.input.combobox__control` is outweighed by one more class.
 .workspace-switcher {
   min-width: $switcher-min-width;
   max-width: 100%;
 
-  // On a phone the control fills the row, as the context row gives it the
-  // whole width (MB.7).
+  // On a phone the control fills the row, as the context row gives it the whole width.
   @media (max-width: $shell-phone-width) {
     width: 100%;
   }

@@ -1,11 +1,9 @@
 @use '../../scss/variables' as *;
 @use '../../scss/mixins' as *;
 
-// The admin invitations tab's own rules: its column, the table's one-line cells at desktop width and wrapping ones
-// as cards, the "None given" ink, the Reason field's room and the sent
-// confirmation. The table is the `.data-table` primitive with `--stack`; the
-// confirmation and the locked controls are the user list's, which bring
-// their own stylesheet (`UserList/controls.scss`).
+// The tab's own rules: its column, one-line table cells at desktop width and wrapping ones as cards,
+// the "None given" ink, the Reason field's room and the sent confirmation. The confirmation and
+// locked controls are the user list's, with their own stylesheet (`UserList/controls.scss`).
 
 // Spaced as the tab's panel spaces any other tab's content: the sent notice,
 // then the list's frame, its filter row above the table or the empty state.
@@ -13,10 +11,9 @@
   @include stack;
 }
 
-// No cell wraps, heading or body: the table scrolls inside its frame, as the
-// user list's does (the owner's call, during MB.59), through DataTable's
-// `.data-table--nowrap`. Each cell centred on its row, a Revoke button
-// standing taller than its text.
+// No cell wraps, heading or body: the table scrolls inside its frame, as the user
+// list's does, through DataTable's `.data-table--nowrap`. Each cell is centred
+// on its row, a Revoke button standing taller than its text.
 .admin-invitations .data-table {
   th,
   td {

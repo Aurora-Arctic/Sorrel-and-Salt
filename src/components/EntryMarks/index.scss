@@ -26,19 +26,17 @@
   @include tip-above;
 }
 
-// ---------------------------------------------------------------------------
-// The New / Updated marker (MB.106). Not a badge: an icon and the word in the accent ink with
-// nothing around them, a step larger than badge text, so it reads apart from the stock,
-// source and safety badges. The inks are the `new` and `updated` badge palettes', already
-// held to the text floor on the page, the card and a card pointed at, in both themes
-// (`tests/scss/tokens.test.ts`, MB.120).
+// --------------------------------------------------------------------------- The New / Updated
+// marker: an icon and the word in the accent ink with nothing around them, a step larger than badge
+// text, so it reads apart from the badges. The inks are the `new` and `updated` badge palettes',
+// held to the text floor in both themes (`tests/scss/tokens.test.ts`).
 // ---------------------------------------------------------------------------
 .recency-mark {
   display: inline-flex;
   align-items: center;
   gap: space(1);
   font-family: $font-body;
-  // Half way between the overline and caption sizes (the owner, 2026-10-19).
+  // Half way between the overline and caption sizes.
   font-size: calc((#{type-size('overline')} + #{type-size('caption')}) / 2);
   font-weight: 600;
   line-height: 1.2;
@@ -50,10 +48,9 @@
   }
 }
 
-// Optical centring against the "Back to" link beside it (measured in a
-// browser, 2026-10-19). The two share a baseline and equal box centres, but
-// the marker's smaller capitals then sit about half a pixel low, and the
-// sparkle's drawn path sits about half a pixel high, so each is nudged back.
+// Optical centring against the "Back to" link beside it. The two share a baseline and
+// equal box centres, but the marker's smaller capitals sit about half a pixel low and
+// the sparkle's drawn path about half a pixel high, so each is nudged back.
 .recency-mark__text {
   position: relative;
   inset-block-start: -$optical-nudge;

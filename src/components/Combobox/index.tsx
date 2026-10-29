@@ -33,13 +33,8 @@ export { ComboboxMultiSelect } from './multi-select';
 export { ComboboxSelect } from './select';
 export { ComboboxSortableEntries } from './sortable';
 
-// A text box that suggests as it is typed in, on Downshift's `useCombobox`:
-// the hook owns the ARIA and the keyboard, and the markup, the rows and the
-// Sass are ours (DESIGN.md §14). It changes no text itself: typing is reported
-// through `onChange`, and a pick through `onPick`, so a field fills itself
-// and a list adds an entry. Free text is the default: nothing is highlighted
-// until an arrow key or the pointer picks it, so Enter and a blur keep what
-// was typed. See claude-docs/components/combobox.md.
+// A text box that suggests as it is typed in, on Downshift's `useCombobox`: the hook owns the ARIA and the keyboard, the markup and Sass are ours (DESIGN.md §14).
+// It changes no text itself, and free text is the default; see claude-docs/components/combobox.md.
 
 const isTyped = <O extends ComboboxOption>(item: Item<O>): item is TypedRow => 'typed' in item;
 const isAction = <O extends ComboboxOption>(item: Item<O>): item is ActionRow => 'action' in item;
@@ -51,12 +46,7 @@ const keyOf = <O extends ComboboxOption>(item: Item<O>): string => {
   return item.key ?? `${item.curated}:${item.heading ?? ''}:${item.label ?? ''}:${item.value}`;
 };
 
-/**
- * The buckets a source names itself, by each row's `heading` (MB.126): one
- * per heading in the order the headings first appear, since the caller has
- * sorted them, and the rows with none in a trailing unheaded bucket. Keyed
- * by the heading's place rather than its text, which may hold a space.
- */
+/** The buckets a source names itself, by each row's `heading`, in the order the headings first appear, with the rows that have none in a trailing unheaded bucket. */
 function bucketByHeading<O extends ComboboxOption>(options: O[]): Bucket<O>[] {
   const headed = new Map<string, O[]>();
   const unheaded: O[] = [];
@@ -74,18 +64,8 @@ function bucketByHeading<O extends ComboboxOption>(options: O[]): Bucket<O>[] {
 }
 
 /**
- * The rows in the order the list shows them — what was typed first, the
- * owner's call, then curated, then in use — flat for Downshift, which numbers
- * them, and bucketed for the headings. A source with one bucket shows no
- * headings; one whose rows carry a `heading` names its own buckets
- * (bucketByHeading). A caller with an `action` has its action row
- * last instead of the typed row first, blank box or not, since what it lists
- * can only be picked (MB.154): the sources found are what is looked for, and
- * making one is the way out when none is (MB.115, the owner's call). A caller
- * refusing what was typed has no typed row
- * (MB.174). The curated headings say where a value comes from, the owner's
- * call (MB.131): a curated value is the compendium's, since its entries hold
- * nothing else, and one only in use is this coven's own.
+ * The rows in the order the list shows them, flat for Downshift and bucketed for the headings; a caller's `action` row goes last in place of the typed row first
+ * (claude-docs/components/combobox.md, "Component notes").
  */
 function arrange<O extends ComboboxOption>(
   options: O[],
@@ -118,11 +98,7 @@ function arrange<O extends ComboboxOption>(
         ].filter((bucket) => bucket.rows.length > 0)
       : [{ heading: null, key: 'all', rows: options }];
   const lastRow: ActionRow | null = action === undefined ? null : { value: action, action: true };
-  // A suggestion whose row reads as the text typed, spaces and case aside,
-  // already offers it, so the typed row would only repeat it, and stand first,
-  // where Enter takes the typed text rather than the suggestion's own spelling.
-  // Its row's text, the label where it has one: "Wax (Animal)" is not "wax", so
-  // that typed row stays, a choice the rows do not offer.
+  // A suggestion whose row reads as the text typed already offers it, so the typed row would only repeat it; a label that differs ("Wax (Animal)") keeps the typed row.
   const folded = typed.trim().toLowerCase();
   const matched = options.some(
     (option) => (option.label ?? option.value).trim().toLowerCase() === folded,
@@ -141,12 +117,8 @@ function arrange<O extends ComboboxOption>(
 }
 
 /**
- * Downshift would select the highlighted row on blur, and empty a closed box
- * on Escape; neither is wanted. A pick leaves the text alone too: the caller
- * sets it, so a list can empty its box rather than show what it just added.
- * With `keepOpen`, a pick of a row leaves the list open for the next, as the
- * multi-select box's `keepChoosing` does; the action row still closes it,
- * since what it opens is somewhere else.
+ * Downshift would select the highlighted row on blur and empty a closed box on Escape; neither is wanted, and a pick leaves the text to the caller.
+ * With `keepOpen` a pick of a row leaves the list open; the action row still closes it.
  */
 const keepText =
   (keepOpen: boolean) =>
@@ -163,9 +135,7 @@ const keepText =
         const stays = keepOpen && changes.selectedItem != null && !isAction(changes.selectedItem);
         return { ...changes, inputValue: state.inputValue, ...(stays && { isOpen: true }) };
       }
-      // Downshift remembers the last row picked, so with `selectedItem` held at
-      // null the next pick reads as the prop changing, and it would write
-      // the null item's text, '', into the box.
+      // Downshift remembers the last row picked, so with `selectedItem` held at null the next pick would write the null item's text into the box.
       case useCombobox.stateChangeTypes.ControlledPropUpdatedSelectedItem:
         return { ...changes, inputValue: state.inputValue };
       default:
@@ -186,11 +156,7 @@ function statusOf(
   return suggestions.pending ? `Looking for ${noun}s` : `No ${noun}s`;
 }
 
-/**
- * Downshift writes `aria-activedescendant=""` while no option is highlighted. An empty id
- * points at nothing, and a checker reads it as a broken reference, so the attribute is left
- * out instead (second design review, 2026-10-28, finding 6).
- */
+/** Downshift writes `aria-activedescendant=""` while no option is highlighted; an empty id is read as a broken reference, so the attribute is left out. */
 function withoutEmptyDescendant<T extends { 'aria-activedescendant'?: string }>(props: T): T {
   if (props['aria-activedescendant']) return props;
   const { 'aria-activedescendant': _empty, ...rest } = props;
@@ -234,11 +200,7 @@ function Combobox<O extends ComboboxOption = ComboboxOption>({
   const headingId = useId();
   const qualifierId = useId();
   const detail = qualifier?.detail;
-  // Opened on the box's focus as well as the qualifier's hover: the
-  // qualifier is no stop of its own, and the box is what the keyboard reaches.
-  // It gets out of the way of typing (MB.115): the first printable key and the
-  // list opening both close it, and focus or a hover opens it again. The
-  // detail stays in the box's description, so a screen reader still hears it.
+  // Opened on the box's focus as well as the qualifier's hover; the first printable key and the list opening close it, and the box's description still holds the detail.
   const tip = useTip(() => Boolean(detail), 'top-start');
   const hideTip = tip.hide;
   // Whether the list would be open had it rows: it opens as they arrive.
@@ -263,8 +225,7 @@ function Combobox<O extends ComboboxOption = ComboboxOption>({
   // A lookup in flight: the visible spinner (shown after $loading-delay by its
   // own stylesheet) and `aria-busy`, beside the status that already says it.
   const busy = suggestions?.pending === true;
-  // With an empty message the listbox is one part of a popup, and
-  // the popup is what is placed; otherwise the list is, as it always was.
+  // With an empty message the listbox is one part of a popup, and the popup is what is placed.
   const wrapped = message !== undefined;
   const { setControl, setList, listStyle, placement } = useListPosition(popupOpen, listAnchor);
 
@@ -309,21 +270,13 @@ function Combobox<O extends ComboboxOption = ComboboxOption>({
     },
   });
 
-  // Enter with nothing highlighted is the caller's — a list's add — and never
-  // the form's submit. With no caller for it, Downshift closes an open list,
-  // and a closed box lets Enter reach the form as a text box does. Backspace
-  // or Delete in an empty box takes the last entry, as react-select's does.
+  // Enter with nothing highlighted is the caller's and never the form's submit; Backspace or Delete in an empty box takes the last entry.
   const onKeyDown = (event: KeyboardEvent<HTMLInputElement>) => {
     if (event.nativeEvent.isComposing) return;
     // A printable key is one character long; a shortcut is not typing.
     if (event.key.length === 1 && !event.ctrlKey && !event.metaKey && !event.altKey) hideTip();
-    // Escape on a box with no open list is the dialog's, unless the "no
-    // matches" message is showing. That message is open content that Downshift
-    // does not know of (it has no rows, so its isOpen is false), so Escape
-    // closes it alone and goes no further, as it does on an open list (MB.115).
-    // Otherwise Downshift prevents the key whenever the box holds text; the
-    // reducer keeps that text but cannot undo the preventDefault, which would
-    // stop the dialog's own cancel event.
+    // Escape on a box with no open list is the dialog's, unless the "no matches" message is showing, which Downshift cannot see and Escape closes alone
+    // (claude-docs/components/combobox.md, "Component notes").
     if (event.key === 'Escape' && !isOpen) {
       if (showEmpty) {
         setWantsOpen(false);
@@ -351,10 +304,7 @@ function Combobox<O extends ComboboxOption = ComboboxOption>({
   // puts the caret in the text, as pressing a plain input would.
   const focusText = (event: MouseEvent<HTMLDivElement>) => {
     const target = event.target as HTMLElement;
-    // The qualifier reads as part of the text, so a press on it does too;
-    // and so does one where the clear sits hidden, whose room the box keeps
-    // (MB.115, the owner's call): `visibility` passes the press to the
-    // indicators' strip, which is the control's own ground.
+    // The qualifier reads as part of the text, and so does the room where the clear sits hidden: `visibility` passes the press to the indicators' strip.
     if (
       target === event.currentTarget ||
       target.classList.contains('combobox__values') ||
@@ -409,8 +359,7 @@ function Combobox<O extends ComboboxOption = ComboboxOption>({
                 </span>
               )}
               {item.label ?? item.value}
-              {/* The space is a text node of the label's own: an accessible
-                  name drops the one a span begins with. */}
+              {/* The space is a text node of the label's own, as a span's leading one is dropped from the name. */}
               {item.count !== undefined && (
                 <>
                   {' '}
@@ -434,41 +383,30 @@ function Combobox<O extends ComboboxOption = ComboboxOption>({
 
   return (
     <div className={popupOpen ? 'combobox is-open' : 'combobox'}>
-      {/* Named by a <label> of its own, hidden, where the caller names none:
-          Chrome flags a field no label names, an aria-label notwithstanding.
-          Downshift ties the two by id. */}
+      {/* Named by a hidden <label> where the caller names none, as Chrome flags a field only an aria-label names. */}
       {!labelId && <label {...getLabelProps({ className: 'visually-hidden' })}>{label}</label>}
-      {/* Presentational: the press is a convenience for the pointer, and the
-          box inside is the control a reader and the keyboard reach. */}
+      {/* Presentational: the press is for the pointer; the box inside is the control. */}
       <div
         ref={setControl}
         role="presentation"
         className={invalid ? 'input combobox__control is-invalid' : 'input combobox__control'}
         onMouseDown={focusText}
       >
-        {/* The caller's own control, ahead of the text so the tab order reads
-            as the screen does. Pressing a button in it is not a press on the
-            control's ground, so focusText leaves it alone (its click must
-            still fire), and Downshift sees it inside the box. */}
+        {/* The caller's own control, ahead of the text so the tab order reads as the screen does; focusText leaves a press in it alone. */}
         {leading && <div className="combobox__leading">{leading}</div>}
         <div className="combobox__values">
           {entries}
-          {/* The chosen choice's mark, ahead of the text as a row's is ahead
-              of its label; a press on it is a press on the text. */}
+          {/* The chosen choice's mark, ahead of the text; a press on it is a press on the text. */}
           {icon && (
             <span className="combobox__icon combobox__lead" aria-hidden="true">
               {icon}
             </span>
           )}
-          {/* The text's slot. With a qualifier it is as wide as the text,
-              sized by a hidden copy of it, so the qualifier reads straight
-              after: "Wax (Animal)". Always in the page, so that a pick
-              adding the qualifier never remounts the box and takes its focus. */}
+          {/* The text's slot, sized by a hidden copy when qualified, always in the page so a pick never remounts the box. */}
           <span
             className={qualifier ? 'combobox__text is-qualified' : 'combobox__text'}
             data-value={value}
-            // Beside chips, room for the placeholder, which stays to prompt
-            // for the next entry while nothing is typed.
+            // Beside chips, room for the placeholder, which prompts for the next entry.
             style={chipsRoom(Boolean(entries), placeholder)}
           >
             <input
@@ -495,12 +433,8 @@ function Combobox<O extends ComboboxOption = ComboboxOption>({
                   'aria-invalid': invalid,
                   'aria-busy': busy || undefined,
                   onKeyDown,
-                  // Typing always wants the list, as Downshift's own input change
-                  // says. Its open callback alone is not enough: it fires only
-                  // when the open state differs from the props it last committed,
-                  // so a key landing just after a pick closed the list, before
-                  // that render committed, read as no change and the list stayed
-                  // shut (story 51). See claude-docs/components/combobox.md.
+                  // Typing always wants the list: Downshift's open callback alone misses a key landing just after a pick closed it, before that render committed
+                  // (claude-docs/components/combobox.md, "Component notes").
                   onChange: () => setWantsOpen(true),
                   onFocus: () => {
                     tip.show();
@@ -508,10 +442,7 @@ function Combobox<O extends ComboboxOption = ComboboxOption>({
                   },
                   onBlur: () => {
                     tip.hide();
-                    // An open list is Downshift's to close on blur; one wanted
-                    // but empty is not open to it, so the wish is dropped here,
-                    // or the next answer would open the list and pull the
-                    // focus back from wherever it has gone.
+                    // An open list is Downshift's to close on blur; one wanted but empty is not open to it, so the wish is dropped here.
                     if (!isOpen) setWantsOpen(false);
                     onBlur?.();
                   },
@@ -520,8 +451,7 @@ function Combobox<O extends ComboboxOption = ComboboxOption>({
             />
           </span>
           {qualifier && (
-            // Hover on a wrapper holding the tooltip as well as the text, so
-            // the pointer can move onto the tooltip without closing it.
+            // Hover on a wrapper holding the tooltip, so the pointer can move onto it without closing it.
             <span
               ref={tip.anchor}
               className="combobox__qualifier"
@@ -531,8 +461,7 @@ function Combobox<O extends ComboboxOption = ComboboxOption>({
             >
               {/* In brackets, as the row picked read: "Wax (Animal)". */}
               <span id={`${qualifierId}-text`}>({qualifier.text})</span>
-              {/* In the page while closed, faded out and aria-hidden, as an
-                  entry's is, and read through the box's description. */}
+              {/* In the page while closed, faded out and aria-hidden, as an entry's is; read through the box's description. */}
               {detail && (
                 <span
                   ref={tip.bubble}
@@ -552,10 +481,7 @@ function Combobox<O extends ComboboxOption = ComboboxOption>({
         </div>
         {(clear || (hasSource && toggle) || busy) && (
           <div className="combobox__indicators">
-            {/* Always drawn once the caller has a clear, and hidden while
-                there is nothing to clear, rather than left out: its room,
-                and the separator's, stay in the control, so typing,
-                choosing and clearing never change its width (MB.115). */}
+            {/* Always drawn once the caller has a clear, hidden when empty, so the control's width never changes. */}
             {clear && (
               <button
                 type="button"
@@ -569,8 +495,7 @@ function Combobox<O extends ComboboxOption = ComboboxOption>({
                 <ClearIcon />
               </button>
             )}
-            {/* After the clear, as react-select draws it, so the spinner
-                sits by the chevron rather than across the clear's held room. */}
+            {/* After the clear, as react-select draws it, so the spinner sits by the chevron. */}
             {busy && <Spinner />}
             {clear && hasSource && toggle && (
               <span
@@ -600,8 +525,7 @@ function Combobox<O extends ComboboxOption = ComboboxOption>({
         after={
           <>
             {showEmpty && (
-              // Not an option, so not in the listbox: a reader hears it through
-              // the status, and would count it as a choice inside the list.
+              // Not an option, so not in the listbox; a reader hears it through the status.
               <EmptyMessage>{message}</EmptyMessage>
             )}
           </>
@@ -627,10 +551,7 @@ function Combobox<O extends ComboboxOption = ComboboxOption>({
               bucket.heading === null ? (
                 bucket.rows.map(row)
               ) : (
-                // A listbox's group is ARIA's own; optgroup belongs to a select.
-                // On a div inside a presentational li, which the tree leaves
-                // out, since ARIA allows no `group` role on an li (axe's
-                // aria-allowed-role, first caught by M5.5's scan in a browser).
+                // A listbox's group is ARIA's own, on a div inside a presentational li, since ARIA allows no `group` role on an li (axe's aria-allowed-role).
                 // oxlint-disable jsx-a11y/prefer-tag-over-role
                 <li key={bucket.key} role="presentation" className="combobox__group">
                   <div role="group" aria-labelledby={`${headingId}-${bucket.key}`}>
@@ -648,8 +569,7 @@ function Combobox<O extends ComboboxOption = ComboboxOption>({
           {isOpen && !actionFirst && lastRow && row(lastRow)}
         </ul>
       </Popup>
-      {/* What the list holds, for a screen reader: the rows arrive after the
-          typing, and nothing else says so. */}
+      {/* What the list holds, for a screen reader, as the rows arrive after the typing. */}
       {hasSource && (
         <output className="visually-hidden" aria-label={`${label} ${noun}s`}>
           {statusOf(isOpen, suggestions, noun, showEmpty ? message : undefined)}

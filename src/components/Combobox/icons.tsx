@@ -1,10 +1,6 @@
 import type { ReactElement } from 'react';
 
-// The control's two indicators, drawn by every box: a typed one, the
-// select-only one and the multi-select; a sortable entry's grip; and a
-// linked entry's link mark (MB.115). Hidden from assistive technology —
-// what names them is the button around them, or nothing, where the whole
-// control is the one target.
+// The control's indicators, drawn by every box, hidden from assistive technology since the button around them names them.
 
 export function ChevronIcon(): ReactElement {
   return (

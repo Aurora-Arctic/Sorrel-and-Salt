@@ -4,12 +4,7 @@ import { type ReactElement, useId } from 'react';
 import { pressFeedback } from '../../lib/press-feedback';
 import { FacetCount } from './facet-count';
 
-/**
- * An on-or-off filter drawn as SwitchField draws it (the same classes, the same native
- * checkbox with `role="switch"`, the same Enter key), with its count after the name as a
- * muted number. SwitchField's label is a string, and the ingredient form shares it, so the
- * panel draws its own rather than widen that one.
- */
+/** An on-or-off filter drawn as SwitchField draws it, with its count after the name; SwitchField's label is a string the ingredient form shares, so the panel draws its own rather than widen it. */
 export function FacetSwitch({
   label,
   count,

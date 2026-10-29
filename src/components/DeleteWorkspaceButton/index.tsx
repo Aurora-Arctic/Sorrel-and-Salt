@@ -8,12 +8,9 @@ import { graphqlRequest } from '../../lib/graphql-client';
 import ConfirmedAction from '../UserList/confirmed-action';
 import type { DeleteWorkspaceButtonProps } from './types';
 
-// An owner's Delete on the coven index page (M6.14). It asks first, naming the
-// coven and what becomes unreachable, then sends the deletion and leaves the
-// page, which the member no longer has. A refusal is said in a callout under
-// the button (M12.31), or, asked over the only owner's exit dialog, in a plain
-// notice beside it inside that dialog. The service is the guard: the page shows this only to a role
-// holding `workspace: delete` (claude-docs/components/delete-workspace-button.md).
+// An owner's Delete on the coven index page: it asks first, naming the coven and what becomes
+// unreachable, then deletes and leaves. A refusal shows in a callout, or a notice in the only owner's
+// exit dialog. The page shows it only to a role holding `workspace: delete` (claude-docs/components/delete-workspace-button.md).
 
 const DeleteWorkspaceDocument = graphql(`
   mutation DeleteWorkspace($workspaceId: ID!) {
@@ -45,9 +42,9 @@ const DeleteWorkspaceButton = ({
       confirmClass="btn btn--destructive"
       inModal={inModal}
       send={() => graphqlRequest(DeleteWorkspaceDocument, { workspaceId })}
-      // The coven is gone for this user too, so the page cannot be read again:
-      // replace it with the landing, and refresh so the shell's switcher stops
-      // listing it (a client-side replace does not re-run the layout).
+      // The coven is gone for this user too, so replace the page with the landing and
+      // refresh so the shell's switcher stops listing it (a client-side replace does
+      // not re-run the layout).
       onSent={() => {
         navigate(COVEN_LANDING_PATH, { replace: true });
         refresh();

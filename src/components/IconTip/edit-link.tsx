@@ -7,14 +7,7 @@ import IconTip from './icon-tip';
 import { AnnotateIcon, MysticEyeIcon, PencilIcon } from './icons';
 import type { EditLinkProps } from './types';
 
-/**
- * A list row's icon link into a dialog: the icon alone, at the larger size a
- * row takes, with its tip. Named by its verb and the row's own name in hidden
- * text, as the word link it replaced was, since a column of bare verbs is no
- * help to a screen reader. A press opens the row's modal at once under
- * `heading`, its form arriving with the navigation (M9.18); a link still, so a
- * new tab, or a press before the script loads, opens the address.
- */
+/** A list row's icon link into a dialog, named by its verb and the row's name in hidden text; a press opens the row's modal at once under `heading`, and the link still works as an address. */
 const IconLink = ({
   href,
   name,
@@ -51,11 +44,7 @@ export const EditLink = ({
   <IconLink {...props} className={className} verb="Edit" icon={<PencilIcon />} />
 );
 
-/**
- * Edit on a compendium entry, for an admin or a curator (the owner's call, 2026-10-20): the same
- * pencil, but named and tipped for the compendium it changes, "Edit in Compendium", so that on a
- * page that also offers a coven's own choices it cannot be taken for one of them.
- */
+/** Edit on a compendium entry for an admin or a curator: named and tipped "Edit in Compendium", so it cannot be taken for a coven's own choice. */
 export const CompendiumEditLink = ({
   className,
   ...props
@@ -63,11 +52,7 @@ export const CompendiumEditLink = ({
   <IconLink {...props} className={className} verb="Edit in Compendium" icon={<PencilIcon />} />
 );
 
-/**
- * A compendium entry's Annotate in a coven's list (M8.17): `AnnotateIcon`, not
- * Edit's pencil, since it writes the coven's notes over the entry
- * rather than changing the entry.
- */
+/** A compendium entry's Annotate in a coven's list: `AnnotateIcon`, not Edit's pencil, since it writes the coven's notes over the entry. */
 export const AnnotateLink = ({
   className,
   ...props
@@ -75,12 +60,7 @@ export const AnnotateLink = ({
   <IconLink {...props} className={className} verb="Annotate" icon={<AnnotateIcon />} />
 );
 
-/**
- * An entry's Quick Look in a list (M12.5): the eye beside its name, opening
- * the entry's details over the list in the modal place `place` names, the
- * name itself still a plain link to the entry's page. Its own class, not
- * Edit's, as it sits in the name's line rather than a row's foot.
- */
+/** An entry's Quick Look in a list: the eye beside its name, opening the details in the modal place `place` names, in its own class as it sits in the name's line. */
 export const QuickLookLink = (props: EditLinkProps & { place?: string }): ReactElement => (
   <IconLink {...props} verb="Quick Look" icon={<MysticEyeIcon />} className="icon-tip__look" />
 );

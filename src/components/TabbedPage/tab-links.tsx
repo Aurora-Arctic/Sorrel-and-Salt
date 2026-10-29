@@ -9,43 +9,14 @@ import { pressFeedback } from '../../lib/press-feedback';
 import { useTabSwitch } from './tab-switch';
 import type { TabLinksProps } from './types';
 
-// The tabs' links, the part that has to know which tab is open, and so a
-// client part: only `usePathname()` reads the address
-// (claude-docs/components/tabbed-page.md).
-//
-// Pressing another tab runs its navigation through the tab switch, which
-// greys the row and shows the panel's loading state until the tab has
-// rendered, as the pager's soft ends do. A Ctrl, Cmd or Shift click and a
-// middle click keep the browser's own behaviour, and without JavaScript each
-// tab is a plain link. The open tab is left to Link, so pressing it again
-// shows no loading state. While a tab is on its way every tab is
-// `aria-disabled` and a press does nothing; the row is `aria-busy` rather
-// than the panel, whose status a screen reader should hear as it arrives,
-// not hold back, and so is the pressed tab. `aria-current` stays on the tab
-// that is open until the new tab renders, since it names the page shown,
-// not the press.
-//
-// The pill that marks a tab is one element sliding beneath the links (the
-// owner's call): on the open tab, and from a press on the pressed one, in
-// its pending look, so it reads as on its way rather than arrived. Should
-// the navigation fail it slides back. The server draws the pill on the open
-// link itself (the stylesheet), so it is there before this script runs and
-// without it; once the sliding pill is placed, the row's `data-sliding`
-// hands the drawing over to it.
-//
-// A row too wide for its column scrolls sideways inside its track (the
-// stylesheet). When the page loads and when the pill moves, its tab is
-// centred in the track, so it is in view with a neighbour either side. The
-// track's own `scrollLeft` is set rather than `scrollIntoView()` called,
-// which would scroll the page too. A focus moving along the row is the
-// browser's to scroll into view.
+// The tabs' links: a client part because only `usePathname()` knows which tab is open. Pressing another tab navigates through the
+// tab switch, and the sliding pill and scrolling are described in claude-docs/components/tabbed-page.md, "Component notes".
 const TabLinks = ({ tabs }: TabLinksProps): ReactElement => {
   const pathname = usePathname();
   const { pending, target, go } = useTabSwitch();
   const track = useRef<HTMLUListElement>(null);
   const pill = useRef<HTMLLIElement>(null);
-  // The open tab is the most specific one at the address, the longest: the grimoire's Drafts
-  // lies beneath Spells, so on Drafts both are at it, and the first would mark Spells.
+  // The open tab is the longest matching address: the grimoire's Drafts lies beneath Spells, so on Drafts both match.
   const openHref = tabs
     .filter(({ href }) => isAtPath(pathname, href))
     .reduce<string | undefined>(
@@ -69,17 +40,14 @@ const TabLinks = ({ tabs }: TabLinksProps): ReactElement => {
       const tab = link.getBoundingClientRect();
       row.scrollLeft +=
         tab.left + tab.width / 2 - (box.left + row.clientLeft + row.clientWidth / 2);
-      // Placed before the slide is switched on, so the first placing does
-      // not slide in from the row's start; reading a size settles it first.
+      // Placed before the slide is switched on, so the first placing does not slide in from the row's start.
       if (!row.hasAttribute('data-sliding')) {
         void shape.offsetWidth;
         row.setAttribute('data-sliding', '');
       }
     };
     place();
-    // Again whenever its tab or the track changes size: the web font
-    // arriving after the first paint widens every label, and a phone turned
-    // on its side widens the track.
+    // Again whenever its tab or the track changes size, as a web font arriving or a phone turned on its side widens it.
     if (typeof ResizeObserver === 'undefined') return;
     const observer = new ResizeObserver(place);
     observer.observe(row);

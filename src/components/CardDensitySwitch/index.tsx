@@ -7,10 +7,9 @@ import { SwitchField } from '../Field/switch-field';
 export const STORAGE_KEY = 'card-density';
 const ATTRIBUTE = 'data-card-density';
 
-// <html> is the one record of the choice, so every switch on a page, and the CSS, read the same
-// thing. A MutationObserver catches writers outside this component (the pre-paint script, another
-// switch); it reports a tick late, so this component's own write also notifies directly, which
-// keeps the redraw inside the click that caused it.
+// <html> is the one record of the choice, so every switch and the CSS read the same thing. A
+// MutationObserver catches outside writers but reports a tick late, so this component's own write also
+// notifies directly, keeping the redraw inside the click.
 const listeners = new Set<() => void>();
 const subscribe = (onChange: () => void): (() => void) => {
   listeners.add(onChange);
@@ -29,10 +28,9 @@ const getSnapshot = (): boolean => document.documentElement.getAttribute(ATTRIBU
 const getServerSnapshot = (): boolean => true;
 
 /**
- * The Compact switch for a list of ingredient cards (M9.6): on by default, remembered on this
- * computer. It sets `data-card-density="regular"` on `<html>` while off, which the compact
- * selectors honour, and removes it while on. Blocked storage costs the memory, not the change.
- * claude-docs/components/card-density-switch.md.
+ * The Compact switch for a list of ingredient cards: on by default, remembered on this computer. It sets
+ * `data-card-density="regular"` on `<html>` while off. Blocked storage costs the memory, not the change
+ * (claude-docs/components/card-density-switch.md).
  */
 export default function CardDensitySwitch(): ReactElement {
   const compact = useSyncExternalStore(subscribe, getSnapshot, getServerSnapshot);

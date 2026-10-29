@@ -46,16 +46,9 @@ import { useFocusFirstInvalid } from './on-submit';
 import { useReportPanelChanges } from './panel-changes';
 import { placeServerIssues } from '../../lib/graphql-failure';
 
-// The citation sub-form (MB.154): a new source written to this coven without
-// leaving the ingredient form. Inline beneath the References field rather
-// than a dialog, since M8.16 puts the whole form in a modal. It cannot be a
-// <form> of its own, nested in the ingredient's, so it is a fieldset running
-// its own react-hook-form, its fields the ingredient form's own, and Enter in
-// one of them saves the source rather than the ingredient
-// (claude-docs/components/ingredient-form.md, "The new reference panel").
-// Opened on a source already recorded, it edits that one instead, prefilled
-// with every field it has, and the change reaches every row citing it
-// (MB.115; the same doc, "Editing a source").
+// The citation sub-form: a new source written to this coven without leaving the ingredient form.
+// A fieldset running its own react-hook-form, as a <form> cannot nest in the ingredient's; opened
+// on a recorded source it edits that one (claude-docs/components/ingredient-form.md, "The new reference panel").
 
 export const CreateReferenceDocument = graphql(`
   mutation CreateReference($workspaceId: ID, $input: ReferenceInput!) {
@@ -134,7 +127,7 @@ const KIND_OPTIONS = REFERENCE_KINDS.map((kind) => ({ value: kind, label: KIND_L
 
 // The fields. No field carries a hint: how to cite is one How to Cite tip
 // at the panel's head, and a field whose format matters shows an example
-// as its placeholder (the owner's call, 2026-10-20; info-tip.md).
+// as its placeholder (info-tip.md).
 const title = (label: string): ReferenceFieldSpec => ({
   name: 'title',
   label,
@@ -296,10 +289,8 @@ const shownFor = (kind: ReferenceKind | ''): ReadonlySet<ReferenceFieldName> =>
   new Set(kind === '' ? ['title'] : FIELDS_OF[kind].map(({ name }) => name));
 
 /**
- * The values as the mutation takes them: the chosen kind's fields as typed —
- * the schema trims and drops a blank — and every other field null, so a
- * field another kind took is left behind. A day goes as null when blank,
- * since `LocalDate` takes no empty text.
+ * The values as the mutation takes them: the chosen kind's fields as typed and every other field
+ * null; a blank day goes as null, since `LocalDate` takes no empty text.
  */
 export function toReferenceInput(values: ReferenceFormValues): ReferenceSendInput {
   const shown = shownFor(values.kind);
@@ -340,11 +331,8 @@ export default function ReferencePanel(props: ReferencePanelProps): ReactElement
 }
 
 /**
- * The panel's head, one line: what it says first, if anything, and at its end
- * edge its own Undo and Redo, any tip it carries, and a × that closes it as
- * Cancel does (MB.258), so a long panel can be left without scrolling to its
- * foot. The × stays last, the one stop before the panel's first field. Named for the panel, since the modal around it has a Close of
- * its own; held while a save is in flight, as Cancel is.
+ * The panel's head, one line: its title, then at the end edge its Undo and Redo, any tip, and a ×
+ * that closes it as Cancel does (claude-docs/components/ingredient-form.md, "Notes behind the code").
  */
 function PanelHead({
   legend,
@@ -384,13 +372,8 @@ function PanelHead({
 }
 
 /**
- * How to cite, said once for the whole panel rather than beside each field
- * (the owner's call, 2026-10-20): the panel's `aria-describedby` names it,
- * so it is read on entering the panel. A title inside a title, the one
- * format a placeholder cannot show, is here (MB.151). One rule to a line,
- * as a list of spans given the list roles: the bubble is a `span`, which
- * may not hold a `ul`. Each rule is a sentence with its full stop; an
- * example sits in brackets before it, since the typed value has no stop.
+ * How to cite, said once for the whole panel and named by its `aria-describedby`, one rule to a
+ * line (claude-docs/components/ingredient-form.md, "Notes behind the code").
  */
 const CITE_RULES = [
   'Names as printed, the first author inverted (Shelley, Mary).',
@@ -418,10 +401,8 @@ function HowToCite({ id }: { id: string }): ReactElement {
 }
 
 /**
- * The edit's read, then the panel prefilled with it. Kept for no longer than
- * the panel is open, so an edit opened again reads the source as it now is.
- * The tier is the source's own: a coven's under its coven, the compendium's
- * without one, as `updateReference` will write it.
+ * The edit's read, then the panel prefilled with it, kept only while the panel is open. The tier
+ * is the source's own, as `updateReference` will write it.
  */
 function EditSourcePanel({ editing, ...props }: EditSourcePanelProps): ReactElement {
   const legendId = useId();
@@ -490,12 +471,8 @@ function PanelForm({
   const kind = useWatch({ control, name: 'kind' });
   const shown = kind === '' ? [] : FIELDS_OF[kind];
 
-  // Opened to be filled in, so the kind, which decides the rest, takes the
-  // focus: its box, the panel's one combobox, found in the page at once, as
-  // the ingredient form finds Name. `setFocus` waits a tick, and would take
-  // the focus back from whatever a quick save had focused meanwhile. Asked
-  // for again while open, it does the same, the owner's call: New Reference
-  // or "Add a reference" always takes you to the panel, its top in view.
+  // Opened to be filled in, so the kind, which decides the rest, takes the focus; `setFocus` waits
+  // a tick, and asked for again while open it does the same, with the panel's top in view.
   useEffect(() => {
     panel.current?.scrollIntoView?.({ block: 'start' });
     panel.current?.querySelector<HTMLElement>('[role="combobox"]')?.focus({ preventScroll: true });
@@ -598,11 +575,9 @@ function PanelForm({
               format={FORMAT_OF[spec.name]}
             />
           ))}
-          {/* Held down from the press to the answer, as the ingredient's saves
-            are: Save Reference says so with the same spinner, and Cancel
-            waits, so a source being written is never left half-added. Save
-            is off until something is entered or changed, and Cancel is quiet,
-            the owner's rules for every form (M5.6). */}
+          {/* Held down from the press to the answer, as the ingredient's saves are, so a source
+            being written is never left half-added; Save is off until something is entered or
+            changed, and Cancel is quiet. */}
           <FormActions
             noun={noun}
             dirty={isDirty}

@@ -9,12 +9,12 @@ import LockedControl from './locked-control';
 import { unverifiedWarning } from './warning';
 import type { CreationControlProps } from './types';
 
-// The row's Approve or Revoke (M5.8), beside the mark it changes: lets a user
+// The row's Approve or Revoke, beside the mark it changes: lets a user
 // with no invitation create a coven, or stops them, behind a confirmation
 // naming them, with an optional reason the ledger keeps, as Change Role
 // takes one. A success re-reads the page, whose row then offers the
 // other action. Approving an unverified address warns first, and still
-// approves (MB.205).
+// approves.
 
 const GrantWorkspaceCreationDocument = graphql(`
   mutation GrantWorkspaceCreation($userId: ID!, $note: String) {
@@ -42,7 +42,7 @@ const CreationControl = ({
   action,
   inModal = false,
 }: CreationControlProps): ReactElement =>
-  // Locked while admin changes are paused, as Change Role is (MB.63).
+  // Locked while admin changes are paused, as Change Role is.
   paused ? (
     <LockedControl
       label={action === 'approve' ? 'Approve' : 'Revoke'}
@@ -56,10 +56,10 @@ const CreationControl = ({
     <ConfirmedAction
       label="Approve"
       accessibleName={`Approve ${name}`}
-      // Quiet, the body ink, on the owner's call.
+      // Quiet, the body ink.
       openClass="btn btn--small btn--quiet"
       title="Approve Coven Creation"
-      // The user's name in bold, on the owner's call.
+      // The user's name in bold.
       question={
         <>
           Let <strong>{name}</strong> create covens?
@@ -73,7 +73,7 @@ const CreationControl = ({
       announcement={`${name} may now create covens.`}
       inModal={inModal}
       // Beside its fact in the user's modal, not in a button row: a refusal
-      // there is the callout too (the owner's call, 2026-10-20).
+      // there is the callout too.
       refusalInModal="callout"
       send={(note) => graphqlRequest(GrantWorkspaceCreationDocument, { userId, note })}
     />
@@ -81,7 +81,7 @@ const CreationControl = ({
     <ConfirmedAction
       label="Revoke"
       accessibleName={`Revoke approval for ${name}`}
-      // Red, on the owner's call: it takes something away.
+      // Red: it takes something away.
       openClass="btn btn--small btn--destructive"
       title="Revoke Coven Creation"
       question={
@@ -95,7 +95,7 @@ const CreationControl = ({
       announcement={`${name} may no longer create covens.`}
       inModal={inModal}
       // Beside its fact in the user's modal, not in a button row: a refusal
-      // there is the callout too (the owner's call, 2026-10-20).
+      // there is the callout too.
       refusalInModal="callout"
       send={(note) => graphqlRequest(RevokeWorkspaceCreationDocument, { userId, note })}
     />

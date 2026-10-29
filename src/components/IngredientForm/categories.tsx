@@ -10,15 +10,12 @@ import type { PickerCategory } from '../CategoryPicker/types';
 import { FieldError } from '../Field';
 import type { IngredientFormValues, SharedFieldProps } from './types';
 
-// The categories an ingredient is filed under (MB.126): every live category,
-// read from the public `categories` query and picked from one box, the rows
-// under their groups and each pick a chip in its group's colour. An issue
-// naming a picked category lands on the picker's one error element, named by
-// the pick, as a list entry's is
-// (claude-docs/components/ingredient-form.md, "The categories").
+// The categories an ingredient is filed under: every live category, picked from one box, the rows
+// under their groups and each pick a chip in its group's colour (claude-docs/components/
+// ingredient-form.md, "The categories").
 
-// One page of the hard maximum, MAX_PAGE_SIZE, holds every category there is
-// (rule 8): written out, since the pagination module is the server's.
+// One page of the hard maximum, MAX_PAGE_SIZE, holds every category there is (rule 8): written out,
+// since the pagination module is the server's.
 export const CategoriesDocument = graphql(`
   query PickerCategories {
     categories(first: 100) {
@@ -41,7 +38,7 @@ export const CategoriesDocument = graphql(`
 
 /**
  * The Categories field: the picker, on the form's `categoryIds`, or at
- * `at`, a variant's own, which file that form alone (MB.215).
+ * `at`, a variant's own, which file that form alone.
  */
 export function CategoryField({ at, action }: SharedFieldProps): ReactElement {
   const FIELD = at ? (`${at}.categoryIds` as const) : 'categoryIds';

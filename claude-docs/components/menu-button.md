@@ -58,3 +58,9 @@ A `MenuButtonItem` has a `key`, a title-case `label` and an optional `destructiv
 ## Where it is tested
 
 `tests/components/MenuButton/index.test.tsx`: the keys, the closing, a link choice and the busy state, and the edge the menu hangs from (the end edge, even in the start half of the window). The entry page's choices are in `tests/components/IngredientEntry/cupboard-actions.test.tsx`, and the browser walks in `tests/e2e/cupboard-screens.spec.ts` and `tests/e2e/make-it-ours.spec.ts`; the Annotate dialog's More, staying inside the dialog, its items in its type, and full width at 375px, and a card's More near the window's foot opening above it inside the window at a desktop's width and at 375px, in `tests/e2e/coven-ingredients.spec.ts`. Story: `src/components/MenuButton/index.stories.tsx`.
+
+## Source notes
+
+Comments in the source that point here; each is the detail behind a one-line comment.
+
+- `index.tsx`: A labelled button with a chevron that opens a menu of choices, none of them the button's own: the APG menu-button pattern, as the bar's Add Ingredient chevron has it (claude-docs/components/app-shell.md). Opening moves the focus to the first item; the arrows, Home and End rove; Escape closes and hands the focus back; Tab and a press outside close. An item is a link or an action, and choosing either closes the menu first; an action may be disabled, shown and reached but not choosable, with a note saying why. It fades in and out over the short motion: a closing menu stays drawn, inert and hidden from assistive technology, until its fade ends. It is placed as a Combobox's list is, on Floating UI: hung from the button's end edge, below it or above it when there is more room there, shifted to stay on the screen clear of the phone's bottom bar; fixed, so a scrolling dialog cannot clip it, and following a scroll or a resize while open. claude-docs/components/menu-button.md.

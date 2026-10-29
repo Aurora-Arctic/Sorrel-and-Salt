@@ -6,12 +6,9 @@ import { StockDialogModal } from '../StockDialog';
 import type { StockData } from '../StockDialog/types';
 import CovenChoice from './coven-choice';
 
-// Edit Stock from a compendium entry's three dots (M9.12; the owner's call, 2026-10-21): the
-// coven card's own dialog, opened from a menu item. With one coven that may update stock it
-// opens at once; with two or more it first asks which, the way Annotate does. The jars and forms
-// are the page's, read per viewer through the services, so nothing here reads or caches
-// anything. The dialog reads the page again when it saves (`StockDialogForm`), so the card and
-// the check follow. claude-docs/components/stock-dialog.md.
+// Edit Stock from a compendium entry's three dots: the coven card's own dialog, opened at once for
+// one coven that may update stock and after asking which for two or more
+// (claude-docs/components/ingredient-entry.md, "Component notes").
 
 /** One coven that may update stock, with what its dialog shows. */
 export interface StockPlace {
@@ -35,12 +32,7 @@ export default function EditStock({
   /** The entry as the compendium calls it: the dialog's title. */
   ingredientName: string;
   defaultWorkspaceId: string;
-  /**
-   * Whether the dialog names the coven it writes to, after the ingredient: for a page that is
-   * not a coven's (the compendium's card, Quick Look and the public entry page), where nothing
-   * else says which coven the jars are. A coven's own pages leave it false (M9.12; the owner's
-   * call, 2026-10-21).
-   */
+  /** Whether the dialog names the coven it writes to; true off a coven's own pages, where nothing else says which coven the jars are. */
   namesCoven?: boolean;
   onClose: () => void;
   returnTo: () => HTMLElement | null | undefined;

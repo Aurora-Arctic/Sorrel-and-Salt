@@ -2,20 +2,9 @@
 
 import { useId, useLayoutEffect, useRef, useState, type ReactElement } from 'react';
 
-// The details modal's description (M12.5): the page's own paragraph, cut to its
-// first six lines, up from four, with Show More opening the rest in place (the owner's
-// calls, 2026-10-20; claude-docs/components/ingredient-entry.md, "The details modal").
-// The cut is the script's: without JavaScript there is no clip and the whole
-// text shows, and the toggle shows only when the text overflows six lines, so
-// a short description stands whole with no button. Not a `<details>`: its
-// summary would stand above the text, where this bar follows the lines it opens.
-//
-// A clip box round the paragraph holds the cut. Its height is set in pixels, from
-// six of the paragraph's own line heights, and moves to the text's full height
-// and back on a transition (summary.scss), because `auto` cannot be animated and
-// the grid-rows trick cannot stop short of the whole text. It is let go to
-// `auto` once open, so the text reflows freely. The bar is the one button the
-// whole way, so a press leaves the focus where it was.
+// The details modal's description: the page's paragraph cut to its first six lines, Show More
+// opening the rest in place. The cut is the script's, so without JavaScript the whole text shows
+// (claude-docs/components/ingredient-entry.md, "Component notes").
 
 const LINES = 6;
 

@@ -4,15 +4,10 @@ import { type ReactElement, useMemo, useState } from 'react';
 import Combobox from '.';
 import type { ComboboxChoice, ComboboxOption, ComboboxTypeaheadProps } from './types';
 
-// A closed set chosen by typing, react-select's single select: the typing
-// box over the set's choices, its text its own and narrowing the list, and
-// only a choice ever the value. Not re-exported from the folder's index,
-// which this imports, since the lint refuses an import cycle. See
-// claude-docs/components/combobox.md, "The type-ahead box".
+// A closed set chosen by typing, react-select's single select: only a choice is ever the value. Not re-exported from the folder's index, as the lint refuses an import cycle
+// (claude-docs/components/combobox.md, "The type-ahead box").
 
-// Not the ingredient form's `fold`, which keys entries as the database folds
-// them: this matches what a person types against a label they read, so it
-// folds in their locale.
+// Not the ingredient form's `fold`: this matches what a person types against a label they read, so it folds in their locale.
 const fold = (text: string) => text.trim().toLocaleLowerCase();
 
 /** The choice the text names in full, whatever its case, or none. */
@@ -37,21 +32,16 @@ export function ComboboxTypeahead({
 }: ComboboxTypeaheadProps): ReactElement {
   const selected = choices.find((choice) => choice.value === value);
   const [text, setText] = useState(selected?.label ?? '');
-  // A value set from outside, a pick or a reset, writes its label into the
-  // box, unless the text already names it: typing "mockish" chooses Mockish
-  // and keeps what was typed until the box is left.
+  // A value set from outside writes its label into the box, unless the text already names it.
   const [shown, setShown] = useState(value);
   if (value !== shown) {
     setShown(value);
     if (selected && choiceNamed(choices, text) !== selected) setText(selected.label);
   }
 
-  // The text narrows the list once it is not the choice's own label, so a
-  // box holding a choice opens on every choice rather than on that one.
+  // The text narrows the list once it is not the choice's own label.
   const query = selected && text === selected.label ? '' : fold(text);
-  // A qualified choice's row reads its label with the qualifier in brackets,
-  // as the ingredient form's Form rows read "Wax (Substance)"; the text a
-  // pick writes is still the label alone, and the query matches that alone.
+  // A qualified choice's row reads its label with the qualifier in brackets; the text a pick writes and the query match the label alone.
   const suggestions = useMemo(
     () => ({
       options: choices
@@ -67,8 +57,7 @@ export function ComboboxTypeahead({
     [choices, query],
   );
 
-  // Text that names no choice is no value: the field holds none, and a
-  // required one shows its error on save, as one never chosen does.
+  // Text that names no choice is no value: the field holds none.
   const type = (next: string) => {
     setText(next);
     const named = choiceNamed(choices, next)?.value ?? '';
@@ -95,8 +84,7 @@ export function ComboboxTypeahead({
         onSettle?.(named?.value ?? '');
         onBlur?.();
       }}
-      // From the first render, empty or not, so its room is kept while it
-      // is hidden and the box never changes width.
+      // From the first render, so its room is kept while hidden and the box never changes width.
       clear={
         clearable
           ? {
@@ -113,10 +101,8 @@ export function ComboboxTypeahead({
           : undefined
       }
       suggestions={suggestions}
-      // The chosen choice's qualifier, once the box reads its label as
-      // written: mid-typing in another case the box is still being typed in.
+      // The chosen choice's qualifier and icon, once the box reads its label as written.
       qualifier={selected && text === selected.label ? selected.qualifier : undefined}
-      // And its icon, ahead of the text, under the same reading.
       icon={selected && text === selected.label ? selected.icon : undefined}
       offerTyped={false}
       highlightFirst

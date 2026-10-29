@@ -5,7 +5,7 @@ import type { ReactElement, ReactNode } from 'react';
 import { ARRIVE_MS } from '../../lib/navigation/timing';
 import './index.scss';
 
-// The skeleton's way out (M12.33): when a wait ends, the bodies (`MainBody`,
+// The skeleton's way out: when a wait ends, the bodies (`MainBody`,
 // `SectionBody`) do not drop the skeleton at once but keep the last one over
 // the page that has arrived, and it fades away while the page shows through.
 // A client part, since the timer is the browser's. A fade rather than the
@@ -48,7 +48,7 @@ export const skeletonFadeHost = (leaving: boolean): string =>
   leaving ? 'skeleton-fade-host skeleton-fade-host--fading' : 'skeleton-fade-host';
 
 /**
- * The props that hold the page during a wait (MB.271): the page stays mounted at
+ * The props that hold the page during a wait: the page stays mounted at
  * its full height, unseen (`visibility`, which keeps its box, where
  * `display: none` or React's `<Activity>` would collapse it) and out of reach
  * (`inert`, `aria-hidden`), while `SkeletonCover` stands over it. Not taken

@@ -1,17 +1,16 @@
 @use '../../scss/variables' as *;
 @use '../../scss/mixins' as *;
 
-// The page kept in view on every side of a dialog, the owner's call during
-// M5.5: a step of space at a phone's edge, rising with the screen to three,
-// so even the compendium's long form sits over the list it opened from.
+// The page kept in view on every side of a dialog: a step of space at a phone's edge, rising with
+// the screen to three, so the compendium's long form sits over the list it opened from.
 $modal-gap: clamp(#{space(4)}, 5vmin, #{space(7)});
 
 // The `.modal` primitive's padding, on both sides: border-box counts it in the
 // width, so a column keeps the content width it had.
 $modal-padding: space(5) * 2;
 
-// The × stands in the dialog's padding: its top and right edges are the padding's own, so its
-// right edge is the right edge of whatever ends a line beneath it (the formal name's pencil), and the
+// The × stands in the dialog's padding: its top and right edges are the padding's own, so its right
+// edge is the right edge of whatever ends a line beneath it (the formal name's pencil), and the
 // head stops short of it by its width and a gap.
 $close-inset: space(5);
 $close-reserve: calc(#{$close-target} + #{space(3)});
@@ -20,16 +19,9 @@ $close-reserve: calc(#{$close-target} + #{space(3)});
 // A head with no top line has the eyebrow for its first line, and the × is brought level with it.
 $eyebrow-line: calc(#{type-size('overline')} * 1.65);
 
-// Only what the native element needs beyond the `.modal` primitive: its
-// default border and padding gone, a width that fits a phone, and a backdrop.
-// Border-box, so the primitive's padding sits inside the limits rather than
-// past them: the long form overran the screen by it. A column, the header
-// over the body, which scrolls beneath it while the dialog holds still
-// (MB.115): open only, since the closed element's `display: none` is the
-// browser's. Clipped rather than hidden, so the dialog is no scroll container
-// at all: `hidden` still lets a script or a focus scroll it, and a field's
-// `scrollIntoView` did, lifting the header out of view and leaving blank
-// space beneath the body (MB.258).
+// Only what the native element needs beyond the `.modal` primitive: border and padding gone, a
+// width that fits a phone, a backdrop. Border-box, a column, open only, and clipped rather than
+// hidden so it is no scroll container at all (claude-docs/components/modal.md, "Styling notes").
 .modal-dialog {
   container: modal / inline-size;
   box-sizing: border-box;
@@ -55,12 +47,9 @@ $eyebrow-line: calc(#{type-size('overline')} * 1.65);
   }
 }
 
-// Under the header, out to the dialog's edges, so the body's scrollbar sits at
-// the edge as the dialog's did. One grid cell, which the body and a
-// question's scrim share: the scrim covers exactly the body in view, and the
-// cell is as tall as the taller, so a short form's dialog grows to hold a
-// question rather than scroll it. A container, so a question's row stacks
-// at the width the form's own does.
+// Under the header, out to the dialog's edges so the body's scrollbar sits at the edge. One grid
+// cell, shared by the body and a question's scrim, so the dialog grows to hold a question; a
+// container, so a question's row stacks at the width the form's own does.
 .modal-dialog__main {
   display: grid;
   grid-template: minmax(0, 1fr) auto / minmax(0, 1fr);
@@ -69,16 +58,16 @@ $eyebrow-line: calc(#{type-size('overline')} * 1.65);
   container: modal-main / inline-size;
 }
 
-// What the contents scroll in, the dialog's padding given back inside it so
-// a focus ring at a field's edge is not cut off. Its own scroll ends at its
-// edge rather than handing on to the page. Isolated, so nothing in it lifted
-// by a z-index rises over a question's layer.
+// What the contents scroll in, the dialog's padding given back inside it so a focus ring at a
+// field's edge is not cut off. Its scroll ends at its edge; isolated, so nothing in it lifted by a
+// z-index rises over a question's layer.
 .modal-dialog__body {
   grid-area: 1 / 1;
   min-height: 0;
   padding: 0 space(5) space(5);
   overflow: auto;
-  // stylelint-disable-next-line plugin/use-baseline -- enhancement: scrolling past the end of the dialog moves the page behind it, not yet Baseline
+  // stylelint-disable-next-line plugin/use-baseline -- enhancement: scrolling past the end of the
+  // dialog moves the page behind it, not yet Baseline
   overscroll-behavior: contain;
   isolation: isolate;
 
@@ -101,12 +90,9 @@ $eyebrow-line: calc(#{type-size('overline')} * 1.65);
   display: contents;
 }
 
-// It fades in and out, dialog and backdrop together, the owner's call during
-// M5.5. In is CSS alone, from `@starting-style` as `showModal()` shows it; out
-// is `.is-closing`, which the component sets and waits on before asking its
-// owner to close it (FADE_LIMIT_MS there outlasts this). Compounded with
-// `.modal`, whose primitive sets its own `transition` as `body .modal`: the
-// theme's colour transitions are restated beside the fade so both run.
+// It fades in and out, dialog and backdrop together: in is CSS alone from `@starting-style`, out is
+// `.is-closing`, which the component waits on (FADE_LIMIT_MS there outlasts this). The theme's
+// colour transitions are restated beside it (claude-docs/components/modal.md, "Styling notes").
 .modal.modal-dialog {
   opacity: 1;
   transition:
@@ -114,7 +100,8 @@ $eyebrow-line: calc(#{type-size('overline')} * 1.65);
     background-color $theme-transition-duration $theme-transition-easing,
     color $theme-transition-duration $theme-transition-easing;
 
-  // stylelint-disable-next-line plugin/use-baseline -- enhancement: the element appears without fading in, widely available 2027-02-06
+  // stylelint-disable-next-line plugin/use-baseline -- enhancement: the element appears without
+  // fading in, widely available 2027-02-06
   @starting-style {
     opacity: 0;
   }
@@ -123,7 +110,8 @@ $eyebrow-line: calc(#{type-size('overline')} * 1.65);
     opacity: 1;
     transition: opacity $modal-fade;
 
-    // stylelint-disable-next-line plugin/use-baseline -- enhancement: the element appears without fading in, widely available 2027-02-06
+    // stylelint-disable-next-line plugin/use-baseline -- enhancement: the element appears without
+    // fading in, widely available 2027-02-06
     @starting-style {
       opacity: 0;
     }
@@ -133,7 +121,8 @@ $eyebrow-line: calc(#{type-size('overline')} * 1.65);
   // the backdrop starts dimmed, so the page never shows between the two, and
   // only the box fades in. It still fades out at its own close.
   &[data-handover]::backdrop {
-    // stylelint-disable-next-line plugin/use-baseline -- enhancement: the element appears without fading in, widely available 2027-02-06
+    // stylelint-disable-next-line plugin/use-baseline -- enhancement: the element appears without
+    // fading in, widely available 2027-02-06
     @starting-style {
       opacity: 1;
     }
@@ -153,32 +142,22 @@ $eyebrow-line: calc(#{type-size('overline')} * 1.65);
   }
 }
 
-// While a dialog is open the page behind it holds still, the owner's call
-// during M5.5: `showModal()` makes the page inert, but a wheel over the
-// backdrop still scrolled it. The overflow is CSS, so no listener can leave
-// the page locked. The room the scrollbar took is given back as padding,
-// `--scrollbar-width`, which `holdPage` (page-hold.ts) measures as the first
-// modal opens and sets only where there was a scrollbar, so nothing behind
-// moves (the owner's call, 2026-10-20). It replaces `scrollbar-gutter: stable`:
-// kept on every page it left a blank strip beside the header on a page that
-// fits the window, and kept only here a page with no scrollbar gained the room
-// as a modal opened. The dialog keeps its own scroll, so nothing in it is out
-// of reach.
+// While a dialog is open the page behind it holds still: the overflow is CSS, so no listener can
+// leave the page locked, and the room the scrollbar took is given back as padding,
+// `--scrollbar-width`, which `holdPage` sets (claude-docs/components/modal.md, "Styling").
 :root:has(.modal-dialog:modal) {
   overflow: hidden;
   padding-inline-end: var(--scrollbar-width, 0);
 }
 
-// A long form's width (M5.5), the compendium entry's first: its list fields
-// and nested References panel are cramped in the default `$dialog-column`.
+// A long form's width, the compendium entry's first: its list fields and nested References panel
+// are cramped in the default `$dialog-column`.
 .modal-dialog--wide {
   width: min(calc($dialog-column-wide + #{$modal-padding}), calc(100vw - #{$modal-gap} * 2));
 }
 
-// The default column with a list down its side, a third of the body to the
-// list and two to the column (M9.9's Edit Stock, the owner's call,
-// 2026-10-20): half a column more, and the step of gap between them, so the
-// column beside the list keeps the width it has in a dialog of its own.
+// The default column with a list down its side: a third of the body to the list and two to the
+// column, half a column more and a step of gap, so the column keeps the width it has alone.
 .modal-dialog--listed {
   width: min(
     calc($dialog-column * 1.5 + #{space(4)} + #{$modal-padding}),
@@ -186,17 +165,9 @@ $eyebrow-line: calc(#{type-size('overline')} * 1.65);
   );
 }
 
-// The × at the dialog's top right, out of the header's flow (the owner's call,
-// 2026-10-20; see `.modal-dialog__close`), so the head's first line is level with
-// it and a name that wraps cannot leave it adrift (MB.115). It stays at the
-// top as a long form scrolls beneath it, the owner's call at MB.115: outside
-// the body, which is what scrolls, the gap beneath it padding rather than
-// margin so it belongs to the header.
-//
-// A control the contents put in the header goes in a row of its own under the
-// heading, at every width (the owner's call at M12.10, over MB.115's place
-// under the ×): between the title and the × it squeezed a phone's heading
-// until a name broke mid-word.
+// The × stands out of the header's flow, so the head's first line is level with it, and stays at
+// the top as a long form scrolls beneath. A control the contents put in the header goes in a row of
+// its own under the heading at every width (claude-docs/components/modal.md, "Styling notes").
 .modal-dialog__header {
   display: grid;
   flex: none;
@@ -205,10 +176,9 @@ $eyebrow-line: calc(#{type-size('overline')} * 1.65);
   padding-bottom: space(4);
 }
 
-// The eyebrow over the title, in the `.header` primitive's column, closer
-// than its gap. It stops short of the × by what the × takes of the head's width
-// (`$close-reserve`), so a long name wraps rather than running under it, and a
-// name with no break in it breaks anywhere rather than overflow.
+// The eyebrow over the title, closer than its gap. It stops short of the × by what the × takes of
+// the head's width (`$close-reserve`), so a long name wraps rather than running under it, and a
+// name with no break in it breaks anywhere.
 .modal-dialog__heading {
   grid-row: 1;
   align-self: start;
@@ -218,8 +188,7 @@ $eyebrow-line: calc(#{type-size('overline')} * 1.65);
 }
 
 // A head with a top line (`topEnd`, the details window's) stands further above what follows it,
-// `space(5)` in place of `space(4)`, so the description is set off from the name and its badges
-// (the owner's call, 2026-10-20). It is the only head with one, so no other dialog's gap moves.
+// `space(5)` in place of `space(4)`; it is the only head with one, so no other dialog's gap moves.
 .modal-dialog__header--topped {
   padding-bottom: space(5);
 }
@@ -231,13 +200,9 @@ $eyebrow-line: calc(#{type-size('overline')} * 1.65);
   padding-inline-end: 0;
 }
 
-// The top line (the owner's call, 2026-10-20): the entry page's top bar, its marks at the start
-// and the × level with them at the far end, as tall as the × is, so each mark is centred on the
-// × 's own middle. Apart from the line under it (the owner's call, 2026-10-20) by the head's own
-// 8px gap and `space(2)` more, 16px, so the pencil there clears the × and the line reads as a
-// bar of its own. The margin is set through the heading's own class, as `.header > *` (layout)
-// zeroes a child's margin at the same weight as a single class, and a margin set on the top line
-// alone is lost to it. Stopped short of the × by its width, which stands over its end.
+// The top line: the entry page's top bar, its marks at the start and the × level with them at the
+// end, each mark centred on the × 's middle. The margin is set through the heading's own class
+// (claude-docs/components/modal.md, "Styling notes").
 .modal-dialog__heading > .modal-dialog__top {
   display: flex;
   align-items: center;
@@ -253,14 +218,9 @@ $eyebrow-line: calc(#{type-size('overline')} * 1.65);
   overflow-wrap: anywhere;
 }
 
-// The formal name, the title and the title's controls (`formalActions`: the details window's
-// Edit pencil and plus), laid out as the entry page lays its own (the owner's call,
-// 2026-10-20): the controls at the end of the formal name's line, over the title, which
-// takes the whole width beneath. The controls come after the title in the markup, as the
-// page's do, and are placed here. The formal name wraps short of them. Each control is as
-// tall as the pencil, which is taller than the formal name's line, so the controls' margin
-// takes half the difference off each side and their middle stands on the line's. With no
-// formal name the title stands in the first row and the controls beside it.
+// The formal name, the title and the title's controls (`formalActions`: the details window's Edit
+// pencil and plus), laid out as the entry page lays its own: the controls at the end of the formal
+// name's line, the title beneath (claude-docs/components/modal.md, "Styling notes").
 .modal-dialog__naming {
   display: grid;
   grid-template-columns: minmax(0, 1fr) auto;
@@ -283,11 +243,9 @@ $eyebrow-line: calc(#{type-size('overline')} * 1.65);
   }
 }
 
-// Placed by the grid, so whatever stands in it has no margin of its own (an entry page's
-// controls row has one under it). Never a dialog: a control that opens one, as Edit Stock does
-// (ModalButton), leaves its `<dialog>` here beside the button, and a modal dialog is centred by
-// the browser's own `margin: auto`, so a zero here pinned the stacked dialog to the screen's
-// top left corner.
+// Placed by the grid, so whatever stands in it has no margin of its own. Never a dialog: one a
+// control opens (ModalButton) is centred by the browser's `margin: auto`, which a zero here
+// pinned to the screen's top left corner.
 .modal-dialog__naming > .modal-dialog__formal-actions > :not(dialog) {
   margin: 0;
 }
@@ -318,9 +276,8 @@ $eyebrow-line: calc(#{type-size('overline')} * 1.65);
   }
 }
 
-// A second identifier after the name, an ingredient's formal name or a
-// deity's tradition (MB.115): quieter than the name, the body's face at its
-// size and weight in the muted ink.
+// A second identifier after the name, an ingredient's formal name or a deity's tradition: quieter
+// than the name, the body's face at its size and weight in the muted ink.
 .modal-dialog__qualifier {
   font-family: $font-body;
   font-size: type-size('body');
@@ -329,21 +286,17 @@ $eyebrow-line: calc(#{type-size('overline')} * 1.65);
   color: $text-muted;
 }
 
-// A sentence about the whole dialog under the heading, above the toolbar row
-// (M8.17, the compendium edit's notice, the owner's call of 2026-10-19): as
-// far below the title as the row stands from it without one. The row then
-// sits a step further from the sentence and a step closer to the body than
-// it would without one, so it reads with the form it works rather than with
-// the sentence (the owner's call of 2026-10-20). Hidden while nothing is in
-// it, so a dialog with no sentence is as it was.
+// A sentence about the whole dialog under the heading, above the toolbar row (the compendium edit's
+// notice): the row sits a step further from it and closer to the body than without one. Hidden
+// while nothing is in it.
 .modal-dialog__header-note {
   display: grid;
   grid-column: 1 / -1;
   gap: space(2);
   margin-top: space(2);
 
-  // A notice put here (the spell builder's recovery banner and conflict notice,
-  // M13.18) keeps the grid's gap rather than its own margin below.
+  // A notice put here (the spell builder's recovery banner and conflict notice) keeps the grid's
+  // gap rather than its own margin below.
   > .notice {
     margin-block-end: 0;
   }
@@ -363,11 +316,9 @@ $eyebrow-line: calc(#{type-size('overline')} * 1.65);
   }
 }
 
-// A toolbar row under the heading at every width, for the controls the
-// contents put in the header (the owner's call at M12.10, replacing the
-// under-the-× place MB.115 gave them): the first control at its start, a
-// form's Undo and Redo pair at its end. Stretched, so every button in it is
-// as tall as the tallest. Hidden while nothing is in it.
+// A toolbar row under the heading at every width, for the controls the contents put in the header:
+// the first control at its start, a form's Undo and Redo pair at its end. Stretched, so every
+// button is as tall as the tallest. Hidden while nothing is in it.
 .modal-dialog__header-slot {
   display: flex;
   grid-column: 1 / -1;
@@ -384,34 +335,24 @@ $eyebrow-line: calc(#{type-size('overline')} * 1.65);
     align-self: stretch;
   }
 
-  // Held while a question is asked, as the form is, so its buttons take the
-  // disabled look, the owner's call: a control that cannot be used reads as
-  // one, as Undo and Redo do when they are off, rather than faded. Neither a
-  // fade, which doubled on a button already off, nor a scrim over the row,
-  // which darkened the gaps between the controls into a strip under the
-  // undimmed title. The ingredient form also disables its Close All then.
+  // Held while a question is asked, as the form is, so its buttons take the disabled look, as Undo
+  // and Redo do when off, not a fade or a scrim over the row (claude-docs/components/modal.md,
+  // "Styling notes"). The ingredient form disables its Close All then too.
   &[inert] .btn {
     @include btn-disabled;
   }
 }
 
-// A head with no top line and an eyebrow (an edit dialog's "Edit Ingredient", a destination's "To ...")
-// has the eyebrow for its first line, so the × is raised from the padding's inset until its middle is
-// the eyebrow text's middle (the owner's call, 2026-10-20): half the difference between the two lines
-// above the inset. The head's own first line, as a top line is for the details window, keeps the inset;
-// a dialog with no eyebrow keeps it too, its title being the first line. Written with `:has()`, as
-// this file's other rules are, so a browser that lacks it leaves the × at the inset.
+// A head with an eyebrow and no top line (an edit dialog's "Edit Ingredient") has the eyebrow for
+// its first line, so the × is raised until its middle is the eyebrow text's middle. Written with
+// `:has()`, so a browser that lacks it leaves the × at the inset.
 .modal-dialog__header:has(> .modal-dialog__heading > .eyebrow:first-child) > .modal-dialog__close {
   inset-block-start: calc(#{$close-inset} + (#{$eyebrow-line} - #{$close-target}) / 2);
 }
 
-// A 2rem × in a `$close-target` square, 2rem too, at the dialog's padding from its top and
-// right edges (the owner's call, 2026-10-20: level with the head's first line, and its right
-// edge on that of the pencil or plus on the formal name's line beneath it). Past WCAG 2.2's
-// 24px minimum target. The dialog's header ends well below it, so it is clear of the body's
-// scrollbar, which stands beneath the header. The icon's 2rem is on no scale: it is the × drawn at the size of the target it sits
-// in, not a length of the layout. Taken out of the flow, so a heading that wraps cannot
-// squeeze the round target to an oval; the head stops short of it (`$close-reserve`).
+// A 2rem × in a `$close-target` square, at the dialog's padding from its top and right edges, past
+// WCAG 2.2's 24px minimum target. Out of the flow, so a wrapping heading cannot squeeze the round
+// target to an oval; the head stops short of it (`$close-reserve`).
 .modal-dialog__close {
   position: absolute;
   inset-block-start: $close-inset;
@@ -435,18 +376,15 @@ $eyebrow-line: calc(#{type-size('overline')} * 1.65);
     color: $text-primary;
   }
 
-  // The shared ring (MB.121: it drew the browser's own).
+  // The shared ring, in place of the browser's own.
   &:focus-visible {
     @include focus-ring;
   }
 }
 
-// A question a form asks over itself, ConfirmOverlay (MB.115, the owner's
-// call): a scrim over the body in view, the form dimmed beneath it, and the
-// question on a raised card centred in it, wherever the body is scrolled.
-// The scrim scrolls only if the card is taller than the tallest dialog,
-// centred with auto margins so its top is never cut off. Both fade in over
-// the short motion, and appear at once under reduced motion.
+// A question a form asks over itself, ConfirmOverlay: a scrim over the body in view, the form
+// dimmed beneath it, the question on a raised card centred in it wherever the body is scrolled.
+// Both fade in over the short motion, and appear at once under reduced motion.
 .confirm-overlay {
   position: relative;
   z-index: 1;
@@ -458,7 +396,8 @@ $eyebrow-line: calc(#{type-size('overline')} * 1.65);
   opacity: 1;
   transition: opacity $motion-short ease-out;
 
-  // stylelint-disable-next-line plugin/use-baseline -- enhancement: the element appears without fading in, widely available 2027-02-06
+  // stylelint-disable-next-line plugin/use-baseline -- enhancement: the element appears without
+  // fading in, widely available 2027-02-06
   @starting-style {
     opacity: 0;
   }
@@ -468,10 +407,9 @@ $eyebrow-line: calc(#{type-size('overline')} * 1.65);
   }
 }
 
-// The card: the dialog's own raised surface, at the floating elevation since
-// it sits on a surface itself, a narrow column wide. Positioned and isolated,
-// so its flash lies over its ground and under its words. A fieldset, so the
-// browser's edge and its least width (its content's) are taken off.
+// The card: the dialog's own raised surface at the floating elevation, a narrow column wide.
+// Positioned and isolated so its flash lies over its ground and under its words. A fieldset, so the
+// browser's edge and least width are taken off.
 .confirm-overlay__card {
   @include modal-surface($shadow-floating);
   position: relative;
@@ -488,34 +426,24 @@ $eyebrow-line: calc(#{type-size('overline')} * 1.65);
   margin: 0;
 }
 
-// A warning among a question's details, Make It Ours's that unsaved changes
-// are lost (M8.17): set well apart from its
-// neighbours, space(5) (1.5rem) above, where the paragraph before it leaves
-// space(2), and 1.75rem below, where the answers stand space(4) off, margins
-// that collapse with theirs (the owner's values, 2026-10-20). 1.75rem sits
-// off the spacing scale, between space(5) and space(6), and is the owner's
-// call rather than a new step. A class the caller gives the Notice, so no
-// other Notice in a card moves. Both classes, to outrank `.notice`'s zero
-// margin.
+// A warning among a question's details, set apart with off-scale margins by a class the caller gives
+// the Notice, so no other Notice moves; both classes outrank `.notice`'s zero margin
+// (claude-docs/components/modal.md, "Styling notes").
 .notice.confirm-overlay__warning {
   margin-block: space(5) 1.75rem;
 }
 
-// The safe answer takes the focus by script as the card comes, and a browser
-// draws a scripted focus's ring only when the focus it replaced had one: after
-// a pointer press on Close, Cancel or the backdrop it held the focus unseen.
-// So in the card a quiet answer shows its keyboard look on any focus, not
-// `:focus-visible` alone. A click on it answers and takes the card away, so
-// the ring never lingers under the pointer (claude-docs/components/modal.md,
-// "Unsaved changes").
+// The safe answer takes the focus by script, and a browser draws a scripted focus's ring only when
+// the focus it replaced had one, so a quiet answer shows its keyboard look on any `:focus`
+// (claude-docs/components/modal.md, "Unsaved changes"). A click answers and takes the card away.
 .confirm-overlay__card .btn--quiet:focus {
   border-color: $edge-highlight;
   background-color: $fill-highlight-field;
   @include focus-ring;
 }
 
-// Its row stacks, full width and in order, at the width a form's own does:
-// a form stacks under 28rem of its own width, the body's padding outside it.
+// Its row stacks, full width and in order, at the width a form's own does: under 28rem of its own
+// width, the body's padding outside it.
 @container modal-main (max-width: #{$narrow-column + $modal-padding}) {
   .confirm-overlay__card .modal__actions {
     flex-direction: column;
@@ -538,13 +466,8 @@ $eyebrow-line: calc(#{type-size('overline')} * 1.65);
   }
 }
 
-// A way out tried again while the discard question shows flashes its card,
-// the owner's call during MB.115, so the person sees why nothing closed:
-// twice, the owner's call, the secondary's tint over the card fading over two
-// of the short motion's steps each time. Under reduced motion nothing fades:
-// a solid edge shows and goes, twice, in the same time. A layer of its own,
-// remade on each try so the animation runs again
-// (claude-docs/components/modal.md, "Unsaved changes").
+// A way out tried again while the discard question shows flashes its card twice; under reduced
+// motion a solid edge shows and goes (claude-docs/components/modal.md, "Unsaved changes").
 $confirm-flash: $motion-short * 4;
 
 .confirm-overlay__flash {

@@ -31,7 +31,7 @@ const Welcome = ({ landing }: WelcomeProps): ReactElement => (
           Sign In
         </Link>
       )}
-      {/* The compendium is public (MB.80), so it is offered to everyone. */}
+      {/* The compendium is public, so it is offered to everyone. */}
       <Link className="btn btn--quiet" href="/compendium">
         Browse the Compendium
       </Link>

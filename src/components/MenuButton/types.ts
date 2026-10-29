@@ -27,17 +27,16 @@ export type MenuButtonItem = {
       onSelect: () => void;
       href?: never;
       /**
-       * Shown, and reached by the arrows, but not choosable: `aria-disabled`, as the APG menu
-       * pattern has a disabled item, drawn muted, and a press runs nothing and leaves the menu
-       * open. A coven that already holds the entry (the owner’s call, 2026-10-20). An action
-       * only: a link that leads nowhere is not a link.
+       * Shown, and reached by the arrows, but not choosable: `aria-disabled`, as the APG
+       * menu pattern has a disabled item, drawn muted, and a press runs nothing and leaves
+       * the menu open. A coven that already holds the entry. An action only: a link that
+       * leads nowhere is not a link.
        */
       disabled?: boolean;
       /**
-       * A green check after the label, as a compendium card marks what is held (HeldMark), and
-       * the words it stands for, joined to the item’s name after a comma: "in its cupboard"
-       * names the item "Hedge Coven, in its cupboard" (the owner’s calls, 2026-10-20, in place
-       * of a note beneath the label; the words MB.120's).
+       * A green check after the label, as a compendium card marks what is held (HeldMark),
+       * and the words it stands for, joined to the item's name after a comma: "in its
+       * cupboard" names the item "Hedge Coven, in its cupboard".
        */
       mark?: string;
     }
@@ -46,8 +45,8 @@ export type MenuButtonItem = {
 /**
  * A labelled group of a menu's items, drawn under a small muted heading and set apart from the
  * next group by a rule: the compendium's choices and the coven's, in a More menu that offers
- * both (the owner's call, 2026-10-20). Generic over the item so the bar's Add Ingredient menu,
- * which has its own items, draws its groups the same way (`sections.tsx`).
+ * both. Generic over the item so the bar's Add Ingredient menu, which has its own items, draws
+ * its groups the same way (`sections.tsx`).
  */
 export interface MenuSection<Item = MenuButtonItem> {
   /** Unique within the menu. */
@@ -62,20 +61,18 @@ export interface MenuSection<Item = MenuButtonItem> {
 export type MenuButtonChoices =
   | {
       /**
-       * What the menu offers, in order, the green item (`primary`) first
-       * whatever its place here: the menu draws it first and keeps the rest in
-       * this order (the owner's call, 2026-10-20).
+       * What the menu offers, in order, the green item (`primary`) first whatever its place
+       * here: the menu draws it first and keeps the rest in this order.
        */
       items: readonly MenuButtonItem[];
       sections?: never;
     }
   | {
       /**
-       * The same items in labelled groups, in the order to draw them: the caller puts first the
-       * group that belongs to where the viewer is, the compendium's on a compendium page and the
-       * coven's on a coven page, so the menu itself reads no address (the owner's call,
-       * 2026-10-20). The green item goes first within its own group. The arrows, Home and End
-       * run through every group's items as one list; the headings are not in it.
+       * The same items in labelled groups, in the order to draw them: the caller puts first
+       * the group that belongs to where the viewer is, so the menu itself reads no address.
+       * The green item goes first within its own group. The arrows, Home and End run through
+       * every group's items as one list; the headings are not in it.
        */
       sections: readonly MenuSection[];
       items?: never;
@@ -91,15 +88,14 @@ export type MenuButtonProps = MenuButtonChoices & {
   /** What is happening while busy, in title case: "Adding". */
   busyLabel?: string;
   /**
-   * The items take the button's type, its face, size and weight, rather than
-   * the lighter menu item's: the Annotate dialog's More, whose two items are
-   * actions of the dialog's foot (the owner's call of 2026-10-20). Off by default.
+   * The items take the button's type, its face, size and weight, rather than the lighter menu
+   * item's: the Annotate dialog's More, whose two items are actions of the dialog's foot. Off
+   * by default.
    */
   buttonType?: boolean;
   /**
-   * An icon drawn in place of the label and the chevron, the label then hidden
-   * but still the button's name: a list card's More (M8.17), the vertical dots,
-   * among the card's other icon controls. Left out, the label shows.
+   * An icon drawn in place of the label and the chevron, the label then hidden but still the
+   * button's name: a list card's More, the vertical dots. Left out, the label shows.
    */
   icon?: ReactElement;
   /**
@@ -109,8 +105,8 @@ export type MenuButtonProps = MenuButtonChoices & {
   menuLabel?: string;
   /**
    * A state the caller's stylesheet draws the button from, set as its `data-state`: the
-   * compendium card's plus says `added` while its check shows after an add (M9.12). Left out,
-   * the button has none.
+   * compendium card's plus says `added` while its check shows after an add. Left out, the
+   * button has none.
    */
   state?: string;
   /** The button itself, so a caller can hand the focus back to it after a dialog an item opened. */

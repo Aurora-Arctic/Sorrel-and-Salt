@@ -1,20 +1,11 @@
 import type { ReactElement } from 'react';
 import type { FormGroupIcon } from '@/modules/vocabulary/schema/form-group-icons';
 
-// The form icons, drawn on the section nav's conventions: a 24-unit square,
-// a 1.6 stroke with round ends and no fill, so they take the text's colour
-// (`currentColor`) and read alike at a list row's size and a heading's. One
-// per form-group icon name, each a thing from its group: a sprig, a paw, a
-// cut gem, a mortar and stone pestle, a drop, a skeleton key. Signed off by
-// the owner in the Storybook story (claude-docs/components/form-icon.md, "The
-// icons").
+// The form icons, on the section nav's conventions: a 24-unit square, a 1.6 stroke with round ends, no
+// fill, in `currentColor` (claude-docs/components/form-icon.md, "The icons").
 /**
- * Scales a drawing about its own centre to sit at (12, 12), the stroke scaled
- * back so every line still renders at the set's 1.6: the sprig and the drop
- * were drawn smaller than the gem and the mortar, and the owner asked for the
- * six to read the same size (2026-10-16). Measured by the browser's
- * `getBBox`, the gem and mortar span about 17 by 15.5; each scale below
- * brings a drawing's area to theirs.
+ * Scales a drawing about (12, 12), the stroke scaled back to 1.6; the sprig and drop are drawn smaller,
+ * so each scale matches the others' area.
  */
 const sized = (scale: number, cx: number, cy: number, shape: ReactElement): ReactElement => (
   <g
@@ -37,7 +28,7 @@ export const FORM_SHAPES: Record<FormGroupIcon, ReactElement> = {
       <path d="M12 11.5C15.7 11.5 18.2 9.3 18.5 5.5C14.8 5.5 12.3 7.7 12 11.5z" />
     </>,
   ),
-  // Drawn 16.6 by 16, centred on (12, 12); a shade under the gem by eye (the owner, 2026-10-16).
+  // Drawn 16.6 by 16, centred on (12, 12); a shade under the gem by eye.
   animal: sized(
     1.05,
     12,
@@ -56,10 +47,9 @@ export const FORM_SHAPES: Record<FormGroupIcon, ReactElement> = {
       <path d="M3.5 10h17M8 4.5l4 5.5 4-5.5M12 10v10" />
     </>
   ),
-  // The pestle is the set's one filled shape: a solid club, so it reads as
-  // stone and not a stick (the owner's call), whose foot runs along the rim
-  // so the bowl's front wall cuts it off rather than the rod poking into the
-  // bowl. Drawn before the bowl, so the rim's stroke lies over its foot.
+  // The pestle is the set's one filled shape: a solid club, so it reads as stone and not
+  // a stick, whose foot runs along the rim so the bowl's front wall cuts it off. Drawn
+  // before the bowl, so the rim's stroke lies over its foot.
   substance: (
     <>
       <path fill="currentColor" d="M12.6 10.5L18.1 3.9a.7 .7 0 0 1 1.12 .84L15.2 10.5z" />
@@ -76,11 +66,8 @@ export const FORM_SHAPES: Record<FormGroupIcon, ReactElement> = {
       <path d="M9 14.5a3 3 0 0 0 1.6 2.6" />
     </>,
   ),
-  // A skeleton key, the owner's call over a plain key: a three-leaf clover
-  // bow (three arcs meeting at cusps, the shaft entering between two leaves),
-  // a straight shaft, and a plate bit near the tip with a notch cut up from
-  // its foot, narrow between two broad teeth, the ward cut of an old door key. Drawn lying flat, bow to the
-  // left, and turned 45° about the centre, which uses the square's diagonal.
+  // A skeleton key: a three-leaf clover bow, a straight shaft, and a plate bit with a notch between two
+  // teeth. Drawn lying flat and turned 45° about the centre, to use the square's diagonal.
   curio: (
     <g transform="rotate(45 12 12)">
       <path d="M5.8 12A2.2 2.2 0 1 0 3.62 10A2.2 2.2 0 1 0 3.62 14A2.2 2.2 0 1 0 5.8 12z" />
@@ -90,17 +77,9 @@ export const FORM_SHAPES: Record<FormGroupIcon, ReactElement> = {
   ),
 };
 
-// The generic: a salt spoon, drawn on the Backdrop's `salt-spoon.webp` and
-// locked by the owner (claude-docs/design-decisions/m12.6-form-icons.md).
-// Seen top-down: an oval bowl upper left holding five grains, a handle
-// pinched to one line before widening to a soft square end, three grains
-// spilled below the bowl. Its own stroke widths rather than the set's: the
-// lines are thinner (1.3, the owner's call) and each grain is a zero-length
-// stroke the round caps swell into a 2-unit dot. It is also the admin nav's
-// Forms mark, so one mark means "a form" everywhere. Drawn 18.8 square,
-// centred on (12.23, 12.23), and scaled up a twentieth to read the size of
-// the six (the owner, 2026-10-16): its own strokes are set per element, so
-// they thicken by the same twentieth, 1.3 to 1.37 and the 2-unit dots to 2.1.
+// The generic: a salt spoon drawn on the Backdrop's `salt-spoon.webp`, also the admin nav's Forms mark
+// (claude-docs/design-decisions/m12.6-form-icons.md). Scaled to match the six; each grain is a
+// zero-length stroke the round caps swell into a dot.
 export const SPOON: ReactElement = (
   <g transform="translate(12 12) scale(1.05) translate(-12.23 -12.23)">
     <ellipse strokeWidth="1.3" cx="8.5" cy="8.5" rx="4.6" ry="3.4" transform="rotate(45 8.5 8.5)" />

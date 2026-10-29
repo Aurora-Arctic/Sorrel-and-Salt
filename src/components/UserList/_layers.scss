@@ -2,7 +2,7 @@
 // `controls.scss`: the sticky Impersonate column's, and every tip's one above
 // it. A tip's lower edge reaches into its own row, whose Impersonate cell
 // comes later in the DOM, so at the same z-index the cell would paint over
-// the tip's corner (fixed in MB.63's PR). Kept here rather than in a site-wide
-// layer map, which is MB.124's.
+// the tip's corner. Kept here rather than in a site-wide
+// layer map.
 $sticky-column-layer: 1;
 $tip-layer: $sticky-column-layer + 1;

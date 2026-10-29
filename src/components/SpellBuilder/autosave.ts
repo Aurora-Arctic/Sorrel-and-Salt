@@ -2,12 +2,12 @@ import { graphql } from '../../gql';
 import { graphqlRequest } from '../../lib/graphql-client';
 import type { SpellBuilderInput, SpellBuilderSpell } from './types';
 
-// The spell builder's save (M13.17): the one call every way of saving goes
+// The spell builder's save: the one call every way of saving goes
 // through, the autosave's, Save's, Close's and Mark Complete's. It takes a
 // target rather than assuming "the row", so that a later edit to a complete
 // spell can go into a draft revision (spell history, v2) by naming another
 // target. Today both targets are the spell's one row, draft or complete.
-// Beside it, the read Reload Latest makes after a stale write (M13.18): the
+// Beside it, the read Reload Latest makes after a stale write: the
 // spell as the server has it now, fields, categories and steps, which the
 // builder puts in the form in place of what was typed.
 // claude-docs/components/spell-builder.md, "Saving" and "Two people, one spell".
@@ -199,7 +199,7 @@ export type SpellSaveTarget =
  * Saves `input` to `target`: `createSpell` for a new spell, otherwise
  * `updateSpell` against the revision the target names. A `null` revision
  * writes over whatever the row is at; the builder never sends one, since Keep
- * My Version names the revision the refusal reported (M13.18), so a third
+ * My Version names the revision the refusal reported, so a third
  * save in between is met as a conflict too rather than written over.
  */
 export async function saveSpell(
@@ -220,7 +220,7 @@ export async function saveSpell(
 }
 
 /**
- * Reads the spell as the server has it now, for Reload Latest (M13.18): the
+ * Reads the spell as the server has it now, for Reload Latest: the
  * fields, the categories as the ids the form picks, and the whole recipe.
  */
 export async function readLatestSpell(workspaceId: string, id: string): Promise<SpellBuilderSpell> {

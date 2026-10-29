@@ -2,10 +2,9 @@
 @use '../../scss/mixins' as *;
 @use '../../scss/frame-bar' as *;
 
-// The application shell's frame and global bar (MB.7). Measurements are the
-// signed-off mock-up's, as tokens: a bar `$shell-bar-height` tall holding
-// controls `$control-height` tall, with a step of air above and below.
-// claude-docs/components/app-shell.md, "Styling".
+// The application shell's frame and global bar. Measurements are tokens: a bar
+// `$shell-bar-height` tall holding controls `$control-height` tall, with a step
+// of air above and below (claude-docs/components/app-shell.md, "Styling").
 
 // The skip link's target, an empty span before the page in AppShell and
 // PublicFrame alike: the link moves focus to it, and nothing shows it, as it
@@ -133,11 +132,9 @@
   box-shadow: none;
 }
 
-// The two parts share one outline: the inner corners square, and a single
-// divider in the bar's own colour between the fills, kept through hover and
-// focus, which the solid variant would otherwise recolour with the fill.
-// A child selector: the chevron sits inside MenuButton's own wrapper, beside
-// its menu, so a descendant `:not(:only-child)` would square its outer corners.
+// The two parts share one outline: inner corners square and one divider in the bar's colour between the
+// fills, kept through hover and focus. A child selector: the chevron sits in MenuButton's own wrapper, so a
+// descendant `:not(:only-child)` would square its outer corners.
 .app-shell__add-group > .app-shell__add:not(:only-child) {
   border-start-end-radius: 0;
   border-end-end-radius: 0;

@@ -11,8 +11,8 @@ import { CategoryLine } from './category-line';
 import { FacetShell } from './shell';
 import type { FacetPanelProps } from './types';
 
-// The ingredient lists' filters (M12.4) inside the Filters shell (./shell.tsx), which draws the
-// button, Clear All and the panel itself. See claude-docs/components/facet-panel.md.
+// The ingredient lists' filters inside the Filters shell (./shell.tsx), which draws the button,
+// Clear All and the panel itself (claude-docs/components/facet-panel.md).
 
 export { FacetShell, WIDE } from './shell';
 
@@ -21,11 +21,7 @@ const SOURCE_LABELS: Record<IngredientSource, string> = {
   compendium: 'Compendium',
 };
 
-/**
- * The Source chip's choices: All, then Local and Compendium. The two always show, each with
- * its count once the coven's counts are read, as Toxic's do; All has none, as Toxic's Any has
- * none.
- */
+/** The Source chip's choices: All, then Local and Compendium, each with its count once read; All has none, as Toxic's Any has none. */
 function sourceOptions(
   counts: CompendiumFacetCounts['source'],
 ): { value: '' | IngredientSource; label: string; count?: number }[] {
@@ -39,14 +35,14 @@ function sourceOptions(
   ];
 }
 
-// In My Covens' two ways (M12.55): In, held in a picked coven, or Not In, held in none of them.
-// Not In submits as covensNot=1; In submits an empty value, which the address reads as absent.
+// In My Covens' two ways: In, held in a picked coven, or Not In, held in none. Not In submits as
+// covensNot=1; In submits an empty value, which the address reads as absent.
 const COVENS_NOT_OPTIONS: ReadonlyArray<{ value: string; label: string }> = [
   { value: '', label: 'In' },
   { value: '1', label: 'Not In' },
 ];
 
-/** The Reviewed strip's settings as the address writes them (M14.8). */
+/** The Reviewed strip's settings as the address writes them. */
 const REVIEW_ADDRESS = { reviewed: '1', needs_review: '0' } as const;
 
 export default function FacetPanel({
@@ -74,8 +70,8 @@ export default function FacetPanel({
   ].reduce((total, list) => total + list.length, 0);
   const count =
     chosen +
-    // Not In with covens picked is a mode of them, as Match is; with none picked it is a filter
-    // of its own, in none of the viewer's covens.
+    // Not In with covens picked is a mode of them, as Match is; with none picked it is a filter of
+    // its own.
     (filter.covensNot && !filter.covens?.length ? 1 : 0) +
     (filter.toxic === '' ? 0 : 1) +
     (admin && filter.withoutReferences ? 1 : 0) +
@@ -86,17 +82,15 @@ export default function FacetPanel({
     (filter.lowStockOnly ? 1 : 0);
 
   const toxicStuck = facets.toxic.some((choice) => choice.count === 0);
-  // The Source chip is stuck the same way: a source with nothing behind it means every
-  // matching entry comes from the other, so the filter cannot narrow. Counts not yet read
-  // (`facets.source` unset) leave it free.
+  // The Source chip is stuck the same way: a source with nothing behind it means every matching
+  // entry comes from the other, so the filter cannot narrow. Unread counts leave it free.
   const sourceStuck = facets.source?.some((choice) => choice.count === 0) ?? false;
-  // The Reviewed chip (M14.8), stuck the same way: with either side empty, every matching
-  // entry is reviewed or none is.
+  // The Reviewed chip is stuck the same way: with either side empty, every entry is reviewed or
+  // none is.
   const reviewedStuck = facets.reviewed?.some((choice) => choice.count === 0) ?? false;
-  // The public compendium's Forms line, whose chips are Toxic alone, is halved when the viewer has
-  // covens (the owner's call, 2026-10-23): Forms and Toxic take the left half, In My Covens and its
-  // In / Not In choice the right. With no covens Forms and Toxic take the line, as on the admin and
-  // coven panels, which keep Forms growing beside their wider run of chips, which a half would wrap.
+  // The public compendium's Forms line is halved when the viewer has covens: Forms and Toxic on
+  // the left, In My Covens and its In / Not In choice on the right. With none, Forms and Toxic
+  // take the line, as on the admin and coven panels, whose wider run of chips a half would wrap.
   const halves =
     !admin &&
     filter.source === undefined &&
@@ -259,10 +253,8 @@ export default function FacetPanel({
             </div>
           </>,
         )}
-        {/* The viewer's own covens (M12.55), the right half of the line with the In / Not In
-                choice beside them (the owner's call, 2026-10-23), and only for a viewer in one. No
-                counts: the counts the rest read are the cached, public ones, and a count per coven
-                would make them the viewer's (rule 6). */}
+        {/* The viewer's own covens beside the In / Not In choice, only for a viewer in one. No counts: the
+            rest read cached, public counts, and a count per coven would make them the viewer's (rule 6). */}
         {covens.length > 0 && (
           <div className="facet-panel__line facet-panel__grow facet-panel__half">
             <div className="facet-panel__grow">
@@ -275,8 +267,8 @@ export default function FacetPanel({
                 counts={false}
                 choices={covens.map(({ id: value, name: label }) => ({ value, label }))}
                 values={filter.covens ?? []}
-                // Removing the last coven switches the choice back to In (the owner's call,
-                // 2026-10-23), so it never turns into "not held in any of my covens" unasked.
+                // Removing the last coven switches the choice back to In, so it never turns into
+                // "not held in any of my covens" unasked.
                 onChange={(picked) =>
                   onChange(
                     picked.length === 0 ? { covens: picked, covensNot: false } : { covens: picked },

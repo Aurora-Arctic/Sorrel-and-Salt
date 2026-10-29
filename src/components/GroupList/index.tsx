@@ -11,16 +11,9 @@ import { KINDS } from './kinds';
 import type { GroupListFilter as Filter, GroupListProps } from './types';
 import './index.scss';
 
-// A group page's table and pager (M5.6b), for every group vocabulary, a deity's
-// traditions included (MB.132).
-// Render-only: the page reads one page of groups through the service and hands
-// it here. A category group's name is drawn in its own chip, which is how a
-// reader meets the pair. A name search heads the list for a kind whose page
-// hands it a `filter`: the traditions', thirty-five in the seed (MB.115), and
-// not the category or form groups', eight and six. Each Edit is an address —
-// the page opens its modal from the URL — so a modal can be linked to and
-// Back closes it. The table turns each row into a card at phone width
-// (claude-docs/components/group-list.md).
+// A group page's table and pager, for every group vocabulary, a deity's traditions included;
+// render-only. A name search heads the list only for a kind whose page hands it a `filter`. Each Edit is
+// an address, so Back closes its modal (claude-docs/components/group-list.md).
 
 /**
  * What an empty list says: how to fill it, with the page header's Add, named

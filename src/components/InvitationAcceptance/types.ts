@@ -11,7 +11,7 @@ export type InvitationAcceptanceProps =
       status: 'acceptable';
       token: string;
       tier: 'site';
-      /** The site role accepting grants (M11.20). */
+      /** The site role accepting grants. */
       siteRole: 'curator' | 'admin';
       landing: Route;
     }
