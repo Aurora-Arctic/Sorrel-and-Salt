@@ -1,6 +1,6 @@
 import type { PointerEvent } from 'react';
 
-// A control's pressed look on a phone as well as with a mouse (MB.115). With
+// A control's pressed look on a phone as well as with a mouse. With
 // the browser's tap highlight off (`globals.scss`), a tap would show nothing:
 // a phone applies `:active` late or not at all, Chromium only once it has
 // ruled out a scroll and Safari only where a touch listener is attached. So

@@ -11,7 +11,7 @@ import superjson from 'superjson';
 
 /**
  * The one tag every compendium cache entry carries — the curated reads' and,
- * through them, the public compendium pages' ISR entries (MB.80).
+ * through them, the public compendium pages' ISR entries.
  */
 export const COMPENDIUM_TAG = 'compendium';
 
@@ -32,15 +32,9 @@ function deploymentKeyPart(): string[] {
 }
 
 /**
- * `read`, held in the data cache under `COMPENDIUM_TAG` and keyed by `key` and
- * its arguments, so each argument list is an entry of its own. Only a read
- * every viewer sees alike may be wrapped: its arguments are the whole key, so
- * a session among them would be a cache per viewer, and one left out of them
- * a leak (claude-docs/db/compendium-cache.md lists the reads).
- *
- * The value is stored as superjson rather than left to Next's `JSON.stringify`,
- * which would answer a hit's `Date` columns as strings while a miss answered
- * them as dates.
+ * `read`, held in the data cache under `COMPENDIUM_TAG` and keyed by `key` and its
+ * arguments, so only a read every viewer sees alike may be wrapped. Stored as superjson,
+ * since Next's `JSON.stringify` would turn a hit's `Date` columns into strings. (claude-docs/modules.md, "Library comments in full")
  */
 export function cachedCompendiumRead<A extends unknown[], R>(
   key: string,
@@ -56,7 +50,7 @@ export function cachedCompendiumRead<A extends unknown[], R>(
 
 /**
  * Expires every entry under `COMPENDIUM_TAG`, called by an admin's write to
- * anything the cache holds once the write has committed (M8.7). `{ expire: 0 }`
+ * anything the cache holds once the write has committed. `{ expire: 0 }`
  * rather than the recommended `'max'`, so the admin's next read is a miss
  * and not the stale answer `'max'` serves while it revalidates; `updateTag`,
  * which would do the same, throws outside a Server Action, and every write

@@ -6,7 +6,7 @@ import type {
   SeedSubstitute,
 } from '../types';
 
-// The content hash of a compendium entry (M14.6): what the seed compares a
+// The content hash of a compendium entry: what the seed compares a
 // file against the row it last wrote, so that a changed file is told from an
 // unchanged one (claude-docs/db/compendium-seed/README.md, "The hash"; the
 // rules are claude-docs/design-decisions/m14.4-compendium-markdown-files.md's).

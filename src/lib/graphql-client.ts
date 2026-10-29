@@ -83,7 +83,7 @@ export function graphqlRequest<TResult, TVariables extends object>(
 /**
  * A save that creates a row, or with its `id` updates that one, through the
  * two documents given: the admin vocabulary forms' `if (id) update else
- * create`, written once for every kind they declare (MB.115).
+ * create`, written once for every kind they declare.
  */
 export function saveRequest<Input extends object>(
   create: TypedDocumentNode<unknown, { input: Input }>,
@@ -141,7 +141,7 @@ export function throwWhenEmpty(_error: unknown, query: Pick<Query, 'state'>): bo
 
 /**
  * The client's defaults. Mutations keep TanStack's own — no retry, and errors
- * returned to the caller, because a form renders them field by field (MB.43).
+ * returned to the caller, because a form renders them field by field.
  */
 export function makeQueryClient(): QueryClient {
   return new QueryClient({

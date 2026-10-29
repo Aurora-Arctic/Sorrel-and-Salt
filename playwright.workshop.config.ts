@@ -4,7 +4,7 @@ import { WORKSHOP_PORT, browserUrl, serverUrl } from './tests/e2e/slots';
 
 // The workshop specs, tests/e2e/workshop/: a component measured in its Storybook
 // story, for a layout fact no page shows yet because no page uses the
-// component (M12.31's click feedback, before its adoption). `npm run
+// component (the click feedback, before its adoption). `npm run
 // e2e:workshop`. One server, Storybook's dev server, and no database, so none of
 // the e2e suite's slot servers, setup or teardown; the browser options are the
 // suite's, reduced motion included, which a spec turns off where it measures

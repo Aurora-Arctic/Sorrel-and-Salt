@@ -77,7 +77,7 @@ export function findIngredientFormValues(
 /**
  * How many forms `findIngredientFormValues` pages under `filter`, and how
  * many come before `start` in its order — "Page X of Y" on the admin page
- * (M5.6a) and `ingredientFormValues`' `totalCount`, as `findCategoryCount`
+ * and `ingredientFormValues`' `totalCount`, as `findCategoryCount`
  * counts the categories: one statement, over the page's own filter and key.
  */
 export function findIngredientFormValueCount(
@@ -94,7 +94,7 @@ export function findIngredientFormValueCount(
 
 /**
  * One page of a curated astrology vocabulary under `filter` in `(name, id)`
- * order, for `celestialBodies`, `zodiacSigns` and their admin lists (MB.95): its
+ * order, for `celestialBodies`, `zodiacSigns` and their admin lists: its
  * live rows, since a flat vocabulary has no group to be curated under.
  * Public reference data, so no proof.
  */
@@ -147,7 +147,7 @@ export function findCategoryCount(
 
 /**
  * One page of the deity vocabulary under `filter`, by its tradition's name,
- * then its own, then id, for the admin's deities page (MB.132): the live
+ * then its own, then id, for the admin's deities page: the live
  * deities whose tradition is live too, read as `findCategoryPage` reads the
  * categories, so a page lists each deity under its tradition. Public
  * reference data, so no proof.
@@ -170,8 +170,8 @@ export function findDeityCount(filter: DeityFilter, start: Cursor | undefined): 
 
 /**
  * One page of a group vocabulary — the category groups, the form groups or
- * the deity traditions — alphabetical by name (MB.35), narrowed by a name
- * fragment as the values' lists are (MB.115): what a group's admin page
+ * the deity traditions — alphabetical by name, narrowed by a name
+ * fragment as the values' lists are: what a group's admin page
  * lists. Public reference data, so no proof.
  */
 export function findGroupPage<TTable extends GroupTable>(
@@ -219,8 +219,8 @@ function vocabularyArms(
 
 /**
  * A deity filter's arms: its tradition is the group it is filed under, and
- * its name fragment finds a deity by its own name or by a live other name
- * (M14.23), so "Ganish" finds Ganesha. An `EXISTS` rather than a join, so a
+ * its name fragment finds a deity by its own name or by a live other name,
+ * so "Ganish" finds Ganesha. An `EXISTS` rather than a join, so a
  * deity with two matching other names is still one row, in the page and in
  * its count alike.
  */
@@ -241,7 +241,7 @@ function deityArms({ query, traditionId }: DeityFilter): SQL | undefined {
 
 /**
  * The key of a vocabulary filed under groups: by its group's name, then its
- * own, both under the natural collation (M12.52), then id, the owner's call during MB.126, so a page reads as the picker
+ * own, both under the natural collation, then id, so a page reads as the picker
  * lists it and two groups' namesakes sit apart. A page and its count share
  * it, with the join that reads the group's name — for its name alone, since
  * the row's own filter already holds the group live.
@@ -267,7 +267,7 @@ const DEITY_ORDER = groupedOrder(TWO_TIER.deities);
 /**
  * The live rows of `vocabulary` whose lower-cased name is one of `folds` —
  * values trimmed and lower-cased as the suggestions fold one — which is how
- * the compendium is held to the curated spellings (MB.162). A form or a deity
+ * the compendium is held to the curated spellings. A form or a deity
  * counts only while its group or tradition is live, as in
  * `findVocabularySuggestions`. Global reference data, so no proof. Two live
  * rows may share a name, a form's "Wax" under two groups, and both come back.
@@ -286,7 +286,7 @@ export function findCuratedRowsByName(
  * The curated rows of a two-tier vocabulary among `ids`: live, under a live
  * group or tradition, as `findCuratedRowsByName` reads them. How a pick is
  * checked before it is written, and how `formChoice` reads one back, so a
- * pick whose row or group is retired reads as no pick (MB.167). Global
+ * pick whose row or group is retired reads as no pick. Global
  * reference data, so no proof.
  */
 export function findCuratedRowsByIds<TVocabulary extends PickedTable>(
@@ -298,7 +298,7 @@ export function findCuratedRowsByIds<TVocabulary extends PickedTable>(
 }
 
 /**
- * The live other names of the deities among `deityIds` (M14.22), in no
+ * The live other names of the deities among `deityIds`, in no
  * particular order — a loader's batch read. Global reference data, so no proof.
  */
 export function findDeityOtherNames(
@@ -314,7 +314,7 @@ export function findDeityOtherNames(
 /**
  * The live other names among `folds` — trimmed and lower-cased — that a live
  * deity of `traditionId` holds, `exceptId` excepted: what refuses one name on
- * two deities of one tradition (M14.23), which no index can, since the
+ * two deities of one tradition, which no index can, since the
  * tradition is the deity's column and not the name's.
  */
 export function findDeityOtherNameHolders(
@@ -343,7 +343,7 @@ export function findDeityOtherNameHolders(
 /**
  * A curated row: live, and filed under a live group or tradition where its
  * vocabulary files rows — what a member's pick, the compendium's spellings
- * and an ingredient's deity link are each held to (MB.162, MB.167).
+ * and an ingredient's deity link are each held to.
  */
 export function curated(vocabulary: SuggestingVocabulary): SQL | undefined {
   return and(notSoftDeleted(vocabulary), inLiveGroup(vocabulary));
@@ -362,7 +362,7 @@ export function inLiveGroup(vocabulary: ListedVocabulary): SQL | undefined {
 
 /**
  * The live compendium entries a curated form's rename to `name` would give
- * two forms of one name (MB.220): each holds a live variant that picked
+ * two forms of one name: each holds a live variant that picked
  * `formId`, which the rename rewrites, and another live variant whose form
  * already folds to `name`, under the fold `ingredient_variants_form_unique`
  * holds. What the rename is refused on, naming them, before its write and
@@ -399,8 +399,8 @@ export function findCompendiumFormRenameClashes(
  * Where each vocabulary's in-use values are written, keyed by table name: a
  * vocabulary added to `SuggestingVocabulary` fails to compile until it names
  * its column, and a caller passes a table alone, so it cannot pair one with
- * the other's column. A list is read entry by entry (MB.136); the deities are
- * their own table's rows (MB.167), and the forms an entry's variants (MB.220),
+ * the other's column. A list is read entry by entry; the deities are
+ * their own table's rows, and the forms an entry's variants,
  * so a form is in use while any live variant holds it, not only the one the
  * ingredient row mirrors.
  */
@@ -445,23 +445,9 @@ function groupingOf(vocabulary: ListedVocabulary): TwoTierPair | undefined {
 }
 
 /**
- * One page of what a member's autofill offers for `vocabulary`'s column:
- * the live curated rows matching `query`, name matches before description
- * matches, then the values written on live ingredients in the compendium or
- * a coven one of `memberships` proves that match it and fold to no live
- * row's name. No proofs reads the compendium alone, which is the admin's
- * compendium form (M5.5). Each tier is alphabetical, case-folded. A blank
- * `query` matches everything.
- *
- * A name or value matches by `%` or `<%` and a description by `<%` alone, so
- * a query finds a word inside a description and completes a typed prefix
- * (claude-docs/db/member-autofill.md, "The member's autofill"). A form or a
- * deity also matches when its group or tradition name holds the query as a
- * case-folded substring, so typing the heading lists everything under it.
- *
- * A form suggestion also carries its group and the in-scope ingredients whose
- * form folds to it, and a deity suggestion its tradition. A form or a deity
- * is curated only while its group or tradition is live too.
+ * One page of what a member's autofill offers for `vocabulary`'s column: live
+ * curated rows matching `query`, then values written on live ingredients the
+ * `memberships` prove. No proofs reads the compendium alone. (claude-docs/db/write-path.md, "Repository comments in full")
  */
 export function findVocabularySuggestions(
   memberships: readonly Membership[],
@@ -494,7 +480,7 @@ export async function findVocabularySuggestions(
 
   const grouping = groupingOf(vocabulary);
   // Only a form names its claimants: the entries already holding it, one of
-  // which a member adding a form may mean to add it to instead (MB.215).
+  // which a member adding a form may mean to add it to instead.
   const claimed = vocabulary === ingredientForms;
   const curatedRows = grouping
     ? sql`${vocabulary} inner join ${grouping.groups} on ${grouping.groups.id} = ${grouping.column}`
@@ -505,7 +491,7 @@ export async function findVocabularySuggestions(
     ? sql`lower(${grouping.groups.name}) || ' ' || ${vocabulary.id}::text`
     : sql`${vocabulary.id}::text`;
 
-  // A deity also matches on its live other names (M14.23), and carries the
+  // A deity also matches on its live other names, and carries the
   // nearest one that matched, so the picker can say why "Ashtoreth" found
   // Astarte; a deity its own name finds carries none.
   const matchedName =

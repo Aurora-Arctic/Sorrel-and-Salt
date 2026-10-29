@@ -10,9 +10,9 @@ import type {
 import type { LoadedCompendium } from './load';
 import { WORKS } from './works';
 
-// The attribution audit (M14.11): a read over every entry file that ranks the
+// The attribution audit: a read over every entry file that ranks the
 // citations whose source may describe another taxon than the entry's formal
-// name, for the owner to settle. It never decides a citation is wrong; it
+// name, for the curator to settle. It never decides a citation is wrong; it
 // finds the ones worth reading first. Pure: the files, the sources and the
 // fetched Wikipedia pages come in, a report goes out, and `audit-run.ts`
 // does the reading and writing. Each heuristic is a reason to doubt, not
@@ -158,16 +158,9 @@ function nameKey(value: string): string {
 }
 
 /**
- * Whether a Wikipedia page is the article on exactly the formal name given,
- * for a mineral or a chemical, which have no taxobox to say so.
- *
- * A plain name ("Iron", "Beryl") needs the page title, or its infobox's name,
- * to equal it, and the page to be a mineral, a chemical element or a chembox
- * compound: a rock ("Marble"), a group ("Garnet", "Tourmaline") and a page
- * with no infobox to say what it is do not count. A variety ("Quartz var.
- * amethyst") needs the page to be the variety's own article and its infobox,
- * or failing that its first sentence, to say it is a variety of the named
- * mineral. Anything less stays a doubt for a person to settle.
+ * Whether a Wikipedia page is the article on exactly the formal name given, for a
+ * mineral or chemical (no taxobox). Rocks, groups and pages with no infobox do not
+ * count; a variety needs its own article. Anything less stays a doubt for a person. (claude-docs/db/compendium-seed/README.md, "Seed comments in full")
  */
 export function pageNamesEntry(page: string, title: string, canonicalName: string): boolean {
   const templates = templatesIn(page);

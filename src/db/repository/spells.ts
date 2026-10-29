@@ -18,16 +18,9 @@ import type {
 } from './types';
 
 /**
- * §5's reader rule, as a predicate: the coven's own spells, shared ones plus
- * this reader's private ones. `created_by` is the author — §5 gives spells no
- * separate author column — so the proof supplies both halves and a caller has
- * no id to pass that could disagree with it.
- *
- * Exported for the repository's own finders — M13.5's and M13.6's workings
- * reach their spell through it — and not from the index: above the
- * repository nothing builds SQL (MB.33). It builds a condition and runs
- * nothing, and the lint rule `sorrel/spell-visibility-read-in-one-place` fails a
- * `spells.visibility` comparison written anywhere else.
+ * The reader rule as a predicate: the coven's shared spells plus this reader's private
+ * ones. Exported for the repository's finders, not the index; the lint rule
+ * `sorrel/spell-visibility-read-in-one-place` fails a visibility comparison elsewhere. (claude-docs/db/write-path.md, "Repository comments in full")
  */
 export function readableSpells(membership: Membership): SQL | undefined {
   return and(
@@ -38,7 +31,7 @@ export function readableSpells(membership: Membership): SQL | undefined {
 }
 
 /**
- * The grimoire's Visibility facet (M13.22), beside the rule that decides who
+ * The grimoire's Visibility facet, beside the rule that decides who
  * reads so the one lint rule has one file to allow. Neither decides who may
  * read: both are ANDed after `readableSpells`, so they only narrow what it
  * lets through. `visibilityIn` keeps the spells holding any of `values`;
@@ -76,7 +69,7 @@ export function findManyInSpell<TTable extends PgTable & SpellScoped & Unscoped>
 }
 
 /**
- * The same, for many spells in one statement: a loader's batch read (M10.9).
+ * The same, for many spells in one statement: a loader's batch read.
  * A spell among `spellIds` the reader may not read contributes no rows, so a
  * batch that names one learns nothing of it.
  */
@@ -156,8 +149,8 @@ export async function findManyOfSpellIngredientsIncludingSoftDeleted<
 
 /**
  * The forms of the ingredients a readable spell holds, deleted or not, so a
- * step whose form was deleted still shows the form it laid (M10.9). The third
- * spell escape hatch, beside M5.3's two. It skips the form's own soft-delete
+ * step whose form was deleted still shows the form it laid. The third
+ * spell escape hatch, beside the two others. It skips the form's own soft-delete
  * filter and no other: the ingredient is read through the finder above, which
  * holds the spell, the layer and the tier. A form's category pairs need no
  * hatch of their own: `ingredient_categories` has no `deleted_at`, and a
@@ -179,8 +172,8 @@ export async function findFormsInSpellsIncludingSoftDeleted(
 }
 
 /**
- * The writes that move a coven's spell steps from one form to another
- * (M12.21), spread into the writer. Here rather than in the grimoire module,
+ * The writes that move a coven's spell steps from one form to another,
+ * spread into the writer. Here rather than in the grimoire module,
  * because the ingredients module moves them and may not import the
  * grimoire's schema; the repository belongs to no module. Every step is read
  * through its spell, scoped to the proof's coven and live, so another coven's

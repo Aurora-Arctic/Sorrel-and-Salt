@@ -1,6 +1,6 @@
 import type { ChainedError } from './types';
 // Reads a unique-index violation off a thrown error without importing the
-// database layer, which a service may not (MB.33): Postgres reports SQLSTATE
+// database layer, which a service may not: Postgres reports SQLSTATE
 // 23505 with the index's name, and Drizzle rethrows the driver's error as the
 // `cause` of its own. A service matches the name to the field that caused it.
 

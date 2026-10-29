@@ -1,4 +1,4 @@
-/** How many days an entry reads as New or Updated for (MB.106). */
+/** How many days an entry reads as New or Updated for. */
 export const RECENT_DAYS = 30;
 
 const WINDOW_MS = RECENT_DAYS * 24 * 60 * 60 * 1000;

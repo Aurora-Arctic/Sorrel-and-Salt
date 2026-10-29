@@ -30,7 +30,7 @@ export class GraphQLClientError extends Error {
 
 /**
  * A STALE_WRITE answer: the save named a revision the row has moved past,
- * and `currentRevision` is the one it holds now (M13.16). A
+ * and `currentRevision` is the one it holds now. A
  * `GraphQLClientError` still, so everything reading one reads this; the
  * autosave hook tells it apart to pause and offer a choice instead of
  * retrying. claude-docs/components/autosave.md, "The server's half".

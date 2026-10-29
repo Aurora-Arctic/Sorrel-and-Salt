@@ -21,20 +21,20 @@ import type {
   SeedSubstitute,
 } from '../types';
 
-// The compendium seed's guard (MB.242): every rule the entry files under
+// The compendium seed's guard: every rule the entry files under
 // `compendium/` are written to that a function can check, run by a
 // database-free test and again by `seedCompendium` before its transaction
 // opens, so a file that breaks one never reaches staging or production. The
 // entries' own rules (`checkCompendium`) take a list of shards, a name and
-// its entries, because they were first written for the TypeScript lists M14.10
-// replaced; the loader hands them the files as one shard. It returns every issue rather than
+// its entries, because they were first written for the TypeScript lists the
+// markdown files replaced; the loader hands them the files as one shard. It returns every issue rather than
 // throwing at the first, so a lane sees its whole list at once. The rules are
 // claude-docs/db/compendium-seed/README.md's.
 
 /**
  * The curated vocabularies an entry may name, each by the slug of a name its
- * seed literal holds. A deity may be named by one of its other names too
- * (M14.23), so `deities` answers the curated deities a name can mean.
+ * seed literal holds. A deity may be named by one of its other names too,
+ * so `deities` answers the curated deities a name can mean.
  */
 export interface CuratedNames {
   forms: ReadonlySet<string>;
@@ -56,7 +56,7 @@ export const CURATED: CuratedNames = {
   zodiacSigns: slugsOf(ZODIAC_SIGNS),
 };
 
-/** An entry's word count bounds, and a form's ceiling: the owner's defaults (README, rule 5). */
+/** An entry's word count bounds, and a form's ceiling: the curator's defaults (README, rule 5). */
 export const ENTRY_WORDS = { min: 100, max: 250 } as const;
 export const VARIANT_WORDS_MAX = 120;
 
@@ -64,7 +64,7 @@ export const VARIANT_WORDS_MAX = 120;
 // (`subsp.`, `var.`, `f.`), a hybrid's `×`, a quoted cultivar, or the genus
 // or higher taxon alone where practice does not split it (`Usnea`), or a
 // group within a genus the candidate list names by its rank (`Rubus subg.
-// Rubus`, `Vaccinium sect. Cyanococcus`; MB.243).
+// Rubus`, `Vaccinium sect. Cyanococcus`).
 const EPITHET = String.raw`(?:× )?[a-z][a-z-]*`;
 const TAXON = new RegExp(
   String.raw`^[A-Z][a-z]+(?: (?:subg\.|sect\.) [A-Z][a-z]+|(?: ${EPITHET}(?: (?:(?:subsp\.|var\.|f\.) )?[a-z][a-z-]*)?)?(?: '[^']+')?)$`,
@@ -77,7 +77,7 @@ function populatedEntryFields(entry: SeedCompendiumEntry): CompendiumEntryField[
   if (entry.canonicalName) fields.push('canonicalName');
   if (entry.description) fields.push('description');
   if (entry.safetyNotes) fields.push('safetyNotes');
-  // A flag on is a claim the plant is poisonous, so a citation must back it (M14.1).
+  // A flag on is a claim the plant is poisonous, so a citation must back it.
   if (entry.toxic) fields.push('toxic');
   for (const field of [
     'elements',
@@ -141,8 +141,8 @@ export interface GuardOptions {
   whereOf?: (shard: SeedCompendiumShard, entry: SeedCompendiumEntry) => string;
   /**
    * Which entries the content rules are reported for: every one by default.
-   * The files' guard passes the `approved` ones (M14.6): a `needs-review`
-   * file is the owner's queue and may be unfinished, while its identity, slug
+   * The files' guard passes the `approved` ones: a `needs-review`
+   * file is the curator's queue and may be unfinished, while its identity, slug
    * and path still have to be sound, so those rules run on every entry.
    */
   reportContent?: (entry: SeedCompendiumEntry) => boolean;
@@ -199,8 +199,8 @@ export function checkCompendium(
   }
 
   // A substitute links an identity some entry carries, whatever the order:
-  // the seed inserts every entry before it resolves a link (M14.6 dropped the
-  // earlier-shard rule MB.242 had, which a folder of files has no use for).
+  // the seed inserts every entry before it resolves a link (a folder of files has no
+  // earlier-shard rule to lean on).
   const seeded = new Set(identities.keys());
   for (const shard of shards) {
     const sources = { ...works, ...shard.sources };
@@ -347,7 +347,7 @@ function checkSubstitutes(
     if (!('identity' in substitute)) {
       if (substitute.name.trim() === '') issues.push(`${where} names a blank substitute.`);
       // A typed name stands in only for what the seed does not write: an
-      // entry's identity is linked, so a reader reaches it (M14.6).
+      // entry's identity is linked, so a reader reaches it.
       else if (seeded.has(substitute.name.toLowerCase())) {
         issues.push(
           `${where}: substitute "${substitute.name}" is typed as a name, but an entry has that identity: link it.`,
@@ -356,8 +356,8 @@ function checkSubstitutes(
       continue;
     }
     const form = substitute.form === undefined ? null : slugify(substitute.form);
-    // A form's linked substitute names a form, as the service holds it
-    // (MB.115); the ingredient's own list may link an ingredient whole.
+    // A form's linked substitute names a form, as the service holds it;
+    // the ingredient's own list may link an ingredient whole.
     if (ownForm !== null && form === null) {
       issues.push(
         `${where}: substitute "${substitute.identity}" links no form; a form's link names one.`,
@@ -415,7 +415,7 @@ function checkCitations<Field extends string>(
   }
 }
 
-// The files' rules (M14.6): what a folder of entry files must satisfy over and
+// The files' rules: what a folder of entry files must satisfy over and
 // above what the entries themselves must, which `checkCompendium` keeps
 // checking (claude-docs/db/compendium-seed/README.md, "The file format" and
 // "The status gate"). Each is a rule a shard literal had no room to break.
@@ -586,7 +586,7 @@ function checkNameBases(
 }
 
 /**
- * The ratchet on the legacy list (M14.11): `unaudited.txt` may only shrink.
+ * The ratchet on the legacy list: `unaudited.txt` may only shrink.
  * `baseline` is the list as last committed beside the test that holds it, so
  * a path the list gains is refused, and a path it has dropped asks for the
  * baseline to drop it too, or the path could come back unnoticed. The guard

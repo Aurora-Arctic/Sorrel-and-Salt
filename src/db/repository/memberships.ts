@@ -28,8 +28,8 @@ export async function findWorkspaceRole(
       notSoftDeleted(workspaceMembers),
       eq(workspaceMembers.userId, userId),
       eq(workspaceMembers.workspaceId, workspaceId),
-      // A deleted workspace admits no one, whatever their membership row says
-      // (M6.14): the rows stay live so a workspace restored by hand keeps its
+      // A deleted workspace admits no one, whatever their membership row says:
+      // the rows stay live so a workspace restored by hand keeps its
       // members, and this check is what refuses every role at once.
       existsIn(workspaces, eq(workspaces.id, workspaceMembers.workspaceId)),
     ),
@@ -38,16 +38,9 @@ export async function findWorkspaceRole(
 }
 
 /**
- * Every live membership each of these users holds, in a workspace that is
- * itself live. The second read that takes no proof, and for the reason the
- * first does: a user's own memberships span workspaces, so there is no one
- * workspace to hold a proof for. The service calling it decides whose ids may
- * be asked about; the index's export list is pinned, so a third is a
- * decision.
- *
- * The workspace's own `deleted_at` is `existsIn`'s to check: a correlated
- * `EXISTS` rather than a join, so the rows come back in the membership's own
- * shape.
+ * Every live membership each of these users holds, in a live workspace. A proofless
+ * read: a user's memberships span workspaces, so the service decides whose ids may be
+ * asked about, and the index's export list is pinned. (claude-docs/db/write-path.md, "Repository comments in full")
  */
 export async function findMembershipsOfUsers(
   userIds: readonly string[],
@@ -65,7 +58,7 @@ export async function findMembershipsOfUsers(
 
 /**
  * One page of the live members of the coven the proof names, in the order
- * they joined (M6.11). Its own finder rather than `findPageInWorkspace`,
+ * they joined. Its own finder rather than `findPageInWorkspace`,
  * which breaks ties on a table's `id`: a membership is keyed on the pair,
  * so inside one coven the user id breaks them instead.
  */
@@ -91,7 +84,7 @@ export function findMemberPage(
 
 /**
  * The live member of the proof's coven who holds this address, or `undefined`:
- * what the invite check reads to refuse inviting someone already inside (M7.3).
+ * what the invite check reads to refuse inviting someone already inside.
  * The address is matched lower-cased against a live user row, in SQL, so the
  * coven's roll is never fetched to be searched.
  */
@@ -118,7 +111,7 @@ export function findMemberByEmail(
 /**
  * The address of each of these users who holds a live seat in the proof's
  * coven, read off their own `users` row: the
- * owner's Email column (M11.19). Nothing else of the row leaves
+ * owner's Email column. Nothing else of the row leaves
  * the repository. A user outside the coven, or removed from it, is left out
  * in SQL, so another coven's address is never fetched to be dropped. The
  * caller has checked `member: readEmail`, which only owners hold.
@@ -143,7 +136,7 @@ export async function findMemberEmails(
 }
 
 /**
- * Soft-deletes the workspace the proof names (M6.14). Its own writer rather
+ * Soft-deletes the workspace the proof names. Its own writer rather
  * than `softDeleteInWorkspace`, which scopes on a `workspace_id` column that
  * `workspaces` does not have: its own `id` is the workspace. The membership
  * rows are left as they were, since `findWorkspaceRole` stops admitting
@@ -163,7 +156,7 @@ export function workspaceWrites({
  * The membership write that takes no proof, for the reason `findWorkspaceRole`
  * is the read that takes none: a proof is minted from a membership row, so
  * the row that makes a creator an owner, or an invitee a member, has none to
- * be written under. Spread into the writer beside `invitationWrites` (MB.198),
+ * be written under. Spread into the writer beside `invitationWrites`,
  * so it still runs inside `withAudit` and is stamped from the session. Narrow
  * on purpose — one row, the pair and the role named — and the caller decides
  * whether this user may be seated.
@@ -199,7 +192,7 @@ export function membershipWrites({
       ),
     insertMembership: (workspaceId, userId, role, invitedBy) =>
       insert(workspaceMembers, { workspaceId, userId, role, invitedBy }),
-    // Removal and leave alike (M6.15): the proof's workspace scopes it, so
+    // Removal and leave alike: the proof's workspace scopes it, so
     // another coven's row is out of reach, and a row already deleted is
     // skipped, so a second removal never overwrites who made the first.
     softDeleteMembership: (membership, userId) =>
@@ -207,7 +200,7 @@ export function membershipWrites({
         workspaceMembers,
         and(scopedTo(membership, workspaceMembers), eq(workspaceMembers.userId, userId)),
       ),
-    // Rule 4's fourth named exception, after M5.3's, MB.138's and MB.10's, and
+    // Rule 4's fourth named exception, and
     // the only writer that touches a deleted row: the audit writer's `update`
     // skips one by design, and the pair `(workspace_id, user_id)` is the
     // primary key, so a person invited back cannot be inserted a second time.

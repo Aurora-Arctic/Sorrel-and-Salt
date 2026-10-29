@@ -11,7 +11,7 @@ import { LAST_USED_PROVIDER_COOKIE } from './sign-in';
 // directly rather than returning a URL to navigate to — component tests
 // mock this module rather than letting a test environment attempt that navigation.
 //
-// `adminClient` for the two impersonation calls alone (MB.53). Its other
+// `adminClient` for the two impersonation calls alone. Its other
 // methods name endpoints the server never mounts, and where impersonation is
 // off the two it uses answer 404 (claude-docs/auth/impersonation.md).
 export const authClient = createAuthClient({

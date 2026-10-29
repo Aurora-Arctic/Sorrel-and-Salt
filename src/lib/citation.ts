@@ -1,6 +1,6 @@
 import type { CitationFields, CitationPart } from './types';
 
-// The one Chicago renderer (MB.151; DESIGN.md §5, "The citation is rendered,
+// The one Chicago renderer (DESIGN.md §5, "The citation is rendered,
 // never stored"): a reference's fields to its bibliography entry, as parts
 // in italic or roman. Pure and client-safe, beside `slugify`, because the
 // page, the picker, the service's sort and the seed's test all call it. The
@@ -222,7 +222,7 @@ function closed(runs: CitationPart[]): CitationPart[] {
   return /[.?!]["”]?$/.test(text) ? runs : [...runs, roman('.')];
 }
 
-/** A date as Chicago prints it: `2026-10-06` → `October 6, 2026`. */
+/** A date as Chicago prints it: `<year>-<month>-<day>` → `October 6, 2026`. */
 function day(iso: string): string {
   const match = ISO_DAY.exec(iso);
   const month = match ? MONTHS[Number(match[2]) - 1] : undefined;

@@ -12,9 +12,9 @@
 //        npm run db:seed:<reference target> -- --dry-run    # run, then roll back: write nothing
 //        npm run db:seed:compendium -- [--dry-run] [--adopt] [--force]
 //          --adopt also lists the ADOPTED lines, as migrate.yml does
-//          --force lifts refusals 1 to 4 (M14.26)
+//          --force lifts refusals 1 to 4
 //        npm run db:seed:reference -- [--dry-run] [--adopt] [--force]
-//          all six above in one transaction, which a dry run rolls back once (M14.26)
+//          all six above in one transaction, which a dry run rolls back once
 //        npm run db:drop              # drop the schema, nothing else
 //        npm run db:reset             # drop, migrate, seed
 
@@ -36,7 +36,7 @@ import { dropSchema } from '../src/db/seed/reset.ts';
 const target = process.argv[2] ?? 'scenario';
 const flags = new Set(process.argv.slice(3));
 
-// The flags each target takes: every reference seed has a dry run (M14.26),
+// The flags each target takes: every reference seed has a dry run,
 // and only the compendium reports adoptions or can be forced.
 const FLAGS: Record<string, readonly string[]> = {
   categories: ['--dry-run'],
@@ -81,10 +81,10 @@ try {
     await seedSources(db, { dryRun });
     done("the vocabularies' sources and their links");
   } else if (target === 'compendium' || target === 'reference') {
-    // M14.7: one line per entry the run updated, refused, left pending or
+    // One line per entry the run updated, refused, left pending or
     // found retired, then the totals; a refused entry exits 1, which fails
     // the deploy's seed step so the refusal is read, not buried. `reference`
-    // runs the five vocabulary seeds first, in the same transaction (M14.26).
+    // runs the five vocabulary seeds first, in the same transaction.
     const force = flags.has('--force');
     const report =
       target === 'reference'

@@ -17,7 +17,7 @@ import type { SortableWording } from './types';
 
 export type { SortableWording } from './types';
 
-// The dnd-kit setup every sortable list shares (MB.170, M10.16): the
+// The dnd-kit setup every sortable list shares: the
 // combobox's chips in a wrapping row and the spell builder's steps in a
 // column. Each list lays its items out itself, with its own sorting strategy
 // and its own arrow keys; what is shared is how a move starts, how a keyboard
@@ -33,7 +33,7 @@ export const SORTABLE_INSTRUCTIONS =
 const DRAG_DISTANCE_PX = 4;
 
 // ---------------------------------------------------------------------------
-// TOUCH DRAG DELAY: the owner has not settled it yet (M10.16). How long a
+// TOUCH DRAG DELAY: a provisional value. How long a
 // finger must rest on a handle before a touch drag starts; a finger that moves
 // further than the tolerance first is not a drag. Change the two numbers here
 // and nothing else: every sortable list reads them.

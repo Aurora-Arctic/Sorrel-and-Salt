@@ -1,5 +1,5 @@
 #!/usr/bin/env node
-// Turns the owner's reference books in /app/.library/ into text a research
+// Turns the curator's reference books in /app/.library/ into text a research
 // lane can grep and read (claude-docs/db/compendium-seed/README.md, "The
 // library"). The devcontainer has no poppler, so neither `pdftotext` nor the
 // Read tool can open a PDF here; pdfjs-dist is Mozilla's own extractor, pure

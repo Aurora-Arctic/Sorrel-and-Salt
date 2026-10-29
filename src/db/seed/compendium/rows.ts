@@ -23,7 +23,7 @@ import type {
   SeedTransaction,
 } from '../types';
 
-// The rows a compendium entry becomes (M14.7): pure builders over an entry and
+// The rows a compendium entry becomes: pure builders over an entry and
 // the curated picks it names, shared by the insert and the update so the two
 // cannot drift on what a column holds. Nothing here writes; the seed
 // (../compendium.ts) and the update (./update.ts) do. Not `writeChildren`
@@ -86,7 +86,7 @@ export function pick(picks: Picks, kind: keyof Picks, name: string): CuratedPick
 }
 
 /**
- * A celestial body or sign is stored as its row's current spelling (MB.162);
+ * A celestial body or sign is stored as its row's current spelling;
  * a retired one is left off, and an empty list is stored as null.
  */
 export function spelled(
@@ -200,7 +200,7 @@ export type DeityRow = Pick<
 /**
  * The entry's deities in its order, each linked to the curated row under its
  * current name; a retired pick is left off. A name may be one of the deity's
- * other names (M14.23), linked to the one deity it means; the guard has
+ * other names, linked to the one deity it means; the guard has
  * refused a name meaning none or several before this runs.
  */
 export function deityRows(

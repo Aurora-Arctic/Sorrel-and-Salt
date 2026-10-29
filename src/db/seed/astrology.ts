@@ -11,7 +11,7 @@ import type { SeedAstrologyValue, SeedDatabase, SeedRunOptions, SeedTransaction 
 // Moon, Rahu, Serpentarius (claude-docs/db/astrology-vocabulary-seed.md, "The
 // astrology vocabulary seed").
 
-// `position` is where a facet lists the row (M12.52): the calendar for signs,
+// `position` is where a facet lists the row: the calendar for signs,
 // Ophiuchus after Pisces, and the Sun outward for the bodies. The rest have none,
 // as a curator's additions have none, and sort after by name.
 

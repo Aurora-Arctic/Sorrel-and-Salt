@@ -11,7 +11,7 @@ import type {
 // The address of a list page under its filter, at a cursor, with a modal open
 // over it or not: `/admin/users?query=wort&awaiting`. Every list's links,
 // pager, filter submit and modal close build one, and six `href.ts` files each
-// carried their own copy of this join until MB.115.
+// carried their own copy of this join.
 //
 // Joined by hand rather than through `URLSearchParams`, which would write a
 // bare flag such as `new` or `awaiting` as `new=`: the pages read those by
@@ -51,7 +51,7 @@ export function dialogParams(dialog?: ListDialog): ListDialogParams {
  * it turns on, so the caller keeps its filter and drops any modal. An end
  * with no page beyond it is left out, and `Pager` disables it. Pure, so a
  * client list and a server page can both call it; it moved here from the
- * admin pages' `list-page.tsx`, which is server-only (MB.119).
+ * admin pages' `list-page.tsx`, which is server-only.
  */
 export function pagerHrefs<Href extends string>(
   pageInfo: Page<unknown>['pageInfo'],

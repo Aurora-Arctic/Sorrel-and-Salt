@@ -1,11 +1,11 @@
 import type { AuditCandidate } from '../types';
 import { parseEntryFile, SECTION_HEADINGS } from './parse-entry';
 
-// The attribution audit's `--apply` (M14.11) on one file's text: the file goes
+// The attribution audit's `--apply` on one file's text: the file goes
 // to `needs-review`, and each flagged citation gains one block in its
 // `#### Questions for the Curator`, opening with a marker so a second run
 // finds it and adds nothing. A text edit rather than parse-and-render, like
-// `seed:mark`, so the owner's comments, key order and prose survive byte for
+// `seed:mark`, so the curator's comments, key order and prose survive byte for
 // byte; neither the status nor the sections are hashed, so a `seedUpdate`
 // mark stays valid.
 
@@ -18,7 +18,7 @@ export function auditMarker(candidate: Pick<AuditCandidate, 'source' | 'headedAs
   return `<!-- audit:${candidate.source}:${candidate.headedAs ?? ''} -->`;
 }
 
-/** The question a candidate puts to the owner, after its marker. */
+/** The question a candidate puts to the curator, after its marker. */
 function blockOf(candidate: AuditCandidate): string {
   const where = candidate.citedOn
     .map((on) => (on === 'entry' ? 'the entry' : `the ${on}`))

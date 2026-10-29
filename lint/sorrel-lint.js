@@ -6,7 +6,7 @@ import { rules as sweepRules } from './source-sweeps.js';
 // "What a test may assert", rule 8). Each was a Vitest guard scanning the tree
 // on every run; a rule here fails the diff that breaks it in the editor and in
 // `npm run lint`, and costs the test run nothing. Each was proved once by a
-// probe file `npm run lint` rejected (MB.224).
+// probe file `npm run lint` rejected.
 
 /** The file being linted, repo-relative with forward slashes. */
 const fileOf = (context) => relative(context.cwd, context.filename).split(sep).join('/');
@@ -54,7 +54,7 @@ export default {
     },
     // CLAUDE.md rule 1: a route handler is a file, so only its path can be checked.
     // The exemption is three public files that take no session and serve only what
-    // the public compendium already shows, as robots.ts and sitemap.ts do (M12.2, claude-docs/seo/ai-discovery.md).
+    // the public compendium already shows, as robots.ts and sitemap.ts do (claude-docs/seo/ai-discovery.md).
     'route-allowlist': {
       create: (context) => ({
         Program(program) {
@@ -72,7 +72,7 @@ export default {
         },
       }),
     },
-    // CLAUDE.md rule 8: the Relay plugin's `t.connection` is called inside the M3.6 helper alone.
+    // CLAUDE.md rule 8: the Relay plugin's `t.connection` is called inside the pagination helper alone.
     'pagination-helper': {
       create: (context) => ({
         CallExpression(node) {

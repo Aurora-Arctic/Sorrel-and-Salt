@@ -269,7 +269,7 @@ function tokenClaims(token: unknown): { email?: string; updateTo?: string } | un
 
 // The change branch of /verify-email — a token carrying `updateTo` — calls no
 // `beforeEmailVerification` and, given no session, mints one for whoever
-// opened the link. So MB.66's rule is applied here, before the endpoint: only
+// opened the link. So the verified-link rule is applied here, before the endpoint: only
 // a session holding the row may follow it, and the address must still be free,
 // or the unique index would fail the write. The plain branch is gated by
 // `beforeEmailVerification` as before (claude-docs/auth/admin-bootstrap.md, "The email page").
@@ -314,7 +314,7 @@ export const auth = betterAuth({
   // The sign-in page marks the provider this browser last used, and the
   // server says nothing about an address (claude-docs/auth/plugins.md, "Plugins").
   // Impersonation is never constructed at production, nor anywhere the flag
-  // is unset, so its endpoints are absent rather than refusing (MB.53).
+  // is unset, so its endpoints are absent rather than refusing.
   plugins: [
     lastLoginMethod({ cookieName: LAST_USED_PROVIDER_COOKIE }),
     ...(impersonationEnabled() ? [impersonation()] : []),
@@ -323,7 +323,7 @@ export const auth = betterAuth({
     // Absent leaves Better Auth's own rule: `__Secure-` names wherever the base
     // URL is https, which a production build forces. The audit's e2e servers alone
     // set it false, so a WebKit page on a plain-http origin sends the cookie it holds
-    // (MB.255; claude-docs/testing/e2e.md, "A signed-in browser without a provider").
+    // (claude-docs/testing/e2e.md, "A signed-in browser without a provider").
     ...(plainSessionCookie() && { useSecureCookies: false }),
     // Matches users.id's uuid type so every FK lines up without a cast.
     database: {
@@ -402,13 +402,13 @@ export const auth = betterAuth({
     },
   },
   // `/update-user` writes `name` and `image` outside `withAudit`; the name
-  // is `setName`'s, the audited write (MB.88). Refused at the router, before
+  // is `setName`'s, the audited write. Refused at the router, before
   // the endpoint or any hook runs, with a 404 (claude-docs/auth/admin-bootstrap.md,
   // "The account page").
   disabledPaths: ['/update-user'],
   user: {
     // Off, pinned by test: on, a user could move the primary admin's address
-    // to another account. An email changes through MB.54's verified flow.
+    // to another account. An email changes through the verified flow.
     changeEmail: { enabled: false },
     // Never refuses: it only records what the provider said, for the hook below.
     // Not on an explicit link, whose vouch `vouchWhenLinking` lent and which
@@ -487,7 +487,7 @@ export const auth = betterAuth({
       // With no return path, the landing is the role's as it stands after any
       // promotion just now; otherwise the endpoint's redirect already goes
       // where the sign-in asked, `/coven` included. A member goes into their
-      // first coven (`signedInLanding`, MB.257).
+      // first coven (`signedInLanding`).
       if (noReturnPath) {
         const role = outcome === 'promoted' ? 'admin' : toUserRole(user.role);
         throw new APIError('FOUND', undefined, {

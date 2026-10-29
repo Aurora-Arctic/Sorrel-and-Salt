@@ -21,8 +21,8 @@ import type {
 import { inLiveGroup } from './vocabularies';
 import { weightedSearch } from './weighted-search';
 
-// The grimoire list's read (M10.9), with its search and category filter
-// (M10.11). In a file of its own rather than in `spells.ts`, because
+// The grimoire list's read, with its search and category filter.
+// In a file of its own rather than in `spells.ts`, because
 // `finders.ts` imports `readableSpells` from there and this pages through
 // `finders.ts`: the two in one file would import each other.
 
@@ -37,7 +37,7 @@ const newestFirst = (column: typeof spells.updatedAt | typeof spells.createdAt):
  * The grimoire's orders, each a cursor key that the page's id follows, so
  * spells tied on every part still page once each. Every part must be NOT
  * NULL, because the cursor compares the key as one row value. A draft may
- * have no title (M13.15), so `TITLE_ASC` sorts on "is it untitled" first —
+ * have no title, so `TITLE_ASC` sorts on "is it untitled" first —
  * untitled spells last — then on the title with a null read as empty, rather
  * than on the bare column.
  */
@@ -154,7 +154,7 @@ function textArm(column: TextColumn, values: readonly string[] | undefined): SQL
 
 /**
  * Everything a query narrows by besides the search, ANDed: status, categories
- * and the four facets of M13.22 each filter in SQL (rule 7), the picks within
+ * and the four facets each filter in SQL (rule 7), the picks within
  * a facet alternatives. The search narrows through its join, which holds only
  * the spells that match.
  */
@@ -200,7 +200,7 @@ export function findGrimoireCount(
 
 /**
  * How many spells `findGrimoirePage` would list in each live category, under
- * the rest of the query: the Categories filter's counts (M10.11), read as
+ * the rest of the query: the Categories filter's counts, read as
  * the ingredient facets read theirs (`categoryFacet`), in one grouped read
  * under the same visibility rule, so another member's private spell never
  * counts. Under `all` the chosen categories stay in the query, so each count
@@ -237,19 +237,9 @@ export function findGrimoireCategoryCounts(
 }
 
 /**
- * The counts behind the four facets M13.22 adds, in four grouped reads (one per
- * facet, run together) under the same visibility rule as the list, so another
- * member's private spell is never counted and its moon phase, day or maker is
- * never offered. Each facet's counts leave its own picks out of the query and
- * keep every other facet, the categories, the status and the search in force,
- * as `findGrimoireCategoryCounts` drops the categories under Match Any. A
- * value no readable spell carries is absent rather than at zero.
- *
- * Moon phase and day of the week group on the trimmed, lower-cased text and
- * name the group by its most-used spelling (`mode()`, the smallest on a tie),
- * so `Full Moon` and `full moon` are one choice. A maker is a user id, and
- * stays a choice after leaving the coven, since the read looks at spells and
- * not seats.
+ * The counts behind the four grimoire facets, under the list's visibility rule, so
+ * another member's private spell is never counted. Each facet leaves its own picks
+ * out of its query; a value no readable spell carries is absent, not zero. (claude-docs/db/write-path.md, "Repository comments in full")
  */
 export async function findGrimoireFacetCounts(
   membership: Membership,

@@ -1,9 +1,9 @@
 import { useEffect, useState } from 'react';
 
 // The one debounce a typed lookup waits on, so every suggesting field settles
-// at the same pace: M5.10a's form and folk-name boxes first, then M5.10's name
-// field and M8.10's search. Built here rather than in M8.10, which had not
-// landed when the first lookup needed it (claude-docs/components/combobox.md,
+// at the same pace: the form and folk-name boxes, the name field and the search.
+// Built as its own file because the first lookup needed it before the search
+// existed (claude-docs/components/combobox.md,
 // "The debounce").
 
 /** How long a value must stop changing before a lookup is sent. */

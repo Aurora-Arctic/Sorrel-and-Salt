@@ -12,7 +12,7 @@ export type AuditOperation = 'insert' | 'update' | 'delete';
 export interface AuditSession {
   userId: string;
   /**
-   * The admin acting as `userId`, on an impersonation session alone (MB.53).
+   * The admin acting as `userId`, on an impersonation session alone.
    * `userId` is still who the stamps name: impersonation reproduces what that
    * user would see and do.
    */
@@ -24,7 +24,7 @@ export type PrivilegeRoute = (typeof userPrivilegeRoute.enumValues)[number];
 
 /**
  * What a write changing `users.role` or `users.can_create_workspace` declares
- * to `withAudit` (MB.195): the route, without which the trigger on `users`
+ * to `withAudit`: the route, without which the trigger on `users`
  * refuses the change, and an optional reason the ledger row keeps.
  */
 export interface PrivilegeDeclaration {
@@ -35,7 +35,7 @@ export interface PrivilegeDeclaration {
 /**
  * Who `publishActor` publishes: the acting user, the admin impersonating
  * them, and the privilege route and note a write changing a privilege
- * declares (MB.195). Each absent one is published as ''.
+ * declares. Each absent one is published as ''.
  */
 export interface PublishedActor {
   userId: string;
@@ -75,8 +75,8 @@ export interface ClientRegistry {
 }
 
 /**
- * The mark on a table written only through its own named writer methods
- * (MB.198), put on it in its schema file by `namedWrites` in table-marks.ts.
+ * The mark on a table written only through its own named writer methods,
+ * put on it in its schema file by `namedWrites` in table-marks.ts.
  * `$writes` is a phantom key beside Drizzle's `$inferSelect`: no column can
  * be named like it, and nothing is added to the table at runtime
  * (claude-docs/db/write-path.md, "Table marks").

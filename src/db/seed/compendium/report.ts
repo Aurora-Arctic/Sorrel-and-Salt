@@ -1,4 +1,4 @@
-// What one compendium seed run did, entry by entry (M14.7), and the lines it
+// What one compendium seed run did, entry by entry, and the lines it
 // prints. The seed builds the report; `scripts/db-seed.ts` prints it and
 // exits 1 when anything was refused, which fails the deploy's seed step and
 // posts the `REFUSED` block on the pull request (migrate.yml).
@@ -54,7 +54,7 @@ export function hasRefusals(report: SeedCompendiumReport): boolean {
  * entry, a `PENDING` or `REFUSED` line followed by the fields that differ, and a totals
  * line. `ADOPTED` lines, each with what differs, print only under `adopt`:
  * the deploy's seed passes `--adopt` so its job summary names each adopted
- * row (M14.1), and `db:seed:compendium -- --adopt --dry-run` is how the owner
+ * row, and `db:seed:compendium -- --adopt --dry-run` is how the curator
  * reads what adoption would make the baseline before a deploy.
  */
 export function formatReport(

@@ -2,8 +2,8 @@ import type { ValidationIssue } from './types';
 
 // The one rule for what an email address looks like, in a file with no
 // server-only import so the invite dialog checks an address before it sends
-// and the services check it again: the same words either way. Moved out of
-// the identity module's email service for M7.4; that service re-exports it.
+// and the services check it again: the same words either way. Lives here so the client can use it; the
+// identity module's email service re-exports it.
 
 /** Trimmed and lower-cased, as the column stores it. */
 export function normaliseEmail(input: string): string {

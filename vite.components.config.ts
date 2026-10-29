@@ -2,7 +2,7 @@ import { globSync } from 'node:fs';
 import { fileURLToPath } from 'node:url';
 import { defineConfig } from 'vite';
 
-// Library build of src/components/ for the Claude Design sync (M12.53): compiled
+// Library build of src/components/ for the Claude Design sync: compiled
 // JavaScript per component plus one compiled stylesheet, written to dist/. Vite's
 // library mode is used rather than a `tsc` emit because the components import
 // their Sass from TypeScript, which only a bundler compiles. React, Next.js and

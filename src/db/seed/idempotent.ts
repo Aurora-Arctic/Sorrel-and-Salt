@@ -21,7 +21,7 @@ class DryRunRollback<T> extends Error {
  * The seed's transaction: the bootstrap user published as the actor by
  * `publishActor`, as `withAudit` publishes its session — all four settings,
  * transaction-local — and present before `body` writes a row that names it as
- * creator. On a dry run (M14.26) `body` runs in full and the transaction is
+ * creator. On a dry run `body` runs in full and the transaction is
  * then rolled back, so every read and constraint is the real one and nothing
  * is left behind; `body`'s result is still returned. A rollback rather than a
  * separate planning pass, so a dry run cannot drift from the run it previews.
@@ -51,7 +51,7 @@ export async function beginSeedTransaction<T>(
  * bootstrap user with no route. The seed writes no ledger row itself: the
  * trigger on `users` records each privilege a seeded user is inserted holding,
  * and refuses one inserted undeclared, stamping the row as the published
- * actor (MB.195). Not a `finally`: a failed body has aborted the
+ * actor. Not a `finally`: a failed body has aborted the
  * transaction, and a further statement would only bury its error.
  */
 export async function declaringBootstrapPrivileges<T>(
@@ -246,7 +246,7 @@ export function requireFrom<K, V>(map: Map<K, V>, key: K, describe: () => string
 }
 
 /**
- * What a vocabulary seed takes as present (MB.172): every row's `seed_key`,
+ * What a vocabulary seed takes as present: every row's `seed_key`,
  * live or soft-deleted, so a row the seed wrote is its own whatever an admin
  * has since renamed it or whether they retired it; and every live row's slug,
  * so a row an admin wrote under a seed name is not met by a second one the

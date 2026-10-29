@@ -131,23 +131,23 @@ export interface ChainedError {
   constraint_name?: unknown;
 }
 
-/** A category group's two colours, one per theme, as its row stores them (MB.35). */
+/** A category group's two colours, one per theme, as its row stores them. */
 export interface GroupColors {
   colorDark: string;
   colorLight: string;
 }
 
-/** Which of a group's two colours: the one the dark theme wears, or the light (MB.36). */
+/** Which of a group's two colours: the one the dark theme wears, or the light. */
 export type GroupColorColumn = keyof GroupColors;
 
 /**
- * The two axes of a colour picker's area, as it lays them out for a format
- * (M5.6b): saturation across, and brightness or lightness up, 100 at the top.
+ * The two axes of a colour picker's area, as it lays them out for a format:
+ * saturation across, and brightness or lightness up, 100 at the top.
  */
 export type AreaSpace = 'hsb' | 'hsl';
 
 /**
- * The five kinds of source `references.kind` holds (MB.151), spelled here
+ * The five kinds of source `references.kind` holds, spelled here
  * because a lib file imports no module; a row's `ReferenceKind` must stay
  * assignable to it, so a sixth kind fails the type check at the renderer's
  * callers.
@@ -228,18 +228,18 @@ export interface PagerHrefs<Href extends string = string> {
   nextHref: Href | undefined;
 }
 
-/** The signed-in person as the application shell draws them (MB.7). */
+/** The signed-in person as the application shell draws them. */
 export interface ShellViewer {
   /** The name the site shows for them; the account button's text and its initials. */
   name: string;
-  /** A curator or a site admin (M11.20): the shell adds the Admin and Your Coven links. */
+  /** A curator or a site admin: the shell adds the Admin and Your Coven links. */
   canCurate: boolean;
   /** Holds `canCreateWorkspace`, read from the user row, never the session. */
   canCreate: boolean;
   /** Their address is verified. Until it is, the shell offers an account menu with Sign Out and nothing else. */
   verified: boolean;
   /**
-   * How many coven invitations wait for their verified address (M10.32): the
+   * How many coven invitations wait for their verified address: the
    * account menu's count and the landing's notice. Never read for an
    * unverified account, which reads 0.
    */

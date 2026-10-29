@@ -14,7 +14,7 @@ import type { ShellContext } from './types';
 // invitation sets `canCreateWorkspace` mid-session. It asks only that someone
 // is signed in: the shell layout draws it round an unverified account's email
 // page too, and the page beneath is what sends that account to the email page
-// (MB.256).
+//.
 
 /**
  * The viewer's own memberships, read once per request whoever asks: the shell, and the public
@@ -65,7 +65,7 @@ export const viewerOf = cache(async (): Promise<ShellContext> =>
 
 /**
  * `viewerOf()` for a page a signed-out visitor may open: `null` instead of
- * the redirect to sign in. For the public frame (MB.83) and nothing else.
+ * the redirect to sign in. For the public frame and nothing else.
  */
 export const viewerIfSignedIn = cache(async (): Promise<ShellContext | null> => {
   const session = await getSession();
@@ -74,7 +74,7 @@ export const viewerIfSignedIn = cache(async (): Promise<ShellContext | null> => 
 
 /**
  * The signed-in viewer's role in each of their covens, by coven id, or `null` signed out: for
- * the public entry page's cupboard choices (M9.12), each of which a different statement permits.
+ * the public entry page's cupboard choices, each of which a different statement permits.
  * The shell carries a coven's permissions as flags rather than its role, and this shares its read.
  */
 export const covenRolesIfSignedIn = cache(

@@ -9,13 +9,13 @@ import { curates } from './site-roles';
 
 /**
  * Where a sign-in goes when no page asked for the visitor back, for anyone
- * but a curator or an admin: the post-sign-in landing (M2.8), not `/` — `/` is the public
+ * but a curator or an admin: the post-sign-in landing, not `/` — `/` is the public
  * front door, and a visitor who has just signed in has been through it already
  * (claude-docs/design-decisions/mb.57-post-sign-in-landing.md).
  */
 export const POST_SIGN_IN_LANDING = '/coven' satisfies Route;
 
-/** A curator's or an admin's landing instead: curating starts in the admin area (MB.113, M11.20). */
+/** A curator's or an admin's landing instead: curating starts in the admin area. */
 export const ADMIN_LANDING = '/admin' satisfies Route;
 
 /** Where a sign-in with no return path lands, by the role the account holds once it has signed in. */
@@ -163,7 +163,7 @@ export const signInErrorMessage = messageLookup(ERROR_MESSAGES, GENERIC_SIGN_IN_
 /** The account page, where a link starts and lands again, with `?error=` when it failed. */
 export const ACCOUNT_PATH = '/account';
 
-/** The account page's Invitations section, by its id; the landing and the account menu link to it (M10.32). */
+/** The account page's Invitations section, by its id; the landing and the account menu link to it. */
 export const ACCOUNT_INVITATIONS_ID = 'account-invitations';
 export const ACCOUNT_INVITATIONS_PATH = `${ACCOUNT_PATH}#${ACCOUNT_INVITATIONS_ID}` as const;
 

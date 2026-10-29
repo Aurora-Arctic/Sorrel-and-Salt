@@ -4,7 +4,7 @@ import type { FlatTable } from '../vocabularies';
 import type { SeedTransaction } from './types';
 
 // The one-tier shape: a vocabulary with no group, each row keyed by the slug
-// it was seeded under (MB.172), a slug nobody writes down.
+// it was seeded under, a slug nobody writes down.
 // `seedTwoTierVocabulary` is the grouped counterpart.
 
 /**

@@ -10,7 +10,7 @@ import { existsIn, selectFrom, selectOne } from './select';
 import type { PageEntry, PageRequest } from '../../lib/types';
 import type { CupboardEntryRow, IngredientRow } from './types';
 
-// The reads over a coven's cupboard entries (M12.14): the rows of
+// The reads over a coven's cupboard entries: the rows of
 // `workspace_compendium_entries`, each naming one compendium entry the coven
 // holds, with its own overrides. That the entry is the compendium's is a read
 // filter here rather than a constraint, so every read joins `ingredients`
@@ -52,16 +52,9 @@ export function findCupboardEntriesOf(
 }
 
 /**
- * The compendium entry with this id, soft-deleted or not, beside the proof's
- * live cupboard entry naming it, or `undefined` when the proof's coven has no
- * such row. The sixth escape hatch (M12.24): a compendium entry the curators
- * retire stays readable to exactly the covens whose cupboard names it, and
- * reads as gone to every other reader (claude-docs/db/workspace-compendium-entries.md,
- * "When the compendium retires the entry"). It skips the entry's own filter
- * and no other: the cupboard row's tombstone filters, the proof scopes it, and
- * the entry must be the compendium's, so a row naming a coven's own
- * ingredient reads as none. One statement: the cupboard row is a left join
- * read as an inner one, which is what lets the entry's tombstone go unread.
+ * The compendium entry with this id, retired or not, beside the proof's live cupboard
+ * entry naming it. A retired entry stays readable to exactly the covens whose cupboard
+ * names it (claude-docs/db/workspace-compendium-entries.md); it skips only the entry's filter. (claude-docs/db/write-path.md, "Repository comments in full")
  */
 export async function findCupboardEntryIncludingSoftDeleted(
   membership: Membership,
@@ -106,7 +99,7 @@ function inCupboard(membership: Membership): SQL | undefined {
 /**
  * The live compendium entries whose label or formal name is `name`, exactly
  * but for case, in no particular order: the entries a coven's typed name already
- * names (M12.20, M12.22). Unscoped, since the compendium is public. Exact
+ * names. Unscoped, since the compendium is public. Exact
  * rather than fuzzy: a near spelling is `findSimilarIngredients`'.
  */
 export function findCompendiumMatchesByName(name: string): Promise<IngredientRow[]> {
@@ -115,7 +108,7 @@ export function findCompendiumMatchesByName(name: string): Promise<IngredientRow
 
 /**
  * One page of the same exact matches, by name and then id: the Add flow's
- * question (M12.20), which the schema serves as a connection like any list.
+ * question, which the schema serves as a connection like any list.
  * Never more rows than the entries one typed name can equal.
  */
 export function findCompendiumMatchPage(
@@ -146,8 +139,8 @@ function compendiumNamed(name: string): SQL | undefined {
 
 /**
  * The proof's live cupboard entry labelled `label`, case folded, or
- * `undefined`: the row a label the coven is about to take would collide with
- * (M12.15). It does not join the compendium entry: the label index does not,
+ * `undefined`: the row a label the coven is about to take would collide with.
+ * It does not join the compendium entry: the label index does not,
  * so a row naming an entry the compendium has since deleted still holds its
  * label.
  */
@@ -169,7 +162,7 @@ export function findCupboardEntryByLabel(
 /**
  * The proof's live own ingredient named `name`, case folded, or `undefined`:
  * the other side of the label rule, which `ingredients_workspace_label_unique`
- * covers for own rows alone (M12.15).
+ * covers for own rows alone.
  */
 export function findWorkspaceIngredientByName(
   membership: Membership,
@@ -187,7 +180,7 @@ export function findWorkspaceIngredientByName(
 
 /**
  * How many covens hold this compendium entry in their cupboard: the distinct
- * live covens with a live cupboard row naming it (M12.25). Unscoped, so it
+ * live covens with a live cupboard row naming it. Unscoped, so it
  * takes a curator's proof rather than a coven's, and it answers a number and
  * never a coven's name or id: the curator's delete confirm shows how many the
  * deletion touches, not who. Zero for an id that is not a live compendium

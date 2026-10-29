@@ -41,7 +41,7 @@ export async function findOne<
 
 /**
  * The live row with this id, or `undefined`. The read-side twin of
- * `write.updateById`: a service cannot build `eq(table.id, id)` itself (MB.33).
+ * `write.updateById`: a service cannot build `eq(table.id, id)` itself.
  */
 export function findOneById<
   TTable extends PgTable & Unscoped & NotSpellScoped & NotIngredientScoped & Identified,
@@ -89,7 +89,7 @@ export async function findOneInWorkspace<
  * The live row with this id in the proof's workspace, or `undefined` —
  * including when the id is another workspace's. The scoped twin of
  * `findOneById`, for the same reason: a service cannot build the `where`
- * `findOneInWorkspace` wants (MB.33).
+ * `findOneInWorkspace` wants.
  */
 export function findOneByIdInWorkspace<
   TTable extends PgTable & WorkspaceScoped & NotVisibilityScoped & Identified,
@@ -183,8 +183,8 @@ export function findPageCountInTiers<
 
 /**
  * The same, for `spells` or a table hung off a spell by `spell_id`
- * (`spell_steps`, M13.6's workings): only rows of spells this member may
- * read, under M10.6's `readableSpells` — the coven's shared spells and the
+ * (`spell_steps`, the workings): only rows of spells this member may
+ * read, under `readableSpells` — the coven's shared spells and the
  * reader's own private ones. The rule is ANDed here rather than left to a
  * caller's `where`, so a private spell never reaches a page (CLAUDE.md
  * rule 7). A child table has no `workspace_id`, so its coven and visibility
@@ -212,8 +212,8 @@ export function findPageInReadableSpells<
 
 /**
  * How many rows `findPageInReadableSpells` would page under the same order and
- * `where`, and how many sit before `start`: the count a numbered pager reads
- * (M10.11). It counts under the same `readableSpells` rule as the pages, so a
+ * `where`, and how many sit before `start`: the count a numbered pager reads.
+ * It counts under the same `readableSpells` rule as the pages, so a
  * private spell never reaches another member's count either.
  */
 export function findPageCountInReadableSpells<
@@ -246,7 +246,7 @@ function readableSpellRows(
 
 /**
  * A page of live rows under a scope the calling finder spells itself, for a
- * table none of the pagers above admits: `invitations`' site tier (MB.115),
+ * table none of the pagers above admits: `invitations`' site tier,
  * two-tier yet no compendium row, so neither `findPage` nor
  * `findPageInTiers`. Inside the folder only, as `selectFrom` is, and no
  * looser: the scope is the finder's own, and the tombstone filter is ANDed
@@ -276,7 +276,7 @@ export function findPageCountInScope(
 /**
  * `findPageInScope` without the tombstone filter: the scope decides alone
  * which deleted rows it admits. The coven's Ingredients list is its one
- * caller (M12.32), whose scope admits a retired compendium entry only while
+ * caller, whose scope admits a retired compendium entry only while
  * the coven's live cupboard row names it. A hatch, not a flag on
  * `findPageInScope`, so a scope that forgets the filter cannot reach it by a
  * default; `tests/guards/soft-delete-finder-guard.test.ts` pins its caller.

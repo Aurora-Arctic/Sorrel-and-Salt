@@ -8,7 +8,7 @@ import { NOMENCLATURE_KINDS } from '../../../modules/ingredients/schema/ingredie
 import type { CitationFields } from '../../../lib/types';
 import type { SeedCompendiumFile, SeedCompendiumShard } from '../types';
 
-// The compendium's files, read as one shard (M14.6): every entry file under
+// The compendium's files, read as one shard: every entry file under
 // `ingredients/<nomenclature>/`, every per-entry source under `sources/`, and
 // the legacy list `unaudited.txt`. Synchronous, since the seed and the guard
 // test both want the whole corpus before they start, and reading three
@@ -175,9 +175,9 @@ export function loadCompendium(root: string = COMPENDIUM_ROOT): LoadedCompendium
 }
 
 /**
- * The conversion manifest (M14.9): the content hash of each converted file by
+ * The conversion manifest: the content hash of each converted file by
  * the entry's identity, which the seed stores as the baseline of a row seeded
- * before the hash existed (M14.7, "Adoption"). A later task deletes it once
+ * before the hash existed ("Adoption"). A later task deletes it once
  * production has adopted.
  */
 export const CONVERSION_MANIFEST = '.converted-hashes.json';

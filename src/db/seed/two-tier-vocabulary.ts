@@ -7,14 +7,14 @@ import { slugify } from '../../lib/slugify';
 import type { GroupTable, ItemTable, TwoTierPair } from '../vocabularies';
 import type { InsertStamps, SeedTransaction, TwoTierItemRow, TwoTierVocabulary } from './types';
 
-// The shape §5's forms, §6's categories and MB.127's deities share: a group
+// The shape §5's forms, §6's categories and the deities share: a group
 // table and an item table filed under it, each row keyed by the slug of its
-// name it was seeded under (MB.172), a slug nobody writes down. The tables
+// name it was seeded under, a slug nobody writes down. The tables
 // and the item's key to its group — `traditionId` for a deity — are the
 // vocabulary's `TWO_TIER` entry; the literals stay with their own
 // vocabulary, which names an item's group — `tradition` for a deity — and,
-// for a form, a slug carrying the group (M5.6a), as a deity's carries its
-// tradition (MB.132). The two inserts, and that slug's backfill, are one.
+// for a form, a slug carrying the group, as a deity's carries its
+// tradition. The two inserts, and that slug's backfill, are one.
 
 /**
  * Groups first — `group_id` is a NOT NULL foreign key — then items, each
@@ -121,15 +121,9 @@ async function groupsByItemKey(
 }
 
 /**
- * The backfill a slug carrying its group needs, run by `seedTwoTierVocabulary`
- * on every seed of a vocabulary whose slug does — the forms (M5.6a) and the
- * deities (MB.132), each given a `slugOf`:
- * each live item's slug re-derived by `slugOf` from its name and its group's
- * name, and written where it differs, so a reseed with nothing to change
- * writes nothing. A database seeded before holds `slugify(name)`; a rewrite
- * in SQL would be a second slug rule, so the seed is the backfill, as it was
- * for ingredient slugs (claude-docs/db/ingredient-slugs.md). A soft-deleted
- * item keeps its slug: the index reserves none.
+ * The backfill for a slug that carries its group: each live item's slug is re-derived
+ * by `slugOf` and written only where it differs, so a reseed with nothing to change
+ * writes nothing. A soft-deleted item keeps its slug. (claude-docs/db/compendium-seed/README.md, "Seed comments in full")
  */
 async function reslugItems(
   tx: SeedTransaction,

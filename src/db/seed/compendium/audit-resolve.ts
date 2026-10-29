@@ -15,7 +15,7 @@ import {
 import type { LoadedCompendium } from './load';
 import { WORKS } from './works';
 
-// Resolving by Wikipedia (M14.11, `--resolve`): a citation headed "X" in a
+// Resolving by Wikipedia (`--resolve`): a citation headed "X" in a
 // book or page that prints no formal name is `resolved` when Wikipedia's page
 // "X" is, or redirects to, the article the entry already cites as `stated`
 // for its own formal name — Wikipedia, not the audit, says the heading and

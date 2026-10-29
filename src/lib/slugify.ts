@@ -19,7 +19,7 @@ export function slugify(name: string): string {
  * declared, so two entries sharing a label are told apart by the name that is
  * their identity rather than by which was added first (`Cat's Claw` /
  * `Uncaria tomentosa` → `cats-claw-uncaria-tomentosa`; no formal name,
- * `graveyard-dirt`). A form is no part of an entry's address (MB.215): an
+ * `graveyard-dirt`). A form is no part of an entry's address: an
  * entry's forms are its variants.
  */
 export function ingredientSlug(name: string, canonicalName: string | null | undefined): string {
@@ -27,7 +27,7 @@ export function ingredientSlug(name: string, canonicalName: string | null | unde
 }
 
 /**
- * A curated form's slug: its name, then its group's (M5.6a), so two live
+ * A curated form's slug: its name, then its group's, so two live
  * forms sharing a name under two groups hold two addresses — Wax under
  * Substance is `wax-substance`, under Animal `wax-animal`. It follows a change
  * to either.
@@ -37,7 +37,7 @@ export function formSlug(name: string, groupName: string): string {
 }
 
 /**
- * A curated deity's slug: its name, then its tradition's (MB.132), as a form's
+ * A curated deity's slug: its name, then its tradition's, as a form's
  * is its name and its group's, so two live deities sharing a name under two
  * traditions hold two addresses — Hecate under Greek is `hecate-greek`, under
  * Roman `hecate-roman`. It follows a change to either.

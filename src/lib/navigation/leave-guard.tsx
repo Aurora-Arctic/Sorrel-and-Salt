@@ -3,7 +3,7 @@
 import { createContext, useContext, useEffect, useRef } from 'react';
 import type { LeaveGuard, LeaveGuardOptions, LeaveGuardSlot } from './types';
 
-// A form's unsaved changes, kept from leaving the page (M13.14): closing the
+// A form's unsaved changes, kept from leaving the page: closing the
 // tab or reloading raises the browser's own question, which is the only one a
 // page may raise there; an in-app navigation, which `NavigationProvider`
 // starts, waits on the form's own question instead. The browser's Back button

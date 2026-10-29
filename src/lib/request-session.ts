@@ -35,7 +35,7 @@ async function stateFromHeaders(requestHeaders: Headers): Promise<SessionState> 
   const result = await auth.api.getSession({ headers: requestHeaders });
   if (!result) return { session: null, emailVerified: false, sessionFresh: false };
   // Present only while the `admin` plugin is registered and this session is
-  // an impersonation (MB.53); the type holds the plugin in either way.
+  // an impersonation; the type holds the plugin in either way.
   const { impersonatedBy } = result.session as { impersonatedBy?: string | null };
   return {
     session: {
@@ -95,7 +95,7 @@ async function forwardedReturnPath(): Promise<string | undefined> {
  * layout and what it draws, never a page. The shell is drawn round the email
  * page too, and a layout that throws the email redirect while the browser is
  * navigating into it leaves the router refetching that page without end
- * (MB.256; claude-docs/auth/route-protection.md, "Where the email redirect is
+ * (claude-docs/auth/route-protection.md, "Where the email redirect is
  * thrown").
  */
 export async function requireSignedIn(): Promise<Session> {
@@ -141,7 +141,7 @@ export async function requireAdminSession(): Promise<Session> {
 }
 
 /**
- * `requireSession()`, then the curation check (M11.20): a curator or an admin
+ * `requireSession()`, then the curation check: a curator or an admin
  * passes, and anyone else gets the forbidden page, as at
  * `requireAdminSession()`. The layout under `/admin` calls it, and so does every
  * curation page there; the people pages call `requireAdminSession()`, which a
@@ -163,7 +163,7 @@ const covenOf = cache(async (slug: string) => membershipBySlug(await requireSess
 
 /**
  * `requireSession()`, then the workspace the `/coven/[slug]` address names
- * and the proof the user is a member of it (M6.10). A refusal is Next's 404,
+ * and the proof the user is a member of it. A refusal is Next's 404,
  * not the 403 `/admin` answers: a slug is a guess at someone's private data,
  * so an unknown slug and a coven the user is not in must look the same
  * (claude-docs/auth/coven-guard.md, "The coven guard"). The layout calls it,

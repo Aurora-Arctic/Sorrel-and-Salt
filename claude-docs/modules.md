@@ -484,3 +484,70 @@ drizzle-kit, which cannot load Vitest.
 - A delete's `moveTo` is refused, beside the picker that names it, when none is named or it names the group itself or no other live group.
 - Rewriting a group whole follows the name into the slug of every live row under it whose slug carries the group's name; a category's carries none, so a category group's rename moves nothing. A move onto another row's address is refused on `name`, naming both, before the write and again after one the index refused.
 - Deleting a group first moves its live rows to the `moveTo` group, re-slugged where the slug carries the group's name, in the same transaction. The rows are read before the transaction, so one filed under the group in the instant between is left under a deleted one, which every read drops.
+
+## Library comments in full
+
+The full text of comments that the source files now cite and summarise in a line or two.
+
+#### `src/lib/graphql-failure.ts`: `export function placeServerIssues<Name extends string>(`
+
+Places every issue a failed save carries on a react-hook-form form: each
+one `toField` names a field for beside that field, the rest, each distinct
+message once, joined into one
+sentence on the form's `root`, which its alert region shows. Both as
+`type: 'server'`, so the next submit or an edit to the field clears them
+as it clears the resolver's own. Answers whether it set any error.
+
+`toField` sees the whole issue, path and message, so each form keeps its
+own reading of a path: a flat form names a field only for a one-segment
+path it shows, the ingredient form follows a path into its lists. It may
+also answer `false` for an issue the form takes up itself, which is
+placed nowhere: the ingredient form's redirect question asks
+rather than errs.
+
+Every error at once rather than `readGraphqlFailure`'s first, as the admin
+forms place them, so none carries its own copy of this loop.
+Generic over the field names rather than the form's values, so a form's
+own `setError` passes as it is: TypeScript cannot work a form's values
+back out of its field paths, and infers the names straight from them.
+
+#### `src/lib/text.ts`: `export function noMatchText(noun: string, parts: readonly string[], emptyText: string): st`
+
+What an admin list says when it shows no rows. With a filter in
+force, `parts` names each filter as the caller phrases it — `“wort”`, `the
+role Admin`, `No Refs` — and the sentence says nothing matches them and how
+to see more: "No users match “ada” and the role Admin. Change or clear the
+filter to see more." With none, the list itself is empty, and `emptyText`
+is the caller's own sentence for that.
+
+`noun` is the plural, matched by a plural verb: one wording for all six
+lists, where the compendium said "No entry matches", the invitations "No
+invitation matches", the users "No users match", the group and value lists
+"No category matches that filter. Try another name." and the ledger "No
+admin changes for “x”." The plural reads true however many rows the list
+could have held, and each filter is named rather than called "that filter",
+so an admin sees which one to change.
+
+#### `src/lib/coven-path.ts`: `export function pathInCoven(`
+
+Where the same page is in another workspace: `/coven/a/ingredients/x`
+becomes `/coven/b/ingredients/x` when the page said it opens there (`opens`),
+and `/coven/b/ingredients` when it did not. What lies beneath a section (an
+ingredient, a spell) belongs to the workspace it was opened in, unless the
+page vouched for the next, and would otherwise be a 404 there. Outside a
+workspace, or at its index, the answer is the new workspace's index. A people
+page the viewer's role cannot open there steps back: invitations to the
+members page beside it when members are readable (a member reads them and
+cannot invite), anything else to the index.
+
+#### `src/lib/compendium-cache.ts`: `export function cachedCompendiumRead<A extends unknown[], R>(`
+
+`read`, held in the data cache under `COMPENDIUM_TAG` and keyed by `key` and
+its arguments, so each argument list is an entry of its own. Only a read
+every viewer sees alike may be wrapped: its arguments are the whole key, so
+a session among them would be a cache per viewer, and one left out of them
+a leak (claude-docs/db/compendium-cache.md lists the reads).
+
+The value is stored as superjson rather than left to Next's `JSON.stringify`,
+which would answer a hit's `Date` columns as strings while a miss answered
+them as dates.

@@ -3,7 +3,7 @@ import { list, oneOf, single, someOf, trimmed } from './search-params';
 import type { ListHrefParams } from './types';
 import type { Route } from 'next';
 
-// A search's parameters as one typed table (M8.13). Each entry holds the name
+// A search's parameters as one typed table. Each entry holds the name
 // the address carries, how that is read, how a value is written back, and the
 // GraphQL variable it becomes. The page's read, every link, the pager and the
 // filter form all go through the table's four functions, so a new filter is

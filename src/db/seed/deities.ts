@@ -13,14 +13,14 @@ import type {
   SeedTransaction,
 } from './types';
 
-// MB.127's deity vocabulary: 88 traditions and the deities filed
+// The deity vocabulary: 88 traditions and the deities filed
 // under them, a starting set an admin may edit. Reference data, not a
 // scenario — migrate.yml seeds it alone, so it inserts the bootstrap user
 // itself. Transcribed from the seed doc's two tables, which review holds in
-// step with it since MB.225 retired the test that compared them; the doc,
+// step with it by hand; the doc,
 // not this file, is where a row is argued and sourced. Names are copied as
 // written, never title-cased (`Manannan mac Lir`), and no slug is written
-// down — a deity's is its name and its tradition's (MB.132), derived here and
+// down — a deity's is its name and its tradition's, derived here and
 // re-derived on every seed (claude-docs/db/deity-vocabulary-seed.md, "The deity vocabulary seed").
 
 /** The doc's traditions, in its order, which nothing reads — traditions list alphabetically. */
@@ -2354,7 +2354,7 @@ for (const deity of DEITIES) {
 }
 
 /**
- * The deities a compendium entry file means by `name` (M14.23), by this
+ * The deities a compendium entry file means by `name`, by this
  * literal's names: the deity named so when one is, else every deity giving it
  * as an other name, so an entry can keep its source's spelling (Kynes's
  * Woden is Odin). A deity's own name wins, which is why Legba is the Fon &
@@ -2393,10 +2393,10 @@ export async function seedDeityVocabulary(tx: SeedTransaction): Promise<void> {
 }
 
 /**
- * Each deity's `otherNames` (M14.23), on the live deity its seed key finds,
+ * Each deity's `otherNames`, on the live deity its seed key finds,
  * so a renamed deity still takes them and a retired one takes none. A name
  * is passed over when the deity has ever held it, live or removed, so an
- * admin's removal stands as a vocabulary row's does (MB.172), and when a live
+ * admin's removal stands as a vocabulary row's does, and when a live
  * deity of the tradition holds it, the refusal the service makes. Nothing
  * present is updated. Case folded as the unique index folds it.
  */
