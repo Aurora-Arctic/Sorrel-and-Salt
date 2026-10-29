@@ -19,13 +19,9 @@ import { useTestDatabase } from '../../../support/db/database';
 import { insertIngredient } from '../../../support/db/insert-ingredient';
 import { makeIngredient } from '../../../support/fixtures';
 
-// The category-group half: the groups' writes, the site
-// admin's alone. Each colour is held to 4.5:1 against its own theme's harder
-// surface. A group is deleted only once its live categories have
-// somewhere to go: the admin names a group, and they move there in the same
-// write, their links untouched (claude-docs/design-decisions/m5.6b-admin-groups.md).
-// The seeded groups stay, so every group a test writes is `Fixture …` and
-// every category `Testcraft …`.
+// The category-group writes, the site admin's alone. Each colour is held to 4.5:1 against its own theme's harder surface.
+// A group is deleted only once its live categories have somewhere to go: the admin names a group and they move there in the same write, links untouched (claude-docs/design-decisions/m5.6b-admin-groups.md).
+// The seeded groups stay, so every group a test writes is `Fixture …` and every category `Testcraft …`.
 
 let sql: postgres.Sql;
 useTestDatabase((client) => {

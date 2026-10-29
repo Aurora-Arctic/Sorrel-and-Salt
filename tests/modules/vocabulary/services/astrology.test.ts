@@ -19,16 +19,10 @@ import { useTestDatabase } from '../../../support/db/database';
 import { insertIngredient } from '../../../support/db/insert-ingredient';
 import { makeIngredient } from '../../../support/fixtures';
 
-// The celestial body and sign half: the two flat astrology
-// vocabularies' writes, the site admin's alone, and the reads the admin pages
-// list them by. A compendium entry's celestial bodies and signs are spellings the
-// vocabulary curates, so a value a live entry's list holds is held:
-// its delete is refused, and its rename is carried onto the list. A coven's
-// ingredient is neither. Every test runs once per vocabulary; the seeded rows
-// stay, so every row a test writes is named `Fixture …`. Both vocabularies go through
-// one code path that differs only in its table, input, noun and entry column, so
-// celestial bodies run every test and zodiac signs run one create, one rename
-// carried onto entries and the held-delete refusal, which prove those differences.
+// The celestial body and sign writes, the site admin's alone, and the reads the admin pages list them by.
+// A compendium entry's bodies and signs are spellings the vocabulary curates, so a value a live entry's list holds is held: its delete is refused and its rename is carried onto the list. A coven's ingredient is neither.
+// Both vocabularies share one code path differing only in table, input, noun and entry column, so celestial bodies run every test and zodiac signs run the create, the rename carried onto entries and the held-delete refusal.
+// The seeded rows stay, so every row a test writes is named `Fixture …`.
 
 let sql: postgres.Sql;
 useTestDatabase((client) => {

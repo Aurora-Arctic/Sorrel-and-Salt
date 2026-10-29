@@ -328,10 +328,8 @@ describe('spell_steps table', () => {
       expect(await positions(otherSpell)).toEqual([1]);
     });
 
-    // A unique index is checked per row, not at end of statement, so a reorder
-    // cannot be one `position + 1` sweep even though the final state is
-    // conflict-free. Nor can it remove and re-add the recipe, which would leave
-    // a tombstone per step: it moves the live rows through a scratch offset.
+    // A unique index is checked per row, not at end of statement, so a reorder cannot be one `position + 1` sweep even though the final state has no conflict.
+    // Removing and re-adding the recipe would leave a tombstone per step, so it moves the live rows through a scratch offset.
     it('refuses a shift that collides mid-statement, so a reorder moves rows in place', async () => {
       await layer({ position: 1 });
       await layer({ ingredientId: ROSEMARY, position: 2 });

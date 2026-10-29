@@ -11,12 +11,8 @@ import { variantIdOf } from '../../../support/db/read-variants';
 import { makeIngredient, makeVariant } from '../../../support/fixtures';
 import { run as runOperation } from '../../../support/graphql/run';
 
-// The `workspaceIngredients` query: a coven's ingredients, a page at a
-// time, with each entry's stock and categories batched and its cupboard row
-// read by the page itself. Which rows the list
-// holds, and who may read it, is services/workspace-ingredient-list.test.ts's;
-// this file holds the transport's half — the arguments reaching the read, the
-// page, one read per page, and the one refusal on the wire.
+// The `workspaceIngredients` query: a coven's ingredients, a page at a time, each entry's stock and categories batched and its cupboard row read by the page itself.
+// Which rows the list holds, and who may read it, is services/workspace-ingredient-list.test.ts's; here: the arguments reaching the read, the page, one read per page, and the one refusal on the wire.
 
 // The reads a page makes, counted at the repository.
 const repository = vi.hoisted(() => ({
@@ -108,11 +104,7 @@ async function names(variables: Record<string, unknown>): Promise<string[]> {
   return result.data?.workspaceIngredients.edges.map((edge) => edge.node.name) ?? [];
 }
 
-/**
- * W's own entry, linked to Hecate and listing a sign and a planet, and a
- * compendium entry in W's cupboard, W holding a jar of its oil, its oil flagged
- * toxic; each in Protection.
- */
+/** W's own entry, linked to Hecate and listing a sign and a planet, and a compendium entry in W's cupboard with a jar of its oil, flagged toxic; each in Protection. */
 let hecate: string;
 let own: string;
 let held: string;

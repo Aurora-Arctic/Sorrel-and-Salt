@@ -5,10 +5,8 @@ import {
 } from '@/modules/ingredients/validation/ingredient';
 import { CELESTIAL_BODIES } from '@/db/seed/astrology';
 
-// The two variants share every field and `crossFieldRules`, and differ in
-// how `nomenclature` is reached: the shared fields run once, on the local
-// variant, and the compendium's own describe proves the rules are attached to
-// it too (src/modules/ingredients/validation/ingredient.ts).
+// The two variants share every field and `crossFieldRules`, and differ in how `nomenclature` is reached.
+// The shared fields run once, on the local variant, and the compendium's own describe proves the rules are attached to it too (src/modules/ingredients/validation/ingredient.ts).
 const ELEMENTS = ['earth', 'air', 'fire', 'water', 'spirit'];
 
 /** The paths a failed parse reported, which is what lands beside a field. */
@@ -411,10 +409,8 @@ describe('the ingredient fields, on the local variant', () => {
     });
   });
 
-  // Suggested, not enforced: practices differ on both, so a value off the
-  // autofill list is written as readily as one on it.
-  // DESIGN.md §5: celestial bodies, zodiac signs and colours are one list
-  // builder, so it runs once, on the celestial bodies.
+  // Suggested, not enforced: practices differ, so a value off the autofill list is written as readily as one on it.
+  // DESIGN.md §5: celestial bodies, zodiac signs and colours are one list builder, so it runs once, on the celestial bodies.
   describe('celestialBodies', () => {
     const base = { name: 'Testwort', nomenclature: 'none' };
     const field = 'celestialBodies';
@@ -540,11 +536,8 @@ describe('the ingredient fields, on the local variant', () => {
     });
   });
 
-  // The forms an ingredient comes in, each a list entry carrying its
-  // own fields and its own substitutes, references and categories. A rule a
-  // variant shares with the ingredient runs on one row here, pathed beneath
-  // the variant; whether a form's pick, link or category names a live row is
-  // the service's.
+  // The forms an ingredient comes in, each a list entry with its own fields, substitutes, references and categories.
+  // A rule a variant shares with the ingredient runs on one row here, pathed beneath the variant; whether a form's pick, link or category names a live row is the service's.
   describe('variants', () => {
     const base = { name: 'Testwort', nomenclature: 'none' };
     const KEPT = '00000000-0000-4000-8000-0000000000b1';

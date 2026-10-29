@@ -8,13 +8,9 @@ import { makeIngredient } from '../../../support/fixtures';
 import { run } from '../../../support/graphql/run';
 import type { CategoryConnection, CategoryNode, FilteredCategories } from './types';
 
-// Over the wire: the public `categories` list and the admin's three
-// writes. This file holds the transport's half (claude-docs/testing/layer-ownership.md):
-// a page, its groups in one read, its count, the filters reaching the read,
-// and per write one refusal per error code, read as the browser reads it.
-// Which roles are refused, what a filter matches and every collision are
-// services/categories.test.ts's; a signed-out caller refused at every field,
-// and a non-admin at the `admin` scope, are tests/db/graphql-query-scopes.test.ts's.
+// Over the wire: the public `categories` list and the admin's three writes (the transport's half, claude-docs/testing/layer-ownership.md).
+// That is a page, its groups in one read, its count, the filters reaching the read, and per write one refusal per error code.
+// Roles, filter matching and collisions are services/categories.test.ts's; signed-out and non-admin scope refusals are tests/db/graphql-query-scopes.test.ts's.
 
 // The group reads a page makes, counted at the repository.
 const repository = vi.hoisted(() => ({ findManyByIds: vi.fn() }));

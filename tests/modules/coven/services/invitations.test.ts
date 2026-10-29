@@ -13,11 +13,8 @@ import { asManualFix } from '../../../support/db/privileges';
 import { makeWorkspace, workspaceColumns } from '../../../support/fixtures';
 import type { CovenInvitationStateRow } from './types';
 
-// An owner invites an address into a coven as a viewer or a member. The
-// token is `crypto.randomBytes` output that only the mail carries; the row
-// holds its hash. The transport is the test double: the real sender builds the
-// link and hands it to a mocked `send`, so what reaches the address is what the
-// test reads. The failing transport is the real `send` over a failing `fetch`
+// An owner invites an address into a coven as a viewer or a member. The token is `crypto.randomBytes` output that only the mail carries, and the row holds its hash.
+// The transport is a test double: the real sender builds the link and hands it to a mocked `send`; the failing transport is the real `send` over a failing `fetch`
 // (claude-docs/db/invitations.md, "Inviting into a coven").
 
 const send = vi.hoisted(() => vi.fn<(message: Message) => Promise<void>>(async () => {}));

@@ -8,15 +8,9 @@ import { makeIngredient } from '../../../support/fixtures';
 import { run as send } from '../../../support/graphql/run';
 import type { AstrologyValueConnection, AstrologyValueNode } from './types';
 
-// `celestialBodies` and `zodiacSigns`: the two curated astrology vocabularies as
-// `CelestialBody` and `ZodiacSign`, a page at a time, answered to a signed-out
-// visitor, and the six admin writes. This file holds the
-// transport's half (claude-docs/testing/layer-ownership.md): a page and its
-// count, the query reaching the read, and per write one refusal per error
-// code, read as the browser reads it. Which roles are refused, a rename
-// carried onto the entries and every collision are services/astrology.test.ts's;
-// a signed-out caller refused at every field, and a non-admin at the `admin`
-// scope, are tests/db/graphql-query-scopes.test.ts's.
+// `celestialBodies` and `zodiacSigns` over the wire: the two curated astrology vocabularies, a page at a time, readable signed out, and the six admin writes.
+// This is the transport's half (claude-docs/testing/layer-ownership.md): a page and its count, and per write one refusal per error code. Roles, renames and collisions are services/astrology.test.ts's;
+// signed-out and non-admin scope refusals are tests/db/graphql-query-scopes.test.ts's.
 
 let sql: ReturnType<typeof postgres>;
 

@@ -21,10 +21,8 @@ import { useTestDatabase } from '../../../support/db/database';
 import { insertIngredient } from '../../../support/db/insert-ingredient';
 import { makeIngredient } from '../../../support/fixtures';
 
-// The category half: the vocabulary's writes, which the site admin
-// makes and nobody else does, and the reads the admin page lists them by
-// (claude-docs/db/categories.md, "Category writes"). The seeded vocabulary
-// stays, so every row a test writes carries a name of its own.
+// The category writes, which only the site admin makes, and the reads the admin page lists them by (claude-docs/db/categories.md, "Category writes").
+// The seeded vocabulary stays, so every row a test writes carries a name of its own.
 
 // The page and count finders wrapped, passing through to the real ones, to see
 // whether a list reads at all. The filter that categories, forms and deities
@@ -94,10 +92,7 @@ const countNamed = async (name: string) => {
   return row.n as number;
 };
 
-/**
- * Files a fresh compendium entry, or W's own ingredient, under the category
- * named — by its label alone.
- */
+/** Files a fresh compendium entry, or W's own ingredient, under the category named, by its label alone. */
 const fileUnder = (category: string, name: string, workspaceId: string | null = null) =>
   insertIngredient(
     sql,

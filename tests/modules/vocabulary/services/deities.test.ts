@@ -21,12 +21,9 @@ import { useTestDatabase } from '../../../support/db/database';
 import { insertDeityLink, insertIngredient } from '../../../support/db/insert-ingredient';
 import { makeIngredient } from '../../../support/fixtures';
 
-// The deity half: the curated deity vocabulary's writes, the
-// site admin's alone, and the reads the admin page lists them by. A
-// compendium entry's deities are picks, so a deity a live entry
-// links is held: its delete is refused, and its rename is carried onto the
-// entry's link, in place. A coven's link is neither. The seeded vocabulary
-// stays, so every deity a test writes is named `Fixture …`.
+// The deity writes, the site admin's alone, and the reads the admin page lists them by.
+// A compendium entry's deities are picks, so a deity a live entry links is held: its delete is refused and its rename is carried onto the entry's link in place. A coven's link is neither.
+// The seeded vocabulary stays, so every deity a test writes is named `Fixture …`.
 
 // The page finder wrapped, passing through to the real one, to see what the
 // list hands it.

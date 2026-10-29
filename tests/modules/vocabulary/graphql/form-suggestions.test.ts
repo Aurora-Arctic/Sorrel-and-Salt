@@ -10,11 +10,8 @@ import { run as runOperation } from '../../../support/graphql/run';
 import { makeIngredient, makeVariant } from '../../../support/fixtures';
 import type { FormSuggestionConnection } from './types';
 
-// The transport half of the form lookup: the nodes, each curated row
-// carrying its group and every suggestion its claimants, a page by cursor and
-// the compendium-only mode. Who is refused, what
-// each bucket holds and the scope are services/form-suggestions.test.ts's, and
-// a signed-out caller at every field is tests/db/graphql-query-scopes.test.ts's.
+// The transport half of the form lookup: the nodes, each curated row carrying its group and every suggestion its claimants, a page by cursor and the compendium-only mode.
+// Who is refused, what each bucket holds and the scope are services/form-suggestions.test.ts's, and a signed-out caller is tests/db/graphql-query-scopes.test.ts's.
 
 let sql: ReturnType<typeof postgres>;
 

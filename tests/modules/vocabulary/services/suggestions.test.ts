@@ -17,12 +17,8 @@ import { type IngredientFixture, type Overrides, makeIngredient } from '../../..
 import type { ConnectionArgs, Page } from '@/lib/types';
 import type { Suggest } from './types';
 
-// DESIGN.md §5, "The two readers are scoped differently": a member's autofill
-// for a `celestialBodies` or `zodiacSigns` entry offers the curated vocabulary first, then the
-// uncurated values in use in the compendium and the caller's own workspace.
-// The vocabularies are the seed's, revived per test since some tests retire a
-// row; `ingredients` is emptied per test, so every in-use value a result
-// could carry is one this file wrote.
+// DESIGN.md §5, "The two readers are scoped differently": a member's autofill for a `celestialBodies` or `zodiacSigns` entry offers the curated vocabulary first, then uncurated values in use in the compendium and the caller's own workspace.
+// The vocabularies are the seed's, revived per test since some tests retire a row; `ingredients` is emptied per test, so every in-use value a result could carry is one this file wrote.
 
 let sql: ReturnType<typeof postgres>;
 
