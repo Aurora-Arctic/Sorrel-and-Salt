@@ -18,8 +18,8 @@
   color: $text-muted;
 }
 
-// The failure is the site's error notice (bar, tint and wax ink), as the conflict is its caution
-// one, so it reads as an error and Retry sits in the notice's button ink. Doubled class to
+// The failure is the site's warning notice (ochre bar, tint and triangle; the owner's call,
+// 2026-10-29), as the conflict is its caution one, and Retry sits in the notice's button ink. Doubled class to
 // outrank the notice's own bottom margin, which would lift it off the Save button's line.
 .save-status .save-status__failed {
   display: flex;
@@ -27,6 +27,14 @@
   align-items: center;
   gap: space(2);
   margin: 0;
+
+  // The notice puts its triangle level with the first line of text. Here the row is the height
+  // of the Retry button, which is taller than the text, so the triangle is centred on the row,
+  // level with the text, which the row centres too. Notice itself is right for text alone.
+  &::before {
+    inset-block-start: 50%;
+    translate: 0 -50%;
+  }
 }
 
 .save-status .save-status__conflict {
