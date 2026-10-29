@@ -1,0 +1,10 @@
+# Gathered for M14.29; the seed never reads this folder.
+entry: unknown/donkey-hide-gelatin
+status: approved
+animalPart:
+  - quote: According to the U.S. Congressional Research Service (CRS), between 2.3 million and 4.8 million donkeys are slaughtered annually for ejiao production, prompting fears that both legal and illegal donkey hide trade threatens donkey populations.
+    source: wikipedia-donkey-hide-gelatin
+    locator: Donkey thefts and population declines
+  - quote: Uganda, Tanzania, Botswana, Niger, Burkina Faso, Mali, and Senegal have banned donkey exports to China.
+    source: wikipedia-donkey-hide-gelatin
+    locator: Donkey thefts and population declines

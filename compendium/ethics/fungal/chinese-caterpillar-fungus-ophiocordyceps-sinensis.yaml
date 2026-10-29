@@ -1,0 +1,20 @@
+# Gathered for M14.29; the seed never reads this folder.
+entry: fungal/chinese-caterpillar-fungus-ophiocordyceps-sinensis
+status: needs-review
+listings:
+  - list: iucn
+    name: IUCN Red List of Threatened Species
+    value: Vulnerable (IUCN 3.1)
+    listedAs: Ophiocordyceps sinensis
+    nameBasis: stated
+    source: wikipedia-ophiocordyceps-sinensis
+    locator: Infobox, Conservation status
+  - list: other
+    name: Endangered in China, assessor not named
+    value: endangered species in China
+    listedAs: Ophiocordyceps sinensis
+    nameBasis: stated
+    source: wikipedia-ophiocordyceps-sinensis
+    locator: Wikipedia, Ophiocordyceps sinensis, oldid 1380190907
+questions:
+  - Wikipedia says overharvesting "led to the classification of O. sinensis as an endangered species in China" but names no assessor or list. Find the assessment, or drop the row?

@@ -1,0 +1,9 @@
+# Gathered for M14.29; the seed never reads this folder.
+entry: unknown/musk
+status: needs-review
+animalPart:
+  - quote: The musk pod, a preputial gland in a pouch, or sac, under the skin of the abdomen of the male musk deer, is normally obtained by killing the male deer through traps laid in the wild.
+    source: wikipedia-musk
+    locator: Deer
+questions:
+  - The ethics file records one animal-part sentence from Wikipedia 'Musk'. Its species, Moschus moschiferus, is shown only in an image caption, so I did not record a listing for it.
