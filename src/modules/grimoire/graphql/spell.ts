@@ -3,7 +3,7 @@ import { sessionOf } from '../../../graphql/context-helpers';
 import { AuditInfo } from '../../../graphql/schema/audit';
 import { compareSpellCategories } from '../validation/categories/compare';
 import { listGrimoire, readSpell } from '../services/spell-reads';
-import { createSpell, deleteSpell, updateSpell } from '../services/spells';
+import { createSpell, deleteSpell, duplicateSpell, updateSpell } from '../services/spells';
 import { clearSpell } from '../loaders/spell-children';
 import { GRIMOIRE_ORDERS, spellStatus, spellVisibility } from '../schema/spells';
 import type { SpellRow, SpellStepView } from '../types';
@@ -331,6 +331,24 @@ builder.mutationField('deleteSpell', (t) =>
       await deleteSpell(sessionOf(context), workspaceId, id);
       clearSpell(loaders, { id, workspaceId });
       return id;
+    },
+  }),
+);
+
+builder.mutationField('duplicateSpell', (t) =>
+  t.field({
+    type: SpellRef,
+    description:
+      'Copies a spell into a new private draft in the same coven, with its categories and live steps; the original is untouched.',
+    args: {
+      workspaceId: t.arg.id({ required: true }),
+      id: t.arg.id({ required: true }),
+    },
+    authScopes: { signedIn: true },
+    resolve: async (_root, { workspaceId, id }, { loaders, ...context }) => {
+      const spell = await duplicateSpell(sessionOf(context), workspaceId, id);
+      clearSpell(loaders, spell);
+      return spell;
     },
   }),
 );

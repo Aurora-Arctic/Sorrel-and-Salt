@@ -22,7 +22,7 @@ export function assertWidens(
   if (status === 'complete' && current === 'workspace' && next === 'private') {
     throw new Forbidden(
       'This spell has been shared with the coven and cannot be made private again. ' +
-        'Delete it instead if it should not be there.',
+        'Duplicate it to get a private copy you can change, or delete it if it should not be there.',
     );
   }
 }

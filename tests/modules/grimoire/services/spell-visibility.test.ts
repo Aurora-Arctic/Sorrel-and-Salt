@@ -115,6 +115,7 @@ describe('setSpellVisibility', () => {
       // Not the bare default: the caller holds the permission and is being
       // told about the rule, which a `Forbidden` on its own does not say.
       expect(error.message).not.toBe(new Forbidden().message);
+      expect(error.message).toMatch(/Duplicate it to get a private copy/);
     });
 
     it('leaves the spell shared', async () => {
