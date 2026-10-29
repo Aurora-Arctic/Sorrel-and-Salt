@@ -346,8 +346,8 @@ $-shake-duration: 500ms;
 }
 
 // A layer drawn in its category group's colours (data on the row, so read from custom
-// properties, as a chip does): 55% in the light theme and 65% in the dark, so the boundary
-// line and the top line stay legible over it.
+// properties, as a chip does): 55% in the light theme and 65% in the dark, so the top
+// line stays legible over it.
 .jar-shelf__band .jar-shelf__band-fill--group {
   fill: light-dark(
     color-mix(in srgb, var(--band-light) 55%, transparent),
@@ -356,20 +356,9 @@ $-shake-duration: 500ms;
   opacity: 1;
 }
 
+// Only the top band draws a line (the owner, 2026-10-29): the level line, with none between layers.
 .jar-shelf__band-edge {
   fill: none;
-  stroke: $text-primary;
-  stroke-width: 0.5;
-  opacity: 0.25;
-}
-
-// The line between two layers is the colour of the layer whose top edge it is, at full strength.
-.jar-shelf__band-edge--group {
-  stroke: light-dark(var(--band-light), var(--band-dark));
-  opacity: 1;
-}
-
-.jar-shelf__band-edge--top {
   stroke: $accent;
   stroke-width: 1.2;
   opacity: 0.9;
