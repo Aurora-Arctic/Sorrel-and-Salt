@@ -1,0 +1,11 @@
+# Gathered for M14.29; the seed never reads this folder.
+entry: botanical/dogwood-cornus-florida
+status: approved
+listings:
+  - list: iucn
+    name: IUCN Red List of Threatened Species, as printed in Wikipedia's taxobox
+    value: LC
+    listedAs: Cornus florida
+    nameBasis: stated
+    source: wikipedia-iucn-cornus-florida
+    locator: 'Taxobox: status = LC, status_system = IUCN3.1; its status_ref reads: "Cornus florida", Stritch, L., 2018, 10.2305/IUCN.UK.2018-2.RLTS.T61990536A61990538.en'

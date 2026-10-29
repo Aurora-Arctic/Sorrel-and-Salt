@@ -1,0 +1,11 @@
+# Gathered for M14.29; the seed never reads this folder.
+entry: botanical/black-locust-robinia-pseudoacacia
+status: approved
+listings:
+  - list: iucn
+    name: IUCN Red List of Threatened Species, as printed in Wikipedia's taxobox
+    value: LC
+    listedAs: Robinia pseudoacacia
+    nameBasis: stated
+    source: wikipedia-iucn-robinia-pseudoacacia
+    locator: 'Taxobox: status = LC, status_system = IUCN3.1; its status_ref reads: "Robinia pseudoacacia", Contu, S., 2012, 10.2305/IUCN.UK.2012.RLTS.T19891648A20138922.en'

@@ -1,0 +1,11 @@
+# Gathered for M14.29; the seed never reads this folder.
+entry: botanical/pear-pyrus-communis
+status: approved
+listings:
+  - list: iucn
+    name: IUCN Red List of Threatened Species, as printed in Wikipedia's taxobox
+    value: LC
+    listedAs: Pyrus communis
+    nameBasis: stated
+    source: wikipedia-iucn-pyrus-communis
+    locator: 'Taxobox: status = LC, status_system = IUCN3.1; its status_ref reads: "Pyrus communis", Barstow, M., 2017, 10.2305/IUCN.UK.2017-3.RLTS.T173010A61580281.en'

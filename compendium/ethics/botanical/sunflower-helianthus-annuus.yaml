@@ -1,0 +1,11 @@
+# Gathered for M14.29; the seed never reads this folder.
+entry: botanical/sunflower-helianthus-annuus
+status: approved
+listings:
+  - list: iucn
+    name: IUCN Red List of Threatened Species, as printed in Wikipedia's taxobox
+    value: LC
+    listedAs: Helianthus annuus
+    nameBasis: stated
+    source: wikipedia-iucn-helianthus-annuus
+    locator: 'Taxobox: status = LC, status_system = IUCN3.1; its status_ref reads: "Helianthus annuus", Contreras, A., 2016, 10.2305/IUCN.UK.2016-3.RLTS.T19073408A47600755.en'

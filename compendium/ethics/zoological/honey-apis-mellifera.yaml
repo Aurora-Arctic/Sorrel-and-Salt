@@ -1,0 +1,13 @@
+# Gathered for M14.29; the seed never reads this folder.
+entry: zoological/honey-apis-mellifera
+status: needs-review
+listings:
+  - list: iucn
+    name: IUCN Red List of Threatened Species, as printed in Wikipedia's taxobox
+    value: DD
+    listedAs: Apis mellifera
+    nameBasis: stated
+    source: wikipedia-iucn-apis-mellifera
+    locator: 'Taxobox: status = DD, status_system = IUCN3.1; its status_ref reads: "Apis mellifera (Europe assessment)", Moro, A., 2025'
+questions:
+  - 'Wikipedia''s status_ref names a regional assessment ("Apis mellifera (Europe assessment)"), not a global one. Recommendation: record it only as a regional listing, or leave it out; owner to decide.'

@@ -1,0 +1,11 @@
+# Gathered for M14.29; the seed never reads this folder.
+entry: botanical/aspen-populus-tremula
+status: approved
+listings:
+  - list: iucn
+    name: IUCN Red List of Threatened Species, as printed in Wikipedia's taxobox
+    value: LC
+    listedAs: Populus tremula
+    nameBasis: stated
+    source: wikipedia-iucn-populus-tremula
+    locator: 'Taxobox: status = LC, status_system = IUCN3.1; its status_ref reads: "Populus tremula", Barstow, M., 2017, 10.2305/IUCN.UK.2017-3.RLTS.T61959941A61959943.en'

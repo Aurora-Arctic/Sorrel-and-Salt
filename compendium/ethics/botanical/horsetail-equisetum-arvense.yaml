@@ -1,0 +1,11 @@
+# Gathered for M14.29; the seed never reads this folder.
+entry: botanical/horsetail-equisetum-arvense
+status: approved
+listings:
+  - list: iucn
+    name: IUCN Red List of Threatened Species, as printed in Wikipedia's taxobox
+    value: LC
+    listedAs: Equisetum arvense
+    nameBasis: stated
+    source: wikipedia-iucn-equisetum-arvense
+    locator: 'Taxobox: status = LC, status_system = IUCN3.1; its status_ref reads: "Equisetum arvense", Maiz-Tome, 2017, 10.2305/IUCN.UK.2017-3.RLTS.T167857A161580271.en'

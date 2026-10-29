@@ -1,0 +1,11 @@
+# Gathered for M14.29; the seed never reads this folder.
+entry: botanical/mastic-pistacia-lentiscus
+status: approved
+listings:
+  - list: iucn
+    name: IUCN Red List of Threatened Species, as printed in Wikipedia's taxobox
+    value: LC
+    listedAs: Pistacia lentiscus
+    nameBasis: stated
+    source: wikipedia-iucn-pistacia-lentiscus
+    locator: 'Taxobox: status = LC, status_system = IUCN3.1; its status_ref reads: "Pistacia lentiscus", 2016'

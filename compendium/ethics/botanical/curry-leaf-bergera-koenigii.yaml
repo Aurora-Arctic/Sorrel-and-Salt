@@ -1,0 +1,13 @@
+# Gathered for M14.29; the seed never reads this folder.
+entry: botanical/curry-leaf-bergera-koenigii
+status: needs-review
+listings:
+  - list: iucn
+    name: IUCN Red List of Threatened Species, as printed in Wikipedia's taxobox
+    value: LC
+    listedAs: Bergera koenigii
+    nameBasis: stated
+    source: wikipedia-iucn-bergera-koenigii
+    locator: 'Taxobox: status = LC, status_system = IUCN3.1; its status_ref reads: "Curry Leaf, Murayya koenigii", Plummer, J., 2021, 10.2305/IUCN.UK.2021-2.RLTS.T156236806A166564522.en'
+questions:
+  - 'Wikipedia''s status_ref names an assessment titled "Curry Leaf, Murayya koenigii", which is not Bergera koenigii. Recommendation: do not list until an authority the owner accepts maps one name to the other. GBIF returned (not an accepted authority): GBIF https://api.gbif.org/v1/species/match?name=Bergera%20koenigii -> Bergera koenigii L. | status SYNONYM | matchType EXACT | accepted (see usage)'

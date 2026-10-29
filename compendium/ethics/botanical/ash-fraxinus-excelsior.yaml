@@ -1,0 +1,11 @@
+# Gathered for M14.29; the seed never reads this folder.
+entry: botanical/ash-fraxinus-excelsior
+status: approved
+listings:
+  - list: iucn
+    name: IUCN Red List of Threatened Species, as printed in Wikipedia's taxobox
+    value: NT
+    listedAs: Fraxinus excelsior
+    nameBasis: stated
+    source: wikipedia-iucn-fraxinus-excelsior
+    locator: 'Taxobox: status = NT, status_system = IUCN3.1; its status_ref reads: "Fraxinus excelsior", Khela, S., 2018, 10.2305/IUCN.UK.2018-1.RLTS.T203367A67807718.en'

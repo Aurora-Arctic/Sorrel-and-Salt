@@ -1,0 +1,11 @@
+# Gathered for M14.29; the seed never reads this folder.
+entry: botanical/blackthorn-prunus-spinosa
+status: approved
+listings:
+  - list: iucn
+    name: IUCN Red List of Threatened Species, as printed in Wikipedia's taxobox
+    value: LC
+    listedAs: Prunus spinosa
+    nameBasis: stated
+    source: wikipedia-iucn-prunus-spinosa
+    locator: 'Taxobox: status = LC, status_system = IUCN3.1; its status_ref reads: "Prunus spinosa", 2016, 10.2305/IUCN.UK.2016-3.RLTS.T172194A19400568.en'

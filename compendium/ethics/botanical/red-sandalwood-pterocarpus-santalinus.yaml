@@ -1,0 +1,11 @@
+# Gathered for M14.29; the seed never reads this folder.
+entry: botanical/red-sandalwood-pterocarpus-santalinus
+status: approved
+listings:
+  - list: iucn
+    name: IUCN Red List of Threatened Species, as printed in Wikipedia's taxobox
+    value: EN
+    listedAs: Pterocarpus santalinus
+    nameBasis: stated
+    source: wikipedia-iucn-pterocarpus-santalinus
+    locator: 'Taxobox: status = EN, status_system = IUCN3.1; its status_ref reads: "Pterocarpus santalinus", Ahmedullah, M., 2021, 10.2305/IUCN.UK.2021-1.RLTS.T32104A187622484.en'

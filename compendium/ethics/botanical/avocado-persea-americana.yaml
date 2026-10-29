@@ -1,0 +1,11 @@
+# Gathered for M14.29; the seed never reads this folder.
+entry: botanical/avocado-persea-americana
+status: approved
+listings:
+  - list: iucn
+    name: IUCN Red List of Threatened Species, as printed in Wikipedia's taxobox
+    value: LC
+    listedAs: Persea americana
+    nameBasis: stated
+    source: wikipedia-iucn-persea-americana
+    locator: 'Taxobox: status = LC, status_system = IUCN3.1; its status_ref reads: "Persea americana", Wegier, A., 2017, 10.2305/IUCN.UK.2017-3.RLTS.T96986556A96986588.en'

@@ -1,0 +1,11 @@
+# Gathered for M14.29; the seed never reads this folder.
+entry: botanical/guggul-commiphora-wightii
+status: approved
+listings:
+  - list: iucn
+    name: IUCN Red List of Threatened Species, as printed in Wikipedia's taxobox
+    value: CR
+    listedAs: Commiphora wightii
+    nameBasis: stated
+    source: wikipedia-iucn-commiphora-wightii
+    locator: 'Taxobox: status = CR, status_system = IUCN3.1; its status_ref reads: "Commiphora wightii", Ved, D., 2015, 10.2305/IUCN.UK.2015-2.RLTS.T31231A50131117.en'

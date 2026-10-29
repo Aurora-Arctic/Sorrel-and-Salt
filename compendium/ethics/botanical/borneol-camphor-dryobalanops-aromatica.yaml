@@ -1,0 +1,11 @@
+# Gathered for M14.29; the seed never reads this folder.
+entry: botanical/borneol-camphor-dryobalanops-aromatica
+status: approved
+listings:
+  - list: iucn
+    name: IUCN Red List of Threatened Species, as printed in Wikipedia's taxobox
+    value: VU
+    listedAs: Dryobalanops aromatica
+    nameBasis: stated
+    source: wikipedia-iucn-dryobalanops-aromatica
+    locator: 'Taxobox: status = VU, status_system = IUCN3.1; its status_ref reads: "Dryobalanops aromatica", Barstow, M., 2018, 10.2305/IUCN.UK.2018-1.RLTS.T61998024A173026192.en'

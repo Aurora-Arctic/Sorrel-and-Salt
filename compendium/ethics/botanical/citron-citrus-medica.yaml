@@ -1,0 +1,13 @@
+# Gathered for M14.29; the seed never reads this folder.
+entry: botanical/citron-citrus-medica
+status: needs-review
+listings:
+  - list: iucn
+    name: IUCN Red List of Threatened Species, as printed in Wikipedia's taxobox
+    value: LC
+    listedAs: Citrus medica
+    nameBasis: stated
+    source: wikipedia-iucn-citrus-medica
+    locator: 'Taxobox: status = LC, status_system = IUCN3.1; its status_ref reads: (no assessment named)'
+questions:
+  - 'The assessment Wikipedia names for Citrus medica is not identified by title (the cited assessment is titled "null"). Raw status_ref: Plummer, J. 2021. Citrus medica. The IUCN Red List of Threatened Species 2021: e.T62041221A62041228. Downloaded on 6 September 2021.. Recommendation: do not list until the assessment is read for Citrus medica.'
