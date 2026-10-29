@@ -17,12 +17,13 @@ export function protections({
 }: {
   production: boolean;
 }): Plugin<Record<string, unknown>>[] {
-  return [
-    EnvelopArmorPlugin({
-      maxDepth: { n: MAX_DEPTH },
-      costLimit: { enabled: false },
-      blockFieldSuggestion: { enabled: production },
-    }),
-    ...(production ? [useDisableIntrospection()] : []),
-  ];
+  // graphql-armor is typed against @envelop/types 5; graphql-yoga 6 carries
+  // @envelop/types 6, whose hook payloads differ only in type. The plugin is the
+  // same at runtime, so it is cast here, at the one boundary.
+  const armor = EnvelopArmorPlugin({
+    maxDepth: { n: MAX_DEPTH },
+    costLimit: { enabled: false },
+    blockFieldSuggestion: { enabled: production },
+  }) as unknown as Plugin<Record<string, unknown>>;
+  return [armor, ...(production ? [useDisableIntrospection()] : [])];
 }
