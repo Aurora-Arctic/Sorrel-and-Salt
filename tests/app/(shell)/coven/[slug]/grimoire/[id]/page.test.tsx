@@ -1,5 +1,5 @@
 import { QueryClientProvider } from '@tanstack/react-query';
-import { render, screen, within } from '@testing-library/react';
+import { fireEvent, render, screen, within } from '@testing-library/react';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { Forbidden, NotFound } from '@/lib/errors';
 import { makeQueryClient } from '@/lib/graphql-client';
@@ -250,6 +250,31 @@ describe('the spell recipe page', () => {
       readSpell.mockRejectedValue(new NotFound('No such spell in this coven'));
       await expect(Page(params(SPELL_ID, { edit: SPELL_ID }))).rejects.toThrow('NEXT_NOT_FOUND');
       expect(readSpell).toHaveBeenCalledWith(session, COVEN.id, SPELL_ID);
+    });
+  });
+
+  describe('deleting (M13.11)', () => {
+    const as = (role: 'owner' | 'member' | 'viewer') =>
+      requireCovenMembership.mockResolvedValue({ workspace: COVEN, membership: { role } });
+
+    it('gives a member a Delete Spell bin beside Edit, which asks in a dialog naming the spell', async () => {
+      as('member');
+      await draw();
+      const bin = screen.getByRole('button', { name: 'Delete Spell Fixture Working' });
+      expect(screen.queryByRole('dialog')).not.toBeInTheDocument();
+      fireEvent.click(bin);
+      expect(screen.getByRole('dialog', { name: 'Delete Spell' })).toHaveTextContent(
+        'Fixture Working',
+      );
+    });
+
+    it('shows a viewer no Delete, though they read the same spell', async () => {
+      as('viewer');
+      await draw();
+      expect(
+        screen.getByRole('heading', { level: 1, name: 'Fixture Working' }),
+      ).toBeInTheDocument();
+      expect(screen.queryByRole('button', { name: /^Delete / })).not.toBeInTheDocument();
     });
   });
 

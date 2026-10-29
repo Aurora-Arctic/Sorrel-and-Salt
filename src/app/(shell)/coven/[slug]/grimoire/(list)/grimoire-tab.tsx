@@ -3,7 +3,9 @@ import { lookHrefOf } from '@/components/GrimoireList/recipe-href';
 import type { ReactElement } from 'react';
 import { readCategories } from '@/app/compendium-reads';
 import GrimoireList from '@/components/GrimoireList';
+import Notice from '@/components/Notice';
 import DetailsDialog from '@/components/IngredientEntry/details-dialog';
+import { deletedHrefOf as deletedHrefFor } from '@/components/SpellRecipe/deleted-href';
 import SpellRecipeBody from '@/components/SpellRecipe/body';
 import SpellLookDialog from '@/components/SpellRecipe/look-dialog';
 import SpellDialog from '@/components/SpellBuilder/spell-dialog';
@@ -30,6 +32,9 @@ import { viewedDetailsOf } from '../../ingredients/viewed-details';
 // One grimoire tab, Spells or Drafts: the slug guard, the address as the filter, and one page of 24
 // cards. Per request, never cached (rule 6). A function, not a component, so a test awaits each
 // page whole. Dialogs: claude-docs/design-decisions/m10.12-spell-builder-modal.md.
+// A delete on a spell's page leaves for this tab with `?deleted=<name>`, which a success Notice
+// above the list says once. A role that may delete or update a spell gets each card's bin and Edit
+// pencil, links back to this address with `deleted` or `?edit=<id>` added.
 /** `closeHref` with a saved spell's dialog open over it. */
 const editHrefOf = (closeHref: Route, id: string): Route =>
   `${closeHref}${closeHref.includes('?') ? '&' : '?'}${new URLSearchParams({ edit: id })}` as Route;
@@ -108,7 +113,11 @@ export async function grimoireTab({
   const spellId = typeof edit === 'string' ? RowId.safeParse(edit) : undefined;
   const canCreate = rolePermits(role, { spell: ['create'] });
   const canUpdate = rolePermits(role, { spell: ['update'] });
+  const canDelete = rolePermits(role, { spell: ['delete'] });
   const closeHref = GRIMOIRE_PARAMS.href(path, filter, { after, before });
+  // Where a delete from the card or the Quick Look lands: this tab as it was, filter and page
+  // kept, `?spell` dropped, with the name for the Notice.
+  const deletedHrefOf = (title: string | null): Route => deletedHrefFor(closeHref, title);
   const opened =
     opensNewSpell(single(adding) ?? null, workspace.slug) && canCreate
       ? {}
@@ -140,8 +149,15 @@ export async function grimoireTab({
       ? await readViewedEntry(membership, entryId)
       : undefined;
 
+  const deleted = single(query.deleted)?.trim();
+
   return (
     <>
+      {deleted && (
+        <Notice kind="success" className="page-frame__notice">
+          <strong>{deleted}</strong> was deleted.
+        </Notice>
+      )}
       <GrimoireList
         path={path}
         workspaceId={workspace.id}
@@ -151,6 +167,9 @@ export async function grimoireTab({
           ...spell,
           lookHref: lookHrefOf(closeHref, spell.id),
           ...(canUpdate && { editHref: editHrefOf(closeHref, spell.id) }),
+          ...(canDelete && {
+            deleteSpell: { workspaceId: workspace.id, deletedHref: deletedHrefOf(spell.title) },
+          }),
         }))}
         filter={filter}
         categories={counted}
@@ -169,6 +188,7 @@ export async function grimoireTab({
         closeHref={closeHref}
         opened={opened}
         canCreate={canCreate}
+        canDelete={canDelete}
         userId={membership.userId}
       />
       <SpellLookDialog
@@ -181,6 +201,13 @@ export async function grimoireTab({
                 lastEdit: looked.recipe.lastEdit,
                 recipeHref: `/coven/${workspace.slug}/grimoire/${looked.spell.id}` as Route,
                 ...(canUpdate && { editHref: editHrefOf(closeHref, looked.spell.id) }),
+                ...(canDelete && {
+                  deleteSpell: {
+                    workspaceId: workspace.id,
+                    spellId: looked.spell.id,
+                    deletedHref: deletedHrefOf(looked.spell.title),
+                  },
+                }),
                 children: (
                   <SpellRecipeBody
                     title={looked.spell.title}

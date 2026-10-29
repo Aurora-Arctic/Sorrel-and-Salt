@@ -19,6 +19,10 @@ it opens at its full size at once, with no skeleton before it
 ([`modal.md`](modal.md), "A form the browser can draw skips the skeleton"). Its head names the coven the spell lands in, as Add Ingredient's does: the coven's name over the title, and the dialog named "New Spell to Whitethorn Coven" (`ModalHeading.destination`, [`modal.md`](modal.md)); a saved spell's stays "Edit Spell" over its title. Reordering the steps (M10.16) is built; instruction steps (M13.3) and Mark Complete (M10.20) are later tasks that extend it. The comparison panel (M10.17) sits in the Jar section, beneath the steps. There is
 no `instructions` field: the ritual is the spell's steps (M13.1).
 
+## Delete
+
+On a saved spell, `SpellDialog` given `canDelete` (a role that may delete) passes the builder a `deletedHrefOf(title)`; the builder then draws Delete Spell in `FormActions` (M13.11, owner's call 2026-10-29, as the ingredient Edit dialog has Delete Ingredient). It opens a `ConfirmQuestion` naming the spell, "It leaves the grimoire for every member of the coven". Confirmed, it sends `deleteSpell` and replaces the address with the list plus `?deleted=<name>` (`deletedHrefOf` in `SpellRecipe/deleted-href.ts`, shared with the card and Quick Look). A refusal shows in the `Notice`. A `removed` flag, set before the request, turns off the autosave (its timers, focus-out and page-hide flushes) and the save on close, so nothing writes to the deleted spell; a refusal lifts it.
+
 ## Props
 
 `SpellBuilderProps` (`types.ts`):

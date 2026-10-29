@@ -298,6 +298,25 @@ describe('the Grimoire tabs', () => {
     await expect(renderTab(SpellsPage)).rejects.toThrow('Forbidden');
   });
 
+  it('says what a delete removed, from ?deleted, above the list, as a status (M13.11)', async () => {
+    await renderTab(SpellsPage, { deleted: 'Fixture Working' });
+    // Among the page's other status regions, the one carrying the deleted spell's name.
+    const notice = screen
+      .getAllByRole('status')
+      .find((region) => within(region).queryByText('Fixture Working') !== null);
+    expect(notice).toBeDefined();
+    expect(notice!.compareDocumentPosition(screen.getByRole('list', { name: 'Grimoire' }))).toBe(
+      Node.DOCUMENT_POSITION_FOLLOWING,
+    );
+  });
+
+  it('says nothing of a delete without ?deleted', async () => {
+    await renderTab(SpellsPage);
+    for (const region of screen.queryAllByRole('status')) {
+      expect(region).not.toHaveTextContent('was deleted');
+    }
+  });
+
   it('links the next page beneath the tab’s own address, the filter kept', async () => {
     listGrimoire.mockResolvedValue(
       Array.from({ length: CARD_PAGE_SIZE + 1 }, (_, i) => spell(`s${i}`, `Fixture ${i}`, 'draft')),
@@ -380,6 +399,19 @@ describe('the spell builder over a Grimoire tab', () => {
     expect(screen.getAllByRole('link', { name: /^Edit / })).toHaveLength(2);
   });
 
+  it.each([
+    ['owner', 1],
+    ['member', 1],
+    ['viewer', 0],
+  ] as const)('draws a Delete Spell bin on each card for a coven %s: %i', async (role, count) => {
+    as(role);
+    await renderTab(DraftsPage, { query: 'fixture' });
+    expect(screen.getAllByRole('link', { name: /^Quick Look / }).length).toBeGreaterThan(0);
+    expect(screen.queryAllByRole('button', { name: 'Delete Spell Fixture Working' })).toHaveLength(
+      count,
+    );
+  });
+
   it('draws no Edit pencil for a viewer, who could read the same cards', async () => {
     as('viewer');
     await renderTab(DraftsPage);
@@ -398,6 +430,15 @@ describe('the spell builder over a Grimoire tab', () => {
     fireEvent.click(within(dialog).getByRole('button', { name: 'Open All' }));
     expect(within(dialog).getByRole('textbox', { name: 'Intent' })).toHaveValue('Calm');
     expect(within(dialog).getByRole('textbox', { name: 'Jar Description' })).toHaveValue('4 oz');
+  });
+
+  it('offers Delete in the Edit dialog to a member, who may delete a spell', async () => {
+    as('member');
+    readSpell.mockResolvedValue(SPELL);
+    await renderTab(DraftsPage, { edit: SPELL_ID });
+
+    const dialog = screen.getByRole('dialog', { name: 'Edit Spell, Fixture Working' });
+    expect(within(dialog).getByRole('button', { name: 'Delete Spell' })).toBeInTheDocument();
   });
 
   it('opens a saved spell under ?edit=<id> with the categories its author assigned it picked', async () => {
@@ -666,7 +707,7 @@ describe('Quick Look over a Grimoire tab', () => {
     await renderTab(SpellsPage, { query: 'fixture', spell: SPELL_ID });
 
     const dialog = screen.getByRole('dialog', { name: 'Fixture Working' });
-    const edit = within(dialog).queryByRole('link', { name: 'Edit Spell' });
+    const edit = within(dialog).queryByRole('link', { name: 'Edit Fixture Working' });
     if (shown) {
       expect(edit).toHaveAttribute(
         'href',
@@ -676,6 +717,25 @@ describe('Quick Look over a Grimoire tab', () => {
       expect(edit).not.toBeInTheDocument();
     }
   });
+
+  it.each([
+    ['member', 2],
+    ['viewer', 0],
+  ] as const)(
+    'offers Delete Spell on a card and in the open Quick Look to a coven %s: %i',
+    async (role, count) => {
+      as(role);
+      await renderTab(SpellsPage, { query: 'fixture', spell: SPELL_ID });
+
+      const dialog = screen.getByRole('dialog', { name: 'Fixture Working' });
+      expect(
+        within(dialog).queryAllByRole('button', { name: 'Delete Spell Fixture Working' }),
+      ).toHaveLength(count / 2);
+      expect(
+        screen.queryAllByRole('button', { name: 'Delete Spell Fixture Working' }),
+      ).toHaveLength(count);
+    },
+  );
 
   it('names the editor in one displayNamesOf call for the modal', async () => {
     as('member');

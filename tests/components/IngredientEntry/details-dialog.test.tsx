@@ -66,6 +66,31 @@ describe('DetailsDialog', () => {
     expect(within(dialog()).queryByRole('button', { name: /^Edited/ })).not.toBeInTheDocument();
   });
 
+  it('draws the Reviewed badge once: the marks leave it out beside a review row', () => {
+    const marks = { kind: 'compendium' as const, reviewedAt: '2026-10-01T09:30:00.000Z' };
+    const { unmount } = render(
+      <DetailsDialog
+        closeHref={LIST}
+        opened={{
+          heading: detailsHeading(ENTRY),
+          pageHref: PAGE,
+          marks,
+          reviewLine: <p>Review row</p>,
+        }}
+      />,
+    );
+    expect(within(dialog()).queryByText(/Reviewed By Curator/)).not.toBeInTheDocument();
+    unmount();
+
+    render(
+      <DetailsDialog
+        closeHref={LIST}
+        opened={{ heading: detailsHeading(ENTRY), pageHref: PAGE, marks }}
+      />,
+    );
+    expect(within(dialog()).getByText(/Reviewed By Curator/)).toBeInTheDocument();
+  });
+
   it('opens nothing while its address asks for nothing', () => {
     render(<DetailsDialog closeHref={LIST} />);
 

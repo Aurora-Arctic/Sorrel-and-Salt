@@ -557,6 +557,17 @@ export interface AuditWriter {
     to: { ingredientId: string; variantId: string },
   ): Promise<SpellStepRow[]>;
   /**
+   * Marks one spell of the proof's coven deleted, stamped from the session, and answers the row, or
+   * `[]` for a spell the proof cannot reach: another coven's, another member's private one, or one
+   * already deleted. The reader's rule is in the WHERE; its steps are `softDeleteStepsOfSpell`'s.
+   */
+  softDeleteSpell(membership: Membership, spellId: string): Promise<SpellRow[]>;
+  /**
+   * Marks a spell's live steps deleted, stamped from the session, and answers them. Scoped through
+   * the spell to the proof's coven; called beside `softDeleteSpell` in its transaction, never alone.
+   */
+  softDeleteStepsOfSpell(membership: Membership, spellId: string): Promise<SpellStepRow[]>;
+  /**
    * Invite an address into the proof's workspace with the role it names, stamped from the session; the workspace is the proof's, never the values'.
    * The token is hashed here and only the hash stored. Only the columns an invitation starts with are written, so it starts pending
    * whatever a cast smuggled into `values`.
@@ -927,6 +938,7 @@ export type VariantRow = typeof ingredientVariants.$inferSelect;
 
 /** One `spell_steps` row, a step of a spell, as the writer reads it. */
 export type SpellStepRow = typeof spellSteps.$inferSelect;
+export type SpellRow = typeof spells.$inferSelect;
 
 /** A redirect from a slug an entry moved off: the entry, at its current slug, and when it ends. */
 export interface SlugRedirect {

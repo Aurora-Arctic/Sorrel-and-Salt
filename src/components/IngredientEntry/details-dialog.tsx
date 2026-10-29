@@ -27,6 +27,7 @@ export function headingOf({
   more,
   plus,
   ingredientId,
+  reviewLine,
 }: IngredientDetailsOpened): ModalHeading {
   // The top line beside Close, as the entry page's top bar has it: New or Updated, then the one
   // safety badge; present for every entry so Close has it to itself.
@@ -61,7 +62,23 @@ export function headingOf({
     topEnd: top,
     ...(lastEdit && { aboveName: <LastEdit by={lastEdit.by} at={lastEdit.at} /> }),
     ...(buttons && { formalActions: buttons }),
-    ...(marks && { under: <EntryMarks {...marks} safety={false} recency={null} /> }),
+    ...((marks || reviewLine) && {
+      // The badges, then the review line as the head's last row (it fills a row of its own).
+      under: (
+        <>
+          {marks && (
+            // The row draws the review badge itself, so the marks leave it out beside the row.
+            <EntryMarks
+              {...marks}
+              reviewedAt={reviewLine ? undefined : marks.reviewedAt}
+              safety={false}
+              recency={null}
+            />
+          )}
+          {reviewLine}
+        </>
+      ),
+    }),
   };
 }
 
@@ -73,19 +90,12 @@ const EditAction = ({
   inCompendium ? <CompendiumEditLink {...link} /> : <EditLink {...link} />;
 
 /** The link to the entry's page: a bar in the modal's `foot` slot, outside the scrolling body (claude-docs/components/ingredient-entry.md, "The details modal"). */
-function PageLinkBar({ pageHref, footControl }: IngredientDetailsOpened): ReactElement {
+function PageLinkBar({ pageHref }: IngredientDetailsOpened): ReactElement {
   // Named by where it goes, not by who is looking: the public compendium's page, or the coven's own
   // page for an entry it holds.
   const label = pageHref.startsWith('/compendium/') ? 'See in Compendium' : 'See in Your Cupboard';
   return (
-    <div
-      className={
-        footControl
-          ? 'ingredient-details-foot ingredient-details-foot--control'
-          : 'ingredient-details-foot'
-      }
-    >
-      {footControl}
+    <div className="ingredient-details-foot">
       <PendingLink
         className="btn"
         href={pageHref}

@@ -42,7 +42,10 @@ whatever the page holds at that instant. The title wait is there because a soft
 navigation (a filter, a router refresh) removes the `<title>` for a moment and
 puts the next one back, while the new rows are already in the page; measured at
 about 4 ms on a quiet machine and 150 to 360 ms with the CPU throttled 20 to 40
-times (MB.265). So the last web-first
+times (MB.265). The swap can also land between that wait and axe's read of the
+page (story 24), so a scan that reports `document-title` waits for a title again
+and scans once more; a page that never has a title still fails, at the wait. So
+the last web-first
 assertion before each scan must be one that waits for the state being
 scanned — a dialog visible, a Save enabled, a status shown, a URL reached —
 never a negative such as `toHaveCount(0)` on something that was never there,

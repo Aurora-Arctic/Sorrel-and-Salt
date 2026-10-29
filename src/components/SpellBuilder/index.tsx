@@ -3,6 +3,7 @@
 import { zodResolver } from '@hookform/resolvers/zod';
 import { type ReactElement, type ReactNode, useCallback, useEffect, useRef, useState } from 'react';
 import { createPortal } from 'react-dom';
+import { useMutation } from '@tanstack/react-query';
 import { FormProvider, type Resolver, useForm, useWatch } from 'react-hook-form';
 import { CollapsibleSection, FoldAll } from '../CollapsibleSection';
 import {
@@ -25,7 +26,12 @@ import {
 } from '../Field';
 import { clockTime } from '../LastEdit/relative';
 import { moonPhaseIcon } from './moon-phase-icon';
-import { useModalHeaderNote } from '../Modal';
+import { ConfirmQuestion, useModalHeaderNote } from '../Modal';
+import { DeleteSpellDocument } from '../SpellRecipe/delete-spell';
+import { UNTITLED_SPELL } from '../SpellCard';
+import { graphqlRequest } from '../../lib/graphql-client';
+import { usePendingNavigation } from '../../lib/navigation';
+import { covenTarget } from '../../lib/coven-path';
 import Notice from '../Notice';
 import SaveStatus from '../SaveStatus';
 import Skeleton from '../Skeleton';
@@ -224,6 +230,7 @@ const SpellBuilder = ({
   spell,
   onCreated,
   stepsRead,
+  deletedHrefOf,
 }: SpellBuilderProps): ReactElement => {
   // The spell this builder opened on. The dialog hands the builder a different
   // `spell` once the builder's own first save has moved the address to it; the
@@ -465,13 +472,36 @@ const SpellBuilder = ({
     return { revision: answer.revision, savedAt: new Date(), id: answer.id };
   };
 
+  // Delete (M13.11), as the ingredient form has it: asked over the form, and once confirmed the
+  // spell is going, so `removed` holds the autosave and the save on close down: a save
+  // after the delete would answer not found, or bring the spell back. A refusal lifts it.
+  const [deleting, setDeleting] = useState(false);
+  const [removed, setRemoved] = useState(false);
+  const { navigate } = usePendingNavigation();
+  const spellId = createdId ?? opened?.id ?? null;
+  const name = useWatch({ control, name: 'title' })?.trim() || UNTITLED_SPELL;
+  const remove = useMutation({
+    mutationFn: () => graphqlRequest(DeleteSpellDocument, { id: spellId!, workspaceId }),
+  });
+  const confirmDelete = async () => {
+    setRemoved(true);
+    try {
+      await remove.mutateAsync();
+    } catch (error) {
+      setRemoved(false);
+      throw error;
+    }
+    const href = deletedHrefOf!(getValues('title') ?? null);
+    navigate(href, { replace: true, target: covenTarget(href.split('?')[0]!) });
+  };
+
   const mirror = userId
     ? mirrorKey({ entity: 'spell', id: createdId ?? opened?.id ?? null, userId })
     : undefined;
   const autosave = useAutosave({
     value: { ...values, steps: sendable },
     dirty,
-    enabled: jarReady && !unitRefused && !blankSaved,
+    enabled: jarReady && !unitRefused && !blankSaved && !removed,
     save: persist,
     mirror,
     revision: opened?.revision ?? null,
@@ -550,7 +580,7 @@ const SpellBuilder = ({
             ? 'Nothing to save yet'
             : null;
   // Steps that could not be read leave nothing a save would take, so Close closes, unsaved.
-  useSaveOnClose(dirty && stepsRead !== 'failed', saveForClose);
+  useSaveOnClose(dirty && stepsRead !== 'failed' && !removed, saveForClose);
 
   // The steps landed: the form starts from them, as from the rest of the saved spell, and
   // only then is the jar drawn, since its list reads the steps once, as it mounts.
@@ -761,6 +791,14 @@ const SpellBuilder = ({
             submitting={autosave.status === 'saving'}
             onSave={() => void saveNow()}
             saveReason={saveReason ?? undefined}
+            onDelete={
+              deletedHrefOf && spellId
+                ? () => {
+                    clearErrors('root');
+                    setDeleting(true);
+                  }
+                : undefined
+            }
           >
             <SpellStatusField flush={flush} />
             <SaveStatus
@@ -774,6 +812,22 @@ const SpellBuilder = ({
               onKeepMine={() => void autosave.resolveConflict('keep-mine').catch(() => undefined)}
             />
           </FormActions>
+          <ConfirmQuestion
+            asked={deleting}
+            question={
+              <>
+                Delete {name}? It leaves the grimoire for every member of the coven. Nothing in
+                stock changes.
+              </>
+            }
+            busy={remove.isPending || remove.isSuccess}
+            onConfirm={confirmDelete}
+            onKeep={() => setDeleting(false)}
+            onRefused={(message) => {
+              setDeleting(false);
+              setError('root', { message });
+            }}
+          />
         </form>
       </FormHistoryContext.Provider>
     </FormProvider>

@@ -235,6 +235,12 @@ const PROBES: Record<string, WorkspaceIdProbe> = {
     }`,
     variables: () => ({ id: updatableSpellId }),
   },
+  deleteSpell: {
+    source: `mutation ($workspaceId: ID!, $id: ID!) {
+      deleteSpell(workspaceId: $workspaceId, id: $id)
+    }`,
+    variables: () => ({ id: updatableSpellId }),
+  },
   createWorkspaceIngredient: {
     source: `mutation ($workspaceId: ID!, $input: IngredientInput!) {
       createWorkspaceIngredient(workspaceId: $workspaceId, input: $input) { id }

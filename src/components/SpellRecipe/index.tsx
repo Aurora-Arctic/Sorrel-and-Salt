@@ -7,8 +7,8 @@ import SpellRecipeBody from './body';
 import type { SpellRecipeProps } from './types';
 
 // A saved spell as a page: purpose, four facts, steps, note (`SpellRecipeBody`, which Quick Look
-// also draws). Read-only; Edit is the `action` slot's and there is no Delete. No print rules are
-// set here (claude-docs/components/spell-recipe.md).
+// also draws). Read-only; Edit and Delete Spell are the `action` slot's, for roles that may. No
+// print rules are set here (claude-docs/components/spell-recipe.md).
 
 const SpellRecipe = ({
   title,

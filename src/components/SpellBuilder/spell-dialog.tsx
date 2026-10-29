@@ -10,6 +10,7 @@ import { usePendingNavigation } from '../../lib/navigation';
 import { RouteModal } from '../Modal';
 import type { ModalHeading } from '../Modal/types';
 import { UNTITLED_SPELL } from '../SpellCard';
+import { deletedHrefOf } from '../SpellRecipe/deleted-href';
 import SpellBuilder from '.';
 import { SpellBuilderStepsDocument } from './steps/documents';
 import type { SpellDialogProps } from './types';
@@ -42,6 +43,7 @@ export default function SpellDialog({
   closeHref,
   opened: read,
   canCreate,
+  canDelete = false,
   userId,
 }: SpellDialogProps): ReactElement | null {
   const { navigate } = usePendingNavigation();
@@ -81,6 +83,7 @@ export default function SpellDialog({
               workspaceId={workspaceId}
               covenSlug={covenSlug}
               userId={userId}
+              deletedHrefOf={canDelete ? (title) => deletedHrefOf(closeHref, title) : undefined}
               spell={spell && { ...spell, steps: steps ?? [] }}
               stepsRead={
                 editing === undefined || steps !== undefined

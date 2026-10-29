@@ -1,6 +1,7 @@
 import type { Route } from 'next';
 import type { CardCategory } from '../CategoryChips/types';
 import type { LastEditProps } from '../LastEdit/types';
+import type { DeleteSpellActionProps } from '../SpellRecipe/types';
 import type { SpellStatus, SpellVisibility } from '@/modules/grimoire';
 
 export interface SpellCardProps {
@@ -13,6 +14,12 @@ export interface SpellCardProps {
    * `?edit=<id>`, worked out by the page for a role that may update a spell. None draws no pencil.
    */
   editHref?: Route;
+  /**
+   * What the Delete Spell bin needs: the coven, and the tab address the browser lands on once the
+   * spell is gone, with `deleted=<name>` in it. Built by the page for a role that may delete; none
+   * draws no bin. The spell's id and name are the card's own.
+   */
+  deleteSpell?: Omit<DeleteSpellActionProps, 'spellId' | 'name'>;
   /**
    * Where the Quick Look eye opens the spell over the list: the tab's own address plus
    * `?spell=<id>`, worked out by the page. None draws no eye.

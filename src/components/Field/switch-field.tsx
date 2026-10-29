@@ -2,6 +2,7 @@
 
 import { type ReactElement, useId } from 'react';
 import InfoTip from '../InfoTip';
+import Spinner from '../Spinner';
 import { pressFeedback } from '../../lib/press-feedback';
 import type { SwitchFieldProps } from './types';
 
@@ -18,6 +19,7 @@ export function SwitchField({
   defaultChecked,
   onChange,
   disabled,
+  busy,
   hint,
   note,
   noteTip,
@@ -60,6 +62,7 @@ export function SwitchField({
           checked={checked}
           defaultChecked={defaultChecked}
           disabled={disabled}
+          aria-busy={busy || undefined}
           aria-describedby={describedBy}
           onChange={(event) => onChange(event.target.checked)}
           onKeyDown={(event) => {
@@ -69,6 +72,9 @@ export function SwitchField({
           }}
           {...pressFeedback}
         />
+        {/* While busy the ring stands where the thumb was (hidden by the stylesheet), so the
+            track's fill and the end it sits at still say the state. */}
+        {busy && <Spinner className="switch__spinner" />}
       </div>
       {note && (
         <p id={noteId} className="field__hint">

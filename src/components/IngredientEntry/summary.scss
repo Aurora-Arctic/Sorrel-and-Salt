@@ -122,23 +122,8 @@
   color: $text-muted;
 }
 
-// The details modal's foot bar itself is in _primitives.scss, which every page loads (the Quick
-// Look of a spell draws it too). Only its variant with a control beside the link is here.
-.ingredient-details-foot {
-  // With a control beside the link (the admin's review switch) the two share the bar, the link
-  // taking what the control leaves. (claude-docs/components/ingredient-entry.md, "Styling")
-  &--control {
-    align-items: center;
-    justify-content: space-between;
-    gap: space(4);
-    padding-inline: space(4);
-
-    > .btn {
-      width: auto;
-      flex: 1;
-    }
-  }
-}
+// The details modal's foot bar, with its variant that has a control beside the link, is in
+// _primitives.scss, which every page loads (the Quick Look of a spell draws it too).
 
 // The description and its Show More bar: a clip box cut to six lines by the script
 // (summary-description.tsx), its text fading into the surface over one full-width button; opening moves

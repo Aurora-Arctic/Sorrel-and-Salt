@@ -108,11 +108,15 @@ export default async function AdminCompendiumPage({ searchParams }: AdminCompend
   const review = summary
     ? await readOrMissing(() => readCompendiumReview(session, detailed.id))
     : undefined;
+  // The entry the modal edits; none on an add, which wins over an `?edit=`.
+  const editing = !adding && edited?.kind === 'entry' ? edited : undefined;
+  // The review read for the entry the edit modal opens, its switch a field of the form; one row by id.
+  const editReview = editing
+    ? await readOrMissing(() => readCompendiumReview(session, editing.id))
+    : undefined;
   // The plus beside the pencil, for the covens the admin or curator is a member of and may add in:
   // none for one in no coven, so neither the plus nor its check shows.
   const detailsPlus = summary ? await plusCovensOf(covens) : undefined;
-  // The entry the modal edits; none on an add, which wins over an `?edit=`.
-  const editing = !adding && edited?.kind === 'entry' ? edited : undefined;
   // The form open, if one is: a near match's Quick Look opens over it, and the details close back
   // to it.
   const form: ListDialog | undefined = adding
@@ -176,7 +180,7 @@ export default async function AdminCompendiumPage({ searchParams }: AdminCompend
             ...(detailsPlus && { plus: detailsPlus, ingredientId: detailed.id }),
             children: summary && <IngredientSummary detail={summary} covens={covens} />,
             ...(review !== undefined && {
-              footControl: (
+              reviewLine: (
                 <ReviewMark
                   ingredientId={detailed.id}
                   reviewedAt={review?.reviewedAt.toISOString() ?? null}
@@ -209,9 +213,15 @@ export default async function AdminCompendiumPage({ searchParams }: AdminCompend
             ? {
                 heading: editHeading(editing.values),
                 entry: { id: editing.id, values: editing.values },
+                ...(editReview !== undefined && {
+                  review: {
+                    reviewed: editReview !== null,
+                    reviewedAt: editReview?.reviewedAt.toISOString() ?? null,
+                  },
+                }),
               }
             : adding
-              ? { heading: ADD_HEADING }
+              ? { heading: ADD_HEADING, review: { reviewed: false } }
               : undefined
         }
       />

@@ -9,10 +9,12 @@ export const FIRST_FIELD =
 /**
  * Whether the field is shown: under no `hidden` ancestor, as a closed
  * section of the ingredient form keeps its fields, and laid out where the
- * browser can tell (happy-dom cannot, and lays nothing out).
+ * browser can tell (happy-dom cannot, and lays nothing out). A `data-focus-skip`
+ * wrapper marks a field the open never lands on, such as a switch at a form's foot.
  */
 const isShown = (field: HTMLElement): boolean =>
   field.closest('[hidden]') === null &&
+  field.closest('[data-focus-skip]') === null &&
   (typeof field.checkVisibility !== 'function' || field.checkVisibility());
 
 /** The first field shown in the scope, or null when it holds none. */

@@ -10,7 +10,7 @@ import {
   UpdateSpellInput as UpdateSpellInputSchema,
 } from '../validation/spell';
 import { NotFound } from '../../../lib/errors';
-import { parseInput } from '../../../lib/validation';
+import { parseInput, RowId } from '../../../lib/validation';
 import type { Session } from '../../../lib/session';
 import { assertMembership, type Membership } from '@/modules/coven';
 import type {
@@ -187,4 +187,33 @@ export async function updateSpellStep(
   if (!steps.some((step) => step.id === stepId)) throw new NotFound('No such step in this spell');
   const [step] = await withAudit(session, (write) => write.updateById(spellSteps, stepId, input));
   return step;
+}
+
+/**
+ * Deletes a spell: a soft delete of the spell and its steps in one
+ * transaction (M13.11). Owners and members delete, viewers are refused; the
+ * spell must be one the caller can read, so another member's private spell
+ * is refused as if it did not exist. Story 56's rule governs widening, not
+ * existence, so a shared or complete spell goes too. Stock is never touched;
+ * a working's rows wait for M13.5, which extends the same writer.
+ *
+ * @throws {Forbidden} the caller may not delete in this coven's grimoire.
+ * @throws {NotFound} no such spell here, or none this caller may read.
+ */
+export async function deleteSpell(
+  session: Session,
+  workspaceId: string,
+  spellId: string,
+): Promise<void> {
+  const membership = await assertMembership(session, workspaceId, { spell: ['delete'] });
+  if (!RowId.safeParse(spellId).success) throw new NotFound('No such spell in this coven');
+  await readableSpell(membership, spellId);
+  await withAudit(session, async (write) => {
+    // The steps first: they are reached through their live spell, which the
+    // next write takes away. One transaction, so a spell that is gone by then
+    // (deleted in between) takes the steps' tombstones back with it.
+    await write.softDeleteStepsOfSpell(membership, spellId);
+    const [spell] = await write.softDeleteSpell(membership, spellId);
+    if (!spell) throw new NotFound('No such spell in this coven');
+  });
 }

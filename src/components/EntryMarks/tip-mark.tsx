@@ -7,7 +7,7 @@ type TipMarkProps = {
   /** The badge's word. */
   label: string;
   /** The badge palette, as `badge--<palette>`. */
-  palette: 'retired' | 'annotated';
+  palette: 'retired' | 'annotated' | 'local';
   /** The sentence the tip says. */
   tip: string;
 };

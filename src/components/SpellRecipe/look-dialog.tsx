@@ -2,15 +2,18 @@
 
 import type { ReactElement } from 'react';
 import { PendingLink } from '../../lib/navigation';
+import { EditLink } from '../IconTip';
 import LastEdit from '../LastEdit';
 import { RouteModal } from '../Modal';
 import type { ModalHeading } from '../Modal/types';
 import Notice from '../Notice';
 import { SPELL_LOOK_PLACE, UNTITLED_SPELL } from '../SpellCard';
+import DeleteSpellAction from './delete-spell';
 import type { SpellLookDialogProps } from './types';
 import './index.scss';
 
-// The Quick Look modal a grimoire card's eye opens: the spell body, last edit, a link to the recipe page and Edit Spell (`?edit=<id>`); a client part for RouteModal
+// The Quick Look modal a grimoire card's eye opens: the spell body, last edit, Edit's pencil and
+// Delete Spell's bin for roles that may, and a link to the recipe page; a client part for RouteModal
 // (claude-docs/components/spell-recipe.md, "The Quick Look component").
 
 export default function SpellLookDialog({
@@ -36,6 +39,22 @@ export default function SpellLookDialog({
   const name = opened ? opened.title?.trim() || UNTITLED_SPELL : '';
   const heading: ModalHeading | undefined = opened && {
     title: name,
+    // Edit and Delete as icons at the end of the title's line, as the ingredient's Quick Look has
+    // them (the owner's call, 2026-10-29), made by the card's own components.
+    ...((opened.editHref || opened.deleteSpell) && {
+      formalActions: (
+        <span className="spell-look-actions">
+          {opened.editHref && (
+            <EditLink
+              href={opened.editHref}
+              name={name}
+              heading={{ eyebrow: 'Edit Spell', title: name }}
+            />
+          )}
+          {opened.deleteSpell && <DeleteSpellAction {...opened.deleteSpell} name={name} />}
+        </span>
+      ),
+    }),
     ...(opened.lastEdit && {
       aboveName: <LastEdit by={opened.lastEdit.by} at={opened.lastEdit.at} />,
     }),
@@ -55,11 +74,6 @@ export default function SpellLookDialog({
               <PendingLink className="btn" href={opened.recipeHref}>
                 See Full Recipe
               </PendingLink>
-              {opened.editHref && (
-                <PendingLink className="btn btn--solid" href={opened.editHref}>
-                  Edit Spell
-                </PendingLink>
-              )}
             </div>
           ),
         }

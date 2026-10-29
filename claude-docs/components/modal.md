@@ -92,7 +92,10 @@ is the wrapper every admin page opens it through (below).
   body's first field a person can use (`firstShownField`, `fields.ts`): an
   input that is not `type="hidden"`, a select or a textarea, not disabled,
   and shown, so not under a `hidden` section as the ingredient form's closed
-  ones are. With no field, the dialog itself takes it (`tabIndex={-1}`,
+  ones are, and not inside a `data-focus-skip` wrapper. That marker is for a
+  field the open should never land on: the Reviewed switch at the foot of the
+  ingredient form, which would otherwise take the focus on an edit whose
+  sections are all closed. With no field, the dialog itself takes it (`tabIndex={-1}`,
   drawing no ring): its name is read, and Tab moves on to Close. React's
   `autoFocus` cannot do this, since it focuses the field at mount, before
   `showModal()` opens the dialog and moves the focus again. A question over

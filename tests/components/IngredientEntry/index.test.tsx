@@ -1094,8 +1094,8 @@ describe("IngredientEntry's review mark (M14.8)", () => {
     });
     renderEntry({ detail: reviewed });
 
-    const badge = screen.getByText(/Reviewed By Curator/);
-    expect(badge.querySelector('time')).toHaveAttribute('datetime', '2026-10-01T09:30:00.000Z');
+    const badge = screen.getByRole('button', { name: 'Reviewed By Curator' });
+    expect(badge).toHaveAccessibleDescription('Reviewed 1 Oct 2026');
     expect(screen.queryByText('Needs Review', { exact: true })).toBeNull();
   });
 });

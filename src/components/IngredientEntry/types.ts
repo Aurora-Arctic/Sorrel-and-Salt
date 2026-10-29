@@ -8,7 +8,7 @@ import type { ReactNode } from 'react';
 import type { AddIconProps } from '../AddIcon/types';
 import type { ModalHeading, RouteModalLink } from '../Modal/types';
 import type { IngredientDetail, IngredientRow } from '@/modules/ingredients';
-import type { EditedIngredient } from '../IngredientForm/types';
+import type { EditedIngredient, ReviewOffer } from '../IngredientForm/types';
 import type { LastEditProps } from '../LastEdit/types';
 import type { EntryMarksProps } from '../EntryMarks/types';
 import type { StockData } from '../StockDialog/types';
@@ -29,7 +29,9 @@ export interface IngredientEntryEdit {
   savedHref?: Route;
   /** The entry's values for the form, present only when the page was asked for with `?edit`; absent, the modal shows its skeleton over a press. */
   opened?: EditedIngredient;
-  /** A coven's own entry: the form writes to this coven and its near matches open in it; left out, the entry is the compendium's. */
+  /** The Reviewed switch as a field of the compendium's edit form: Save carries it; left out for a coven's entry and for anyone who cannot curate. */
+  review?: ReviewOffer;
+  /** A coven's own entry: the form writes to this coven and its near matches open in it; `mayPromote` is the role's answer to making a folk name the display name; left out, the entry is the compendium's. */
   coven?: {
     workspaceId: string;
     /** The coven's ingredient list; an entry's page in the coven is beneath it, by id. */
@@ -45,6 +47,8 @@ export interface IngredientEntryEdit {
 export type LinkedIngredient = Pick<IngredientRow, 'id' | 'slug' | 'workspaceId'>;
 
 export interface IngredientEntryProps {
+  /** The Reviewed switch as the last row of the page's head, built for a curator or admin from the uncached review read; it saves on flip. */
+  reviewControl?: ReactNode;
   /** Who last edited the entry in this coven and when, from `lastEditsOf`; none draws no line. */
   lastEdit?: LastEditProps | null;
   /** The entry and everything its page shows, as `ingredientDetailOf` assembles it. */
@@ -177,8 +181,8 @@ export interface IngredientDetailsOpened {
   marks?: DetailsMarks;
   /** Who last edited the entry in this coven and when; drawn above the head's buttons. */
   lastEdit?: LastEditProps | null;
-  /** A control in the foot beside the link to the entry's page: the admin's Reviewed By Curator switch, since the dialog has no Save. */
-  footControl?: ReactNode;
+  /** The review line for a curator or admin: the last row of the head, the Reviewed switch at its start and the review day at its end. */
+  reviewLine?: ReactNode;
   /** The entry's own page, which the foot's link (See in Compendium or See in Your Cupboard) reaches. */
   pageHref: Route;
   /** An Edit opening the edit modal over the details at the list's own `?edit=`, for whoever may edit the entry (claude-docs/components/ingredient-entry.md, "Props in detail"). */
@@ -296,7 +300,7 @@ export interface SummaryJar {
   threshold: number | null;
 }
 
-/** The admin's Reviewed By Curator switch on a compendium entry (`review-mark.tsx`): the entry, and when a curator last marked it reviewed as an ISO moment, or `null` while it needs review. */
+/** The Reviewed switch on a compendium entry (`review-mark.tsx`), which saves on flip: the entry, and when a curator last marked it reviewed as an ISO moment, or `null` while it needs review. */
 export interface ReviewMarkProps {
   ingredientId: string;
   reviewedAt: string | null;

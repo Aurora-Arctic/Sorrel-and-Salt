@@ -1,6 +1,6 @@
-import { render, screen } from '@testing-library/react';
+import { cleanup, render, screen, within } from '@testing-library/react';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
-import { NotFound } from '@/lib/errors';
+import { Forbidden, NotFound } from '@/lib/errors';
 import { EMPTY_VALUES } from '@/components/IngredientForm/values';
 import { entryDetail } from '../../../support/entry-detail';
 
@@ -21,11 +21,27 @@ const viewerIfSignedIn = vi.fn();
 vi.mock('@/lib/viewer', () => ({ viewerIfSignedIn }));
 
 const readCompendiumEntry = vi.fn();
-vi.mock('@/modules/ingredients', () => ({ readCompendiumEntry }));
+// The review switch's read (M14.8), per viewer, made for a curator or admin only.
+const readCompendiumReview = vi.fn();
+vi.mock('@/modules/ingredients', () => ({ readCompendiumEntry, readCompendiumReview }));
+const SESSION = { userId: 'user-fixture' };
+const getSession = vi.fn();
+vi.mock('@/lib/request-session', () => ({ getSession }));
 
 // The form is its own tests'; here only that the dialog holds one.
 vi.mock('@/components/IngredientForm', () => ({
-  default: () => <form aria-label="Fixture Form" />,
+  default: ({ review }: { review?: { reviewed: boolean } }) => (
+    <form aria-label="Fixture Form">
+      {review && (
+        <input
+          type="checkbox"
+          role="switch"
+          aria-label="Reviewed"
+          defaultChecked={review.reviewed}
+        />
+      )}
+    </form>
+  ),
 }));
 
 const entryValues = vi.fn();
@@ -59,6 +75,8 @@ beforeEach(() => {
   viewerIfSignedIn.mockResolvedValue(null);
   readCompendiumEntry.mockResolvedValue(entryRead());
   entryValues.mockResolvedValue(EMPTY_VALUES);
+  getSession.mockResolvedValue(SESSION);
+  readCompendiumReview.mockResolvedValue(null);
 });
 
 describe('the compendium entry page', () => {
@@ -148,6 +166,64 @@ describe('the compendium entry page', () => {
 
     expect(dialog()).not.toBeInTheDocument();
     expect(entryValues).not.toHaveBeenCalled();
+  });
+});
+
+// M14.8: the Reviewed switch as the last row of the page's head, for a curator or
+// admin. Its read is per viewer and made for them alone, so a visitor's page is the cached one.
+describe('the compendium entry page, with the review switch', () => {
+  const reviewSwitches = () => screen.queryAllByRole('switch', { name: 'Reviewed' });
+  const REVIEWED = { reviewedAt: new Date('2026-10-01T09:30:00.000Z') };
+
+  it('shows a curator the switch as the mark stands, read once with their session', async () => {
+    viewerIfSignedIn.mockResolvedValue(shellOf(true));
+    readCompendiumReview.mockResolvedValue(REVIEWED);
+    await show();
+
+    expect(readCompendiumReview).toHaveBeenCalledExactlyOnceWith(SESSION, entryDetail().entry.id);
+    const [mark] = reviewSwitches();
+    expect(reviewSwitches()).toHaveLength(1);
+    expect(mark).toBeChecked();
+  });
+
+  it('draws it last in the head, and gives the edit form the same answer', async () => {
+    viewerIfSignedIn.mockResolvedValue(shellOf(true));
+    readCompendiumReview.mockResolvedValue(REVIEWED);
+    const { container } = await show({ edit: '' });
+
+    const head = container.querySelector('.ingredient-entry__head')!;
+    const inHead = within(head as HTMLElement).getByRole('switch', { name: 'Reviewed' });
+    expect(head.lastElementChild!.contains(inHead)).toBe(true);
+    expect(within(dialog()!).getByRole('switch', { name: 'Reviewed' })).toBeChecked();
+    expect(readCompendiumReview).toHaveBeenCalledOnce();
+  });
+
+  // The preconditions: the same address shows the switch to a curator (asserted first).
+  it.each([
+    ['a signed-out visitor', null],
+    ['a signed-in viewer who cannot curate', shellOf(false)],
+  ])('shows %s no switch and makes no review read', async (_who, shell) => {
+    viewerIfSignedIn.mockResolvedValue(shellOf(true));
+    await show({ edit: '' });
+    expect(reviewSwitches()).toHaveLength(2);
+    cleanup();
+    readCompendiumReview.mockClear();
+    getSession.mockClear();
+
+    viewerIfSignedIn.mockResolvedValue(shell);
+    await show({ edit: '' });
+
+    expect(reviewSwitches()).toHaveLength(0);
+    expect(readCompendiumReview).not.toHaveBeenCalled();
+    expect(getSession).not.toHaveBeenCalled();
+  });
+
+  it('shows nothing, and does not fail, when the read refuses', async () => {
+    viewerIfSignedIn.mockResolvedValue(shellOf(true));
+    readCompendiumReview.mockRejectedValue(new Forbidden('curators only'));
+    await show();
+
+    expect(reviewSwitches()).toHaveLength(0);
   });
 });
 

@@ -920,8 +920,8 @@ describe('NameField, with useDuplicateWarning', () => {
       await warned();
       press(eye());
 
-      const badge = await within(look()).findByText(/Reviewed By Curator/);
-      expect(badge.querySelector('time')).toHaveAttribute('datetime', '2026-10-01T09:30:00.000Z');
+      const badge = await within(look()).findByRole('button', { name: 'Reviewed By Curator' });
+      expect(badge).toHaveAccessibleDescription('Reviewed 1 Oct 2026');
       expect(within(look()).queryByText('Needs Review')).toBeNull();
     });
 
