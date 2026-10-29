@@ -300,7 +300,8 @@ $spell-columns-switch: $spell-main-min + $spell-columns-gap + $spell-side;
   gap: space(1);
 }
 
-// Clear, quiet and at the end of the chip line; drawn only while a chip is pressed.
+// Clear, quiet, at the right end of the caption line, level with the caption; drawn only while a
+// chip is pressed.
 .spell-steps__filter-clear {
   margin-inline-start: auto;
   padding: 0;

@@ -312,6 +312,15 @@ export function StepPicker({ workspaceId, oneOffs, onAdd }: StepPickerProps): Re
               <InfoTip id={`${id}-filter-tip`} label="Filter By Category">
                 Show only ingredients in any of the pressed categories.
               </InfoTip>
+              {narrowedBy.length > 0 && (
+                <button
+                  type="button"
+                  className="spell-steps__filter-clear"
+                  onClick={() => setPressed([])}
+                >
+                  Clear
+                </button>
+              )}
             </div>
             <div className="spell-steps__filter-row">
               <div
@@ -349,15 +358,6 @@ export function StepPicker({ workspaceId, oneOffs, onAdd }: StepPickerProps): Re
                   ];
                 })}
               </div>
-              {narrowedBy.length > 0 && (
-                <button
-                  type="button"
-                  className="spell-steps__filter-clear"
-                  onClick={() => setPressed([])}
-                >
-                  Clear
-                </button>
-              )}
             </div>
           </div>
         )}
