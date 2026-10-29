@@ -6,7 +6,7 @@ listings:
     name: Red List of South African Plants, national assessment
     value: Critically Endangered A4acd
     listedAs: Siphonochilus aethiopicus
-    scope: national (South Africa)
+    scope: South Africa
     nameBasis: stated
     source: sanbi-siphonochilus-aethiopicus
     locator: 'National Status, "Critically Endangered A4acd", assessed 2022/07/20 by M. Lötter, J.E. Burrows and L. von Staden (archived page of 21 June 2024). Earlier national assessments on the same page: CR A4acd (Raimondo et al. 2009), EN A1cd (Scott-Shaw 1999)'
@@ -27,6 +27,7 @@ listings:
     source: cites-appendices
     locator: 'p. 80, Appendix II column, family ZINGIBERACEAE: "Siphonochilus aethiopicus (Only the populations of Eswatini, Mozambique, South Africa and Zimbabwe; no other population is included in the Appendices)"'
 questions:
+  - 'Owner decision 2026-10-29: KEEP. A national rating never removes an entry, so the Critically Endangered A4acd rating of the Red List of South African Plants does not remove African ginger.'
   - 'Deeper research 2026-10-29. Global IUCN Red List: none found. The Wikipedia taxobox (oldid 1373240846) carries no IUCN status, only CITES Appendix II, and GBIF returns NOT_EVALUATED (evidence only). So there is no global IUCN EN or CR rating, and by the rule the entry does not qualify for removal on the IUCN criterion.'
   - 'Deeper research 2026-10-29. The "critically endangered" sentence in the Wikipedia text cites a 2021 review (Adebayo, Amoo, Mokgehle and Aremu, Journal of Ethnopharmacology), which assesses nothing itself. The assessment behind it is the South African national one: Critically Endangered A4acd, assessed 2022/07/20 by Lötter, Burrows and von Staden, recorded above with scope national (South Africa). The same SANBI page says the plant is not endemic to South Africa and also occurs in Zimbabwe, Malawi, Zambia, Mozambique, Ethiopia, Benin, Niger, Nigeria, Tanzania and northern Ghana, so the national rating is not a rating of the whole species.'
   - 'Deeper research 2026-10-29. Cultivated stock: Wikipedia says "While the plant can be cultivated, some traditional healers believe that only wild-harvested plants have the correct medical properties" (citing Jasson et al. 2023, Horticulturae 9(2):274). That says cultivation is possible, not that the supplied material is cultivated. Wikipedia also says that, because of over-harvesting, the plant is found at around 10% of its historic range (citing the SANBI page).'
