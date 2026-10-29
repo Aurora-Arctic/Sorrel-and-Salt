@@ -168,19 +168,11 @@ export function SpellSteps({ workspaceId }: { workspaceId: string }): ReactEleme
         </h4>
         {steps.length > 0 && <p className="spell-steps__summary">{counts}</p>}
       </div>
-      {/* One grid holds the box, Add an Instruction and the list: the button follows the box on a
-          wide column and is the list's last line on a narrow one, by `order` alone, so it
-          is one button, in the one place in the markup. */}
+      {/* One grid holds the list, then the add row: the box and Add an Instruction, beneath the
+          list where a new step lands (second design review, 2026-10-28). The button follows the
+          box on a wide column and is a numbered line beneath it on a narrow one, by grid
+          placement alone, so it is one button, in the one place in the markup. */}
       <div className="spell-steps__body">
-        <div className="spell-steps__box">
-          <StepPicker workspaceId={workspaceId} oneOffs={oneOffs} onAdd={add} />
-        </div>
-        <button type="button" className="btn spell-steps__add-step" onClick={addStep}>
-          <span className="spell-steps__next" aria-hidden="true">
-            {fields.length + 1}.
-          </span>
-          Add an Instruction
-        </button>
         <SortableSteps ids={fields.map((field) => field.id)} names={names} onMove={move}>
           {fields.map((field, index) => (
             <BuilderStepRow
@@ -194,6 +186,15 @@ export function SpellSteps({ workspaceId }: { workspaceId: string }): ReactEleme
             />
           ))}
         </SortableSteps>
+        <div className="spell-steps__box">
+          <StepPicker workspaceId={workspaceId} oneOffs={oneOffs} onAdd={add} />
+        </div>
+        <button type="button" className="btn spell-steps__add-step" onClick={addStep}>
+          <span className="spell-steps__next" aria-hidden="true">
+            {fields.length + 1}.
+          </span>
+          Add an Instruction
+        </button>
       </div>
       <LiveRegion id={regionId} announcement={announcement} />
     </section>

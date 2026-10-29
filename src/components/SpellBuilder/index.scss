@@ -185,19 +185,19 @@ $spell-columns-switch: $spell-main-min + $spell-columns-gap + $spell-side;
   display: grid;
   grid-template-columns: minmax(0, 1fr) auto;
   align-items: start;
-  // The add row sits with the heading's group, then space(5) to the list.
+  // The list, then the add row beneath it, space(5) apart.
   gap: space(5) space(3);
 }
 
 .spell-steps__box {
   grid-column: 1;
-  grid-row: 1;
+  grid-row: 2;
   min-width: 0;
 }
 
 .spell-steps__add-step {
   grid-column: 2;
-  grid-row: 1;
+  grid-row: 2;
   white-space: nowrap;
 }
 
@@ -206,10 +206,14 @@ $spell-columns-switch: $spell-main-min + $spell-columns-gap + $spell-side;
   display: none;
 }
 
-.spell-steps__body > .spell-steps__list,
-.spell-steps__body > .spell-steps__list:empty {
+.spell-steps__body > .spell-steps__list {
   grid-column: 1 / -1;
-  grid-row: 2;
+  grid-row: 1;
+}
+
+// No steps: no row, so no gap above the add row.
+.spell-steps__body > .spell-steps__list:empty {
+  display: none;
 }
 
 @container spell-column (max-width: #{$narrow-column}) {
