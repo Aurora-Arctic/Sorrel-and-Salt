@@ -68,8 +68,7 @@ describe('StepRow', () => {
           name="Testwort"
           open={open}
           fieldsId="fields"
-          summary="2 tsp"
-          bodySummary="Crush it first"
+          summary="2 tsp · Crush it first"
           badge={<span>One-Off</span>}
           edit={<button aria-label="Edit Testwort">Edit</button>}
           aside={<span>Goes in this jar only</span>}

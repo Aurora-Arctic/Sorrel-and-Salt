@@ -42,7 +42,6 @@ export default function StepRow({
   open,
   fieldsId,
   summary,
-  bodySummary,
   badge,
   edit,
   onToggle,
@@ -117,7 +116,6 @@ export default function StepRow({
       >
         {identity}
         {!open && summary && <p className="step-row__summary">{summary}</p>}
-        {!open && bodySummary && (
           <p className="step-row__summary step-row__body-summary">{bodySummary}</p>
         )}
         <div className="step-row__marks">

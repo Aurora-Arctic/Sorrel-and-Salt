@@ -152,12 +152,10 @@ $step-ink-drop: 0.05rem;
 .step-row.step-row--card {
   &.step-row--closed,
   &.step-row--open {
-    // The name's line, then the amount and the instruction each on its own muted line beneath
-    // it, in the name's column (the look of a closed section's summary).
+    // The name's line, then the amount and the instruction on one muted line beneath it, in the name's column (the look of a closed section's summary).
     grid-template-areas:
       'handle position name marks edit remove'
-      '. . summary summary summary summary'
-      '. . body-summary body-summary body-summary body-summary';
+      '. . summary summary summary summary';
     grid-template-columns: auto auto minmax(0, 1fr) auto auto auto;
 
     // Everything on the first line sits on that line's centre, and not on the
@@ -212,10 +210,6 @@ $step-ink-drop: 0.05rem;
     font-weight: 300;
 
     @include truncate;
-  }
-
-  .step-row__body-summary {
-    grid-area: body-summary;
   }
 
   .step-row__edit {
