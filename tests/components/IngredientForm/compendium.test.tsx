@@ -55,13 +55,9 @@ import {
   offerReferences,
 } from '../../support/msw/ingredient-lookups';
 
-// The form on the compendium, and only what the mode changes: written
-// with no coven, so every lookup asks with a null `workspaceId`, the
-// vocabulary boxes are picked from the curated rows, a substitute is picked
-// from the compendium, the classification is required, and an entry given to
-// it is edited, saved over and deleted. A pick-only list box on its own is
-// list-field.test.tsx's, and what the form does in either mode is
-// index.test.tsx's (claude-docs/components/ingredient-form.md, "Testing").
+// The form on the compendium, and only what the mode changes: written with no coven, so every lookup asks with a null `workspaceId`, the vocabulary boxes are picked from the curated rows,
+// a substitute is picked from the compendium, the classification is required, and an entry given to it is edited, saved over and deleted.
+// A pick-only list box on its own is list-field.test.tsx's, and what the form does in either mode is index.test.tsx's (claude-docs/components/ingredient-form.md, "Testing").
 
 const OTHER_ID = '9a1b2c3d-4e5f-4a6b-8c7d-0e1f2a3b4c5d';
 const CATEGORY_ID = 'c4a8e2f1-7b3d-4c9e-a6f5-1d2e3f4a5b6c';
@@ -92,11 +88,7 @@ function renderForm(props: Partial<Extract<IngredientFormProps, { workspaceId: n
   return { onSaved, onDeleted, asks };
 }
 
-/**
- * A variant's Form box and a pick-only list's box on their own, as the
- * compendium's form wires them, in a form of its own on the compendium's
- * resolver.
- */
+/** A variant's Form box and a pick-only list's box on their own, as the compendium's form wires them, in a form of its own on the compendium's resolver. */
 function renderPickOnly() {
   const onSubmit = vi.fn();
   const Harness = () => {
@@ -213,10 +205,8 @@ describe('IngredientForm on the compendium', () => {
       );
     });
 
-    // A regression: an entry whose substitute links an ingredient
-    // in forms, with none chosen, opened as the readback gives it, its
-    // Form of X box registering a key the values lacked. React's development
-    // double mount then counted the untouched entry changed, and Cancel asked.
+    // Regression: an entry whose substitute links an ingredient in forms, with none chosen, opened as the readback gives it, its Form of X box registering a key the values lacked.
+    // React's development double mount then counted the untouched entry changed, and Cancel asked.
     it('closes an untouched entry at once whose substitute links an ingredient with no form chosen', () => {
       offerNothing();
       const values: IngredientFormValues = {

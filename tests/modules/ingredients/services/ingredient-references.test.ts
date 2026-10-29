@@ -25,12 +25,8 @@ import {
 } from '../../../support/db/insert-reference';
 import { type IngredientFixture, type Overrides, makeIngredient } from '../../../support/fixtures';
 
-// An ingredient's references, each a link to a reference with an
-// optional locator, written in the ingredient's own transaction by either
-// tier's service, held to the tier rule, and read back alphabetically by
-// citation through `referencesOf`, the batch behind `Ingredient.references`
-// (DESIGN.md §5, "References"). Both tables are emptied per test, so every row
-// a result could come from is one this file wrote.
+// An ingredient's references, each a link to a reference with an optional locator, written in the ingredient's own transaction by either tier's service and held to the tier rule (DESIGN.md §5, "References").
+// `referencesOf`, the batch behind `Ingredient.references`, reads them back alphabetically by citation. Both tables are emptied per test, so every row a result could come from is one this file wrote.
 
 let sql: postgres.Sql;
 useTestDatabase((client) => {

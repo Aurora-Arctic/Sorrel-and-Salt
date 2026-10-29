@@ -223,10 +223,8 @@ describe('findAstrologyValueCount', () => {
   });
 });
 
-// The deity vocabulary as the admin's deities page lists it: every
-// live deity under a live tradition — the same "curated" the autofill means —
-// by its tradition's name, then its own, so a page reads each deity under its
-// tradition, narrowed by a name fragment and a tradition.
+// The deity vocabulary as the admin's deities page lists it: every live deity under a live tradition (the same "curated" the autofill means), by tradition name then its own,
+// narrowed by a name fragment and a tradition.
 describe('findDeityPage and findDeityCount', () => {
   afterEach(async () => {
     await sql`

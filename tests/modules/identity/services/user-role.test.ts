@@ -12,12 +12,8 @@ import { asManualFix } from '../../../support/db/privileges';
 import { makeIngredient } from '../../../support/fixtures/ingredient';
 import type { PrivilegeChangeRow, RoleRow } from './types';
 
-// An admin makes a user an admin, or stops one being one, from
-// `/admin/users`, declared `via: 'admin'` so the trigger on `users` records
-// each change in the privilege ledger. The primary admin, named by
-// ADMIN_BOOTSTRAP_EMAIL when the check runs, cannot be revoked, and a count
-// under a lock refuses leaving no admin at all
-// (claude-docs/design-decisions/m2.9-granting-admin.md, "Granting" and "Revoking").
+// An admin makes a user an admin, or stops one being one, from `/admin/users`, declared `via: 'admin'` so the trigger on `users` records each change in the privilege ledger.
+// The primary admin, named by ADMIN_BOOTSTRAP_EMAIL when the check runs, cannot be revoked, and a count under a lock refuses leaving no admin at all (claude-docs/design-decisions/m2.9-granting-admin.md, "Granting" and "Revoking").
 
 let sql: postgres.Sql;
 useTestDatabase((client) => {
@@ -250,10 +246,8 @@ describe('setUserRole, revoking', () => {
   });
 });
 
-// The curator role is set on the same dialog, through the same
-// service. Becoming a curator sets the creation flag in the same write, as
-// becoming an admin does, and a move between curator and admin is a revoke
-// of one and a grant of the other.
+// The curator role is set on the same dialog, through the same service.
+// Becoming a curator sets the creation flag in the same write, as becoming an admin does; a move between curator and admin is a revoke of one and a grant of the other.
 describe('setUserRole and the curator role', () => {
   beforeEach(async () => {
     await insertUser(CURATOR, 'Curator Fixturewort', `curator${DOMAIN}`, { role: 'curator' });

@@ -94,13 +94,7 @@ async function linkedRows(userId: string) {
   return { users, accounts, sessions } as { users: number; accounts: number; sessions: number };
 }
 
-/**
- * Moves the row's sign-up and last touch back together, as if it happened
- * `by` ago. The `set_updated_at` trigger overwrites any `updated_at` an
- * UPDATE supplies, so it is switched off for this one statement; the worker's
- * database is its own clone, and the transaction holds the lock only for as
- * long as the statement.
- */
+/** Moves the row's sign-up and last touch back together by `by`. The `set_updated_at` trigger overwrites any `updated_at` an UPDATE supplies, so it is switched off for this one statement. */
 async function backdate(userId: string, by: string): Promise<void> {
   await sql.begin(async (tx) => {
     await tx`alter table users disable trigger set_updated_at`;

@@ -2,10 +2,8 @@ import { describe, expect, it } from 'vitest';
 
 import { scanSql } from '../../scripts/check-destructive-ddl';
 
-// What the destructive-DDL check reads as destructive (claude-docs/db/expand-contract.md): every
-// DROP but the two that widen, and the four other forms an expand/contract migration avoids, read
-// through comments and string literals. Which files it scans, the base it diffs against and the
-// acknowledgement sidecar are the CI leg's to exercise; the script's own --self-test runs its fixtures.
+// What the destructive-DDL check reads as destructive (claude-docs/db/expand-contract.md): every DROP but the two that widen, and the four other forms an expand/contract migration avoids, read through comments and string literals.
+// Which files it scans, the base it diffs against and the acknowledgement sidecar are the CI leg's; the script's own --self-test runs its fixtures.
 
 const rulesFor = (sql: string) => scanSql(sql, 'probe.sql').map((finding) => finding.rule);
 

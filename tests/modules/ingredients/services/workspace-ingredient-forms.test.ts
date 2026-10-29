@@ -49,10 +49,8 @@ const countIngredients = async () => {
   return row.n as number;
 };
 
-// An ingredient's forms are written inside its own save, each with its
-// own substitutes, references and categories (DESIGN.md §5, "Variants are
-// written inside the ingredient's save"). What the schema refuses is
-// `validation/ingredient.test.ts`'s; what is read back is the ingredient read's.
+// An ingredient's forms are written inside its own save, each with its own substitutes, references and categories (DESIGN.md §5, "Variants are written inside the ingredient's save").
+// What the schema refuses is `validation/ingredient.test.ts`'s; what is read back is the ingredient read's.
 describe('its forms', () => {
   let protection: string;
   let love: string;

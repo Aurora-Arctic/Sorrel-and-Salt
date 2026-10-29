@@ -14,13 +14,9 @@ import { mockGraphQLError, mockGraphQLMutation } from '../../support/msw/graphql
 const router = vi.hoisted(() => ({ push: vi.fn(), replace: vi.fn(), refresh: vi.fn() }));
 vi.mock('next/navigation', () => ({ useRouter: () => router }));
 
-// The Annotate dialog's foot (claude-docs/components/ingredient-entry.md):
-// Make It Ours and Remove, each offered only on the member's permission, in a
-// More menu when both are and as a button of its own when one is, and each
-// asked in the form's own question card over it, as Delete asks, not
-// in a second dialog.
-// A remove leaves for where the dialog closes to; Make It Ours for the own
-// entry it writes, warning first when the form holds unsaved changes.
+// The Annotate dialog's foot (claude-docs/components/ingredient-entry.md): Make It Ours and Remove, each offered only on the member's permission,
+// in a More menu when both are and as a button of its own when one is, each asked in the form's own question card, as Delete asks, not in a second dialog.
+// A remove leaves for where the dialog closes to; Make It Ours goes to the own entry it writes, warning first when the form holds unsaved changes.
 
 const CLOSE = '/coven/fixture-coven/ingredients?q=test' as Route;
 

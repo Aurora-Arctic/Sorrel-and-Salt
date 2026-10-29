@@ -9,11 +9,8 @@ import {
 } from '../support/lint-probes/db-client-boundary';
 import { REPO_ROOT } from '../support/paths';
 
-// Both `no-restricted-imports` boundaries in `.oxlintrc.json` fire (only `src/db/repository/` may
-// import the database client, CLAUDE.md rule 2; only the database layer may import `drizzle-orm` at
-// runtime, rule 4) and the client's exemptions are pinned (claude-docs/db/query-building.md, "Where
-// queries may be built"). The probes are linted once by the unit project's setup; this file reads
-// its diagnostics off that run.
+// Both `no-restricted-imports` boundaries in `.oxlintrc.json` fire (only `src/db/repository/` may import the database client, rule 2; only the database layer may import `drizzle-orm` at runtime, rule 4) and the client's exemptions are pinned (claude-docs/db/query-building.md, "Where queries may be built").
+// The probes are linted once by the unit project's setup; this file reads its diagnostics off that run.
 
 const RULE = 'eslint(no-restricted-imports)';
 
@@ -34,10 +31,8 @@ describe('CLAUDE.md rules 2 and 4 — the database import boundaries', () => {
     expect(restricted(drizzleProbe)).toBe(1);
   });
 
-  // The exemptions are disable comments rather than config (oxlint ignores "off" inside `overrides`),
-  // which makes a new one cheap to add by hand, so the set is pinned and a new one is argued for in the
-  // diff. A directive counts only when the line after it imports the client: a file may carry one for
-  // another `no-restricted-imports` pattern. Untracked files count, so one is caught in the diff that adds it.
+  // The exemptions are disable comments rather than config (oxlint ignores "off" inside `overrides`), which makes a new one cheap to add by hand, so the set is pinned and a new one is argued for in the diff.
+  // A directive counts only when the line after it imports the client: a file may carry one for another `no-restricted-imports` pattern. Untracked files count, so one is caught in the diff that adds it.
   it('has exactly six files carrying the client exemption, and no others', () => {
     const files = inject('repoFiles').filter((file) => /\.tsx?$/.test(file));
     // Precondition: an empty listing has no seventh in it either.

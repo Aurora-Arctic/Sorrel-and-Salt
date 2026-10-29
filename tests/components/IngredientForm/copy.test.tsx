@@ -16,13 +16,8 @@ import {
   twoForms,
 } from './variants-harness';
 
-// A variant's Copy From Ingredient buttons: each
-// of an open variant's fields but its form fills from the ingredient's own,
-// adding and never taking away. Rendered by ./variants-harness.tsx, the
-// ingredient's own fields held in the form's values and its Description a
-// box beside the field; a copy into the list fields, sent by the whole
-// form's save, is variants.test.tsx's
-// (claude-docs/components/ingredient-form.md, "The variants").
+// A variant's Copy From Ingredient buttons: each of an open variant's fields but its form fills from the ingredient's own, adding and never taking away.
+// Rendered by ./variants-harness.tsx, with the ingredient's own fields held in the form's values and its Description a box beside the field; a copy into the list fields, sent by the whole form's save, is variants.test.tsx's (claude-docs/components/ingredient-form.md, "The variants").
 
 const save = () => press('Save Ingredient');
 

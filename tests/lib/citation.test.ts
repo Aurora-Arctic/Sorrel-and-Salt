@@ -2,11 +2,8 @@ import { describe, expect, it } from 'vitest';
 import { byCitation, citationText, renderCitation } from '@/lib/citation';
 import type { CitationFields, CitationPart } from '@/lib/types';
 
-// DESIGN.md §5, "The citation is rendered, never stored": one renderer, its
-// parts joined back with `_` around the italic ones so each case compares
-// against the seed doc's own Markdown (claude-docs/db/references.md, "The
-// renderer"). Each kind's examples are copied from
-// claude-docs/db/deity-vocabulary-seed.md; the rest use invented names.
+// DESIGN.md §5, "The citation is rendered, never stored": one renderer, its parts joined back with `_` around the italic ones so each case compares against the seed doc's own Markdown (claude-docs/db/references.md, "The renderer").
+// Each kind's examples are copied from claude-docs/db/deity-vocabulary-seed.md; the rest use invented names.
 
 /** The parts as the seed doc writes them: `_` around each italic run. */
 const marked = (parts: CitationPart[]) =>

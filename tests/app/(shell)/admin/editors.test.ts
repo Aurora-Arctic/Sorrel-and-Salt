@@ -1,12 +1,8 @@
 import { describe, expect, it, vi } from 'vitest';
 import { Forbidden } from '@/lib/errors';
 
-// The Updated column's names. Who may read them is
-// `editorNamesForCurator`'s, asserted against a database in
-// tests/modules/identity/services/editor-names.test.ts: a curator and an admin are
-// answered, a coven owner is refused. This file holds what the
-// page adds: the stamp each row gets, from the editor that made the latest
-// edit.
+// The Updated column's names. Who may read them is `editorNamesForCurator`'s, asserted against a database in tests/modules/identity/services/editor-names.test.ts.
+// This file holds what the page adds: the stamp each row gets, from the editor that made the latest edit.
 
 const editorNamesForCurator = vi.fn();
 const SEED = '00000000-0000-0000-0000-000000000001';

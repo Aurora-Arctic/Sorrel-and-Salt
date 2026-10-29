@@ -8,14 +8,9 @@ import { CARD_PAGE_SIZE } from '@/lib/pagination';
 import { offerCategories } from '../../../../../../support/msw/ingredient-lookups';
 import { mockGraphQLQuery } from '../../../../../../support/msw/graphql';
 
-// The Grimoire's two tabs: Spells and Drafts. The guard and the services are mocked,
-// since what they decide is their own tests' (which spells a reader may list is
-// tests/db/repository/readable-spell-page.test.ts's and
-// tests/modules/grimoire/services/spell-reads.test.ts's); the tabs' own read runs for real over
-// them. Here: the guard on the slug from the address, one page of 24 of the tab's status, the
-// address becoming the query, each card's assigned categories, and the pager's addresses; and
-// the spell builder's dialog over the tab, `?new=spell-<slug>` and `?edit=<id>`, beside the
-// shell's Add Ingredient, `?new=ingredient-coven-<slug>`.
+// The Grimoire's two tabs, Spells and Drafts, with the guard and services mocked (which spells a reader may list is tests/db/repository/readable-spell-page.test.ts's and tests/modules/grimoire/services/spell-reads.test.ts's) and the tabs' own read run for real.
+// It proves the guard on the slug from the address, one page of 24 of the tab's status, the address becoming the query, each card's assigned categories, and the pager's addresses;
+// also the spell builder's dialog over the tab (`?new=spell-<slug>`, `?edit=<id>`) beside the shell's Add Ingredient (`?new=ingredient-coven-<slug>`).
 
 const COVEN = {
   id: '5b8f4a10-2d6e-4c19-8a37-0e9d1c2b3a44',

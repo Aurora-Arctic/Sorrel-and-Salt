@@ -59,11 +59,8 @@ vi.mock('@/components/IngredientForm', () => ({
   ),
 }));
 
-// The page body both entry routes render (
-// claude-docs/components/ingredient-entry.md). Every name and value below is
-// the test's own data, so finding one proves what rendered, never what the
-// copy says; the formal-name line is asserted by its structure (a labelled
-// value, italic or not), not by its sentences.
+// The page body both entry routes render (claude-docs/components/ingredient-entry.md). Every name and value below is the test's own data, so finding one proves what rendered, never what the copy says.
+// The formal-name line is asserted by its structure (a labelled value, italic or not), not by its sentences.
 
 const STAMPS = {
   createdAt: new Date('2026-01-01T00:00:00Z'),
@@ -76,11 +73,7 @@ const STAMPS = {
 
 const COVEN = '00000000-0000-4000-8000-0000000000c1';
 
-/**
- * The status badges that say where an entry lives, Compendium; not the curators' review mark
- * (Needs Review or Reviewed By Curator), which every compendium entry wears and
- * which the review-mark tests below own.
- */
+/** The status badges that say where an entry lives, Compendium; not the curators' review mark (Needs Review or Reviewed By Curator), which every compendium entry wears and the review-mark tests below own. */
 const provenanceMarks = (): (string | null)[] =>
   screen
     .queryAllByRole('status')

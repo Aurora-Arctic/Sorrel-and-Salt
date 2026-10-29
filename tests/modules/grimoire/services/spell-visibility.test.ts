@@ -11,13 +11,8 @@ import { useTestDatabase } from '../../../support/db/database';
 import { makeSpell } from '../../../support/fixtures';
 import type { SpellStatus, SpellVisibility } from '@/modules/grimoire';
 
-// DESIGN.md §5's one-way rule: `private` may be widened to `workspace`, and
-// `workspace` may never be narrowed back. Once the coven has read a spell and
-// built on it, hiding it retracts something they were relying on — so the
-// service refuses, and says that rather than answering `Forbidden` and leaving
-// the caller to guess at a permission they do hold.
-//
-// B, a plain member, authors throughout; A, the owner, is the one refused.
+// DESIGN.md §5's one-way rule: `private` may be widened to `workspace`, and `workspace` may never be narrowed back, because the coven may already be building on the spell.
+// The service refuses and says so, rather than answering `Forbidden` for a permission the caller holds. B, a plain member, authors throughout; A, the owner, is the one refused.
 
 let sql: postgres.Sql;
 useTestDatabase((client) => {

@@ -45,16 +45,9 @@ import {
   variant,
 } from './variants-harness';
 
-// What the whole form adds around its Variants section: the curated
-// pick and the typed form refused on the compendium, the unsaved-changes
-// question, each variant saved back by its id, a save opening the variant
-// and section a schema or server error is in, Close All and Open All, the
-// links a substitute pick and a copy send, and undo and redo. The section's
-// own behaviour is variants-field.test.tsx's, a variant's substitute offers
-// substitutes.test.tsx's and its copy buttons copy.test.tsx's, each on
-// ./variants-harness.tsx; a field inside a variant behaves as the same field
-// does on the ingredient, which index.test.tsx and the fields' own files
-// prove (claude-docs/components/ingredient-form.md, "The variants").
+// What the whole form adds around its Variants section: the pick and typed form refused on the compendium, the unsaved-changes question, each variant saved by its id, a save opening the variant or section an error is in, Close All and Open All, substitute and copy links, and undo and redo.
+// The section's own behaviour is variants-field.test.tsx's, substitute offers substitutes.test.tsx's and copy buttons copy.test.tsx's, each on ./variants-harness.tsx.
+// A field inside a variant behaves as the same field does on the ingredient (claude-docs/components/ingredient-form.md, "The variants").
 
 function renderForm(props: { workspaceId: string | null; values?: IngredientFormValues }) {
   offerNothing();

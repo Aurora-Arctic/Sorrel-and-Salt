@@ -8,10 +8,8 @@ import type {
   PickerGroup,
 } from '@/components/CategoryPicker/types';
 
-// The categories picked from one box, as a list field's entries are, the
-// rows under their groups and each pick a chip in its group's colour: the
-// form's category field and the ingredients filter
-// (claude-docs/components/category-picker.md).
+// The categories picked from one box, as a list field's entries are: the rows under their groups and each pick a chip in its group's colour.
+// It serves the form's category field and the ingredients filter (claude-docs/components/category-picker.md).
 
 const fixtureWard: PickerGroup = {
   id: 'g-ward',

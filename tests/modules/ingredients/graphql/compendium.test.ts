@@ -8,12 +8,9 @@ import { run as runOperation } from '../../../support/graphql/run';
 import { makeIngredient } from '../../../support/fixtures';
 import type { CompendiumConnection, SubstituteNode } from './types';
 
-// The `compendium` query over the standard seed's 26 entries: public,
-// a page at a time, with folk names and categories batched. What each filter
-// matches is tests/db/repository/ingredients.test.ts's, and how the service
-// reads the filter services/compendium.test.ts's; this file holds the
-// transport's half — the arguments reaching the read, the edge's score, the
-// page numbers, one read per page, and the one refusal on the wire.
+// The `compendium` query over the standard seed's 26 entries: public, a page at a time, with folk names and categories batched.
+// What each filter matches is tests/db/repository/ingredients.test.ts's and how the service reads it is services/compendium.test.ts's.
+// Here: the arguments reaching the read, the edge's score, the page numbers, one read per page, and the one refusal on the wire.
 
 // The reads a page makes, counted at the repository so the batching is a
 // number rather than a hope; the role lookup is counted to show a public
@@ -149,13 +146,9 @@ describe('compendium', () => {
     expect(nodes.map((node) => node.name)).not.toContain('Fixture Wroot');
   });
 
-  // `sal` matches three seeded labels and Rosemary's formal name, Salvia
-  // rosmarinus, each holding it verbatim, so each scores a full 1 however
-  // short of a word it falls; and a folk name each of Mugwort and Selenite,
-  // Sailor's Tobacco and Satin Spar, at a word similarity of 0.5, neither
-  // holding it. Each field's weight then sets the rank — the label at 1, the
-  // formal name at 0.9, a folk name at 0.8 — so the order shows the weighted
-  // rank first and the name second.
+  // `sal` matches three seeded labels and Rosemary's formal name (Salvia rosmarinus), each holding it verbatim, so each scores a full 1.
+  // It also matches a folk name of Mugwort and of Selenite (Sailor's Tobacco, Satin Spar) at a word similarity of 0.5, neither holding it.
+  // Each field's weight sets the rank (label 1, formal name 0.9, folk name 0.8), so the order shows the weighted rank first and the name second.
   it('ranks a search best match first, with the score on each edge', async () => {
     const result = await run(null, { query: 'sal', first: 50 });
     expect(result.errors).toBeUndefined();

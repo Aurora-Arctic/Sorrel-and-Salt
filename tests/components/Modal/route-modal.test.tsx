@@ -12,10 +12,8 @@ const { RouteModalContext } = await import('@/components/Modal/route-modal-provi
 const { EditLink } = await import('@/components/IconTip');
 const { default: MenuButton } = await import('@/components/MenuButton');
 
-// A page's one modal place: the form its address opens, or, while a
-// press's navigation is on its way, the pressed modal's head over a skeleton
-// in the same dialog, which the form then fills; and the links that open it
-// so (claude-docs/components/modal.md, "Opening at once").
+// A page's one modal place: the form its address opens, or, while a press's navigation is on its way, the pressed modal's head over a skeleton in the same dialog, which the form then fills.
+// Also the links that open it so (claude-docs/components/modal.md, "Opening at once").
 
 const CLOSE: Route = '/admin/categories';
 const EDIT: Route = '/admin/categories?edit=testcraft';
@@ -145,11 +143,8 @@ describe('RouteModalProvider', () => {
   });
 });
 
-// The focus goes back to the link that opened it (Modal's own), or, once that
-// is drawn afresh or was never there, to a link to the address it opened, or
-// to the page's heading (claude-docs/components/modal.md, "Giving the focus
-// back"). The page here is drawn again by hand,
-// as the close's navigation would draw it.
+// The focus goes back to the link that opened the modal (Modal's own) or, once that is drawn afresh or was never there, to a link to the address it opened, or to the page's heading
+// (claude-docs/components/modal.md, "Giving the focus back"). The page here is drawn again by hand, as the close's navigation would draw it.
 describe('RouteModal giving the focus back', () => {
   function Page({ open, drawn }: { open: boolean; drawn: number }) {
     return (

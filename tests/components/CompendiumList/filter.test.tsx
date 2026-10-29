@@ -47,16 +47,10 @@ import { Navigating } from '../../support/navigating';
 const router = vi.hoisted(() => ({ push: vi.fn() }));
 vi.mock('next/navigation', () => ({ useRouter: () => router }));
 
-// The compendium's filter row and its search sentence, drawn without
-// the table beneath them, as IngredientSearch draws them above it. What the
-// list does while a filter is on its way, giving way to its status, is
-// index.test.tsx's, since only it renders the table.
+// The compendium's filter row and its search sentence, drawn without the table beneath them, as IngredientSearch draws them above it.
+// What the list does while a filter is on its way, giving way to its status, is index.test.tsx's, since only it renders the table.
 
-/**
- * The compendium's page as the App Router draws it: the row under the filter
- * its address shows, which a push changes inside the row's transition, as
- * Next renders the new page.
- */
+/** The compendium's page as the App Router draws it: the row under the filter its address shows, which a push changes inside the row's transition, as Next renders the new page. */
 function RoutedCompendium(): ReactElement {
   const [filter, setFilter] = useState<CompendiumListFilter>(NO_FILTER);
   router.push.mockImplementation((href: string) => {

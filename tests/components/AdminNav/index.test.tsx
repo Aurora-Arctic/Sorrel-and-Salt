@@ -12,10 +12,8 @@ vi.mock('next/navigation', () => ({
 
 const { default: AdminNav } = await import('@/components/AdminNav');
 
-// The nav the `/admin` layout carries: every admin page, and nothing
-// else, each linked at its first tab, with the page you are on marked
-// (claude-docs/components/admin-nav.md). Which pages show in the row and
-// which behind More is the stylesheet's, so every page is in the row here.
+// The nav the `/admin` layout carries: every admin page and nothing else, each linked at its first tab, with the page you are on marked (claude-docs/components/admin-nav.md).
+// Which pages show in the row and which behind More is the stylesheet's, so every page is in the row here.
 
 const nav = () => screen.getByRole('navigation', { name: 'Admin' });
 const row = () => within(nav()).getAllByRole('link');

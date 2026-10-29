@@ -15,14 +15,9 @@ import { useTestDatabase } from '../../../support/db/database';
 import { insertDeityLink, insertIngredient } from '../../../support/db/insert-ingredient';
 import { makeIngredient } from '../../../support/fixtures';
 
-// The tradition half: the deity traditions' writes, the site
-// admin's alone. A deity's slug is its name and its tradition, so a
-// rename moves the slug of every deity under the tradition, and a delete first
-// moves its live deities to the tradition the admin names, each re-slugged
-// there — the deities stay curated, so neither a compendium entry's pick nor a
-// coven's is orphaned (claude-docs/design-decisions/mb.132-admin-deities.md).
-// The seeded traditions stay, so every tradition and deity a test writes is
-// `Fixture …`.
+// The deity tradition writes, the site admin's alone. A deity's slug is its name and its tradition, so a rename moves the slug of every deity under the tradition.
+// A delete first moves its live deities to the tradition the admin names, each re-slugged there, so no pick is orphaned (claude-docs/design-decisions/mb.132-admin-deities.md).
+// The seeded traditions stay, so every tradition and deity a test writes is `Fixture …`.
 
 let sql: postgres.Sql;
 useTestDatabase((client) => {

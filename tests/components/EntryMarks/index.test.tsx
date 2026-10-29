@@ -2,10 +2,8 @@ import { fireEvent, render, screen } from '@testing-library/react';
 import { describe, expect, it } from 'vitest';
 import EntryMarks, { RecencyMark } from '@/components/EntryMarks';
 
-// The cupboard's three kinds and what each shows (
-// claude-docs/components/entry-marks.md). Each mark is found by its exact
-// text and asserted by presence or absence; the `output` badges also by the
-// count of `status` roles. What the words say is never asserted.
+// The cupboard's three kinds and what each shows (claude-docs/components/entry-marks.md). Each mark is found by its exact text and asserted by presence or absence; the `output` badges also by the count of `status` roles.
+// What the words say is never asserted.
 
 const statuses = () => screen.queryAllByRole('status');
 const local = () => screen.queryByText('Local', { exact: true });

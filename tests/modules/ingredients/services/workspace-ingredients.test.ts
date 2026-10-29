@@ -22,11 +22,9 @@ import {
 } from '../../../support/fixtures';
 import { inputOf, local } from '../../../support/workspace-ingredient-input';
 
-// A coven's own ingredients, written by its owners and
-// members and read by its members, never by anyone else. The table is emptied
-// per test, so every row a result could come from is one this file wrote. What a
-// deleted row leaves in each read is workspace-ingredient-deleted-reads.test.ts's,
-// and the forms written inside the save are workspace-ingredient-forms.test.ts's.
+// A coven's own ingredients, written by its owners and members and read by its members, never by anyone else.
+// The table is emptied per test, so every row a result could come from is one this file wrote.
+// Deleted rows are workspace-ingredient-deleted-reads.test.ts's, and the forms written inside the save are workspace-ingredient-forms.test.ts's.
 
 // The identity holder lookup, wrapped so one test can have the holder gone by
 // the time it is read without changing what it answers for the rest.

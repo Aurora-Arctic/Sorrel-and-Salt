@@ -5,10 +5,8 @@ import { truncateAllTables } from '../../support/seeded-database';
 import { seedAstrology } from '@/db/seed/astrology';
 import type { VocabularyRow } from './types';
 
-// What a re-run of the celestial body and zodiac seed leaves of an admin's edits; the
-// shape every seed shares is index.test.ts's, and the vocabulary's
-// content is the seed doc's to review, not a test's to copy —
-// claude-docs/db/astrology-vocabulary-seed.md, "The astrology vocabulary seed".
+// What a re-run of the celestial body and zodiac seed leaves of an admin's edits; the shape every seed shares is index.test.ts's.
+// The vocabulary's content is the seed doc's to review (claude-docs/db/astrology-vocabulary-seed.md, "The astrology vocabulary seed").
 
 let sql: ReturnType<typeof postgres>;
 let db: ReturnType<typeof drizzle>;

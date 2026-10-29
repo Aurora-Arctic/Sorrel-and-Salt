@@ -3,10 +3,8 @@ import { buildAiCatalog, buildLlmsTxt } from '@/app/ai-discovery';
 import { describe as cut } from '@/lib/page-metadata';
 import { SITE_NAME, SITE_ORIGIN } from '@/lib/site';
 
-// The two public files that describe the compendium to a crawler or an
-// AI agent. llms.txt follows https://llmstxt.org/; the catalog follows the AI
-// Catalog draft (https://ai-catalog.io/spec/) and ARD v0.91
-// (https://agenticresourcediscovery.org/spec) together.
+// The two public files that describe the compendium to a crawler or an AI agent: llms.txt follows https://llmstxt.org/;
+// the catalog follows the AI Catalog draft (https://ai-catalog.io/spec/) and ARD v0.91 (https://agenticresourcediscovery.org/spec) together.
 
 const entry = (
   name: string,

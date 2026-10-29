@@ -158,10 +158,8 @@ describe('MenuButton', () => {
     expect(screen.queryByRole('menu')).toBeNull();
   });
 
-  // The busy button was `disabled`, and a browser drops the focus of a control that is
-  // disabled under it to the body, so the keyboard lost its place while an add ran. It is
-  // `aria-disabled` instead, as the menu's own disabled items are, and refuses a press and
-  // ArrowDown itself.
+  // The busy button was `disabled`, and a browser drops the focus of a control that is disabled under it to the body, so the keyboard lost its place while an add ran.
+  // It is `aria-disabled` instead, as the menu's own disabled items are, and refuses a press and ArrowDown itself.
   describe('while busy', () => {
     it('keeps the focus on the button as it turns busy, and gives it back as it ends', () => {
       const { rerender } = draw(actions());
@@ -223,10 +221,7 @@ describe('MenuButton', () => {
   });
 });
 
-// The green item goes first: whatever place a
-// caller gives the item marked `primary`, the menu draws it
-// first and leaves the rest in the caller's order, and the keys follow what is
-// drawn.
+// The green item goes first: whatever place a caller gives the item marked `primary`, the menu draws it first and leaves the rest in the caller's order, and the keys follow what is drawn.
 describe('MenuButton green item first', () => {
   const names = (): (string | null)[] =>
     within(menu())
@@ -280,10 +275,8 @@ describe('MenuButton green item first', () => {
   });
 });
 
-// Sections: a menu that holds both the compendium's choices and
-// the coven's draws them in labelled groups, the caller putting first the group that belongs to
-// the page the viewer is on. The APG menu pattern: a group named by its visible label, a
-// separator between groups, and the arrows running through every item as one list.
+// Sections: a menu that holds both the compendium's choices and the coven's draws them in labelled groups, the caller putting first the group that belongs to the page the viewer is on.
+// This is the APG menu pattern: a group named by its visible label, a separator between groups, and the arrows running through every item as one list.
 describe('MenuButton sections', () => {
   const plain = (key: string, label: string): MenuButtonItem => ({
     key,

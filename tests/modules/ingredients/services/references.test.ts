@@ -16,11 +16,8 @@ import { A, B, C, D, E, F, asUser } from '../../../support/as-user';
 import { useTestDatabase } from '../../../support/db/database';
 import { insertReference } from '../../../support/db/insert-reference';
 
-// A reference written in its tier — the compendium's under the
-// SiteAdmin proof alone, a coven's under its Membership, whoever cites it —
-// and the picker's search, scoped to the compendium and the current coven
-// (DESIGN.md §5, "References"). Both tables are emptied per test, so every
-// row a result could come from is one this file wrote.
+// A reference written in its tier (the compendium's under the SiteAdmin proof alone, a coven's under its Membership, whoever cites it), and the picker's search, scoped to the compendium and the current coven (DESIGN.md §5, "References").
+// Both tables are emptied per test, so every row a result could come from is one this file wrote.
 
 let sql: postgres.Sql;
 useTestDatabase((client) => {
@@ -114,10 +111,8 @@ describe('createReference', () => {
     await expect(createReference(asUser(user), WORKSPACE_W_ID, BOOK)).rejects.toThrow(Forbidden);
   });
 
-  // DESIGN.md §5's CHECKs, refused by the shared schema before the table sees
-  // them: each issue on the field that failed, never a constraint's name. One
-  // case proves the service parses its input; every rule the schema holds is
-  // tests/modules/ingredients/validation/reference.test.ts's.
+  // DESIGN.md §5's CHECKs, refused by the shared schema before the table sees them: each issue on the field that failed, never a constraint's name.
+  // One case proves the service parses its input; every rule the schema holds is tests/modules/ingredients/validation/reference.test.ts's.
   it('refuses a web page with no address or day, pathed to each field', async () => {
     const issues = await refusal(
       createReference(asUser(B), WORKSPACE_W_ID, { kind: 'web_page', title: 'Testwort' } as never),

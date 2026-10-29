@@ -5,13 +5,9 @@ import { ingredientColumns, makeIngredient } from '../../../support/fixtures';
 import { FIXTURE_USERS, WORKSPACE_W_ID, WORKSPACE_X_ID } from '@/db/seed/standard';
 import type { IngredientOverrides, Inserted } from './types';
 
-// §5's five declared unique indexes, by what each refuses; that each is
-// partial on deleted_at, and frees its slot on a soft delete, is
-// tests/db/partial-unique-indexes.test.ts's. Identity is `identity_key`, the
-// formal name alone, once per tier whatever the form, which is a variant's
-// , so the compendium is unique on identity and label
-// uniqueness survives only inside a workspace —
-// claude-docs/db/identity-model.md, "The ingredient identity model".
+// §5's five declared unique indexes, by what each refuses. That each is partial on deleted_at and frees its slot on a soft delete is tests/db/partial-unique-indexes.test.ts's.
+// Identity is `identity_key`, the formal name alone, once per tier whatever the form, so the compendium is unique on identity and label uniqueness survives only inside a workspace
+// (claude-docs/db/identity-model.md, "The ingredient identity model").
 const WORKSPACE_LABEL = 'ingredients_workspace_label_unique';
 const COMPENDIUM_IDENTITY_KEY = 'ingredients_compendium_identity_key_unique';
 const WORKSPACE_IDENTITY_KEY = 'ingredients_workspace_identity_key_unique';
@@ -24,10 +20,7 @@ const AUTHOR = FIXTURE_USERS.A.id;
 const WORKSPACE_A = WORKSPACE_W_ID;
 const WORKSPACE_B = WORKSPACE_X_ID;
 
-/**
- * The shared factory plus this file's author; the audit stamps are never the
- * fixture's.
- */
+/** The shared factory plus this file's author; the audit stamps are never the fixture's. */
 function row(overrides: IngredientOverrides = {}): Record<string, unknown> {
   return {
     ...ingredientColumns(makeIngredient(overrides)),
@@ -169,10 +162,8 @@ describe('ingredients unique indexes', () => {
     });
   });
 
-  // The slug is the label and the formal name, so it
-  // collides only where `slugify` folds two different identities together —
-  // punctuation or accents in a formal name, or a label differing only in
-  // punctuation. Those pairs are refused here, not by identity or the label.
+  // The slug is the label and the formal name, so it collides only where `slugify` folds two different identities together (punctuation or accents in a formal name, or a label differing only in punctuation).
+  // Those pairs are refused here, not by identity or the label.
   describe('the slug indexes', () => {
     it('holds two compendium entries that share a label, under distinct slugs', async () => {
       const first = await insert({ name: "Cat's Claw", canonicalName: 'Uncaria tomentosa' });

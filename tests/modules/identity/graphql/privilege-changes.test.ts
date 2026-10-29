@@ -6,13 +6,8 @@ import { useTestDatabase } from '../../../support/db/database';
 import { run } from '../../../support/graphql/run';
 import type { PrivilegeChangesResult } from './types';
 
-// `privilegeChanges`, the transport's half
-// (claude-docs/testing/layer-ownership.md): an admin's page with every field,
-// the filters reaching the service, subject and actor in one read per page,
-// and the `admin` scope's refusal. The order, the
-// page boundary and who the service refuses are
-// services/privilege-changes.test.ts's; a signed-out caller is
-// tests/db/graphql-query-scopes.test.ts's.
+// `privilegeChanges`, the transport's half (claude-docs/testing/layer-ownership.md): an admin's page with every field, the filters reaching the service, subject and actor in one read per page, and the `admin` scope's refusal.
+// The order, the page boundary and who the service refuses are services/privilege-changes.test.ts's; a signed-out caller is tests/db/graphql-query-scopes.test.ts's.
 
 // The query count, observed at the repository: the user read is wrapped so
 // the test counts calls without changing what they answer.

@@ -172,10 +172,8 @@ describe('Story 1: adding a second provider from a signed-in session', () => {
     expect(await userRow(OWNER)).toEqual(owner);
   });
 
-  // The pin this task narrows rather than lifts. The row is present and
-  // verified, and the profile is the one the first test links, so the only
-  // thing standing between this sign-in and the owner's row is that
-  // Microsoft does not vouch outside a link flow.
+  // The row is present and verified and the profile is the one the first test links, so the only thing between this sign-in
+  // and the owner's row is that Microsoft does not vouch outside a link flow.
   it('still refuses the same Microsoft profile at a plain sign-in over that row', async () => {
     const owner = await discordUser(OWNER);
 
@@ -278,10 +276,8 @@ describe('Story 1: removing a linked provider', () => {
   });
 });
 
-// The seed's creator row is a plain user, and this is why it can stay
-// one — no provider's sign-in lands in it. Better Auth links a sign-in to an
-// existing row by address only if that row is verified, and the bootstrap row
-// never is; nor has it an `accounts` row to sign in through.
+// The seed's creator row stays a plain user because no provider's sign-in lands in it: Better Auth links a sign-in to an existing row
+// by address only if that row is verified, and the bootstrap row never is nor has an `accounts` row.
 describe("the seed's bootstrap user", () => {
   it.each<ProviderId>(['google', 'discord', 'facebook', 'microsoft'])(
     'refuses a %s sign-in vouching for its address, and attaches nothing to it',

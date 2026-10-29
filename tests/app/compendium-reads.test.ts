@@ -2,11 +2,8 @@ import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { Forbidden, NotFound } from '@/lib/errors';
 import { entryDetail } from '../support/entry-detail';
 
-// The details a Quick Look opens over the public cards: an entry by id, read with no
-// session, through the cached public entry read. The services are mocked: that a coven's own
-// id answers `NotFound` with no session is getIngredient's test
-// (tests/modules/ingredients/services/compendium.test.ts); here, that the read asks it with
-// none, and turns its refusal into nothing for the page to open.
+// The details a Quick Look opens over the public cards: an entry by id, read with no session, through the cached public entry read. The services are mocked.
+// That a coven's own id answers `NotFound` with no session is getIngredient's test (tests/modules/ingredients/services/compendium.test.ts); here, the read asks it with none and turns the refusal into nothing for the page to open.
 
 const getIngredient = vi.fn();
 const readCompendiumEntry = vi.fn();

@@ -41,9 +41,7 @@ let sql: ReturnType<typeof postgres>;
 useTestDatabase((client) => (sql = client));
 
 // The factory writes the row; this file supplies the coven and the author.
-// `status` and `visibility` are dropped so each column's own default is what
-// the tests observe — a value spelled out in the insert would make "defaults
-// to draft" assert what it just wrote. `cast` and `share` take those paths.
+// `status` and `visibility` are dropped so each column's own default is what the tests observe; a value spelled out would make "defaults to draft" assert what it just wrote.
 async function record(overrides: SpellOverrides = {}): Promise<string> {
   const {
     status: _status,

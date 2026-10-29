@@ -22,11 +22,8 @@ import type { Logged } from '../../support/db/types';
 import { type IngredientFixture, makeIngredient, makeVariant } from '../../support/fixtures';
 import type { Overrides } from '../../support/fixtures';
 
-// How many compendium entries each facet value would list, read in one
-// grouped query per kind. Each count is checked against the list's own count
-// read under the filter the value stands for, so the facets cannot drift from
-// the arms that match. The ingredient tables are emptied per test, so every
-// row a count could come from is one this file wrote.
+// How many compendium entries each facet value would list, read in one grouped query per kind. Each count is checked against the list's own count under the filter the value stands for, so the facets cannot drift from the arms that match.
+// The ingredient tables are emptied per test, so every row a count could come from is one this file wrote.
 
 const logged = vi.hoisted(() => [] as Logged[]);
 
@@ -72,11 +69,7 @@ const KINDS: Kind[] = [
   'toxic',
 ];
 
-/**
- * The list filter a facet value stands for: `base` with the value as its
- * kind's only selection, or, for a category under `all`, added to the ones
- * already chosen.
- */
+/** The list filter a facet value stands for: `base` with the value as its kind's only selection, or, for a category under `all`, added to those already chosen. */
 function only(base: IngredientFilter, kind: Kind, value: string): IngredientFilter {
   switch (kind) {
     case 'forms':
@@ -103,14 +96,8 @@ function counts(facets: IngredientFacets, kind: Kind): Record<string, number> {
   return Object.fromEntries(facets[kind].map(({ value, count }) => [value, count]));
 }
 
-// The order of each kind's values, the same on the compendium's read
-// and a coven's. Every list of names sorts alphabetically in natural-language
-// order (case set aside, an accented letter beside its plain one), a category
-// under its group and a deity under its tradition; signs and bodies by their
-// curated position, then the unpositioned by name; never by count
-// (claude-docs/design-decisions/m12.52-facet-sort-order.md). Every name below
-// is invented, and each list's counts run against its alphabetical order, so
-// a count order and a code-unit order would each read differently.
+// The order of each kind's values, the same on the compendium's read and a coven's: names alphabetical in natural-language order (case set aside, an accented letter beside its plain one), a category under its group, a deity under its tradition,
+// signs and bodies by curated position then unpositioned by name; never by count (claude-docs/design-decisions/m12.52-facet-sort-order.md). Each list's counts run against its alphabetical order, so a count order and a code-unit order would each read differently.
 describe("the order of each kind's values (M12.52)", () => {
   /** Ids of the invented curated rows, by name. */
   const ids = new Map<string, string>();
@@ -200,12 +187,7 @@ describe("the order of each kind's values (M12.52)", () => {
   ];
 
   describe.each(reads)('on $read read', ({ workspaceId, facets }) => {
-    /**
-     * Six entries, the first carrying every value and each later one fewer,
-     * so the counts fall as the names rise: zedform on all six, Alphaform on
-     * one; Ashmark on five, Zestmark on one; Dunmar on five, Yorrow on one;
-     * Pisces and Vesta on all six.
-     */
+    /** Six entries, the first carrying every value and each later one fewer, so counts fall as names rise: zedform on all six, Alphaform on one; Ashmark on five, Zestmark on one; Dunmar on five, Yorrow on one; Pisces and Vesta on all six. */
     async function seedEntries(): Promise<void> {
       const forms = [
         'zedform',
@@ -404,10 +386,7 @@ describe('findCompendiumFacets', () => {
   let hecate: string;
   let apollo: string;
 
-  /**
-   * Four compendium entries spread over every kind, and a coven entry that
-   * matches them all and must count for none of them.
-   */
+  /** Four compendium entries spread over every kind, and a coven entry that matches them all and must count for none. */
   async function seedEntries(): Promise<void> {
     protection = await idOf('categories', 'Protection');
     cleansing = await idOf('categories', 'Cleansing');

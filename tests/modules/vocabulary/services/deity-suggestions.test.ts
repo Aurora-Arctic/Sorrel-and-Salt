@@ -11,12 +11,8 @@ import { insertIngredient } from '../../../support/db/insert-ingredient';
 import { type IngredientFixture, type Overrides, makeIngredient } from '../../../support/fixtures';
 import type { ConnectionArgs, Page } from '@/lib/types';
 
-// DESIGN.md §5 and claude-docs/db/deity-vocabulary.md, "The deity
-// vocabulary": the deities field's autofill offers the curated vocabulary
-// first, each row with its tradition, then the uncurated values in use in the
-// compendium and the caller's own workspace. The vocabulary is
-// the seed, revived per test since some tests retire a row; `ingredients`
-// is emptied per test, so every in-use value is one this file wrote.
+// DESIGN.md §5 and claude-docs/db/deity-vocabulary.md, "The deity vocabulary": the deities autofill offers the curated vocabulary first, each row with its tradition, then uncurated values in use in the compendium and the caller's workspace.
+// The vocabulary is the seed, revived per test since some tests retire a row; `ingredients` is emptied per test, so every in-use value is one this file wrote.
 
 let sql: ReturnType<typeof postgres>;
 

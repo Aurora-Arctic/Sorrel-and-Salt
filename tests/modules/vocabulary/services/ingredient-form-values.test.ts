@@ -20,18 +20,12 @@ import { useTestDatabase } from '../../../support/db/database';
 import { insertIngredient, insertVariant } from '../../../support/db/insert-ingredient';
 import { makeIngredient, makeVariant } from '../../../support/fixtures';
 
-// The form half: the curated form vocabulary's writes, the site
-// admin's alone, and the reads the admin page lists them by. A compendium
-// entry's forms are its variants, each a pick, so a form a
-// live entry's variant picked is held: its delete is refused, and its rename
-// is carried onto every such variant, moving no address. A coven's
-// pick is neither. The seeded vocabulary stays, so every form a test writes
-// is named `Fixture …`.
+// The curated form vocabulary's writes, the site admin's alone, and the reads the admin page lists them by.
+// A compendium entry's forms are its variants, each a pick, so a form a live variant picked is held: its delete is refused and its rename is carried onto every such variant, moving no address. A coven's pick is neither.
+// The seeded vocabulary stays, so every form a test writes is named `Fixture …`.
 
-// Two repository reads wrapped, each passing through to the real one: the
-// page finder, to see what the list hands it, and the rename's clash check,
-// so one test can have a clashing variant appear after the check, as a second
-// admin's write would.
+// Two repository reads wrapped, each passing through to the real one: the page finder, to see what the list hands it, and the rename's clash check,
+// so one test can have a clashing variant appear after the check, as a second admin's write would.
 const repository = vi.hoisted(() => ({
   findIngredientFormValues: vi.fn(),
   findCompendiumFormRenameClashes: vi.fn(),
@@ -120,10 +114,7 @@ const variantsOf = (ingredientId: string) =>
     select id, form, form_id, updated_by from ingredient_variants
     where ingredient_id = ${ingredientId} and deleted_at is null order by form`;
 
-/**
- * A fresh compendium entry, or W's own ingredient, whose one form is `form`,
- * picking `formId` when given — by its label alone unless a formal name is.
- */
+/** A fresh compendium entry, or W's own ingredient, whose one form is `form`, picking `formId` when given, by its label alone unless a formal name is given. */
 const entry = (
   name: string,
   form: string,
@@ -491,13 +482,8 @@ describe('updateIngredientFormValue', () => {
     await expect(updateIngredientFormValue(admin, 'not-a-uuid', input())).rejects.toThrow(NotFound);
   });
 
-  // A rename onto the variants: the new spelling
-  // is carried onto every live compendium variant that picked the form, and
-  // no entry's address moves, since a form is no part of it. Which rows the
-  // carry writes, stamps and leaves alone row by row is write.carryFormRename's
-  // (tests/db/repository/ingredients.test.ts): what stays here is the rule —
-  // which variants follow, that nothing moves an address, the refusal — and
-  // that no coven's pick is an admin's to rewrite.
+  // A rename onto the variants: the new spelling is carried onto every live compendium variant that picked the form, and no entry's address moves, since a form is no part of it.
+  // Which rows the carry writes and stamps is write.carryFormRename's (tests/db/repository/ingredients.test.ts); what stays here is which variants follow, that no address moves, the refusal, and that no coven's pick is rewritten.
   describe('a rename, while live compendium entries pick the form', () => {
     it('carries the new name onto every compendium variant picking it, moving no slug and retiring none', async () => {
       const id = await seed('Fixture Resin');

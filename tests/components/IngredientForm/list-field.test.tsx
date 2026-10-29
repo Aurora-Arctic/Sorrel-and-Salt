@@ -14,16 +14,9 @@ import { press, type } from '../../support/interact';
 import { layOutChips, moveByKeyboard } from '../../support/sortable';
 import type { Variant } from './types';
 
-// The form's list field on its own: one box to type in, its entries
-// inside it, on react-hook-form with the form's resolver, and no lookup — the
-// suggestions are given, as `LookupListField` gives them. The behaviour every
-// list shares runs on a plain list and a pick-only one, the two ways an entry
-// gets in; `ordered` and the folk names' own-name rule have their own
-// describes, and the six lists differ otherwise only in the shape a typed
-// entry is sent in, of which there are two. What the box, its chips and the sortable list do on their own is
-// Combobox's (tests/components/Combobox/index.test.tsx), and what needs the
-// whole form — the lookups wired, the payload — stays in index.test.tsx
-// (claude-docs/components/ingredient-form.md, "Testing").
+// The form's list field on its own: one box to type in, its entries inside it, on react-hook-form with the form's resolver, and no lookup (the suggestions are given, as `LookupListField` gives them).
+// The shared behaviour runs on a plain list and a pick-only one, the two ways an entry gets in; `ordered` and the folk names' own-name rule have their own describes, and the six lists otherwise differ only in the shape a typed entry is sent in, of which there are two.
+// What the box, chips and sortable list do on their own is Combobox's (tests/components/Combobox/index.test.tsx), and what needs the whole form (lookups wired, the payload) stays in index.test.tsx (claude-docs/components/ingredient-form.md, "Testing").
 
 /** The shapes the field takes; the form's six lists are these under their own names. */
 const PLAIN: Variant = {
@@ -62,11 +55,7 @@ const DEITIES: Variant = {
   ordered: true,
 };
 
-/**
- * The two shapes a list sends a typed entry in: the folk names, celestial bodies,
- * signs and colours as text, a deity or substitute as a name (DESIGN.md §5,
- * `ingredient_deities` and `ingredient_substitutes`).
- */
+/** The two shapes a list sends a typed entry in: the folk names, celestial bodies, signs and colours as text, a deity or substitute as a name (DESIGN.md §5, `ingredient_deities` and `ingredient_substitutes`). */
 const LISTS: (Omit<Variant, 'variant'> & { sent: (values: string[]) => unknown })[] = [
   { ...FOLK_NAME, sent: (values) => values },
   { ...PLAIN, sent: (values) => values.map((name) => ({ name })) },
@@ -79,11 +68,7 @@ const offer = (values: string[]): Suggestions<ListOption> => ({
   pending: false,
 });
 
-/**
- * One list field in a form of its own, given its entries as an edit would be.
- * A pick-only list is given a source, since a pick is its only way in; the
- * Name box is there for what a folk name is judged against.
- */
+/** One list field in a form of its own, given its entries as an edit would be. A pick-only list is given a source, since a pick is its only way in; the Name box is there for what a folk name is judged against. */
 function renderList(
   { name, legend, entry, ordered, pickOnly }: Omit<Variant, 'variant'>,
   {

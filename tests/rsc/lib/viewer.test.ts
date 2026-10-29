@@ -2,10 +2,8 @@ import { createElement } from 'react';
 import { AsyncLocalStorage } from 'node:async_hooks';
 import { describe, expect, it, vi } from 'vitest';
 
-// The viewer's own memberships, read once in a request however many readers ask. React's `cache()`
-// memoises only inside the Flight renderer, so this renders; the shared read is asked after an
-// `await`, which the renderer follows only through `AsyncLocalStorage`, a global Next sets on the
-// server and Node does not, so it is set here first.
+// The viewer's own memberships, read once in a request however many readers ask. React's `cache()` memoises only inside the Flight renderer, so this renders;
+// the shared read is asked after an `await`, which the renderer follows only through `AsyncLocalStorage`, a global Next sets on the server and Node does not, so it is set here first.
 
 const SESSION = { userId: 'u1', role: 'user' } as const;
 const { membershipsOf } = vi.hoisted(() => ({

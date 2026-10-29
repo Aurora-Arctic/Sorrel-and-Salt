@@ -5,11 +5,8 @@ import ChipColorField from '@/components/ChipColorField';
 import type { ChipColorFieldProps } from '@/components/ChipColorField/types';
 import { pairedColor } from '@/lib/group-colors';
 
-// One of a category group's two chip colours: Ark's picker and the
-// hex it writes, kept in step; the channels of a format the admin chooses; a
-// veil over the colours that fall short of 4.5:1 on its ground; a Match button setting it from its partner; a
-// sample chip there with its ratio; and a warning when another
-// group's colour in the theme stands too close.
+// One of a category group's two chip colours: Ark's picker and the hex it writes, kept in step; the channels of a format the admin chooses;
+// a veil over the colours that fall short of 4.5:1 on its ground; a Match button setting it from its partner; a sample chip with its ratio; and a warning when another group's colour in the theme stands too close.
 
 function Controlled({
   initial = '#5d8ab1',
@@ -78,10 +75,8 @@ describe('ChipColorField', () => {
     it('opens a tooltip on the toggle when the keyboard focuses it', async () => {
       render(<Controlled />);
 
-      // The tooltip starts listening for the keyboard a microtask after it
-      // mounts (zag queues a machine's effects), and that listener is global
-      // and outlives the render, so only the file's first mount is without
-      // it. Yield once, so this test does not depend on running after another.
+      // The tooltip starts listening for the keyboard a microtask after it mounts (zag queues a machine's effects), and that listener is global and outlives the render,
+      // so only the file's first mount is without it. Yield once, so this test does not depend on running after another.
       await act(async () => {});
       // Arrived at by the keyboard, as the tooltip opens on focus only then.
       fireEvent.keyDown(document.body, { key: 'Tab' });

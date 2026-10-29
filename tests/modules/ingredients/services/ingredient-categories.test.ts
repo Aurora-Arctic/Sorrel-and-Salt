@@ -15,12 +15,9 @@ import { useTestDatabase } from '../../../support/db/database';
 import { insertIngredient } from '../../../support/db/insert-ingredient';
 import { type IngredientFixture, type Overrides, makeIngredient } from '../../../support/fixtures';
 
-// The categories an ingredient is filed under, written by either
-// tier's service in the ingredient's own transaction. The join
-// table is hard-deleted, so a pair dropped leaves no row and a pair
-// kept keeps the stamps of whoever added it. The ingredients are emptied per
-// test; a category a test retires is put back after it, since the
-// vocabularies are the file's clone's.
+// The categories an ingredient is filed under, written by either tier's service in the ingredient's own transaction.
+// The join table is hard-deleted, so a pair dropped leaves no row and a pair kept keeps the stamps of whoever added it.
+// Ingredients are emptied per test; a category a test retires is put back after it, since the vocabularies are the file's clone's.
 
 let sql: postgres.Sql;
 useTestDatabase((client) => {

@@ -8,10 +8,8 @@ import { insertCupboardEntry } from '../../../support/db/insert-cupboard-entry';
 import { insertIngredient } from '../../../support/db/insert-ingredient';
 import { makeIngredient } from '../../../support/fixtures';
 
-// Which of the viewer's own covens an entry's page opens in: the coven switcher keeps the viewer
-// on the entry when it can. A live compendium entry opens in every coven; a retired one only in
-// a coven whose cupboard still names it; a coven's own entry in that coven alone. Per viewer and
-// never cached (rule 6), only covens the viewer belongs to (rule 5).
+// Which of the viewer's own covens an entry's page opens in: the coven switcher keeps the viewer on the entry when it can. A live compendium entry opens in every coven; a retired one only in a coven whose cupboard still names it; a coven's own entry in that coven alone.
+// The answer is per viewer and never cached (rule 6), and covers only covens the viewer belongs to (rule 5).
 
 let sql: postgres.Sql;
 useTestDatabase((client) => {

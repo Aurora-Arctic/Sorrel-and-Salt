@@ -6,11 +6,8 @@ import { insertIngredient } from '../support/db/insert-ingredient';
 import { makeIngredient } from '../support/fixtures/ingredient';
 import { FIXTURE_USERS, WORKSPACE_W_ID, WORKSPACE_X_ID } from '@/db/seed/standard';
 
-// The table's two live uniques (CLAUDE.md rule 4): one presence per coven and
-// compendium entry, and one label per coven, case folded. This file proves
-// what each index is keyed on; the catalogue sweep in
-// partial-unique-indexes.test.ts proves for every index alike that a soft
-// delete frees the slot.
+// The table's two live uniques (CLAUDE.md rule 4): one presence per coven and compendium entry, and one label per coven, case folded.
+// This file proves what each index is keyed on; partial-unique-indexes.test.ts proves for all that a soft delete frees the slot.
 
 const AUTHOR = FIXTURE_USERS.A.id;
 

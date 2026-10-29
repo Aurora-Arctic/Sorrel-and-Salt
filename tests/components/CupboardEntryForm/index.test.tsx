@@ -18,10 +18,8 @@ import { mockGraphQLError, mockGraphQLMutation } from '../../support/msw/graphql
 const router = vi.hoisted(() => ({ push: vi.fn(), replace: vi.fn(), refresh: vi.fn() }));
 vi.mock('next/navigation', () => ({ useRouter: () => router }));
 
-// The override form of a compendium entry in a coven's cupboard (
-// claude-docs/components/cupboard-entry-form.md): a field is sent only when it
-// changed, null hands it back to the compendium, and an emptied list is sent as
-// an empty list, the coven having cleared it on purpose.
+// The override form of a compendium entry in a coven's cupboard (claude-docs/components/cupboard-entry-form.md): a field is sent only when it changed, and null hands it back to the compendium.
+// An emptied list is sent as an empty list, the coven having cleared it on purpose.
 
 const COMPENDIUM: CompendiumValues = {
   name: 'Testwort',

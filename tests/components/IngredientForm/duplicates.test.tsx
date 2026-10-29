@@ -25,12 +25,8 @@ import type { DuplicateNode } from './types';
 const router = vi.hoisted(() => ({ push: vi.fn(), replace: vi.fn(), refresh: vi.fn() }));
 vi.mock('next/navigation', () => ({ useRouter: () => router }));
 
-// The duplicate warning on its own: `useDuplicateWarning` and the
-// `NameField` that draws it, in a form whose save asks the warning's `check`
-// before it sends, as the form's does. What only the whole form does with it
-// — the focus on Create Anyway, Save busy while it checks, an error elsewhere
-// first — is index.test.tsx's (claude-docs/components/ingredient-form.md,
-// "Testing").
+// The duplicate warning on its own: `useDuplicateWarning` and the `NameField` that draws it, in a form whose save asks the warning's `check` before it sends, as the form's does.
+// What only the whole form does with it (the focus on Create Anyway, Save busy while it checks, an error elsewhere first) is index.test.tsx's (claude-docs/components/ingredient-form.md, "Testing").
 
 const TOMENTOSA: DuplicateNode = {
   id: 'claw-1',
@@ -52,11 +48,8 @@ const MOCKLEAF: DuplicateNode = {
 };
 
 /**
- * The name field and its warning; a save that the warning does not hold calls
- * `sent` with the name. `opened` is an edited entry's name, as the form opens with it;
- * `cupboard: false` is the admin's form, which has no cupboard to put an entry in;
- * `look` gives each match a Quick Look, as the admin's form does; `inModal` stands the
- * form in a dialog of its own, as the Add Ingredient modal holds it.
+ * The name field and its warning; a save the warning does not hold calls `sent` with the name. `opened` is an edited entry's name.
+ * `cupboard: false` is the admin's form; `look` gives each match a Quick Look; `inModal` stands the form in a dialog, as the Add Ingredient modal holds it.
  */
 function renderName(
   opened?: string,
@@ -144,10 +137,7 @@ const type = (value: string) => typeIn(name(), value);
 const save = () => press('Save Ingredient');
 const warning = () => screen.getByRole('status', { name: 'Possible duplicates' });
 const createAnyway = () => screen.queryByRole('button', { name: 'Create Anyway' });
-/**
- * The region once its last rows have faded: they leave on the slide's net,
- * and the notice with them.
- */
+/** The region once its last rows have faded: they leave on the slide's net, and the notice with them. */
 const emptied = async () => {
   await act(() => vi.advanceTimersByTimeAsync(600));
   expect(warning()).toHaveTextContent('');
@@ -700,13 +690,9 @@ describe('NameField, with useDuplicateWarning', () => {
     });
   });
 
-  // The eye on every row the coven holds opens
-  // the entry's details over the form, read in the page, so nothing the
-  // form holds is lost to a navigation.
-  // A compendium match's + once its add has worked: AddIcon's check, held
-  // ADDED_HOLD_MS, then the eye on the same button, then the row moving under In This
-  // Coven. What the form sends, its status-region words and a refusal are
-  // index.test.tsx's.
+  // The eye on every row the coven holds opens the entry's details over the form, read in the page, so nothing the form holds is lost to a navigation.
+  // A compendium match's + once its add has worked shows AddIcon's check, held ADDED_HOLD_MS, then the eye on the same button, then the row moves under In This Coven.
+  // What the form sends, its status-region words and a refusal are index.test.tsx's.
   describe('after the + has added', () => {
     const UNUSED = { ...TOMENTOSA, isGlobal: true, inCupboard: false };
     const QUICK_LOOK = /^Quick Look Cat's Claw, Uncaria tomentosa/;

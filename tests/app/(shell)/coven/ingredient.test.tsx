@@ -11,10 +11,8 @@ import {
 } from '@/components/CovenSwitchTargets/context';
 import { entryDetail } from '../../../support/entry-detail';
 
-// A coven's ingredient page. The guard and the services are mocked,
-// since what they decide is their own tests'. Here: that the coven in the
-// address is what the lookup is given, that a refusal is a 404, and which of
-// Edit and the compendium link each kind of entry gets.
+// A coven's ingredient page, with the guard and the services mocked.
+// It proves the coven in the address is what the lookup is given, that a refusal is a 404, and which of Edit and the compendium link each kind of entry gets.
 
 const notFound = vi.fn(() => {
   throw new Error('not-found');

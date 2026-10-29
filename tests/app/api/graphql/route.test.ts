@@ -87,10 +87,8 @@ describe('/api/graphql', () => {
       await expect(response.json()).resolves.not.toHaveProperty('data.__type');
     });
 
-    // The mapping is claude-docs/graphql/errors.md's "Errors"; tests/graphql/errors.test.ts
-    // covers each type. This is the route carrying it: `me` signed out is refused
-    // by its scope, which throws the same `Forbidden` a service does. The environment
-    // changes only the plugin set and the IDE, never the mapping, so one is enough.
+    // The mapping is claude-docs/graphql/errors.md's "Errors", and tests/graphql/errors.test.ts covers each type. This case is the route carrying it:
+    // `me` signed out is refused by its scope, which throws the same `Forbidden` a service does. The environment changes only the plugin set and the IDE, never the mapping, so one is enough.
     it('answers a refusal with its code', async () => {
       const response = await route().POST(post({ query: '{ me { id } }' }));
 

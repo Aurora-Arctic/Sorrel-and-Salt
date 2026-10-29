@@ -21,11 +21,8 @@ vi.mock('next/navigation', () => ({ useRouter: () => ({ push: vi.fn(), refresh: 
 
 const { default: SpellBuilder } = await import('@/components/SpellBuilder');
 
-// The spell builder's Add to Jar: the
-// ingredient picker, a one-off ingredient, each step's quantity and unit, and
-// Remove. The picker's answers come from MSW in /api/graphql's shape. That a
-// save writes the ingredient and form ids and never a cupboard entry, and who
-// may save one, is tests/modules/grimoire/services/spell-ingredient-steps.test.ts's.
+// The spell builder's Add to Jar: the ingredient picker, a one-off ingredient, each step's quantity and unit, and Remove. MSW answers the picker in /api/graphql's shape.
+// That a save writes ingredient and form ids and never a cupboard entry, and who may save one, is tests/modules/grimoire/services/spell-ingredient-steps.test.ts's.
 
 type Edge = SpellIngredientSuggestionsQuery['ingredientSuggestions']['edges'][number];
 

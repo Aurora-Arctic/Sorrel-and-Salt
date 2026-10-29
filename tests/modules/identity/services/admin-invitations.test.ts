@@ -20,13 +20,9 @@ import { useTestDatabase } from '../../../support/db/database';
 import { asManualFix } from '../../../support/db/privileges';
 import type { InvitationStateRow } from './types';
 
-// An admin invites an address to become an admin. The token is
-// `crypto.randomBytes` output that only the mail carries; the row holds its
-// hash. Creating and revoking are a site admin's alone and paused with the
-// rest of the admin changes for every admin but the primary one
-// (claude-docs/auth/admin-users.md, "Inviting an admin"). The transport is the
-// test double: the real sender builds the link and hands it to a mocked
-// `send`, so what reaches the address is what the test reads.
+// An admin invites an address to become an admin. The token is `crypto.randomBytes` output that only the mail carries; the row holds its hash.
+// Creating and revoking are a site admin's alone and paused with the rest of the admin changes for every admin but the primary one (claude-docs/auth/admin-users.md, "Inviting an admin").
+// The real sender builds the link and hands it to a mocked `send`, so what reaches the address is what the test reads.
 
 const send = vi.hoisted(() => vi.fn<(message: Message) => Promise<void>>(async () => {}));
 vi.mock('@/lib/mail', () => ({ send }));

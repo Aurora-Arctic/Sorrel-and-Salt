@@ -36,18 +36,11 @@ import type {
   NameNode,
 } from './types';
 
-// The form's lookups on their own components: the Form box
-// (`FormField`) and a list's box (`LookupListField`), each in a form of its
-// own on the form's resolver, asking MSW as /api/graphql answers. What a pick
-// becomes is read from what the resolver hands the submit — the input the
-// form sends. That the form gives each box its coven, and sends the pick, is
-// index.test.tsx's, once per lookup; the box's rows and keys are Combobox's
-// (claude-docs/components/ingredient-form.md, "Testing").
+// The form's lookups on their own components: the Form box (`FormField`) and a list's box (`LookupListField`), each in a form of its own on the form's resolver, asking MSW as /api/graphql answers.
+// What a pick becomes is read from what the resolver hands the submit, the input the form sends. That the form gives each box its coven, and sends the pick, is index.test.tsx's, once per lookup;
+// the box's rows and keys are Combobox's (claude-docs/components/ingredient-form.md, "Testing").
 
-/**
- * `field` in a form of its own, its name given, and `values` beside; the
- * submit receives what the form would send.
- */
+/** `field` in a form of its own, its name given, and `values` beside; the submit receives what the form would send. */
 function renderInForm(field: ReactElement, values: Partial<IngredientFormValues> = {}) {
   const onSubmit = vi.fn();
   const Harness = () => {

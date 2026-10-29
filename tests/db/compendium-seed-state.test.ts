@@ -5,13 +5,8 @@ import { failureOf, useTestDatabase } from '../support/db/database';
 import { ingredientColumns, makeIngredient } from '../support/fixtures';
 import { FIXTURE_USERS } from '@/db/seed/standard';
 
-// Migration 0081: the three columns that let the compendium seed tell
-// a changed file from an unchanged one and keep its hands off a reviewed
-// entry. They are state about the row, not content of it, so the updated_at
-// trigger ignores them (claude-docs/db/updated-at.md, "updated_at is the
-// database's"). Behaviour, not the function's text: a later migration may
-// rewrite the body again, as 0079 and 0081 did, and this test must keep
-// holding it to the same promise.
+// Migration 0081's three columns let the compendium seed tell a changed file from an unchanged one and leave a reviewed entry alone; the updated_at trigger ignores them
+// (claude-docs/db/updated-at.md, "updated_at is the database's"). Behaviour, not the function's text: a later migration may rewrite the body and this must hold the same promise.
 
 const A = FIXTURE_USERS.A.id;
 const B = FIXTURE_USERS.B.id;

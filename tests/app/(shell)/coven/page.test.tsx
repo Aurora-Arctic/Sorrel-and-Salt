@@ -2,12 +2,8 @@ import { fireEvent, render, screen, within } from '@testing-library/react';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 import type { WorkspaceRole } from '@/modules/coven';
 
-// The `/coven/[slug]` index page: the page every coven opens on. It
-// runs the coven guard on its own slug, since a layout does not re-run on
-// client-side navigation, and offers Leave, which every role sees, and
-// Delete, which only an owner does. What the guard decides is
-// tests/lib/request-session.test.ts's and the service's; here it is mocked.
-// The role check is the real one, read off the access-control statements.
+// The `/coven/[slug]` index page. It runs the coven guard on its own slug, since a layout does not re-run on client-side navigation, and offers Leave to every role and Delete to an owner only.
+// The guard is mocked (tests/lib/request-session.test.ts's and the service's); the role check is real, read off the access-control statements.
 
 // The Delete control reads the router, which a page test has no app to give.
 vi.mock('next/navigation', () => ({ useRouter: () => ({ replace: vi.fn(), refresh: vi.fn() }) }));
@@ -122,10 +118,8 @@ describe('the /coven/[slug] page', () => {
     expect(memberRoster).not.toHaveBeenCalled();
   });
 
-  // The sections: Contents lists the pages the caller can reach,
-  // Your Membership holds Leave alone, and Delete has a section of its own
-  // that only an owner is shown, so the two buttons that end a seat and end a
-  // coven are never side by side.
+  // Contents lists the pages the caller can reach, Your Membership holds Leave alone, and Delete has its own section for an owner,
+  // so the button that ends a seat and the one that ends a coven are never side by side.
   describe('the sections', () => {
     it('lists the members page in Contents for a member, who may read members', async () => {
       await renderAs('member');

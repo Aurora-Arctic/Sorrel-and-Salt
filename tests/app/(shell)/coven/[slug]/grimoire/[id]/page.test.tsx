@@ -6,10 +6,8 @@ import { makeQueryClient } from '@/lib/graphql-client';
 import { mockGraphQLQuery } from '../../../../../../support/msw/graphql';
 import { offerCategories } from '../../../../../../support/msw/ingredient-lookups';
 
-// The spell recipe page. The guard and the services are mocked, since what they decide
-// is their own tests' (tests/modules/grimoire/services/spell-reads.test.ts proves a private
-// spell reads as NotFound to anyone but its author); here: the page guards itself, a refusal
-// is the 404, and what the services give is drawn.
+// The spell recipe page, with the guard and services mocked (tests/modules/grimoire/services/spell-reads.test.ts proves a private spell reads as NotFound to anyone but its author).
+// It proves the page guards itself, a refusal is the 404, and what the services give is drawn.
 
 const SPELL_ID = '0f6d2c8e-3b1a-4e5f-9a7c-2d4b6e8f1a3c';
 const COVEN = { id: 'c0ffee00-0000-4000-8000-000000000001', slug: 'fixture-coven' };

@@ -10,12 +10,8 @@ import { insertIngredient } from '../../../support/db/insert-ingredient';
 import { type IngredientFixture, type Overrides, makeIngredient } from '../../../support/fixtures';
 import type { ConnectionArgs, Page } from '@/lib/types';
 
-// DESIGN.md §9, "Entry-time lookups are permission-scoped": typing a common
-// name suggests the names already in use in the compendium and the caller's
-// workspace — an entry's display name or any of its folk names — each naming,
-// by formal name, the in-scope ingredients that answer to it. There is no
-// curated vocabulary of common names, so there is one bucket. The table is
-// emptied per test, so every name a result could carry is one this file wrote.
+// DESIGN.md §9, "Entry-time lookups are permission-scoped": typing a common name suggests the names in use in the compendium and the caller's workspace (an entry's display name or any folk name), each naming by formal name the in-scope ingredients that answer to it.
+// There is no curated vocabulary of common names, so there is one bucket. The table is emptied per test, so every name a result could carry is one this file wrote.
 
 let sql: ReturnType<typeof postgres>;
 
@@ -42,10 +38,7 @@ function pageOf(
   return resolvePage(args, (request) => suggestCommonNames(session, workspaceId, query, request));
 }
 
-/**
- * Every suggestion in one page — the lists here are far shorter than the
- * maximum. A null workspace is the compendium form's.
- */
+/** Every suggestion in one page, since the lists here are far shorter than the maximum. A null workspace is the compendium form's. */
 async function all(
   session: Session,
   query: string,

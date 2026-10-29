@@ -10,11 +10,8 @@ import { formGroupIcon, ingredientFormGroups } from '@/modules/vocabulary/schema
 import { FIXTURE_USERS } from '@/db/seed/standard';
 import type { Row } from './types';
 
-// The eight curated vocabularies, driven off the registry the repository and
-// the seed read, so a ninth is covered by the line that adds it. What every
-// vocabulary shares runs once per table; foreign keys, NOT NULL and the
-// partial unique indexes are the drift test's and the sweeps'
-// (claude-docs/testing/db-harness.md, "The db test harness").
+// The eight curated vocabularies, driven off the registry the repository and the seed read, so a ninth is covered by the line that adds it.
+// What every vocabulary shares runs once per table; foreign keys, NOT NULL and the partial unique indexes are the drift test's and the sweeps' (claude-docs/testing/db-harness.md, "The db test harness").
 
 const AUTHOR = FIXTURE_USERS.A.id;
 const SHARED = ['id', 'name', 'slug', 'description', 'seed_key'];
@@ -119,10 +116,8 @@ describe.each(TABLES)('$table', (entry) => {
 });
 
 describe.each(PAIRS)('$items under $groups', ({ items, groups, groupColumn, groupExtra }) => {
-  // The deliberate gap: uniqueness is on the slug alone, so two live items may
-  // share a display name — "Wax", animal and substance; one god honoured under
-  // two traditions — and the autofill shows the group beside each. A `name`
-  // index would supersede that; say so rather than deleting this test.
+  // Deliberate gap: uniqueness is on the slug alone, so two live items may share a display name ("Wax" animal and substance; one god under two traditions), and the autofill shows the group beside each.
+  // A `name` index would supersede this; say so rather than deleting the test.
   it('admits two live items sharing a display name under two groups', async () => {
     const name = `Fixturia ${token()}`;
     const first = await insert(groups, vocabularyRow(groupExtra));

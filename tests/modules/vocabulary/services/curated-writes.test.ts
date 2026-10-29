@@ -5,13 +5,8 @@ import { createCategory, deleteIngredientFormGroup } from '@/modules/vocabulary'
 import { E, asUser } from '../../../support/as-user';
 import { useTestDatabase } from '../../../support/db/database';
 
-// The slug refusal every curated vocabulary's write shares, on the
-// two arms its services' tests cannot reach without a race: an error that is
-// not the vocabulary's slug violation, and a violation whose holder is gone
-// by the time the refusal reads it. Reached through `createCategory`, whose
-// write is stubbed to fail as each race would leave it; the holder-named arm
-// is each service's own test. A group's delete, likewise, when the slug index
-// refuses a move the read before the write let through.
+// The slug refusal every curated vocabulary's write shares, on the two arms its services' tests cannot reach without a race: an error that is not the slug violation, and a violation whose holder is gone by the time the refusal reads it.
+// Reached through `createCategory` with its write stubbed to fail as each race would; the holder-named arm is each service's own test. A group's delete is likewise covered when the slug index refuses a move the earlier read let through.
 
 const repository = vi.hoisted(() => ({ withAudit: vi.fn() }));
 vi.mock('@/db/repository', async (importOriginal) => {

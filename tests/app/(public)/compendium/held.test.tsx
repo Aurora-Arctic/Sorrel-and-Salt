@@ -1,10 +1,8 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { Forbidden } from '@/lib/errors';
 
-// What the public compendium page tells each card about the viewer's covens: whether
-// every coven they may write in holds the entry, and which ones do. The cards, the cached reads and the viewer
-// are mocked; here: which coven is asked, for which entries, and that a visitor and a viewer are
-// asked nothing. The held read is per viewer and sits beside the cached ones (CLAUDE.md rule 6).
+// What the public compendium page tells each card about the viewer's covens: whether every coven they may write in holds the entry, and which ones do.
+// The cards, cached reads and viewer are mocked; a visitor and a viewer are asked nothing. The held read is per viewer and sits beside the cached ones (CLAUDE.md rule 6).
 
 vi.mock('next/navigation', () => ({ redirect: vi.fn() }));
 

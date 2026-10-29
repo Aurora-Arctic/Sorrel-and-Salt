@@ -23,11 +23,8 @@ import { insertSpell } from '../../support/db/insert-spell';
 import { makeSpell } from '../../support/fixtures';
 import type { Cursor, PageRequest } from '@/lib/types';
 
-// The cursor-page reader for spells and the tables hung off a spell,
-// `findPageInReadableSpells`. It ANDs `readableSpells` itself, so a
-// page can only ever hold what the direct-id read would return: the coven's
-// shared spells and this reader's own private ones (DESIGN.md §5, CLAUDE.md
-// rule 7). Every refusal first proves the row is there and its author pages it.
+// The cursor-page reader for spells and the tables hung off a spell, `findPageInReadableSpells`. It ANDs `readableSpells` itself, so a page holds only what the direct-id read would return:
+// the coven's shared spells and this reader's own private ones (DESIGN.md §5, CLAUDE.md rule 7). Every refusal first proves the row is there and its author pages it.
 
 let sql: postgres.Sql;
 useTestDatabase((client) => {
@@ -137,10 +134,7 @@ describe('findPageInReadableSpells', () => {
 });
 
 describe('findGrimoirePage', () => {
-  /**
-   * Sets spells' stamps, the `updated_at` trigger off so the value holds. One
-   * statement, so spells stamped together share `now()` to the microsecond.
-   */
+  /** Sets spells' stamps with the `updated_at` trigger off so the value holds; one statement, so spells stamped together share `now()` to the microsecond. */
   const stamp = (ids: string | string[], created: string, updated: string) =>
     sql.begin(async (tx) => {
       await tx`alter table spells disable trigger set_updated_at`;

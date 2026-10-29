@@ -23,10 +23,8 @@ import {
   variantInput,
 } from '../../../support/fixtures';
 
-// The three writes of a coven's cupboard entry, and the two places
-// that keep the label rule (add/annotate here, own-row names in
-// workspace-ingredients.ts). Which role may do what is asserted beside the
-// precondition that would let the write through.
+// The three writes of a coven's cupboard entry, and the two places that keep the label rule (add/annotate here, own-row names in workspace-ingredients.ts).
+// Which role may do what is asserted beside the precondition that would let the write through.
 
 let sql: postgres.Sql;
 useTestDatabase((client) => {

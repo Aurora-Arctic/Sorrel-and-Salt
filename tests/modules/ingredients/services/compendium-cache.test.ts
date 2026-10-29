@@ -17,11 +17,8 @@ import { insertIngredient } from '../../../support/db/insert-ingredient';
 import { makeIngredient } from '../../../support/fixtures';
 import { clearDataCache, declared } from '../../../support/next-data-cache';
 
-// The compendium's page and its count held in the data cache under
-// the `compendium` tag, each keyed by its arguments (DESIGN.md §7). A data
-// cache that holds, as Next's does (tests/support/next-data-cache.ts), so a
-// row written underneath a read shows whether the repeat read reached
-// Postgres (claude-docs/db/compendium-cache.md).
+// The compendium's page and its count held in the data cache under the `compendium` tag, each keyed by its arguments (DESIGN.md §7).
+// The data cache holds as Next's does (tests/support/next-data-cache.ts), so a row written underneath a read shows whether the repeat read reached Postgres (claude-docs/db/compendium-cache.md).
 vi.mock('next/cache', () => import('../../../support/next-data-cache'));
 
 let sql: postgres.Sql;

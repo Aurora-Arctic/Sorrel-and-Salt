@@ -20,11 +20,8 @@ import {
 } from './variants-harness';
 import { press } from '../../support/interact';
 
-// A variant's substitutes: offered form by form, ranked by the
-// variant's own form and group, a typed name kept as a name. Rendered by
-// ./variants-harness.tsx; the link a picked row sends, and the save refusing
-// a link that names no form, are variants.test.tsx's, on the whole form
-// (claude-docs/components/ingredient-form.md, "The variants").
+// A variant's substitutes: offered form by form, ranked by the variant's own form and group, a typed name kept as a name. Rendered by ./variants-harness.tsx.
+// The link a picked row sends, and the save refusing a link that names no form, are variants.test.tsx's, on the whole form (claude-docs/components/ingredient-form.md, "The variants").
 
 describe('a variant’s substitutes', () => {
   beforeEach(() => {

@@ -4,11 +4,8 @@ import { A, E, asUser } from '../../../support/as-user';
 import { run } from '../../../support/graphql/run';
 import type { SetUserRoleResult } from './types';
 
-// `setUserRole`, the transport's half (claude-docs/testing/layer-ownership.md):
-// an admin's answer, the reason reaching the ledger, and one refusal per error
-// code, read as the browser reads them. Which callers and targets the service
-// refuses is services/user-role.test.ts's; a signed-out caller and the scope
-// are tests/db/graphql-query-scopes.test.ts's.
+// `setUserRole`, the transport's half (claude-docs/testing/layer-ownership.md): an admin's answer, the reason reaching the ledger, and one refusal per error code, read as the browser reads them.
+// Which callers and targets the service refuses is services/user-role.test.ts's; a signed-out caller and the scope are tests/db/graphql-query-scopes.test.ts's.
 
 let sql: ReturnType<typeof postgres>;
 

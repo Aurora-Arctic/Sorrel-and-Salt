@@ -44,10 +44,8 @@ describe('RadioGroupField, strip', () => {
     expect(screen.getByRole('group', { name: 'Icon' })).toHaveAccessibleDescription();
   });
 
-  // Each segment's name, shown above it on hover and on its radio's focus,
-  // for a sighted person who cannot tell the icons apart.
-  // Decoration: the radio's own name already says it, so the tip
-  // is kept out of the accessibility tree, and found with `hidden`.
+  // Each segment's name shows above it on hover and on its radio's focus, for a sighted person who cannot tell the icons apart.
+  // It is decoration, since the radio's own name already says it, so the tip is kept out of the accessibility tree and found with `hidden`.
   it('opens the name tip of the segment pointed at, and no other', async () => {
     render(<Harness />);
     const tip = () => screen.queryByRole('tooltip', { hidden: true });

@@ -2,12 +2,8 @@ import { describe, expect, it } from 'vitest';
 import { CHIP_GROUNDS, contrastRatio } from '@/lib/contrast';
 import { CategoryGroupInput } from '@/modules/vocabulary/validation/category-group';
 
-// A category group as an admin writes one: its colours held to 4.5:1,
-// each against the harder of its own theme's surfaces — `colorDark` the dark
-// card, `colorLight` the light page — refused beside the picker that
-// chose it, naming the column and the ratio missed. The name, the
-// description and the dropped slug are curatedValueInput's, and
-// tests/lib/validation.test.ts's.
+// A category group as an admin writes one: each colour held to 4.5:1 against the harder of its own theme's surfaces (`colorDark` the dark card, `colorLight` the light page).
+// A refusal sits beside the picker that chose it and names the column and the ratio missed. The name, description and dropped slug are curatedValueInput's, and tests/lib/validation.test.ts's.
 
 const VALID = {
   name: 'Fixture Wards',

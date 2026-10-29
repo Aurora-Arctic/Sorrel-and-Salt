@@ -4,10 +4,8 @@ import IconTip, { CheckIcon, EditLink } from '@/components/IconTip';
 import MenuButton from '@/components/MenuButton';
 import Modal from '@/components/Modal';
 
-// A word above an icon control, "Edit" over a pencil: shown once the pointer
-// rests on the control or at its focus, gone the moment the pointer leaves,
-// and dismissed by Escape; decoration only, since the control's own name says
-// more (claude-docs/components/icon-tip.md).
+// A word above an icon control, "Edit" over a pencil: shown once the pointer rests on the control or at its focus, gone the moment the pointer leaves, and dismissed by Escape.
+// It is decoration only, since the control's own name says more (claude-docs/components/icon-tip.md).
 
 // Open, the tip is in the page but kept out of the accessibility tree, so
 // it is found with `hidden`; shut, it is not in the page at all.
@@ -133,10 +131,7 @@ describe('IconTip', () => {
   });
 });
 
-// A tip over a control that opens a menu: while the menu is open the menu says
-// what the control does, so the tip stays shut however the pointer or the
-// focus reaches the control, and is back for
-// the next hover once the menu is closed.
+// A tip over a control that opens a menu: while the menu is open the menu says what the control does, so the tip stays shut however the pointer or focus reaches the control, and is back for the next hover once the menu is closed.
 describe('IconTip around a menu button', () => {
   beforeEach(() => {
     vi.useFakeTimers();

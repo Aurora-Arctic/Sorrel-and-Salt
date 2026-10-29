@@ -19,11 +19,8 @@ import {
   parsed,
 } from './compendium/files-fixture';
 
-// The six reference seeds in one transaction, which a dry run rolls
-// back once. Each seed's own shape (stamps, idempotence, nothing resurrected,
-// a dry run writing nothing) is index.test.ts's; force's per-refusal cases are
-// compendium.test.ts's. This file proves only what running them together adds,
-// over the two-entry fixture: the real files' content is reviewed, not tested.
+// The six reference seeds in one transaction, which a dry run rolls back once. Each seed's own shape is index.test.ts's and force's per-refusal cases are compendium.test.ts's.
+// This file proves only what running them together adds, over the two-entry fixture.
 
 let sql: ReturnType<typeof postgres>;
 let db: ReturnType<typeof drizzle>;

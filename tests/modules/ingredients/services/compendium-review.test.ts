@@ -29,11 +29,8 @@ import {
 } from '../../../support/fixtures';
 import { curatedFormId } from '../../../support/db/curated-ids';
 
-// A curator's review mark on a compendium entry. Set and cleared by hand through
-// `setCompendiumEntryReviewed` alone, and left as it was by every other curator
-// write to the entry; read
-// back only through the curator's own read, never through the public one.
-// The table is emptied per test, so every row read back is one this file wrote.
+// A curator's review mark on a compendium entry: set and cleared by hand through `setCompendiumEntryReviewed` alone, and left as it was by every other curator write to the entry.
+// It is read back only through the curator's own read, never the public one. The table is emptied per test, so every row read back is one this file wrote.
 
 let sql: postgres.Sql;
 useTestDatabase((client) => {

@@ -8,12 +8,8 @@ import { choose, press, typeIn } from '../../support/interact';
 import { graphqlLink, mockGraphQLError, mockGraphQLMutation } from '../../support/msw/graphql';
 import { server } from '../../support/msw/server';
 
-// The Edit Stock dialog on a coven card: the jars the coven holds of
-// the ingredient in a list, the chosen one's fields beside it, a form added
-// or a jar removed in the same dialog, all of it saved as one `saveStock`.
-// The service is the guard and is tested there; this proves what the dialog
-// sends — only what changed — when it lets Save through, and where a refusal
-// lands.
+// The Edit Stock dialog on a coven card: the jars the coven holds of the ingredient in a list, the chosen one's fields beside it, and a form added or a jar removed in the same dialog, all saved as one `saveStock`.
+// The service is the guard and is tested there; this proves what the dialog sends (only what changed) when it lets Save through, and where a refusal lands.
 
 const router = { push: vi.fn(), replace: vi.fn(), refresh: vi.fn() };
 vi.mock('next/navigation', () => ({ useRouter: () => router }));

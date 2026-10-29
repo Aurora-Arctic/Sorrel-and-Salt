@@ -17,11 +17,8 @@ vi.mock('next/navigation', () => ({ useRouter: () => ({ push, refresh: vi.fn() }
 
 const { default: SpellBuilder } = await import('@/components/SpellBuilder');
 
-// The spell builder's title, intent and jar fields. The
-// saves are answered by MSW in the shape /api/graphql answers, so a refusal is
-// read through the route's own error mapping; that the service refuses a
-// viewer, and a complete spell with no title, is
-// tests/modules/grimoire/services/spells.test.ts's.
+// The spell builder's title, intent and jar fields. MSW answers the saves in /api/graphql's shape, so a refusal is read through the route's own error mapping.
+// That the service refuses a viewer, and a complete spell with no title, is tests/modules/grimoire/services/spells.test.ts's.
 
 function renderBuilder(props: Partial<SpellBuilderProps> = {}) {
   return render(

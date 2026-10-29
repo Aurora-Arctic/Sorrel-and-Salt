@@ -6,14 +6,9 @@ import { E, asUser } from '../../../support/as-user';
 import { run } from '../../../support/graphql/run';
 import type { FormGroupNode } from './types';
 
-// The three form-group writes over the wire. This file holds the
-// transport's half (claude-docs/testing/layer-ownership.md): the loaders
-// cleared by a write, `moveTo` reaching the delete, and per write one refusal
-// per error code, read as the browser reads it. Which roles are refused, and
-// the services' own rules — the forms' slugs following a rename, and moving
-// with a delete — are services/ingredient-form-groups.test.ts's; a signed-out
-// caller at every field, and a non-admin at the `admin` scope, are
-// tests/db/graphql-query-scopes.test.ts's.
+// The three form-group writes over the wire: the transport's half (claude-docs/testing/layer-ownership.md).
+// That is the loaders cleared by a write, `moveTo` reaching the delete, and per write one refusal per error code. Roles and the services' own rules are services/ingredient-form-groups.test.ts's;
+// signed-out and non-admin scope refusals are tests/db/graphql-query-scopes.test.ts's.
 
 let sql: ReturnType<typeof postgres>;
 beforeAll(() => {

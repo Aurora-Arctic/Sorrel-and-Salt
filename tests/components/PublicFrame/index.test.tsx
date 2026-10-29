@@ -7,10 +7,8 @@ const pathname = vi.fn<() => string>();
 const router = vi.hoisted(() => ({ push: vi.fn(), replace: vi.fn(), refresh: vi.fn() }));
 vi.mock('next/navigation', () => ({ usePathname: () => pathname(), useRouter: () => router }));
 
-// The frame round a public page for a signed-out visitor: the
-// landmarks, the skip link that reaches the page, the way in, and the wait a
-// move between public pages draws. The page brings its own `main`,
-// as the (public) layout gives it one.
+// The frame round a public page for a signed-out visitor: the landmarks, the skip link that reaches the page, the way in, and the wait a move between public pages draws.
+// The page brings its own `main`, as the (public) layout gives it one.
 
 const frame = () =>
   render(

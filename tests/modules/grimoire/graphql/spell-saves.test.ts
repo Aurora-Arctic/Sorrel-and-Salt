@@ -10,11 +10,8 @@ import { variantIdOf } from '../../../support/db/read-variants';
 import { makeIngredient, makeSpell, makeVariant } from '../../../support/fixtures';
 import { run } from '../../../support/graphql/run';
 
-// The two spell saves over the wire: what the transport adds to
-// services/spells.test.ts, which owns who may save what and how a recipe is
-// written. Here: the answer's shape and revision, a save's steps read fresh in
-// the same request, a null the wire allows but the service does not, and one
-// refusal per code a save can answer.
+// The two spell saves over the wire: what the transport adds to services/spells.test.ts, which owns who may save what and how a recipe is written.
+// Here: the answer's shape and revision, a save's steps read fresh in the same request, a null the wire allows but the service does not, and one refusal per code a save can answer.
 
 let sql: postgres.Sql;
 useTestDatabase((client) => {

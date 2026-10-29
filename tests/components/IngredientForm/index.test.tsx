@@ -45,16 +45,10 @@ import {
 import { server } from '../../support/msw/server';
 import type { CategoryNode, DuplicateNode } from './types';
 
-// The ingredient entry form. The mutation is answered by MSW in the shape
-// /api/graphql answers (tests/support/msw/graphql.ts), so a server error is
-// the route's own mapping rather than a hand-written body
+// The ingredient entry form. MSW answers the mutation in the shape /api/graphql answers (tests/support/msw/graphql.ts), so a server error is the route's own mapping rather than a hand-written body
 // (claude-docs/components/ingredient-form.md).
 
-/**
- * Renders the form with every lookup answered empty; a test about a lookup
- * answers it after rendering, since the later answer wins. The categories are
- * read as the form opens, so a test about them passes them in.
- */
+/** Renders the form with every lookup answered empty; a test about a lookup answers it after rendering, since the later answer wins. The categories are read as the form opens, so a test about them passes them in. */
 function renderForm({ categories = [] }: { categories?: CategoryNode[] | 'refused' } = {}) {
   const onSaved = vi.fn();
   offerNothing();
@@ -134,11 +128,8 @@ const pickCategory = async (name: string) => {
   // chevron would shut it.
   if (screen.getByRole('combobox', { name: 'Category' }).getAttribute('aria-expanded') !== 'true')
     fireEvent.click(screen.getByRole('button', { name: 'Show Category suggestions' }));
-  // A longer wait than the default 1000ms, here alone: nothing says the categories have
-  // loaded before the list opens, so the options are the only signal. They appear about
-  // 82ms after the click on an idle machine, but a run under full CPU load slows this
-  // file's tests up to about 85 times, past 1000ms. 10s covers that and stays inside
-  // the 20s test timeout.
+  // A longer wait than the default 1000ms, here alone: nothing says the categories have loaded before the list opens, so the options are the only signal.
+  // They appear about 82ms after the click on an idle machine, but a run under full CPU load slows this file's tests up to about 85 times, past 1000ms; 10s covers that and stays inside the 20s test timeout.
   fireEvent.click(
     await screen.findByRole('option', { name: new RegExp(`^${name}`) }, { timeout: 10_000 }),
   );
@@ -998,11 +989,7 @@ describe('IngredientForm', () => {
       slug: 'cats-claw-uncaria-tomentosa',
       isGlobal: true,
     };
-    /**
-     * Adds as the server does in a coven that already calls another entry by the
-     * name typed: any label sent is refused as taken, as Rose under "rosemary"
-     * was.
-     */
+    /** Adds as the server does in a coven that already calls another entry by the name typed: any label sent is refused as taken, as Rose under "rosemary" was. */
     const accept = () => {
       const adds: AddCupboardEntryFromFormMutationVariables[] = [];
       server.use(

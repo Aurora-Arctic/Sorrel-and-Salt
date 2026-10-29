@@ -19,14 +19,9 @@ import {
 import { run } from '../../../support/graphql/run';
 import type { WorkspaceIngredientNode } from './types';
 
-// Over the wire: the site admin's three compendium writes.
-// This file holds the transport's half (claude-docs/testing/layer-ownership.md):
-// the SDL's own refusals, the loaders cleared between two writes in one
-// request, `endRedirect` reaching the service, and one refusal per error code
-// per mutation, read as the browser reads it. Who is refused is
-// services/compendium-entries.test.ts's, and every collision
-// services/compendium-entry-slugs.test.ts's; a signed-out caller
-// and a non-admin at the `admin` scope are tests/db/graphql-query-scopes.test.ts's.
+// Over the wire: the site admin's three compendium writes (the transport's half, claude-docs/testing/layer-ownership.md).
+// That is the SDL's own refusals, the loaders cleared between two writes in one request, `endRedirect` reaching the service, and one refusal per error code per mutation.
+// Who is refused is services/compendium-entries.test.ts's, collisions are services/compendium-entry-slugs.test.ts's, and signed-out and non-admin scope refusals are tests/db/graphql-query-scopes.test.ts's.
 
 let sql: postgres.Sql;
 useTestDatabase((client) => {
@@ -107,10 +102,7 @@ const earthy = (name: string) => ({
   variants: [formOf('Earth', earth)],
 });
 
-/**
- * The whole entry as the update input takes it: every field sent, and an
- * empty value where `input` has none.
- */
+/** The whole entry as the update input takes it: every field sent, and an empty value where `input` has none. */
 function whole(input: Record<string, unknown>): Record<string, unknown> {
   const empty: Record<string, unknown> = {
     canonicalName: '',

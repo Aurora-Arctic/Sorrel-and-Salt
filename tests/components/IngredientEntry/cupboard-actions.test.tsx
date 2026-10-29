@@ -19,13 +19,9 @@ import { server } from '../../support/msw/server';
 const router = vi.hoisted(() => ({ push: vi.fn(), replace: vi.fn(), refresh: vi.fn() }));
 vi.mock('next/navigation', () => ({ useRouter: () => router }));
 
-// Which cupboard choices a compendium entry offers
-// (claude-docs/components/ingredient-entry.md): the page decides from the
-// member's permissions, the choices follow whether the coven holds the entry, and they are drawn
-// as the list cards draw them: a main icon (Annotate on a
-// coven's page, Edit in Compendium on the compendium's) and the three dots for what is further,
-// Remove among it beside Make It Ours, the bin only where Remove is
-// the one choice left.
+// Which cupboard choices a compendium entry offers (claude-docs/components/ingredient-entry.md): the page decides from the member's permissions and the choices follow whether the coven holds the entry.
+// They are drawn as the list cards draw them: a main icon (Annotate on a coven's page, Edit in Compendium on the compendium's) and the three dots for the rest,
+// with Remove beside Make It Ours, and the bin only where Remove is the one choice left.
 
 const ANNOTATE = {
   href: '/coven/fixture-coven/ingredients/fixture?annotate' as Route,
@@ -304,10 +300,8 @@ describe('CupboardActions', () => {
     await waitFor(() => expect(button('More for Testwort')).toHaveFocus());
   });
 
-  // The entry's page heading takes the focus once the re-read says the coven no
-  // longer holds it: Remove went with its menu, and the control left may be
-  // another element. Until then the
-  // confirmation stays, busy, as ConfirmedAction's does.
+  // The entry's page heading takes the focus once the re-read says the coven no longer holds it, because Remove went with its menu and the control left may be another element.
+  // Until then the confirmation stays, busy, as ConfirmedAction's does.
   it("reads the page again once the entry is removed, and closes onto the page's heading when the re-read drops it", async () => {
     mockGraphQLMutation<RemoveCupboardEntryMutation, Record<string, unknown>>(
       'RemoveCupboardEntry',
@@ -532,11 +526,9 @@ describe('CupboardActions', () => {
     );
   });
 
-  // The plus beside the pencil on a coven's page too: the page's
-  // `plus` names every coven the viewer may add in and which of them hold the entry.
-  // Edit Stock on the coven's own page: first in the dots,
-  // this coven's dialog at once with no coven to choose, for a coven that holds the entry and
-  // where the role may update stock. The page hands over the stock only then.
+  // The plus beside the pencil on a coven's page too: the page's `plus` names every coven the viewer may add in and which of them hold the entry.
+  // Edit Stock on the coven's own page is first in the dots and opens this coven's dialog at once with no coven to choose,
+  // for a coven that holds the entry and where the role may update stock; the page hands over the stock only then.
   describe('Edit Stock', () => {
     const FLOWER = '00000000-0000-4000-8000-0000000000f1';
     const STOCK: StockData = {

@@ -13,10 +13,8 @@ vi.mock('next/navigation', () => ({ useRouter: () => ({ push, refresh }) }));
 const { default: CreateWorkspaceForm } = await import('@/components/CreateWorkspaceForm');
 const { NavigationProvider, usePendingNavigation } = await import('@/lib/navigation');
 
-// The create-workspace page's form. The mutation is answered
-// by MSW in the shape /api/graphql answers, so a refusal is read through the
-// route's own error mapping; that the service refuses a user without the
-// right is tests/modules/coven/services/workspace-creation.test.ts's.
+// The create-workspace page's form. MSW answers the mutation in the shape /api/graphql answers, so a refusal is read through the route's own error mapping.
+// That the service refuses a user without the right is tests/modules/coven/services/workspace-creation.test.ts's.
 
 function renderForm(ui: ReactNode = <CreateWorkspaceForm />) {
   return render(<QueryClientProvider client={makeQueryClient()}>{ui}</QueryClientProvider>);

@@ -7,11 +7,8 @@ import { makeIngredient } from '../../../support/fixtures';
 import { ingredientVariants } from '@/modules/ingredients/schema/ingredient-variants';
 import { FIXTURE_USERS, WORKSPACE_W_ID } from '@/db/seed/standard';
 
-// DESIGN.md §5's `ingredient_variants`: one row per form of an
-// ingredient, carrying what is particular to that form. The columns' types,
-// keys and index names are the drift test's; the audit set and the trigger
-// are their sweeps'; a second live row of one key and its soft-delete pair are
-// the partial-unique sweep's (claude-docs/testing/db-harness.md).
+// DESIGN.md §5's `ingredient_variants`: one row per form of an ingredient, carrying what is particular to that form.
+// Column types, keys and index names are the drift test's; the audit set and trigger are their sweeps'; a second live row of one key and its soft-delete pair are the partial-unique sweep's (claude-docs/testing/db-harness.md).
 const OWN_COLUMNS = [
   'id',
   'ingredient_id',

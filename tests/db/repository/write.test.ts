@@ -545,21 +545,15 @@ describe('the compendium tier, under the Curator proof', () => {
   });
 });
 
-// A table marked `namedWrites` is reached only through its own named
-// writer methods, and the mark is the whole refusal: no column name is read
-// (claude-docs/db/write-path.md, "Table marks"). No body runs: each
-// `@ts-expect-error` fails `npm run typecheck` the moment a generic method
-// stops demanding `Generic`, which a runtime assertion cannot see.
+// A table marked `namedWrites` is reached only through its own named writer methods, and the mark is the whole refusal: no column name is read (claude-docs/db/write-path.md, "Table marks").
+// No body runs: each `@ts-expect-error` fails `npm run typecheck` the moment a generic method stops demanding `Generic`, which a runtime assertion cannot see.
 describe('a table marked namedWrites, refused by every generic writer method', () => {
   const admin = assertSiteAdmin({ ...session, role: 'admin' });
   const id = session.userId;
   const where = eq(herbs.id, id);
 
-  // Why each refusal below is the mark's: `switches` is `herbs`' shape and
-  // `tiers` is `tinctures`', and every call below compiles against those
-  // unmarked. `switches` carries `deleted_at`, which refuses the hard delete
-  // too, so that one is also asserted against `pairs` marked, the shape
-  // `delete` otherwise takes.
+  // Why each refusal below is the mark's: `switches` is `herbs`' shape and `tiers` is `tinctures`', and every call below compiles against those unmarked.
+  // `switches` carries `deleted_at`, which refuses the hard delete too, so that one is also asserted against `pairs` marked, the shape `delete` otherwise takes.
   it('takes every call below against the same shapes unmarked', () => {
     const unmarked = [
       (write: AuditWriter) => write.insert(herbs, { name: 'Testwort' }),
@@ -645,10 +639,8 @@ describe('a table marked namedWrites, refused by every generic writer method', (
   });
 });
 
-// CLAUDE.md rule 4 on the write side: a soft-deleted row is out of reach of
-// every update and every soft delete, decided by the table's shape as the
-// finders' filter is (claude-docs/db/write-path.md, "The write path"). The way back to
-// one is a restore, which is v2's.
+// CLAUDE.md rule 4 on the write side: a soft-deleted row is out of reach of every update and soft delete, decided by the table's shape as the finders' filter is (claude-docs/db/write-path.md, "The write path").
+// The way back to one is a restore, which is v2's.
 describe('a soft-deleted row, out of reach of every update and soft delete', () => {
   const DELETED_AT = new Date('2020-01-01T00:00:00Z');
   const stamps = { created_by: session.userId, updated_by: session.userId };
@@ -707,10 +699,8 @@ describe('a soft-deleted row, out of reach of every update and soft delete', () 
     ['softDeleteByIdInWorkspace', (write, id) => write.softDeleteByIdInWorkspace(inW, jars, id)],
   ];
 
-  // Why each could have written the tombstone: the same call, naming its live
-  // twin the same way, writes that one. The deleted row keeps its stamps —
-  // `updated_at` and `deleted_by` included — so a second delete cannot
-  // rewrite who made the first.
+  // Why each could have written the tombstone: the same call, naming its live twin the same way, writes that one.
+  // The deleted row keeps its stamps, `updated_at` and `deleted_by` included, so a second delete cannot rewrite who made the first.
   it.each(unscoped)(
     '%s writes the live row and leaves the deleted one as it was',
     async (_method, call) => {

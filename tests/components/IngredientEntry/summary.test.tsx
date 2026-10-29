@@ -5,11 +5,8 @@ import type { CategoryDetail, IngredientDetail, VariantDetail } from '@/modules/
 import { formLabel } from '@/modules/ingredients/validation/form-label';
 import { entryDetail } from '../../support/entry-detail';
 
-// The details modal's body (claude-docs/components/ingredient-entry.md,
-// "The details modal"): the entry page's Details section cut down to
-// the caution and the categories, the folk names and the
-// correspondences, drawn by the page's own blocks. Every value is the test's own
-// data, so finding one proves what rendered.
+// The details modal's body (claude-docs/components/ingredient-entry.md, "The details modal"): the entry page's Details section cut down to the caution, categories, folk names and correspondences, drawn by the page's own blocks.
+// Every value is the test's own data, so finding one proves what rendered.
 
 const STAMPS = {
   createdAt: new Date('2026-01-01T00:00:00Z'),
@@ -320,10 +317,7 @@ describe('IngredientSummary', () => {
       vi.restoreAllMocks();
     });
 
-    /**
-     * The paragraph's measured overflow: happy-dom lays nothing out, so its height and
-     * its line height (six of which are the cut) are the test's.
-     */
+    /** The paragraph's measured overflow: happy-dom lays nothing out, so its height and its line height (six of which are the cut) are the test's. */
     function measures(scrollHeight: number, lineHeight = 24): void {
       vi.spyOn(HTMLElement.prototype, 'scrollHeight', 'get').mockReturnValue(scrollHeight);
       const real = window.getComputedStyle.bind(window);

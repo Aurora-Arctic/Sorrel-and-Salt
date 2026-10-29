@@ -15,13 +15,8 @@ import type {
   DeclineInvitationByIdResult,
 } from './types';
 
-// The three mutations, the transport's half
-// (claude-docs/testing/layer-ownership.md): an admin's answer, which carries
-// no token and no link, the session as the actor, and one refusal per error
-// code, read as the browser reads them. Which callers, addresses and links the
-// services refuse is services/admin-invitations.test.ts's and
-// services/invitation-acceptance-by-token.test.ts's; a signed-out caller and the scope
-// are tests/db/graphql-query-scopes.test.ts's.
+// The three mutations, the transport's half (claude-docs/testing/layer-ownership.md): an admin's answer, which carries no token and no link, the session as the actor, and one refusal per error code.
+// Which callers, addresses and links the services refuse is services/admin-invitations.test.ts's and services/invitation-acceptance-by-token.test.ts's; a signed-out caller and the scope are tests/db/graphql-query-scopes.test.ts's.
 
 let sql: ReturnType<typeof postgres>;
 

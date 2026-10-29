@@ -30,11 +30,8 @@ describe('users schema', () => {
   });
 });
 
-// The primary admin is whichever live row matches ADMIN_BOOTSTRAP_EMAIL
-// case-insensitively, and `users_email_unique` is on the raw column. Better
-// Auth lowercases every email it writes, but a row inserted by hand need not,
-// so the database holds the addresses to lower case and two rows can never
-// differ by case alone.
+// The primary admin is whichever live row matches ADMIN_BOOTSTRAP_EMAIL case-insensitively, and `users_email_unique` is on the raw column.
+// Better Auth lowercases every email it writes but a row inserted by hand need not, so the database holds addresses to lower case and two rows can never differ by case alone.
 describe('users email case', () => {
   let sql: postgres.Sql;
   useTestDatabase((client) => {
@@ -79,11 +76,8 @@ describe('users email case', () => {
   });
 });
 
-// The flag is what lets anyone create a workspace, admins included, so
-// a CHECK holds every admin to it rather than the gate reading `role` beside
-// it (claude-docs/design-decisions/mb.177-admins-hold-workspace-creation.md).
-// It holds for every role but `user`, curators included
-// (claude-docs/design-decisions/m11.20-curator-role.md).
+// The flag is what lets anyone create a workspace, admins included, so a CHECK holds every admin to it rather than the gate reading `role` beside it (claude-docs/design-decisions/mb.177-admins-hold-workspace-creation.md).
+// It holds for every role but `user`, curators included (claude-docs/design-decisions/m11.20-curator-role.md).
 describe('users privileged creation flag', () => {
   let sql: postgres.Sql;
   useTestDatabase((client) => {

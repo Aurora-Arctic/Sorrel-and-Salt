@@ -27,16 +27,9 @@ import {
   variant,
 } from './variants-harness';
 
-// The Variants section on its own: a form added from the New Form
-// box, refused there, removed by its own button, folded to a line and opened
-// one at a time, each variant's sections folding under its own headings, and
-// a form an admin has renamed settled by the member. Rendered by
-// ./variants-harness.tsx, the field on the form's resolver; what the whole
-// form adds around it — a save opening the variant an error is in, Close
-// All, undo, the unsaved-changes question, the save mutation — is
-// variants.test.tsx's, and a variant's copy buttons and substitutes are
-// copy.test.tsx's and substitutes.test.tsx's
-// (claude-docs/components/ingredient-form.md, "The variants").
+// The Variants section on its own: a form added from the New Form box, refused there, removed by its own button, folded to a line and opened one at a time, each variant's sections folding under its own headings, and a form an admin has renamed settled by the member.
+// It is rendered by ./variants-harness.tsx, the field on the form's resolver. What the whole form adds around it (a save opening the variant an error is in, Close All, undo, the unsaved-changes question, the save mutation) is variants.test.tsx's;
+// a variant's copy buttons and substitutes are copy.test.tsx's and substitutes.test.tsx's (claude-docs/components/ingredient-form.md, "The variants").
 
 const save = () => press('Save Ingredient');
 

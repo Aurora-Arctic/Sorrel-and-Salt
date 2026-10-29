@@ -33,12 +33,8 @@ import {
   renderInModal,
 } from '../../support/discard-guard';
 
-// The admin's form for a group, for every group vocabulary, a deity's
-// traditions included: a name, a
-// description, and for a category group its chip's two colours, each held to
-// 4.5:1 on its own ground before the request as well as by the
-// service. A delete of a group holding rows first asks where they go, then
-// asks to confirm that move (claude-docs/components/group-form.md).
+// The admin's form for a group, for every group vocabulary, a deity's traditions included: a name, a description, and for a category group its chip's two colours,
+// each held to 4.5:1 on its own ground before the request as well as by the service. A delete of a group holding rows first asks where they go, then asks to confirm that move (claude-docs/components/group-form.md).
 
 const GROUPS = [
   { id: '0b9f0f6e-2f4c-4d7a-9a52-3c1c5b8e6d21', name: 'Fixture Mineral' },

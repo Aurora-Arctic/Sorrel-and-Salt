@@ -16,12 +16,8 @@ import type { SeedDatabase } from '@/db/seed/types';
 import { fixtureFiles } from './compendium/files-fixture';
 import type { SeedEntry, UserRow } from './types';
 
-// The shape every production seed shares, asserted here once over all of them
-//  and in no per-seed file: the bootstrap user inserted and published as the acting user,
-// every row stamped as it, a second run a no-op, and nothing an admin deleted
-// brought back. The handle is this file's own; that the seed writes through
-// it rather than a client of its own is enforced by lint, not here —
-// claude-docs/db/seed-module.md, "The seed module".
+// The shape every production seed shares, asserted once over all of them: the bootstrap user inserted and published as the acting user, every row stamped as it, a second run a no-op, and nothing an admin deleted brought back.
+// The handle is this file's own; that the seed writes through it rather than a client of its own is enforced by lint (claude-docs/db/seed-module.md, "The seed module").
 
 const PROBE = 'seed_probe_acting_user';
 
@@ -76,10 +72,8 @@ beforeAll(async () => {
     ).map((row) => row.table_name),
   );
 
-  // Records, per inserted row, what `app.current_user_id` held inside the
-  // inserting transaction; it is transaction-local and gone by the time a test
-  // could read it. One function, a trigger on every table, so the one probe
-  // watches every seed's own rows and not only the bootstrap user's.
+  // Records, per inserted row, what `app.current_user_id` held inside the inserting transaction; it is transaction-local and gone by the time a test could read it.
+  // One function, a trigger on every table, so the one probe watches every seed's own rows and not only the bootstrap user's.
   await sql`create table ${sql(PROBE)} (table_name text not null, acting_user text)`;
   await sql.unsafe(`
     create function ${PROBE}() returns trigger language plpgsql as $$
@@ -133,15 +127,9 @@ describe('resolveScenario', () => {
   });
 });
 
-// Every entry point opens with `beginSeedTransaction`, so each inserts the
-// bootstrap row when it is missing — the reference-data seeds alone, on staging
-// and production. From wherever, it is no admin: it has no OAuth
-// account and nobody can sign in as it, so as an admin it would only be a
-// revocable row on /admin/users.
-//
-// Each entry names the tables it is the seed of: the ones it fills from empty.
-// The six that `migrate.yml` runs on staging and production; the dev-only
-// scenarios are a developer's to see working.
+// Every entry point opens with `beginSeedTransaction`, which inserts the bootstrap row when it is missing.
+// That row is no admin: it has no OAuth account and nobody can sign in as it, so as an admin it would only be a revocable row on /admin/users.
+// Each entry names the tables it fills from empty: the six `migrate.yml` runs on staging and production; the dev-only scenarios are a developer's to see working.
 const SEED_ENTRIES: SeedEntry[] = (
   [
     {
@@ -175,11 +163,9 @@ const SEED_ENTRIES: SeedEntry[] = (
       tables: ['references', 'reference_links'],
     },
     {
-      // On the production list, after everything it picks from and the sources
-      // it may share a work with. The fill sweep reads the real files under
-      // `compendium/`, so every table it names is proved filled; the
-      // other three sweeps read the two-entry fixture, since what they prove
-      // does not grow with the files and the real list costs seconds a run.
+      // On the production list, after everything it picks from and the sources it may share a work with.
+      // The fill sweep reads the real files under `compendium/`, so every table it names is proved filled.
+      // The other three sweeps read the two-entry fixture, since what they prove does not grow with the files and the real list costs seconds a run.
       name: 'the compendium seed, after the vocabularies and sources',
       prepare: async (db) => {
         await seedCategories(db);

@@ -9,10 +9,8 @@ import { insertIngredient } from '../../../support/db/insert-ingredient';
 import { makeIngredient } from '../../../support/fixtures';
 import { run } from '../../../support/graphql/run';
 
-// `compendiumMatches(name, workspaceId)` and `Ingredient.inCupboard`:
-// the Add flow's exact-name question. Exact on the name or the formal name,
-// case aside, and never a near spelling; `inCupboard` reads this coven's
-// cupboard row alone; a caller outside the coven is refused by its id.
+// `compendiumMatches(name, workspaceId)` and `Ingredient.inCupboard`: the Add flow's exact-name question.
+// Exact on the name or the formal name, case aside, and never a near spelling; `inCupboard` reads this coven's cupboard row alone; a caller outside the coven is refused by its id.
 
 let sql: postgres.Sql;
 useTestDatabase((client) => {

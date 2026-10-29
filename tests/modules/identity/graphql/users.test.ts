@@ -7,13 +7,8 @@ import { useTestDatabase } from '../../../support/db/database';
 import { run } from '../../../support/graphql/run';
 import type { UsersQueryResult } from './types';
 
-// The `users` query, the admin user list's GraphQL half: the same service
-// the page calls, its nodes the ordinary `User`, so `email` resolves through
-// the scope it already carries rather than a second path around it
-// (claude-docs/auth/admin-users.md, "The user list"). This file holds a page,
-// the filters reaching the service, and `providers`' scope;
-// who is refused the list is services/user-list.test.ts's, and a signed-out
-// caller tests/db/graphql-query-scopes.test.ts's.
+// The `users` query, the admin user list's GraphQL half: the same service the page calls, its nodes the ordinary `User`, so `email` resolves through the scope it already carries (claude-docs/auth/admin-users.md, "The user list").
+// This file holds a page, the filters reaching the service, and `providers`' scope; who is refused the list is services/user-list.test.ts's, and a signed-out caller tests/db/graphql-query-scopes.test.ts's.
 
 let sql: postgres.Sql;
 useTestDatabase((client) => {

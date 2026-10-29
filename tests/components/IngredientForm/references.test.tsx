@@ -34,15 +34,9 @@ import {
 } from '../../support/msw/ingredient-lookups';
 import type { ReferenceNode } from './types';
 
-// The References field on its own: `ReferencesField`, a
-// search over `referenceSuggestions`, each source picked becoming a row
-// beneath the box with its locator, and the new reference panel opened
-// beneath it, in a form of its own on the form's resolver; what the resolver
-// hands the submit is what the form sends. The panel's own behaviours are
-// reference-panel.test.tsx's, and the search's debounce is lookups.test.tsx's
-// and tests/lib/debounce.test.tsx's; what needs the whole form — the payload
-// sent and cleared, and a server's error routed to a row — is at the end
-// (claude-docs/components/ingredient-form.md, "Testing").
+// The References field on its own: `ReferencesField`, a search over `referenceSuggestions`, each source picked becoming a row beneath the box with its locator, and the new reference panel opened beneath it,
+// in a form of its own on the form's resolver; what the resolver hands the submit is what the form sends. The panel's behaviours are reference-panel.test.tsx's, and the search's debounce is lookups.test.tsx's and tests/lib/debounce.test.tsx's.
+// What needs the whole form (the payload sent and cleared, and a server's error routed to a row) is at the end (claude-docs/components/ingredient-form.md, "Testing").
 
 const COMPENDIUM_ID = '1c2d3e4f-5a6b-4c7d-8e9f-0a1b2c3d4e5f';
 const COVEN_ID = '6f5e4d3c-2b1a-4f9e-8d7c-6b5a4f3e2d1c';
@@ -116,11 +110,7 @@ const row = (citation: string) =>
   (() => {
     throw new Error(`No row for ${citation}`);
   })();
-/**
- * What a row's line shows a sighted reader: its text less every hidden
- * element's, and less a pencil's tip, which the press that opens or shuts
- * the row leaves showing over it.
- */
+/** What a row's line shows a sighted reader: its text less every hidden element's, and less a pencil's tip, which the press that opens or shuts the row leaves showing over it. */
 const shownIn = (item: HTMLElement) => {
   const copy = item.cloneNode(true) as HTMLElement;
   copy.querySelectorAll('[hidden], [role="tooltip"]').forEach((node) => node.remove());

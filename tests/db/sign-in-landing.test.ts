@@ -15,13 +15,8 @@ import { importAuth } from '../support/auth-module';
 import { asManualFix } from '../support/db/privileges';
 import type { AuthInstance, Profile } from '../support/types';
 
-// Where the callback lands a sign-in: a return path wins, `/coven`
-// included; with none, an admin — by the role held once any promotion at this
-// sign-in has run — lands on /admin, a member of a coven goes straight into the
-// first one the switcher lists, and everyone else on /coven. An
-// unverified account lands on the email page first, whatever its role. Driven
-// through Better Auth's real endpoints, as SignInPanel starts them
-// (claude-docs/auth/route-protection.md, "Route protection").
+// Where the callback lands a sign-in: a return path wins; otherwise an admin goes to /admin, a coven member into the first coven the switcher lists, anyone else to /coven;
+// an unverified account lands on the email page first. Driven through Better Auth's real endpoints (claude-docs/auth/route-protection.md, "Route protection").
 
 const send = vi.hoisted(() => vi.fn<(message: Message) => Promise<void>>());
 vi.mock('@/lib/mail', () => ({ send }));

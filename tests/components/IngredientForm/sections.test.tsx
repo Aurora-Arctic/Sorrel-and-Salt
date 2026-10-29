@@ -9,12 +9,8 @@ import { choose, press, type, typeIn } from '../../support/interact';
 import { mockGraphQLError } from '../../support/msw/graphql';
 import { ENTRY_ID, acceptUpdate, offerNothing } from '../../support/msw/ingredient-lookups';
 
-// The form's six sections as disclosures: a
-// new entry opens with every one open, an edit with every one closed to its
-// summary line; each heading opens and closes its own; Open All / Close All
-// every one; and a save that finds an error in a closed section opens it so
-// the focus reaches the field (claude-docs/components/ingredient-form.md,
-// "Sections").
+// The form's six sections as disclosures: a new entry opens with every one open, an edit with every one closed to its summary line; each heading opens and closes its own; Open All and Close All do every one.
+// A save that finds an error in a closed section opens it so the focus reaches the field (claude-docs/components/ingredient-form.md, "Sections").
 
 const SECTIONS = [
   'Identity',

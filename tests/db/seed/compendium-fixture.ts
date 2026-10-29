@@ -1,10 +1,7 @@
 import type { SeedCompendiumShard } from '@/db/seed/types';
 
-// An invented two-entry shard for the compendium seed's tests: no
-// plant, book or page here exists. Testwort carries every field and two
-// forms; Samplewort links it as a substitute, by identity and by form.
-// Testwort and its Oil are flagged toxic, each with a citation naming the
-// flag; its Herb and Samplewort are not.
+// An invented two-entry shard for the compendium seed's tests: no plant, book or page here exists. Testwort carries every field and two forms; Samplewort links it as a substitute, by identity and by form.
+// Testwort and its Oil are flagged toxic, each with a citation naming the flag; its Herb and Samplewort are not.
 
 /** A description of `count` words, so the guard's word bounds are what a test chooses. */
 export function wordsOf(count: number): string {

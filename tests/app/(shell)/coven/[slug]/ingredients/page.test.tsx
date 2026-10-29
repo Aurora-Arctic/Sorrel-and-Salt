@@ -7,12 +7,9 @@ import { makeQueryClient } from '@/lib/graphql-client';
 import { CARD_PAGE_SIZE } from '@/lib/pagination';
 import { entryDetail } from '../../../../../support/entry-detail';
 
-// A coven's Ingredients page. The guard and the services are mocked, since what they
-// decide is their own tests'; the page's own reads run for real over them. Here: the guard on
-// the slug from the address, one page of 24 with one stock call for the whole page, the address
-// becoming the filter, what a card shows of the coven's label, kind and jars, and the edit
-// dialog `?edit=<id>` opens over the list on the coven's own entry, and the Annotate dialog `?annotate=<id>` over a compendium entry
-// the cupboard holds.
+// A coven's Ingredients page, with the guard and services mocked and the page's own reads run for real over them.
+// It proves the guard on the slug from the address, one page of 24 with one stock call for the whole page, the address becoming the filter, what a card shows of the coven's label, kind and jars,
+// the edit dialog `?edit=<id>` opens over the coven's own entry, and the Annotate dialog `?annotate=<id>` over a compendium entry the cupboard holds.
 
 const COVEN = {
   id: '5b8f4a10-2d6e-4c19-8a37-0e9d1c2b3a44',

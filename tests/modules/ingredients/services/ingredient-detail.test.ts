@@ -30,11 +30,8 @@ import {
   makeVariant,
 } from '../../../support/fixtures';
 
-// The page body's one read, `ingredientDetailOf`, and the public
-// route's cached read of an address, `readCompendiumEntry`. The table is
-// emptied per test, so every row a result could come from is one this file
-// wrote. Setup goes through the raw client; only the rename and the create
-// that move an address are the services', since they are what retire one.
+// The page body's one read, `ingredientDetailOf`, and the public route's cached read of an address, `readCompendiumEntry`.
+// The table is emptied per test, so every row a result could come from is one this file wrote. Setup goes through the raw client; only the rename and create that move an address are the services', since they retire one.
 
 let sql: postgres.Sql;
 useTestDatabase((client) => {

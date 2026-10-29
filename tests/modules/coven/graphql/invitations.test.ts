@@ -9,11 +9,8 @@ import type { CreateInvitationResult } from './types';
 
 useRawClient();
 
-// The transport's half of `createInvitation`: the answer is the
-// invitation, with its coven and role and never the link or the token, the
-// session is the actor, and a refusal reaches the wire as its code. Who may
-// invite, which roles and which addresses are
-// tests/modules/coven/services/invitations.test.ts's.
+// The transport's half of `createInvitation`: the answer is the invitation, with its coven and role and never the link or the token, the session is the actor, and a refusal reaches the wire as its code.
+// Who may invite, which roles and which addresses are tests/modules/coven/services/invitations.test.ts's.
 
 const INVITED = 'invited@coven-invitations-graphql.test';
 
