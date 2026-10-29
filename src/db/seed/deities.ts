@@ -13,7 +13,7 @@ import type {
   SeedTransaction,
 } from './types';
 
-// MB.127's deity vocabulary: thirty-five traditions and the deities filed
+// MB.127's deity vocabulary: 87 traditions and the deities filed
 // under them, a starting set an admin may edit. Reference data, not a
 // scenario — migrate.yml seeds it alone, so it inserts the bootstrap user
 // itself. Transcribed from the seed doc's two tables, which review holds in
@@ -182,6 +182,255 @@ export const DEITY_TRADITIONS: SeedDeityTradition[] = [
     name: 'Italian folk witchcraft',
     description:
       'Figures of Italian folk witchcraft as Charles Leland recorded it, honoured in Stregheria and modern practice.',
+  },
+  {
+    name: 'Arara',
+    description:
+      'The Arara religion of Cuba, which grew in the late nineteenth century among descendants of people from the Dahomey kingdom of West Africa.',
+  },
+  {
+    name: 'Winti',
+    description:
+      'The Afro-Surinamese religion of Suriname, joining African beliefs brought mainly by enslaved Akan, Fon and Kongo people.',
+  },
+  {
+    name: 'Bwiti',
+    description:
+      'The spiritual discipline of the Punu, Mitsogo and Fang peoples of Gabon, joining animism, ancestor worship and, in some forms, Christianity.',
+  },
+  {
+    name: 'Buddhist',
+    description:
+      'Buddhism, the Indian religion and philosophy based on teachings attributed to the Buddha, who lived in the 6th or 5th century BCE.',
+  },
+  {
+    name: 'Jain',
+    description:
+      'Jainism, the Indian religion that teaches spiritual purity through disciplined nonviolence to all living creatures, guided by 24 tirthankaras.',
+  },
+  {
+    name: 'Theravada Buddhist',
+    description:
+      'Theravada, the oldest existing school of Buddhism, which keeps the Buddha’s teaching in the Pali Canon.',
+  },
+  {
+    name: 'Shugendo',
+    description:
+      'An Esoteric Buddhist religion of ascetic practice that began in Nara-period Japan.',
+  },
+  {
+    name: 'Tripuri',
+    description:
+      'The Tibeto-Burman-speaking people of the Indian state of Tripura and of Bangladesh, descended from the inhabitants of the Tripura kingdom.',
+  },
+  {
+    name: 'Aboriginal Australian',
+    description:
+      'The Indigenous peoples of the Australian mainland and many of its islands, formed over time into as many as 500 linguistic and territorial groups.',
+  },
+  {
+    name: 'Maori',
+    description:
+      'The Indigenous Polynesian people of mainland New Zealand, descended from East Polynesian settlers.',
+  },
+  {
+    name: 'Polynesian',
+    description:
+      'The closely related peoples native to Polynesia, the islands within the Polynesian Triangle in the Pacific Ocean.',
+  },
+  {
+    name: 'Melanesian',
+    description:
+      'The Indigenous inhabitants of Melanesia, in an area stretching from New Guinea to the Fiji Islands.',
+  },
+  {
+    name: 'Malay',
+    description:
+      'The Austronesian people native to the Malay Peninsula, eastern Sumatra and coastal Borneo.',
+  },
+  {
+    name: 'Javanese',
+    description:
+      'The Austronesian people native to the central and eastern parts of the island of Java, in Indonesia.',
+  },
+  {
+    name: 'Sundanese',
+    description:
+      'The Austronesian people native to the western part of the island of Java, in Indonesia.',
+  },
+  {
+    name: 'Tongan',
+    description: 'The Polynesian people native to Tonga, an archipelago in the Pacific Ocean.',
+  },
+  {
+    name: 'Samoan',
+    description:
+      'The Indigenous Polynesian people of the Samoan Islands, an archipelago in Polynesia.',
+  },
+  {
+    name: 'Fijian',
+    description:
+      'The Austronesian people native to Fiji, the major Indigenous people of the Fiji Islands of Melanesia.',
+  },
+  {
+    name: 'Mazatec',
+    description:
+      'The Indigenous people of Mexico who live in the Sierra Mazateca in Oaxaca and in nearby parts of Puebla and Veracruz.',
+  },
+  {
+    name: 'Chumash',
+    description:
+      'The Native American people of the central and southern coastal regions of California.',
+  },
+  {
+    name: 'Moche',
+    description: 'The civilisation that flourished in northern Peru from about 100 to 800 AD.',
+  },
+  {
+    name: 'Nazca',
+    description:
+      'The culture that flourished from about 100 BC to 800 AD beside the arid southern coast of Peru.',
+  },
+  {
+    name: 'Chavin',
+    description:
+      'The pre-Columbian civilisation of the northern Andean highlands of Peru, from about 900 to 250 BCE.',
+  },
+  {
+    name: 'Olmec',
+    description:
+      'The early Mesoamerican civilisation of the Mexican states of Veracruz and Tabasco, from roughly 1200 to 400 BC.',
+  },
+  {
+    name: 'Tongva',
+    description:
+      'The Indigenous people of California from the Los Angeles Basin and the Southern Channel Islands.',
+  },
+  {
+    name: 'Taino',
+    description:
+      'The Indigenous peoples of most of the West Indies, in the Caribbean, whose culture descendants and revivalist communities continue.',
+  },
+  {
+    name: 'Quechua',
+    description:
+      'The Indigenous peoples of South America who speak the Quechuan languages, which originated among the Indigenous people of Peru.',
+  },
+  {
+    name: 'Ojibwe',
+    description:
+      'The Anishinaabe people whose homeland covers much of the Great Lakes region and the northern plains.',
+  },
+  {
+    name: 'Potawatomi',
+    description:
+      'The Indigenous North American tribe of the Great Plains, the upper Mississippi River and the western Great Lakes region, who speak an Algonquian language.',
+  },
+  {
+    name: 'Menominee',
+    description: 'The Native American tribe of Wisconsin and the Upper Peninsula of Michigan.',
+  },
+  {
+    name: 'Dakota',
+    description:
+      'The Native American tribe and First Nations band government that forms two of the three main subcultures of the Sioux.',
+  },
+  {
+    name: 'Lakota',
+    description:
+      'The Native American people also known as the Teton Sioux, with lands in North and South Dakota.',
+  },
+  {
+    name: 'Blackfeet',
+    description:
+      'The linguistically related groups of the Blackfoot Confederacy, the Blackfoot or Blackfeet people.',
+  },
+  {
+    name: 'Zuni',
+    description: 'The Native American Pueblo people of the Zuni River valley, in New Mexico.',
+  },
+  { name: 'Hopi', description: 'The Native Americans who live mainly in northeastern Arizona.' },
+  {
+    name: 'Cherokee',
+    description:
+      'One of the Indigenous peoples of the Southeastern Woodlands of the United States.',
+  },
+  {
+    name: 'Muscogee',
+    description:
+      'The group of related Indigenous peoples of the Southeastern Woodlands of the United States, also known as Creek.',
+  },
+  {
+    name: 'Tlingit',
+    description:
+      'The Indigenous people of the Pacific Northwest Coast of North America, who speak a Na-Dene language.',
+  },
+  {
+    name: 'Tsimshian',
+    description:
+      'The Indigenous people of the Pacific Northwest Coast of North America, mostly in coastal British Columbia.',
+  },
+  {
+    name: 'Haida',
+    description:
+      'The Indigenous people of the Pacific Northwest Coast of North America, whose traditional territory includes Haida Gwaii.',
+  },
+  {
+    name: 'Inuit',
+    description:
+      'The culturally and historically similar Indigenous peoples of the Arctic and Subarctic regions of North America and Russia.',
+  },
+  {
+    name: 'Khoikhoi',
+    description: 'The traditionally nomadic pastoralist Indigenous population of Southern Africa.',
+  },
+  {
+    name: 'Malagasy',
+    description:
+      'The Austronesian-speaking people and nation Indigenous to the island country of Madagascar.',
+  },
+  {
+    name: 'Swazi',
+    description:
+      'The Bantu ethnic group native to Southern Africa, in Eswatini and South Africa’s Mpumalanga province.',
+  },
+  {
+    name: 'Taita',
+    description: 'The Bantu-speaking ethnic group of Taita-Taveta County, in Kenya.',
+  },
+  {
+    name: 'Maasai',
+    description: 'The Eastern Nilotic ethnic group native to Kenya and northern Tanzania.',
+  },
+  {
+    name: 'Basotho',
+    description:
+      'The Sotho-Tswana ethnic group Indigenous to Southern Africa, in Lesotho, South Africa, Botswana and Namibia.',
+  },
+  {
+    name: 'Tuareg',
+    description:
+      'The Amazigh ethnic group of nomadic pastoralists who live mainly in the Sahara, from southwestern Libya to southern Algeria, Niger, Mali and Burkina Faso.',
+  },
+  {
+    name: 'Bedouin',
+    description:
+      'The semi-nomadic Arab tribes who have historically lived in the desert regions of the Arabian Peninsula, North Africa, the Levant and Mesopotamia.',
+  },
+  {
+    name: 'Jewish',
+    description:
+      'The Jewish people, an ethnoreligious group and nation originating in the Israelites of ancient Israel and Judah, and their religion, Judaism.',
+  },
+  {
+    name: 'Christian',
+    description:
+      'Christianity, the Abrahamic religion based on the Bible and the teachings of Jesus.',
+  },
+  {
+    name: 'Scottish Gaelic',
+    description:
+      'The Gaels of Scotland, whose Gaelic language and culture extended from Ireland into western Scotland.',
   },
 ];
 
@@ -1597,6 +1846,496 @@ export const DEITIES: SeedDeity[] = [
     tradition: 'Italian folk witchcraft',
     description:
       "Italian witch goddess of Leland's Aradia, or the Gospel of the Witches, daughter of Diana, who taught witchcraft to the oppressed.",
+  },
+
+  // Greek
+  {
+    name: 'Achilles',
+    tradition: 'Greek',
+    description:
+      'Greek hero of the Trojan War, known as the greatest of the Greek warriors; son of the Nereid Thetis and Peleus, and central character of Homer’s Iliad.',
+  },
+  {
+    name: 'Amphitrite',
+    tradition: 'Greek',
+    description: 'Greek goddess and queen of the sea, consort of Poseidon; Roman Salacia.',
+  },
+  {
+    name: 'Ariadne',
+    tradition: 'Greek',
+    description:
+      'Cretan princess of Greek myth, daughter of King Minos, who helped Theseus escape the Minotaur and later married Dionysus.',
+  },
+  {
+    name: 'Eos',
+    tradition: 'Greek',
+    description:
+      'Greek goddess and personification of the dawn, who rose each morning from the edge of the river Oceanus.',
+  },
+  {
+    name: 'Hebe',
+    tradition: 'Greek',
+    description:
+      'Greek goddess of youth, or of the prime of life, and cup-bearer to the gods of Mount Olympus.',
+  },
+  {
+    name: 'Leto',
+    tradition: 'Greek',
+    description: 'Greek mother of Apollo and Artemis, daughter of the Titans Coeus and Phoebe.',
+  },
+  {
+    name: 'Nike',
+    tradition: 'Greek',
+    description:
+      'Greek personification of victory, goddess of victory in battle and in other contests.',
+  },
+  {
+    name: 'Nemesis',
+    tradition: 'Greek',
+    otherNames: ['Rhamnousia'],
+    description: 'Greek goddess who personified retribution for hubris, arrogance before the gods.',
+  },
+  {
+    name: 'Morpheus',
+    tradition: 'Greek',
+    description:
+      'God of sleep and dreams, who in Ovid’s Metamorphoses appears in dreams in human form.',
+  },
+  {
+    name: 'Prometheus',
+    tradition: 'Greek',
+    description:
+      'Greek Titan who stole fire from the Olympian gods and gave it to humanity, and is credited with creating and aiding humankind.',
+  },
+  {
+    name: 'Uranus',
+    tradition: 'Greek',
+    otherNames: ['Ouranos'],
+    description:
+      'Greek personification of the sky and one of the primordial deities, husband and son of Gaia and father of the first Titans.',
+  },
+  {
+    name: 'Hymen',
+    tradition: 'Greek',
+    otherNames: ['Hymenaios'],
+    description: 'Greek god of marriage ceremonies, who inspires feasts and song.',
+  },
+  {
+    name: 'Daphne',
+    tradition: 'Greek',
+    description:
+      'Greek figure of myth, a mortal woman or a nymph and daughter of a river god, who prayed for escape from Apollo’s pursuit and was turned into a tree.',
+  },
+  {
+    name: 'Medea',
+    tradition: 'Greek',
+    description:
+      'Greek sorceress, daughter of King Aeetes of Colchis and granddaughter of the sun god Helios, skilled in medicinal magic and often shown as a priestess of Hecate.',
+  },
+  {
+    name: 'Moirai',
+    tradition: 'Greek',
+    otherNames: ['Fates'],
+    description:
+      'Greek personifications of destiny, in some accounts three sisters, Clotho, Lachesis and Atropos; Roman Parcae.',
+  },
+  {
+    name: 'Erinyes',
+    tradition: 'Greek',
+    otherNames: ['Eumenides'],
+    description:
+      'Greek chthonic goddesses of vengeance, also called the Eumenides, the “gracious ones”.',
+  },
+  {
+    name: 'Charites',
+    tradition: 'Greek',
+    otherNames: ['Graces'],
+    description:
+      'Greek goddesses who personify beauty and grace, named by Hesiod Aglaia, Euphrosyne and Thalia.',
+  },
+  {
+    name: 'Cronus',
+    tradition: 'Greek',
+    otherNames: ['Cronos', 'Kronos'],
+    description:
+      'Greek leader and youngest of the Titans, who overthrew his father Uranus and ruled in the Golden Age until his son Zeus overthrew him.',
+  },
+  {
+    name: 'Eirene',
+    tradition: 'Greek',
+    description:
+      'Greek goddess and personification of peace, one of the Horae, daughter of Zeus and Themis.',
+  },
+
+  // Roman
+  {
+    name: 'Hercules',
+    tradition: 'Roman',
+    description:
+      'Roman form of the Greek divine hero Heracles, son of Jupiter and the mortal Alcmena, famous for superhuman strength and far-ranging adventures.',
+  },
+  {
+    name: 'Bellona',
+    tradition: 'Roman',
+    description: 'Roman goddess of war, embodying the destructive and brutal side of warfare.',
+  },
+  {
+    name: 'Bona Dea',
+    tradition: 'Roman',
+    description:
+      'The Roman “Good Goddess”, associated with chastity and fertility among married women, healing and the protection of the state.',
+  },
+  {
+    name: 'Lares',
+    tradition: 'Roman',
+    description:
+      'Guardian deities of Roman religion, believed to watch over and protect all that happened within the bounds of their place or function.',
+  },
+  {
+    name: 'Lucina',
+    tradition: 'Roman',
+    description:
+      'Title of the Roman goddess Juno, and sometimes Diana, as goddess of childbirth who safeguarded women in labour.',
+  },
+  {
+    name: 'Luna',
+    tradition: 'Roman',
+    description: 'Roman divine embodiment of the Moon, the female complement of the Sun god Sol.',
+  },
+  {
+    name: 'Fides',
+    tradition: 'Roman',
+    description: 'Roman goddess and embodiment of trust, faithfulness and good faith.',
+  },
+  {
+    name: 'Aurora',
+    tradition: 'Roman',
+    description: 'Roman goddess and personification of the dawn; Latin for dawn.',
+  },
+
+  // Egyptian
+  {
+    name: 'Atum',
+    tradition: 'Egyptian',
+    description:
+      'Primordial Egyptian god from whom all else arose, father of Shu and Tefnut and closely associated with the evening sun.',
+  },
+  {
+    name: 'Mut',
+    tradition: 'Egyptian',
+    description:
+      'Egyptian mother goddess, whose name means “mother”, regarded as a primal deity of the primordial waters of Nu.',
+  },
+  {
+    name: 'Nefertem',
+    tradition: 'Egyptian',
+    otherNames: ['Nefertum'],
+    description:
+      'Egyptian god who arose from the primal waters at the creation of the world and stood for the first sunlight and a delightful scent.',
+  },
+  {
+    name: 'Wepwawet',
+    tradition: 'Egyptian',
+    description:
+      'Egyptian jackal god of funerary rites, war and royalty, whose name means “opener of the ways” and whose cult centre was Asyut.',
+  },
+  {
+    name: 'Harpocrates',
+    tradition: 'Egyptian',
+    description:
+      'God of silence, secrets and confidentiality, adapted by the Greeks of Ptolemaic Alexandria from the Egyptian child god Horus.',
+  },
+
+  // Hindu
+  {
+    name: 'Brahma',
+    tradition: 'Hindu',
+    description:
+      'Hindu god called the Creator within the Trimurti beside Vishnu and Shiva, associated with creation, knowledge and the Vedas.',
+  },
+  {
+    name: 'Indra',
+    tradition: 'Hindu',
+    description:
+      'Vedic god of weather and king of the devas, the deity most often named in the Rigveda.',
+  },
+  {
+    name: 'Shakti',
+    tradition: 'Hindu',
+    description:
+      'The divine feminine energy of Hinduism, of which the many Hindu goddesses are personifications.',
+  },
+  {
+    name: 'Rama',
+    tradition: 'Hindu',
+    description:
+      'Hindu deity worshipped as an avatar of Vishnu, the ideal man and hero of the Ramayana.',
+  },
+  {
+    name: 'Yama',
+    tradition: 'Hindu',
+    otherNames: ['Dharmaraja'],
+    description:
+      'Hindu god of death and justice, who in the Vedic tradition was the first mortal to die.',
+  },
+  {
+    name: 'Varuna',
+    tradition: 'Hindu',
+    description:
+      'Hindu god who in the early Vedic era ruled the sky as god-sovereign, and chief of the Adityas.',
+  },
+  {
+    name: 'Dattatreya',
+    tradition: 'Hindu',
+    description:
+      'Hindu god and paradigmatic monk, a lord of yoga considered an avatar and combined form of Brahma, Vishnu and Shiva.',
+  },
+
+  // Norse
+  {
+    name: 'Ran',
+    tradition: 'Norse',
+    description:
+      'Norse goddess and personification of the sea, wife of Aegir, who uses a net to capture sea-goers.',
+  },
+  {
+    name: 'Aegir',
+    tradition: 'Norse',
+    description:
+      'Norse giant and personification of the sea, who hosts the gods in his halls and is associated with brewing ale.',
+  },
+  {
+    name: 'Norns',
+    tradition: 'Norse',
+    description:
+      'Norse group of deities who shape the course of human destinies, often three goddesses, Urd, Verdandi and Skuld.',
+  },
+
+  // Irish
+  {
+    name: 'Badb',
+    tradition: 'Irish',
+    description:
+      'Irish war goddess who takes the form of a crow and causes fear and confusion among soldiers.',
+  },
+  {
+    name: 'Banba',
+    tradition: 'Irish',
+    description:
+      'Irish matron goddess of Ireland, daughter of Delbaeth and Ernmas of the Tuatha De Danann.',
+  },
+  {
+    name: 'Macha',
+    tradition: 'Irish',
+    description:
+      'Irish sovereignty goddess associated with Ulster, Navan Fort and Armagh, said to be one of the three Morrigna.',
+  },
+  {
+    name: 'Cu Chulainn',
+    tradition: 'Irish',
+    description:
+      'Irish warrior hero and demigod of the Ulster Cycle, believed an incarnation of the god Lugh, who is also his father.',
+  },
+  {
+    name: 'Lir',
+    tradition: 'Irish',
+    otherNames: ['Ler'],
+    description: 'Irish sea god and personification of the sea, father of Manannan mac Lir.',
+  },
+
+  // Welsh
+  {
+    name: 'Don',
+    tradition: 'Welsh',
+    description:
+      'Welsh ancestor figure, mother of the Children of Don, among them Gwydion, Arianrhod and Gilfaethwy.',
+  },
+  {
+    name: 'Modron',
+    tradition: 'Welsh',
+    description:
+      'Welsh mother figure whose name means “mother”, mother of the hero Mabon ap Modron.',
+  },
+  {
+    name: 'Olwen',
+    tradition: 'Welsh',
+    description:
+      'Welsh heroine of Culhwch and Olwen in the Mabinogion, daughter of the giant Ysbaddaden.',
+  },
+  {
+    name: 'Llyr',
+    tradition: 'Welsh',
+    description: 'Welsh sea god, father of Bran, Branwen and Manawydan, related to the Irish Ler.',
+  },
+
+  // Gaulish & British
+  {
+    name: 'Brigantia',
+    tradition: 'Gaulish & British',
+    description:
+      'Goddess of Roman Britain and tutelary deity of the Brigantes, known from Latin votive inscriptions.',
+  },
+  {
+    name: 'Coventina',
+    tradition: 'Gaulish & British',
+    description:
+      'Romano-British goddess of wells and springs, known from inscriptions near Carrawburgh on Hadrian’s Wall.',
+  },
+
+  // Aztec
+  {
+    name: 'Centeotl',
+    tradition: 'Aztec',
+    description:
+      'Aztec deity of the staple crop, son of the earth goddess Tlazolteotl and the solar deity Piltzintecuhtli.',
+  },
+  {
+    name: 'Chicomecoatl',
+    tradition: 'Aztec',
+    description:
+      'Aztec goddess of agriculture, food, drink and human livelihood, “Seven Serpent”; female counterpart of Centeotl.',
+  },
+  {
+    name: 'Huitzilopochtli',
+    tradition: 'Aztec',
+    description:
+      'Aztec solar and war deity of sacrifice, patron god of the Aztecs and of their capital Tenochtitlan.',
+  },
+  {
+    name: 'Ixtlilton',
+    tradition: 'Aztec',
+    description: 'Aztec god of medicine and healing, a gentle god who came from an obsidian mask.',
+  },
+  {
+    name: 'Xiuhtecuhtli',
+    tradition: 'Aztec',
+    otherNames: ['Xiuhtecutli'],
+    description: 'Aztec god of fire, day and heat, the “Turquoise Lord” or “Lord of Fire”.',
+  },
+  {
+    name: 'Yacatecuhtli',
+    tradition: 'Aztec',
+    description:
+      'Aztec patron god of commerce and travellers, especially business travellers; his symbol is a bundle of sticks.',
+  },
+
+  // Buddhist
+  {
+    name: 'Buddha',
+    tradition: 'Buddhist',
+    description:
+      'Siddhartha Gautama, the wandering religious teacher of the 6th or 5th century BCE who founded Buddhism; “the awakened one”.',
+  },
+
+  // Jewish
+  {
+    name: 'Yahweh',
+    tradition: 'Jewish',
+    description:
+      'Ancient Semitic deity of the southeastern Levant who became the national god of the Iron Age kingdoms of Israel-Samaria and Judah.',
+  },
+
+  // Christian
+  {
+    name: 'Raphael',
+    tradition: 'Christian',
+    description:
+      'Archangel whose name means “God has healed”, first mentioned in the Book of Tobit and in 1 Enoch.',
+  },
+
+  // Persian
+  {
+    name: 'Zoroaster',
+    tradition: 'Persian',
+    otherNames: ['Zarathustra'],
+    description:
+      'Iranian religious reformer and spiritual founder of Zoroastrianism, traditionally believed to have authored the Gathas.',
+  },
+
+  // Akkadian & Babylonian
+  {
+    name: 'Tiamat',
+    tradition: 'Akkadian & Babylonian',
+    description:
+      'Mesopotamian cosmic ocean that mates with Abzu to produce the Babylonian pantheon in the Enuma Elish.',
+  },
+
+  // Sumerian
+  {
+    name: 'Belili',
+    tradition: 'Sumerian',
+    description:
+      'Mesopotamian goddess, a sister of Dumuzi in the texts on his death and a primordial deity paired with Alala.',
+  },
+
+  // Japanese
+  {
+    name: 'Izanami',
+    tradition: 'Japanese',
+    description:
+      'Japanese Shinto mother goddess, creator of both creation and death, who with her brother-husband Izanagi was among the last of seven generations of primordial deities.',
+  },
+
+  // Maya
+  {
+    name: 'Ek Chuah',
+    tradition: 'Maya',
+    description:
+      'Postclassic Maya merchant deity, known as God M in the classification of codical gods.',
+  },
+
+  // Hawaiian
+  {
+    name: 'Kanaloa',
+    tradition: 'Hawaiian',
+    description:
+      'Hawaiian god symbolised by the squid or the octopus, a complementary power to Kane.',
+  },
+  {
+    name: 'Kanehekili',
+    tradition: 'Hawaiian',
+    otherNames: ['Kane-hekili'],
+    description: 'Hawaiian god of thunder, brother of Pele and Hiiaka, born of Haumea.',
+  },
+
+  // Polynesian
+  {
+    name: 'Maui',
+    tradition: 'Polynesian',
+    description:
+      'Great culture hero and trickster of Polynesian mythology, very rarely worshipped and more a demigod and folk hero than a deity.',
+  },
+
+  // English folklore
+  {
+    name: 'Puck',
+    tradition: 'English folklore',
+    otherNames: ['Robin Goodfellow'],
+    description:
+      'Demon or fairy of English folklore, a domestic or nature sprite, also known as a goodfellow.',
+  },
+
+  // Inuit
+  {
+    name: 'Sedna',
+    tradition: 'Inuit',
+    description:
+      'Inuit goddess of the sea and marine animals, the Mother of the Sea, who rules Adlivun, the underworld.',
+  },
+
+  // Scottish Gaelic
+  {
+    name: 'Cailleach',
+    tradition: 'Scottish Gaelic',
+    otherNames: ['Cailleach Bheur', 'Beira'],
+    description:
+      'Divine hag of Gaelic myth, linked with the shaping of the landscape and with weather, especially storms and winter; in Scotland Beira, Queen of Winter.',
+  },
+  {
+    name: 'Seonaidh',
+    tradition: 'Scottish Gaelic',
+    otherNames: ['Shony', 'Shoney'],
+    description: 'Water spirit of the isle of Lewis, propitiated with a cup of ale.',
   },
 ];
 
