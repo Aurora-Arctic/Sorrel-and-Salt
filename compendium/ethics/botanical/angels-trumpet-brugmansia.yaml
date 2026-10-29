@@ -1,0 +1,11 @@
+# Gathered for M14.29; the seed never reads this folder.
+entry: botanical/angels-trumpet-brugmansia
+status: approved
+listings:
+  - list: iucn
+    name: IUCN Red List
+    value: Extinct in the Wild
+    listedAs: Brugmansia
+    nameBasis: stated
+    source: wikipedia-brugmansia
+    locator: 'lead paragraph: "listed as Extinct in the Wild by the IUCN Red List"'

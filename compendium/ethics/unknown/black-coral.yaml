@@ -1,0 +1,7 @@
+# Gathered for M14.29; the seed never reads this folder.
+entry: unknown/black-coral
+status: approved
+animalPart:
+  - quote: The largest single threat is poaching— though the majority of black coral fisheries are heavily regulated, there is still a black market for the corals.
+    source: wikipedia-black-coral
+    locator: section "Threats"
