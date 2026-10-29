@@ -116,8 +116,6 @@ export default function StepRow({
       >
         {identity}
         {!open && summary && <p className="step-row__summary">{summary}</p>}
-          <p className="step-row__summary step-row__body-summary">{bodySummary}</p>
-        )}
         <div className="step-row__marks">
           {badge}
           {marks}
