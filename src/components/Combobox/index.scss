@@ -521,6 +521,13 @@ $room: min(100%, max(6rem, var(--combobox-room, 0px)));
   color: $text-muted;
   font-size: type-size('caption');
 
+  // With `meta` after it the line is kept to one, ending in an ellipsis.
+  &--meta {
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+
   .is-highlighted & {
     color: $text-primary;
   }

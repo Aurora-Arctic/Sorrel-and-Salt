@@ -64,5 +64,20 @@ for (const viewport of [
     expect(frames.length).toBeGreaterThan(10);
     expect(frames.every(({ form }) => form)).toBe(true);
     expect(new Set(frames.map(({ height }) => height)).size).toBe(1);
+
+    // The default column (32rem of content and the dialog's 3rem of padding, 560px), held to the
+    // window's gap on a phone.
+    const width = await page
+      .getByRole('dialog', { name: 'New Spell' })
+      .evaluate((dialog) => Math.round(dialog.getBoundingClientRect().width));
+    if (viewport.width >= 1280) expect(width).toBe(560);
+    else expect(width).toBeLessThan(viewport.width);
+
+    // The Jar is one column at every width: the jar details above the steps.
+    const details = await page.getByRole('group', { name: 'Jar Details' }).boundingBox();
+    const list = await page.getByRole('heading', { name: 'What Goes In' }).boundingBox();
+    if (!details || !list) throw new Error('The Jar draws no column');
+    expect(list.y).toBeGreaterThan(details.y);
+    expect(Math.abs(list.x - details.x)).toBeLessThan(40);
   });
 }

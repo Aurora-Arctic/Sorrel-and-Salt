@@ -730,10 +730,11 @@ $control-height-compact: 2rem;
 $wide-column: 80rem;
 
 // A dialog's content column, and the wide one for a form with nested panels,
-// such as the ingredient form (M5.5). Each was a raw width in
-// `Modal/index.scss`; the modal adds its padding and caps both at the window.
+// such as the ingredient form (M5.5), or two columns side by side, the spell
+// builder's jar (55rem: its step list at 30rem or more beside an 18rem aside). Each was a
+// raw width in `Modal/index.scss`; the modal adds its padding and caps both at the window.
 $dialog-column: 32rem;
-$dialog-column-wide: 48rem;
+$dialog-column-wide: 55rem;
 
 // The page's ground at three quarters over what lies behind: a dialog's backdrop
 // over the page, and a question's scrim over the form it asks about (MB.115). The

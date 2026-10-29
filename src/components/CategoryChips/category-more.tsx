@@ -4,7 +4,8 @@ import { autoUpdate, flip, offset, shift, size, useFloating } from '@floating-ui
 import { type ReactElement, useCallback, useEffect, useId, useRef, useState } from 'react';
 import { chipColors } from '../../lib/chip-colors';
 import { TIP_OPEN_DELAY_MS } from '../InfoTip/constants';
-import type { CardCategory } from './types';
+import CategoryTipChip from './category-tip-chip';
+import type { CardCategory, CategoryChipsProps } from './types';
 
 /** The least width the panel takes when the chip row is narrower. */
 const PANEL_MIN_PX = 192;
@@ -29,9 +30,11 @@ interface CategoryMoreProps {
   categories: readonly CardCategory[];
   /** The ingredient's label, for the accessible names. */
   label: string;
+  /** A chip's tip words, when the caller gives each chip a tip. */
+  tipOf?: CategoryChipsProps['tipOf'];
 }
 
-const CategoryMore = ({ categories, label }: CategoryMoreProps): ReactElement => {
+const CategoryMore = ({ categories, label, tipOf }: CategoryMoreProps): ReactElement => {
   const [open, setOpen] = useState(false);
   const [pinned, setPinned] = useState(false);
   const wrapper = useRef<HTMLSpanElement>(null);
@@ -159,11 +162,20 @@ const CategoryMore = ({ categories, label }: CategoryMoreProps): ReactElement =>
         aria-hidden={!open}
         className={open ? 'category-more__panel is-open' : 'category-more__panel'}
       >
-        {categories.map(({ category, group }) => (
-          <span key={category.id} className="chip" style={chipColors(group)}>
-            {category.name}
-          </span>
-        ))}
+        {categories.map(({ category, group }) =>
+          tipOf ? (
+            <CategoryTipChip
+              key={category.id}
+              category={category}
+              group={group}
+              tip={tipOf(category)}
+            />
+          ) : (
+            <span key={category.id} className="chip" style={chipColors(group)}>
+              {category.name}
+            </span>
+          ),
+        )}
       </span>
     </span>
   );

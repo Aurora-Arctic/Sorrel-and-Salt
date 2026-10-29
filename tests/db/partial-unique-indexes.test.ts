@@ -268,10 +268,6 @@ const ROWS: Record<string, PartialIndexRow> = {
   spell_steps_spell_id_custom_name_unique: { row: () => spellStep(false) },
   spell_steps_spell_id_layer_order_unique: { row: () => spellStep(true) },
   spell_steps_spell_id_position_unique: { row: () => spellStep(true) },
-  spell_steps_spell_id_variant_id_unique: {
-    row: () => spellStep(true),
-    clash: ['spell_id', 'ingredient_id', 'variant_id'],
-  },
   users_email_unique: { row: async () => stamped({ name: 'Fixture Person', email: address() }) },
   workspaces_slug_unique: {
     row: async () => {

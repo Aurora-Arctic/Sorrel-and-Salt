@@ -12,6 +12,7 @@ import { detailsHeading, detailsMarks } from '../IngredientEntry/details';
 import IngredientSummary from '../IngredientEntry/summary';
 import type { SummaryJar } from '../IngredientEntry/types';
 import Modal from '../Modal';
+import Skeleton from '../Skeleton';
 import ModalLoading from '../Modal/loading';
 import type { Duplicate } from './types';
 import { applyCupboardEntry } from '@/modules/ingredients/validation/cupboard-merge';
@@ -157,6 +158,29 @@ export const jarsOf = (looked: Looked): SummaryJar[] =>
     threshold: jar.lowStockThreshold === null ? null : Number(jar.lowStockThreshold),
   }));
 
+/** The names a Quick Look's head shows before the entry arrives; the formal name's two fields come together or not at all. */
+type QuickLookNames = Pick<Duplicate, 'name'> &
+  (
+    | Pick<Duplicate, 'canonicalName' | 'nomenclature'>
+    | { canonicalName?: never; nomenclature?: never }
+  );
+
+/**
+ * The head before the entry arrives. With the formal name known it is the details' own head; with
+ * it unknown, a line skeleton stands where the formal name goes (while the read is out), or
+ * nothing does (after a failed read): never "Not yet looked up", which would say the entry has none.
+ */
+function pendingHeading(entry: QuickLookNames, loading = true): ReturnType<typeof detailsHeading> {
+  if (entry.canonicalName !== undefined && entry.nomenclature !== undefined) {
+    return detailsHeading({
+      ...entry,
+      canonicalName: entry.canonicalName,
+      nomenclature: entry.nomenclature,
+    });
+  }
+  return { title: entry.name, formalName: loading ? <Skeleton shape="line" /> : undefined };
+}
+
 /**
  * The modal itself: open at once under the row's name, loading by the standard's
  * skeleton (M12.33), then the entry; a failed read says so, with Try Again.
@@ -172,9 +196,11 @@ export function DuplicateQuickLook({
   id: string;
   /**
    * The row's names, for the head while the read is out: the details' own head, as
-   * the list's Quick Look opens under, so nothing in it jumps when they arrive.
+   * the list's Quick Look opens under, so nothing in it jumps when they arrive. A caller
+   * that does not know the formal name leaves `canonicalName` and `nomenclature` out: the
+   * head then draws a one-line skeleton where the formal name goes, until the entry arrives.
    */
-  entry: Pick<Duplicate, 'name' | 'canonicalName' | 'nomenclature'>;
+  entry: QuickLookNames;
   workspaceId: string;
   /** The entry's page, opened in a new tab so the form stays as it is. */
   pageHref: string;
@@ -189,14 +215,14 @@ export function DuplicateQuickLook({
 
   if (isPending || (error && isRefetching)) {
     return (
-      <Modal {...detailsHeading(entry)} onClose={onClose} returnTo={returnTo} loading>
+      <Modal {...pendingHeading(entry)} onClose={onClose} returnTo={returnTo} loading>
         <ModalLoading />
       </Modal>
     );
   }
   if (error) {
     return (
-      <Modal {...detailsHeading(entry)} onClose={onClose} returnTo={returnTo}>
+      <Modal {...pendingHeading(entry, false)} onClose={onClose} returnTo={returnTo}>
         {/* The server's sentence, "No such ingredient" for one deleted since,
             or else "That didn't work. Please try again." */}
         <p role="alert">{readGraphqlFailure(error).alert}</p>

@@ -233,6 +233,31 @@ describe('suggestIngredients', () => {
     });
   });
 
+  describe('the category filter', () => {
+    it('keeps only entries carrying any of the given categories, and none given keeps all', async () => {
+      const rows =
+        await sql`select id, name from categories where deleted_at is null order by name limit 3`;
+      const [first, second, third] = rows;
+      await addIngredient({ name: 'Mugwort', categories: [first.name as string] });
+      await addIngredient({ name: 'Mugroot', categories: [second.name as string] });
+      await addIngredient({ name: 'Mugleaf', categories: [third.name as string] });
+      await addIngredient({ name: 'Mugbare' });
+      const names = async (categoryIds?: string[]) =>
+        (await suggestIngredients(asUser(B), WORKSPACE_W_ID, 'mug', PAGE, undefined, categoryIds))
+          .map((entry) => entry.node.name)
+          .sort();
+
+      // Why it could have succeeded: all four match the typed text.
+      expect(await names()).toEqual(['Mugbare', 'Mugleaf', 'Mugroot', 'Mugwort']);
+      expect(await names([])).toHaveLength(4);
+      expect(await names([first.id as string])).toEqual(['Mugwort']);
+      expect(await names([first.id as string, second.id as string])).toEqual([
+        'Mugroot',
+        'Mugwort',
+      ]);
+    });
+  });
+
   describe('authorization', () => {
     beforeEach(async () => {
       await addIngredient({ name: 'Mugwort', workspaceId: WORKSPACE_W_ID });

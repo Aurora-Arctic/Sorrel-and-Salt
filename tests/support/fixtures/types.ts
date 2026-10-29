@@ -103,15 +103,7 @@ export type VariantInput = NonNullable<z.input<typeof LocalIngredientInput>['var
 export interface SpellStepFixture extends Required<
   Pick<
     typeof spellSteps.$inferInsert,
-    | 'ingredientId'
-    | 'name'
-    | 'form'
-    | 'quantity'
-    | 'unit'
-    | 'note'
-    | 'body'
-    | 'position'
-    | 'layerOrder'
+    'ingredientId' | 'name' | 'form' | 'quantity' | 'unit' | 'body' | 'position' | 'layerOrder'
   >
 > {}
 

@@ -21,9 +21,21 @@ builder.queryField('ingredientSuggestions', (t) =>
       workspaceId: t.arg.id({ required: true }),
       query: t.arg.string({ required: false }),
       form: t.arg.string({ required: false }),
+      categoryIds: t.arg.idList({
+        required: false,
+        description:
+          'Keep only entries carrying any of these categories. Empty or null is no filter.',
+      }),
     },
-    resolve: (_root, { workspaceId, query, form }, page, context) =>
-      suggestIngredients(sessionOf(context), workspaceId, query ?? '', page, form ?? undefined),
+    resolve: (_root, { workspaceId, query, form, categoryIds }, page, context) =>
+      suggestIngredients(
+        sessionOf(context),
+        workspaceId,
+        query ?? '',
+        page,
+        form ?? undefined,
+        categoryIds ?? undefined,
+      ),
     edgeFields: (t) => ({
       group: t.field({
         type: SuggestionGroupEnum,

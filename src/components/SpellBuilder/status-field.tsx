@@ -6,33 +6,21 @@ import { useFormContext, useFormState } from 'react-hook-form';
 import BusyButton from '../BusyButton';
 import type { SpellBuilderInput, SpellBuilderValues, SpellStatusFieldProps } from './types';
 
-// A spell is a draft until it is marked complete (M10.20, story 55). The control
-// is one button that says what it will do: Mark Complete on a draft, Reopen as
-// Draft on a complete spell, so completing is explicit and reversible. A click
-// saves everything the form holds with the other status, as Share With the Coven
-// does, so the status is never a pick left pending. A complete spell needs a title
-// (M13.15's CHECK): its absence is said on the title field, before anything is sent.
-// Marking complete flushes the autosave with the other status, which carries every unsaved
-// change in the same save.
+// A spell is a draft until it is marked complete (M10.20, story 55). A draft shows one
+// button, Mark Complete; a click saves everything the form holds as complete, as Share With
+// the Coven does, so the status is never a pick left pending. A complete spell needs a title
+// (M13.15's CHECK): its absence is said on the title field, before anything is sent. Marking
+// complete flushes the autosave with the other status, which carries every unsaved change in
+// the same save.
+// A complete spell shows its statement and no button: there is no Reopen as Draft. Once
+// complete, a spell's workings are recorded against it and its visibility lock has started,
+// so reopening would undo both. To vary a complete spell, M13.20's copy (Duplicate a Spell)
+// is the way. This is the control only: the service still accepts complete -> draft for now.
 // claude-docs/components/spell-builder.md, "Draft and complete".
 
-/** What each saved status says about itself, and the action that changes it. */
-const STATES = {
-  draft: {
-    says: 'A draft: not yet finished.',
-    action: 'Mark Complete',
-    busy: 'Marking Complete',
-    next: 'complete',
-  },
-  complete: {
-    says: 'Complete. Reopening it keeps its workings, but no new working can be recorded until it is complete again.',
-    action: 'Reopen as Draft',
-    busy: 'Reopening',
-    next: 'draft',
-  },
-} as const;
+const DRAFT_SAYS = 'A draft: not yet finished.';
 
-export function SpellStatusField({ flush }: SpellStatusFieldProps): ReactElement {
+export function SpellStatusField({ flush }: SpellStatusFieldProps): ReactElement | null {
   const { control, getValues, handleSubmit, setFocus, setValue } = useFormContext<
     SpellBuilderValues,
     unknown,
@@ -41,7 +29,7 @@ export function SpellStatusField({ flush }: SpellStatusFieldProps): ReactElement
   const { defaultValues } = useFormState({ control });
   const [busy, setBusy] = useState(false);
   // The saved spell's status is the last save's, which the form starts from.
-  const state = STATES[defaultValues?.status ?? 'draft'];
+  const complete = defaultValues?.status === 'complete';
 
   const change = async () => {
     // The form holds the status being asked for while it validates, so the
@@ -51,7 +39,7 @@ export function SpellStatusField({ flush }: SpellStatusFieldProps): ReactElement
     // own status is never one the server has not taken. Drawn before the flush
     // so the autosave has seen the change when it is asked to save.
     const before = getValues('status');
-    flushSync(() => setValue('status', state.next));
+    flushSync(() => setValue('status', 'complete'));
     setBusy(true);
     try {
       await handleSubmit(
@@ -69,21 +57,25 @@ export function SpellStatusField({ flush }: SpellStatusFieldProps): ReactElement
     }
   };
 
+  // A complete spell shows nothing here (the owner, 2026-10-29): no button, no sentence. Its
+  // state is carried by the missing button and the locked Visibility switch.
+  if (complete) return null;
+
   // The state line is read, not drawn: a button row has no room for a sentence.
   return (
     <>
       <span id="spell-status-says" className="visually-hidden">
-        {state.says}
+        {DRAFT_SAYS}
       </span>
       <BusyButton
         type="button"
         className="btn btn--quiet"
         busy={busy}
-        busyLabel={state.busy}
+        busyLabel="Marking Complete"
         aria-describedby="spell-status-says"
         onClick={change}
       >
-        {state.action}
+        Mark Complete
       </BusyButton>
     </>
   );

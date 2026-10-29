@@ -16,7 +16,7 @@ on any other page is sent to that coven's grimoire with a replace
 `?new=spell-<slug>` in the browser, with no server
 request, and the dialog draws the empty builder from the address itself, so
 it opens at its full size at once, with no skeleton before it
-([`modal.md`](modal.md), "A form the browser can draw skips the skeleton"). Its head names the coven the spell lands in, as Add Ingredient's does: the coven's name over the title, and the dialog named "New Spell to Whitethorn Coven" (`ModalHeading.destination`, [`modal.md`](modal.md)); a saved spell's stays "Edit Spell" over its title. Reordering the steps (M10.16) is built; instruction steps (M13.3) and Mark Complete (M10.20) are later tasks that extend it. The comparison panel (M10.17) sits in the Jar section, after the steps. There is
+([`modal.md`](modal.md), "A form the browser can draw skips the skeleton"). Its head names the coven the spell lands in, as Add Ingredient's does: the coven's name over the title, and the dialog named "New Spell to Whitethorn Coven" (`ModalHeading.destination`, [`modal.md`](modal.md)); a saved spell's stays "Edit Spell" over its title. Reordering the steps (M10.16) is built; instruction steps (M13.3) and Mark Complete (M10.20) are later tasks that extend it. The comparison panel (M10.17) sits in the Jar section, beneath the steps. There is
 no `instructions` field: the ritual is the spell's steps (M13.1).
 
 ## Props
@@ -61,12 +61,14 @@ for it, as for a refused unit, and Save or Close shows the error beside it.
   `autosave:spell:<id|new>:<userId>`, until the server confirms. If a copy
   newer than the spell's `updatedAt` exists when the builder opens, a banner
   reads "Restored unsaved changes from 2:02 pm" with Keep (load the copy into
-  the form, unsaved) and Discard (forget it). An older copy is removed without
+  the form, unsaved) and Discard (forget it). The notice is a wrapping flex row with a
+  `space(2)` gap between the sentence and the buttons (the same gap as the save status's notices), so
+  at a narrow width the buttons drop to their own line. An older copy is removed without
   a word.
 - **Typing in flight is kept.** A save's answer becomes the form's new start
   with `reset(..., { keepValues: true })`, so what was typed meanwhile reads
   as the next change.
-- **Mark Complete and Reopen as Draft** flush first; a missing title refuses
+- **Mark Complete** flushes first; a missing title refuses
   inline on the title field and the status goes back.
 
 - **No field is required.** A draft saves with any one field, or all of them.
@@ -150,10 +152,14 @@ The rule it follows is DESIGN.md §5's: a complete spell's visibility only widen
   spell is shared in one action. Any other unsaved changes go with it, which
   the question says. A refusal lands in the `Notice` and the spell stays
   private.
+- **A shared draft** keeps the switch open. Switching it off is a pending
+  change like a new spell's, saved with the rest of the form. The lock binds only
+  once the stored status is complete (M10.20).
 - **A complete spell shared with the coven** shows the switch on and disabled, with
-  the note: "Shared with the coven, so it cannot be made private again.
-  Duplicate makes a private copy." Duplicate is M13.20. A new spell saved for
-  the coven stays open, being a draft; marking it complete shuts it.
+  the note "Shared with the coven" and, in an InfoTip beside it, "It cannot be
+  made private again. Duplicate makes a private copy." The tip's text is in
+  the switch's accessible description. Duplicate is M13.20. A new spell saved for
+  the coven stays open while it is a draft, and shuts once it is complete.
 
 Which state shows is read from the form's starting values (the last save's,
 status and visibility) and whether the spell has been created, so the builder passes only
@@ -167,19 +173,20 @@ refusal's words, which explain the rule and name Delete, show in the
 
 Whether the spell is finished (M10.20, story 55): `SpellStatusField`, in
 `status-field.tsx`, drawn in the form's action row (`FormActions`) beside Save Spell, outside every section.
-A spell is a `draft` until it is marked `complete`. The control is one
-button that says what it will do: Mark Complete on a draft, Reopen as Draft on
-a complete spell, with a line saying what the state means, visually hidden and read as the button's description. Like Share
-With the Coven, a click saves the whole form with the other status at once, so
-the status is never a pick left pending.
+A spell is a `draft` until it is marked `complete`. A draft shows one button,
+Mark Complete, with a line saying what the state means, visually hidden and read as the button's description. Like Share
+With the Coven, a click saves the whole form with the status `complete` at once, so
+the status is never a pick left pending. A complete spell shows no button and
+no sentence (the owner, 2026-10-29); the missing button and the locked Visibility switch carry the state. Once
+complete, its workings are recorded against it and its visibility lock has
+started, so reopening would undo both. M13.20's copy (Duplicate a Spell) will
+add a Copy as Draft button here; it is the way to vary a complete spell. The
+service still accepts complete to draft for now; only this control dropped it.
 
 - **A new spell** is a draft (`valuesOf` reads a missing status as one).
 - **A blank title** is refused before anything is sent: the form holds the asked-for status while it validates, so the schema's rule shows it on the title field,
   with `COMPLETE_NEEDS_TITLE` (validation/spell.ts), the words for the
   database's `spells_complete_has_title` check (M13.15). Focus goes to the title.
-- **Reopening** keeps the spell's workings. Refusing a new working on a draft
-  belongs to the workings service, which does not exist yet; this control only
-  sets the status.
 - **Autosave:** Mark Complete will flush a pending autosave first once M13.17
   exists. Until then the save it sends already carries every unsaved change.
 - **The list** shows status already: the Drafts tab, and a Draft badge on each
@@ -209,7 +216,7 @@ the save. A refused save keeps the dialog open with the refusal in the
 `Notice`, so nothing typed is lost. With nothing unsaved, Close closes at once.
 Closing the tab or reloading still asks the browser's own question, which no
 page can answer by saving. Undo and redo are the shared `FormHistoryButtons`
-(M12.9).
+(M12.9). Undo writes the `steps` array back whole with `setValue`, which makes react-hook-form give every row a new id; so the list keys its rows, drag ids and open row by each step's `rowKey` (a value carried in the step, stable across an Undo), not by the field array's `id`. Every path that writes stored steps back goes through `restoredSteps` (`steps/values.ts`): Undo and Redo (`prepare`) and a recovered draft (`keepRecovered`). It sets a saved id the server's current steps do not hold to none, so the next save adds the step as a new one and the service never sees a dead id (a draft kept before a save removed a step would otherwise be refused on every save), and it gives a step with no `rowKey` one. A save's answer setting a new step's `stepId` is bookkeeping and not a history step (`skip`).
 
 ## Sections
 
@@ -218,12 +225,12 @@ The fields sit in four `CollapsibleSection`s at `h3`
 `.collapsible-sections`, as Add Ingredient's are (M8.16; the owner, 2026-10-28,
 "Use add ingredient modal as reference"):
 
-| Section         | Fields                                               |
-| --------------- | ---------------------------------------------------- |
-| Purpose         | Title, Intent, Categories (M10.14)                   |
-| Jar             | Jar Description, Seal Wax Colour, the steps (M10.15) |
-| When to Work It | Moon Phase, Day of the Week                          |
-| Notes           | Note, Share With the Coven (M10.13)                  |
+| Section         | Fields                                                                                             |
+| --------------- | -------------------------------------------------------------------------------------------------- |
+| Purpose         | Title, Intent, Categories (M10.14)                                                                 |
+| Jar             | The jar details (Seal Wax, Jar Description), What Goes In (the steps, M10.15), then the comparison |
+| When to Work It | Moon Phase, Day                                                                                    |
+| Notes           | Note, Share With the Coven (M10.13)                                                                |
 
 A new spell opens with every section open, to be filled in order; a saved
 spell opens with every section shut. Shut, a section's line names the values
@@ -249,7 +256,7 @@ states a rule a person could trip on
 stored as typed: the columns are free text
 ([`../db/grimoire.md`](../db/grimoire.md)).
 
-- **Moon Phase and Day of the Week** sit together under When to Work It.
+- **Moon Phase and Day** sit together under When to Work It.
   They are the recipe's timing, meaning when to work the
   spell, not a record of when it was worked. A working's own day and moon
   phase follow from its `workedOn` date (M13.4). Both are comboboxes
@@ -303,61 +310,60 @@ stored as typed: the columns are free text
   as the picker's chips; the grimoire's spell card shows the saved ones with
   `CategoryChips`. A saved spell opens with its categories picked: the
   `?edit=<id>` read (`readEditedSpell`) loads them with `assignedCategoriesOf`.
-- **Jar Description and Seal Wax Colour** stay plain text boxes, with no list, by
+- **Jar Description and Seal Wax** stay plain text boxes, with no list, by
   the owner's decision (2026-10-27).
-- **Intent and Note** are multi-line. Title, Jar Description and Seal Wax Colour are
+- **Intent and Note** are multi-line. Title, Jar Description and Seal Wax are
   `autoComplete="off"`.
 
 ## Steps
 
-`steps/` is the jar: the picker that adds to it, the list of steps, and the
-spell's derived categories, in that order. The picker leads so that a step
-added never pushes the search box, or the list open beneath it, down the
-dialog: the list is fixed under its box, and a box carried below the fold of
-the dialog's scrolling body opened its list off the screen (found by story
-51's flow). It sits in the Jar section after Seal Wax Colour;
-while a saved spell's steps are still being read it is a skeleton there, and
-if the read fails, an error in its place.
+The Jar section is one column (the owner's call, 2026-10-29: with In Coven Inventory gone, one column in the default-width dialog; it was two columns, owner's design, 2026-10-28, option C2). In order: the jar details ([the jar details](#the-jar-details)), "What Goes In" (`steps/`), then the comparison (Category Match). "What Goes In" holds a summary line, the list of steps, then one add row beneath the list: the picker and
+Add Instruction. The add row sits below the list because a new step lands at the end of the list (owner's call, 2026-10-29, on the second design review's second question): the control that adds an item belongs where the item appears, a pick is followed by a short move to the new step rather than a trip down the list and back, and Shift+Tab from the picker reaches the new step's last field instead of going through every closed row. With no steps the list takes no space, so the add row sits directly under the heading. The default dialog is 32rem of content, so the section is one column at every width (gate spec `tests/e2e/spell-dialog-size.spec.ts`). While a saved spell's steps are still
+being read the column is a skeleton, and if the read fails, an error in its place.
 
-- **Add to Jar** (`picker.tsx`, story 49) is a fieldset with a type-ahead,
-  Search Ingredients, over `ingredientSuggestions`: the coven's own
-  ingredients under Your Ingredients and the compendium's under Compendium,
-  one row per form, since a step lays a form and not a whole ingredient. A row
-  reads the cupboard's label (or the ingredient's name) with the form in
-  brackets, its form's icon, and the formal name as its note. A retired
-  ingredient is not offered. A form already in the jar is listed but disabled,
-  with the note "Already in the jar". Picking a row appends the step and
-  clears the search, and the focus stays in the search for the next
-  ingredient: the append passes `shouldFocus: false`, since react-hook-form
-  would otherwise move the focus to the new step's Quantity a render later and
-  close the list of whatever was typed meanwhile.
-- **A one-off ingredient** is a name and an optional form typed for this jar
-  alone (One-Off Name, One-Off Form, Add One-Off Ingredient). It makes no
-  ingredients row: the step saves its `name` and `form` with no ids. A name
-  already in the jar as a one-off is refused beneath the name field.
+- **Summary** reads how many steps and how many ingredients the jar holds.
+- **Add to Jar** (`picker.tsx`, story 49) is one combobox over `ingredientSuggestions`: the coven's
+  own ingredients under Your Ingredients and the compendium's under Compendium, one row per
+  form, since a step lays a form and not a whole ingredient. A row reads the cupboard's label
+  (or the ingredient's name) with the form in brackets, its form's icon, and the formal name as
+  its second line: the formal name in italics (`.spell-steps__formal`), then " · " and the form's categories (the form's own, else the ingredient's) as `CategoryChips` with no separator between chips (the combobox's `meta`; see "Folded categories" below). The box has a visible "Add to Jar" label above its frame, passed to the combobox as `labelId`, and the field's error sits directly under the frame. A retired ingredient is not offered. A form already in the jar is listed and
+  can be picked again, for another step (owner, 2026-10-28; before it a form could be in the jar once). Picking a row appends the step and clears the search, and
+  the focus stays in the search for the next ingredient: the append passes
+  `shouldFocus: false`, since react-hook-form would otherwise move the focus to the new step's
+  Quantity a render later and close the list of whatever was typed meanwhile.
+- **A one-off ingredient** is the combobox's first row, `Add "<typed>" as a one-off ingredient`
+  (the Combobox's `action`). It makes no ingredients row: the step saves its `name` with no
+  ids, is marked One-Off, and its Form is typed in the open row. A name already in the jar as a
+  one-off, trimmed and ignoring case, is refused beneath the box.
 - **What a step saves.** A step picked from the type-ahead sends its
   `ingredientId` and `variantId`, never the cupboard entry or the coven's
   jar it was found through (`stepInputOf` in `values.ts`); a one-off sends
   its `name` and `form`. A saved step sends its `id`. Quantity is sent as a
-  number, and a blank quantity, unit or note is left out.
-- **Each row** (`step-row.tsx`'s `BuilderStepRow`, stories 50 and 80) is
-  [`StepRow`](step-row.md) with the builder's controls in it: the handle (Move
-  and the step's name, below), then the form's icon and the name with its
-  form, a Quantity and a Unit, an Instruction beneath, and Remove. An
-  instruction-only step has the handle and its Instruction alone.
-- **Add a Step** (M13.3) is a button beside Add to Jar that appends an
-  instruction-only step and puts the focus in its Instruction field. Until
-  something is written the step is named "New Instruction" where it is read
-  out. The Instruction field is a two-row text area; its placeholder is
-  "Light candle" on an instruction-only step and "Crush first" under an
+  number, and a blank quantity or unit is left out.
+- **Each row** (`step-row.tsx`'s `BuilderStepRow`, stories 50 and 80) is [`StepRow`](step-row.md), an
+  open or a closed card. Closed, it shows the handle, the position, the form's icon, the name with
+  its form, a summary of amount and instruction, the supply badge, a pencil to open it and Remove.
+  Open, it also shows Name (one-offs only, required, editable: the header and inventory line follow it, a blank is refused as "Give the ingredient a name" and a repeat as the picker does, both in the field; a linked ingredient's name is read-only), Form (one-offs only), Quantity and Unit on one line, and Instruction full width on a line beneath. One row is open at a
+  time: a new step opens, opening another closes the one before, and a step whose unit breaks the
+  rule is forced open so its error is seen. An open row also closes when a click or tap lands outside it or the focus leaves it; a new step stays open while the focus is in Add to Jar and closes on the next click or focus outside the box and the row. What was typed in a closed row is kept. An instruction-only step is the same
+  card: closed, its text on one line (a muted "Write the step" when empty) with a pencil ("Edit step N")
+  and Remove, as tall as a closed ingredient row; a click on it or the pencil opens it, a text area in place of
+  the text, and the pencil becomes the Close chevron at the right with Remove hidden.
+- **Add Instruction** (M13.3) is on the add row, after the picker: a `.btn` on wide, and on narrow the
+  dashed numbered last line, beneath the picker. It appends an instruction-only step, opens it and puts the
+  focus in its Instruction field. Until something is written the step is named "New Instruction"
+  where it is read out. The Instruction field is a two-row text area; its placeholder is
+  "Light candle" on an instruction-only step and "Add an instruction" under an
   ingredient. A step with an ingredient needs no instruction: a cleared one is
   left out of the save. An instruction-only step with a blank one is refused
   at its own field, "Write the instruction, or remove it", before anything is
   sent (`stepInputOf` keeps the blank body on that kind of step so the schema
-  says it, rather than a step that says nothing). A step's `note` is not
-  edited here.
+  says it, rather than a step that says nothing). The step `note` is retired: `body` is the one text on a
+  step, and the Instruction field edits it
+  ([`pr1308-step-note-retired.md`](../design-decisions/pr1308-step-note-retired.md)).
 - **After a Remove** the focus goes to the handle of the row now in that place
-  (the one before it for the last), and to Add a Step when the list is empty.
+  (the one before it for the last), and to Add Instruction when the list is empty.
+- **The starting unit** (story 77): a form the coven keeps a jar of is added with that jar's unit already in the Unit field (`newStep` reads `jarUnit`, which the picker's lookup already returns in `stock`); a form with no jar, or a jar with no unit, starts blank. It is set once, as the step is added, so it never replaces a unit the member has chosen.
 - **The unit rule** (story 77, `unitIssues`) is the service's, from
   `src/modules/grimoire/validation/step-unit.ts`: when the coven holds a jar
   of that form, the step's unit must be one the jar can be measured in (the
@@ -366,11 +372,8 @@ if the read fails, an error in its place.
   Unit, and Save Spell stays disabled while any step breaks it. A step with no
   unit, a form the coven holds no jar of, and a saved step whose unit is
   unchanged all pass, as on the server.
-- **Derived Categories** lists the union of the steps' categories, the
-  ingredient's and the form's, once each and sorted by name. It is worked
-  out from the steps as they stand, so a Remove takes a category off at once.
-  These are only ever derived; the categories a spell intends are assigned
-  (M10.14), and the two are never mixed (DESIGN.md §5).
+- **Derived Categories** (the intended categories are assigned, M10.14, and the two are never mixed,
+  DESIGN.md §5) is drawn with the comparison, below.
 - **Safety (M10.18, story 53).** A step carries the ingredient's and the form's
   `toxic` and `safetyNotes`, from the picker row or the saved spell, and draws
   `SafetyMark` beside its name and `SafetyNote` (heading level 5) beneath
@@ -380,53 +383,47 @@ if the read fails, an error in its place.
   the save. A one-off, or an instruction, has no safety value (null) and draws
   nothing: it is not called safe either.
 
+### Add to Jar: categories on the rows and the filter
+
+- **Folded categories.** A row draws its categories through the site's own `CategoryChips` (compact size, group colours, [`category-chips.md`](category-chips.md)) with `limit` set to `ROW_CATEGORY_CAP` (1): the first in its group colour, the rest behind the same `CategoryMore` "+N" button and floating panel the ingredient cards and the admin table have (hover after the tip delay, click pins, Escape closes). The cap is a fixed count, not a measured fit, because measuring needs the row's laid-out width. The panel is `position: fixed`, so the list's scrolling does not clip it. A category whose colours have not landed draws neutral grey. The chips swallow the option's click and press, so using them never picks the row or closes the list.
+- **In Jar.** A row whose form is already a step in the form shows a compact neutral "In Jar" badge flush right at the row's inline end on its first line (the label line is a flex row and the badge has `margin-inline-start: auto`, so no width is fixed), and the option's name gains "already in the jar" (visually hidden text). It is information only: the row stays pickable, since a form may be laid again. The set comes from the same watched `steps` the Missing sort reads, by `variantId`; every row is one form, so there is no whole-ingredient row to match.
+- **Order.** In three runs: the spell's assigned categories that Category Match counts Missing (carried by no step in the jar yet), then its other assigned ones (Carried), then the rest in the order the server sent. The Missing set comes from `compareJar` in `comparison-panel.tsx`, the derivation the panel itself uses. This decides which one is drawn.
+- **Filter.** When the spell has categories, a tray sits inside the box's own border: one frame (`.spell-steps__frame`) wraps the search input and the tray, with a hairline between them, so the filter reads as part of the search. The tray has two lines. The first is the muted caption "Filter By Category" with its InfoTip ("Show only ingredients in any of the pressed categories."). A quiet "Clear" button sits at the right end of that line, level with the caption (the owner, 2026-10-29); it exists only while a chip is pressed and unpresses them all. The second is the group of chips (`role=group`, named by the caption), one toggle each. A chip is a toggle: at rest a neutral hairline border, primary ink and a small dot in its group colour; pressed, a solid fill in the group colour, card-coloured ink and a leading check that takes the dot's place in the same 12px slot, so the chip keeps its width in both states (an inline 12px SVG of Lucide's Check path, `aria-hidden`, as Lucide is not a dependency; the dot is an 8px circle drawn inside a 12px box), so the state is not carried by colour alone. The pressed chip is not bold; the fill and border ease over 150ms, off under reduced motion (`aria-pressed`). The open list is layered over the tray (its z-index, see Combobox). None pressed is no filter. One or more keeps ingredients carrying any of them. A pressed category the spell no longer has drops out of the filter. While any are pressed, the list's heading names them: "Your Ingredients · In Protection", joined with ", " for several. The filter is sent as `categoryIds` on `ingredientSuggestions`, not applied after fetching, because that query is paged at ten rows and a client-side filter would miss matches beyond the page. "Add Instruction" sits in the box's row with its top edge level with the top of the box's frame (`align-self: start`, offset below the label by the label's pinned line), so the filter tray grows below it without moving it; it is drawn flat, with no shadow.
+
+## The jar details
+
+`jar-details.tsx` (`JarDetails`, once `jar-aside.tsx`, the right-hand column) is the block at the top of the Jar section, above the step list (the owner's call, 2026-10-29: with In Coven Inventory gone, one column in the default-width dialog). It is a `group` named Jar Details. The first line is the jar drawing at the left, then the Seal Wax field taking the remaining width, the jar spanning the whole Seal Wax field, its label and input together (the owner's call, 2026-10-29: level with the Seal Wax label and input together). The row stretches its items, so the jar's top lines up with the label's top and its bottom with the input's; the drawing keeps its aspect ratio inside that box, so it is never distorted. The Jar Description is a plain full-width field on its own line beneath (`space(5)` below). The DOM order is the jar, Seal Wax, Jar Description. The section's order is the jar details, the step list with its add row (What Goes In), then the comparison (Category Match, shown once the steps are read). The drawing is `JarDrawing` and `pickJarShape` from the jar shelf
+([`jar-shelf.md`](jar-shelf.md)), drawn empty and tinted by the seal wax.
+
+**The jar fills as ingredients are added.** `JarDrawing` takes `bands`, one entry per ingredient step (one-offs count, instructions do not), each entry the one group colour of the step's first category (or null). Each band is the same height, stacked from the base and clipped to the vessel's body so it follows the shape. Eight bands fill the jar (`BANDS_FULL`, a typical spell); past eight the bands shrink so they keep fitting. A band with no known group colour is the jar's ink (`$text-primary`) in two alternating tints, 8% and 18% opacity. No line is drawn between layers (the owner’s call, 2026-10-29). Each boundary between two layers is a smooth wave of four full periods across the jar (quadratic curves of 6 units, joined on the same slope), drawn once and used both as the band above's bottom and the band below's top, so bands tile with no gap. The wave lies above its boundary, so the top layer keeps its full thickness, and the bands are sized so the highest wave still stays under the jar's full line. Each boundary has its own phase (1 unit for each step up, a sixth of the half period) and an amplitude of 0.65 or 0.8 in turn, rising 1.3 to 1.6 units (about 1.5 to 2px in the aside), so neighbouring edges run nearly parallel with a slight drift (the owner's call), the same on every render; the lowest band is flat on the base. The highest band's top edge is drawn as the level line of a held jar (`$accent`, 1.2 wide), lifted 0.6 so the whole line sits above the top layer's fill and none is drawn across it (the stroke is centred on its path; checked in a render, 2026-10-29). A band that has group colours takes them instead, with no line between layers (the top band keeps the level line) (MB.35: the colours are data on the group row, so they reach the drawing as the custom properties `--band-dark` and `--band-light`, never as tokens). It is the group colour of the step's first category in listed order (the ingredient's, then the form's), skipping any whose group is not loaded: one colour for each layer, never stripes (the owner's call, 2026-10-28). The colour is mixed 55% in the light theme and 65% in the dark with `color-mix`, picked by `light-dark()`, so the top line stays legible. A step with no categories, or none whose group is loaded yet, keeps the muted tint. The group colours come from the categories the Category Match panel already reads (`useCategoryColors`), so the Jar adds no request. A band moves by a `transform` transition (none under reduced motion). The drawing stays `aria-hidden`, and an empty jar draws no band.
+
+**The Quick Look eye** stands in each ingredient step of What Goes In, after the row's badges and safety mark, before Edit, in one tight group with Edit and Remove (three fixed slots, so badges line up across rows), closed and open alike, and on no one-off or instruction-only step (the owner's call, 2026-10-29). It is `QuickLookButton`, the icon-only button the Add Ingredient form's duplicate rows use, named "Quick Look <name>", opening `DuplicateQuickLook`, the entry's details in a modal over the builder, so nothing typed is lost to a navigation. It needs the coven's id and URL segment, so `SpellBuilder` takes an optional `covenSlug` (the dialog passes it) and a builder given none draws no eye. It is drawn small (`size="small"`: the mark at 1rem in a 24px box); `StepQuickLook` (`step-quick-look.tsx`) holds the modal and the focus return, and `SpellSteps` takes the `look`. While the entry loads, the modal's head reads only the step's name, with a one-line skeleton where the formal name goes (the step carries no formal name, so it passes none: `DuplicateQuickLook` draws the skeleton when the entry has no `canonicalName`, and the loaded head is built from the loaded entry). The Add Ingredient form's duplicates list knows the formal name and shows it at once.
+
+**The builder shows no stock** (the owner's call, 2026-10-29; [`design-decisions/m10.19-stock-off-the-builder.md`](../design-decisions/m10.19-stock-off-the-builder.md)). The builder no longer draws In Coven Inventory, and no step row carries a verdict. Whether the coven holds enough of an ingredient shows on the spell's page, its Quick Look and in workings (M13.21). `inventory.tsx` and the `steps/supply*` files remain only until M13.21 moves them; nothing in the builder renders them.
+
+**Decision record:** on 2026-10-29 the owner chose icon-only verdicts with tooltips over the second design review's finding 3 (show the verdicts as words). Do not read the review as current on this point.
+
 ## The comparison panel
 
-`comparison-panel.tsx` (M10.17, story 52) sets what the spell intends beside
-what its jar carries, so a mismatch shows while the spell is built. It is an
-`aside` named Intent Against Ingredients, drawn in the Jar section after the steps, its heading an h4 under the section's h3. It reads the
-form's values as they stand, saved or not, so a pick or an ingredient added or
-removed moves it at once. The comparison is M10.8's `compareSpellCategories`
-over M10.7's `summarizeSpellCategories`, run in the browser on the steps'
-categories; a one-off or an instruction brings none.
+`comparison-panel.tsx` (M10.17, story 52) sets what the spell intends beside what its jar
+carries, so a mismatch shows while the spell is built. It is a region named Category Match
+in the Jar section beneath the steps, drawn as rows of a `dl` (Carried, Missing, Extra) whose values are
+the site's own `CategoryChips` ([`category-chips.md`](category-chips.md)), each in its category's group colours (read by id from the `categories` query the picker already makes; a category whose colours have not landed is left out until they do). The chips are the compact size, the one the admin Compendium table's Categories column uses. The row's label alone says Carried, Missing or Extra: the Missing row alone draws its chips hollow (CategoryChips' `absent` prop: no fill, a dashed border and text both in `$text-muted`, so the chip is wholly grey; the owner's call), so they read as absent while still naming the category; Carried keeps the full fill and Extra is unchanged. Every chip carries a tip, through `CategoryChips`'s `tipOf` prop: "From <the ingredients carrying it, in the jar's order>" on a Carried or Extra chip, and "Assigned to this spell, and nothing in the jar carries it" on a Missing one. It opens by hover, focus and tap (the M12.43 rule) and rides on the chip as its accessible description. Every chip is drawn (`showAll`): the panel has no +N button (the owner's call, 2026-10-28). The Extra row has no line of its own beneath the chip: the tip is where the ingredients are named. It reads the form's values as they stand, saved or not, so a pick or an ingredient added or
+removed moves it at once. The comparison is M10.8's `compareSpellCategories` over M10.7's
+`summarizeSpellCategories`, run in the browser on the steps' categories; a one-off or an
+instruction brings none. It also lists Derived Categories, the union of the steps' categories,
+once each and sorted by name.
 
-- **Intended, Not Carried** lists each assigned category that nothing in the
-  jar carries ("Prosperity: nothing in the jar carries it").
-- **Carried, Not Intended** lists each ingredient bringing a category that was
-  not assigned, one item per ingredient and form. It is one list at two
-  levels of emphasis, said in words so that it survives a screen reader. An
-  ingredient that carries nothing intended leads the list, its name in bold,
-  and ends "Carries nothing you intended". One that also carries an intended
-  category follows, in the muted ink, and ends "Also carries <categories>".
-  The words, and the order, are what carry the difference; the bold and the
-  muted ink only follow them. An ingredient with no category at all, or none
-  unintended, brings nothing to list and is not listed.
-- **Matched** reads "Intent and ingredients match." when neither list has an
-  item. With no category assigned, the panel does not list every ingredient as
-  a stray, which would say nothing: it asks for categories first. With nothing
+- **Carried** is each intended category the jar carries; **Missing** each assigned category nothing
+  in the jar carries; **Extra** each category the jar carries that was not assigned. The row is its chips and nothing
+  else: no line, tip or other place names the ingredients that bring an extra category (the owner's
+  call, 2026-10-28).
+  The words carry the difference; the chips are coloured by group, as they are everywhere. On 2026-10-29 the owner chose the group colours over the second design review's finding 6a (neutral chips), so the review is not current on this point. The review's spacing stays: the chips are the compact size (`CategoryChips` with `compact`, which applies `chip($size: compact)`: overline text, 0.4375rem side padding), the row labels are the 5.5rem caption column, and rows are `space(2)` apart.
+- With none of the three, it reads "Intent and ingredients match." With no category assigned the
+  panel does not list every ingredient as an extra: it asks for categories first. With nothing
   assigned and nothing in the jar it reads "Nothing to compare yet."
 
-Placement (decided here, to be confirmed by the owner): an `aside` in the
-form's flow after the jar, not a column of the dialog. The dialog is a single
-column of folding sections like Add Ingredient, and a column beside it would
-set the dialog's layout before the section's design review has. The story
-finds it by its role and name, so moving it to a side column later changes
-styling only.
-
-- **Supply (M10.19, story 54).** Each ingredient step reads the coven's jar of its form
-  (`quantityOnHand`, `lowStockThreshold` and unit, from the same `stock` the unit rule
-  reads) and `supplyOf` (`steps/supply.ts`, pure) turns it and the amount typed into one
-  of: **Out of Stock** (no jar for the form, which is how a compendium form the coven has
-  not taken in reads, or a jar at 0), **Not Enough** (the jar holds less than the step
-  calls for, once both are in one unit through `unitConvert`; distinct from Out),
-  **Cannot Compare** (the step's unit cannot be set against the jar's: a count, two
-  dimensions, or a jar with no unit; never read as held or enough), **Low Stock** (the
-  jar's own threshold), **One-Off** (a one-off, which nothing in the cupboard could ever
-  answer; marked, not told to be gathered), or nothing. A jar held but not weighed, a
-  step with no amount, and an instruction-only step show nothing. Out and Low are
-  `StockBadge`'s own; the others are words in a badge, so no state rests on colour. The
-  verdict follows each keystroke of the quantity and unit, and the jar figures are as the
-  picker or the saved read found them, not refreshed while the dialog is open.
+- **No supply verdicts in the builder.** M10.19 (story 54) once read the coven's jar against each step and drew Out of Stock, Not Enough, Units Differ, Low Stock and One-Off verdicts. The owner moved that off the builder on 2026-10-29: stock is not a concern while writing a spell, and shows on the spell's page, its Quick Look and in workings (M13.21). `supplyOf` (`steps/supply.ts`) and its marks remain until M13.21 moves them. Story 77's starting unit (the picker's `jarUnit`) stays: it presets a unit and shows nothing.
 
 ## Reordering
 
@@ -465,14 +462,30 @@ instruction steps move alike.
   `(spell_id, position)` partial unique index through a negative scratch
   place, never by removing a step and adding it again.
 
+## Why Save Spell is off
+
+While Save Spell is off, a tip on the button says why (the owner's call, 2026-10-29: it was a muted line beside the button from the second design review, 2026-10-28, finding 6). `FormActions` takes the reason as `saveReason`: the tip opens on hover (after the wait), focus and a tap, through `IconTip`, and the same words are the button's description. The button is then `aria-disabled` rather than `disabled`, so it keeps focus and the tip has something to open from; it looks off and its press does nothing. In this order: "Fix the unit in step N to save" (a unit the jar cannot be measured in), "Waiting for the jar to load", "Nothing to save yet". It is left out while a save is on its way, and "Nothing to save yet" only while the spell has not been edited (the autosave status is idle): an edit that has been autosaved leaves nothing to save too, but the line had come back after every autosave, for the owner a message that stayed after an edit.
+
 ## Styling
 
-No wrapper: the `<form className="form">` sits straight in the body of a
-`RouteModal` at the default column, Add Ingredient's (`size="wide"` until
-2026-10-28), its sections styled by `CollapsibleSection` ([`modal.md`](modal.md)),
-which scrolls the form when it is taller than the screen. `index.scss` holds the
-visibility switch's alignment (M10.13) and the step handle (M10.16), unboxed as
-the combobox's chip handle is. Its look past the tokens is the grimoire's design review's.
+Spacing, set by the second design review (2026-10-28, finding 3), which reverses earlier recorded choices (the hairlines in the aside and the card's `$text-muted` border): the step list's gap is `space(4)` (was `space(3)`); the add row sits `space(5)` below the list; the Jar section's blocks sit one field gap apart; an open section's fields end `space(6)` above the next section, set under `.spell-builder` so IngredientForm's `space(5)` stays. Values are in `rem`, so they are the same at 1280px and 390px; only the add row, which stacks in a narrow container, changes place, not size.
+
+No wrapper: the `<form className="form">` sits straight in the body of a `RouteModal` of
+`size` unset: the default `$dialog-column` (32rem of content), since the owner's call, 2026-10-29: with In Coven Inventory gone, one column in the default-width dialog; it was `size="wide"` from 2026-10-28 until then; [`modal.md`](modal.md)), its sections styled by `CollapsibleSection`. `index.scss` holds the
+visibility switch's alignment (M10.13) and the Jar section (the owner's design pass, 2026-10-28):
+
+- a single text field (Title, Intent, Moon Phase, Day, Note) fills the dialog's column, with no cap; When to Work It and Notes (with Status and the visibility switch) are plain full-width fields;
+- the Purpose section is one column (the owner's call, 2026-10-29: with In Coven Inventory gone, one column in the default-width dialog): Title, Intent, then the Categories picker under Intent. The two-column rhythm (`$spell-main-min`, `$spell-side`, `$spell-columns-switch`, `spell-side-stacked`, `spell-side-beside`, `.spell-purpose*`, `.spell-main-column*`) is gone;
+- the handle unboxed in `$text-muted`, with the shared focus ring;
+- the lifted step (`.step-row.spell-step.is-dragging`) in `$shadow-lifted` with an `$accent`
+  border, while the other rows stay as they are;
+- the list a column spaced by its `gap` alone, with no margin on a row and no room taken while
+  empty. The list is the size container a row stacks by (`spell-steps`), declared in
+  `StepRow`'s stylesheet;
+- the Jar's detail fields (`.jar-details`) and every other layout rule are plain: the sections are single columns spaced by `CollapsibleSection`'s own gap, with a bare `section`'s margin zeroed under `.spell-builder` so the gap is not doubled; the Category Match chips are `CategoryChips`, unstyled here; every colour is a token,
+  so both themes follow.
+
+The row's own look, the card, is in [`step-row.md`](step-row.md), "The card".
 
 ## Stories
 
@@ -491,7 +504,7 @@ the recovery banner (Keep, Discard, an older copy). The gate spec
 status: saving, saved, failed with Retry, and conflict. Story 81 is in
 `tests/e2e/stories/06-grimoire.spec.ts`.
 
-`tests/components/SpellBuilder/step-text.test.tsx` covers the step text (M13.3): Add a Step with
+`tests/components/SpellBuilder/step-text.test.tsx` covers the step text (M13.3): Add Instruction with
 its focus and announcement, an instruction-only step sent as its text alone, a blank one refused at its
 field, a saved spell's texts read back and saved by id, a cleared text dropped from an ingredient step,
 and Remove.
@@ -528,7 +541,7 @@ after a removal sent (an empty set to clear them), the categories left out of
 a save that did not change them, and a refused pick shown beside the field
 by name. `steps.test.tsx` covers the
 jar: the two headings, one row per form, a pick adding its row and clearing
-the search, a form already in the jar disabled, a one-off and its two
+the search, a form picked twice giving two rows, a one-off and its two
 refusals, the ids sent, Remove updating Derived Categories, the unit rule both
 ways and with no jar, saved steps sent back by id, and a server issue placed
 on its step. `reorder.test.tsx` covers the order: a handle on every kind of

@@ -63,24 +63,18 @@ type StepIdentity = {
   name?: string | null;
 };
 
-// Mirrors the two unique indexes over a jar's live layers, one form per jar
-// and one custom name per jar, case aside (spell_steps_spell_id_variant_id_unique,
-// spell_steps_spell_id_custom_name_unique), and refuses a step named twice:
-// each would otherwise reach the user as a database error.
+// Mirrors the unique index over a jar's live custom names, case aside
+// (spell_steps_spell_id_custom_name_unique), and refuses a step named twice: each would
+// otherwise reach the user as a database error. A linked form may repeat: a spell lays one
+// form in as many steps as it likes.
 function distinctSteps(spell: { steps?: StepIdentity[] }, context: z.RefinementCtx) {
-  const seen = { id: new Set<string>(), variantId: new Set<string>(), name: new Set<string>() };
+  const seen = { id: new Set<string>(), name: new Set<string>() };
   const flag = (index: number, field: string, message: string) =>
     context.addIssue({ code: 'custom', path: ['steps', index, field], message });
   spell.steps?.forEach((step, index) => {
     if (step.id != null) {
       if (seen.id.has(step.id)) flag(index, 'id', 'This step is already in the recipe');
       seen.id.add(step.id);
-    }
-    if (step.variantId != null) {
-      if (seen.variantId.has(step.variantId)) {
-        flag(index, 'variantId', 'This form is already in the jar; give it one step with a note');
-      }
-      seen.variantId.add(step.variantId);
     }
     if (step.ingredientId == null && step.name != null) {
       const name = step.name.toLowerCase();

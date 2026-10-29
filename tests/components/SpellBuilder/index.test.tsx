@@ -97,9 +97,9 @@ const LABELS = [
   'Title',
   'Intent',
   'Jar Description',
-  'Seal Wax Colour',
+  'Seal Wax',
   'Moon Phase',
-  'Day of the Week',
+  'Day',
   'Note',
 ] as const;
 
@@ -124,17 +124,42 @@ describe('SpellBuilder', () => {
 
   it('has nothing to save until a field holds something', () => {
     renderBuilder();
-    expect(save()).toBeDisabled();
+    expect(save().matches(':disabled, [aria-disabled="true"]')).toBe(true);
 
     // Blank is none, as the service reads it: still nothing to save.
     type('Intent', '   ');
-    expect(save()).toBeDisabled();
+    expect(save().matches(':disabled, [aria-disabled="true"]')).toBe(true);
 
     type('Intent', 'To see clearly');
     expect(save()).toBeEnabled();
 
     type('Intent', '');
-    expect(save()).toBeDisabled();
+    expect(save().matches(':disabled, [aria-disabled="true"]')).toBe(true);
+  });
+
+  it('gives a held Save its reason as its description, and stops once it can save', () => {
+    renderBuilder();
+    expect(save()).toHaveAttribute('aria-disabled', 'true');
+    expect(save()).toHaveAccessibleDescription('Nothing to save yet');
+
+    type('Intent', 'To see clearly');
+    expect(save()).toBeEnabled();
+    expect(save()).not.toHaveAttribute('aria-disabled');
+    expect(save()).not.toHaveAccessibleDescription();
+  });
+
+  // The owner's report, 2026-10-29: after an edit that the autosave had saved, the reason
+  // "Nothing to save yet" came back and stayed, as the save left the form matching the row.
+  it('does not say there is nothing to save after an edit has been saved', async () => {
+    acceptCreate();
+    renderBuilder();
+
+    type('Title', 'Fixture Working');
+    submit();
+
+    await waitFor(() => expect(save()).not.toHaveAccessibleDescription('Nothing to save yet'));
+    await waitFor(() => expect(save().matches(':disabled')).toBe(true));
+    expect(save()).not.toHaveAccessibleDescription('Nothing to save yet');
   });
 
   it('saves a draft with only its intent: no field is required', async () => {
@@ -169,9 +194,9 @@ describe('SpellBuilder', () => {
     type('Title', '  Fixture Working ');
     type('Intent', 'To see clearly');
     type('Jar Description', '4 oz');
-    type('Seal Wax Colour', 'Blue');
+    type('Seal Wax', 'Blue');
     type('Moon Phase', 'Waxing gibbous');
-    type('Day of the Week', 'Monday');
+    type('Day', 'Monday');
     type('Note', 'Kept on the sill');
     submit();
 
@@ -199,9 +224,9 @@ describe('SpellBuilder', () => {
     submit();
 
     await waitFor(() => expect(button).toHaveAttribute('aria-busy', 'true'));
-    expect(button).toBeDisabled();
+    expect(button.matches(':disabled, [aria-disabled="true"]')).toBe(true);
     await waitFor(() => expect(button).not.toHaveAttribute('aria-busy', 'true'));
-    expect(button).toBeDisabled();
+    expect(button.matches(':disabled, [aria-disabled="true"]')).toBe(true);
     expect(field('Title')).toHaveValue('Fixture Working');
   });
 
@@ -215,7 +240,7 @@ describe('SpellBuilder', () => {
     type('Title', 'Fixture Working');
     submit();
     await waitFor(() => expect(created).toHaveLength(1));
-    await waitFor(() => expect(save()).toBeDisabled());
+    await waitFor(() => expect(save().matches(':disabled, [aria-disabled="true"]')).toBe(true));
 
     type('Intent', 'To see clearly');
     submit();
@@ -252,10 +277,10 @@ describe('SpellBuilder', () => {
     expect(field('Title')).toHaveValue('Fixture Working');
     expect(field('Jar Description')).toHaveValue('4 oz');
     expect(field('Moon Phase')).toHaveValue('');
-    expect(save()).toBeDisabled();
+    expect(save().matches(':disabled, [aria-disabled="true"]')).toBe(true);
 
     // A field emptied is a field cleared: null, not left out.
-    type('Seal Wax Colour', '');
+    type('Seal Wax', '');
     submit();
 
     await waitFor(() => expect(updated).toHaveLength(1));
@@ -336,7 +361,7 @@ describe('SpellBuilder', () => {
       ]);
       fireEvent.click(screen.getByRole('button', { name: 'Show Moon Phase suggestions' }));
 
-      fireEvent.click(screen.getByRole('button', { name: 'Show Day of the Week suggestions' }));
+      fireEvent.click(screen.getByRole('button', { name: 'Show Day suggestions' }));
       expect(listed()).toEqual([
         'Monday',
         'Tuesday',
@@ -363,11 +388,11 @@ describe('SpellBuilder', () => {
 
       type('Moon Phase', 'full');
       fireEvent.click(screen.getByRole('option', { name: 'Full Moon' }));
-      type('Day of the Week', 'fri');
+      type('Day', 'fri');
       fireEvent.click(screen.getByRole('option', { name: 'Friday' }));
 
       expect(field('Moon Phase')).toHaveValue('Full Moon');
-      expect(field('Day of the Week')).toHaveValue('Friday');
+      expect(field('Day')).toHaveValue('Friday');
       submit();
 
       await waitFor(() => expect(calls).toHaveLength(1));
@@ -379,7 +404,7 @@ describe('SpellBuilder', () => {
       renderBuilder();
 
       type('Moon Phase', 'Blue moon');
-      type('Day of the Week', 'Any dark night');
+      type('Day', 'Any dark night');
       submit();
 
       await waitFor(() => expect(calls).toHaveLength(1));
@@ -408,8 +433,8 @@ describe('SpellBuilder', () => {
       openAll();
 
       expect(field('Moon Phase')).toHaveValue('Full');
-      expect(field('Day of the Week')).toHaveValue('saturday');
-      expect(save()).toBeDisabled();
+      expect(field('Day')).toHaveValue('saturday');
+      expect(save().matches(':disabled, [aria-disabled="true"]')).toBe(true);
     });
   });
 
@@ -444,14 +469,8 @@ describe('SpellBuilder', () => {
       expect(expanded()).toEqual(['true', 'true', 'true', 'true']);
       const HELD = {
         Purpose: ['Title', 'Intent', 'Category'],
-        Jar: [
-          'Jar Description',
-          'Seal Wax Colour',
-          'Search Ingredients',
-          'One-Off Name',
-          'One-Off Form',
-        ],
-        'When to Work It': ['Moon Phase', 'Day of the Week'],
+        Jar: ['Jar Description', 'Seal Wax', 'Add to Jar'],
+        'When to Work It': ['Moon Phase', 'Day'],
         Notes: ['Note'],
       } as const;
       for (const name of SECTIONS) {
@@ -508,14 +527,14 @@ describe('SpellBuilder', () => {
 
     it('keeps what was typed across a shut, its line reading it', () => {
       renderBuilder();
-      type('Day of the Week', 'Friday');
+      type('Day', 'Friday');
 
       fireEvent.click(when());
 
       expect(when()).toHaveAttribute('aria-expanded', 'false');
       expect(when()).toHaveAccessibleDescription('Friday');
       fireEvent.click(when());
-      expect(field('Day of the Week')).toHaveValue('Friday');
+      expect(field('Day')).toHaveValue('Friday');
     });
 
     it('opens the shut section a refused save names, flagged, and leaves the rest shut', async () => {
@@ -566,7 +585,7 @@ describe('SpellBuilder', () => {
       expect(tabCloseAsks()).toBe(true);
 
       submit();
-      await waitFor(() => expect(save()).toBeDisabled());
+      await waitFor(() => expect(save().matches(':disabled, [aria-disabled="true"]')).toBe(true));
       await waitFor(() => expect(save()).not.toHaveAttribute('aria-busy', 'true'));
       expect(tabCloseAsks()).toBe(false);
     });

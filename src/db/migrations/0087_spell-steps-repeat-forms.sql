@@ -1,0 +1,1 @@
+DROP INDEX "spell_steps_spell_id_variant_id_unique";

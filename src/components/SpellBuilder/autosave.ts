@@ -27,7 +27,6 @@ const CreateSpellDocument = graphql(`
         form
         quantity
         unit
-        note
         body
         ingredient {
           id
@@ -85,7 +84,6 @@ const UpdateSpellDocument = graphql(`
         form
         quantity
         unit
-        note
         body
         ingredient {
           id

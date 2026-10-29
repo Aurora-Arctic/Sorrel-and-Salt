@@ -27,8 +27,8 @@ export function SupplyMark({ supply }: { supply: StepSupply | null }): ReactElem
           <span className="visually-hidden">: {withUnit(supply.held, supply.unit)} held</span>
         </span>
       );
-    case 'cannot-compare':
-      return <span className="badge badge--draft">Cannot Compare</span>;
+    case 'units-differ':
+      return <span className="badge badge--draft">Units Differ</span>;
     case 'one-off':
       return <span className="badge badge--local">One-Off</span>;
   }
