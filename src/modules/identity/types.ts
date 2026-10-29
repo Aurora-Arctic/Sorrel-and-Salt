@@ -63,27 +63,17 @@ export interface AdminRoleChangePauseState {
 }
 
 /**
- * How an invitation's link, admin or coven, reaches the invited address. Built
- * per request by the GraphQL context, as `EmailVerificationSender` is: the
- * link's origin is Better Auth's to resolve against its allowed hosts, and a
- * service may not import it.
+ * How an invitation's link, admin or coven, reaches the invited address. Built per request by the GraphQL context, as
+ * `EmailVerificationSender` is, because a service may not import Better Auth's origin resolution.
  */
 export interface InvitationSender {
-  /**
-   * Mails `to` the link that accepts the site invitation `token` names,
-   * saying which site role it grants and who sent it. Never throws
-   * on a failed send.
-   */
+  /** Mails `to` the link that accepts the site invitation `token` names, with the site role and sender. Never throws on a failed send. */
   siteInvitation(
     to: string,
     token: string,
     invitation: { siteRole: InvitableSiteRole; inviterName: string },
   ): Promise<void>;
-  /**
-   * Mails `to` the link that accepts the coven invitation `token` names,
-   * saying which coven, in what role and who invited them. Never
-   * throws on a failed send.
-   */
+  /** Mails `to` the link that accepts the coven invitation `token` names, with the coven, role and inviter. Never throws on a failed send. */
   workspaceInvitation(
     to: string,
     token: string,
@@ -98,10 +88,8 @@ export type WorkspaceInvitationRow = InvitationRow & {
 };
 
 /**
- * A pending coven invitation as its invitee's `/coven` landing shows it: the
- * coven's name and slug, the role, who sent it and when it lapses. Never the
- * token, which no response carries, nor the invited address, which is the
- * viewer's own.
+ * A pending coven invitation as its invitee's `/coven` landing shows it: coven, role, sender and expiry.
+ * Never the token, which no response carries, nor the invited address.
  */
 export interface ReceivedInvitation {
   id: string;

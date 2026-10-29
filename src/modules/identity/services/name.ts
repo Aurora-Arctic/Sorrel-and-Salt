@@ -8,11 +8,8 @@ import { NameInput } from '../validation/name';
 import { getMe } from './profile';
 import type { UserRow } from '../types';
 
-// The name the site shows for an account: its owner's to change, on
-// the account page, through `withAudit`. Better Auth's `/update-user` would
-// write it too, outside the audit, so `src/lib/auth.ts` disables that path
-// and this is the name's one write (claude-docs/auth/admin-bootstrap.md,
-// "The account page").
+// The name the site shows for an account, which its owner changes on the account page through `withAudit`.
+// Better Auth's `/update-user` would write it outside the audit, so `src/lib/auth.ts` disables it (claude-docs/auth/admin-bootstrap.md, "The account page").
 
 /**
  * Renames the session's own row to `input`, trimmed. It takes no id, so the

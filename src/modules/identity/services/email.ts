@@ -53,10 +53,8 @@ export async function verificationWaitFor(userId: string): Promise<number> {
 }
 
 /**
- * Stamps the row as mailed now, before the mail goes out. Being an update,
- * it restarts a provisional row's window through the trigger too, which is
- * why it takes the row's own session and never a stranger's
- * (claude-docs/auth/admin-bootstrap.md, "Provisional accounts").
+ * Stamps the row as mailed now, before the mail goes out. As an update it restarts a provisional row's window,
+ * so it takes the row's own session (claude-docs/auth/admin-bootstrap.md, "Provisional accounts").
  */
 export async function recordVerificationSent(session: AuditSession): Promise<void> {
   await withAudit(session, (write) =>

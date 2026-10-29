@@ -404,11 +404,7 @@ function changedJarColumns(current: StockRow, input: StockInput) {
   );
 }
 
-/**
- * The columns `input` sets: each field it states, null included, and none it
- * leaves out, with the unit's dimension wherever the unit is set. Amounts are
- * `numeric` text, as Drizzle writes the column.
- */
+/** The columns `input` sets: each field it states, null included, with the unit's dimension wherever the unit is set. Amounts are `numeric` text. */
 function stockColumns(input: StockInput) {
   const amount = (value: number | null | undefined) =>
     value === undefined ? undefined : value === null ? null : String(value);

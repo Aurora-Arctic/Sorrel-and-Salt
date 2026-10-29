@@ -4,12 +4,8 @@ import type { Session } from '../../../lib/session';
 import { curates } from '../../../lib/site-roles';
 import { isSiteAdmin } from './admin-changes';
 
-// CLAUDE.md rule 5's two layers, on the site role rather than a workspace
-// role, twice over: `assertCurator` and `assertSiteAdmin` are the checks, and
-// the `Curator` and `SiteAdmin` they return are the proofs each ran. Every
-// compendium-tier `AuditWriter` method demands a `Curator`, and every
-// people-page one a `SiteAdmin` — see claude-docs/db/site-admin-proof.md,
-// "The SiteAdmin proof".
+// CLAUDE.md rule 5's two layers on the site role: `assertCurator` and `assertSiteAdmin` check, and the `Curator` and `SiteAdmin` they return
+// are the proofs. Compendium-tier writers demand a `Curator`, people-page ones a `SiteAdmin` (claude-docs/db/site-admin-proof.md, "The SiteAdmin proof").
 
 // Not exported, so no object literal outside this file satisfies either proof.
 declare const curatorBrand: unique symbol;
@@ -25,9 +21,7 @@ export type Curator = {
 };
 
 /**
- * Proof that `assertSiteAdmin` found this user a site admin. An admin curates
- * too, so it is a `Curator` with a brand of its own beside, and a curator's
- * proof is not one: nothing on the people page takes it.
+ * Proof that `assertSiteAdmin` found this user a site admin. It is a `Curator` with a brand of its own; a curator's proof is not one.
  */
 export type SiteAdmin = Curator & {
   readonly [adminBrand]: true;

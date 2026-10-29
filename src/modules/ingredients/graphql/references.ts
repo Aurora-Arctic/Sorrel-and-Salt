@@ -82,11 +82,7 @@ export const ReferenceLinkInput = builder.inputType('ReferenceLinkInput', {
   }),
 });
 
-/**
- * A reference's fields, validated per `kind` by the shared schema. One input
- * for both writes: an update replaces the reference, so a field left out or
- * null is cleared — a day has no empty value to send.
- */
+/** A reference's fields, validated per `kind` by the shared schema. One input for both writes: an update replaces the reference, so a field left out is cleared. */
 const ReferenceInput = builder.inputType('ReferenceInput', {
   description: 'A reference, whole. On an update, a field left out or null is cleared.',
   fields: (t) => ({
@@ -107,11 +103,7 @@ const ReferenceInput = builder.inputType('ReferenceInput', {
   }),
 });
 
-/**
- * The tier the `workspaceId` argument names, as a scope: a null one writes the
- * compendium's, which only a site admin's scope admits, and a coven's
- * admits anyone signed in, the membership check deciding who may.
- */
+/** The tier the `workspaceId` argument names, as a scope: null writes the compendium's (site admin only), a coven's admits anyone signed in. */
 const tierScope = (_root: unknown, { workspaceId }: { workspaceId?: string | null }) =>
   workspaceId == null ? { curator: true } : { signedIn: true };
 

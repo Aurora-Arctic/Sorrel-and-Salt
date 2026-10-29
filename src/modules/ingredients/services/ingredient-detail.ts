@@ -33,12 +33,8 @@ import type {
   VariantDetail,
 } from '../types';
 
-// An ingredient as its page shows it: the one assembly both routes end in, the
-// public compendium page and a coven's own. Each child kind is read once for
-// every ref that needs it, through the readers the GraphQL `Ingredient`
-// resolves through, so the page needs no browser read and no per-form query.
-// The session is the caller's, and a coven entry's children answer `Forbidden`
-// to anyone outside it; the compendium's answer anyone, a null session included.
+// An ingredient as its page shows it: the one assembly both the public compendium page and a coven's own end in. Each child kind is read once
+// for every ref that needs it, through the readers the GraphQL `Ingredient` uses. A coven entry's children answer `Forbidden` outside it; the compendium's answer anyone.
 
 /** A batch answer for one ref, which a refusal turns into the error it is. */
 function only<T>([answer]: readonly (T | Error)[]): T {
@@ -203,11 +199,7 @@ export async function ingredientDetailOf(
   };
 }
 
-/**
- * The cupboard entry `workspaceId`'s page reads beside `entry`: none
- * without a coven, and none for a coven's own entry, which no cupboard entry
- * can name.
- */
+/** The cupboard entry `workspaceId`'s page reads beside `entry`: none without a coven, and none for a coven's own entry. */
 async function cupboardEntryOf(
   session: Session | null,
   entry: IngredientRow,
@@ -218,11 +210,7 @@ async function cupboardEntryOf(
   return getCupboardEntry(session, workspaceId, entry.id);
 }
 
-/**
- * The proof and cupboard entry by which `workspaceId` reads a retired
- * compendium entry: none for the public page, and none for a coven whose
- * cupboard does not name it, each a `NotFound` as any other gone entry is.
- */
+/** The proof and cupboard entry by which `workspaceId` reads a retired compendium entry: none for the public page or a coven that does not name it, each a `NotFound`. */
 async function retiredEntryHeld(
   session: Session | null,
   entry: IngredientRow,

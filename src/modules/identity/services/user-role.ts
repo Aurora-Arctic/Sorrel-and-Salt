@@ -11,13 +11,9 @@ import { isPrimaryAdmin } from './primary-admin';
 import type { SiteAdmin } from './site-admin';
 import type { UserRow } from '../types';
 
-// An admin sets a user's site role, `user`, `curator` or
-// `admin`, from `/admin/users`. Each change is declared `via: 'admin'` and
-// the trigger on `users` records it in the privilege ledger; the
-// service writes no ledger row. Why each rule is what it is:
-// claude-docs/design-decisions/m2.9-granting-admin.md, "The primary admin",
-// "Granting" and "Revoking", and m11.20-curator-role.md; the shape is
-// claude-docs/auth/admin-users.md, "Changing a site role".
+// An admin sets a user's site role from `/admin/users`. Each change is declared `via: 'admin'` and the trigger on `users` records it;
+// the service writes no ledger row. Rules: claude-docs/design-decisions/m2.9-granting-admin.md and m11.20-curator-role.md;
+// shape: claude-docs/auth/admin-users.md, "Changing a site role".
 
 const REFUSAL = 'Only a site admin may change a site role';
 
@@ -29,11 +25,8 @@ const ROLE_NOUNS: Record<UserRole, string> = {
 };
 
 /**
- * The grant of a curating role every route but the bootstrap shares, inside
- * the caller's transaction: the creation flag too, since the users CHECK
- * refuses a curator or an admin without it. An admin's role
- * change and an accepted site invitation both write it; the route is
- * the caller's declaration.
+ * The grant of a curating role every route but the bootstrap shares, inside the caller's transaction. It sets the creation flag too,
+ * since the users CHECK refuses a curator or an admin without it.
  */
 export function writeSiteRoleGrant(
   write: AuditWriter,
@@ -44,10 +37,8 @@ export function writeSiteRoleGrant(
 }
 
 /**
- * The role write, inside the caller's transaction. Leaving `admin`, for
- * `curator` or `user`, is a revoke of admin: it first locks the live admins
- * and counts them, so two revokes at once cannot leave none. Moving to
- * `user` leaves the flag, the grant having been a vouching too.
+ * The role write, inside the caller's transaction. Leaving `admin` first locks the live admins and counts them,
+ * so two revokes at once cannot leave none. Moving to `user` leaves the flag.
  */
 async function writeRole(
   write: AuditWriter,

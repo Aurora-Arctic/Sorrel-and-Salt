@@ -5,12 +5,8 @@ import { ingredients } from './ingredients';
 import { ingredientVariants } from './ingredient-variants';
 import { idColumn } from '../../../db/schema-parts';
 
-// What an ingredient may be replaced with, one row per entry: a link
-// to another ingredient, or a name typed for one that is not entered — the
-// shape a spell's layers have. A child table rather than
-// `ingredients.substitutes text[]`, which a link cannot live in. Full
-// `auditColumns`, as folk names: a substitute is content, not a pairing of two
-// curated rows (DESIGN.md §5, `ingredient_substitutes`).
+// What an ingredient may be replaced with, one row per entry: a link to another ingredient, or a name typed for one not entered.
+// A child table, as a link cannot live in `text[]`. Full `auditColumns`: a substitute is content, not a pairing (DESIGN.md §5, `ingredient_substitutes`).
 export const ingredientSubstitutes = pgTable(
   'ingredient_substitutes',
   {

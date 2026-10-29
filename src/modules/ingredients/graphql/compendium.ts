@@ -11,16 +11,12 @@ import {
 } from './ingredient';
 import { CompendiumFacetsRef } from './ingredient-facets';
 
-// The compendium's three queries. Public, so none carries the `signedIn`
-// scope; tests/db/graphql-query-scopes.test.ts holds every other
-// query to its refusal. The filtering is the service's, in SQL: the browser
-// never holds more than a page, so it cannot be the search
-// (claude-docs/graphql/schema.md, "compendium, ingredient and ingredientFormValues").
+// The compendium's three queries. Public, so none carries the `signedIn` scope; tests/db/graphql-query-scopes.test.ts holds every other query to its refusal.
+// The filtering is the service's, in SQL (claude-docs/graphql/schema.md, "compendium, ingredient and ingredientFormValues").
 
 /**
- * The six facet arguments the compendium and a coven's ingredient list share
- * (claude-docs/design-decisions/m11.22-search-facets.md): within each
- * list any value matches, and every argument given must match.
+ * The six facet arguments the compendium and a coven's ingredient list share (claude-docs/design-decisions/m11.22-search-facets.md):
+ * any value within a list matches, and every argument given must match.
  */
 export const facetArgs = builder.args((t) => ({
   forms: t.stringList({

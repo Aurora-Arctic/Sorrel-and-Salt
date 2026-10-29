@@ -67,20 +67,15 @@ function parsedFilter({ userId, privilege, query }: PrivilegeChangeFilter): Priv
 }
 
 /**
- * Whether `/admin/users` lists this user, so a row naming them can link to
- * theirs: everyone but the seed's bootstrap user, which stamps the seeded
- * rows and which the list leaves out (claude-docs/auth/admin-users.md, "The
- * user list").
+ * Whether `/admin/users` lists this user: everyone but the seed's bootstrap user (claude-docs/auth/admin-users.md, "The user list").
  */
 export function listedOnUserList(userId: string): boolean {
   return userId !== BOOTSTRAP_USER_ID;
 }
 
 /**
- * The live user behind each id, one answer per id in the order given and
- * null where none is live: a DataLoader's batch, the ledger's subjects and
- * actors in one read. A site admin's alone, as the ledger is: every slot of
- * anyone else's batch is a `Forbidden`.
+ * The live user behind each id, null where none is live: a DataLoader's batch for the ledger's subjects and actors.
+ * A site admin's alone: every slot of anyone else's batch is a `Forbidden`.
  */
 export async function usersForAdmin(
   session: Session,

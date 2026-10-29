@@ -13,11 +13,7 @@ import type { UserRow } from '../types';
 
 const REFUSAL = 'Only a site admin may change who can create a coven';
 
-/**
- * Writes the flag as an admin's act, answering the row. The ledger row is the
- * trigger's, written in the same transaction, carrying `note`, the
- * confirmation's optional reason, a blank one as none.
- */
+/** Writes the flag as an admin's act, answering the row. The ledger row is the trigger's, carrying `note` (blank as none). */
 async function setFlag(
   session: Session,
   userId: string,

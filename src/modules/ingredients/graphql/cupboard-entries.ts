@@ -21,11 +21,8 @@ import type {
 import { isAnnotated } from '../validation/cupboard-merge';
 import { IngredientElementEnum, IngredientRef } from './ingredient';
 
-// A coven's cupboard entry over the wire: the coven's own say over
-// one compendium entry, read beside the entry rather than merged into it, so
-// a client can show both. Who may read it is the cupboard-entry service's
-// check, through the loader (claude-docs/graphql/schema.md, "Cupboard
-// entries: CupboardEntry and Ingredient.cupboardEntry").
+// A coven's cupboard entry over the wire: the coven's own say over one compendium entry, read beside the entry so a client can show both.
+// Who may read it is the service's check, through the loader (claude-docs/graphql/schema.md, "Cupboard entries: CupboardEntry and Ingredient.cupboardEntry").
 
 export const CupboardEntryRef = builder.objectRef<CupboardEntryNode>('CupboardEntry').implement({
   description:
@@ -110,9 +107,8 @@ const CupboardEntryInputRef = builder.inputType('CupboardEntryInput', {
 });
 
 /**
- * The written row with the compendium entry's own name beside it, as the read
- * answers. `read` fetches the entry where the loader cannot: the loader reads
- * live entries only, and a coven annotates a retired entry it still holds.
+ * The written row with the compendium entry's own name beside it. `read` fetches the entry where the loader cannot:
+ * the loader reads live entries only, and a coven annotates a retired entry it still holds.
  */
 async function nodeOf(
   row: CupboardEntryRow,
