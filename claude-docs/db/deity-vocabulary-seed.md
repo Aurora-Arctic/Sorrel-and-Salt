@@ -1831,3 +1831,54 @@ Per-deity:
   - Wikipedia, under "Cailleach." Last modified October 3, 2026. Accessed October 29, 2026. https://en.wikipedia.org/w/index.php?title=Cailleach&oldid=1378141247.
 - **Seonaidh** (filed Scottish Gaelic; also Shony, Shoney)
   - Wikipedia, under "Seonaidh." Last modified August 19, 2026. Accessed October 29, 2026. https://en.wikipedia.org/w/index.php?title=Seonaidh&oldid=1370081242.
+
+## Open for the owner (M14.13)
+
+On 2026-10-29 the owner deferred these questions from M14.15 to M14.13, their single review pass. Nothing here blocks M14.15. Each item gives my recommendation. The owner needs to act on M14.13 only: choose, for each item, to accept the recommendation or say otherwise.
+
+1. **Traditions held, not written (question 3).** The pairs in "Traditions held for the owner" in `compendium/left-out.md` (Korean medicine pair, the three Tibetan names, the Chinese medicine pair, Iroquois and Haudenosaunee, Dene and Athabaskan, Algonquian peoples, Anishinaabe, Chinese, Palauan, Mouride brotherhood). Navajo and Diné are already merged into Navajo. I recommend writing none of the medical-system names, because a tradition is a people or a religion and a medical system is neither; and, for each people pair, one row under the name the cited Wikipedia page uses as its title.
+2. **Traditions the vocabulary already covers (question 4).** The list of these in `compendium/left-out.md` names the existing row each maps to. I recommend leaving them out and filing the deities under the existing row.
+3. **Palauan (question 5).** I recommend leaving it out until a source names a deity filed to it.
+4. **Overlaps (question 6).** Quechua beside Inca, Polynesian beside Hawaiian, and Scottish Gaelic beside Irish. Each was added because the cited page describes a people or religion apart from the older row. I recommend keeping all three, and moving a deity only when a source says it belongs to the wider group.
+5. **The Buddha, Mary and Medea (question 7).** The doc's earlier "left out" bullets for the Buddha, Medea and Anansi disagreed with the rows now present, and I corrected the bullets; the Virgin Mary stays out (see item 6). I recommend the owner confirm that the Buddha and Medea rows stay.
+6. **Marian (question 8).** Two notes, on myrrh and myrtle. The source may mean the Virgin Mary. I recommend leaving the notes in place.
+7. **Anu (question 9).** Anu is the Mesopotamian sky god and is also given as another name of the Irish Danu. I recommend adding Anu to Mesopotamian only if the owner confirms that is the intended figure; the tamarisk sources do not say.
+8. **The Furies (question 10).** The Furies are the Roman name for the Erinyes, and the Erinyes row names only the Eumenides. I recommend adding "Furies" to the Erinyes row's other names, with the owner's approval, since that edits an existing row.
+9. **Hoenin and Lodr (question 11).** Reading them as Norse Hœnir and Lóðurr is an inference the source does not make. I recommend leaving them out.
+10. **Cailleach filing (question 12).** Cailleach and Seonaidh are filed Scottish Gaelic. The question is whether Cailleach belongs under Scottish Gaelic or under Irish; I did not settle it. I recommend keeping Scottish Gaelic unless the owner has a source for Irish.
+11. **ASCII spellings and Robin Goodfellow (question 13).** Deity names are plain ASCII, so accents are dropped; the accented forms sit in descriptions where the source gives them. Robin Goodfellow is recorded as another name of Puck, which is an identification I took from the page cited. I recommend keeping both.
+12. **Description spot-check (question 15).** The 74 deity and 53 tradition descriptions gloss the Wikipedia page cited and were not checked against an academic source. I recommend the owner read about ten at random, and that I replace any a reader doubts.
+13. **Wikipedia-only sources.** Every M14.15 row cites Wikipedia alone, by permanent link. I recommend adding an academic source to a row when a reader finds one; I did not search for one.
+
+### Kept gap notes
+
+Twenty-eight entry files keep 32 `Deity gap` notes (the Kupala note appears in seven files, the Althea note in two, the Furies note in three and the Hoenin and Lodr notes in one file). Each note says why its figure is not in the vocabulary. They stay so the entry can be re-read when the owner decides. The files:
+
+- `compendium/ingredients/botanical/bean-phaseolus-vulgaris.md`
+- `compendium/ingredients/botanical/clover-trifolium-pratense.md`
+- `compendium/ingredients/botanical/cypress-cupressus-sempervirens.md`
+- `compendium/ingredients/botanical/elm-ulmus-glabra.md`
+- `compendium/ingredients/botanical/fennel-foeniculum-vulgare.md`
+- `compendium/ingredients/botanical/galangal-alpinia-officinarum.md`
+- `compendium/ingredients/botanical/heliotrope-heliotropium-europaeum.md`
+- `compendium/ingredients/botanical/juniper-juniperus-communis.md`
+- `compendium/ingredients/botanical/lemon-balm-melissa-officinalis.md`
+- `compendium/ingredients/botanical/linden-tilia-europaea.md`
+- `compendium/ingredients/botanical/lotus-nelumbo-nucifera.md`
+- `compendium/ingredients/botanical/mallow-malva-sylvestris.md`
+- `compendium/ingredients/botanical/marjoram-origanum-majorana.md`
+- `compendium/ingredients/botanical/marshmallow-althaea-officinalis.md`
+- `compendium/ingredients/botanical/moonwort-botrychium.md`
+- `compendium/ingredients/botanical/mulberry-morus-nigra.md`
+- `compendium/ingredients/botanical/myrrh-commiphora-myrrha.md`
+- `compendium/ingredients/botanical/myrtle-myrtus-communis.md`
+- `compendium/ingredients/botanical/oak-quercus.md`
+- `compendium/ingredients/botanical/olive-olea-europaea.md`
+- `compendium/ingredients/botanical/oregano-origanum-vulgare.md`
+- `compendium/ingredients/botanical/sage-salvia-officinalis.md`
+- `compendium/ingredients/botanical/tamarisk-tamarix.md`
+- `compendium/ingredients/botanical/valerian-valeriana-officinalis.md`
+- `compendium/ingredients/botanical/willow-salix-alba.md`
+- `compendium/ingredients/botanical/yew-taxus-baccata.md`
+- `compendium/ingredients/mineral/beryl-beryl.md`
+- `compendium/ingredients/mineral/turquoise-turquoise.md`
