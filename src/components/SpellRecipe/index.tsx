@@ -1,5 +1,5 @@
 import type { ReactElement } from 'react';
-import { PendingLink } from '../../lib/navigation';
+import BackLink from '../IngredientEntry/back-link';
 import LastEdit from '../LastEdit';
 import LinkHint from '../LinkHint';
 import { UNTITLED_SPELL } from '../SpellCard';
@@ -36,9 +36,11 @@ const SpellRecipe = ({
       className={`spell-recipe${aside ? ' spell-recipe--with-aside' : ''}`}
       aria-labelledby="spell-recipe-title"
     >
-      <PendingLink className="spell-recipe__back" href={back.href}>
+      {/* The ingredient entry's own back link (the owner, 2026-10-29): the chevron, and the
+          way back through history to the list as it was, the Drafts tab counted as the list. */}
+      <BackLink className="spell-recipe__back" href={back.href} also={[`${back.href}/drafts`]}>
         Back to {back.label} <LinkHint />
-      </PendingLink>
+      </BackLink>
       {/* Above the title, as the ingredient entry page places it (the owner, 2026-10-29). */}
       {lastEdit && <LastEdit by={lastEdit.by} at={lastEdit.at} />}
       <header className="spell-recipe__head">

@@ -17,7 +17,8 @@ $recipe-column: 48rem;
   padding: space(4);
 }
 
-// The way back stands a clear step off the Edited line and the title.
+// The way back stands a clear step off the Edited line and the title. Its look is the back
+// link's own (IngredientEntry/back-link.scss).
 .spell-recipe__back {
   margin-block-end: space(2);
 }
