@@ -3,10 +3,8 @@ import { beforeEach, describe, expect, it, vi } from 'vitest';
 import type { WorkspaceRole } from '@/modules/coven';
 import { encodeCursor } from '@/lib/pagination';
 
-// The invitations page. The guard and the services are mocked;
-// the role check is the real one. Here: the list is read for an owner only,
-// by the permission and not by catching a refusal, and it pages through the
-// default cursor keys.
+// The invitations page, with the guard and the services mocked and the role check real.
+// It proves the list is read for an owner only, by the permission and not by catching a refusal, and that it pages through the default cursor keys.
 
 const notFound = vi.fn(() => {
   throw new Error('not-found');

@@ -17,10 +17,8 @@ vi.mock('next/navigation', () => ({ useRouter: () => ({ push: vi.fn(), refresh: 
 
 const { default: SpellBuilder } = await import('@/components/SpellBuilder');
 
-// The categories a spell is assigned, in the builder: what
-// it intends, picked as chips and sent with the save. That the service writes
-// exactly the set sent, and refuses a viewer and another coven's member, is
-// tests/modules/grimoire/services/spells.test.ts's.
+// The categories a spell is assigned in the builder: what it intends, picked as chips and sent with the save.
+// That the service writes exactly the set sent, and refuses a viewer and another coven's member, is tests/modules/grimoire/services/spells.test.ts's.
 
 // Invented categories, with uuid ids, as the shared schema refuses any other.
 const WARDS = { id: 'a3e1c9b2-0d4f-4a8e-9c71-5b2f6e8d0a11', name: 'Wards & Fixtures' };

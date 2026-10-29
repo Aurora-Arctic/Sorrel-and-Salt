@@ -2,10 +2,8 @@ import { render, screen } from '@testing-library/react';
 import { describe, expect, it } from 'vitest';
 import Skeleton from '@/components/Skeleton';
 
-// A skeleton is announced once, as a status, whatever it draws; the shapes
-// are for the eye and add nothing to the accessibility tree. What each shape
-// draws is presentation, owned by the workshop
-// (layer-ownership.md, "What a test may assert", rule 4).
+// A skeleton is announced once, as a status, whatever it draws; its shapes are for the eye and add nothing to the accessibility tree.
+// What each shape draws is presentation, owned by the workshop (layer-ownership.md, "What a test may assert", rule 4).
 describe('Skeleton', () => {
   it.each(['table'] as const)('the %s shape renders exactly one status', (shape) => {
     render(<Skeleton shape={shape} />);

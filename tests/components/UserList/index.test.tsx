@@ -343,10 +343,8 @@ describe('UserList filter', () => {
   });
 });
 
-// A user who may not yet create a coven is approved from their row, and
-// one who may is revoked, each behind a confirmation naming them; an admin's
-// row offers neither. The service is the guard; these put the control where an
-// admin looks, and show what the mutation answers.
+// A user who may not yet create a coven is approved from their row, and one who may is revoked, each behind a confirmation naming them; an admin's row offers neither.
+// The service is the guard; these put the control where an admin looks and show what the mutation answers.
 describe('UserList approval', () => {
   afterEach(() => {
     router.refresh.mockReset();
@@ -516,10 +514,8 @@ describe('UserList approval', () => {
   });
 });
 
-// The role cell's Change Role, asking in a modal naming the
-// user which role they move to, every role but the one held, with an
-// optional reason; the primary admin's in view but unusable, saying why. The
-// service is the guard, and refuses the same.
+// The role cell's Change Role asks in a modal naming the user which role they move to (every role but the one held, with an optional reason); the primary admin's is in view but unusable, saying why.
+// The service is the guard, and refuses the same.
 describe('UserList site role', () => {
   afterEach(() => {
     router.refresh.mockReset();

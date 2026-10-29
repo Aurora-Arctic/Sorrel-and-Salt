@@ -3,10 +3,8 @@ import { beforeEach, describe, expect, it, vi } from 'vitest';
 import type { WorkspaceRole } from '@/modules/coven';
 import { Forbidden } from '@/lib/errors';
 
-// The members page. The guard and the services are mocked,
-// since what they decide is their own tests'; the role check is the real one,
-// read off the access-control statements. Here: who gets role controls, and
-// that a refusal from the service is a 404.
+// The members page, with the guard and the services mocked and the role check real, read off the access-control statements.
+// It proves who gets role controls and that a refusal from the service is a 404.
 
 const notFound = vi.fn(() => {
   throw new Error('not-found');

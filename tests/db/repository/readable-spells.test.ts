@@ -12,15 +12,8 @@ import { useTestDatabase } from '../../support/db/database';
 import { insertSpell } from '../../support/db/insert-spell';
 import { makeSpell } from '../../support/fixtures';
 
-// Who may read which spell, as one matrix of relationship × visibility
-// (DESIGN.md §5; claude-docs/db/spell-visibility.md, "Reading"). Every finder
-// that reads a spell or its rows goes through `readableSpells`, so for each
-// cell the direct-id read and both of the spell's child tables must give the
-// same answer. A finder that disagreed with the others would be a
-// second rule.
-//
-// Every refusal first proves the read could have succeeded: the row is there,
-// live, in the coven, and its author reads it through all three reads.
+// Who may read which spell, as one matrix of relationship × visibility (DESIGN.md §5; claude-docs/db/spell-visibility.md, "Reading"). Every finder reading a spell or its rows goes through `readableSpells`, so for each cell the direct-id read and both child tables must give the same answer; one that disagreed would be a second rule.
+// Every refusal first proves the read could have succeeded: the row is there, live, in the coven, and its author reads it through all three reads.
 
 let sql: postgres.Sql;
 useTestDatabase((client) => {

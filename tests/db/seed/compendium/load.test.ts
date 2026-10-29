@@ -12,10 +12,8 @@ import {
   type FixtureFolder,
 } from './files-fixture';
 
-// The loader reads a folder of entry files as the one shard the seed
-// and the guard take. The folder is the invented fixture written to a
-// temporary directory, so each case adds one thing that does not belong and
-// expects the one issue naming it.
+// The loader reads a folder of entry files as the one shard the seed and the guard take.
+// The folder is the invented fixture in a temporary directory; each case adds one thing that does not belong and expects the one issue naming it.
 
 const folders: FixtureFolder[] = [];
 const folder = (...args: Parameters<typeof fixtureFolder>) => {

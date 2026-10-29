@@ -3,12 +3,8 @@ import { describe, expect, it } from 'vitest';
 import SafetyNote, { CautionMark, SafetyMark, ToxicMark } from '@/components/SafetyNote';
 import { capitalise } from '@/lib/text';
 
-// The one presentation of an ingredient's caution (
-// claude-docs/components/safety-note.md): a region of its own, labelled by
-// its Caution heading, holding the ingredient's notes and then each shown
-// form's under that form's name; and the Toxic mark beside it. Both are text
-// to read, never controls. The notes and form names are the test's own data,
-// so finding them proves what rendered, not what the copy says.
+// The one presentation of an ingredient's caution (claude-docs/components/safety-note.md): a region labelled by its Caution heading, holding the ingredient's notes and then each shown form's under its name, and the Toxic mark beside it. Both are text, never controls.
+// The notes and form names are the test's own data, so finding them proves what rendered, not what the copy says.
 
 const INGREDIENT_NOTES = 'Fixture ingredient caution.';
 const LEAF = {

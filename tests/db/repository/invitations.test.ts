@@ -30,13 +30,8 @@ import type { InvitationOverrides } from './types';
 
 useRawClient();
 
-// The invitation's named writes and finders, by tier
-// (claude-docs/db/invitations.md). A `Membership` writes and revokes in its
-// own workspace, a `SiteAdmin` on the site tier, where the workspace and the
-// role are both null; the accept and the token read take no proof, since the
-// invitee holds none yet, and match either tier. The token is what they
-// speak: the insert stores its hash, and the read and the accept match one,
-// so a dumped row's hash redeems nothing.
+// The invitation's named writes and finders by tier (claude-docs/db/invitations.md): a `Membership` writes and revokes in its own workspace, a `SiteAdmin` on the site tier (workspace and role both null);
+// the accept and token read take no proof, since the invitee holds none yet, and match either tier. The insert stores the token's hash and the read and accept match one, so a dumped row's hash redeems nothing.
 
 // Fixed strings, the shape of a `crypto.randomBytes` token in base64url.
 const TOKEN = 'fixture-token-aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa';
@@ -510,10 +505,8 @@ describe('the pending lists', () => {
   });
 });
 
-// The session's own received invitations. Every finder keeps the
-// workspace tier, the session's verified address, and a live coven in SQL; the
-// token-less accept by id says the same in the statement. Each exclusion is
-// shown to be the cause: remove that one fact and the same row appears.
+// The session's own received invitations. Every finder keeps the workspace tier, the session's verified address and a live coven in SQL, as the token-less accept by id does.
+// Each exclusion is shown to be the cause: remove that one fact and the same row appears.
 describe('the received invitations (M10.32)', () => {
   const FULL = { limit: 101, inverted: false };
   const sorted = (list: string[]) => [...list].sort();

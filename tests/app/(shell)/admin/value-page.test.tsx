@@ -7,14 +7,9 @@ import { encodeCursor } from '@/lib/pagination';
 import type { PageRequest } from '@/lib/types';
 import type { GroupedValueKind } from '@/components/GroupedValueForm/types';
 
-// The page every curated value shares (src/app/(shell)/admin/value-page.tsx): the guard, one page of
-// the vocabulary under the address's filter and its groups, and the modal its address opens (`?new`
-// empty, `?edit=` a value by slug). The shape runs on the categories; every other kind gets only what
-// it changes, its path and its services (claude-docs/testing/layer-ownership.md, rule 5). The guard and
-// the services are mocked: what they decide is tests/lib/request-session.test.ts's and the vocabulary
-// module's service tests'. This file holds the page's half: the address read into service calls, the
-// guard, NotFound against any other error, and what the page builds for the list and the modal; how the
-// list and the form behave given those props is their own tests' (claude-docs/testing/layer-ownership.md, "The owning layer").
+// The page every curated value shares (src/app/(shell)/admin/value-page.tsx): the guard, one page of the vocabulary under the address's filter and groups, and the modal its address opens (`?new` empty, `?edit=` a value by slug).
+// The shape runs on the categories; other kinds get only what they change, their path and services (claude-docs/testing/layer-ownership.md, rule 5). The guard and services are mocked (tests/lib/request-session.test.ts, the vocabulary service tests).
+// This file holds the page's half: the address read into service calls, the guard, NotFound against any other error, and the props built for the list and modal; how those behave is their own tests' (layer-ownership.md, "The owning layer").
 
 const requireCuratorSession = vi.fn();
 vi.mock('@/lib/request-session', () => ({ requireCuratorSession }));

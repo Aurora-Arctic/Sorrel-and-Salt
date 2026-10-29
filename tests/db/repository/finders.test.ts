@@ -234,14 +234,9 @@ describe('the Membership proof (M6.3)', () => {
     });
   });
 
-  // The writers' half of the mechanism, once per family: the writes by
-  // condition, which AND the proof's workspace onto the caller's `where`
-  // (updateInWorkspace here, softDeleteInWorkspace the same `and`), and the
-  // writes by id, which share `inWorkspaceById` (softDeleteByIdInWorkspace
-  // here, updateByIdInWorkspace the same predicate). The readers' half is
-  // findOneByIdInWorkspace's above: findOneInWorkspace is the same
-  // findManyInWorkspace. Who may hold a proof of which workspace is each
-  // service's to prove, by direct id, in tests/modules/*/services/.
+  // The writers' half of the mechanism, once per family: the writes by condition AND the proof's workspace onto the caller's `where` (updateInWorkspace here, softDeleteInWorkspace the same `and`),
+  // and the writes by id share `inWorkspaceById` (softDeleteByIdInWorkspace here, updateByIdInWorkspace the same predicate). The readers' half is findOneByIdInWorkspace's above.
+  // Who may hold a proof of which workspace is each service's, by direct id, in tests/modules/*/services/.
   describe('a direct id belonging to another workspace', () => {
     it('is not updatable, and the row is left as it was', async () => {
       const [row] = await insertJar(inX, 'Nettle');

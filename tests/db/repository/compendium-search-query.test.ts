@@ -8,11 +8,8 @@ import { useTestDatabase } from '../../support/db/database';
 import type { PageRequest } from '@/lib/types';
 import type { Logged } from '../../support/db/types';
 
-// The plan the ranked compendium search runs, and the substitute picker's
-// search beside it: each statement is read off the connection's log
-// and explained, so the plan is the one the finder really sends
-// (claude-docs/db/compendium-read.md, "The compendium read"). The 0.5 word
-// threshold's effect is ingredients.test.ts's to prove by the rows it finds.
+// The plan the ranked compendium search runs, and the substitute picker's search beside it: each statement is read off the connection's log and explained, so the plan is the one the finder really sends (claude-docs/db/compendium-read.md, "The compendium read").
+// The 0.5 word threshold's effect is ingredients.test.ts's to prove by the rows it finds.
 
 const logged = vi.hoisted(() => [] as Logged[]);
 
@@ -45,11 +42,7 @@ async function statementFor(request: () => Promise<unknown>): Promise<Logged> {
   return read;
 }
 
-/**
- * `explain` of a logged statement, in a transaction holding the search's
- * threshold with sequential scans disabled, so the question is whether the
- * indexes can be reached at all rather than what the planner prefers.
- */
+/** `explain` of a logged statement in a transaction holding the search's threshold with sequential scans disabled, so the question is whether the indexes can be reached at all, not what the planner prefers. */
 async function explain({ query, params }: Logged): Promise<string> {
   return sql.begin(async (tx) => {
     await tx`select set_config('pg_trgm.word_similarity_threshold', '0.5', true)`;
@@ -65,10 +58,8 @@ describe('the ranked search plan over ~20,000 rows', () => {
   let pageTwo: Logged;
   let suggestions: Logged;
 
-  // Seeded once per file: twenty thousand entries, as many folk
-  // names and as many variants that share no word with `mugwort`, and some
-  // thirteen hundred that do — by label, by formal name, by folk name and by a
-  // variant's description — at several scores.
+  // Seeded once per file: twenty thousand entries, as many folk names and as many variants that share no word with `mugwort`,
+  // and some thirteen hundred that do (by label, formal name, folk name and a variant's description) at several scores.
   beforeAll(async () => {
     await sql`
       insert into ingredients (name, slug, canonical_name, nomenclature, created_by, updated_by)

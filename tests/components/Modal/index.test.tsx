@@ -4,10 +4,8 @@ import { createPortal } from 'react-dom';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import Modal, { DiscardQuestion, useDiscardGuard, useModalHeaderSlot } from '@/components/Modal';
 
-// A dialog over the page, on the native element's modal mode, which brings
-// the focus trap, Escape and the inert page (claude-docs/components/modal.md).
-// happy-dom's `showModal` and `close` only set and clear `open`, with no focus
-// trap, so both are replaced here by spies that do the same and can be asserted on.
+// A dialog over the page on the native element's modal mode, which brings the focus trap, Escape and the inert page (claude-docs/components/modal.md).
+// happy-dom's `showModal` and `close` only set and clear `open`, with no focus trap, so both are replaced by spies that do the same and can be asserted on.
 
 const showModal = vi.fn(function (this: HTMLDialogElement) {
   this.setAttribute('open', '');
@@ -38,10 +36,8 @@ function renderModal(onClose = vi.fn()) {
 }
 
 describe('Modal', () => {
-  // In development React mounts, unmounts and mounts again. A real dialog
-  // blurs what it holds when it closes, so a field focused by the first mount
-  // was left, and a form read that as touched: its required error showed on a
-  // direct load of a route modal. The focus goes in once, after both.
+  // In development React mounts, unmounts and mounts again. A real dialog blurs what it holds when it closes, so a field focused by the first mount was left,
+  // and a form read that as touched: its required error showed on a direct load of a route modal. The focus goes in once, after both.
   it('leaves the first field focused and never blurred through a Strict Mode remount', async () => {
     close.mockImplementationOnce(function (this: HTMLDialogElement) {
       this.removeAttribute('open');
@@ -198,14 +194,9 @@ describe('Modal', () => {
     expect(dialog).toHaveAttribute('open');
   });
 
-  // A click outside closes it, as Escape does.
-  // The backdrop is the dialog's own box to an event, so outside is told by
-  // the point; happy-dom lays nothing out, so every point is outside the box and
-  // what is tested is where the press began and ended. Its own padding is
-  // inside the box, which only a real layout shows (tests/e2e/admin-compendium.spec.ts).
-  // A confirmation opened from inside a dialog (the Annotate dialog) is a
-  // second Modal in the first's contents. React carries the inner dialog's
-  // cancel up its tree to the outer dialog's handler, so Escape closed both.
+  // A click outside closes it, as Escape does. The backdrop is the dialog's own box to an event, so outside is told by the point;
+  // happy-dom lays nothing out, so every point is outside the box and what is tested is where the press began and ended. The dialog's own padding is inside the box, which only a real layout shows (tests/e2e/admin-compendium.spec.ts).
+  // A confirmation opened from inside a dialog (the Annotate dialog) is a second Modal in the first's contents. React carries the inner dialog's cancel up its tree to the outer dialog's handler, so Escape closed both.
   it("closes only the innermost of two nested dialogs on Escape, leaving the outer's owner unasked", () => {
     const outer = vi.fn();
     const inner = vi.fn();
@@ -413,10 +404,8 @@ describe('Modal', () => {
     });
   });
 
-  // It fades in and out. In is CSS alone. Out
-  // is the modal's: it fades, then asks its owner to close, since the owner's
-  // unmount would take it away at once. The dom project draws no transition, so its end
-  // is fired here, and `matchMedia` is stood in for: the setup reports reduced motion.
+  // It fades in and out: in is CSS alone, out is the modal's, which fades and then asks its owner to close, since the owner's unmount would take it away at once.
+  // The dom project draws no transition, so its end is fired here, and `matchMedia` is stood in for because the setup reports reduced motion.
   describe('fading out', () => {
     const motion = (reduced: boolean) =>
       vi.stubGlobal(
@@ -561,16 +550,10 @@ describe('Modal', () => {
     });
   });
 
-  // The guard over a form's unsaved changes: every
-  // way out asks first while the form has changes. Its shape is asserted
-  // here, on a form of the test's own; each admin form's test asserts only
-  // its wiring.
+  // The guard over a form's unsaved changes: every way out asks first while the form has changes.
+  // Its shape is asserted here on a form of the test's own; each admin form's test asserts only its wiring.
   describe('guarding unsaved changes', () => {
-    /**
-     * A form as the admin forms are: a field, a save that closes, and Cancel,
-     * and the question drawn over it while asking, its buttons
-     * still beneath.
-     */
+    /** A form as the admin forms are: a field, a save that closes, and Cancel, with the question drawn over it while asking and its buttons still beneath. */
     function GuardedForm({ close }: { close: () => void }): ReactElement {
       const [name, setName] = useState('');
       const [note, setNote] = useState('');
@@ -830,10 +813,8 @@ describe('Modal', () => {
   });
 });
 
-// While a modal is open the root's scroll is hidden, and the scrollbar's room
-// is given back as padding (Modal/page-hold.ts): the width is published as
-// `--scrollbar-width` only where the page had a scrollbar, and only until the
-// last modal closes. The padding itself is presentation, measured by hand.
+// While a modal is open the root's scroll is hidden and the scrollbar's room is given back as padding (Modal/page-hold.ts).
+// The width is published as `--scrollbar-width` only where the page had a scrollbar and only until the last modal closes; the padding itself is presentation, measured by hand.
 describe('Modal holding the page', () => {
   const root = document.documentElement;
   const widthOf = () => root.style.getPropertyValue('--scrollbar-width');

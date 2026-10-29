@@ -5,10 +5,8 @@ import { describe, expect, it, vi } from 'vitest';
 import FacetCombobox from '@/components/FacetCombobox';
 import type { FacetComboboxProps } from '@/components/FacetCombobox/types';
 
-// A filter's closed set with how many entries each value would leave:
-// the multi-select box with counts, zero rows last and disabled, and each
-// chosen value a hidden input of the filter's GET form
-// (claude-docs/components/facet-combobox.md).
+// A filter's closed set with how many entries each value would leave: the multi-select box with counts, zero rows last and disabled,
+// and each chosen value a hidden input of the filter's GET form (claude-docs/components/facet-combobox.md).
 
 const CHOICES = [
   { value: 'air', label: 'Testair', count: 3 },

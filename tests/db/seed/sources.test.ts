@@ -9,12 +9,8 @@ import { SOURCES, seedSources } from '@/db/seed/sources';
 import { citationText } from '@/lib/citation';
 import type { DocLink, DocLinkKind, ReferenceLinkRow, ReferenceRow } from './types';
 
-// The sources seed writes compendium references keyed by citation,
-// a tradition's source reaching every deity under it, against the real tables
-// emptied first: one run of the seed serves every read, and a re-run over an
-// admin's edit empties them again. The shape every seed shares is
-// index.test.ts's, and which sources the docs record is the docs' to
-// review — claude-docs/db/references.md, "How the seed reads the docs".
+// The sources seed writes compendium references keyed by citation, a tradition's source reaching every deity under it, against the real tables emptied first: one run serves every read, and a re-run over an admin's edit empties them again.
+// The shape every seed shares is index.test.ts's; which sources the docs record is the docs' to review (claude-docs/db/references.md, "How the seed reads the docs").
 
 const byLink = (a: DocLink, b: DocLink) =>
   `${a.kind}|${a.name}|${a.locator}`.localeCompare(`${b.kind}|${b.name}|${b.locator}`);

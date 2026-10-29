@@ -12,10 +12,8 @@ import { renderEntryFile } from '@/db/seed/compendium/render-entry';
 import { fileOf, TESTWORT } from './files-fixture';
 import type { SeedCompendiumEntry } from '@/db/seed/types';
 
-// The content hash tells a changed file from an unchanged one, so what
-// it ignores matters as much as what it sees. Each case below is one edit to
-// the invented Testwort; the decision record lists which side each falls on
-// (claude-docs/design-decisions/m14.4-compendium-markdown-files.md, "The hash").
+// The content hash tells a changed file from an unchanged one, so what it ignores matters as much as what it sees. Each case is one edit to the invented Testwort;
+// the decision record lists which side each falls on (claude-docs/design-decisions/m14.4-compendium-markdown-files.md, "The hash").
 
 /** Testwort with `edit` applied to a deep copy. */
 function edited(edit: (entry: SeedCompendiumEntry) => void): SeedCompendiumEntry {

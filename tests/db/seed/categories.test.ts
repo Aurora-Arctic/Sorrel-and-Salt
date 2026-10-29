@@ -9,11 +9,8 @@ import { CATEGORY_GROUPS } from '@/db/seed/category-groups';
 import { slugify } from '@/lib/slugify';
 import type { CategoryGroupRow, CategoryRow } from './types';
 
-// Every seeded group colour clears the contrast floor on its theme's page
-// ground, read from the stylesheet that defines it; the seed wires each
-// category to its group and leaves an admin's colours alone. The shape every
-// seed shares is index.test.ts's, and the vocabulary's content is the
-// seed doc's to review — claude-docs/db/category-seed.md, "The category seed".
+// Every seeded group colour clears the contrast floor on its theme's page ground, read from the stylesheet that defines it; the seed wires each category to its group and leaves an admin's colours alone.
+// The shape every seed shares is index.test.ts's; the content is the seed doc's to review (claude-docs/db/category-seed.md, "The category seed").
 
 /** A page ground as `_variables.scss` defines it. */
 function ground(variable: string): string {

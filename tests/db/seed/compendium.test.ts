@@ -41,17 +41,9 @@ import {
 } from './compendium/files-fixture';
 import type { SeedCompendiumEntry } from '@/db/seed/types';
 
-// The compendium seed writes each entry whole, once, on the invented
-// fixture entries, read from files, against the real tables emptied first. The shape every seed
-// shares — stamps, a second run a no-op, nothing resurrected — is
-// index.test.ts's; the guard's rules are compendium/guard.test.ts's and
-// compendium/guard-files.test.ts's.
-//
-// The five vocabularies the compendium picks from are seeded once for the
-// file, and each case empties only what the compendium and its cases write
-// : re-seeding them per case cost most of the file's time. The cases
-// that need other vocabularies, or none, have describes of their own that
-// put the shared state back when they finish.
+// The compendium seed writes each entry whole, once, from the invented fixture files, against the real tables emptied first. The shape every seed shares is index.test.ts's; the guard's rules are compendium/guard.test.ts's and guard-files.test.ts's.
+// The five vocabularies the compendium picks from are seeded once for the file and each case empties only what it writes, because re-seeding per case cost most of the file's time;
+// cases that need other vocabularies, or none, have describes of their own that put the shared state back.
 
 let sql: ReturnType<typeof postgres>;
 let db: ReturnType<typeof drizzle>;
@@ -103,10 +95,8 @@ async function seedSharedVocabularies(): Promise<void> {
 }
 
 /**
- * Deletes what the last case wrote and leaves the vocabularies: the bootstrap
- * user, and the sources seed's references and links, stay. A delete rather
- * than a truncate, because `truncate ... cascade` empties every referencing
- * table whole, and `reference_links` holds both seeds' rows.
+ * Deletes what the last case wrote and leaves the vocabularies, the bootstrap user, and the sources seed's references and links.
+ * A delete, not a truncate: `truncate ... cascade` empties every referencing table whole, and `reference_links` holds both seeds' rows.
  */
 async function resetToVocabularies(): Promise<void> {
   for (const table of deleteOrder) {
@@ -520,10 +510,8 @@ describe('seedCompendium', () => {
   });
 });
 
-// A present entry is updated only when its file says so (`seedUpdate`,
-// the hash of the file as read) and nobody's work on the site stands in the
-// way. Every case seeds the two fixture entries from files, then runs the
-// seed again on an edited copy, and reads the rows back.
+// A present entry is updated only when its file says so (`seedUpdate`, the hash of the file as read) and nobody's work on the site stands in the way.
+// Each case seeds the two fixture entries, runs the seed again on an edited copy and reads the rows back.
 describe('the update path (M14.7)', () => {
   const PATH = entryFilePath(TESTWORT);
   const A_ID = FIXTURE_USERS.A.id;
@@ -790,10 +778,7 @@ describe('the update path (M14.7)', () => {
     expect((await variantRowsOf(sql, id)).find((v) => v.form === 'Oil')?.deleted_at).not.toBeNull();
   });
 
-  /**
-   * Refusals 1 to 3: someone worked on the entry at the site. Each case sets
-   * the work up, checks it took, and names the reason the run prints.
-   */
+  /** Refusals 1 to 3: someone worked on the entry at the site. Each case sets the work up, checks it took, and names the reason the run prints. */
   const SITE_WORK: { name: string; reason: string; setUp: () => Promise<void> }[] = [
     {
       name: 'a curator-reviewed entry',
@@ -841,11 +826,7 @@ describe('the update path (M14.7)', () => {
     },
   ];
 
-  /**
-   * Refused with `reason` and nothing written; then the same marked edit,
-   * with the file's `overwriteEditor` or the run's `force`, lands, and the
-   * row comes out unreviewed.
-   */
+  /** Refused with `reason` and nothing written; then the same marked edit, with the file's `overwriteEditor` or the run's `force`, lands and the row comes out unreviewed. */
   async function expectRefusedThenLanded(
     reason: string,
     lift: { overwrite: true } | { force: true },

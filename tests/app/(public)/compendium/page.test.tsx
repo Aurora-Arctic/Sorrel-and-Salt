@@ -7,10 +7,8 @@ import { EMPTY_VALUES } from '@/components/IngredientForm/values';
 import { NotFound } from '@/lib/errors';
 import { entryDetail } from '../../../support/entry-detail';
 
-// The public compendium page. The reads and the viewer are mocked, since what
-// they decide is their own tests' (the admin page's test runs the reads). Here: what the
-// address becomes in the read, which foot each kind of visitor gets, and when the page asks
-// to be kept out of search results.
+// The public compendium page, with the reads and the viewer mocked (the admin page's test runs the reads). It proves what the address becomes in the read,
+// which foot each kind of visitor gets, and when the page asks to be kept out of search results.
 
 const router = { push: vi.fn(), replace: vi.fn(), refresh: vi.fn() };
 const redirect = vi.fn((_to: string) => {

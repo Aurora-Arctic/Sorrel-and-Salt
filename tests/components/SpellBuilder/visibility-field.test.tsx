@@ -19,11 +19,8 @@ const { default: SpellBuilder } = await import('@/components/SpellBuilder');
 // The builder's category picker reads the categories as it opens.
 beforeEach(() => offerCategories([]));
 
-// The spell builder's visibility control: who can see the spell, its
-// author alone or the whole coven, set at creation, widened once with a
-// confirmation, and read-only once shared. That the service refuses a
-// narrowing is tests/modules/grimoire/services/spells.test.ts's; here
-// the builder shows that refusal's words in its notice.
+// The spell builder's visibility control: who can see the spell, its author alone or the whole coven, set at creation, widened once with a confirmation, and read-only once shared.
+// That the service refuses a narrowing is tests/modules/grimoire/services/spells.test.ts's; here the builder shows that refusal's words in its notice.
 
 // A saved spell opens with its sections shut, so each is opened
 // with Open All, as a person reaches the switch in Notes.

@@ -1,10 +1,8 @@
 import { fireEvent, render, screen } from '@testing-library/react';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 
-// The `/coven/[slug]` layout runs the coven guard on the slug in its own URL
-// segment and on nothing else. What the guard decides is
-// tests/lib/request-session.test.ts's and the service's; here it is mocked, to
-// prove the layout awaits it before rendering anything.
+// The `/coven/[slug]` layout runs the coven guard on the slug in its own URL segment and on nothing else.
+// The guard is mocked (tests/lib/request-session.test.ts's and the service's), to prove the layout awaits it before rendering anything.
 
 const requireCovenMembership = vi.fn();
 vi.mock('@/lib/request-session', () => ({ requireCovenMembership }));

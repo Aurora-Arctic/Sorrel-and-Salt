@@ -121,10 +121,8 @@ describe.each(MAILS)('$name', ({ name, link }) => {
   });
 });
 
-// Zoho Mail drops the stylesheet and, in its Night mode, rewrites every inline `color` and
-// `background-color` to an inverted `!important` value, except on an <a> whose background is an
-// image (measured; claude-docs/email.md, "Design"). So the page is painted by a gradient as well
-// as a colour, and every run of text sits directly inside an anchor that carries a gradient of its own.
+// Zoho Mail drops the stylesheet and, in its Night mode, rewrites every inline `color` and `background-color` to an inverted `!important` value, except on an <a> whose background is an image (measured; claude-docs/email.md, "Design").
+// So the page is painted by a gradient as well as a colour, and every run of text sits directly inside an anchor that carries a gradient of its own.
 describe.each(MAILS)('$name, in Zoho Mail', ({ name }) => {
   it('gives every anchor a gradient background and no background colour', () => {
     const { html } = rendered.get(name)!;
@@ -193,10 +191,8 @@ describe('the shared layout', () => {
 
   const page = () => rendered.get(MAILS[0].name)!.html;
 
-  // iOS Mail, iCloud, Yahoo, AOL, o2.pl, Seznam and Outlook.com each applied the light text rules
-  // and not the light page rule, leaving dark text on the dark page. So every light rule hangs off
-  // the one cell that carries the page colour: a client that loses that rule loses them all.
-  // (Zoho was on that list from a preview tool; measured, it reads no stylesheet at all.)
+  // iOS Mail, iCloud, Yahoo, AOL, o2.pl, Seznam and Outlook.com each applied the light text rules and not the light page rule, leaving dark text on the dark page,
+  // so every light rule hangs off the one cell that carries the page colour. (Zoho reads no stylesheet at all, as measured.)
   it('scopes every light rule beneath the one cell that carries the page colour', () => {
     const html = page();
     const light = html.match(/@media \(prefers-color-scheme: light\)\{(.*?)\}\}/s)?.[1] ?? '';
