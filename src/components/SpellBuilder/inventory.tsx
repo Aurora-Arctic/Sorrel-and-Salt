@@ -26,6 +26,10 @@ const NOT_ENOUGH_TIP = 'The jar holds less than this step needs.';
 const OUT_TIP = 'The jar is empty, so there is nothing to put in.';
 const LOW_TIP = 'The jar is at or below the coven’s Low mark.';
 
+// A one-off holds no stock, but its jar is drawn with something in it, as a stocked jar is: an
+// unmeasured jar stands at the middling level, in muted ink (index.scss). The One-Off badge says why.
+const ONE_OFF_HELD = { quantity: null, threshold: null };
+
 const OutIcon = ({ className }: { className: string }): ReactElement => (
   <StockIcon out className={className} />
 );
@@ -92,7 +96,7 @@ function HoldLine({
   return (
     <li className={`spell-inventory__line${oneOff ? ' is-one-off' : ''}`}>
       <span className={`spell-inventory__jar ${modifier}`}>
-        <JarDrawing shape={pickJarShape(seed, formKey ?? '')} held={oneOff ? null : jar} />
+        <JarDrawing shape={pickJarShape(seed, formKey ?? '')} held={oneOff ? ONE_OFF_HELD : jar} />
       </span>
       <span className="spell-inventory__title">
         <span className="spell-inventory__name">{stepNameOf(step)}</span>

@@ -492,13 +492,18 @@ body .spell-builder .collapsible-section__fields {
   grid-template-columns: 2rem minmax(0, 1fr);
   column-gap: space(2);
 
-  // A one-off holds no stock, so its jar is the plain empty outline the aside's own jar is,
-  // solid and muted, not the dashed outline of a form with no jar, and not faded.
+  // A one-off holds no stock, but its jar looks as if it holds something: the glass, the level
+  // and the wave are all muted ink in place of the stock green, at the middling level.
   &.is-one-off .spell-inventory__jar {
     .jar-shelf__glass,
     .jar-shelf__lid,
-    .jar-shelf__facet {
+    .jar-shelf__facet,
+    .jar-shelf__wave {
       stroke: $text-muted;
+    }
+
+    .jar-shelf__level {
+      fill: $text-muted;
     }
   }
 }
