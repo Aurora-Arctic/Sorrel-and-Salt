@@ -7,6 +7,7 @@ import { JarDrawing, pickJarShape } from '../JarShelf';
 import { useCategoryColors } from './category-colors';
 import { SpellComparison } from './comparison-panel';
 import { SpellInventory } from './inventory';
+import type { QuickLookCoven } from './step-quick-look';
 import type { SpellStepsValues } from './steps/types';
 import { isInstruction } from './steps/values';
 
@@ -60,7 +61,7 @@ export function JarAside({
   look,
 }: {
   /** The coven's ids for each ingredient line's Quick Look; left out, the lines have none. */
-  look?: { workspaceId: string; covenSlug: string };
+  look?: QuickLookCoven;
   /** The Seal Wax field, drawn to the right of the jar. */
   waxField: ReactNode;
   /** The Jar Description field, beneath the jar and the wax field, the aside's full width. */
