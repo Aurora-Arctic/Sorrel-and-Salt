@@ -38,6 +38,8 @@ test(
       return id;
     });
     const recipePath = `/coven/${coven.slug}/grimoire/${spellId}`;
+    // This story is the pane with nothing but Close; a wake lock sign is story 86's.
+    await page.addInitScript(() => Reflect.deleteProperty(Navigator.prototype, 'wakeLock'));
 
     for (const user of [coven.users.B, coven.users.C]) {
       await signInAgainAs(page, user);
@@ -93,3 +95,69 @@ test('a non-member gets a 404 for the spell', { tag: '@story-85' }, async ({ pag
   expect((await page.goto(recipePath))?.status()).toBe(404);
   await expect(page.getByRole('button', { name: 'Preview', exact: true })).toHaveCount(0);
 });
+
+// Keeping the screen awake in the pane (story 86). The browser's lock is stood in for by one that counts, since a
+// headless browser grants none.
+test(
+  'the pane keeps the screen awake, says so, and lets it be turned off',
+  { tag: '@story-86' },
+  async ({ page }) => {
+    const coven = await seedCoven(page, 'Fixture Coven Eighty-Six', 'story-86.test', {
+      A: 'owner',
+      B: 'member',
+    });
+    const spellId = await withSql((sql) =>
+      insertSpell(sql, coven.id, 'Fixture Working', 'workspace', coven.users.A, 'complete'),
+    );
+    await page.addInitScript(() => {
+      const counts = { requests: 0, releases: 0 };
+      Reflect.set(window, 'wakeCounts', counts);
+      Object.defineProperty(navigator, 'wakeLock', {
+        configurable: true,
+        value: {
+          request: () => {
+            counts.requests += 1;
+            const listeners: (() => void)[] = [];
+            return Promise.resolve({
+              addEventListener: (_type: string, fn: () => void) => listeners.push(fn),
+              release: () => {
+                counts.releases += 1;
+                listeners.forEach((fn) => fn());
+                return Promise.resolve();
+              },
+            });
+          },
+        },
+      });
+    });
+    const counts = () =>
+      page.evaluate(
+        () => Reflect.get(window, 'wakeCounts') as { requests: number; releases: number },
+      );
+    await signInAgainAs(page, coven.users.B);
+    await page.goto(`/coven/${coven.slug}/grimoire/${spellId}`);
+    await page.getByRole('button', { name: 'Preview', exact: true }).click();
+    const pane = page.getByRole('dialog', { name: 'Fixture Working' });
+    const awake = pane.getByRole('button', { name: 'Screen Awake' });
+    await expect(awake).toHaveAttribute('aria-pressed', 'true');
+    expect(await counts()).toEqual({ requests: 1, releases: 0 });
+    await assertNoAccessibilityViolations(page);
+    // The background animation stands still under reduced motion.
+    const animation = () => pane.evaluate((el) => getComputedStyle(el, '::before').animationName);
+    await page.emulateMedia({ reducedMotion: 'no-preference' });
+    expect(await animation()).not.toBe('none');
+    await page.emulateMedia({ reducedMotion: 'reduce' });
+    expect(await animation()).toBe('none');
+    // Off releases the lock; on asks again.
+    await awake.click();
+    await expect(awake).toHaveAttribute('aria-pressed', 'false');
+    expect(await counts()).toEqual({ requests: 1, releases: 1 });
+    await awake.click();
+    await expect(awake).toHaveAttribute('aria-pressed', 'true');
+    expect(await counts()).toEqual({ requests: 2, releases: 1 });
+    // Closing the pane releases it.
+    await pane.getByRole('button', { name: 'Close' }).click();
+    await expect(page.getByRole('dialog')).toHaveCount(0);
+    expect(await counts()).toEqual({ requests: 2, releases: 2 });
+  },
+);

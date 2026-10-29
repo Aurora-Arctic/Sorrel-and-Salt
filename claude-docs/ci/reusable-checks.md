@@ -194,7 +194,7 @@
   `playwright` and runs beside it, under its own `stories` path filter. The
   input switches the run command (`npm run test:stories` with
   `STORIES_JSON=/app/stories.json`), the summariser
-  (`.github/scripts/summarize-stories.mjs`: "3 of 58 stories passing" and a
+  (`.github/scripts/summarize-stories.mjs`: "3 of 59 stories passing" and a
   markdown checklist), the check name, the comment thread
   (`marker-slug: stories`) and the report artifact's name (`stories-report`,
   since one workflow run may not upload two artifacts under one name), and

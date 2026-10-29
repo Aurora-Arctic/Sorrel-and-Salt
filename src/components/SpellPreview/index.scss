@@ -1,4 +1,5 @@
 @use '../../scss/variables' as *;
+@use '../../scss/mixins' as *;
 
 // The pane covers the window: the native dialog's top layer, sized to the viewport and no longer a
 // box in the middle. Tokens only; the look is the grimoire's design review's (MB.123).
