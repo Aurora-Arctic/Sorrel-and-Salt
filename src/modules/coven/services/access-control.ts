@@ -15,6 +15,8 @@ const statements = {
   /** Stock: the jars a coven holds. No `create` or `delete`: adding and throwing out a jar are writes like any change, so all three check `update`. */
   inventory: ['read', 'update'],
   spell: ['read', 'create', 'update', 'delete'],
+  /** A working: one time a spell was made, with its participants and the stock it took (M13.5). Its own resource so a role can be given one and not the other. */
+  working: ['read', 'create', 'update', 'delete'],
   /**
    * Members and invitations. Owners and members read the roll (`read`); a member's address (`readEmail`), inviting, changing a
    * role and removing stay with owners. The address is its own action since a member reads the roll but only an owner needs it to tell two people apart.
@@ -31,6 +33,7 @@ const viewer = ac.newRole({
   ingredient: ['read'],
   inventory: ['read'],
   spell: ['read'],
+  working: ['read'],
   workspace: ['read'],
 });
 
@@ -40,6 +43,7 @@ const member = ac.newRole({
   inventory: ['read', 'update'],
   member: ['read'],
   spell: ['read', 'create', 'update', 'delete'],
+  working: ['read', 'create', 'update', 'delete'],
   workspace: ['read'],
 });
 
@@ -48,6 +52,7 @@ const owner = ac.newRole({
   ingredient: ['read', 'create', 'update', 'delete'],
   inventory: ['read', 'update'],
   spell: ['read', 'create', 'update', 'delete'],
+  working: ['read', 'create', 'update', 'delete'],
   member: ['read', 'readEmail', 'invite', 'update', 'remove'],
   workspace: ['read', 'update', 'delete'],
 });
