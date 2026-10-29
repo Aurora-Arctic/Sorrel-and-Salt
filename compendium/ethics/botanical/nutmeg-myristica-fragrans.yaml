@@ -6,6 +6,7 @@ listings:
     name: IUCN Red List of Threatened Species, as printed in Wikipedia's taxobox
     value: DD
     listedAs: Myristica fragrans
+    scope: global
     nameBasis: stated
     source: wikipedia-iucn-myristica-fragrans
     locator: 'Taxobox: status = DD, status_system = IUCN3.1; its status_ref reads: "Myristica fragrans", World Conservation Monitoring Centre., 1998, 10.2305/IUCN.UK.1998.RLTS.T33986A9820569.en'

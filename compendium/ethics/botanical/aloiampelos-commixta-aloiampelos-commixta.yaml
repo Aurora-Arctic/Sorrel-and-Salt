@@ -1,11 +1,14 @@
 # Gathered for M14.29; the seed never reads this folder.
 entry: botanical/aloiampelos-commixta-aloiampelos-commixta
-status: approved
+status: needs-review
 listings:
   - list: iucn
-    name: 'IUCN Red List (global Red Data List, as worded by Wikipedia)'
-    value: 'Vulnerable (VU)'
-    listedAs: 'Aloiampelos commixta'
+    name: IUCN Red List (global Red Data List, as worded by Wikipedia)
+    value: Vulnerable (VU)
+    listedAs: Aloiampelos commixta
+    scope: global
     nameBasis: stated
     source: wikipedia-aloiampelos-commixta
     locator: 'text: "This plant is listed as Vulnerable (VU) on IUCN''s global Red Data List, which reports that there are currently only a few hundred plants in existence."'
+questions:
+  - 'The CITES Appendices (valid from 5 March 2026) list the whole genus: p. 72, Appendix II column, "Aloiampelos spp.", annotation #4. They do not print Aloiampelos commixta by name. Owner: say whether a genus-wide listing may be recorded. Recommendation: yes, as list: cites with nameBasis: resolved, with annotation #4 quoted in the locator.'

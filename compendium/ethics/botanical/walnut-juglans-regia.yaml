@@ -6,6 +6,7 @@ listings:
     name: IUCN Red List of Threatened Species, as printed in Wikipedia's taxobox
     value: LC
     listedAs: Juglans regia
+    scope: global
     nameBasis: stated
     source: wikipedia-iucn-juglans-regia
     locator: 'Taxobox: status = LC, status_system = IUCN3.1; its status_ref reads: "Juglans regia", 2017, 10.2305/IUCN.UK.2017-3.RLTS.T63495A61526700.en'

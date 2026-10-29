@@ -6,6 +6,7 @@ listings:
     name: IUCN Red List of Threatened Species, as printed in Wikipedia's taxobox
     value: LC
     listedAs: Camphora officinarum
+    scope: global
     nameBasis: stated
     source: wikipedia-iucn-camphora-officinarum
     locator: 'Taxobox: status = LC, status_system = IUCN3.1; its status_ref reads: "Cinnamomum camphora", de Kok, R., 2021, 10.2305/IUCN.UK.2021-3.RLTS.T15441072A15441116.en'

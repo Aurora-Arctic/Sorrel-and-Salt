@@ -6,6 +6,7 @@ listings:
     name: IUCN Red List of Threatened Species, as printed in Wikipedia's taxobox
     value: DD
     listedAs: Carica papaya
+    scope: global
     nameBasis: stated
     source: wikipedia-iucn-carica-papaya
     locator: 'Taxobox: status = DD, status_system = IUCN3.1; its status_ref reads: "Carica papaya", Contreras, A., 2016'

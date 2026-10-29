@@ -3,11 +3,22 @@ entry: botanical/african-ginger-siphonochilus-aethiopicus
 status: needs-review
 listings:
   - list: other
-    name: 'Conservation status as stated in the Wikipedia article text (no assessor named)'
-    value: 'critically endangered'
-    listedAs: 'Siphonochilus aethiopicus'
+    name: Conservation status as stated in the Wikipedia article text (no assessor named)
+    value: critically endangered
+    listedAs: Siphonochilus aethiopicus
+    scope: unknown
     nameBasis: stated
     source: wikipedia-siphonochilus-aethiopicus
     locator: 'lead: "is critically endangered due to over-harvesting"'
+  - list: cites
+    name: CITES Appendices I, II and III, valid from 5 March 2026
+    value: Appendix II (populations of Eswatini, Mozambique, South Africa and Zimbabwe only)
+    listedAs: Siphonochilus aethiopicus
+    scope: global
+    nameBasis: stated
+    source: cites-appendices
+    locator: 'p. 80, Appendix II column, family ZINGIBERACEAE: "Siphonochilus aethiopicus (Only the populations of Eswatini, Mozambique, South Africa and Zimbabwe; no other population is included in the Appendices)"'
 questions:
-  - "Wikipedia says 'is critically endangered due to over-harvesting' but names no assessor. Find the assessment, or drop the row? I recommend finding the assessment."
+  - Wikipedia says 'is critically endangered due to over-harvesting' but names no assessor. Find the assessment, or drop the row? I recommend finding the assessment.
+  - "The CITES listing of Siphonochilus aethiopicus is limited to four countries' populations (p. 80). The Wikipedia page does not say which population the entry's material comes from. Owner: say whether the limited listing is enough to record. Recommendation: record it as written, with the limit in the locator."
+  - 'The source does not say where the status "critically endangered" (Conservation status as stated in the Wikipedia article text (no assessor named)) applies, so its scope is recorded as unknown. Owner: say whether it is global or for one place, and whether to keep the row. Recommendation: keep it as unknown and do not remove the entry on it.'

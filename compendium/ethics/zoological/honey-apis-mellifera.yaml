@@ -6,6 +6,7 @@ listings:
     name: IUCN Red List of Threatened Species, as printed in Wikipedia's taxobox
     value: DD
     listedAs: Apis mellifera
+    scope: Europe
     nameBasis: stated
     source: wikipedia-iucn-apis-mellifera
     locator: 'Taxobox: status = DD, status_system = IUCN3.1; its status_ref reads: "Apis mellifera (Europe assessment)", Moro, A., 2025'
@@ -14,5 +15,4 @@ animalPart:
     source: wikipedia-honey
     locator: Honey article (oldid 1378877316), passage on Jainism
 questions:
-  - 'Wikipedia''s status_ref names a regional assessment ("Apis mellifera (Europe assessment)"), not a global one. Recommendation: record it only as a regional listing, or leave it out; owner to decide.'
   - 'The only statement found about harm in taking honey is the Jain prohibition above, from Wikipedia. It is a religious prohibition on eating honey, not a conservation listing. Owner: say whether it belongs on the entry as an animal-part concern. Recommendation: yes, as recorded, with the Wikipedia source replaced by a Jain authority if one is found in M14.13.'

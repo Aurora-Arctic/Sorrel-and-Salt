@@ -3,9 +3,10 @@ entry: botanical/doum-palm-hyphaene-thebaica
 status: approved
 listings:
   - list: iucn
-    name: 'IUCN Red List of Threatened Species'
-    value: 'Least Concern (IUCN 3.1)'
-    listedAs: 'Hyphaene thebaica'
+    name: IUCN Red List of Threatened Species
+    value: Least Concern (IUCN 3.1)
+    listedAs: Hyphaene thebaica
+    scope: global
     nameBasis: stated
     source: wikipedia-hyphaene-thebaica
     locator: 'taxobox, "Conservation status": "Least Concern (IUCN 3.1)"'

@@ -6,8 +6,7 @@ listings:
     name: IUCN Red List of Threatened Species, as printed in Wikipedia's taxobox
     value: EN
     listedAs: Mandragora officinarum
+    scope: Europe
     nameBasis: stated
     source: wikipedia-iucn-mandragora-officinarum
     locator: 'Taxobox: status = EN, status_system = IUCN3.1; its status_ref reads: "Mandragora officinarum (Europe assessment)", Bilz, M., 2011'
-questions:
-  - 'Wikipedia''s status_ref names a regional assessment ("Mandragora officinarum (Europe assessment)"), not a global one. Recommendation: record it only as a regional listing, or leave it out; owner to decide.'

@@ -5,7 +5,8 @@ listings:
   - list: other
     name: United Plant Savers Species At-Risk List
     value: In Review
-    listedAs: 'Lobelia inflata'
+    listedAs: Lobelia inflata
+    scope: global
     nameBasis: stated
     source: ups-species-at-risk
     locator: under the heading "In Review", entry for Lobelia

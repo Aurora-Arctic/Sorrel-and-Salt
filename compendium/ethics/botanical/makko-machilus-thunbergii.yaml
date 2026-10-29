@@ -6,6 +6,7 @@ listings:
     name: IUCN Red List of Threatened Species, as printed in Wikipedia's taxobox
     value: LC
     listedAs: Machilus thunbergii
+    scope: global
     nameBasis: stated
     source: wikipedia-iucn-machilus-thunbergii
     locator: 'Taxobox: status = LC, status_system = IUCN3.1; its status_ref reads: "Machilus thunbergii", Liu, B., 2019, 10.2305/IUCN.UK.2019-2.RLTS.T147638804A147638806.en'

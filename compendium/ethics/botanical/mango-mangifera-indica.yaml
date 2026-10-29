@@ -3,9 +3,10 @@ entry: botanical/mango-mangifera-indica
 status: approved
 listings:
   - list: iucn
-    name: 'IUCN Red List of Threatened Species'
-    value: 'Data Deficient (IUCN 3.1)'
-    listedAs: 'Mangifera indica'
+    name: IUCN Red List of Threatened Species
+    value: Data Deficient (IUCN 3.1)
+    listedAs: Mangifera indica
+    scope: global
     nameBasis: stated
     source: wikipedia-mangifera-indica
     locator: 'taxobox, "Conservation status": "Data Deficient (IUCN 3.1)"'

@@ -6,6 +6,7 @@ listings:
     name: IUCN Red List of Threatened Species, as printed in Wikipedia's taxobox
     value: NT
     listedAs: Fraxinus excelsior
+    scope: global
     nameBasis: stated
     source: wikipedia-iucn-fraxinus-excelsior
     locator: 'Taxobox: status = NT, status_system = IUCN3.1; its status_ref reads: "Fraxinus excelsior", Khela, S., 2018, 10.2305/IUCN.UK.2018-1.RLTS.T203367A67807718.en'

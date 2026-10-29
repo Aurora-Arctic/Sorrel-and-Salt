@@ -6,6 +6,7 @@ listings:
     name: IUCN Red List
     value: Vulnerable (IUCN 3.1)
     listedAs: Metrosideros polymorpha
+    scope: global
     nameBasis: stated
     source: wikipedia-metrosideros-polymorpha
     locator: taxobox, conservation status (status = VU, IUCN3.1)
@@ -13,6 +14,7 @@ listings:
     name: NatureServe (TNC)
     value: G5 (TNC status in taxobox)
     listedAs: Metrosideros polymorpha
+    scope: global
     nameBasis: stated
     source: wikipedia-metrosideros-polymorpha
     locator: taxobox, status2 = G5, status2_system = TNC

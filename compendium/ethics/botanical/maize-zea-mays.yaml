@@ -6,6 +6,7 @@ listings:
     name: IUCN Red List of Threatened Species, as printed in Wikipedia's taxobox
     value: LC
     listedAs: Zea mays
+    scope: global
     nameBasis: stated
     source: wikipedia-iucn-zea-mays
     locator: 'Taxobox: status = LC, status_system = IUCN3.1; its status_ref reads: "Zea mays", Contreras, 2019, 10.2305/IUCN.UK.2019-2.RLTS.T77726273A77726310.en'

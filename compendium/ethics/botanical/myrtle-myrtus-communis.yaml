@@ -6,6 +6,7 @@ listings:
     name: IUCN Red List of Threatened Species, as printed in Wikipedia's taxobox
     value: LC
     listedAs: Myrtus communis
+    scope: global
     nameBasis: stated
     source: wikipedia-iucn-myrtus-communis
     locator: 'Taxobox: status = LC, status_system = IUCN3.1; its status_ref reads: "Myrtus communis", Chadburn, H., 2018, 10.2305/IUCN.UK.2018-1.RLTS.T203365A119997141.en'

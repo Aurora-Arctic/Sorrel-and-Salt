@@ -6,6 +6,7 @@ listings:
     name: United Plant Savers Species At-Risk List
     value: At-Risk
     listedAs: Sanguinaria canadensis
+    scope: global
     nameBasis: stated
     source: ups-species-at-risk
     locator: under the heading "At-Risk", entry for Bloodroot
@@ -13,6 +14,7 @@ listings:
     name: IUCN Red List of Threatened Species, as printed in Wikipedia's taxobox
     value: LC
     listedAs: Sanguinaria canadensis
+    scope: global
     nameBasis: stated
     source: wikipedia-iucn-sanguinaria-canadensis
     locator: 'Taxobox: status = LC, status_system = IUCN3.1; its status_ref reads: "Sanguinaria canadensis", Siekkinen, K., Reinier, J. E., Meredith, C.R., Williams, M., Piatt, L., Mikanik, A., Leopold, S., Gerrity, J., Dinh, D., Duncan, H., Kirchner, W., Metzman, H., Miller, A. & Preston, J., 2024'

@@ -6,6 +6,7 @@ listings:
     name: IUCN Red List
     value: Least Concern (IUCN 3.1)
     listedAs: Piper excelsum
+    scope: global
     nameBasis: stated
     source: wikipedia-piper-excelsum
     locator: taxobox, conservation status (status = LC, IUCN3.1)

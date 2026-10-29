@@ -6,6 +6,7 @@ listings:
     name: Population status stated by Wikipedia (assessor not named)
     value: thought to be endangered
     listedAs: Hippocampus
+    scope: unknown
     nameBasis: stated
     source: wikipedia-seahorse
     locator: Wikipedia, Seahorse, oldid 1381001046
@@ -15,3 +16,5 @@ animalPart:
     locator: Traditional Chinese medicine
 questions:
   - Wikipedia says 'Seahorse populations are thought to be endangered as a result of overfishing and habitat destruction' but names no assessor. Find the assessment, or drop the row?
+  - 'The CITES Appendices (valid from 5 March 2026) list the whole genus: p. 55, Appendix II column, "Hippocampus spp.", family SYNGNATHIDAE, no annotation. The entry is the genus, so the listing names it directly, but covers every species. Owner: say whether to record it. Recommendation: yes, as list: cites with nameBasis: stated.'
+  - 'The source does not say where the status "thought to be endangered" (Population status stated by Wikipedia (assessor not named)) applies, so its scope is recorded as unknown. Owner: say whether it is global or for one place, and whether to keep the row. Recommendation: keep it as unknown and do not remove the entry on it.'

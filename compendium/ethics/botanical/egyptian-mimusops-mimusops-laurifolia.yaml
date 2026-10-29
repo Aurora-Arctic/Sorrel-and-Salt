@@ -3,9 +3,10 @@ entry: botanical/egyptian-mimusops-mimusops-laurifolia
 status: needs-review
 listings:
   - list: other
-    name: 'Wikipedia article text (no assessor named)'
-    value: 'Extremely rare in Southwest Arabia; habitat destruction, overgrazing and desertification'
-    listedAs: 'Mimusops laurifolia'
+    name: Wikipedia article text (no assessor named)
+    value: Extremely rare in Southwest Arabia; habitat destruction, overgrazing and desertification
+    listedAs: Mimusops laurifolia
+    scope: Southwest Arabia
     nameBasis: stated
     source: wikipedia-mimusops-laurifolia
     locator: 'section "Conservation status": "M. laurifolia is extremely rare in Southwest Arabia."'

@@ -6,6 +6,7 @@ listings:
     name: IUCN Red List of Threatened Species, as printed in the Wikipedia taxobox
     value: Least Concern
     listedAs: Gloriosa superba
+    scope: global
     nameBasis: stated
     source: wikipedia-gloriosa-superba
     locator: 'taxobox "Conservation status": Least Concern (IUCN 3.1); The page also says the species has become rarer in Southern Africa, Bangladesh, Sri Lanka and parts of India, and attributes the decline to harvesting of wild plants for traditional medicine.'

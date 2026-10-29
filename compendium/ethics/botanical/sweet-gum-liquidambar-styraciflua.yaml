@@ -6,6 +6,7 @@ listings:
     name: IUCN Red List of Threatened Species, as printed in Wikipedia's taxobox
     value: LC
     listedAs: Liquidambar styraciflua
+    scope: global
     nameBasis: stated
     source: wikipedia-iucn-liquidambar-styraciflua
     locator: 'Taxobox: status = LC, status_system = IUCN3.1; its status_ref reads: "Liquidambar styraciflua", Beech, E., 2018, 10.2305/IUCN.UK.2018-1.RLTS.T33966A67700725.en'

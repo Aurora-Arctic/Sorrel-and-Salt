@@ -6,6 +6,7 @@ listings:
     name: IUCN Red List of Threatened Species, as printed in Wikipedia's taxobox
     value: LC
     listedAs: Portulaca oleracea
+    scope: global
     nameBasis: stated
     source: wikipedia-iucn-portulaca-oleracea
     locator: 'Taxobox: status = LC, status_system = IUCN3.1; its status_ref reads: "Portulaca oleracea", Diop, 2020, 10.2305/IUCN.UK.2020-3.RLTS.T164001A65924501.en'

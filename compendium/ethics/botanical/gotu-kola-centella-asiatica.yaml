@@ -6,6 +6,7 @@ listings:
     name: IUCN Red List of Threatened Species, as printed in Wikipedia's taxobox
     value: LC
     listedAs: Centella asiatica
+    scope: global
     nameBasis: stated
     source: wikipedia-iucn-centella-asiatica
     locator: 'Taxobox: status = LC, status_system = IUCN3.1; its status_ref reads: "Centella asiatica", Lansdown, R.V., 2019, 10.2305/IUCN.UK.2019-2.RLTS.T168725A88308182.en'

@@ -6,8 +6,10 @@ listings:
     name: IUCN CAMP Criteria, as printed by Wikipedia (species and assessment not named)
     value: Vulnerable
     listedAs: Swertia
+    scope: unknown
     nameBasis: stated
     source: wikipedia-swertia
     locator: Wikipedia, Swertia, oldid 1375881973, Traditional medicine
 questions:
   - Wikipedia says Swertia 'is considered Vulnerable based on IUCN CAMP Criteria' in a sentence about Sikkim, without naming a species or an assessment. Find the assessment, or drop the row?
+  - 'The source does not say where the status "Vulnerable" (IUCN CAMP Criteria, as printed by Wikipedia (species and assessment not named)) applies, so its scope is recorded as unknown. Owner: say whether it is global or for one place, and whether to keep the row. Recommendation: keep it as unknown and do not remove the entry on it.'

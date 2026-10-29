@@ -3,9 +3,10 @@ entry: botanical/oil-palm-elaeis-guineensis
 status: approved
 listings:
   - list: iucn
-    name: 'IUCN Red List of Threatened Species'
-    value: 'Least Concern (IUCN 3.1)'
-    listedAs: 'Elaeis guineensis'
+    name: IUCN Red List of Threatened Species
+    value: Least Concern (IUCN 3.1)
+    listedAs: Elaeis guineensis
+    scope: global
     nameBasis: stated
     source: wikipedia-elaeis-guineensis
     locator: 'taxobox, "Conservation status": "Least Concern (IUCN 3.1)"'

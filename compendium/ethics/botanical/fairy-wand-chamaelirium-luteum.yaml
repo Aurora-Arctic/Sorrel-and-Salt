@@ -5,7 +5,8 @@ listings:
   - list: other
     name: United Plant Savers Species At-Risk List
     value: Critical
-    listedAs: 'Chamaelirium luteum'
+    listedAs: Chamaelirium luteum
+    scope: global
     nameBasis: stated
     source: ups-species-at-risk
     locator: under the heading "Critical", entry for False Unicorn

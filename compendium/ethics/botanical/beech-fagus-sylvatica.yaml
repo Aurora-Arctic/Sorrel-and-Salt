@@ -6,6 +6,7 @@ listings:
     name: IUCN Red List of Threatened Species, as printed in Wikipedia's taxobox
     value: LC
     listedAs: Fagus sylvatica
+    scope: global
     nameBasis: stated
     source: wikipedia-iucn-fagus-sylvatica
     locator: 'Taxobox: status = LC, status_system = IUCN3.1; its status_ref reads: "Fagus sylvatica", Barstow, M., 2018, 10.2305/IUCN.UK.2018-1.RLTS.T62004722A62004725.en'

@@ -6,8 +6,11 @@ listings:
     name: Endangered by collection, assessor not named
     value: endangered by collections
     listedAs: Saussurea (species not named in the sentence)
+    scope: unknown
     nameBasis: stated
     source: wikipedia-saussurea
     locator: Wikipedia, Saussurea, oldid 1371714029
 questions:
   - Wikipedia says 'the slow-growing wild plant is endangered by collections' but names no assessor and, in that sentence, no species. Find the assessment, or drop the row?
+  - 'The CITES Appendices (valid from 5 March 2026) print "Saussurea costus" in Appendix I (p. 66, Appendix I column). The entry is the genus Saussurea, which is not listed as a genus; only that one species is. Owner: say whether a genus entry is affected by a listing of one of its species. Recommendation: no, the genus entry is not removed on that listing; see the entry for Dolomiaea costus.'
+  - 'The source does not say where the status "endangered by collections" (Endangered by collection, assessor not named) applies, so its scope is recorded as unknown. Owner: say whether it is global or for one place, and whether to keep the row. Recommendation: keep it as unknown and do not remove the entry on it.'

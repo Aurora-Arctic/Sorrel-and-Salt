@@ -3,9 +3,10 @@ entry: botanical/sceletium-mesembryanthemum-tortuosum
 status: approved
 listings:
   - list: other
-    name: 'Red List of South African Plants (SANBI), as printed by Wikipedia'
-    value: 'Least Concern'
-    listedAs: 'Mesembryanthemum tortuosum'
+    name: Red List of South African Plants (SANBI), as printed by Wikipedia
+    value: Least Concern
+    listedAs: Mesembryanthemum tortuosum
+    scope: South Africa
     nameBasis: stated
     source: wikipedia-mesembryanthemum-tortuosum
     locator: 'text: "M. tortuosum is listed as least concern in the Red List of South African Plants, though it is facing a slow decline in population numbers due to harvesting for medicinal use."'

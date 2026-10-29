@@ -6,8 +6,7 @@ listings:
     name: IUCN Red List of Threatened Species, as printed in Wikipedia's taxobox
     value: LC
     listedAs: Polygonum aviculare
+    scope: Europe
     nameBasis: stated
     source: wikipedia-iucn-polygonum-aviculare
     locator: 'Taxobox: status = LC, status_system = IUCN3.1; its status_ref reads: "Polygonum aviculare (Europe assessment)", Khela, 2026, 10.2305/IUCN.UK.2026-1.RLTS.T203393A209214355.en'
-questions:
-  - 'Wikipedia''s status_ref names a regional assessment ("Polygonum aviculare (Europe assessment)"), not a global one. Recommendation: record it only as a regional listing, or leave it out; owner to decide.'

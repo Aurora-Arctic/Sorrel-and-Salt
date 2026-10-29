@@ -6,6 +6,7 @@ listings:
     name: IUCN Red List of Threatened Species, as printed in Wikipedia's taxobox
     value: LC
     listedAs: Juglans nigra
+    scope: global
     nameBasis: stated
     source: wikipedia-iucn-juglans-nigra
     locator: 'Taxobox: status = LC, status_system = IUCN3.1; its status_ref reads: "Juglans nigra", Stritch, L., 2018, 10.2305/IUCN.UK.2018-1.RLTS.T62019712A62019714.en'

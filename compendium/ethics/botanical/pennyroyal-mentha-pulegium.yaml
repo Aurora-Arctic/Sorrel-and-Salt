@@ -6,6 +6,7 @@ listings:
     name: IUCN Red List of Threatened Species, as printed in Wikipedia's taxobox
     value: LC
     listedAs: Mentha pulegium
+    scope: global
     nameBasis: stated
     source: wikipedia-iucn-mentha-pulegium
     locator: 'Taxobox: status = LC, status_system = IUCN3.1; its status_ref reads: "Mentha pulegium", de Belair, 2014, 10.2305/IUCN.UK.2014-1.RLTS.T164256A42395474.en'

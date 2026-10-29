@@ -6,6 +6,7 @@ listings:
     name: IUCN Red List of Threatened Species, as printed in the Wikipedia taxobox
     value: Vulnerable
     listedAs: Mesua ferrea
+    scope: global
     nameBasis: stated
     source: wikipedia-mesua-ferrea
     locator: 'taxobox "Conservation status": Vulnerable (IUCN 3.1)'

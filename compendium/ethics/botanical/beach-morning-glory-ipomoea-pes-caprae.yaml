@@ -6,6 +6,7 @@ listings:
     name: IUCN Red List
     value: Least Concern (IUCN 3.1)
     listedAs: Ipomoea pes-caprae
+    scope: global
     nameBasis: stated
     source: wikipedia-ipomoea-pes-caprae
     locator: taxobox, conservation status (status = LC, IUCN3.1)

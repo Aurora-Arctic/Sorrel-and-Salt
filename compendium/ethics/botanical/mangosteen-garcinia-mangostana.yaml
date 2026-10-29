@@ -6,6 +6,7 @@ listings:
     name: IUCN Red List
     value: Data Deficient (IUCN 3.1)
     listedAs: Garcinia mangostana
+    scope: global
     nameBasis: stated
     source: wikipedia-mangosteen
     locator: taxobox, conservation status (status = DD, IUCN3.1)

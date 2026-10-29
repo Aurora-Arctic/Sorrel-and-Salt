@@ -6,6 +6,7 @@ listings:
     name: IUCN Red List of Threatened Species, as printed in Wikipedia's taxobox
     value: LC
     listedAs: Allium ampeloprasum
+    scope: global
     nameBasis: stated
     source: wikipedia-iucn-allium-ampeloprasum
     locator: 'Taxobox: status = LC, status_system = IUCN3.1; its status_ref reads: "Allium ampeloprasum", Rhodes, 2016, 10.2305/IUCN.UK.2016-3.RLTS.T172192A19391082.en'

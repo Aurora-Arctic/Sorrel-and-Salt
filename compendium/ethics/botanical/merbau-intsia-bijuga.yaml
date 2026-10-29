@@ -6,6 +6,7 @@ listings:
     name: IUCN Red List
     value: Near Threatened (IUCN 3.1)
     listedAs: Intsia bijuga
+    scope: global
     nameBasis: stated
     source: wikipedia-intsia-bijuga
     locator: taxobox, conservation status (status = NT, IUCN3.1)
@@ -13,6 +14,7 @@ listings:
     name: Northern Territory
     value: Critically endangered
     listedAs: Intsia bijuga
+    scope: Northern Territory
     nameBasis: stated
     source: wikipedia-intsia-bijuga
     locator: 'Conservation: "in the neighbouring Northern Territory it is listed as critically endangered"'
@@ -20,6 +22,7 @@ listings:
     name: Queensland
     value: Least concern
     listedAs: Intsia bijuga
+    scope: Queensland
     nameBasis: stated
     source: wikipedia-intsia-bijuga
     locator: 'Conservation: "in Queensland, Australia, it has been given least concern status"'
@@ -27,6 +30,7 @@ listings:
     name: Singapore (assessor not named)
     value: Critically endangered
     listedAs: Intsia bijuga
+    scope: Singapore
     nameBasis: stated
     source: wikipedia-intsia-bijuga
     locator: 'Conservation: "It is also listed as critically endangered in Singapore"'
@@ -34,6 +38,7 @@ listings:
     name: India (assessor not named)
     value: Vulnerable
     listedAs: Intsia bijuga
+    scope: India
     nameBasis: stated
     source: wikipedia-intsia-bijuga
     locator: 'Conservation: "as vulnerable in India"'

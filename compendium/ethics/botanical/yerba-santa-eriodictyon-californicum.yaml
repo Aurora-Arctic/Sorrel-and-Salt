@@ -5,7 +5,8 @@ listings:
   - list: other
     name: United Plant Savers Species At-Risk List
     value: At-Risk
-    listedAs: 'Eriodictyon californicum'
+    listedAs: Eriodictyon californicum
+    scope: global
     nameBasis: stated
     source: ups-species-at-risk
     locator: under the heading "At-Risk", entry for Yerba Santa

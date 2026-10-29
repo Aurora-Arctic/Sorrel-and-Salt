@@ -6,6 +6,7 @@ listings:
     name: IUCN Red List
     value: Least Concern (IUCN 3.1)
     listedAs: Cordia subcordata
+    scope: global
     nameBasis: stated
     source: wikipedia-cordia-subcordata
     locator: taxobox, conservation status (status = LC, IUCN3.1)
@@ -13,6 +14,7 @@ listings:
     name: Assessor not named
     value: Highly endangered in Sri Lanka
     listedAs: Cordia subcordata
+    scope: Sri Lanka
     nameBasis: stated
     source: wikipedia-cordia-subcordata
     locator: 'Conservation: "It is thought to be highly endangered in Sri Lanka, only persisting at a small number of sites that are under pressure from development."'

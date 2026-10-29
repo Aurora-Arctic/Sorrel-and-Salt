@@ -6,6 +6,7 @@ listings:
     name: IUCN Red List of Threatened Species, as printed in Wikipedia's taxobox
     value: LC
     listedAs: Bursera fagaroides
+    scope: global
     nameBasis: stated
     source: wikipedia-iucn-bursera-fagaroides
     locator: 'Taxobox: status = LC, status_system = IUCN3.1; its status_ref reads: "Bursera fagaroides", IUCN SSC Global Tree Specialist Group, 2020, 10.2305/IUCN.UK.2020-1.RLTS.T148948270A148952198.en'

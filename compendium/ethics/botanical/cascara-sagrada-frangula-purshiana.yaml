@@ -6,6 +6,7 @@ listings:
     name: United Plant Savers Species At-Risk List
     value: At-Risk
     listedAs: Frangula purshiana
+    scope: global
     nameBasis: stated
     source: ups-species-at-risk
     locator: under the heading "At-Risk", entry for Cascara Sagrada
@@ -13,6 +14,7 @@ listings:
     name: IUCN Red List of Threatened Species, as printed in Wikipedia's taxobox
     value: LC
     listedAs: Frangula purshiana
+    scope: global
     nameBasis: stated
     source: wikipedia-iucn-frangula-purshiana
     locator: 'Taxobox: status = LC, status_system = IUCN3.1; its status_ref reads: "Frangula purshiana", Stritch, L., 2018, 10.2305/IUCN.UK.2018-1.RLTS.T61957071A61957074.en'

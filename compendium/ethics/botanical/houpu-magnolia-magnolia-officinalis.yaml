@@ -6,6 +6,7 @@ listings:
     name: IUCN Red List of Threatened Species
     value: Endangered (IUCN 3.1)
     listedAs: Magnolia officinalis
+    scope: global
     nameBasis: stated
     source: wikipedia-magnolia-officinalis
     locator: Infobox, Conservation status

@@ -6,6 +6,7 @@ listings:
     name: IUCN Red List of Threatened Species, as printed in the Wikipedia taxobox
     value: Near Threatened
     listedAs: Shorea robusta
+    scope: global
     nameBasis: stated
     source: wikipedia-shorea-robusta
     locator: 'taxobox "Conservation status": Near Threatened (IUCN 3.1)'

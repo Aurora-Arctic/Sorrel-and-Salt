@@ -6,6 +6,7 @@ listings:
     name: IUCN Red List
     value: Least Concern (IUCN 3.1)
     listedAs: Abies balsamea
+    scope: global
     nameBasis: stated
     source: wikipedia-abies-balsamea
     locator: taxobox, conservation status (status = LC, IUCN3.1)
@@ -13,6 +14,7 @@ listings:
     name: Connecticut
     value: Endangered (native populations only)
     listedAs: Abies balsamea
+    scope: Connecticut
     nameBasis: stated
     source: wikipedia-abies-balsamea
     locator: section "Conservation status"

@@ -6,6 +6,7 @@ listings:
     name: IUCN Red List of Threatened Species, as printed in Wikipedia's taxobox
     value: LC
     listedAs: Cascabela thevetia
+    scope: global
     nameBasis: stated
     source: wikipedia-iucn-cascabela-thevetia
     locator: 'Taxobox: status = LC, status_system = IUCN3.1; its status_ref reads: "Cascabela thevetia", Botanic Gardens Conservation International (BGCI)., 2019, 10.2305/IUCN.UK.2019-2.RLTS.T146789945A146789947.en'

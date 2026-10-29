@@ -6,6 +6,7 @@ listings:
     name: IUCN Red List of Threatened Species, as printed in Wikipedia's taxobox
     value: LC
     listedAs: Bergera koenigii
+    scope: global
     nameBasis: stated
     source: wikipedia-iucn-bergera-koenigii
     locator: 'Taxobox: status = LC, status_system = IUCN3.1; its status_ref reads: "Curry Leaf, Murayya koenigii", Plummer, J., 2021, 10.2305/IUCN.UK.2021-2.RLTS.T156236806A166564522.en'

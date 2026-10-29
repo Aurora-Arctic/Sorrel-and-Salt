@@ -3,9 +3,10 @@ entry: botanical/sassywood-tree-erythrophleum-suaveolens
 status: approved
 listings:
   - list: iucn
-    name: 'IUCN Red List of Threatened Species'
-    value: 'Least Concern (IUCN 3.1)'
-    listedAs: 'Erythrophleum suaveolens'
+    name: IUCN Red List of Threatened Species
+    value: Least Concern (IUCN 3.1)
+    listedAs: Erythrophleum suaveolens
+    scope: global
     nameBasis: stated
     source: wikipedia-erythrophleum-suaveolens
     locator: 'taxobox, "Conservation status": "Least Concern (IUCN 3.1)"'

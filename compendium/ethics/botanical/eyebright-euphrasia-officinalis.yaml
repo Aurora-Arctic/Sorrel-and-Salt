@@ -6,6 +6,7 @@ listings:
     name: United Plant Savers Species At-Risk List
     value: In Review
     listedAs: Euphrasia spp.
+    scope: global
     nameBasis: stated
     source: ups-species-at-risk
     locator: under the heading "In Review", entry for Eyebright
@@ -13,9 +14,9 @@ listings:
     name: IUCN Red List of Threatened Species, as printed in Wikipedia's taxobox
     value: LC
     listedAs: Euphrasia officinalis
+    scope: Europe
     nameBasis: stated
     source: wikipedia-iucn-euphrasia-officinalis
     locator: 'Taxobox: status = LC, status_system = IUCN3.1; its status_ref reads: "Euphrasia rostkoviana (Europe assessment)", Chadburn, H., 2026, 10.2305/IUCN.UK.2026-1.RLTS.T203371A209209053.en'
 questions:
   - "The list prints a genus-level entry (spp.) and states its purpose as a list of wild medicinals of North America. I did not check where this species grows. Does the genus listing cover it? Recommendation: keep the listing but show it as the list's genus-level statement, or drop it; owner to decide."
-  - 'Wikipedia''s status_ref names a regional assessment ("Euphrasia rostkoviana (Europe assessment)"), not a global one. Recommendation: record it only as a regional listing, or leave it out; owner to decide.'

@@ -6,6 +6,7 @@ listings:
     name: IUCN Red List of Threatened Species, as printed in Wikipedia's taxobox
     value: LC
     listedAs: Salvia officinalis
+    scope: global
     nameBasis: stated
     source: wikipedia-iucn-salvia-officinalis
     locator: 'Taxobox: status = LC, status_system = IUCN3.1; its status_ref reads: "Salvia officinalis", Allen, D.J., 2014, 10.2305/IUCN.UK.2014-1.RLTS.T203260A2762648.en'

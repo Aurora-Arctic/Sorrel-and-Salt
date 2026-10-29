@@ -6,6 +6,7 @@ listings:
     name: IUCN Red List of Threatened Species, as printed in Wikipedia's taxobox
     value: LC
     listedAs: Ficus benghalensis
+    scope: global
     nameBasis: stated
     source: wikipedia-iucn-ficus-benghalensis
     locator: 'Taxobox: status = LC, status_system = IUCN3.1; its status_ref reads: "Ficus benghalensis", IUCN SSC Global Tree Specialist Group., 2026, 10.2305/IUCN.UK.2026-1.RLTS.T150220988A250196091.en'
