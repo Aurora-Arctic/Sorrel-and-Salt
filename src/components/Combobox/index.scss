@@ -21,7 +21,7 @@ $room: min(100%, max(6rem, var(--combobox-room, 0px)));
 }
 
 // `.input`'s edge, fill and states, as a flex row that wraps: the entries, the text, then the indicators; compounded with `.input` so a lone class does not lose to `body .input`
-// (claude-docs/components/combobox.md, "Style notes").
+// (claude-docs/components/combobox.md, "Control").
 .input.combobox__control {
   display: flex;
   flex-wrap: wrap;
@@ -177,7 +177,7 @@ $room: min(100%, max(6rem, var(--combobox-room, 0px)));
 }
 
 // The text's slot, a one-cell grid: the box takes the rest of the row, or, with a qualifier, is as wide as a hidden copy of the value so the qualifier follows the text
-// (claude-docs/components/combobox.md, "Style notes").
+// (claude-docs/components/combobox.md, "Text slot").
 .combobox__text {
   display: grid;
   // The text's own few letters' room, as `.combobox__input`'s, or beside
@@ -218,7 +218,7 @@ $room: min(100%, max(6rem, var(--combobox-room, 0px)));
 }
 
 // The qualifier's detail, in InfoTip's bubble and fade, above the control with its left edge on the qualifier's, placed by `useTip` and not beneath the box, where the list opens
-// (claude-docs/components/combobox.md, "Style notes").
+// (claude-docs/components/combobox.md, "Qualifier detail").
 .combobox__qualifier-tip {
   @include tip-above(1, false);
 
@@ -259,7 +259,7 @@ $room: min(100%, max(6rem, var(--combobox-room, 0px)));
 }
 
 // The list, floating beneath the control at its width on the card surface with the floating shadow, hidden rather than unmounted while closed since Downshift keeps its ref
-// (claude-docs/components/combobox.md, "Style notes").
+// (claude-docs/components/combobox.md, "List").
 .combobox__list {
   z-index: 1;
   display: none;
@@ -277,7 +277,7 @@ $room: min(100%, max(6rem, var(--combobox-room, 0px)));
 }
 
 // With an empty message the popup is the placed, bordered panel and the listbox inside is the scroller, reading the `--combobox-list-room` the placement sets
-// (claude-docs/components/combobox.md, "Style notes").
+// (claude-docs/components/combobox.md, "The popup's styling").
 .combobox__popup {
   z-index: 1;
   display: none;
@@ -389,7 +389,7 @@ $room: min(100%, max(6rem, var(--combobox-room, 0px)));
 }
 
 // The rows at the panel's top and bottom edges take its inner corners, so a highlight follows the curve; one row alone rounds all four, and a group's heading is the top of a grouped list
-// (claude-docs/components/combobox.md, "Style notes").
+// (claude-docs/components/combobox.md, "Rows at the edges").
 .combobox__list > .combobox__option:first-child {
   border-start-start-radius: calc(#{radius('surface')} - 1px);
   border-start-end-radius: calc(#{radius('surface')} - 1px);
@@ -473,7 +473,7 @@ $room: min(100%, max(6rem, var(--combobox-room, 0px)));
 }
 
 // An entry a list holds, inside the control ahead of the text: a filled, square-cornered chip in react-select's shape, neutral as a free-text entry has no group colour
-// (claude-docs/components/combobox.md, "Style notes").
+// (claude-docs/components/combobox.md, "Entry chip").
 .combobox__entries {
   display: flex;
   flex-wrap: wrap;
@@ -531,7 +531,7 @@ $room: min(100%, max(6rem, var(--combobox-room, 0px)));
   }
 
   // The chip being moved: the accent 22% into the card, opaque, with a 2px accent edge and the floating shadow
-  // (claude-docs/components/combobox.md, "Style notes").
+  // (claude-docs/components/combobox.md, "Dragged chip").
   &.is-dragging,
   &.is-dragging.is-invalid {
     z-index: 1;
@@ -673,7 +673,7 @@ $room: min(100%, max(6rem, var(--combobox-room, 0px)));
 }
 
 // A linked entry's text, a button that opens its summary: led by an accent link mark and underlined, the text in the body ink since the accent clears only 3:1 on the chip's wash
-// (claude-docs/components/combobox.md, "Style notes"; tests/scss/tokens.test.ts).
+// (claude-docs/components/combobox.md, "Linked entry"; tests/scss/tokens.test.ts).
 .combobox__entry-open {
   @include button-reset;
 

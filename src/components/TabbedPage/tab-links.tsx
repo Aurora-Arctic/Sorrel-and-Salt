@@ -10,7 +10,7 @@ import { useTabSwitch } from './tab-switch';
 import type { TabLinksProps } from './types';
 
 // The tabs' links: a client part because only `usePathname()` knows which tab is open. Pressing another tab navigates through the
-// tab switch, and the sliding pill and scrolling are described in claude-docs/components/tabbed-page.md, "Component notes".
+// tab switch, and the sliding pill and scrolling are described in claude-docs/components/tabbed-page.md, "The sliding pill".
 const TabLinks = ({ tabs }: TabLinksProps): ReactElement => {
   const pathname = usePathname();
   const { pending, target, go } = useTabSwitch();

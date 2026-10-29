@@ -2,7 +2,7 @@
 @use '../../scss/mixins' as *;
 
 // The jar shelf: jars stand on a thin plank with a concave bracket at either end under each
-// (claude-docs/components/jar-shelf.md, "Style notes").
+// (claude-docs/components/jar-shelf.md, "Shelf geometry").
 
 // The cell's top padding, the drawing's height and the bracket's size, from which the plank and
 // brackets are placed so they cannot drift.
@@ -26,7 +26,7 @@ $-shake-duration: $jar-shake-duration;
   align-items: start;
 
   // The outer ends carry no fillet: each cell draws its brackets' halves outside itself and the shelf clips sideways (`clip`, not `hidden`)
-  // (claude-docs/components/jar-shelf.md, "Style notes").
+  // (claude-docs/components/jar-shelf.md, "Shelf geometry").
   overflow-x: clip;
 
   @media (max-width: 30rem) {
@@ -51,7 +51,7 @@ $-shake-duration: $jar-shake-duration;
 
   // The fillets: a square at the plank's top with a quarter circle cut from its outer corner, drawn
   // just outside each cell's edges so the half at a row's end is clipped by `.jar-shelf` with no
-  // row-counting (claude-docs/components/jar-shelf.md, "Style notes").
+  // row-counting (claude-docs/components/jar-shelf.md, "Shelf geometry").
   &::before,
   &::after {
     @include list-marker-cleared;
@@ -133,7 +133,7 @@ $-shake-duration: $jar-shake-duration;
 
 // The hover on an editable jar: the drawing's `svg` shakes once and the name grows, only where
 // there is a button and a device that really hovers. Keyboard focus does both through
-// `:focus-visible`, outside the hover query (claude-docs/components/jar-shelf.md, "Style notes").
+// `:focus-visible`, outside the hover query (claude-docs/components/jar-shelf.md, "Hover, focus and motion").
 .jar-shelf__press .jar-shelf__name {
   // Inline-block, since a transform has no effect on an inline box; the scale grows from the name's
   // middle.
@@ -261,7 +261,7 @@ $-shake-duration: $jar-shake-duration;
 
 // A faceted jar's two bands, a step darker and lighter than the glass, from the text and card
 // colours since no token exists; they swap roles in the dark theme
-// (claude-docs/components/jar-shelf.md, "Style notes").
+// (claude-docs/components/jar-shelf.md, "Paint").
 .jar-shelf__shade {
   fill: color-mix(in srgb, $text-primary 8%, transparent);
 }

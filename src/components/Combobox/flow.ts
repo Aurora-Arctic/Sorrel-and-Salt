@@ -1,7 +1,7 @@
 import type { FlowShape, FlowSlot } from './types';
 
 // Where a sortable list's chips sit in a given order: the wrapping row worked out by hand, since dnd-kit's `rectSortingStrategy` overlaps chips of different widths
-// (claude-docs/components/combobox.md, "Component notes").
+// (claude-docs/components/combobox.md, "Sortable layout").
 
 // Sub-pixel widths sum a hair past the row a browser still fits them on.
 const ROUNDING_PX = 0.5;

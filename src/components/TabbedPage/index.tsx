@@ -6,7 +6,7 @@ import type { TabbedPageProps } from './types';
 import './index.scss';
 
 // A page in tabs: its heading with a row of links, one per tab, on the same line, the open tab's action at the line's end,
-// and its content beneath. Each tab is at its own address (claude-docs/components/tabbed-page.md, "Component notes").
+// and its content beneath. Each tab is at its own address (claude-docs/components/tabbed-page.md, "What a tabbed page is").
 const TabbedPage = ({ title, tabs, action, children }: TabbedPageProps): ReactElement => (
   <main className="tabbed-page">
     <TabSwitchProvider>

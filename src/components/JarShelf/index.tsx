@@ -14,7 +14,7 @@ import type { HeldJar, JarPart, JarShelfProps, ShelfForm } from './types';
 import './index.scss';
 
 // A shelf of small drawn jars, one per form of an ingredient, showing what the coven holds of each
-// (claude-docs/components/jar-shelf.md, "Component notes").
+// (claude-docs/components/jar-shelf.md, "What the shelf shows").
 
 /** The amount of a Low or Out jar as the button that opens its tip: the badge's `StockTip` on text, named by amount and state. */
 function AmountTip({ jar, state }: { jar: HeldJar; state: 'low' | 'out' }): ReactElement {
@@ -55,7 +55,7 @@ const TOP_LINE_LIFT = 0.6;
 /**
  * One boundary between two layers, as a wave: boundary `k` (0 is the flat, undrawn base) has phase
  * `k` and an amplitude alternating 0.8, 0.65, the same every render
- * (claude-docs/components/jar-shelf.md, "Component notes").
+ * (claude-docs/components/jar-shelf.md, "What the shelf shows").
  */
 type Wave = { start: number; end: number; amp: number; segments: readonly Segment[] };
 type Segment = { from: number; to: number; cx: number; cy: number };
@@ -105,7 +105,7 @@ function bandPath(height: number, index: number): string {
 const bandInk = ({ colorDark, colorLight }: GroupColors): CSSProperties =>
   ({ '--band-dark': colorDark, '--band-light': colorLight }) as CSSProperties;
 
-/** The jar's drawing, `aria-hidden` because the form and amount beside it say everything it does (claude-docs/components/jar-shelf.md, "Component notes"). */
+/** The jar's drawing, `aria-hidden` because the form and amount beside it say everything it does (claude-docs/components/jar-shelf.md, "What the shelf shows"). */
 export function JarDrawing({
   shape,
   held,
