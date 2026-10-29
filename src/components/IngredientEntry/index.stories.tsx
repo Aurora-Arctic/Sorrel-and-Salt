@@ -28,7 +28,6 @@ const meta = {
   title: 'Pages / Ingredient Entry',
 } satisfies Meta;
 export default meta;
-// The dropdown story's `state` arg is the node it draws (see its argTypes mapping).
 type Story = StoryObj<{ state?: import('react').ReactNode }>;
 
 const STAMPS = {
@@ -1026,8 +1025,6 @@ const toxicNode = <PublicEntry detail={{ ...FULL, entry: { ...FULL.entry, toxic:
 
 const heldInCovenNode = <PublicEntry heldInCovens />;
 
-// One story with a control to choose the state: each is a whole page or list,
-// too big to sit beside the others (claude-docs/workshop.md, rule 5).
 const STATES_STATES: Record<string, ReactNode> = {
   Default: defaultNode,
   'No Formal Name': noFormalNameNode,
@@ -1070,8 +1067,6 @@ export const States: Story = {
   render: ({ state }) => <div key={String(state)}>{state}</div>,
 };
 
-// One story with a control to choose the state: each is a whole page or list,
-// too big to sit beside the others (claude-docs/workshop.md, rule 5).
 const DETAILS_STATES: Record<string, ReactNode> = {
   'From Coven List': detailsFromCovenListNode,
   'With Stock': detailsWithStockNode,

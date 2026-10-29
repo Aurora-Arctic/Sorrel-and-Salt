@@ -21,7 +21,6 @@ const meta = {
   title: 'Admin / Grouped Value Form',
 } satisfies Meta;
 export default meta;
-// The dropdown story's `state` arg is the node it draws (see its argTypes mapping).
 type Story = StoryObj<{ state?: import('react').ReactNode }>;
 
 // Enough of each to narrow: every group field is typed into (MB.115).
@@ -163,8 +162,6 @@ export const AskingToDelete: Story = {
   },
 };
 
-// One story with a control to choose the state: each is a whole page or list,
-// too big to sit beside the others (claude-docs/workshop.md, rule 5).
 const STATES: Record<string, ReactNode> = {
   'Adding A Category': addingACategoryNode,
   'Editing A Category': editingACategoryNode,

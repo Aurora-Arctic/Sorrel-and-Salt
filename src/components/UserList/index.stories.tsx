@@ -29,7 +29,6 @@ const meta = {
   title: 'Admin / User List',
 } satisfies Meta;
 export default meta;
-// The dropdown story's `state` arg is the node it draws (see its argTypes mapping).
 type Story = StoryObj<{ state?: import('react').ReactNode }>;
 
 const USERS: readonly UserListEntry[] = [
@@ -265,8 +264,6 @@ const adminChangesNotPrimaryNode = (
   </AdminTabbedFrame>
 );
 
-// One story with a control to choose the state: each is a whole page or list,
-// too big to sit beside the others (claude-docs/workshop.md, rule 5).
 const LISTED_STATES: Record<string, ReactNode> = {
   'Without Filters': defaultNode,
   'Primary Admin': primaryAdminNode,

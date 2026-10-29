@@ -12,7 +12,6 @@ const meta = {
   title: 'Forms / Info Tip',
 } satisfies Meta;
 export default meta;
-// The dropdown story's `state` arg is the node it draws (see its argTypes mapping).
 type Story = StoryObj<{ state?: import('react').ReactNode }>;
 
 const HINT =

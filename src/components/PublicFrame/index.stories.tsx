@@ -11,7 +11,6 @@ const meta = {
   title: 'Shell / Public Frame',
 } satisfies Meta;
 export default meta;
-// The dropdown story's `state` arg is the node it draws (see its argTypes mapping).
 type Story = StoryObj<{ state?: import('react').ReactNode }>;
 
 // The workshop pretends to be on the admin area unless told otherwise, so each
@@ -45,8 +44,6 @@ export const LoadingTheCompendium: Story = {
   ),
 };
 
-// One story with a control to choose the state: each is a whole page or list,
-// too big to sit beside the others (claude-docs/workshop.md, rule 5).
 const STATES_STATES: Record<string, ReactNode> = {
   Default: defaultNode,
   'Not On The Compendium': notOnTheCompendiumNode,

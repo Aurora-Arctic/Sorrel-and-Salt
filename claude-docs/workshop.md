@@ -551,3 +551,7 @@ The workshop's font plumbing substitutes, Vite-side, for what `next/font` +
   self-hosted `@fontsource` so `workshop:build` needs no network access.
 - **That `:root` override sits in `.storybook/typography.scss`** (prose rules).
   Move it to its own `.storybook/fonts.scss`, alongside the `preview-head.html` concern.
+
+## The `state` dropdown story
+
+A story with a `state` control (rule 5 above) draws a whole page or list, too big to sit beside the others. Its `state` arg is the node it draws: the `argTypes` mapping turns the chosen name into that node, so the story's type is `StoryObj<{ state?: ReactNode }>`. Story files do not repeat either fact.

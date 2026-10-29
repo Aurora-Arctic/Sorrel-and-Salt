@@ -11,7 +11,6 @@ const meta = {
   title: 'Ingredients / Jar Shelf',
 } satisfies Meta;
 export default meta;
-// The dropdown story's `state` arg is the node it draws (see its argTypes mapping).
 type Story = StoryObj<{ state?: import('react').ReactNode }>;
 
 const WORKSPACE = '00000000-0000-4000-8000-000000000001';
@@ -64,8 +63,6 @@ const defaultNode = <JarShelf forms={FORMS} seed={SEED} edit={edit} />;
 /** One form alone, as an entry with a single variant has. */
 const oneFormNode = <JarShelf forms={FORMS.slice(0, 1)} seed={SEED} />;
 
-// One story with a control to choose the state: each is a whole page or list,
-// too big to sit beside the others (claude-docs/workshop.md, rule 5).
 const STATES_STATES: Record<string, ReactNode> = {
   Default: defaultNode,
   Viewer: viewerNode,

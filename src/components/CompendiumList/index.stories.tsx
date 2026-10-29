@@ -32,7 +32,6 @@ const meta = {
   title: 'Ingredients / Compendium List',
 } satisfies Meta;
 export default meta;
-// The dropdown story's `state` arg is the node it draws (see its argTypes mapping).
 type Story = StoryObj<{ state?: import('react').ReactNode }>;
 
 // The page around the list: the layout's frame, then `main` with the heading
@@ -359,8 +358,6 @@ const FilterPanelOpenView = () => {
 };
 const filterPanelOpenNode = <FilterPanelOpenView />;
 
-// One story with a control to choose the state: each is a whole page or list,
-// too big to sit beside the others (claude-docs/workshop.md, rule 5).
 const STATES: Record<string, ReactNode> = {
   Default: defaultNode,
   'First Page': firstPageNode,

@@ -11,7 +11,6 @@ const meta = {
   title: 'Ingredients / Search Sentence',
 } satisfies Meta;
 export default meta;
-// The dropdown story's `state` arg is the node it draws (see its argTypes mapping).
 type Story = StoryObj<{ state?: ReactNode }>;
 
 const FULL = (query: string) =>

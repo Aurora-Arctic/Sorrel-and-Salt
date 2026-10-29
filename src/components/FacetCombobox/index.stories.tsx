@@ -11,7 +11,6 @@ const meta = {
   title: 'Ingredients / Facet Combobox',
 } satisfies Meta;
 export default meta;
-// The dropdown story's `state` arg is the node it draws (see its argTypes mapping).
 type Story = StoryObj<{ state?: import('react').ReactNode }>;
 
 const ELEMENTS: ComboboxChoice[] = [
@@ -130,8 +129,6 @@ const DEITIES: ComboboxChoice[] = [
 // Each choice under its group's heading, as the Deities filter groups by tradition.
 const groupedNode = <Stateful label="Deities" choices={DEITIES} initial={['c']} typeahead />;
 
-// One story with a control to choose the state: each is a whole page or list,
-// too big to sit beside the others (claude-docs/workshop.md, rule 5).
 const STATES: Record<string, ReactNode> = {
   Default: defaultNode,
   'Some Chosen': someChosenNode,

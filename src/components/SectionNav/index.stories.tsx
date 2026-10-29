@@ -13,7 +13,6 @@ const meta = {
   title: 'Navigation / Section Nav',
 } satisfies Meta;
 export default meta;
-// The dropdown story's `state` arg is the node it draws (see its argTypes mapping).
 type Story = StoryObj<{ state?: import('react').ReactNode }>;
 
 // A stand-in for the context row the layouts put the nav in: a hairline-edged

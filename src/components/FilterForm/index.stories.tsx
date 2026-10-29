@@ -20,7 +20,6 @@ const meta = {
   title: 'Admin / Filter Form',
 } satisfies Meta;
 export default meta;
-// The dropdown story's `state` arg is the node it draws (see its argTypes mapping).
 type Story = StoryObj<{ state?: ReactNode }>;
 
 const GROUPS = asSlugs(GROUP_NAMES.category);

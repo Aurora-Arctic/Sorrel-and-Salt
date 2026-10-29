@@ -13,7 +13,6 @@ const meta = {
   title: 'Layout / Page Header',
 } satisfies Meta;
 export default meta;
-// The dropdown story's `state` arg is the node it draws (see its argTypes mapping).
 type Story = StoryObj<{ state?: import('react').ReactNode }>;
 
 // The compendium's, the one admin page with a heading of its own since the
@@ -79,8 +78,6 @@ const withLeadNode = (
 // The long heading again at a phone's width, where it wraps beside the action.
 const AtPhoneWidth = () => <Long />;
 
-// One story with a control to choose the state: each is a whole page or list,
-// too big to sit beside the others (claude-docs/workshop.md, rule 5).
 const STATES_STATES: Record<string, ReactNode> = {
   Default: defaultNode,
   'Heading Alone': headingAloneNode,

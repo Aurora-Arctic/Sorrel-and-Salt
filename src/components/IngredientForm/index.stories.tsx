@@ -57,7 +57,6 @@ const meta = {
   beforeEach: ({ msw }) => msw.use(CANNED_API),
 } satisfies Meta;
 export default meta;
-// The dropdown story's `state` arg is the node it draws (see its argTypes mapping).
 type Story = StoryObj<{ state?: import('react').ReactNode }>;
 
 const WORKSPACE_ID = '00000000-0000-4000-8000-000000000000';
@@ -1431,8 +1430,6 @@ function Duplicates() {
 
 export const DuplicatesNotice: Story = { render: () => <Duplicates /> };
 
-// One story with a control to choose the state: each is a whole page or list,
-// too big to sit beside the others (claude-docs/workshop.md, rule 5).
 const STATES_STATES: Record<string, ReactNode> = {
   Coven: covenNode,
   Compendium: compendiumNode,

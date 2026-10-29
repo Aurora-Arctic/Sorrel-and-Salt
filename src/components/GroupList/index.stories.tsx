@@ -18,7 +18,6 @@ const meta = {
   title: 'Admin / Group List',
 } satisfies Meta;
 export default meta;
-// The dropdown story's `state` arg is the node it draws (see its argTypes mapping).
 type Story = StoryObj<{ state?: import('react').ReactNode }>;
 
 const CATEGORY_GROUPS = [
@@ -128,8 +127,6 @@ const emptyNode = <GroupList kind="form" groups={[]} />;
 // The traditions' empty message names them.
 const traditionsEmptyNode = <GroupList kind="tradition" groups={[]} filter={{ query: '' }} />;
 
-// One story with a control to choose the state: each is a whole page or list,
-// too big to sit beside the others (claude-docs/workshop.md, rule 5).
 const STATES: Record<string, ReactNode> = {
   Default: defaultNode,
   'Form Groups': formGroupsNode,

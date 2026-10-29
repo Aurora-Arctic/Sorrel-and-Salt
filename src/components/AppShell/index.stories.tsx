@@ -11,7 +11,6 @@ const meta = {
   title: 'Shell / App Shell',
 } satisfies Meta;
 export default meta;
-// The dropdown story's `state` arg is the node it draws (see its argTypes mapping).
 type Story = StoryObj<{ state?: import('react').ReactNode }>;
 
 // A coven's index page: the coven's name for its heading, in the coven layout's

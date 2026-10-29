@@ -21,7 +21,6 @@ const meta = {
   title: 'Layout / Tabbed Page',
 } satisfies Meta;
 export default meta;
-// The dropdown story's `state` arg is the node it draws (see its argTypes mapping).
 type Story = StoryObj<{ state?: import('react').ReactNode }>;
 
 // Users pressed and on its way, a tab whose list opens with a filter.

@@ -13,7 +13,6 @@ const meta = {
   title: 'Coven / Member List',
 } satisfies Meta;
 export default meta;
-// The dropdown story's `state` arg is the node it draws (see its argTypes mapping).
 type Story = StoryObj<{ state?: import('react').ReactNode }>;
 
 const MEMBERS: readonly MemberListEntry[] = [
@@ -120,8 +119,6 @@ const gapsNode = (
 // An owner's view with the addresses but no controls, as a viewer's page draws it.
 const addressesOnlyNode = <MemberList members={MEMBERS} currentUserId="u-cy" showEmail />;
 
-// One story with a control to choose the state: each is a whole page or list,
-// too big to sit beside the others (claude-docs/workshop.md, rule 5).
 const STATES_STATES: Record<string, ReactNode> = {
   Default: defaultNode,
   'With Actions': withActionsNode,

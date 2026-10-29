@@ -15,7 +15,6 @@ const meta = {
   title: 'Ingredients / Facet Panel',
 } satisfies Meta;
 export default meta;
-// The dropdown story's `state` arg is the node it draws (see its argTypes mapping).
 type Story = StoryObj<{ state?: import('react').ReactNode }>;
 
 const WARDING = { id: 'g1', name: 'Protective', colorDark: '#50a58e', colorLight: '#1d755d' };
@@ -261,8 +260,6 @@ export const SourceMenu: Story = {
 // The admin's Toxic chip open, with No Refs on the same row.
 export const ToxicMenu: Story = { render: () => <Panel menu="Toxic" admin start={NONE} /> };
 
-// One story with a control to choose the state: each is a whole page or list,
-// too big to sit beside the others (claude-docs/workshop.md, rule 5).
 const STATES: Record<string, ReactNode> = {
   Default: defaultNode,
   Public: publicNode,

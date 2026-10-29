@@ -13,7 +13,6 @@ const meta = {
   title: 'Coven / Create Coven Form',
 } satisfies Meta;
 export default meta;
-// The dropdown story's `state` arg is the node it draws (see its argTypes mapping).
 type Story = StoryObj<{ state?: import('react').ReactNode }>;
 
 // Inside the page's frame and head, as src/app/(shell)/coven/new/page.tsx writes

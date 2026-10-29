@@ -20,7 +20,6 @@ const meta = {
   title: 'Admin / Invitations',
 } satisfies Meta;
 export default meta;
-// The dropdown story's `state` arg is the node it draws (see its argTypes mapping).
 type Story = StoryObj<{ state?: import('react').ReactNode }>;
 
 // The filter a page shows: part of an address and Expires in 24 Hrs, which
@@ -187,8 +186,6 @@ const sendAddressRefusedNode = (
 );
 const sendAcceptedNode = <SendView answers={SEND_ACCEPTED} address="fern@fixture.test" />;
 
-// One story with a control to choose the state: each is a whole page or list,
-// too big to sit beside the others (claude-docs/workshop.md, rule 5).
 const STATES: Record<string, ReactNode> = {
   Default: defaultNode,
   Empty: emptyNode,

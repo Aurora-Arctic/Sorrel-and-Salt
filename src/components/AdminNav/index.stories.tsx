@@ -14,7 +14,6 @@ const meta = {
   title: 'Admin / Nav',
 } satisfies Meta;
 export default meta;
-// The dropdown story's `state` arg is the node it draws (see its argTypes mapping).
 type Story = StoryObj<{ state?: import('react').ReactNode }>;
 
 // Wider than a tablet: six tabs along the row, People set apart by a hairline
@@ -56,8 +55,6 @@ const indexPageNode = <Index />;
 // The index as a curator reads it: the Compendium section alone.
 const indexPageCuratorNode = <Index managesPeople={false} />;
 
-// One story with a control to choose the state: each is a whole page or list,
-// too big to sit beside the others (claude-docs/workshop.md, rule 5).
 const STATES: Record<string, ReactNode> = {
   'People Current': defaultNode,
   'Categories Current': categoriesCurrentNode,

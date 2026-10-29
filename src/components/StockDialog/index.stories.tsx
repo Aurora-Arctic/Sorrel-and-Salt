@@ -15,7 +15,6 @@ const meta = {
   title: 'Ingredients / Stock Dialog',
 } satisfies Meta;
 export default meta;
-// The dropdown story's `state` arg is the node it draws (see its argTypes mapping).
 type Story = StoryObj<{ state?: import('react').ReactNode }>;
 
 const WORKSPACE = '00000000-0000-4000-8000-000000000001';
@@ -183,8 +182,6 @@ const openOnAFormNotHeldNode = <Pressed jars={[LEAF, OIL]} openOn={FORMS[2].vari
 // A modal draws in the page's own document, so its stories sit in a frame of
 // their own (claude-docs/workshop.md).
 
-// One story with a control to choose the state: each is a whole page or list,
-// too big to sit beside the others (claude-docs/workshop.md, rule 5).
 const STOCK_STATES: Record<string, ReactNode> = {
   Open: openNode,
   'Open On A Held Form': openOnAHeldFormNode,
