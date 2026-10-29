@@ -198,7 +198,7 @@ describe('a deleted coven ingredient', () => {
     expect(await shows(id)).toBe(false);
   });
 
-  // A spell is a record of a working: what went into the jar stays in it
+  // A spell is a recipe: what went into the jar stays in it
   // (claude-docs/db/spell-visibility.md, "What a spell holds").
   it('stays in a spell that holds it, for every member who may read the spell', async () => {
     const id = await seed(local());

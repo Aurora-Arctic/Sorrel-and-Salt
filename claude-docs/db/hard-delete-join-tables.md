@@ -72,7 +72,7 @@ outright, and the pair can be re-added afterwards — by a different member,
 whose stamps the new row carries (MB.226).
 
 **Why not `spell_ingredients`** (MB.110). It was the third, and is
-soft-deleted since `0029`: a spell is a record of a working, so a layer taken
+soft-deleted since `0029`: a spell is a recipe that keeps what went into its jar, so a layer taken
 out of it should be recoverable like every other delete
 ([`m5.3-spells-keep-deleted-ingredients.md`](../design-decisions/m5.3-spells-keep-deleted-ingredients.md)).
 The deciding argument above does not reach it. What reads through a layer does

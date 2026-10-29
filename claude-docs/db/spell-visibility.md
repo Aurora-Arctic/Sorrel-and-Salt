@@ -102,7 +102,7 @@ the parent is filtered twice, and neither copy is the other's to forget.
 
 ### What a spell holds (M5.3)
 
-A spell is a record of a working, so an ingredient soft-deleted after it went
+A spell is a recipe that keeps what went into its jar, so an ingredient soft-deleted after it went
 into the jar is still in it: shown as it was, its categories still counted
 toward the spell's derived categories, its safety notes still warning. The
 data already holds that — `spell_steps` points at the row, its foreign
