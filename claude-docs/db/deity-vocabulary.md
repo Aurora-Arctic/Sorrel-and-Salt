@@ -172,3 +172,14 @@ same deity, such as Woden for Odin. They are rows of `deity_other_names`
   an admin removed ([the seed's doc](deity-vocabulary-seed.md#other-names)),
   and a compendium entry file may name a deity by one of them
   ([the compendium seed's rule](compendium-seed/README.md)).
+
+## Deity service details
+
+`src/modules/vocabulary/services/deities.ts` holds the curated deity vocabulary: public reads, like every curated vocabulary, and writes for a curator or an admin alone.
+
+- A compendium entry's deities are picks, so a deity a live entry links holds: its delete is refused (the message names the entries) and its rename is carried onto the entry's link in the same write. A deity is no part of an entry's identity or slug, so the rewrite touches the link's name alone. A change of tradition alone rewrites nothing, since a link holds the deity's name and not its tradition's.
+- A deity's slug is its name and its tradition's, as a form's is its name and its group's. A collision is cured by changing either.
+- A coven's link never holds a deity and is never rewritten: what it picked stays, and an admin writes nothing of a coven's. Deleting a deity moves its name into that coven's in-use values.
+- The linking entries are read before the delete's transaction, so an entry linking the deity in the instant between is left holding a deleted one, which reads as its name.
+- The list reads treat a blank query as no query, and a tradition id that is not a uuid names no tradition, so lists nothing.
+- Other names: each is refused if the list repeats it or another live deity of the tradition holds it; the refusal sits on the name's row in the list sent, so a blank row still counts. Names are compared as written, so a change of case is a new name, and a dropped name is soft-deleted before a new one is written so the per-deity index never sees both.
