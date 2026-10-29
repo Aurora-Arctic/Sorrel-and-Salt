@@ -96,13 +96,15 @@ const categoryNames = (
       {hidden.length > 0 && (
         <>
           {' · '}
-          <span className="chip chip--more" title={hidden.map(({ name }) => name).join(', ')}>
-            +{hidden.length}
-            <span className="visually-hidden">
-              {' '}
-              more: {hidden.map(({ name }) => name).join(', ')}
+          <IconTip tip={hidden.map(({ name }) => name).join(', ')} placement="above">
+            <span className="chip chip--more">
+              +{hidden.length}
+              <span className="visually-hidden">
+                {' '}
+                more: {hidden.map(({ name }) => name).join(', ')}
+              </span>
             </span>
-          </span>
+          </IconTip>
         </>
       )}
     </>
@@ -115,6 +117,7 @@ function pickRows(
   colors: ReadonlyMap<string, GroupColors>,
   assigned: ReadonlySet<string>,
   missing: ReadonlySet<string>,
+  inJar: ReadonlySet<string>,
 ): IngredientPickOption[] {
   return data.ingredientSuggestions.edges.flatMap(({ group, node }) =>
     // A retired entry is kept where a spell lays it, never added anew.
@@ -127,6 +130,13 @@ function pickRows(
             value: name,
             label: `${name} (${formLabel(form)})`,
             note: node.canonicalName ?? undefined,
+            // Information only: the row stays pickable, since a form may be laid again.
+            badge: inJar.has(variant.id) ? (
+              <span className="badge badge--retired spell-steps__in-jar">
+                <span aria-hidden="true">In Jar</span>
+                <span className="visually-hidden">already in the jar</span>
+              </span>
+            ) : undefined,
             // The form's categories, else the ingredient's, as small print on that line.
             meta: categoryNames(
               variant.categories.length > 0 ? variant.categories : node.categories,
@@ -178,9 +188,15 @@ export function StepPicker({ workspaceId, oneOffs, onAdd }: StepPickerProps): Re
   // drops out of the filter, so removing it from the field never leaves a hidden filter.
   const [pressed, setPressed] = useState<readonly string[]>([]);
   const narrowedBy = useMemo(() => pressed.filter((id) => assigned.has(id)), [pressed, assigned]);
+  // The forms already laid as a step, marked on their rows.
+  const inJar = useMemo(
+    () => new Set((jarSteps ?? []).flatMap(({ variantId }) => (variantId ? [variantId] : []))),
+    [jarSteps],
+  );
   const shape = useMemo(
-    () => (data: SpellIngredientSuggestionsQuery) => pickRows(data, colors, assigned, missing),
-    [colors, assigned, missing],
+    () => (data: SpellIngredientSuggestionsQuery) =>
+      pickRows(data, colors, assigned, missing, inJar),
+    [colors, assigned, missing, inJar],
   );
   const suggestions = useLookup(
     SpellIngredientSuggestionsDocument,
@@ -255,12 +271,14 @@ export function StepPicker({ workspaceId, oneOffs, onAdd }: StepPickerProps): Re
           none pressed is no filter, one or more keeps ingredients carrying any of them. */}
       {assigned.size > 0 && (
         <div className="spell-steps__filter">
-          <span id={`${id}-filter-label`} className="spell-steps__filter-label">
-            Filter By Category
-          </span>
-          <InfoTip id={`${id}-filter-tip`} label="Filter By Category">
-            Show only ingredients in any of the pressed categories.
-          </InfoTip>
+          <div className="spell-steps__filter-head">
+            <span id={`${id}-filter-label`} className="spell-steps__filter-label">
+              Filter By Category
+            </span>
+            <InfoTip id={`${id}-filter-tip`} label="Filter By Category">
+              Show only ingredients in any of the pressed categories.
+            </InfoTip>
+          </div>
           <div
             role="group"
             aria-labelledby={`${id}-filter-label`}

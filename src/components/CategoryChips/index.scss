@@ -106,6 +106,17 @@
   }
 }
 
+// Absent chips (Category Match's Missing row, the owner's call): hollow, so the category is
+// named but reads as not there. No fill, a dashed border and text both muted (wholly grey); the
+// size and spacing are the chip's own. Muted text on the card surface is the same pairing the
+// panel's row labels use.
+.category-chips--absent .chip {
+  background-color: transparent;
+  border-style: dashed;
+  border-color: $text-muted;
+  color: $text-muted;
+}
+
 // A chip with a tip is a button that looks like the plain chip: the help cursor says there is
 // more behind it, and it takes the focus ring.
 .category-chips__tip-chip {

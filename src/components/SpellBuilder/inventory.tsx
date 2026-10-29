@@ -10,6 +10,7 @@ import { StockJarButton } from '../StockDialog';
 import type { StockDialogProps } from '../StockDialog/types';
 import { stockState } from '../StockBadge/stock-state';
 import { amountText } from '../StockBadge/stock-words';
+import { type QuickLookCoven, StepQuickLook } from './step-quick-look';
 import { UnitsDifferIcon, NotEnoughIcon } from './supply-icon';
 import { type StepSupply, supplyOf } from './steps/supply';
 import type { SpellStepValue, SpellStepsValues } from './steps/types';
@@ -31,6 +32,10 @@ const NOT_ENOUGH_TIP = 'The jar holds less than this step needs.';
 
 const OUT_TIP = 'The jar is empty, so there is nothing to put in.';
 const LOW_TIP = 'The jar is at or below the coven’s Low mark.';
+
+// A one-off holds no stock, but its jar is drawn with something in it, as a stocked jar is: an
+// unmeasured jar stands at the middling level, in muted ink (index.scss). The One-Off badge says why.
+const ONE_OFF_HELD = { quantity: null, threshold: null };
 
 const OutIcon = ({ className }: { className: string }): ReactElement => (
   <StockIcon out className={className} />
@@ -90,7 +95,10 @@ function HoldLine({
   steps,
   seed,
   doors,
+  look,
 }: {
+  /** The builder's Quick Look: the coven's ids; left out, no line has the eye of its own. */
+  look?: QuickLookCoven;
   step: SpellStepValue;
   steps: readonly SpellStepValue[];
   seed: string;
@@ -107,7 +115,7 @@ function HoldLine({
   return (
     <li className={`spell-inventory__line${oneOff ? ' is-one-off' : ''}`}>
       <span className={`spell-inventory__jar ${modifier}`}>
-        <JarDrawing shape={pickJarShape(seed, formKey ?? '')} held={oneOff ? null : jar} />
+        <JarDrawing shape={pickJarShape(seed, formKey ?? '')} held={oneOff ? ONE_OFF_HELD : jar} />
       </span>
       <span className="spell-inventory__title">
         {doors?.edit ? (
@@ -125,7 +133,14 @@ function HoldLine({
         ) : (
           <span className="spell-inventory__name">{name}</span>
         )}
-        {doors?.look && <span className="spell-inventory__look">{doors.look}</span>}
+        {doors?.look ? (
+          <span className="spell-inventory__look">{doors.look}</span>
+        ) : (
+          look &&
+          step.ingredientId !== null && (
+            <StepQuickLook ingredientId={step.ingredientId} name={step.name ?? ''} look={look} />
+          )
+        )}
         {verdict && (
           <span className={`spell-inventory__verdict is-${verdict.tone}`}>
             <IconTip tip={verdict.mark.tip}>
@@ -145,12 +160,15 @@ export function InCovenInventory({
   steps,
   heading: Heading = 'h5',
   doorsOf,
+  look,
 }: {
   steps: readonly SpellStepValue[];
   /** The heading's level: h5 under the builder's Jar heading, h2 on the recipe page (M13.21). */
   heading?: 'h2' | 'h5';
   /** A line's doors, where the page offers them (the recipe page); none in the builder. */
   doorsOf?: (step: SpellStepValue) => LineDoors | undefined;
+  /** The builder's Quick Look: the coven to look in; left out, a line has no eye of its own. */
+  look?: QuickLookCoven;
 }): ReactElement {
   const lines = steps.filter((step) => !isInstruction(step));
   return (
@@ -167,6 +185,7 @@ export function InCovenInventory({
               steps={lines}
               seed={step.ingredientId ?? step.name ?? ''}
               doors={doorsOf?.(step)}
+              look={look}
             />
           ))}
         </ul>
@@ -176,8 +195,8 @@ export function InCovenInventory({
 }
 
 /** In Coven Inventory on the builder's own values, as the amounts stand as they are typed. */
-export function SpellInventory(): ReactElement {
+export function SpellInventory({ look }: { look?: QuickLookCoven }): ReactElement {
   const { control } = useFormContext<SpellStepsValues>();
   const steps = useWatch({ control, name: 'steps' }) ?? [];
-  return <InCovenInventory steps={steps} />;
+  return <InCovenInventory steps={steps} look={look} />;
 }

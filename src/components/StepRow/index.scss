@@ -159,10 +159,11 @@ $step-ink-drop: 0.05rem;
 .step-row.step-row--card {
   &.step-row--closed,
   &.step-row--open {
-    grid-template-areas: 'handle position name summary marks edit remove';
-    // The summary keeps 8rem however long the name is: the name's column takes all it asks for
-    // before the 1fr column gets anything, so a long name squeezed the amount to nothing.
-    grid-template-columns: auto auto minmax(0, auto) minmax(8rem, 1fr) auto auto auto;
+    // The name's line, then the amount and the instruction on one muted line beneath it, in the name's column (the look of a closed section's summary).
+    grid-template-areas:
+      'handle position name marks edit remove'
+      '. . summary summary summary summary';
+    grid-template-columns: auto auto minmax(0, 1fr) auto auto auto;
 
     // Everything on the first line sits on that line's centre, and not on the
     // centre of the whole row: a name that wraps, or the summary that stands
@@ -211,10 +212,28 @@ $step-ink-drop: 0.05rem;
     grid-area: summary;
     min-width: 0;
     margin: 0;
-    overflow: hidden;
     color: $text-muted;
-    text-overflow: ellipsis;
-    white-space: nowrap;
+    font-size: type-size('caption');
+    font-weight: 300;
+
+    @include truncate;
+  }
+
+  // A closed ingredient row's one line: the amount whole, then the instruction cut by an ellipsis.
+  .step-row__line {
+    display: flex;
+    min-width: 0;
+  }
+
+  .step-row__line-amount {
+    flex: none;
+    white-space: pre;
+  }
+
+  .step-row__line-body {
+    min-width: 0;
+
+    @include truncate;
   }
 
   .step-row__edit {
@@ -460,16 +479,9 @@ $step-ink-drop: 0.05rem;
     }
   }
 
-  // An open or closed card keeps its one line and moves its summary beneath the name;
-  // the opened fields stack: Form whole, Quantity and Unit half each, Instruction whole.
+  // An open or closed card keeps its areas; the opened fields stack: Form whole, Quantity and Unit half each, Instruction whole.
   .step-row.step-row--card.step-row--closed,
   .step-row.step-row--card.step-row--open {
-    grid-template-areas:
-      'handle position name marks edit remove'
-      '. . summary summary summary summary';
-    grid-template-columns: auto auto minmax(0, 1fr) auto auto auto;
-    align-items: start;
-
     // Two badges stack and keep the right edge, so the name keeps the width they would take.
     .step-row__marks {
       flex-direction: column;
@@ -477,7 +489,7 @@ $step-ink-drop: 0.05rem;
     }
 
     .step-row__open {
-      grid-row: 3;
+      grid-row: 2;
       grid-column: name-start / -1;
     }
 

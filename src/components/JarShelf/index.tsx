@@ -64,24 +64,75 @@ function Part({ part }: { part: JarPart }): ReactElement {
 /** How many bands fill the spell's jar; past it the bands shrink to keep fitting. */
 export const BANDS_FULL = 8;
 
-/**
- * Height of the crest on each band edge, in drawing units. The aside's jar is 4rem wide for a
- * 48-unit drawing, so 1.3 units is about 1.7px there: below that the wave is not seen.
- */
-const CREST = 1.9;
+/** Half a period of the wave, in drawing units: four full periods across the 48-unit jar. */
+const HALF = 6;
 
-/** A band's top edge: one low crest across the jar. */
-const crest = `M-2 ${CREST}Q24 ${-CREST} 50 ${CREST}`;
+/** The most a wave rises above its boundary, in drawing units (amplitudes run 0.65 to 0.8),
+ * plus the 0.6 the top band's level line sits above its fill so none of the line is over the layer. */
+const MAX_RISE = 2.2;
 
 /**
- * One band, `height` tall: its top is the crest and its bottom is the same crest, so stacked
- * bands tile with no gap. The lowest band is flat along the base.
+ * The top band's level line is 1.2 wide and centred on its path, so the path is lifted by half of
+ * that: the line then lies wholly above the top layer's fill and nothing is drawn across it.
  */
-function bandPath(height: number, lowest: boolean): string {
-  const bottom = lowest
-    ? `V${height + 4}H-2z`
-    : `V${height + CREST}Q24 ${height - CREST} -2 ${height + CREST}z`;
-  return crest + bottom;
+const TOP_LINE_LIFT = 0.6;
+
+/**
+ * One boundary between two layers, as a wave. Boundary `k` (k = 0 is the base, which is flat and
+ * never drawn) has a phase of `k` units and an amplitude that alternates 0.8, 0.65, so
+ * neighbouring edges run nearly parallel with a slight drift, and it is the same every render (no randomness). The wave
+ * lies wholly above its baseline, between 0 and 2 x amplitude, so it adds to the layer above
+ * rather than cutting into the top layer's own height. Each half period is one quadratic curve
+ * whose control point is on the far side of the middle line, and each joins the next on the same
+ * slope, so there is no corner. It runs from beyond the jar's left edge to beyond its right (the
+ * clip trims it), so a band's closing sides are never seen.
+ */
+type Wave = { start: number; end: number; amp: number; segments: readonly Segment[] };
+type Segment = { from: number; to: number; cx: number; cy: number };
+
+function waveOf(k: number): Wave {
+  const amp = k % 2 === 0 ? 0.8 : 0.65;
+  const start = -2 - (k % (HALF * 2));
+  const segments: Segment[] = [];
+  for (let x = start, m = 0; x < 50; x += HALF, m += 1) {
+    segments.push({
+      from: x,
+      to: x + HALF,
+      cx: x + HALF / 2,
+      cy: -amp + (m % 2 === 0 ? -2 * amp : 2 * amp),
+    });
+  }
+  return { start, end: start + segments.length * HALF, amp, segments };
+}
+
+/** The wave left to right, `dy` lower, as an open path. */
+const waveForward = (w: Wave, dy: number): string =>
+  `M${w.start} ${+(dy - w.amp).toFixed(2)}${w.segments
+    .map((g) => `Q${g.cx} ${+(dy + g.cy).toFixed(2)} ${g.to} ${+(dy - w.amp).toFixed(2)}`)
+    .join('')}`;
+
+/** The same wave right to left, `dy` lower, to continue a path from its right end. */
+const waveBack = (w: Wave, dy: number): string =>
+  [...w.segments]
+    .reverse()
+    .map((g) => `Q${g.cx} ${+(dy + g.cy).toFixed(2)} ${g.from} ${+(dy - w.amp).toFixed(2)}`)
+    .join('');
+
+/**
+ * One band, `height` tall: its top is boundary `top`'s wave and its bottom is boundary
+ * `top - 1`'s, which is the wave the band below draws as its own top, so stacked bands tile with
+ * no gap. The lowest band is flat along the base.
+ */
+function bandPath(height: number, index: number): string {
+  const top = waveOf(index + 1);
+  const closing =
+    index === 0
+      ? `L${top.end} ${height + 4}L${top.start} ${height + 4}z`
+      : (() => {
+          const bottom = waveOf(index);
+          return `L${bottom.end} ${+(height - bottom.amp).toFixed(2)}${waveBack(bottom, height)}z`;
+        })();
+  return waveForward(top, 0) + closing;
 }
 
 /** A group's colours on a band, for the stylesheet to pick from by theme; React types no custom property. */
@@ -127,7 +178,9 @@ export function JarDrawing({
       {bands.length > 0 && (
         <g clipPath={url}>
           {bands.map((ink, i) => {
-            const height = +((40 - S.full) / Math.max(bands.length, BANDS_FULL)).toFixed(2);
+            const height = +((40 - S.full - MAX_RISE) / Math.max(bands.length, BANDS_FULL)).toFixed(
+              2,
+            );
             return (
               <g
                 key={i}
@@ -137,11 +190,12 @@ export function JarDrawing({
                 <path
                   className={`jar-shelf__band-fill${ink ? ' jar-shelf__band-fill--group' : ''}`}
                   style={ink ? bandInk(ink) : undefined}
-                  d={bandPath(height, i === 0)}
+                  d={bandPath(height, i)}
                 />
                 <path
-                  className={`jar-shelf__band-edge${i === bands.length - 1 ? ' jar-shelf__band-edge--top' : ''}`}
-                  d={crest}
+                  className={`jar-shelf__band-edge${ink ? ' jar-shelf__band-edge--group' : ''}${i === bands.length - 1 ? ' jar-shelf__band-edge--top' : ''}`}
+                  style={ink ? bandInk(ink) : undefined}
+                  d={waveForward(waveOf(i + 1), i === bands.length - 1 ? -TOP_LINE_LIFT : 0)}
                 />
               </g>
             );

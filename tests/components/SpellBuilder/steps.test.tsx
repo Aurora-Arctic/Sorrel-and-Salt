@@ -1233,10 +1233,10 @@ describe('the spell builder’s Add to Jar categories', () => {
 
     expect(many).toHaveTextContent('Aid · +4');
     expect(within(many).getByText(/^\+4/)).toHaveTextContent('+4 more: Bind, Calm, Dawn, Ember');
-    // Hover shows the folded names: a title, as a tooltip button would steal the option's role.
-    expect(within(many).getByText(/^\+4/)).toHaveAttribute('title', 'Bind, Calm, Dawn, Ember');
     // Hovering the chip shows the folded names in the app's tip, not a native title.
-    fireEvent.mouseEnter(within(many).getByText(/^\+4/));
+    const chip = within(many).getByText(/^\+4/);
+    expect(chip).not.toHaveAttribute('title');
+    fireEvent.mouseEnter(chip.parentElement as HTMLElement);
     expect(await within(many).findByRole('tooltip', { hidden: true })).toHaveTextContent(
       'Bind, Calm, Dawn, Ember',
     );
@@ -1301,6 +1301,39 @@ describe('the spell builder’s Add to Jar categories', () => {
     // The jar carries Ember, so Bind is the one still Missing: Bind, then Carried Ember, then the rest.
     expect(many).toHaveTextContent('Bind · +4');
     expect(many).toHaveTextContent('more: Ember, Aid, Calm, Dawn');
+  });
+
+  it('marks a form already in the jar on its row, and leaves the row pickable', async () => {
+    suggest(ROSEWORT, MOCKROOT);
+    const laid: SpellBuilderSpell['steps'][number] = {
+      id: ID.savedRosewort,
+      name: 'Fixture Rosewort',
+      form: 'dried leaf',
+      quantity: 3,
+      unit: 'g',
+      body: null,
+      ingredient: { id: ID.rosewort, toxic: false, safetyNotes: null, categories: [], stock: [] },
+      variant: {
+        id: ID.roseLeaf,
+        toxic: false,
+        safetyNotes: null,
+        categories: [],
+        formChoice: null,
+      },
+    };
+    renderBuilder({ spell: answer('s3', 1, [laid]) });
+    openAll();
+
+    const rosewort = await lookUp('Fixture', /Fixture Rosewort/);
+    const mockroot = screen.getByRole('option', { name: /Fixture Mockroot/ });
+
+    expect(rosewort).toHaveAccessibleName(/already in the jar/);
+    expect(within(rosewort).getByText('In Jar')).toBeInTheDocument();
+    // Why it could have been marked: Mockroot is a form too, and no step lays it.
+    expect(mockroot).not.toHaveAccessibleName(/already in the jar/);
+    expect(within(mockroot).queryByText('In Jar')).toBeNull();
+    // Information only: a repeat is allowed.
+    expect(rosewort).not.toHaveAttribute('aria-disabled', 'true');
   });
 
   it('narrows the results to the pressed assigned categories, asking the server for them', async () => {

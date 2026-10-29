@@ -167,6 +167,18 @@
   }
 }
 
+// The small eye (the spell builder's step rows and inventory lines, the owner's call,
+// 2026-10-29): the mark at `$glyph-size` in a `$icon-size` box, 24px, the smallest hit area.
+.icon-tip__look--small {
+  width: $icon-size;
+  height: $icon-size;
+
+  svg {
+    width: $glyph-size;
+    height: $glyph-size;
+  }
+}
+
 // The action icons of a card's foot, an entry page's head and the Quick Look window's head, 13%
 // larger than the large size (`$action-icon-size`, the owner's call, 2026-10-21): the pencils
 // (Edit, Annotate, Edit Stock), the plus and its held check, the bin, the three dots, and the

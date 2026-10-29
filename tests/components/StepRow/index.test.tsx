@@ -105,7 +105,7 @@ describe('StepRow', () => {
           name="Testwort"
           open={open}
           fieldsId="fields"
-          summary="· 2 tsp"
+          summary="2 tsp · Crush it first"
           badge={<span>One-Off</span>}
           edit={<button aria-label="Edit Testwort">Edit</button>}
           aside={<span>Goes in this jar only</span>}
@@ -119,7 +119,8 @@ describe('StepRow', () => {
 
       expect(row()).toHaveTextContent('Testwort');
       expect(row()).toHaveTextContent('One-Off');
-      expect(row()).toHaveTextContent('· 2 tsp');
+      expect(row()).toHaveTextContent('2 tsp');
+      expect(row()).toHaveTextContent('Crush it first');
       expect(within(row()).getByRole('button', { name: 'Edit Testwort' })).toBeInTheDocument();
       expect(within(row()).queryByRole('textbox', { name: 'Quantity' })).toBeNull();
       expect(row()).not.toHaveTextContent('Goes in this jar only');

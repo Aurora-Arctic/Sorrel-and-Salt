@@ -363,6 +363,12 @@ $-shake-duration: 500ms;
   opacity: 0.25;
 }
 
+// The line between two layers is the colour of the layer whose top edge it is, at full strength.
+.jar-shelf__band-edge--group {
+  stroke: light-dark(var(--band-light), var(--band-dark));
+  opacity: 1;
+}
+
 .jar-shelf__band-edge--top {
   stroke: $accent;
   stroke-width: 1.2;

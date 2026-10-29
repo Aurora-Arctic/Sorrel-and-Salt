@@ -38,7 +38,9 @@ function Row({
   label,
   categories,
   tipOf,
+  absent = false,
 }: {
+  absent?: boolean;
   label: string;
   categories: readonly CardCategory[];
   tipOf: (category: CardCategory['category']) => string;
@@ -48,7 +50,14 @@ function Row({
     <div className="comparison-panel__row">
       <dt>{label}</dt>
       <dd>
-        <CategoryChips categories={categories} label={label} compact showAll tipOf={tipOf} />
+        <CategoryChips
+          categories={categories}
+          label={label}
+          compact
+          absent={absent}
+          showAll
+          tipOf={tipOf}
+        />
       </dd>
     </div>
   );
@@ -107,7 +116,7 @@ export function ComparisonPanel({
     body = (
       <dl className="comparison-panel__rows">
         <Row label="Carried" categories={chipsOf(carried)} tipOf={fromTip} />
-        <Row label="Missing" categories={chipsOf(missing)} tipOf={missingTip} />
+        <Row label="Missing" categories={chipsOf(missing)} absent tipOf={missingTip} />
         <Row label="Stray" categories={chipsOf(strays)} tipOf={fromTip} />
       </dl>
     );

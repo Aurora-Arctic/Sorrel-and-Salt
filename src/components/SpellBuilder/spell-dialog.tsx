@@ -95,6 +95,7 @@ export default function SpellDialog({
             <SpellBuilder
               key={spell && spell.id !== created ? spell.id : 'new'}
               workspaceId={workspaceId}
+              covenSlug={covenSlug}
               userId={userId}
               spell={spell && { ...spell, steps: steps ?? [] }}
               stepsRead={
