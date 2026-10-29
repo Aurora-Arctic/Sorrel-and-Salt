@@ -151,6 +151,7 @@ export function HistoryProbe({
             name="level"
             render={({ field }) => (
               <div
+                // oxlint-disable-next-line jsx-a11y/prefer-tag-over-role -- a test fixture standing in for the real control
                 role="slider"
                 aria-label="Level"
                 aria-valuemin={0}

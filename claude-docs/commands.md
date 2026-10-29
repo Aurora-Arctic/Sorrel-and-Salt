@@ -84,6 +84,12 @@ Every check runs to the end even when another fails (`--continue-on-error`),
 so one run lists every problem. Prettier still honours `.prettierignore` for a
 file passed by name, so a staged file under `src/gql/` is not flagged.
 
+**Oxlint** (`.oxlintrc.json`, MB.275) exits 0 on a warning, so a rule that only warns is a rule nothing enforces. The repo holds 0 warnings and 0 errors. A disable is `// oxlint-disable-next-line <rule> -- <reason>` (`{/* … */}` among JSX children), and the reason is required.
+
+- **Errors**: `no-console` (output goes through a logger; `scripts/**` and a few named files are exempt), `no-unused-vars` (dead code hides mistakes), `no-unsafe-optional-chaining` (it throws on undefined), `react-hooks/exhaustive-deps` (a missing dependency is a stale value), `react/set-state-in-effect` (state set in an effect draws twice), and the `jsx-a11y` rules `click-events-have-key-events`, `no-static-element-interactions`, `no-noninteractive-element-interactions`, `interactive-supports-focus`, `no-noninteractive-tabindex`, `control-has-associated-label` and `anchor-is-valid` (each is a keyboard or screen-reader failure).
+- **Warnings**: `jsx-a11y/aria-role`, set to `ignoreNonDOM` so a component with a `role` prop is not judged as an element, and the advisory rules below.
+- **Advisory, disabled where deliberate**: the React Compiler rules (`react/refs`, `react/immutability`, `react/preserve-manual-memoization`) because the compiler is off in `next.config.ts`; they are off in `tests/**`, where fixtures write and read freely, along with `react/globals` and `react/incompatible-library`. `jsx-a11y/prefer-tag-over-role` is disabled per site where the native tag would change the layout or the meaning.
+
 **Stylelint** (`.stylelintrc.json`, MB.116) carries one binding rule,
 "only `_variables.scss` may name a raw hue" ([`styling.md`](styling.md),
 "Binding rules"): `color-no-hex` and `color-named: "never"`, cleared for

@@ -1,7 +1,7 @@
 'use client';
 
 import type { Route } from 'next';
-import { type ReactElement, useEffect, useRef, useState } from 'react';
+import { type ReactElement, useRef, useState } from 'react';
 import { MoreMenu } from '../IconTip';
 import { ANNOTATE_HEADING } from '../IngredientEntry/annotate-heading';
 import AnnotatePicker from '../IngredientEntry/annotate-picker';
@@ -79,9 +79,7 @@ export default function CompendiumCardMore({
     list.some(({ workspaceId }) => workspaceId === targetPlace?.workspaceId);
   const gone =
     (asking === 'remove' && !stillThere(removers)) || (asking === 'own' && !stillThere(owners));
-  useEffect(() => {
-    if (gone) setAsking(undefined);
-  }, [gone]);
+  if (gone) setAsking(undefined);
 
   const ask = (what: Asking, list: readonly CompendiumCardPlace[]) => () => {
     setAlert(undefined);

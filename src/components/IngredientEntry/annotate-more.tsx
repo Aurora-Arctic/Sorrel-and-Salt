@@ -65,7 +65,7 @@ export default function AnnotateMore({
   // whatever held it as it opened, and a menu item that chose goes with its
   // menu, so the focus is put on this first.
   const trigger = useRef<HTMLButtonElement>(null);
-  const ask = (what: 'remove' | 'own') => () => {
+  const ask = (what: 'remove' | 'own') => {
     trigger.current?.focus();
     setAsking(what);
   };
@@ -80,20 +80,24 @@ export default function AnnotateMore({
     onRefused,
   });
   const items: MenuButtonItem[] = [
-    ...(canMakeOurs ? [{ key: 'own', label: 'Make It Ours', onSelect: ask('own') }] : []),
+    ...(canMakeOurs ? [{ key: 'own', label: 'Make It Ours', onSelect: () => ask('own') }] : []),
     ...(canRemove
-      ? [{ key: 'remove', label: 'Remove', destructive: true, onSelect: ask('remove') }]
+      ? [{ key: 'remove', label: 'Remove', destructive: true, onSelect: () => ask('remove') }]
       : []),
   ];
+  // oxlint-disable-next-line react/refs -- the callback ref and handlers come from a hook and are only handed to the DOM, never read while rendering
   const only = items.length === 1 ? items[0] : undefined;
+  // oxlint-disable-next-line react/refs -- the callback ref and handlers come from a hook and are only handed to the DOM, never read while rendering
   if (items.length === 0) return null;
   return (
     <>
+      {/* oxlint-disable-next-line react/refs -- the callback ref and handlers come from a hook and are only handed to the DOM, never read while rendering */}
       {only === undefined ? (
         <MenuButton
           ref={trigger}
           label={CUPBOARD_MENU_LABEL}
           className="btn btn--quiet"
+          // oxlint-disable-next-line react/refs -- the callback ref and handlers come from a hook and are only handed to the DOM, never read while rendering
           {...choicesFor({ compendium: [], coven: items }, 'coven')}
           buttonType
         />
@@ -101,8 +105,9 @@ export default function AnnotateMore({
         <button
           ref={trigger}
           type="button"
+          // oxlint-disable-next-line react/refs -- the callback ref and handlers come from a hook and are only handed to the DOM, never read while rendering
           className={only.destructive ? 'btn btn--destructive' : 'btn btn--quiet'}
-          onClick={ask(only.key === 'own' ? 'own' : 'remove')}
+          onClick={() => ask(only.key === 'own' ? 'own' : 'remove')}
         >
           {only.label}
         </button>

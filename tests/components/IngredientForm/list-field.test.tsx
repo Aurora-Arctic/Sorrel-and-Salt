@@ -150,7 +150,7 @@ function expectErrorOn(control: HTMLElement) {
 
 describe('ListField', () => {
   describe.each(VARIANTS)('the $variant list', (variant) => {
-    const { legend, entry, name, pickOnly } = variant;
+    const { legend, entry, pickOnly } = variant;
 
     it('starts with one empty box and no entries, Add offered only where text is added', () => {
       renderList(variant);

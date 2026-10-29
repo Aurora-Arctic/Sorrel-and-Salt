@@ -276,6 +276,7 @@ Work that was not in the original breakdown. `MB.*` exists so a defect or a miss
 | MB.272 | A Click Anywhere on an Ingredient Card Opens Its Entry                                                                   | Bugfixes | —                      |
 | MB.273 | Claude Design Previews Render in a Narrower, Shorter Frame Than Storybook                                                | Bugfixes | —                      |
 | MB.274 | Seeded Compendium Content Stays Stale After a Deploy                                                                     | Bugfixes | —                      |
+| MB.275 | Lint Warnings Pile Up Because Nothing Fails on Them                                                                      | Bugfixes | —                      |
 
 **MB.206 — Repository: the two-tier read scope and the page pair, written once** · 3h
 
@@ -1786,6 +1787,31 @@ _Acceptance criteria:_
 - Local and test runs with neither value use one fixed key part, and the existing cache tests still pass unchanged.
 - An admin write still clears every cached entry under the current deployment.
 - Docs: `claude-docs/db/compendium-cache.md` says how the key part is built, and that reseeding locally under a running server still needs a restart.
+
+**MB.275 — Lint Warnings Pile Up Because Nothing Fails on Them** · 6h
+
+_Story:_ As a developer on this repo, I want lint to report only warnings still worth reading, and to fail on the kinds we have agreed are bugs, so that a real problem is not buried under 142 old ones.
+
+Found on 2026-10-29 in CI run 40927631845 (PR #1321). The linter, oxlint, exits 0 on warnings, so `npm run lint` passes in CI and in pre-commit however many it prints, and GitHub shows only the first 10 as annotations; the rest pile up on staging unseen. On staging, oxlint 1.89.0 prints 142 warnings across 73 files and no errors: 33 unused imports and variables, 17 console calls (16 of them deliberate output in CLI scripts under `.design-sync/` and `.github/scripts/`), 59 React warnings, of which about 15 are real (handlers called during render, state set in an effect when it can be worked out during render, missing effect dependencies) and the rest flag intended patterns (dnd-kit callbacks, floating-ui callback refs, test harnesses), and 32 accessibility warnings, 3 of them real. The owner chose which rules become errors; every other rule stays a warning. The plan is `claude-docs/design-decisions/mb.275-plan.md`.
+
+Steps to reproduce:
+
+1. Check out staging.
+2. Run `npm run lint`.
+
+Actual: 142 warnings across 73 files, and the command exits 0.
+Expected: 0 warnings, and a new hit on a promoted rule fails lint.
+
+_Acceptance criteria:_
+
+- Regression check: a planted unused import, and a planted missing effect dependency, each make `npm run lint` exit non-zero, and it exits 0 without them; run once and recorded in the PR body
+- `npm run lint` on the branch prints 0 warnings and 0 errors
+- `.oxlintrc.json` makes these `"error"`: `no-unused-vars`, `no-console` (with `.design-sync/**` and `.github/scripts/**` added to the scripts override), `no-unsafe-optional-chaining`, `react-hooks/exhaustive-deps`, `react/set-state-in-effect`, the jsx-a11y interaction rules (`click-events-have-key-events`, `no-static-element-interactions`, `no-noninteractive-element-interactions`, `interactive-supports-focus`, `no-noninteractive-tabindex`), `control-has-associated-label` and `anchor-is-valid`
+- These stay warnings: `react/refs`, `react/immutability`, `prefer-tag-over-role`, and `aria-role` with `ignoreNonDOM` set; the React Compiler rules (`react/globals`, `react/preserve-manual-memoization`, `react/incompatible-library`) stay warnings in `src/` and are off under `tests/**`
+- Every `oxlint-disable` added says why on the same line
+- Each behaviour change (`cupboard-actions`, `card-more`, `SkeletonFade`, `StockDialog`, the SpellBuilder steps, `use-navigation`) is covered by a component test that leaves the same state as before, and `npm run test:coverage` passes
+- The e2e specs covering those components pass, one run each
+- `claude-docs/commands.md`, or the lint doc it points to, records which rules are errors and why
 
 **MB.1 — Fix prefers-reduced-motion facet swap in ThemeToggle** · 2h
 

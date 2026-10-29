@@ -381,12 +381,14 @@ const Modal = ({
           className="modal-dialog__body"
           aria-busy={loading || undefined}
           // A body only to read takes a Tab stop, so a keyboard can scroll it.
+          // oxlint-disable-next-line jsx-a11y/no-noninteractive-tabindex -- a scrolling body must take a Tab stop so a keyboard can scroll it
           tabIndex={readingBody ? 0 : undefined}
         >
           <CloseGuardContext.Provider value={guard}>
             <HeaderSlotContext.Provider value={headerSlot}>
               <HeaderNoteContext.Provider value={headerNote}>
                 <ConfirmLayerContext.Provider value={layer}>
+                  {/* oxlint-disable-next-line react/refs -- the callback ref and handlers come from a hook and are only handed to the DOM, never read while rendering */}
                   {typeof children === 'function' ? children(close) : children}
                 </ConfirmLayerContext.Provider>
               </HeaderNoteContext.Provider>

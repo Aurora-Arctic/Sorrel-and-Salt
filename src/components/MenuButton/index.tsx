@@ -102,7 +102,9 @@ function MenuGroup({
   const labelId = useId();
   return (
     <>
+      {/* oxlint-disable-next-line jsx-a11y/control-has-associated-label, jsx-a11y/prefer-tag-over-role -- menu items need role=menuitem siblings, so the rule and group stay plain elements with their roles */}
       {!first && <div role="separator" className="menu-button__rule" />}
+      {/* oxlint-disable-next-line jsx-a11y/prefer-tag-over-role -- menu items need role=menuitem siblings, so the rule and group stay plain elements with their roles */}
       <div role="group" aria-labelledby={labelId} className="menu-button__group">
         <div id={labelId} className="menu-button__heading">
           {section.label}
@@ -288,6 +290,7 @@ export default function MenuButton({
         ref={setList}
         id={menuId}
         role="menu"
+        tabIndex={-1}
         aria-label={menuLabel ?? label}
         aria-hidden={!open || undefined}
         inert={!open}

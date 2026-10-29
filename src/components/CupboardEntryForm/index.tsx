@@ -27,13 +27,7 @@ import { DiscardQuestion, useDiscardGuard } from '../Modal';
 import Notice from '../Notice';
 import { FIELDS, differs, baselineOf, changesOf, isOwn, openingValues } from './changes';
 import { fromForm, toForm, type CupboardFormValues } from './form-values';
-import type {
-  CupboardEntryFormProps,
-  CupboardField,
-  CupboardValues,
-  ListFieldName,
-  TextField,
-} from './types';
+import type { CupboardEntryFormProps, CupboardField, TextField } from './types';
 import './index.scss';
 
 // The coven's override form for a compendium entry it holds (M12.17): seven

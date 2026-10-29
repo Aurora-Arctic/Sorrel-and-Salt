@@ -89,6 +89,7 @@ const IconTip = ({
     // the child without its props being taken over: the bubble takes no
     // pointer, so the wrapper's hover is the control's. Focus heard here too,
     // as it bubbles from the control.
+    // oxlint-disable-next-line jsx-a11y/click-events-have-key-events, jsx-a11y/no-static-element-interactions -- the focus and blur handlers hear events bubbling from the control inside; the span adds no control of its own
     <span
       ref={setWrapper}
       className={`icon-tip icon-tip--${placement}`}

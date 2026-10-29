@@ -25,6 +25,7 @@ export function NavigationBar(): ReactElement {
       const timer = setTimeout(() => setPhase('shown'), LOADING_DELAY_MS);
       return () => clearTimeout(timer);
     }
+    // oxlint-disable-next-line react/set-state-in-effect -- the state follows an outside value (a timer, a measurement or a focus request), so it can only be set from an effect
     setPhase((current) => (current === 'shown' ? 'leaving' : 'hidden'));
   }, [busy]);
 

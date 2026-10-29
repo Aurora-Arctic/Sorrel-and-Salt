@@ -324,6 +324,7 @@ export function StepPicker({ workspaceId, oneOffs, onAdd }: StepPickerProps): Re
             </div>
             <div className="spell-steps__filter-row">
               <div
+                // oxlint-disable-next-line jsx-a11y/prefer-tag-over-role -- a fieldset or details would add a legend or a disclosure; this is a plain labelled group
                 role="group"
                 aria-labelledby={`${id}-filter-label`}
                 className="spell-steps__filter-chips"

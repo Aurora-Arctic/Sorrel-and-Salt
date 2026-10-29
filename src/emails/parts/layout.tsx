@@ -125,6 +125,7 @@ const INK_BACKGROUND = 'linear-gradient(rgba(0,0,0,0),rgba(0,0,0,0))';
  */
 function Ink({ className, color, font, children }: InkProps) {
   return (
+    // oxlint-disable-next-line jsx-a11y/anchor-is-valid -- an anchor with no href is the point: it is text that Zoho Mail Night mode leaves uncoloured
     <a
       className={className}
       style={{ background: INK_BACKGROUND, color, fontFamily: font, textDecoration: 'none' }}

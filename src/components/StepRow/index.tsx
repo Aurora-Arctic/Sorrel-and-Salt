@@ -110,6 +110,7 @@ export default function StepRow({
   );
   if (textCard) {
     return (
+      // oxlint-disable-next-line jsx-a11y/click-events-have-key-events, jsx-a11y/no-noninteractive-element-interactions -- a mouse convenience; the row has its own keyboard button to toggle it
       <li
         ref={rowRef}
         className={className_}
@@ -133,6 +134,7 @@ export default function StepRow({
   }
   if (collapsible) {
     return (
+      // oxlint-disable-next-line jsx-a11y/click-events-have-key-events, jsx-a11y/no-noninteractive-element-interactions -- a mouse convenience; the row has its own keyboard button to toggle it
       <li
         ref={rowRef}
         className={className_}

@@ -40,6 +40,7 @@ export default function SummaryDescription({ text }: { text: string }): ReactEle
 
   // Measured before paint, so the bar and the cut arrive together.
   useLayoutEffect(() => {
+    // oxlint-disable-next-line react/set-state-in-effect -- the state follows an outside value (a timer, a measurement or a focus request), so it can only be set from an effect
     setMounted(true);
   }, []);
   useLayoutEffect(() => {
