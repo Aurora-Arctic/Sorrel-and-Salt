@@ -20,7 +20,7 @@ import type { SpellBuilderInput, SpellBuilderValues, SpellStatusFieldProps } fro
 
 const DRAFT_SAYS = 'A draft: not yet finished.';
 
-export function SpellStatusField({ flush }: SpellStatusFieldProps): ReactElement {
+export function SpellStatusField({ flush }: SpellStatusFieldProps): ReactElement | null {
   const { control, getValues, handleSubmit, setFocus, setValue } = useFormContext<
     SpellBuilderValues,
     unknown,
