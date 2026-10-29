@@ -1,0 +1,12 @@
+# Gathered for M14.29; the seed never reads this folder.
+entry: botanical/boldo-peumus-boldus
+status: approved
+listings:
+  - list: iucn
+    name: IUCN Red List of Threatened Species, as printed in Wikipedia's taxobox
+    value: LC
+    listedAs: Peumus boldus
+    scope: global
+    nameBasis: stated
+    source: wikipedia-iucn-peumus-boldus
+    locator: 'Taxobox: status = LC, status_system = IUCN3.1; its status_ref reads: "Peumus boldus", Botanic Gardens Conservation International (BGCI).; IUCN SSC Global Tree Specialist Group., 2018, e.T135682641A135698438'

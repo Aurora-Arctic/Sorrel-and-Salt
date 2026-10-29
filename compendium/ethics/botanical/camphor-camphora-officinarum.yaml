@@ -1,0 +1,14 @@
+# Gathered for M14.29; the seed never reads this folder.
+entry: botanical/camphor-camphora-officinarum
+status: needs-review
+listings:
+  - list: iucn
+    name: IUCN Red List of Threatened Species, as printed in Wikipedia's taxobox
+    value: LC
+    listedAs: Camphora officinarum
+    scope: global
+    nameBasis: stated
+    source: wikipedia-iucn-camphora-officinarum
+    locator: 'Taxobox: status = LC, status_system = IUCN3.1; its status_ref reads: "Cinnamomum camphora", de Kok, R., 2021, 10.2305/IUCN.UK.2021-3.RLTS.T15441072A15441116.en'
+questions:
+  - 'Wikipedia''s status_ref names an assessment titled "Cinnamomum camphora", which is not Camphora officinarum. Recommendation: do not list until an authority the owner accepts maps one name to the other. GBIF returned (not an accepted authority): GBIF https://api.gbif.org/v1/species/match?name=Camphora%20officinarum -> Camphora officinarum Nees | status SYNONYM | matchType EXACT | accepted (see usage); GBIF https://api.gbif.org/v1/species/match?name=Cinnamomum%20camphora -> Cinnamomum camphora (L.) J.Presl | status ACCEPTED | matchType EXACT | accepted (is accepted or none)'

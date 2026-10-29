@@ -1,0 +1,20 @@
+# Gathered for M14.29; the seed never reads this folder.
+entry: botanical/spikenard-nardostachys-jatamansi
+status: approved
+listings:
+  - list: iucn
+    name: IUCN Red List of Threatened Species, as printed in Wikipedia's taxobox
+    value: CR
+    listedAs: Nardostachys jatamansi
+    scope: global
+    nameBasis: stated
+    source: wikipedia-iucn-nardostachys-jatamansi
+    locator: 'Taxobox: status = CR, status_system = IUCN3.1; its status_ref reads: "Nardostachys jatamansi", Chauhan, H.K., 2021, 10.2305/IUCN.UK.2021-3.RLTS.T50126627A88304158.en'
+  - list: cites
+    name: CITES Appendices I, II and III, valid from 5 March 2026
+    value: Appendix II
+    listedAs: Nardostachys jatamansi
+    scope: global
+    nameBasis: stated
+    source: cites-appendices
+    locator: 'p. 79, Appendix II column, family VALERIANACEAE: "Nardostachys jatamansi", annotation #2: "All parts and derivatives except: a) seeds and pollen; and b) finished products packaged and ready for retail trade."'

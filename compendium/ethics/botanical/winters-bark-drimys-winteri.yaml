@@ -1,0 +1,12 @@
+# Gathered for M14.29; the seed never reads this folder.
+entry: botanical/winters-bark-drimys-winteri
+status: approved
+listings:
+  - list: iucn
+    name: IUCN Red List of Threatened Species, as printed in Wikipedia's taxobox
+    value: LC
+    listedAs: Drimys winteri
+    scope: global
+    nameBasis: stated
+    source: wikipedia-iucn-drimys-winteri
+    locator: 'Taxobox: status = LC, status_system = IUCN3.1; its status_ref reads: "Drimys winteri", Botanic Gardens Conservation International (BGCI)., 2018, 10.2305/IUCN.UK.2018-2.RLTS.T61968097A135698496.en'

@@ -1,0 +1,12 @@
+# Gathered for M14.29; the seed never reads this folder.
+entry: botanical/english-bluebell-hyacinthoides-non-scripta
+status: approved
+listings:
+  - list: other
+    name: Wildlife and Countryside Act 1981 protection, as stated by Wikipedia
+    value: protected species; removing wild bulbs is a criminal offence
+    listedAs: Hyacinthoides non-scripta
+    scope: United Kingdom
+    nameBasis: stated
+    source: wikipedia-hyacinthoides-non-scripta
+    locator: 'Section "Protection": "In the United Kingdom, H. non-scripta is a protected species under the Wildlife and Countryside Act 1981."'

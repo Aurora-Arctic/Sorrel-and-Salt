@@ -1,0 +1,28 @@
+# Gathered for M14.29; the seed never reads this folder.
+entry: botanical/goldenseal-hydrastis-canadensis
+status: approved
+listings:
+  - list: other
+    name: United Plant Savers Species At-Risk List
+    value: At-Risk
+    listedAs: Hydrastis canadensis
+    scope: global
+    nameBasis: stated
+    source: ups-species-at-risk
+    locator: under the heading "At-Risk", entry for Goldenseal
+  - list: iucn
+    name: IUCN Red List of Threatened Species, as printed in Wikipedia's taxobox
+    value: VU
+    listedAs: Hydrastis canadensis
+    scope: global
+    nameBasis: stated
+    source: wikipedia-iucn-hydrastis-canadensis
+    locator: 'Taxobox: status = VU, status_system = IUCN3.1; its status_ref reads: "Hydrastis canadensis", Oliver, L., 2016, e.T44340011A44340071'
+  - list: cites
+    name: CITES Appendices I, II and III, valid from 5 March 2026
+    value: Appendix II
+    listedAs: Hydrastis canadensis
+    scope: global
+    nameBasis: stated
+    source: cites-appendices
+    locator: 'p. 77, Appendix II column, family RANUNCULACEAE: "Hydrastis canadensis", annotation #8: "Underground parts (i.e. roots, rhizomes): whole, parts and powdered."'

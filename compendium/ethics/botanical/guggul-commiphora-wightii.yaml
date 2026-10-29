@@ -1,0 +1,22 @@
+# Gathered for M14.29; the seed never reads this folder.
+entry: botanical/guggul-commiphora-wightii
+status: approved
+listings:
+  - list: iucn
+    name: IUCN Red List of Threatened Species, as printed in Wikipedia's taxobox
+    value: CR
+    listedAs: Commiphora wightii
+    scope: global
+    nameBasis: stated
+    source: wikipedia-iucn-commiphora-wightii
+    locator: 'Taxobox: status = CR, status_system = IUCN3.1; its status_ref reads: "Commiphora wightii", Ved, D., 2015, 10.2305/IUCN.UK.2015-2.RLTS.T31231A50131117.en'
+  - list: cites
+    name: CITES Appendices I, II and III, valid from 5 March 2026
+    value: Appendix II
+    listedAs: Commiphora wightii
+    scope: global
+    nameBasis: stated
+    source: cites-appendices
+    locator: 'p. 63, Appendix II column, family BURSERACEAE: "Commiphora wightii", annotation #19: "Extracts (including resins, gums and essential oils) and powder, except the following finished products, packaged and ready for retail trade"'
+questions:
+  - 'Approved by the owner 2026-10-29: the entry stays under the cultivated exception to the no-endangered-species rule (M14.29), because its source says the trade supply is cultivated. Nothing more to ask.'

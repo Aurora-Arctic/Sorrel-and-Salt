@@ -1,0 +1,14 @@
+# Gathered for M14.29; the seed never reads this folder.
+entry: botanical/pistachio-pistacia-vera
+status: needs-review
+listings:
+  - list: iucn
+    name: IUCN Red List of Threatened Species, as printed in Wikipedia's taxobox
+    value: NT
+    listedAs: Pistacia vera
+    scope: global
+    nameBasis: stated
+    source: wikipedia-iucn-pistacia-vera
+    locator: 'Taxobox: status = NT, status_system = IUCN3.1; its status_ref reads: (no assessment named)'
+questions:
+  - 'The assessment Wikipedia names for Pistacia vera is not identified by title (the cited assessment is titled "null"). Raw status_ref: Participants of the FFI/IUCN SSC Central Asian regional tree Red Listing workshop, Bishkek, Kyrgyzstan (11–13 July 2006) (2007). ''''Pistacia vera. The IUCN Red List of Threatened Species'''' 2007: e.T63497A12670823. {{doi|10.2305/IUCN.UK.2007.RLTS.T63497A12670823.en }}. Recommendation: do not list until the assessment is read for Pistacia vera.'

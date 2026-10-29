@@ -1,0 +1,12 @@
+# Gathered for M14.29; the seed never reads this folder.
+entry: botanical/yaupon-ilex-vomitoria
+status: approved
+listings:
+  - list: iucn
+    name: IUCN Red List
+    value: Least Concern (IUCN 3.1)
+    listedAs: Ilex vomitoria
+    scope: global
+    nameBasis: stated
+    source: wikipedia-ilex-vomitoria
+    locator: taxobox, conservation status (status = LC, IUCN3.1)

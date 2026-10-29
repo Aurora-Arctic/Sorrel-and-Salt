@@ -1,0 +1,12 @@
+# Gathered for M14.29; the seed never reads this folder.
+entry: botanical/sacred-datura-datura-wrightii
+status: approved
+listings:
+  - list: other
+    name: NatureServe (TNC)
+    value: G5 (TNC status in taxobox)
+    listedAs: Datura wrightii
+    scope: global
+    nameBasis: stated
+    source: wikipedia-datura-wrightii
+    locator: taxobox, status = G5, status_system = TNC

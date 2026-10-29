@@ -1,0 +1,12 @@
+# Gathered for M14.29; the seed never reads this folder.
+entry: botanical/buckthorn-rhamnus-cathartica
+status: approved
+listings:
+  - list: iucn
+    name: IUCN Red List of Threatened Species, as printed in Wikipedia's taxobox
+    value: LC
+    listedAs: Rhamnus cathartica
+    scope: global
+    nameBasis: stated
+    source: wikipedia-iucn-rhamnus-cathartica
+    locator: 'Taxobox: status = LC, status_system = IUCN3.1; its status_ref reads: "Rhamnus cathartica", Barstow, M., 2018, 10.2305/IUCN.UK.2017-3.RLTS.T61957125A128942433.en'

@@ -1,0 +1,12 @@
+# Gathered for M14.29; the seed never reads this folder.
+entry: botanical/cashew-anacardium-occidentale
+status: approved
+listings:
+  - list: iucn
+    name: IUCN Red List of Threatened Species, as printed in Wikipedia's taxobox
+    value: LC
+    listedAs: Anacardium occidentale
+    scope: global
+    nameBasis: stated
+    source: wikipedia-iucn-anacardium-occidentale
+    locator: 'Taxobox: status = LC, status_system = IUCN3.1; its status_ref reads: "Anacardium occidentale", Barstow, M., 2021, 10.2305/IUCN.UK.2021-3.RLTS.T60761600A60761604.en'

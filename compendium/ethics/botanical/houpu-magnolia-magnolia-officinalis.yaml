@@ -1,0 +1,14 @@
+# Gathered for M14.29; the seed never reads this folder.
+entry: botanical/houpu-magnolia-magnolia-officinalis
+status: approved
+listings:
+  - list: iucn
+    name: IUCN Red List of Threatened Species
+    value: Endangered (IUCN 3.1)
+    listedAs: Magnolia officinalis
+    scope: global
+    nameBasis: stated
+    source: wikipedia-magnolia-officinalis
+    locator: Infobox, Conservation status
+questions:
+  - 'Approved by the owner 2026-10-29: the entry stays under the cultivated exception to the no-endangered-species rule (M14.29), because its source says the trade supply is cultivated. Nothing more to ask.'

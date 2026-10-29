@@ -1,0 +1,12 @@
+# Gathered for M14.29; the seed never reads this folder.
+entry: botanical/opoponax-commiphora-guidottii
+status: approved
+listings:
+  - list: iucn
+    name: IUCN Red List of Threatened Species, as printed in Wikipedia's taxobox
+    value: VU
+    listedAs: Commiphora guidottii
+    scope: global
+    nameBasis: stated
+    source: wikipedia-iucn-commiphora-guidottii
+    locator: 'Taxobox: status = VU, status_system = IUCN3.1; its status_ref reads: "Commiphora guidottii", 2021, 10.2305/IUCN.UK.2021-3.RLTS.T35815A223073528.en'

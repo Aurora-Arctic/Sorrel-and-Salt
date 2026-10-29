@@ -1,0 +1,12 @@
+# Gathered for M14.29; the seed never reads this folder.
+entry: botanical/henna-lawsonia-inermis
+status: approved
+listings:
+  - list: iucn
+    name: IUCN Red List of Threatened Species, as printed in Wikipedia's taxobox
+    value: LC
+    listedAs: Lawsonia inermis
+    scope: global
+    nameBasis: stated
+    source: wikipedia-iucn-lawsonia-inermis
+    locator: 'Taxobox: status = LC, status_system = IUCN3.1; its status_ref reads: "Lawsonia inermis", Plummer, J., 2020, 10.2305/IUCN.UK.2020-3.RLTS.T138450837A149445045.en'

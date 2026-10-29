@@ -1,0 +1,22 @@
+# Gathered for M14.29; the seed never reads this folder.
+entry: botanical/kou-cordia-subcordata
+status: needs-review
+listings:
+  - list: iucn
+    name: IUCN Red List
+    value: Least Concern (IUCN 3.1)
+    listedAs: Cordia subcordata
+    scope: global
+    nameBasis: stated
+    source: wikipedia-cordia-subcordata
+    locator: taxobox, conservation status (status = LC, IUCN3.1)
+  - list: other
+    name: Assessor not named
+    value: Highly endangered in Sri Lanka
+    listedAs: Cordia subcordata
+    scope: Sri Lanka
+    nameBasis: stated
+    source: wikipedia-cordia-subcordata
+    locator: 'Conservation: "It is thought to be highly endangered in Sri Lanka, only persisting at a small number of sites that are under pressure from development."'
+questions:
+  - Wikipedia says "It is thought to be highly endangered in Sri Lanka" but names no assessor. Find the assessment, or drop the row?

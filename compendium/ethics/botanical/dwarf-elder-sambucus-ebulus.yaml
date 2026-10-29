@@ -1,0 +1,12 @@
+# Gathered for M14.29; the seed never reads this folder.
+entry: botanical/dwarf-elder-sambucus-ebulus
+status: approved
+listings:
+  - list: iucn
+    name: IUCN Red List of Threatened Species, as printed in Wikipedia's taxobox
+    value: LC
+    listedAs: Sambucus ebulus
+    scope: Europe
+    nameBasis: stated
+    source: wikipedia-iucn-sambucus-ebulus
+    locator: 'Taxobox: status = LC, status_system = IUCN3.1; its status_ref reads: "Sambucus ebulus (Europe assessment)", Khela, S., 2012, e.T202956A2758237 (the reference says Europe regional assessment)'

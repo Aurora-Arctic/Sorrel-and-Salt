@@ -1,0 +1,12 @@
+# Gathered for M14.29; the seed never reads this folder.
+entry: botanical/maile-alyxia-stellata
+status: approved
+listings:
+  - list: other
+    name: The Nature Conservancy (NatureServe) global rank
+    value: G3
+    listedAs: Alyxia stellata
+    scope: global
+    nameBasis: stated
+    source: wikipedia-alyxia-stellata
+    locator: taxobox, conservation status (status = G3, status_system = TNC)

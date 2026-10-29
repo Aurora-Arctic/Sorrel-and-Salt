@@ -1,0 +1,12 @@
+# Gathered for M14.29; the seed never reads this folder.
+entry: botanical/polynesian-arrowroot-tacca-leontopetaloides
+status: approved
+listings:
+  - list: iucn
+    name: IUCN Red List
+    value: Least Concern (IUCN 3.1)
+    listedAs: Tacca leontopetaloides
+    scope: global
+    nameBasis: stated
+    source: wikipedia-tacca-leontopetaloides
+    locator: taxobox, conservation status (status = LC, IUCN3.1)

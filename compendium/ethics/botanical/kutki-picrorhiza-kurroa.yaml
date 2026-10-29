@@ -1,0 +1,16 @@
+# Gathered for M14.29; the seed never reads this folder.
+entry: botanical/kutki-picrorhiza-kurroa
+status: needs-review
+listings:
+  - list: other
+    name: Wikipedia prose, no assessor named
+    value: harvested to near extinction
+    listedAs: Picrorhiza kurroa
+    scope: unknown
+    nameBasis: stated
+    source: wikipedia-picrorhiza-kurroa
+    locator: Distribution paragraph
+questions:
+  - Wikipedia says "It has been reported that Picrorhiza has been harvested to near extinction" but names no assessor. Find the assessment, or drop the row?
+  - 'The CITES Appendices (valid from 5 March 2026) print "Picrorhiza kurrooa { Excludes Picrorhiza scrophulariiflora }" in Appendix II (p. 78, Appendix II column, annotation #2), with a double "o". The entry''s formal name is Picrorhiza kurroa. Owner: say whether an authority you accept maps the two spellings. Recommendation: do not record a listing row until an authority maps them.'
+  - 'The source does not say where the status "harvested to near extinction" (Wikipedia prose, no assessor named) applies, so its scope is recorded as unknown. Owner: say whether it is global or for one place, and whether to keep the row. Recommendation: keep it as unknown and do not remove the entry on it.'

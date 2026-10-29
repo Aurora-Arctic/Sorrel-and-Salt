@@ -1,0 +1,12 @@
+# Gathered for M14.29; the seed never reads this folder.
+entry: botanical/foxglove-digitalis-purpurea
+status: needs-review
+listings:
+  - list: iucn
+    name: IUCN Red List of Threatened Species, as printed in Wikipedia's taxobox
+    value: LC
+    listedAs: Digitalis purpurea
+    scope: Europe
+    nameBasis: stated
+    source: wikipedia-iucn-digitalis-purpurea
+    locator: 'Taxobox: status = LC, status_system = IUCN3.1; its status_ref reads: "Digitalis purpurea (Europe assessment)", Chadburn, H., 2026, 10.2305/IUCN.UK.2026-1.RLTS.T203383A209211625.en'

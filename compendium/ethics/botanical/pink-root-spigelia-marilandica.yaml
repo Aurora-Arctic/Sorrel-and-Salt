@@ -1,0 +1,28 @@
+# Gathered for M14.29; the seed never reads this folder.
+entry: botanical/pink-root-spigelia-marilandica
+status: approved
+listings:
+  - list: iucn
+    name: IUCN Red List of Threatened Species, as printed in Wikipedia's taxobox
+    value: LC
+    listedAs: Spigelia marilandica
+    scope: global
+    nameBasis: stated
+    source: wikipedia-iucn-spigelia-marilandica
+    locator: 'Taxobox: status = LC, status_system = IUCN3.1; its status_ref reads: "Spigelia marilandica", Leopold, S.; Kirchner, W.; Duncan, H.; Filyaw, T.; and others, 2024, e.T116997951A135903790'
+  - list: other
+    name: NatureServe global rank, as printed in Wikipedia's taxobox
+    value: G4
+    listedAs: Spigelia marilandica
+    scope: global
+    nameBasis: stated
+    source: wikipedia-iucn-spigelia-marilandica
+    locator: 'Taxobox: status2 = G4, status2_system = TNC'
+  - list: other
+    name: United Plant Savers Species At-Risk List
+    value: At-Risk
+    listedAs: Spigelia marilandica
+    scope: not stated
+    nameBasis: stated
+    source: ups-species-at-risk
+    locator: Category "At-Risk", entry "Pink Root – Spigelia marilandica"

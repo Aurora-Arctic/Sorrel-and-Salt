@@ -1,0 +1,22 @@
+# Gathered for M14.29; the seed never reads this folder.
+entry: botanical/royal-palm-roystonea-regia
+status: needs-review
+listings:
+  - list: iucn
+    name: IUCN Red List of Threatened Species
+    value: Least Concern (IUCN 3.1)
+    listedAs: Roystonea regia
+    scope: global
+    nameBasis: stated
+    source: wikipedia-roystonea-regia
+    locator: 'taxobox, "Conservation status": "Least Concern (IUCN 3.1)"'
+  - list: other
+    name: NatureServe
+    value: Imperiled
+    listedAs: Roystonea regia
+    scope: unknown
+    nameBasis: stated
+    source: wikipedia-roystonea-regia
+    locator: 'taxobox, "Conservation status": "Imperiled (NatureServe)"'
+questions:
+  - 'The source does not say where the status "Imperiled" (NatureServe) applies, so its scope is recorded as unknown. Owner: say whether it is global or for one place, and whether to keep the row. Recommendation: keep it as unknown and do not remove the entry on it.'

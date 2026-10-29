@@ -1,0 +1,12 @@
+# Gathered for M14.29; the seed never reads this folder.
+entry: botanical/wahoo-euonymus-atropurpureus
+status: approved
+listings:
+  - list: iucn
+    name: IUCN Red List of Threatened Species, as printed in Wikipedia's taxobox
+    value: LC
+    listedAs: Euonymus atropurpureus
+    scope: global
+    nameBasis: stated
+    source: wikipedia-iucn-euonymus-atropurpureus
+    locator: 'Taxobox: status = LC, status_system = IUCN3.1; its status_ref reads: "Euonymus atropurpureus", Botanic Gardens Conservation International (BGCI)., 2018, 10.2305/IUCN.UK.2018-2.RLTS.T135956865A135956867.en'
