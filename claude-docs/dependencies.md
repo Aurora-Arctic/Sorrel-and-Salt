@@ -35,7 +35,7 @@ msw 3.0.3 is out and the move is small: subpath imports and one renamed option (
 
 ## Advisories and deprecations with no fix
 
-`npm audit` reports 21 findings (17 high, 4 moderate), all in devDependencies and none with a real fix:
+`npm audit` reported 0 findings on 2026-10-29. The advisories below are no longer reported (the lockfile resolves past or away from them); each stays listed with its revisit condition in case it returns. They were all in devDependencies, and none had a real fix:
 
 - **braces up to 3.0.3, GHSA-vfj7-8cjw-p6xm** (CVSS 8.7, September 2026): a deeply nested brace pattern from an attacker exhausts the stack. No patched version exists. It is reached through `micromatch`, `fast-glob` and `globby` under `stylelint` and `@graphql-codegen/cli`, each at its latest release, and none takes glob patterns from users. **Revisit when** a patched `braces` is published.
 - **esbuild up to 0.24.2, GHSA-67mh-4wv8-2f99**, under `drizzle-kit` and its deprecated `@esbuild-kit/esm-loader`. Accepted in [`db/orm-version.md`](db/orm-version.md); `drizzle-kit@1.0.0-rc` drops `@esbuild-kit`, so it clears with the ORM move above.
