@@ -1,4 +1,4 @@
-import { fireEvent, render, screen } from '@testing-library/react';
+import { render, screen } from '@testing-library/react';
 import type { ReactElement } from 'react';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { QueryClientProvider } from '@tanstack/react-query';
@@ -84,15 +84,6 @@ const props = (
   covens: COVENS,
   ...over,
 });
-
-/** The plus on the fixture card, named by its tip and then its entry (MB.120). */
-const PLUS = { name: `${ADD}: Fixture Salt` };
-
-/** Opens the plus's menu and returns it. */
-function openMenu(): HTMLElement {
-  fireEvent.click(screen.getByRole('button', PLUS));
-  return screen.getByRole('menu', PLUS);
-}
 
 describe('the add icon on the cards', () => {
   beforeEach(() => {

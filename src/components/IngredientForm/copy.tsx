@@ -267,6 +267,7 @@ export function SkippedNotice({
     // A status written out, where an `<output>` would hold phrasing content
     // alone; the notice inside takes no role, so it is announced once.
     <div
+      // oxlint-disable-next-line jsx-a11y/prefer-tag-over-role -- this live region holds block content, which an output element would restyle
       role="status"
       className="ingredient-form__copy-skipped"
       aria-label="Substitute Ingredients skipped"

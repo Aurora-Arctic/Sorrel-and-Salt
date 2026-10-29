@@ -120,7 +120,7 @@ vi.mock('@/components/IngredientForm', () => ({
   },
 }));
 /** The entry the form was last handed, or none for an add. */
-const formEntry = (): unknown => (formProps.mock.lastCall?.[0] as { entry?: unknown }).entry;
+const formEntry = (): unknown => (formProps.mock.lastCall?.[0] as { entry?: unknown })?.entry;
 
 // `redirect` throws in Next, ending the render; so does this one, recognisably.
 const REDIRECTED = 'NEXT_REDIRECT';

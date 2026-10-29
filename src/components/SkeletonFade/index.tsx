@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useRef, useState } from 'react';
+import { useEffect, useState } from 'react';
 import type { ReactElement, ReactNode } from 'react';
 import { ARRIVE_MS } from '../../lib/navigation/timing';
 import './index.scss';
@@ -21,7 +21,7 @@ import './index.scss';
  * starting mid-fade takes it back at once.
  */
 export function useLeavingSkeleton(shown: ReactElement | null): ReactElement | null {
-  const last = useRef<ReactElement | null>(null);
+  const [kept, setKept] = useState<ReactElement | null>(null);
   const [wasShown, setWasShown] = useState(false);
   const [leaving, setLeaving] = useState<ReactElement | null>(null);
   const isShown = shown !== null;
@@ -30,12 +30,9 @@ export function useLeavingSkeleton(shown: ReactElement | null): ReactElement | n
   // overlay and the page never shows bare for a frame.
   if (isShown !== wasShown) {
     setWasShown(isShown);
-    setLeaving(isShown ? null : last.current);
+    if (isShown) setKept(shown);
+    setLeaving(isShown ? null : kept);
   }
-
-  useEffect(() => {
-    if (shown) last.current = shown;
-  });
 
   useEffect(() => {
     if (!leaving) return undefined;

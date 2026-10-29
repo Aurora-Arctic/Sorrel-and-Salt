@@ -31,7 +31,7 @@ export function SpellSteps({
   const steps = useWatch({ control, name: 'steps' });
   // Each row's key follows its step, not its place: written back whole by an Undo, the array
   // keeps its steps' keys, where react-hook-form's own ids are all made afresh.
-  const keys = fields.map((field) => field.rowKey ?? field.id);
+  const keys = useMemo(() => fields.map((field) => field.rowKey ?? field.id), [fields]);
   const names = fields.map((field, index) => stepNameOf(steps[index] ?? field));
   const { announce, announcement } = useAnnouncement();
   const regionId = useId();
@@ -63,7 +63,7 @@ export function SpellSteps({
     const id = keys[keys.length - 1] ?? null;
     addedId.current = id;
     setOpenId(id);
-  }, [fields]);
+  }, [keys]);
   // An open row closes when a click or the focus lands outside it, so one row is open at a
   // time without a second click to shut it. A row just added is also kept open while the
   // focus stays in Add to Jar (the next ingredient is typed there); a click on the row's own
@@ -116,7 +116,7 @@ export function SpellSteps({
       document.removeEventListener('click', leave, true);
       document.removeEventListener('focusin', leave);
     };
-  }, [openId, fields]);
+  }, [openId, keys]);
   // A new instruction takes the focus into its field once it is open and drawn: a closed
   // instruction has no field to focus.
   const focusField = useRef(false);
@@ -128,7 +128,7 @@ export function SpellSteps({
       ?.querySelectorAll<HTMLElement>('.spell-steps__list > li')
       [index]?.querySelector<HTMLElement>('textarea')
       ?.focus();
-  }, [openId, fields]);
+  }, [openId, keys]);
 
   const add = (step: SpellStepValue) => {
     openNew.current = true;

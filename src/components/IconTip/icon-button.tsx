@@ -41,13 +41,10 @@ export const BinButton = ({
 export const AnnotateButton = ({
   name,
   onClick,
-  size,
   ref,
 }: {
   name: string;
   onClick: () => void;
-  /** `small`: the eye at 1rem in a 24px box, for a row that is already full (a spell's steps). */
-  size?: 'small';
   ref?: Ref<HTMLButtonElement>;
 }): ReactElement => (
   <IconTip tip="Annotate">

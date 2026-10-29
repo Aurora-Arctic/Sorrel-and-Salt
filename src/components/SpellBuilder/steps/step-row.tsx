@@ -157,6 +157,7 @@ export function BuilderStepRow({
       look={
         look && !instruction && step.ingredientId !== null ? (
           // A click inside the modal bubbles through React to the row, which would toggle it.
+          // oxlint-disable-next-line jsx-a11y/click-events-have-key-events, jsx-a11y/no-static-element-interactions -- this only stops a click reaching the row; it is not a control
           <span onClick={(event) => event.stopPropagation()}>
             <StepQuickLook ingredientId={step.ingredientId} name={name} look={look} />
           </span>

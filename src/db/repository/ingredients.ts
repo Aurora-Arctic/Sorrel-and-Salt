@@ -45,7 +45,6 @@ import {
 import { inUseIngredientParent, inUseVariantParent } from './ingredient-parent';
 import {
   fold,
-  foldedWordMatch,
   inCompendium,
   listFolds,
   notSoftDeleted,

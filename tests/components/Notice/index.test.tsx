@@ -107,6 +107,7 @@ describe('Notice, the block form', () => {
 describe('Notice, inside a region', () => {
   it.each(['success'] as const)('takes no role of its own as a %s, inline or block', (kind) => {
     render(
+      // oxlint-disable-next-line jsx-a11y/prefer-tag-over-role -- a test fixture standing in for the real control
       <div role="status" aria-label="Fixture Region">
         <Notice kind={kind} inRegion>
           {SENTENCE}

@@ -290,6 +290,7 @@ export function useAutosave<TValue>({
   });
 
   const [view, setView] = useState(INITIAL);
+  // oxlint-disable-next-line react/refs -- the ref is read once, in a state initialiser or after a held pointer, never to draw something else
   const [engine] = useState(() => createEngine(latest, setView, revision));
 
   useEffect(() => {

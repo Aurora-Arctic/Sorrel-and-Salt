@@ -404,8 +404,10 @@ const CITE_RULES = [
 function HowToCite({ id }: { id: string }): ReactElement {
   return (
     <InfoTip id={id} label="How to Cite">
+      {/* oxlint-disable-next-line jsx-a11y/prefer-tag-over-role -- these sit in a tooltip bubble as phrasing content; a ul would break the paragraph around it */}
       <span role="list" className="ingredient-form__cite-rules">
         {CITE_RULES.map((rule) => (
+          // oxlint-disable-next-line jsx-a11y/prefer-tag-over-role -- these sit in a tooltip bubble as phrasing content; an li would break the paragraph around it
           <span key={rule} role="listitem" className="ingredient-form__cite-rule">
             {rule}
           </span>

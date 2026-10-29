@@ -193,6 +193,7 @@ export function ChoiceChip<T extends string>({
       <div
         ref={tip.anchor}
         className="facet-chip__bar"
+        // oxlint-disable-next-line react/refs -- the callback ref and handlers come from a hook and are only handed to the DOM, never read while rendering
         onMouseEnter={chipHint ? tip.showSoon : undefined}
         onMouseLeave={chipHint ? tip.hideSoon : undefined}
       >
@@ -209,6 +210,7 @@ export function ChoiceChip<T extends string>({
               {face}
             </button>
           ) : (
+            // oxlint-disable-next-line jsx-a11y/no-noninteractive-element-interactions -- the handlers hear events bubbling from the summary, which is the control
             <details
               ref={root}
               className={
@@ -268,6 +270,7 @@ export function ChoiceChip<T extends string>({
             id={chipHintId}
             role="tooltip"
             className={tip.open && !shown ? 'info-tip__bubble is-open' : 'info-tip__bubble'}
+            // oxlint-disable-next-line react/refs -- the callback ref and handlers come from a hook and are only handed to the DOM, never read while rendering
             aria-hidden={!(tip.open && !shown)}
             style={tip.bubbleStyle}
           >
