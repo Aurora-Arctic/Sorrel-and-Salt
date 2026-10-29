@@ -1,0 +1,60 @@
+# Gathered for M14.29; the seed never reads this folder.
+entry: botanical/pyrola-orthilia-secunda
+status: approved
+listings:
+  - list: other
+    name: NatureServe global rank, as printed in Wikipedia's taxobox
+    value: G5
+    listedAs: Orthilia secunda
+    scope: global
+    nameBasis: stated
+    source: wikipedia-orthilia
+    locator: 'Taxobox: status = G5, status_system = TNC'
+  - list: other
+    name: Maryland state listing, as stated by Wikipedia
+    value: endangered and extirpated
+    listedAs: Orthilia secunda
+    scope: Maryland
+    nameBasis: stated
+    source: wikipedia-orthilia
+    locator: 'Conservation sentence: "It is listed as endangered and extirpated in Maryland, extirpated in Indiana, presumed extirpated in Ohio, as threatened in Iowa and Rhode Island."'
+  - list: other
+    name: Indiana state listing, as stated by Wikipedia
+    value: extirpated
+    listedAs: Orthilia secunda
+    scope: Indiana
+    nameBasis: stated
+    source: wikipedia-orthilia
+    locator: 'Conservation sentence: "It is listed as endangered and extirpated in Maryland, extirpated in Indiana, presumed extirpated in Ohio, as threatened in Iowa and Rhode Island."'
+  - list: other
+    name: Ohio state listing, as stated by Wikipedia
+    value: presumed extirpated
+    listedAs: Orthilia secunda
+    scope: Ohio
+    nameBasis: stated
+    source: wikipedia-orthilia
+    locator: 'Conservation sentence: "It is listed as endangered and extirpated in Maryland, extirpated in Indiana, presumed extirpated in Ohio, as threatened in Iowa and Rhode Island."'
+  - list: other
+    name: Iowa state listing, as stated by Wikipedia
+    value: threatened
+    listedAs: Orthilia secunda
+    scope: Iowa
+    nameBasis: stated
+    source: wikipedia-orthilia
+    locator: 'Conservation sentence: "It is listed as endangered and extirpated in Maryland, extirpated in Indiana, presumed extirpated in Ohio, as threatened in Iowa and Rhode Island."'
+  - list: other
+    name: Rhode Island state listing, as stated by Wikipedia
+    value: threatened
+    listedAs: Orthilia secunda
+    scope: Rhode Island
+    nameBasis: stated
+    source: wikipedia-orthilia
+    locator: 'Conservation sentence: "It is listed as endangered and extirpated in Maryland, extirpated in Indiana, presumed extirpated in Ohio, as threatened in Iowa and Rhode Island."'
+  - list: other
+    name: Connecticut state listing, as stated by Wikipedia
+    value: special concern and believed extirpated
+    listedAs: Orthilia secunda
+    scope: Connecticut
+    nameBasis: stated
+    source: wikipedia-orthilia
+    locator: 'Section "Conservation status within the United States": "It is a special concern and believed extirpated in Connecticut."'

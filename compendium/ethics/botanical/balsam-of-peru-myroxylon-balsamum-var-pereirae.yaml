@@ -1,0 +1,14 @@
+# Gathered for M14.29; the seed never reads this folder.
+entry: botanical/balsam-of-peru-myroxylon-balsamum-var-pereirae
+status: needs-review
+listings:
+  - list: iucn
+    name: IUCN Red List of Threatened Species, as printed in Wikipedia's taxobox
+    value: LC
+    listedAs: Myroxylon balsamum var. pereirae
+    scope: global
+    nameBasis: stated
+    source: wikipedia-iucn-myroxylon-balsamum
+    locator: 'Taxobox: status = LC, status_system = IUCN3.1; its status_ref reads: "Myroxylon balsamum", Canteiro, C.; Lewis, G., 2021, e.T62026528A62026530'
+questions:
+  - 'The assessment is of the species (Myroxylon balsamum), the entry is the variety Myroxylon balsamum var. pereirae. Recommendation: keep the row for the species and ask whether it speaks for the variety.'

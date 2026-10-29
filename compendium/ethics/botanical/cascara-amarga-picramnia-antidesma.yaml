@@ -1,0 +1,12 @@
+# Gathered for M14.29; the seed never reads this folder.
+entry: botanical/cascara-amarga-picramnia-antidesma
+status: approved
+listings:
+  - list: iucn
+    name: IUCN Red List of Threatened Species, as printed in Wikipedia's taxobox
+    value: LC
+    listedAs: Picramnia antidesma
+    scope: global
+    nameBasis: stated
+    source: wikipedia-iucn-picramnia-antidesma
+    locator: 'Taxobox: status = LC, status_system = IUCN3.1; its status_ref reads: "Picramnia antidesma", Machuca Machuca, K.; Martínez Salas, E.; Samain, M.-S., 2022, e.T205474470A205617360'

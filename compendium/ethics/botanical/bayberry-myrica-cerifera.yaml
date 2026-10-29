@@ -1,0 +1,14 @@
+# Gathered for M14.29; the seed never reads this folder.
+entry: botanical/bayberry-myrica-cerifera
+status: needs-review
+listings:
+  - list: iucn
+    name: IUCN Red List of Threatened Species, as printed in Wikipedia's taxobox
+    value: LC
+    listedAs: Myrica cerifera
+    scope: global
+    nameBasis: stated
+    source: wikipedia-iucn-myrica-cerifera
+    locator: 'Taxobox: status = LC, status_system = IUCN3.1; its status_ref reads: "Morella cerifera", IUCN SSC Global Tree Specialist Group; Botanic Gardens Conservation International, 2020, e.T152858227A152906779'
+questions:
+  - 'Wikipedia''s status_ref names an assessment titled "Morella cerifera", which is not Myrica cerifera. Is it the same species? Recommendation: do not rely on this row until an authority the owner accepts maps one name to the other.'
