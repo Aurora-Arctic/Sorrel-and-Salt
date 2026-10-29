@@ -37,6 +37,11 @@ export interface ComboboxOption {
    * combobox knows no icon set; the caller hands over a drawn, decorative one.
    */
   icon?: ReactNode;
+  /**
+   * A mark at the end of the label's line, after the count: information only (the spell picker's
+   * In Jar badge). Its text counts toward the name, so a caller gives its words for a reader.
+   */
+  badge?: ReactNode;
   /** How many results picking it would match (M12.4): read after the label, "Wax (3)", part of the option's name. */
   count?: number;
   /**

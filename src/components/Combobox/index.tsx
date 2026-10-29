@@ -421,6 +421,7 @@ function Combobox<O extends ComboboxOption = ComboboxOption>({
                   <span className="combobox__count">{item.count}</span>
                 </>
               )}
+              {item.badge && <> {item.badge}</>}
             </span>
             {(item.note || item.meta) && (
               <div className={item.meta ? 'combobox__note combobox__note--meta' : 'combobox__note'}>

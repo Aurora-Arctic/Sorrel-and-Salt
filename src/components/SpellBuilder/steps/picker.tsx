@@ -115,6 +115,7 @@ function pickRows(
   colors: ReadonlyMap<string, GroupColors>,
   assigned: ReadonlySet<string>,
   missing: ReadonlySet<string>,
+  inJar: ReadonlySet<string>,
 ): IngredientPickOption[] {
   return data.ingredientSuggestions.edges.flatMap(({ group, node }) =>
     // A retired entry is kept where a spell lays it, never added anew.
@@ -127,6 +128,13 @@ function pickRows(
             value: name,
             label: `${name} (${formLabel(form)})`,
             note: node.canonicalName ?? undefined,
+            // Information only: the row stays pickable, since a form may be laid again.
+            badge: inJar.has(variant.id) ? (
+              <span className="badge badge--retired spell-steps__in-jar">
+                <span aria-hidden="true">In Jar</span>
+                <span className="visually-hidden">already in the jar</span>
+              </span>
+            ) : undefined,
             // The form's categories, else the ingredient's, as small print on that line.
             meta: categoryNames(
               variant.categories.length > 0 ? variant.categories : node.categories,
@@ -178,9 +186,15 @@ export function StepPicker({ workspaceId, oneOffs, onAdd }: StepPickerProps): Re
   // drops out of the filter, so removing it from the field never leaves a hidden filter.
   const [pressed, setPressed] = useState<readonly string[]>([]);
   const narrowedBy = useMemo(() => pressed.filter((id) => assigned.has(id)), [pressed, assigned]);
+  // The forms already laid as a step, marked on their rows.
+  const inJar = useMemo(
+    () => new Set((jarSteps ?? []).flatMap(({ variantId }) => (variantId ? [variantId] : []))),
+    [jarSteps],
+  );
   const shape = useMemo(
-    () => (data: SpellIngredientSuggestionsQuery) => pickRows(data, colors, assigned, missing),
-    [colors, assigned, missing],
+    () => (data: SpellIngredientSuggestionsQuery) =>
+      pickRows(data, colors, assigned, missing, inJar),
+    [colors, assigned, missing, inJar],
   );
   const suggestions = useLookup(
     SpellIngredientSuggestionsDocument,

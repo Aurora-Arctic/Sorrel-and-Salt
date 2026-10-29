@@ -1303,6 +1303,39 @@ describe('the spell builder’s Add to Jar categories', () => {
     expect(many).toHaveTextContent('more: Ember, Aid, Calm, Dawn');
   });
 
+  it('marks a form already in the jar on its row, and leaves the row pickable', async () => {
+    suggest(ROSEWORT, MOCKROOT);
+    const laid: SpellBuilderSpell['steps'][number] = {
+      id: ID.savedRosewort,
+      name: 'Fixture Rosewort',
+      form: 'dried leaf',
+      quantity: 3,
+      unit: 'g',
+      body: null,
+      ingredient: { id: ID.rosewort, toxic: false, safetyNotes: null, categories: [], stock: [] },
+      variant: {
+        id: ID.roseLeaf,
+        toxic: false,
+        safetyNotes: null,
+        categories: [],
+        formChoice: null,
+      },
+    };
+    renderBuilder({ spell: answer('s3', 1, [laid]) });
+    openAll();
+
+    const rosewort = await lookUp('Fixture', /Fixture Rosewort/);
+    const mockroot = screen.getByRole('option', { name: /Fixture Mockroot/ });
+
+    expect(rosewort).toHaveAccessibleName(/already in the jar/);
+    expect(within(rosewort).getByText('In Jar')).toBeInTheDocument();
+    // Why it could have been marked: Mockroot is a form too, and no step lays it.
+    expect(mockroot).not.toHaveAccessibleName(/already in the jar/);
+    expect(within(mockroot).queryByText('In Jar')).toBeNull();
+    // Information only: a repeat is allowed.
+    expect(rosewort).not.toHaveAttribute('aria-disabled', 'true');
+  });
+
   it('narrows the results to the pressed assigned categories, asking the server for them', async () => {
     const asked: unknown[] = [];
     mockGraphQLQuery<SpellIngredientSuggestionsQuery, { categoryIds?: string[] | null }>(

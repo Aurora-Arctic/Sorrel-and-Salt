@@ -228,6 +228,12 @@ $spell-columns-switch: $spell-main-min + $spell-columns-gap + $spell-side;
 // The picker's category filter, above the box: the spell's assigned categories as toggles. Off
 // is an outline in the group's colours; on is the full wash with a heavier ring, so the state is
 // not carried by colour alone.
+// The In Jar mark on a picker row: the site's compact badge size, as the step rows' marks wear.
+.spell-steps__in-jar {
+  @include badge-size('small');
+  margin-inline-start: space(2);
+}
+
 .spell-steps__filter {
   display: flex;
   flex-direction: column;
