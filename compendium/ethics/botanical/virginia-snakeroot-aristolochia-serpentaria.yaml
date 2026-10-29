@@ -5,7 +5,14 @@ listings:
   - list: other
     name: United Plant Savers Species At-Risk List
     value: At-Risk
-    listedAs: 'Aristolochia serpentaria'
+    listedAs: Aristolochia serpentaria
     nameBasis: stated
     source: ups-species-at-risk
     locator: under the heading "At-Risk", entry for Virginia Snakeroot
+  - list: other
+    name: New York State listing, as stated by Wikipedia
+    value: endangered
+    listedAs: Aristolochia serpentaria
+    nameBasis: stated
+    source: wikipedia-aristolochia-serpentaria-conservation
+    locator: 'Section "Protection": "Virginia snakeroot is considered an endangered species in New York"'

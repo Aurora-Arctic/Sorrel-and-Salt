@@ -16,3 +16,10 @@ listings:
     nameBasis: stated
     source: wikipedia-iucn-symplocarpus-foetidus
     locator: 'Taxobox: status = LC, status_system = IUCN3.1; its status_ref reads: "Symplocarpus foetidus", Maiz-Tome, L., 2016, 10.2305/IUCN.UK.2016-1.RLTS.T64325342A67731102.en'
+  - list: other
+    name: Tennessee state listing, as stated by Wikipedia
+    value: endangered
+    listedAs: Symplocarpus foetidus
+    nameBasis: stated
+    source: wikipedia-symplocarpus-foetidus-conservation
+    locator: 'Section on distribution (sentence beginning "In Tennessee"): "In Tennessee, it is protected as an endangered species."'

@@ -5,7 +5,14 @@ listings:
   - list: other
     name: United Plant Savers Species At-Risk List
     value: At-Risk
-    listedAs: 'Panax quinquefolius'
+    listedAs: Panax quinquefolius
     nameBasis: stated
     source: ups-species-at-risk
     locator: under the heading "At-Risk", entry for American Ginseng
+  - list: other
+    name: Committee on the Status of Endangered Wildlife in Canada (COSEWIC), as stated by Wikipedia
+    value: Endangered (E)
+    listedAs: Panax quinquefolius
+    nameBasis: stated
+    source: wikipedia-panax-quinquefolius-conservation
+    locator: 'Section "Status": "As determined by the Committee on the Status of Endangered Wildlife in Canada, the conservation status of Panax quinquefolius is Endangered (E) in Canada."'
