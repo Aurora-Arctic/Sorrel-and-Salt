@@ -8,5 +8,5 @@ listings:
     listedAs: Persicaria hydropiper
     scope: 'global'
     nameBasis: stated
-    source: iucn-persicaria-hydropiper
+    source: wikipedia-iucn-persicaria-hydropiper
     locator: 'Taxobox: status = LC, status_system = IUCN3.1; Lansdown, R.V., 2014, 10.2305/IUCN.UK.2014-1.RLTS.T163977A42399743.en'
