@@ -5,6 +5,7 @@ import { signInAgainAs } from '../session';
 import {
   compendiumVariant,
   insertSpell,
+  insertStep,
   insertStock,
   localIngredient,
   seedCoven,
@@ -323,6 +324,50 @@ test(
     // The warning does not block the addition: the step stays and can be saved.
     await page.getByRole('textbox', { name: 'Title' }).fill('Fixture Working');
     await expect(page.getByRole('button', { name: 'Save' })).toBeEnabled();
+  },
+);
+
+test(
+  "a member sees on a spell's Quick Look and its recipe page what the coven has none of",
+  { tag: '@story-54' },
+  async ({ page }) => {
+    const coven = await seedCoven(page, 'Fixture Coven Fifty-Four', 'story-54.test', {
+      A: 'owner',
+      B: 'member',
+    });
+    const A = coven.users.A;
+    const spellId = await withSql(async (sql) => {
+      // The coven's jar of one root is empty, and of the other holds plenty.
+      const empty = await localIngredient(sql, coven.id, A, {
+        name: 'Fixture Emptywort',
+        variants: [makeVariant({ form: 'Root' })],
+      });
+      const full = await localIngredient(sql, coven.id, A, {
+        name: 'Fixture Fullwort',
+        variants: [makeVariant({ form: 'Root' })],
+      });
+      await insertStock(sql, coven.id, empty, { quantity: 0, unit: 'g', threshold: 0 }, A);
+      await insertStock(sql, coven.id, full, { quantity: 50, unit: 'g', threshold: 0 }, A);
+      const id = await insertSpell(sql, coven.id, 'Fixture Working', 'workspace', A, 'complete');
+      await insertStep(sql, id, empty, { quantity: 2, unit: 'g', position: 0 }, A);
+      await insertStep(sql, id, full, { quantity: 2, unit: 'g', position: 1 }, A);
+      return id;
+    });
+    await signInAgainAs(page, coven.users.B);
+    await page.goto(`/coven/${coven.slug}/grimoire`);
+    await grimoireList(page).getByRole('link', { name: 'Quick Look Fixture Working' }).click();
+    // The Quick Look marks the step the coven has none of, and only that one.
+    const look = page.getByRole('dialog', { name: /Fixture Working/ });
+    await expect(look.getByRole('button', { name: 'Out' })).toHaveCount(1);
+    const emptyStep = look.getByRole('listitem').filter({ hasText: 'Fixture Emptywort' });
+    await expect(emptyStep.getByRole('button', { name: 'Out' })).toBeVisible();
+    // The recipe page says the same in its In Coven Inventory.
+    await look.getByRole('link', { name: 'See Full Recipe' }).click();
+    await expect(page).toHaveURL(new RegExp(`/coven/${coven.slug}/grimoire/${spellId}$`));
+    const inventory = page.getByRole('region', { name: 'In Coven Inventory' });
+    await expect(inventory.getByRole('button', { name: 'Out' })).toHaveCount(1);
+    const emptyLine = inventory.getByRole('listitem').filter({ hasText: 'Fixture Emptywort' });
+    await expect(emptyLine.getByRole('button', { name: 'Out' })).toBeVisible();
   },
 );
 

@@ -211,6 +211,33 @@ export async function insertSpell(
   });
 }
 
+/**
+ * A step on `spellId` laying `held`, `quantity` `unit` of it, at `position`, written by
+ * `author`. `layer_order` takes the same value until M13.9 drops it (spell-steps.ts).
+ */
+export async function insertStep(
+  sql: postgres.Sql,
+  spellId: string,
+  held: Held,
+  { quantity, unit, position }: { quantity: number; unit: StockUnit; position: number },
+  author: string,
+): Promise<string> {
+  return sql.begin(async (tx) => {
+    await tx`select set_config('app.current_user_id', ${author}, true)`;
+    const [row] = await tx<{ id: string }[]>`
+      insert into spell_steps (
+        spell_id, ingredient_id, variant_id, quantity, unit, layer_order, position,
+        created_by, updated_by
+      )
+      values (
+        ${spellId}, ${held.ingredientId}, ${held.variantId}, ${quantity}, ${unit},
+        ${position}, ${position}, ${author}, ${author}
+      )
+      returning id`;
+    return row.id;
+  });
+}
+
 interface GraphqlAnswer {
   data?: Record<string, unknown> | null;
   errors?: { message: string; extensions?: { code?: string } }[];
