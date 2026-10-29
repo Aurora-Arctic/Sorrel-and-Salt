@@ -419,20 +419,20 @@ reads that nothing is held yet.
 
 `comparison-panel.tsx` (M10.17, story 52) sets what the spell intends beside what its jar
 carries, so a mismatch shows while the spell is built. It is a region named Category Match
-in the Jar aside, drawn as rows of a `dl` (Carried, Missing, Stray) whose values are
-the site's own `CategoryChips` ([`category-chips.md`](category-chips.md)), each in its category's group colours (read by id from the `categories` query the picker already makes; a category whose colours have not landed is left out until they do). The chips are the compact size, the one the admin Compendium table's Categories column uses. The row's label alone says Carried, Missing or Stray: the Missing row alone draws its chips hollow (CategoryChips' `absent` prop: no fill, a dashed border and text both in `$text-muted`, so the chip is wholly grey; the owner's call), so they read as absent while still naming the category; Carried keeps the full fill and Stray is unchanged. Every chip carries a tip, through `CategoryChips`'s `tipOf` prop: "From <the ingredients carrying it, in the jar's order>" on a Carried or Stray chip, and "Assigned to this spell, and nothing in the jar carries it" on a Missing one. It opens by hover, focus and tap (the M12.43 rule) and rides on the chip as its accessible description. Every chip is drawn (`showAll`): the panel has no +N button (the owner's call, 2026-10-28). The Stray row has no line of its own beneath the chip: the tip is where the ingredients are named. It reads the form's values as they stand, saved or not, so a pick or an ingredient added or
+in the Jar aside, drawn as rows of a `dl` (Carried, Missing, Extra) whose values are
+the site's own `CategoryChips` ([`category-chips.md`](category-chips.md)), each in its category's group colours (read by id from the `categories` query the picker already makes; a category whose colours have not landed is left out until they do). The chips are the compact size, the one the admin Compendium table's Categories column uses. The row's label alone says Carried, Missing or Extra: the Missing row alone draws its chips hollow (CategoryChips' `absent` prop: no fill, a dashed border and text both in `$text-muted`, so the chip is wholly grey; the owner's call), so they read as absent while still naming the category; Carried keeps the full fill and Extra is unchanged. Every chip carries a tip, through `CategoryChips`'s `tipOf` prop: "From <the ingredients carrying it, in the jar's order>" on a Carried or Extra chip, and "Assigned to this spell, and nothing in the jar carries it" on a Missing one. It opens by hover, focus and tap (the M12.43 rule) and rides on the chip as its accessible description. Every chip is drawn (`showAll`): the panel has no +N button (the owner's call, 2026-10-28). The Extra row has no line of its own beneath the chip: the tip is where the ingredients are named. It reads the form's values as they stand, saved or not, so a pick or an ingredient added or
 removed moves it at once. The comparison is M10.8's `compareSpellCategories` over M10.7's
 `summarizeSpellCategories`, run in the browser on the steps' categories; a one-off or an
 instruction brings none. It also lists Derived Categories, the union of the steps' categories,
 once each and sorted by name.
 
 - **Carried** is each intended category the jar carries; **Missing** each assigned category nothing
-  in the jar carries; **Stray** each category the jar carries that was not assigned. The row is its chips and nothing
-  else: no line, tip or other place names the ingredients that bring a stray category (the owner's
+  in the jar carries; **Extra** each category the jar carries that was not assigned. The row is its chips and nothing
+  else: no line, tip or other place names the ingredients that bring an extra category (the owner's
   call, 2026-10-28).
   The words carry the difference; the chips are coloured by group, as they are everywhere. On 2026-10-29 the owner chose the group colours over the second design review's finding 6a (neutral chips), so the review is not current on this point. The review's spacing stays: the chips are the compact size (`CategoryChips` with `compact`, which applies `chip($size: compact)`: overline text, 0.4375rem side padding), the row labels are the 5.5rem caption column, and rows are `space(2)` apart.
 - With none of the three, it reads "Intent and ingredients match." With no category assigned the
-  panel does not list every ingredient as a stray: it asks for categories first. With nothing
+  panel does not list every ingredient as an extra: it asks for categories first. With nothing
   assigned and nothing in the jar it reads "Nothing to compare yet."
 
 - **Supply (M10.19, story 54).** Each ingredient step reads the coven's jar of its form
