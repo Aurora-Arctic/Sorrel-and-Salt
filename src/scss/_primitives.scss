@@ -1118,6 +1118,28 @@
     }
   }
 
+  // A solid button on either keeps its label in the on-colour ink: it stands on the
+  // accent, not on the tint, so the ink above would vanish into it (M13.18, the
+  // conflict notice's Reload Latest and the recovery banner's Keep).
+  .notice--warn .btn--solid,
+  .notice--error .btn--solid {
+    color: $text-on-color;
+  }
+
+  // A quiet button on either keeps the body ink it has everywhere else, at rest and
+  // on hover: it stands on a field's ground, not on the tint, and it does not fill, so
+  // neither ink above fits it (M13.18, the conflict notice's Keep My Version and the
+  // recovery banner's Discard; the owner's call, 2026-10-29).
+  .notice--warn .btn--quiet,
+  .notice--error .btn--quiet {
+    color: $text-primary;
+
+    &:hover,
+    &:focus-visible {
+      color: $text-primary;
+    }
+  }
+
   // Caution: a quieter warning, for what is worth knowing but asks nothing
   // of the reader. The bar and tint in the muted ink, the triangle still the
   // ochre, the text in the body ink (the owner's call, 2026-10-19).

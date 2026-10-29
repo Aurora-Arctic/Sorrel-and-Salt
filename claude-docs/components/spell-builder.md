@@ -55,13 +55,21 @@ for it, as for a refused unit, and Save or Close shows the error beside it.
 - **The adapter** (`autosave.ts`) takes a target: `{ kind: 'new' }` calls
   `createSpell`, once, and the engine then carries the id;
   `{ kind: 'spell', id, revision }` calls `updateSpell` with that
-  `expectedRevision` (null forces, for M13.18). A later edit to a complete
-  spell can name another target when spell history arrives.
+  `expectedRevision`. The builder never sends null (the unconditional write):
+  after a conflict it names the revision the refusal reported, as "Two people,
+  one spell" below sets out. A later edit to a complete spell can name
+  another target when spell history arrives. Beside the save, `readLatestSpell`
+  reads the spell as the server has it now (`SpellBuilderReload`), for Reload Latest.
 - **The browser copy.** Every change is mirrored to localStorage, keyed
   `autosave:spell:<id|new>:<userId>`, until the server confirms. If a copy
   newer than the spell's `updatedAt` exists when the builder opens, a banner
   reads "Restored unsaved changes from 2:02 pm" with Keep (load the copy into
-  the form, unsaved) and Discard (forget it). The notice is a wrapping flex row with a
+  the form, unsaved) and Discard (forget it). In the dialog it sits under the
+  title, in the modal's header note ([`modal.md`](modal.md), "A control in the
+  header"), as the conflict notice does, so it is in view however far the form
+  has scrolled; outside a modal it is above the fields. It is a warning notice, with Keep
+  the one solid button and Discard quiet (the owner's calls, 2026-10-29), and takes the
+  conflict notice's room so the two line up. The notice is a wrapping flex row with a
   `space(2)` gap between the sentence and the buttons (the same gap as the save status's notices), so
   at a narrow width the buttons drop to their own line. An older copy is removed without
   a word.
@@ -123,6 +131,42 @@ for it, as for a refused unit, and Save or Close shows the error beside it.
   and every save was refused. The answers are all typed as `SpellBuilderStep`
   (`types.ts`, off the steps read) where the builder reads them, so a copy
   missing a field fails the type check.
+
+## Two people, one spell
+
+Two members can have one spell open at once, and each save names the
+revision it was read at (`expectedRevision`; M13.15, M13.16). The second of two
+saves written against the same revision is refused by the service with
+`StaleWrite`, which reaches the builder as a `STALE_WRITE` answer carrying the
+spell's revision now ([`autosave.md`](autosave.md), "The server's half").
+Nothing of the refused save lands: the service and resolver tests in
+`tests/modules/grimoire/` prove the row is as the first save left it. The
+builder then (M13.18, story 81):
+
+- **Pauses the autosave** and shows the conflict notice, "This spell was
+  changed elsewhere.", with Reload Latest and Keep My Version (`SaveStatus`'s
+  `conflict` state). It sits under the dialog's title, through `conflictInto`
+  and the modal's header note, not in the footer beside Save, where it went
+  unnoticed under a long form (the owner's call, 2026-10-29); the saved line
+  stays beside Save. Typing goes on, into the form, but nothing is sent until
+  one is pressed.
+- **Reload Latest** reads the spell as the server has it now (`readLatestSpell`
+  in `autosave.ts`: the fields, the categories and the whole recipe) and puts
+  it in the form in place of what was typed, which is discarded, with the
+  browser copy. The form starts clean from it, so Save goes off, and the
+  engine carries the revision the refusal reported. A save made by someone
+  else between the refusal and the read is met as the next conflict. If the
+  read fails, the conflict and the typing stay and the form says "The latest
+  version couldn't be loaded. Try again." above the fields.
+- **Keep My Version** sends the form again, naming the revision the refusal
+  reported as `expectedRevision`, so it writes over the other person's save.
+  Their open builder then meets the conflict in its turn on its next save. The
+  version written over is kept nowhere (v2's revisions table would keep it).
+
+There is no merge of the two texts, no diff and no history. A conflict is
+settled by one of the two buttons, never by a page reload: the engine's
+`resolveConflict` ([`autosave.md`](autosave.md)) is what moves the status on.
+A draft and a complete spell meet it alike, since both save to the one row.
 
 ## Visibility
 
@@ -498,8 +542,12 @@ Open Again to look once more after Close.
 ## Testing
 
 `tests/components/SpellBuilder/autosave.test.tsx` covers the saves (create once,
-then update at the revision; a draft with no title; the three-second save) and
-the recovery banner (Keep, Discard, an older copy). The gate spec
+then update at the revision; a draft with no title; the three-second save),
+the recovery banner (Keep, Discard, an older copy) and a save someone else
+got in first (the notice's two buttons; Reload Latest puts the server's spell
+in the form, clean; Keep My Version sends again at the reported revision).
+Story 81's second flow walks it in two browsers, each signed in as another
+member of the coven, and scans the notice with axe. The gate spec
 `tests/e2e/spell-builder-autosave.spec.ts` scans the builder with axe in each
 status: saving, saved, failed with Retry, and conflict. Story 81 is in
 `tests/e2e/stories/06-grimoire.spec.ts`.

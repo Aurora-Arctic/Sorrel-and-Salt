@@ -1,5 +1,6 @@
 import type { Locator, Page } from '@playwright/test';
 import { test, expect } from '../fixtures';
+import { assertNoAccessibilityViolations } from '../axe';
 import { recreateE2eDatabase } from '../database';
 import { signInAgainAs } from '../session';
 import {
@@ -681,6 +682,72 @@ test(
     await expect(page.getByRole('textbox', { name: 'Intent' })).toHaveValue(
       'To see clearly, offline',
     );
+  },
+);
+
+/** The builder on a saved spell, every section open, in `page`'s browser. */
+async function openSavedSpell(page: Page, slug: string, spellId: string, title: string) {
+  await page.goto(`/coven/${slug}/grimoire?edit=${spellId}`);
+  const dialog = page.getByRole('dialog', { name: `Edit Spell, ${title}` });
+  await dialog.getByRole('button', { name: 'Open All' }).click();
+  return dialog;
+}
+
+test(
+  'two members edit one spell: the second save is refused, and Reload Latest or Keep My Version settles it',
+  { tag: '@story-81' },
+  async ({ page, browser, baseURL }) => {
+    const coven = await seedCoven(page, 'Fixture Coven Eighty-One Shared', 'story-81-shared.test', {
+      A: 'owner',
+      B: 'member',
+    });
+    const spellId = await withSql((sql) =>
+      insertSpell(sql, coven.id, 'Shared Working', 'workspace', coven.users.A),
+    );
+    // Two browsers on the one spell: B here, A in a second context on the same server.
+    await signInAgainAs(page, coven.users.B);
+    const other = await browser.newContext({ baseURL });
+    const otherPage = await other.newPage();
+    await signInAgainAs(otherPage, coven.users.A);
+    const first = await openSavedSpell(page, coven.slug, spellId, 'Shared Working');
+    const second = await openSavedSpell(otherPage, coven.slug, spellId, 'Shared Working');
+    const conflict = 'This spell was changed elsewhere.';
+
+    // Both edit the same field; the first save lands, the second is refused.
+    await first.getByRole('textbox', { name: 'Intent' }).fill('Seen by B');
+    await first.getByRole('button', { name: 'Save Spell' }).click();
+    await expect(first.getByRole('button', { name: 'Save Spell' })).toBeDisabled();
+    await second.getByRole('textbox', { name: 'Intent' }).fill('Seen by A');
+    await second.getByRole('button', { name: 'Save Spell' }).click();
+    await expect(second.getByText(conflict)).toBeVisible();
+    await assertNoAccessibilityViolations(otherPage);
+
+    // Reload Latest shows the other's text, and there is nothing left to save.
+    await second.getByRole('button', { name: 'Reload Latest' }).click();
+    await expect(second.getByRole('textbox', { name: 'Intent' })).toHaveValue('Seen by B');
+    await expect(second.getByText(conflict)).toBeHidden();
+    await expect(second.getByRole('button', { name: 'Save Spell' })).toBeDisabled();
+    // Edited again from the latest, the save lands.
+    await second.getByRole('textbox', { name: 'Intent' }).fill('Seen by A, after reload');
+    await second.getByRole('button', { name: 'Save Spell' }).click();
+    await expect(second.getByRole('button', { name: 'Save Spell' })).toBeDisabled();
+
+    // The first browser is now the one behind: Keep My Version writes over A's save.
+    await first.getByRole('textbox', { name: 'Intent' }).fill('Kept by B');
+    await first.getByRole('button', { name: 'Save Spell' }).click();
+    await expect(first.getByText(conflict)).toBeVisible();
+    await first.getByRole('button', { name: 'Keep My Version' }).click();
+    await expect(first.getByText(conflict)).toBeHidden();
+    await expect(first.getByRole('button', { name: 'Save Spell' })).toBeDisabled();
+    await page.reload();
+    await page.getByRole('button', { name: 'Open All' }).click();
+    await expect(page.getByRole('textbox', { name: 'Intent' })).toHaveValue('Kept by B');
+
+    // And the other open builder meets the conflict in its turn.
+    await second.getByRole('textbox', { name: 'Intent' }).fill('Seen by A, once more');
+    await second.getByRole('button', { name: 'Save Spell' }).click();
+    await expect(second.getByText(conflict)).toBeVisible();
+    await other.close();
   },
 );
 
