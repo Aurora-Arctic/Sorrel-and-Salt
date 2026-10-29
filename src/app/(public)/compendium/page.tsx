@@ -63,10 +63,7 @@ const isFiltered = (params: PublicCompendiumSearchParams) =>
   JSON.stringify(COMPENDIUM_PARAMS.read(publicParams(params))) !==
   JSON.stringify(COMPENDIUM_PARAMS.read({}));
 
-/**
- * A filtered view is a thin copy of the page: kept out of search results, with the unfiltered
- * page as the canonical address. A canonical never carries a query string.
- */
+/** A filtered view is a thin copy: kept out of search results, with the unfiltered page canonical. */
 export async function generateMetadata({
   searchParams,
 }: PublicCompendiumPageProps): Promise<Metadata> {
@@ -78,9 +75,8 @@ export async function generateMetadata({
 }
 
 /**
- * Which of these entries each of the viewer's covens already holds, by coven id. Per viewer, so
- * never inside the cached compendium read (rule 6). A refusal reads as nothing held: the plus is
- * offered, and the add itself says no.
+ * Which entries each of the viewer's covens holds, by coven id. Per viewer, never in the cached
+ * read (rule 6). A refusal reads as nothing held; the add itself says no.
  */
 async function heldEntryIds(workspaceIds: readonly string[], ids: readonly string[]) {
   const session = await getSession();
@@ -143,11 +139,9 @@ export default async function CompendiumPage({ searchParams }: PublicCompendiumP
     deities: new Map(deities.map(({ id, ...deity }) => [id, deity])),
     categories: new Map(categories.map((category) => [category.id, category])),
   });
-  // Who may add, and to which covens: a role that may create an ingredient and stock it
-  // (`canWrite`, set in `viewerFor`). The compendium names no coven in its address, so the default
-  // is the first the viewer may write in: the plus adds to it at once when it is the only one, and
-  // the picker starts on it when there are several. A viewer-only account and a visitor have none.
-  // Every coven of the viewer's, any role, for In My Covens and the count on each plus.
+  // Who may add, and to which covens: `canWrite` (set in `viewerFor`). The compendium names no coven
+  // in its address, so the default is the first the viewer may write in. A viewer-only account and a
+  // visitor have none. Every coven of the viewer's, any role, serves In My Covens and each plus.
   const mine = viewer?.workspaces.map(({ id, name }) => ({ id, name })) ?? [];
   const writable = viewer?.workspaces.filter(({ canWrite }) => canWrite) ?? [];
   const covens = writable.map(({ id, name }) => ({ id, name }));

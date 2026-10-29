@@ -11,15 +11,9 @@ export const metadata: Metadata = {
   title: 'Your Coven — Sorrel & Salt',
 };
 
-// The post-sign-in landing, where a sign-in with no return path ends for someone in no coven. A member
-// who opens it goes into the first coven the switcher lists; someone with none who holds the right to
-// create one is offered the create page; anyone else is told how to get in (an admin holds the right
-// by CHECK, so sees the second). Nothing here creates a workspace. The right is read from the row
-// through `viewerOf`, not the session, since accepting an invitation sets it mid-session. A
-// non-member with coven invitations waiting for their verified address is pointed to the account
-// page's Invitations section, so a lost or filtered mail does not block them; the count is the one
-// the account menu shows, read once per request by `viewerOf`. Nothing sits on a card; an eyebrow says
-// "Welcome" and the heading says the next step for the state.
+// The post-sign-in landing for someone with no return path. A member goes into the first coven; one who
+// may create a coven is offered the create page; anyone else is told how to get in. The right is read
+// from the row via `viewerOf`, as accepting an invitation sets it mid-session.
 export default async function CovenLandingPage() {
   await requireSession();
   const { viewer, workspaces } = await viewerOf();

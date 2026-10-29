@@ -11,10 +11,7 @@ export interface AdminCompendiumPageProps {
   searchParams: Promise<CompendiumSearchParams>;
 }
 
-/**
- * The page's address: every list page's name query, cursor and modal (`list-page.ts`), and the
- * compendium's own filters (the table in CompendiumList/params.ts). Every one repeats for a list.
- */
+/** The page's address: the list pages' query, cursor and modal, and the compendium's own filters. */
 export interface CompendiumSearchParams extends ListSearchParams {
   forms?: string | string[];
   withoutReferences?: string | string[];
@@ -51,15 +48,8 @@ export interface CompendiumDialogProps {
   place: CompendiumPlace;
   /** What the address opens; none when it opens nothing, or while a press's is on its way. */
   opened?: OpenedEntry;
-  /**
-   * The list's own address: the admin Compendium's, or the public search's, which opens the same
-   * dialog for a curator. The admin's when left out.
-   */
+  /** The list's own address: the admin Compendium's by default, or the public search's. */
   path?: Route;
-  /**
-   * The modal the address opens, kept beneath a near match's Quick Look, which opens that match's
-   * details over the form. Left out where the list opens no details by slug, the public search's,
-   * whose duplicate warning offers no Quick Look.
-   */
+  /** The modal the address opens, kept beneath a near match's Quick Look; left out where the list has none. */
   lookUnder?: ListDialog;
 }

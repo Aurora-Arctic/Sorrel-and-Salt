@@ -32,16 +32,11 @@ import MissingNotice from './missing-notice';
 import type { ModalHeading } from '../../../components/Modal/types';
 import type { GroupKindPage, GroupPageProps, GroupSearchParams } from './types';
 
-// The page every group vocabulary shares: the category groups, the form groups and the deity
-// traditions. Each route's `page.tsx` keeps its `metadata` and hands its kind and address here; the
-// heading and tabs are its route group's layout's. One page of groups through the service GraphQL
-// reads too, paged by the cursor helper (rules 1 and 8). A kind with `search` narrows by `?query=`
-// in SQL, which every link keeps; only the traditions take it.
+// The page every group vocabulary shares: category groups, form groups and deity traditions. Each
+// route's `page.tsx` keeps its `metadata` and hands its kind here. Read through the services and
+// paged by the cursor helper (rules 1 and 8); only a kind with `search` narrows by `?query=`.
 
-/**
- * What tells one group page from another: its copy and its readers. A kind without a search is
- * handed no filter, since `readPlace` reads no query for it and its services have no filter.
- */
+/** What tells one group page from another: its copy and readers. A kind without search gets no filter. */
 const GROUP_KINDS: Record<GroupKind, GroupKindPage> = {
   category: {
     search: false,
@@ -84,10 +79,7 @@ const readPage = cache(
   },
 );
 
-/**
- * Where the address puts the list: its search, cursor and modal. A kind without a search reads no
- * `?query=`, so a hand-written one leaves every link, as an unreadable cursor does.
- */
+/** Where the address puts the list: search, cursor and modal. A kind without search reads no `?query=`. */
 function readPlace(kind: GroupKind, params: GroupSearchParams) {
   const { query, after, before, editSlug, adding } = readListPlace(params);
   const shown = GROUP_KINDS[kind].search ? query : '';
@@ -105,18 +97,14 @@ async function readGroup(kind: GroupKind, slug: string) {
   return { group, memberCount: await GROUP_KINDS[kind].countMembers(group.id) };
 }
 
-/**
- * A group's edit dialog head: the name it was saved under, which a rename leaves until it saves,
- * under the kind; its row's Edit opens with the same head.
- */
+/** A group's edit dialog head: the name it was saved under, under the kind. */
 function editHeading(kind: GroupKind, name: string): ModalHeading {
   return { eyebrow: `Edit ${KINDS[kind].label}`, title: name };
 }
 
 /**
- * The kind's Add, the open tab's action beside the page's heading: its route group's `@action`
- * slot renders it, so it changes with the tab (claude-docs/components/tabbed-page.md). It keeps the
- * list's search and cursor, as every link on the page does.
+ * The kind's Add, the open tab's action: its route group's `@action` slot renders it
+ * (claude-docs/components/tabbed-page.md). It keeps the list's search and cursor.
  */
 export async function GroupAction({ kind, searchParams }: GroupPageProps): Promise<ReactElement> {
   await requireCuratorSession();
@@ -130,9 +118,8 @@ export async function GroupAction({ kind, searchParams }: GroupPageProps): Promi
 }
 
 /**
- * A group vocabulary, for an admin to add to, edit and retire. A modal over the list does the
- * writing, opened by `?new` or `?edit=<slug>` so it can be linked to and Back closes it
- * (claude-docs/components/group-form.md, "On the admin pages").
+ * A group vocabulary to add to, edit and retire. A modal over the list does the writing, opened by
+ * `?new` or `?edit=<slug>` (claude-docs/components/group-form.md, "On the admin pages").
  */
 export async function GroupPage({ kind, searchParams }: GroupPageProps): Promise<ReactElement> {
   const session = await requireCuratorSession();

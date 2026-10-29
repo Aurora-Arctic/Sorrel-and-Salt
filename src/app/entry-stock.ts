@@ -5,11 +5,8 @@ import { getSession } from '@/lib/request-session';
 import { heldFormsOf, stockOf, variantsOf, type StockKey } from '@/modules/ingredients';
 
 // What Edit Stock in the compendium's three dots reads: the forms an entry comes in and the jars a
-// coven holds of it, so the dialog opens at once with both. Per viewer, so read per request through
-// the services and never inside the cached compendium read (CLAUDE.md rule 6). One call to each
-// service for the whole page, whatever the number of entries and covens (a compendium entry's forms
-// are read per coven, through its proof, in one call). `stockDialogOf` maps rows to what the dialog
-// reads and is shared with the coven's own pages (claude-docs/components/stock-dialog.md).
+// coven holds of it. Per viewer, so never inside the cached compendium read (rule 6); one call to each
+// service for the whole page. See claude-docs/components/stock-dialog.md.
 
 /** The key a coven's stock of an entry is found under in what `readEntryStock` returns. */
 export const stockKey = (workspaceId: string, ingredientId: string): string =>
@@ -19,9 +16,8 @@ export const stockKey = (workspaceId: string, ingredientId: string): string =>
 export type StockAsk = StockKey & { own?: boolean };
 
 /**
- * The stock for each (coven, entry) pair asked, under `stockKey`. A pair is left out when the
- * service refuses its coven's jars or its entry's forms: the dialog is then not offered, and a
- * write the role may not make is refused by the service anyway. None for a visitor.
+ * The stock for each (coven, entry) pair under `stockKey`; a pair the service refuses is left out,
+ * so no dialog is offered. None for a visitor.
  */
 export async function readEntryStock(
   asked: readonly StockAsk[],
@@ -35,10 +31,8 @@ export async function readEntryStock(
   const session = await getSession();
   if (!session) return found;
 
-  // The forms of a compendium entry are read per coven, through that coven's proof: stock is per
-  // coven, so a retired entry still lists its forms for a coven whose cupboard names it, and none
-  // for any other. A coven's own entry has no cupboard row to hold, so its forms are read in its
-  // own tier (the service refuses a coven's entry asked as the compendium's).
+  // Forms are read per coven through its proof: a retired entry still lists its forms for a coven
+  // whose cupboard names it. A coven's own entry has no cupboard row, so it is read in its own tier.
   const compendium = pairs.filter(({ own }) => !own);
   const own = pairs.filter(({ own: isOwn }) => isOwn);
   const [jars, compendiumForms, ownForms] = await Promise.all([

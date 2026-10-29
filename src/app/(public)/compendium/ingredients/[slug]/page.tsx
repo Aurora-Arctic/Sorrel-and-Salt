@@ -13,11 +13,9 @@ import { publicCupboardOf } from './cupboard';
 import { covensHolding } from '@/app/plus-covens';
 import type { CompendiumEntryParams } from './types';
 
-// One compendium entry at its public address: readable signed out, and the address the coven's copy
-// names as canonical. The (public) layout owns `<main>`, so this renders none. The entry comes from
-// the cached, sessionless `readCompendiumEntry`; the page itself is drawn per request, because a
-// signed-in viewer gets a curator Edit and their cupboard choices (`cupboard.ts`). An unknown slug and
-// a coven entry's slug both answer 404; a moved slug answers 308 to the current address.
+// One compendium entry at its public address, readable signed out. The read is cached and sessionless,
+// but the page is drawn per request for a signed-in viewer's Edit and cupboard choices. An unknown or
+// coven slug answers 404; a moved slug answers 308.
 
 const addressOf = (slug: string) => `/compendium/ingredients/${slug}` as Route;
 

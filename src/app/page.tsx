@@ -7,12 +7,9 @@ import { emailPagePath } from '../lib/account-email';
 import { signedInLanding } from '../lib/landing';
 import { SITE_NAME, siteUrl } from '../lib/site';
 
-// The one public page that reads the session, with getSession() and never requireSession(), which
-// would redirect the signed-out visitors it exists for. It reads it for one thing: which way in to
-// offer, where a signed-in visitor belongs (their first coven, or their role's landing) or the
-// sign-in page. An unverified account is offered the email page, carrying that landing as its `next`,
-// since every protected page would send it there anyway.
-// See claude-docs/design-decisions/mb.57-post-sign-in-landing.md.
+// The one public page that reads the session, with getSession() as requireSession() would redirect the
+// signed-out visitors it exists for. It offers a signed-in visitor their landing, or sign-in; an
+// unverified account gets the email page. See claude-docs/design-decisions/mb.57-post-sign-in-landing.md.
 const DESCRIPTION = 'A compendium, ingredient store and grimoire.';
 
 // The site's name alone, absolute so the layout's template does not add it twice. Canonical is the

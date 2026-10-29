@@ -44,10 +44,9 @@ const readInvitations = cache(
   },
 );
 
-// The pending admin invitations with Revoke on each, narrowed by the address's filter in the service's
-// SQL and paged by its cursor, with the invite form `?invite` opens over them. New Invitation is the
-// tab's action (`../@action/invitations`). The page and GraphQL end at the same identity services,
-// which are the guard (claude-docs/auth/admin-users.md, "Inviting an admin").
+// The pending admin invitations with Revoke, narrowed by the filter in SQL and paged by cursor, with
+// the invite form `?invite` opens. The page and GraphQL end at the same identity services, which are
+// the guard (claude-docs/auth/admin-users.md, "Inviting an admin").
 export default async function AdminInvitationsPage({ searchParams }: AdminInvitationsPageProps) {
   const session = await requireAdminSession();
   const params = await searchParams;

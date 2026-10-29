@@ -8,11 +8,9 @@ import IngredientForm from '../../../../components/IngredientForm';
 import { RouteModal } from '../../../../components/Modal';
 import type { CompendiumDialogProps } from './types';
 
-// The page's modal, a `RouteModal` (claude-docs/components/modal.md, "RouteModal"). It keeps a
-// router of its own because a save moves the open modal from `?new` to the entry's `?edit=` rather
-// than closing it. A client part, as the form's handlers are functions a server page cannot hand
-// over (claude-docs/design-decisions/m5.5-admin-compendium.md). Rendered whatever the address
-// opens, so a press's skeleton and the form that replaces it are one dialog.
+// The page's `RouteModal` (claude-docs/components/modal.md, "RouteModal"). It keeps a router of its
+// own because a save moves the modal from `?new` to the entry's `?edit=`. A client part, as the form's
+// handlers cannot cross from a server page (claude-docs/design-decisions/m5.5-admin-compendium.md).
 export default function CompendiumDialog({
   place,
   opened,

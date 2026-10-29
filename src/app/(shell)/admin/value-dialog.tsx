@@ -5,10 +5,9 @@ import GroupedValueForm from '../../../components/GroupedValueForm';
 import { RouteModal } from '../../../components/Modal';
 import type { ValueDialogProps } from './types';
 
-// A curated value page's modal, opened by its address or at once by a press. The client edge
-// between the server page and the form, as `RouteModal` hands its contents the modal's close as a
-// function a server component cannot pass. Rendered whatever the address opens, so a press's
-// skeleton and the form that replaces it are one dialog.
+// A curated value page's modal, opened by its address or at once by a press. The client edge between
+// server page and form, as `RouteModal` hands its contents `close`, which a server component cannot
+// pass. Always rendered, so a press's skeleton and the form replacing it are one dialog.
 export default function ValueDialog({
   kind,
   closeHref,

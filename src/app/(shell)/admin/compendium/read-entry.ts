@@ -6,8 +6,7 @@ import { entryValues } from '@/app/entry-values';
 // edit dialog over themselves: the admin Compendium and, for a curator, the public search.
 
 /**
- * What `?edit=` names: the entry there, its values read for the form, or the
- * address it moved to while its old one still redirects. A slug that names
+ * What `?edit=` names: the entry, its form values, or the address it moved to. A slug naming
  * nothing throws `NotFound`, which `readEditPlace` turns into a notice.
  */
 export const readCompendiumEntry = async (slug: string) => {

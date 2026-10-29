@@ -39,12 +39,9 @@ import {
 } from '@/modules/ingredients';
 import { stockDialogOf } from '@/app/coven-stock';
 
-// A coven's Ingredients: what the coven has, as compact cards with their jars. The guard proves the
-// caller is in the coven (a non-member gets the 404). Read per request and never cached (rule 6).
-// The page draws its own `<main>` and is its own RouteModalProvider. The address carries the
-// compendium list's filters plus Source, In Stock and Low Stock Only (`COVEN_PARAMS`), and one page
-// of 24 is read under them. Card actions and Quick Look dialogs are described in
-// claude-docs/components/coven-cards.md.
+// A coven's Ingredients: compact cards with their jars. Per request, never cached (rule 6). The page
+// draws its own `<main>` and is its own RouteModalProvider; one page of 24 is read under `COVEN_PARAMS`.
+// Card actions and Quick Look: claude-docs/components/coven-cards.md.
 
 export const metadata: Metadata = { title: 'Ingredients' };
 
@@ -85,10 +82,8 @@ export default async function CovenIngredientsPage({
   // A card's Edit and Annotate open over the list alone, never over details.
   const placed = (dialog: CovenListDialog) =>
     covenIngredientsHref(workspace.slug, { ...filter, after, before }, dialog);
-  // What a card's foot may do to an entry, for the role: Edit on the coven's own, Annotate on a
-  // compendium entry the cupboard holds, and More's writes. The Quick Look window draws the very
-  // same through `covenCardActions`; only its Edit opens over the details, `editHref`, where the
-  // card's opens over the list.
+  // What a card's foot may do to an entry, for the role. Quick Look draws the same through
+  // `covenCardActions`; only its Edit opens over the details, `editHref`, not over the list.
   const footOf = (
     own: boolean,
     shown: Parameters<typeof editHeading>[0] & { id: string },

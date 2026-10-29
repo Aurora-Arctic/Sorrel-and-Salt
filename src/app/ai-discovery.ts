@@ -3,19 +3,17 @@ import { describe } from '../lib/page-metadata';
 import { SITE_NAME, siteUrl } from '../lib/site';
 import type { CompendiumSlugEntry } from '@/modules/ingredients';
 
-// The two public files that describe the compendium to a crawler or an AI agent: `/llms.txt`, and the
-// catalog at `/.well-known/ai-catalog.json` and `/.well-known/ard.json`. They list the public
-// compendium and nothing else, every URL built on `siteUrl` rather than the request's host
-// (claude-docs/seo/ai-discovery.md).
+// The two public files that describe the compendium to a crawler or AI agent: `/llms.txt` and the
+// catalog at `/.well-known/ai-catalog.json` and `/.well-known/ard.json`. Every URL is built on
+// `siteUrl`, never the request's host (claude-docs/seo/ai-discovery.md).
 
 /** The public compendium's own summary, shared by both files. */
 const SUMMARY =
   'A public reference of the ingredients used in spellwork, each entry with its sources.';
 
 /**
- * llms.txt text, in the layout of https://llmstxt.org/: an H1 with the site name, a blockquote
- * summary, then H2 sections of `- [name](url): notes` lists, `## Optional` for what a reader may
- * skip. No heading is allowed between the summary and the first H2.
+ * llms.txt text, in the https://llmstxt.org/ layout: an H1, a blockquote summary, then H2 sections
+ * of `- [name](url): notes`. No heading may sit between the summary and the first H2.
  */
 export function buildLlmsTxt(entries: readonly CompendiumSlugEntry[]): string {
   const lines = [
@@ -44,10 +42,7 @@ export function buildLlmsTxt(entries: readonly CompendiumSlugEntry[]): string {
 // A bracket in a name would end the link text early.
 const linkText = (text: string) => text.replace(/[[\]\\]/g, (char) => `\\${char}`);
 
-/**
- * The `: note` after a link, from the entry's description cut by the page's meta description
- * function (`describe`, which also joins the text onto one line); none for an entry without one.
- */
+/** The `: note` after a link: the entry's description cut by `describe`; none for an entry without one. */
 function note(description: string | null): string {
   const text = description ? describe(description) : '';
   return text ? `: ${linkText(text)}` : '';
@@ -72,10 +67,8 @@ export type AiCatalog = {
 };
 
 /**
- * One body that meets two specs: the AI Catalog draft needs `specVersion`, `entries` and, per
- * entry, `identifier`, `type` and one of `url`/`data`; ARD v0.91 needs `identifier`, `displayName`,
- * `type` and one of `url`/`data`. The entry is the compendium's HTML page, so `type` is
- * `text/html`. `updatedAt` is the latest real change among the entries, left out when there are none.
+ * One body for two specs: the AI Catalog draft needs `specVersion` and per-entry `identifier`,
+ * `type` and `url`/`data`; ARD v0.91 also needs `displayName`. `updatedAt` is left out with no entries.
  */
 export function buildAiCatalog(entries: readonly CompendiumSlugEntry[]): AiCatalog {
   const latest = entries.reduce<Date | null>(

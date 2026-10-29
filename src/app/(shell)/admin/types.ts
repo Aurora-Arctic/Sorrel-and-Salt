@@ -21,10 +21,7 @@ export interface TabbedLayoutProps extends AdminLayoutProps {
   action: ReactNode;
 }
 
-/**
- * A list page's address as Next hands it over (`list-page.ts`): any parameter may come once,
- * several times, or not at all. Each page's own filter parameters sit beside these.
- */
+/** A list page's address as Next hands it over: each parameter may come once, many times or not at all. */
 export interface ListSearchParams {
   query?: string | string[];
   after?: string | string[];
@@ -51,10 +48,7 @@ export interface MissingNoticeProps {
   noun: string;
 }
 
-/**
- * A curated value page's address (`value-page.tsx`): the list's place, and a grouped kind's group
- * by slug, under `group` or, for the deities, `tradition`.
- */
+/** A curated value page's address: the list's place, and a grouped kind's group by slug. */
 export interface ValueSearchParams extends ListSearchParams {
   group?: string | string[];
   tradition?: string | string[];
@@ -102,10 +96,7 @@ export interface ValueFilter {
   groupId?: string;
 }
 
-/**
- * One kind's readers, from `@/modules/vocabulary` (`value-kinds.ts`), each mapped onto the value
- * page's own names, so the page reads every kind alike.
- */
+/** One kind's readers from `@/modules/vocabulary`, mapped onto the value page's own names. */
 export interface ValueKindSource {
   list: (filter: ValueFilter, page: PageRequest) => Promise<PageEntry<ValueRow>[]>;
   count: (filter: ValueFilter, start: Cursor | undefined) => Promise<PageCount>;
@@ -131,10 +122,7 @@ export interface ValueDialogProps {
   groups: readonly GroupedValueGroupChoice[];
 }
 
-/**
- * A group page's address (`group-page.tsx`): the list's place, its `query` read only by a kind
- * that searches (`GroupKindPage.search`).
- */
+/** A group page's address: the list's place, and a `query` read only by a kind that searches. */
 export type GroupSearchParams = ListSearchParams;
 
 /** What a group route's `page.tsx` is handed, which it passes on to `GroupPage`. */
@@ -163,10 +151,7 @@ export interface GroupRow {
 
 /** One group vocabulary's page readers, from `@/modules/vocabulary`; its copy is the kind table's (`GroupList/kinds.ts`). */
 export interface GroupKindPage {
-  /**
-   * Whether the list takes a name search: the traditions' alone. A kind without one reads no
-   * `query` from its address, so its readers are handed no filter and need take none.
-   */
+  /** Whether the list takes a name search (the traditions only); others read no `query`. */
   search: boolean;
   list: (page: PageRequest, filter?: GroupFilter) => Promise<PageEntry<GroupRow>[]>;
   count: (start: Cursor | undefined, filter?: GroupFilter) => Promise<PageCount>;
@@ -201,10 +186,7 @@ export interface AddActionProps {
   href: Route;
   /** The head of the modal it opens, "Add Category", shown at once while the form loads. */
   heading: ModalHeading;
-  /**
-   * True when the dialog reads the address in the browser and draws its form there (New Spell):
-   * a plain press writes the address with `pushState` rather than navigating. False by default.
-   */
+  /** True when the dialog draws its form from the address in the browser: a press uses `pushState`. */
   drawnHere?: boolean;
   /** The label, "Add Category": the link's name at every width, and the tip over the plus at a phone's. */
   children: string;

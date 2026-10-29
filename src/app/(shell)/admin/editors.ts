@@ -11,9 +11,7 @@ import { editorNamesForCurator, listedOnUserList } from '@/modules/identity';
 const REMOVED_EDITOR = 'Unknown';
 
 /**
- * The Updated stamp of each row, in the order given. An editor whose account is gone reads as
- * Unknown, never as their id. A row last written by the seed system user has no stamp at all: the
- * seed is not an editor an admin can ask anything of, so the cell stays empty.
+ * The Updated stamp of each row, in order. A gone editor reads Unknown; a seed-written row has none.
  *
  * @throws {Forbidden} the session's role is neither `curator` nor `admin`.
  */

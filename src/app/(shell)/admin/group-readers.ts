@@ -15,9 +15,8 @@ import type { ValueGroupRow } from './types';
 // reach every value reader to get three lists.
 
 /**
- * Every group of a kind on one page of the maximum: the seeded groups are few and an admin adds
- * one rarely. The modal picks one by id, the filter by slug, and the list names each. Cached, so
- * the request reads them once.
+ * Every group of a kind on one page of the maximum, as groups are few. The modal picks by id, the
+ * filter by slug. Cached, so the request reads them once.
  */
 const allGroups = <T extends ValueGroupRow>(list: (page: PageRequest) => Promise<PageEntry<T>[]>) =>
   cache(async (): Promise<ValueGroupRow[]> => {

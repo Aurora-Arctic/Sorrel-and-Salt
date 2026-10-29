@@ -6,10 +6,9 @@ import type { Session } from '@/lib/session';
 import type { SpellStepView } from '@/modules/grimoire';
 import { stockOf } from '@/modules/ingredients';
 
-// The stock verdict the spell's Quick Look marks on each ingredient step: the recipe page's In Coven
-// Inventory judgement, `supplyOf` against the coven's jar of the step's form, drawn as a mark in the
-// step's row since the modal has no side column. One `stockOf` call whatever the spell's length,
-// through the ingredients module and never GraphQL (rule 1); read per request (rule 6).
+// The stock verdict Quick Look marks on each ingredient step: `supplyOf` against the coven's jar of
+// the step's form, drawn in the row as the modal has no side column. One `stockOf` call through the
+// ingredients module, never GraphQL (rule 1); per request (rule 6).
 
 type StockRows = Awaited<ReturnType<typeof stockOf>>[number];
 

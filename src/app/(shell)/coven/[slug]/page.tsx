@@ -12,13 +12,9 @@ import type { PageNavEntry } from '../../../../components/PageNav/types';
 import { requireCovenMembership, requireSession } from '../../../../lib/request-session';
 import type { CovenLayoutParams } from './types';
 
-// The page a coven opens on, where the switcher, an accepted invitation and the shell's coven link
-// land. The layout's title template does not apply to a page in its own segment, so this titles
-// itself with the coven's name alone. The guard runs again here, as a layout does not re-run on
-// client-side navigation (claude-docs/auth/coven-guard.md, "The coven guard"). Below the role head
-// come the sections, reached from a jump menu laid out as the account page's is (`.page-with-nav`):
-// Contents, Your Membership (which holds Leave alone) and, for an owner, Delete This Coven, kept apart
-// so the buttons that end a seat and end a coven are never side by side.
+// The page a coven opens on. The layout's title template does not apply in its own segment, so this
+// titles itself with the coven's name. The guard runs again (claude-docs/auth/coven-guard.md,
+// "The coven guard"). Leave and Delete sit in separate sections, never side by side.
 const ROLE_NAME = { owner: 'an owner', member: 'a member', viewer: 'a viewer' } as const;
 
 export default async function CovenPage({ params }: CovenLayoutParams) {
