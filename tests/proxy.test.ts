@@ -321,7 +321,7 @@ describe('the workshop', () => {
 
   /**
    * Whether `policy`, on a page at `page`, lets scripts request `url`: CSP Level 3's `connect-src`, falling back to `default-src`.
-   * A source with no scheme takes the page's, and a path ending `/` matches every path beneath it while one without matches only itself. A keyword it does not know throws.
+   * A scheme-less source takes the page's; a source ending `/` matches every path beneath it; an unknown keyword throws.
    */
   function connectAllows(
     policy: string | null,

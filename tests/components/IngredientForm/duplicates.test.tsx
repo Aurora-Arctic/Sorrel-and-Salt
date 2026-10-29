@@ -48,8 +48,8 @@ const MOCKLEAF: DuplicateNode = {
 };
 
 /**
- * The name field and its warning; a save that the warning does not hold calls `sent` with the name. `opened` is an edited entry's name, as the form opens with it.
- * `cupboard: false` is the admin's form, which has no cupboard to put an entry in; `look` gives each match a Quick Look, as the admin's form does; `inModal` stands the form in a dialog of its own, as the Add Ingredient modal holds it.
+ * The name field and its warning; a save the warning does not hold calls `sent` with the name. `opened` is an edited entry's name.
+ * `cupboard: false` is the admin's form; `look` gives each match a Quick Look; `inModal` stands the form in a dialog, as the Add Ingredient modal holds it.
  */
 function renderName(
   opened?: string,

@@ -21,10 +21,7 @@ export interface ScopeProbe {
   outcome: Outcome;
 }
 
-/**
- * What an admin write changes: the closed list of what a site admin governs (CLAUDE.md, "Admins curate …"), so a write outside it is a new entry a reviewer reads.
- * A coven's contents are never on it.
- */
+/** What an admin write changes: the closed list of what a site admin governs (CLAUDE.md, "Admins curate …"), so a write outside it is a new entry a reviewer reads. A coven's contents are never on it. */
 export type Governed =
   | 'compendium'
   | 'references'
@@ -67,10 +64,7 @@ export type CompendiumWrite = Parameters<typeof updateCompendiumEntry>[2];
 /** A row as the raw client writes and returns it. */
 export type Row = Record<string, unknown>;
 
-/**
- * How the partial-unique sweep builds a row inside one index's predicate: `row` makes a fresh live row each call;
- * `clash` names the columns a second row copies to collide on this index alone.
- */
+/** How the partial-unique sweep builds a row inside one index's predicate: `row` makes a fresh live row each call; `clash` names the columns a second row copies to collide on this index alone. */
 export interface PartialIndexRow {
   row: () => Promise<Row>;
   clash?: string[];

@@ -94,10 +94,7 @@ async function seedSharedVocabularies(): Promise<void> {
   };
 }
 
-/**
- * Deletes what the last case wrote and leaves the vocabularies, the bootstrap user, and the sources seed's references and links.
- * A delete, not a truncate: `truncate ... cascade` empties every referencing table whole, and `reference_links` holds both seeds' rows.
- */
+/** Deletes what the last case wrote and leaves the vocabularies, the bootstrap user, and the sources seed's references and links. A delete, not a truncate: `truncate ... cascade` empties every referencing table whole, and `reference_links` holds both seeds' rows. */
 async function resetToVocabularies(): Promise<void> {
   for (const table of deleteOrder) {
     if (table === 'users') await sql`delete from users where id <> ${BOOTSTRAP_USER_ID}`;

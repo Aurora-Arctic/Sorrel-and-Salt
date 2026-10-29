@@ -42,7 +42,7 @@ function surfaces(theme: Theme): Record<string, string> {
 
 /**
  * A compiled colour as the `#rrggbb` a browser paints: Sass writes a mixed token as `rgb()` in fractional percentages, which the screen rounds to 8 bits per channel.
- * A part that differs by theme compiles to `light-dark(light, dark)`, and the theme picks its half.
+ * A theme-dependent part compiles to `light-dark(light, dark)`, and the theme picks its half.
  */
 function toHex(value: string, theme: Theme): string {
   const split = /^light-dark\((.+),\s*(.+)\)$/.exec(value);

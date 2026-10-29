@@ -269,8 +269,8 @@ export async function openSubstitutes(oil: HTMLElement) {
 }
 
 /**
- * `VariantsField` on its own, its section open, under the resolver the form uses for `workspaceId` (null, the compendium's). `values` are an entry's, opened as the form opens an edit's;
- * without them the field starts on a new coven ingredient named Testwort. Beside it are the ingredient's own Description, which a variant copies from, and Save Ingredient, which calls `onSubmit` with what the resolver passes, the input a save sends.
+ * `VariantsField` on its own, its section open, under the resolver the form uses for `workspaceId` (null, the compendium's). `values` are an entry's; without them the field starts on a new coven ingredient named Testwort.
+ * Beside it are the ingredient's own Description, which a variant copies from, and Save Ingredient, which calls `onSubmit` with the input a save sends.
  */
 export function renderVariants({
   workspaceId,
