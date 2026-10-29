@@ -34,8 +34,8 @@ test('the eye opens a spell in a modal over the list, keeps the filter, stacks i
     const testwort = await localIngredient(sql, coven.id, coven.users.A);
     await sql.begin(async (tx) => {
       await tx`select set_config('app.current_user_id', ${coven.users.B}, true)`;
-      await tx`insert into spell_steps (spell_id, ingredient_id, variant_id, position, layer_order, quantity, unit, created_by, updated_by)
-        values (${shared}, ${testwort.ingredientId}, ${testwort.variantId}, 1, 1, 2, 'tsp', ${coven.users.B}, ${coven.users.B})`;
+      await tx`insert into spell_steps (spell_id, ingredient_id, variant_id, position, quantity, unit, created_by, updated_by)
+        values (${shared}, ${testwort.ingredientId}, ${testwort.variantId}, 1, 2, 'tsp', ${coven.users.B}, ${coven.users.B})`;
     });
     return [
       shared,

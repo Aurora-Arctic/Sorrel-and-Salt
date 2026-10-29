@@ -1347,10 +1347,8 @@ async function insertMissingSteps(
             unit: step.unit,
           }
         : NO_LAYER),
-      // The place in the array, one per jar from 1, written to `layer_order`
-      // too until M13.9 drops it.
+      // The place in the array, one per jar from 1.
       position: index + 1,
-      layerOrder: index + 1,
     }),
   });
 }

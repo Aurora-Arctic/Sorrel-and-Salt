@@ -8,7 +8,5 @@ export interface StepRow {
   quantity?: string | null;
   unit?: string | null;
   position?: number;
-  /** The old place column, written beside `position` until M13.9; `position` when left out. */
-  layerOrder?: number;
   body?: string | null;
 }

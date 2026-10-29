@@ -48,7 +48,6 @@ export const Complete: Story = {
           safety: { toxic: false, safetyNotes: null, variants: [] },
           oneOff: false,
           deleted: false,
-          note: null,
           body: null,
         },
         { kind: 'instruction', id: 'b', body: 'Stir three times, sunwise.' },
@@ -64,8 +63,7 @@ export const Complete: Story = {
           safety: null,
           oneOff: true,
           deleted: false,
-          note: 'From the garden wall.',
-          body: null,
+          body: 'From the garden wall.',
         },
       ]}
     />

@@ -371,13 +371,11 @@ describe('a layer removed from a spell', () => {
 
     await sql`
       insert into spell_steps
-        (spell_id, ingredient_id, variant_id, position, layer_order, created_by, updated_by)
-      values (${spellId}, ${localId}, ${removed.variantId}, 1, 1, ${B.id}, ${B.id})`;
+        (spell_id, ingredient_id, variant_id, position, created_by, updated_by)
+      values (${spellId}, ${localId}, ${removed.variantId}, 1, ${B.id}, ${B.id})`;
 
     const layers = await findManyInSpell(await proofFor(B), spellSteps, spellId);
-    expect(layers).toEqual([
-      expect.objectContaining({ ingredientId: localId, position: 1, layerOrder: 1 }),
-    ]);
+    expect(layers).toEqual([expect.objectContaining({ ingredientId: localId, position: 1 })]);
     expect(layers[0].id).not.toBe(removed.id);
     await expect(
       findIngredientsInSpellsIncludingSoftDeleted(await proofFor(B), [localId]),

@@ -134,13 +134,9 @@ const SpellRecipeBody = ({
                   marks={<Marks step={step} />}
                   quantity={step.quantity}
                   unit={step.unit}
-                  // An ingredient step's line is its note, drawn muted under the name (the owner,
-                  // 2026-10-28); with `note` retired into `body` (PR #1308, migration 0088) the
-                  // body is that line, drawn the same way, and `note` is read only until the
-                  // column goes (M13.9). An instruction step is its text.
-                  note={
-                    (step.note || step.body) && <p className="meta">{step.note || step.body}</p>
-                  }
+                  // An ingredient step's line is its body, drawn muted under the name (the owner,
+                  // 2026-10-28). An instruction step is its text.
+                  note={step.body && <p className="meta">{step.body}</p>}
                 />
               ),
             )}

@@ -28,7 +28,6 @@ const ingredient = (
   safety: null,
   oneOff: false,
   deleted: false,
-  note: null,
   body: null,
   ...over,
 });
@@ -130,22 +129,20 @@ describe('SpellRecipe', () => {
     expect(screen.queryByRole('button', { name: /more categories/i })).toBeNull();
   });
 
-  it("draws an ingredient step's note, or its body where the note has moved there, and an instruction step's text", () => {
+  it("draws an ingredient step's body and an instruction step's text", () => {
     render(
       <SpellRecipe
         {...props({
           steps: [
-            ingredient('a', { body: 'Crush it first', note: 'The base' }),
-            ingredient('b', { name: 'Fixture Moss', body: 'From the wall', note: null }),
+            ingredient('a', { body: 'Crush it first' }),
+            ingredient('b', { name: 'Fixture Moss', body: null }),
             instruction('c', 'Stir.'),
           ],
         })}
       />,
     );
 
-    expect(screen.getByText('The base')).toBeInTheDocument();
-    expect(screen.queryByText('Crush it first')).toBeNull();
-    expect(screen.getByText('From the wall')).toBeInTheDocument();
+    expect(screen.getByText('Crush it first')).toBeInTheDocument();
     expect(screen.getByText('Stir.')).toBeInTheDocument();
   });
 

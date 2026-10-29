@@ -36,9 +36,7 @@ async function readableSpell(membership: Membership, spellId: string): Promise<S
 }
 
 /**
- * The spell row's own columns a save names. The free text goes to `note`
- * alone: the old `instructions` column is left as it was until M13.9 drops it
- * (DESIGN.md §5, `spells`).
+ * The spell row's own columns a save names (DESIGN.md §5, `spells`).
  */
 function spellColumns(input: {
   title?: string | null;
@@ -171,9 +169,9 @@ export async function addSpellStep(
   const membership = await assertMembership(session, workspaceId, { spell: ['update'] });
   await readableSpell(membership, spellId);
   const existing = await findManyInSpell(membership, spellSteps, spellId);
-  const next = Math.max(0, ...existing.map((step) => step.position ?? step.layerOrder)) + 1;
+  const next = Math.max(0, ...existing.map((step) => step.position)) + 1;
   const [step] = await withAudit(session, (write) =>
-    write.insert(spellSteps, { ...input, spellId, position: next, layerOrder: next }),
+    write.insert(spellSteps, { ...input, spellId, position: next }),
   );
   return step;
 }

@@ -56,7 +56,6 @@ export function recipeStepsOf(views: readonly SpellStepView[], hereHref: Route):
         : null,
       oneOff: !linked,
       deleted: linked && (ingredient?.deleted === true || variant?.deleted === true),
-      note: view.note,
       body: view.body,
     };
   });

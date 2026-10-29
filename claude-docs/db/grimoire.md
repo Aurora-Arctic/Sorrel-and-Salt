@@ -23,26 +23,20 @@ holds (`inventory_items`).
 
 M13.1 made the recipe one ordered list ([`m13.1-spell-steps.md`](../design-decisions/m13.1-spell-steps.md)):
 `0083` renamed `spell_ingredients` to `spell_steps`, with every index, CHECK
-and foreign key renamed after it, and added `position` and `body`. Until M13.9
-contracts it, three things from before stay:
+and foreign key renamed after it, and added `position` and `body`. `0089` (M13.9) then contracted what the
+rename left standing, in one transaction:
 
-- **A view named `spell_ingredients`**, `SELECT * FROM spell_steps`, made after
-  the `ADD COLUMN`s so it carries `position` and `body` too. The deploy before
-  `0083` reads and writes the rows through it.
-- **`layer_order`**, the old name of `position`. The code writes both, the same
-  number. `position` is nullable until M13.9, because the deploy before writes
-  `layer_order` alone and a `NOT NULL` would refuse its inserts; `0083` filled
-  `position` from `layer_order` for the rows already there.
-- **`spell_steps.note`**, the per-ingredient line, retired 2026-10-28. `0088`
-  copied each live step's note into `body` (after the body, a blank line
-  between) and rewrote the amount CHECK without it. Nothing reads or writes the
-  column; M13.9 drops it
-  ([`pr1308-step-note-retired.md`](../design-decisions/pr1308-step-note-retired.md)).
-- **`spells.instructions`**, the old name of `spells.note`, filled into it by
-  `0083`. The saves write `note` alone and leave `instructions` as it was
-  ("Saving a recipe" below).
+- It refilled `position` from `layer_order` wherever they differed, then set
+  `position` `NOT NULL`. It needed no copy of `spells.instructions`, which
+  `0083` had already filled into `spells.note`.
+- It dropped the view named `spell_ingredients`, which the deploy before
+  `0083` read and wrote the rows through.
+- It dropped `layer_order` and its unique index, `spell_steps.note` (retired
+  2026-10-28; `0088` had copied it into `body`, see
+  [`pr1308-step-note-retired.md`](../design-decisions/pr1308-step-note-retired.md)),
+  and `spells.instructions`.
 
-`tests/db/schema-drift.test.ts` lists all three in `PENDING_DROPS`.
+`PENDING_DROPS` in `tests/db/schema-drift.test.ts` is empty again.
 
 **`visibility` arrived a wave later than the rest of the table** (M10.3,
 `0018_spell-visibility.sql`), after M1.23 had seeded spells against it — which
@@ -67,9 +61,7 @@ key and the pair swaps which one reddens.
 `position` is an integer unique within a spell among live rows:
 `spell_steps_spell_id_position_unique` on
 `(spell_id, position) WHERE deleted_at IS NULL`. It was `layer_order` until
-M13.1, and until M13.9 `layer_order` stays beside it, `NOT NULL`, under its
-own index `spell_steps_spell_id_layer_order_unique`, which the code keeps
-equal ("Steps (M13.1)" above). M10.2 had the pair as a
+M13.1 (dropped by `0089`, "Steps (M13.1)" above). M10.2 had the pair as a
 unique index beside a `(spell_id, ingredient_id)` key; MB.40 made it the
 primary key once a row could exist without an ingredient id; MB.110 moved the
 key onto a surrogate `id` once removing a layer became a soft delete, because
@@ -78,10 +70,9 @@ load-bearing:
 
 - **Stored, not inferred.** Stories 51 and 80 make the order part of the recipe, and no
   query may lean on insertion order.
-- **NOT NULL from M13.9**, because a nullable column would satisfy neither half
+- **NOT NULL**, since `0089`, because a nullable column would satisfy neither half
   of "stored and unique within a spell": distinct NULLs collide with nothing, so
-  an unordered row would sit outside the index meant to constrain it. Until
-  then `layer_order`'s `NOT NULL` holds that line, and the code writes both.
+  an unordered row would sit outside the index meant to constrain it.
 - **Leading on `spell_id`**, which both scopes the index to the one jar and
   makes it the one that answers "read this spell's steps in order" —
   every read of the table in M10.9 and MB.6.
@@ -108,7 +99,7 @@ within is written down before the reorder is.
 `createSpell` and `updateSpell` (`src/modules/grimoire/services/spells.ts`)
 take the recipe as **one ordered list of steps**, and
 `src/modules/grimoire/services/recipe.ts` writes it. A step's place is its
-index in the list, written to `position` and `layer_order` alike. The list is
+index in the list, written to `position`. The list is
 the whole recipe:
 
 - **A step with an `id` is a saved step, kept.** The id must name one of this

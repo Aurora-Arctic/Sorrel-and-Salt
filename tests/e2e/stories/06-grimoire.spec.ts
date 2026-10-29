@@ -254,10 +254,10 @@ test(
     await expect(save).toBeDisabled();
     await expect(save).not.toHaveAttribute('aria-busy', 'true');
     // The builder has no page to reopen a saved spell on until M13.10, so the
-    // order is read where the save left it: position and layer_order together.
+    // order is read where the save left it: the position.
     const rows = await withSql(
-      (sql) => sql<{ name: string; position: number; layer_order: number }[]>`
-        select i.name, st.position, st.layer_order from spell_steps st
+      (sql) => sql<{ name: string; position: number }[]>`
+        select i.name, st.position from spell_steps st
         join spells s on s.id = st.spell_id
         join ingredients i on i.id = st.ingredient_id
         where s.workspace_id = ${coven.id} and s.title = 'Fixture Working'
@@ -265,8 +265,8 @@ test(
         order by st.position`,
     );
     expect(rows).toEqual([
-      { name: 'Mugwort', position: 1, layer_order: 1 },
-      { name: 'Rosemary', position: 2, layer_order: 2 },
+      { name: 'Mugwort', position: 1 },
+      { name: 'Rosemary', position: 2 },
     ]);
   },
 );
