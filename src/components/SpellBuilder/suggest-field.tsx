@@ -8,11 +8,8 @@ import { FieldShell, useField } from '../Field';
 import type { SpellBuilderValues, SpellSuggestFieldProps } from './types';
 
 /**
- * A spell field whose box suggests from a fixed list (./constants) as it is
- * typed in: a pick fills the field with the name, and anything else typed is
- * kept as typed, so a value saved before the list existed ("Full") opens
- * unchanged. The ingredient form's SuggestField is bound to that form's
- * values and asks a server lookup, so this is the builder's own.
+ * A spell field that suggests from a fixed list (./constants): a pick fills the name and anything else typed is kept as typed
+ * (claude-docs/components/spell-builder.md, "Notes from code comments: the suggest field").
  */
 export function SpellSuggestField({
   name,

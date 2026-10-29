@@ -41,3 +41,7 @@ One story, `States`, with a control that chooses Default or Annotated. The works
 ## Testing
 
 `tests/components/CupboardEntryForm/index.test.tsx`: Save stays disabled until a change; only the changed field is sent; Restore Original sends `null`; an emptied list sends `[]`; adding to an inherited list sends the whole list; Undo brings back a removed entry; a Label refusal lands on the Label field and the form stays open; Label and the four lists carry a tip, and Description and Safety Notes none. The end-to-end flow is `tests/e2e/cupboard-screens.spec.ts`.
+
+## Notes from code comments: the changed fields
+
+The fields that changed. A field handed back sends null when the coven held an override; a text field cleared sends null, as the server reads blank; a field the coven did not override sends its value only once it differs from the compendium's; one it did sends its value once it differs from its own. An emptied list is sent as `[]`: the coven cleared it on purpose.

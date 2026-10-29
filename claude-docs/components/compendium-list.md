@@ -208,3 +208,7 @@ Comments in the source that point here; each is the detail behind a one-line com
 
 - `types.ts`: Every filter's choices with their counts, read for the filter the page shows (the compendium's `compendiumFacets`, public like the list). Each list is in the order to offer them: forms, deities and categories most entries first, then by label, and only the values some entry carries plus the ones chosen, which sit at zero if none does; signs, celestial bodies and elements all of them, zeros included, in the vocabulary's order; toxic as toxic, then not toxic.
 - `index.tsx`: The empty list, naming the filters in use so an admin sees what to change: "No entries match “wort”, the form “Oil” and the element Fire. Change or clear the filter to see more." With no filter it says how to begin the compendium. A node, as the values are bold; `noMatchText` stays the string form for the other admin lists, and both build from `noMatchLead` and `NO_MATCH_ADVICE`.
+
+## Notes from code comments: the categories column floor
+
+The Categories column's floor: the widest row of chips any seeded entry shows, measured in Chromium at a 16px root with the final compact, dot-less chips: Aspen's Ancestor Work and Communication with its +8 button and the row's 4px gaps, 266px (16.625rem), rounded up to the next 0.25rem. The cell's own inset is added each side. Only where the table is wide: below that the table scrolls rather than wraps its chips, so the floor keeps the column from being squeezed under them; as a card (under `$table-stack-width`) it never applies and the chips wrap.

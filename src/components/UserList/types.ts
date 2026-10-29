@@ -126,20 +126,13 @@ export interface ConfirmedActionProps {
   /** Close the modal on success, for a control the re-read does not replace. */
   closeOnSent?: boolean;
   /**
-   * Drawn inside a modal already, the user's: asks over that modal's
-   * body through its confirm layer rather than opening a second modal on top,
-   * and says a refusal in a plain notice beside the control, inside that
-   * dialog, rather than in a callout over it, unless
-   * `refusalInModal` says otherwise.
+   * Drawn inside the user's modal: asks through its confirm layer and says a refusal in a plain notice, unless `refusalInModal` says otherwise
+   * (claude-docs/components/user-list.md, "Notes from code comments: inside a modal").
    */
   inModal?: boolean;
   /**
-   * How a refusal is said inside a modal: a plain notice (the default), which
-   * a button row lifts above its buttons, or the callout under the control, as
-   * outside one. The callout is for a control that stands beside a fact rather
-   * than in a button row: the user modal's Change Role and Approve or Revoke.
-   * Outside a modal
-   * a refusal is always the callout.
+   * How a refusal is said inside a modal: a plain notice (default), or the callout under the control; outside a modal it is always the callout
+   * (claude-docs/components/user-list.md, "Notes from code comments: refusal display").
    */
   refusalInModal?: 'notice' | 'callout';
 }

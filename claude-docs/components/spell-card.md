@@ -173,3 +173,13 @@ Nothing warm sits under text: the hole is under 1rem deep, half of it past the c
 edge, so with its rim and the tearing it stays inside the card's padding. Only at the
 corner does it climb higher, about 1.25rem up the right edge, where no text runs. The card's
 face takes IngredientCard's hover tint and lifted shadow and nothing else.
+
+## Notes from code comments: the smoulder stylesheet
+
+The spell card's hover: the parchment smouldering from its bottom-right corner. What burns is gone: a hole in the card's foot corner, through the face and its shadow, drawn as one layer (`.spell-card__face`) torn by one SVG filter (`#spell-card-burn`). Nothing warm sits under text (claude-docs/components/spell-card.md, "Notes from code comments: the smouldering edge").
+
+The layers stack by the order of the markup, with no z-index (index.scss says why). Nothing transforms the card or any ancestor of it: a transformed ancestor becomes the containing block of the category chips' `position: fixed` tip bubbles.
+
+## Notes from code comments: the burn filter
+
+The filter that tears the smouldering edge ragged, referenced by id from index.scss. Rendered once per page beside the list of cards (GrimoireList), not per card: an id must be unique, and one filter serves every card. Without it the burn front is a smooth curve. Coarse noise displacing the hole and its ember and char bands; still, since a burn line does not wriggle.

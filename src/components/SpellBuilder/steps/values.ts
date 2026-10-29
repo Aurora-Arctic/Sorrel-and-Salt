@@ -80,11 +80,9 @@ const newRowKey = (): string =>
   `new-${typeof crypto !== 'undefined' && 'randomUUID' in crypto ? crypto.randomUUID() : `${Date.now()}-${rowKeys++}`}`;
 
 /**
- * Steps written back from stored values (an Undo or Redo, a recovered draft) made safe to
- * save: a saved id the server no longer holds becomes none, so the save adds the step as a
- * new one instead of being refused for naming a row the spell has not got; and a step with no
- * row key (a draft kept before keys existed) is given one. `live` is the ids of the spell's
- * steps as last saved.
+ * Steps written back from stored values made safe to save: an unknown saved id becomes none (added as new) and a step with no row key gets one.
+ * `live` is the ids of the spell's steps as last saved.
+ * (claude-docs/components/spell-builder.md, "Notes from code comments: stored step values").
  */
 export const restoredSteps = (
   steps: readonly SpellStepValue[],

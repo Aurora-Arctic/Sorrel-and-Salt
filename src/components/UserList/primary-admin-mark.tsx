@@ -5,13 +5,8 @@ import { useTip } from '../InfoTip/use-tip';
 import { CrownIcon } from './icons';
 import './controls.scss';
 
-// The primary admin's mark beside its role: a crown named "Primary Admin",
-// with a tip saying so that behaves as InfoTip's does, through the same
-// `useTip`: opened by hover, focus or a tap, kept open while the pointer is on
-// it, and closed on Escape (WCAG 1.4.13). The mark is a button, as InfoTip's
-// ⓘ is, so the keyboard reaches the tip too. The tip says no more than the
-// button's name, so it is hidden from assistive technology while closed, as
-// InfoTip's is (claude-docs/components/user-list.md).
+// The primary admin's crown beside its role, a button whose tip behaves as InfoTip's through `useTip`
+// (claude-docs/components/user-list.md, "Notes from code comments: the primary admin mark").
 const PrimaryAdminMark = (): ReactElement => {
   const { open, show, showSoon, hide, hideSoon, anchor, bubble, bubbleStyle } = useTip();
 

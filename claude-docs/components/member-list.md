@@ -107,3 +107,7 @@ on the own row only, and the address only under
 and `role-control.test.tsx` hold each control's refusal, said under the button
 as the service's sentence alone and the focus on the button, the badge bringing it back,
 and its success said in the status region.
+
+## Notes from code comments: the columns
+
+The columns: the name, then where the page asks, the address; then the role with its change beside it, then the facts no control changes: when they joined, who invited them, and who last changed the membership and when, in one Updated column. Remove is last, in a column ruled in red as Impersonate is, since it is the table's one destructive row action, and only when the page passes it.

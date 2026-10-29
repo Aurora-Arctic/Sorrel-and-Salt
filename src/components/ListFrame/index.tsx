@@ -19,11 +19,8 @@ import type { ListBodyProps, ListFrameProps, ListNavigation, ListNavigationKind 
 export const ListNavigationContext = createContext<ListNavigation | null>(null);
 
 /**
- * Holds the navigation the filter, the pager and the body share. A soft navigation runs
- * inside this transition, so `pending` stays true until Next has rendered the new page. A
- * full load has no transition: a flag holds `pending` from the press until the browser
- * unloads the page, and a `pageshow` from the back-forward cache drops it, so Back does not
- * land on a skeleton. A provider already above, the workshop's, is kept rather than shadowed.
+ * Holds the navigation the filter, pager and body share; `pending` stays true until Next has rendered the new page
+ * (claude-docs/components/list-frame.md, "Notes from code comments: the navigation provider").
  */
 const ListFrame = ({ className, children }: ListFrameProps): ReactElement => {
   const outer = useContext(ListNavigationContext);

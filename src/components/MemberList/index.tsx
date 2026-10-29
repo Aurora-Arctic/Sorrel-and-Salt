@@ -11,11 +11,8 @@ import './index.scss';
 // no permission check (claude-docs/components/member-list.md).
 
 /**
- * The columns: the name, then where the page asks, the address; then the role with its change
- * beside it, then the facts no control changes: when they joined, who invited them, and who
- * last changed the membership and when, in one Updated column. Remove is last, in a column
- * ruled in red as Impersonate is, since it is the table's one destructive row action, and
- * only when the page passes it.
+ * The columns: name, address where asked, role with its change, then joined, invited by and Updated; Remove is last, ruled in red, and only when the page passes it.
+ * (claude-docs/components/member-list.md, "Notes from code comments: the columns").
  */
 const columns = (
   currentUserId: string,

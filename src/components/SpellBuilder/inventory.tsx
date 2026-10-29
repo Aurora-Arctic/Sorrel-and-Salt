@@ -12,15 +12,8 @@ import type { SpellStepValue } from './steps/types';
 import { verdictOf, type VerdictKind, VerdictMark } from './verdict-mark';
 import { isInstruction, stepNameOf } from './steps/values';
 
-// In Coven Inventory, in the spell's recipe page's side column: one line for each form,
-// at its first step's place, saying what all its steps need together (`needOf`) against what the
-// coven's jar holds, as `supplyOf` judges it; a one-off keeps a line for each step, and a step
-// with an instruction only has none. The verdict's mark (`VerdictMark`) stands at the right end
-// of the name's line, so the name is cut short before it is. A line may carry doors (`doorsOf`):
-// a Quick Look eye in a column of its own at the line's right, and Edit Stock behind the jar and
-// the name (a `StockJarButton` stretched over both, as the entry page's shelf stretches it over a
-// jar). The builder draws no stock, so this serves the page alone.
-// See claude-docs/components/spell-recipe.md, "The side column".
+// In Coven Inventory: one line per form, at its first step's place, setting `needOf` against the jar's `supplyOf`, with a `VerdictMark` and `doorsOf` doors; used by the recipe page alone
+// (claude-docs/components/spell-recipe.md, "The side column" and "Notes from code comments: the inventory panel").
 
 // A one-off holds no stock, but its jar is drawn with something in it, as a stocked jar is: an
 // unmeasured jar stands at the middling level, in muted ink (index.scss). The One-Off badge says

@@ -14,13 +14,8 @@ import { summarizeSpellCategories } from '@/modules/grimoire/validation/categori
 import type { SpellStepValue, StepCategory } from './steps/types';
 import { stepNameOf } from './steps/values';
 
-// Category Match, in the Jar's aside: the categories the
-// author assigned set beside the ones the jar's ingredients carry, in three rows. Carried
-// is intended and present, Missing intended and absent from the jar, Extra present but not
-// intended. A row with nothing in it is
-// left out. The words lead each row and carry it alone.
-// It reads what the builder holds now, saved or not, through the pure comparison.
-// See claude-docs/components/spell-builder.md, "The comparison panel".
+// Category Match: the assigned categories set against the jar's, as Carried, Missing and Extra rows (empty rows left out), read from the builder's current state
+// (claude-docs/components/spell-builder.md, "Notes from code comments: the comparison panel rows").
 
 export interface ComparisonPanelProps {
   /** The categories the spell is assigned, named. */

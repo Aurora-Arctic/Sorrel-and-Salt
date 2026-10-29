@@ -5,14 +5,9 @@ import type { ReactElement, ReactNode } from 'react';
 import { ARRIVE_MS } from '../../lib/navigation/timing';
 import './index.scss';
 
-// The skeleton's way out: when a wait ends, the bodies (`MainBody`,
-// `SectionBody`) do not drop the skeleton at once but keep the last one over
-// the page that has arrived, and it fades away while the page shows through.
-// A client part, since the timer is the browser's. A fade rather than the
-// page fading in, since wrapping the arriving page would put a box round it
-// that the section layouts' flex columns would feel; the overlay is out of
-// layout and unmounts when it has gone.
-// claude-docs/components/skeleton-fade.md
+// The skeleton's way out: the bodies keep the last skeleton over the arrived page and fade it away, as an out-of-layout overlay, not by wrapping the page
+// (claude-docs/components/skeleton-fade.md).
+// (claude-docs/components/skeleton-fade.md, "Notes from code comments: the fade out").
 
 /**
  * The skeleton to keep over the page for the length of its fade-out, or null.
@@ -48,14 +43,8 @@ export const skeletonFadeHost = (leaving: boolean): string =>
   leaving ? 'skeleton-fade-host skeleton-fade-host--fading' : 'skeleton-fade-host';
 
 /**
- * The props that hold the page during a wait: the page stays mounted at
- * its full height, unseen (`visibility`, which keeps its box, where
- * `display: none` or React's `<Activity>` would collapse it) and out of reach
- * (`inert`, `aria-hidden`), while `SkeletonCover` stands over it. Not taken
- * away, because the browser saves the scroll position into the history entry
- * when the navigation writes it, after the skeleton is up: a page swapped for a
- * shorter skeleton clamps the scroll first, and Back returns to the clamped one.
- * The same element whether waiting or not, so React keeps the page mounted.
+ * The props holding the page during a wait: mounted at full height, unseen (`visibility`, not `display: none`) and `inert`, because Back needs the scroll position kept
+ * (claude-docs/components/skeleton-fade.md, "Notes from code comments: holding the page").
  */
 export const heldPage = (waiting: boolean, className?: string) => ({
   className: [className, waiting && 'skeleton-held'].filter(Boolean).join(' ') || undefined,

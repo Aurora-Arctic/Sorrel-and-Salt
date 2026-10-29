@@ -63,14 +63,8 @@
   min-width: 0;
 }
 
-// The card: a step on the ingredient form's variant card,
-// the muted-ink edge, the surface radius and ground, the same padding. On one
-// row it holds the handle, the step's number, the form's icon and name, the
-// amount, and Remove, level along the bottoms of their fields so that the name
-// sits on the line of the boxes and not of their labels. What the step has
-// beyond that stands beneath, in the name's column and at its width: the marks,
-// then the instruction, then the safety note. The marks are words as well as
-// colour, so nothing here carries a state alone.
+// The card: the ingredient form's variant card look, one row of handle, number, icon, name, amount and Remove, with the marks, instruction and safety note beneath
+// (claude-docs/components/step-row.md, "Notes from code comments: the card").
 .step-row.step-row--card {
   display: grid;
   grid-template-areas: 'handle position name amount remove';

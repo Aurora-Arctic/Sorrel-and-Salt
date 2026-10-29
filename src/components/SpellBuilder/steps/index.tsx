@@ -10,13 +10,8 @@ import { BuilderStepRow } from './step-row';
 import type { SpellStepValue, SpellStepsValues } from './types';
 import { isInstruction, newInstruction, stepNameOf, warningOf } from './values';
 
-// The jar's steps: the box that adds to them, the Add Instruction button
-// and the list, under the heading What Goes In. The steps are moved by a handle
-// each, and an Add or a Remove is said in a live region of its own,
-// as a move is said in dnd-kit's. One step is open at a time, the newest at
-// once; the rest are a line each. What the jar holds and the spell's intent set
-// against it are the aside's (inventory.tsx, comparison-panel.tsx).
-// See claude-docs/components/spell-builder.md, "Steps".
+// The jar's steps under What Goes In: the add box, Add Instruction and the list, one step open at a time, each moved by a handle
+// (claude-docs/components/spell-builder.md, "Notes from code comments: the steps list").
 
 export function SpellSteps({
   workspaceId,

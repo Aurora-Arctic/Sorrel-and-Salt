@@ -632,11 +632,8 @@ const SpellBuilder = ({
   );
 
   /**
-   * Reload Latest, after someone else's save got in first: the spell
-   * as the server has it now replaces the form, what was typed into it
-   * included, and the form starts clean from it. The engine takes the revision
-   * the refusal reported; a save made since is met as the next conflict. A read
-   * that fails leaves the conflict and the typing as they are, and says so.
+   * Reload Latest, after a stale save: replaces the form, typing included, with the spell as the server has it; a failed read leaves the conflict as it is
+   * (claude-docs/components/spell-builder.md, "Notes from code comments: reload latest").
    */
   const reloadLatest = async () => {
     const id = createdId ?? opened?.id;

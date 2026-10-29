@@ -11,13 +11,8 @@ import type { SpellRecipeAsideProps } from './types';
 // mounts the builder's dialog too, but the column loads them itself rather than by that chance.
 import '../SpellBuilder/index.scss';
 
-// The recipe page's side column: Category Match and In Coven
-// Inventory, the builder's Jar aside panels, read for the saved spell and laid out as the
-// ingredient entry page lays its side column, beside the text past a tablet's width and beneath
-// it on a phone. The page alone draws it; the Quick Look modal keeps to the recipe body. Both
-// panels are read-only here, as they are in the builder: the page hands them the saved steps.
-// A client part because the panels are; the landmark around them is SpellRecipe's own.
-// claude-docs/components/spell-recipe.md, "The side column".
+// The recipe page's side column of Category Match and In Coven Inventory, read-only here, beside the text past tablet width and beneath it on a phone; a client part
+// (claude-docs/components/spell-recipe.md, "Notes from code comments: the aside").
 
 export default function SpellRecipeAside({
   steps,
