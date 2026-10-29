@@ -17,10 +17,8 @@ import { loadCompendium } from './load';
 // `apply` alone, each flagged file written back. `report` writes nothing.
 
 /**
- * The fetched Wikipedia pages under `dirs`, by `wikiKey(title)`: each
- * `<Title>.wikitext` file opens with `TITLE:`, `REVID:`, `PERMALINK:` and
- * `FETCHED:` lines and a `----` line, and the wikitext follows. A page is
- * found by its `TITLE:` and by its file name both.
+ * The fetched Wikipedia pages under `dirs`, by `wikiKey(title)`: each `<Title>.wikitext` opens with `TITLE:`, `REVID:`, `PERMALINK:` and
+ * `FETCHED:` lines and a `----` line. A page is found by its `TITLE:` and by its file name both.
  */
 export function readWikiPages(dirs: readonly string[]): Map<string, string> {
   const pages = new Map<string, string>();

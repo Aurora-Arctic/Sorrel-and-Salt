@@ -16,13 +16,9 @@ export function weightedSearch(
   const { matches, similarity, contains, position } = foldedWordMatch(query);
   const arms = sql.identifier('arms');
   const matched = sql.identifier('matched');
-  // One field's arm: the row it belongs to, the field's weighted score — its
-  // word similarity, or 1 where it holds the query verbatim, since word
-  // similarity scores a fragment inside a longer word by the trigrams it
-  // shares — and where it holds the query. The arm's `where` is the field's
-  // match, so every row it reads scored. The weight and the 1 are cast to
-  // `real`: `real` times a bare number is `double precision`, and a rank
-  // carried onto an edge is not cast as the keyset's sort is.
+  // One field's arm: its row, its weighted score (word similarity, or 1 where it holds the query verbatim, since similarity under-scores a
+  // fragment of a longer word) and where it holds the query. Its `where` is the field's match. The weight and the 1 are cast to `real`, as `real`
+  // times a bare number is `double precision` and a rank carried onto an edge is not cast like the keyset's sort.
   const arm = ({ id, text, weight, from, live }: SearchField) =>
     sql`select ${id} as id,
         greatest(${similarity(text)}, case when ${contains(text)} then 1::real end) * ${weight}::real as score,

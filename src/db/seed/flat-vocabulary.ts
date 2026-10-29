@@ -8,10 +8,8 @@ import type { SeedTransaction } from './types';
 // `seedTwoTierVocabulary` is the grouped counterpart.
 
 /**
- * Inserts each item only where `presentKeys` does not hold its slug, keyed by
- * it: a row an admin renamed or soft-deleted is not re-inserted on the next
- * deploy, and nothing present is updated, so a rewritten description
- * survives. Assumes the GUC is published and the bootstrap user exists.
+ * Inserts each item only where `presentKeys` lacks its slug: a renamed or soft-deleted row is not re-inserted and nothing present is updated, so a
+ * rewritten description survives. Assumes the GUC is published and the bootstrap user exists.
  */
 export async function seedFlatVocabulary(
   tx: SeedTransaction,

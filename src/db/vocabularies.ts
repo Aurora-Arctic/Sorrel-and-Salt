@@ -22,10 +22,8 @@ function pairOf<TItems extends PgTable, TGroups extends PgTable, TKey extends ke
 }
 
 /**
- * The two-tier vocabularies: a form under its group, a category under its
- * group, a deity under its tradition. `key` is the item's property naming its
- * group's id, which the seed writes, and `column` that property's column,
- * which a finder joins and filters by.
+ * The two-tier vocabularies: a form under its group, a category under its group, a deity under its tradition. `key` is the item's property naming
+ * its group's id, which the seed writes; `column` is that property's column, which a finder joins and filters by.
  */
 export const TWO_TIER = {
   forms: pairOf(ingredientForms, ingredientFormGroups, 'groupId'),

@@ -75,11 +75,8 @@ export interface ClientRegistry {
 }
 
 /**
- * The mark on a table written only through its own named writer methods,
- * put on it in its schema file by `namedWrites` in table-marks.ts.
- * `$writes` is a phantom key beside Drizzle's `$inferSelect`: no column can
- * be named like it, and nothing is added to the table at runtime
- * (claude-docs/db/write-path.md, "Table marks").
+ * The mark on a table written only through its named writer methods, put on by `namedWrites` in table-marks.ts. `$writes` is a phantom key beside
+ * Drizzle's `$inferSelect`, nothing added at runtime (claude-docs/db/write-path.md, "Table marks").
  */
 export type NamedWrites = { readonly $writes: 'named' };
 

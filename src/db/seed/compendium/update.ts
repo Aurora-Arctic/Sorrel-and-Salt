@@ -517,13 +517,8 @@ export function decide(item: SeedItem, state: PresentState, ctx: UpdateContext):
     // Forced with no baseline: `stored` stays null, so the entry goes on to
     // the mark check below as an edit, never a skip.
   }
-  // A matching hash: a row that matches its file is skipped; one that
-  // differs because a person worked on it is skipped quietly, keeping the work,
-  // since the file has not changed since that work. Only the run's --force
-  // goes past that skip, to the mark check and the refusals it lifts:
-  // the file's overwriteEditor does not, since it was already on the file when
-  // the work was done. One that differs with nobody's work on it is drift, as
-  // a row seeded before its file changed is, and goes on as a changed file does.
+  // A matching hash: a row matching its file is skipped; one differing because a person worked on it is skipped quietly, as the file has not changed since.
+  // Only the run's --force goes past that skip; the file's overwriteEditor does not. One differing with nobody's work on it is drift and goes on as a changed file does.
   if (stored === item.hash) {
     if (plan.differs.length === 0) return { adopt, outcome: { kind: 'skip' } };
     const worked = row.curatorReviewedAt !== null || touched(row) || touchedChild(state) !== null;
@@ -557,10 +552,8 @@ export async function adoptHash(tx: SeedTransaction, id: string, hash: string): 
 const tombstone = () => applyAudit('delete', {}, BOOTSTRAP_SESSION);
 
 /**
- * Applies a planned update inside the seed's transaction, stamped by the
- * bootstrap user: the scalars and the hash on the row, then each child list
- * reconciled in place. `overwriteEditor` or `--force` clears the curator mark in the same
- * statement, since the content is no longer what was reviewed.
+ * Applies a planned update inside the seed's transaction as the bootstrap user: the scalars and hash, then each child list reconciled in place.
+ * `overwriteEditor` or `--force` clears the curator mark in the same statement, as the content is no longer what was reviewed.
  */
 export async function applyUpdate(
   tx: SeedTransaction,

@@ -12,14 +12,9 @@ import type {
   WithoutAuditFields,
 } from './types';
 
-// Factories rather than column instances: every audit id references
-// `users.id`, `users`' own rows included, and importing `users` from here
-// would make this module and the identity module's `users.ts` import each
-// other — a cycle that, entered from the wrong end, built `users` before
-// `auditColumns` existed and silently dropped its stamps. The
-// instances live beside `users`, in src/modules/identity/schema/users.ts,
-// so this module depends on nothing in a module and any schema file can be
-// the first one loaded (claude-docs/db/audit-columns.md, "Audit columns and applyAudit").
+// Factories, not column instances: every audit id references `users.id`, so importing `users` here would make a cycle with the identity
+// module's `users.ts` that built `users` before `auditColumns` existed and silently dropped its stamps. The instances live beside `users`
+// (claude-docs/db/audit-columns.md, "Audit columns and applyAudit").
 export function auditStampColumnsReferencing(usersId: UsersIdReference) {
   return {
     createdAt: timestamp('created_at').notNull().defaultNow(),

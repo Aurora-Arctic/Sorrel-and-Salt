@@ -6,12 +6,8 @@ import type {
   SeedSubstitute,
 } from '../types';
 
-// The content hash of a compendium entry: what the seed compares a
-// file against the row it last wrote, so that a changed file is told from an
-// unchanged one (claude-docs/db/compendium-seed/README.md, "The hash"; the
-// rules are claude-docs/design-decisions/m14.4-compendium-markdown-files.md's).
-// Pure: it imports `node:crypto` and types, nothing else, so a test and the
-// seed hash one way.
+// The content hash of a compendium entry: what the seed compares a file against the row it last wrote (claude-docs/db/compendium-seed/README.md, "The hash").
+// Pure, importing only `node:crypto` and types, so a test and the seed hash one way.
 
 /**
  * The algorithm's version, prefixed to the text that is hashed, so a later
@@ -101,11 +97,8 @@ function withoutBlanks(
 }
 
 /**
- * The seeded fields of an entry, with the database's key names (`colors`),
- * every string folded, every blank dropped and the keys in alphabetical
- * order. Lists keep their order. What is not here is not content: a file's
- * `status`, `seedUpdate`, `overwriteEditor`, each citation's `supports` and
- * provenance, and the two trailing sections.
+ * The seeded fields of an entry with the database's key names (`colors`), strings folded, blanks dropped and keys alphabetical; lists keep their
+ * order. Not content: `status`, `seedUpdate`, `overwriteEditor`, each citation's `supports` and provenance, and the two trailing sections.
  */
 export function canonicalEntry(entry: SeedCompendiumEntry): CanonicalValue {
   return withoutBlanks({

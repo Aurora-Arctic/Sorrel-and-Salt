@@ -8,15 +8,8 @@ import { NOMENCLATURE_KINDS } from '../../../modules/ingredients/schema/ingredie
 import type { CitationFields } from '../../../lib/types';
 import type { SeedCompendiumFile, SeedCompendiumShard } from '../types';
 
-// The compendium's files, read as one shard: every entry file under
-// `ingredients/<nomenclature>/`, every per-entry source under `sources/`, and
-// the legacy list `unaudited.txt`. Synchronous, since the seed and the guard
-// test both want the whole corpus before they start, and reading three
-// hundred small files takes less time than one database round trip.
-// What a file must contain is parse-entry.ts's; what the corpus must satisfy
-// is guard.ts's (`checkCompendiumFiles`). This reads, and reports only what
-// stops it reading: a stray file, a folder named for no naming system, a
-// source file that is not a citation.
+// The compendium's files read as one shard: entry files under `ingredients/<nomenclature>/`, per-entry sources under `sources/`, and `unaudited.txt`.
+// Synchronous, as the seed and the guard both want the whole corpus first. Reports only what stops it reading (a stray file, an unknown folder, a non-citation source); parse-entry.ts and guard.ts judge content.
 
 /** The repo's compendium folder, where `loadCompendium()` reads by default. */
 export const COMPENDIUM_ROOT = 'compendium';
@@ -175,10 +168,8 @@ export function loadCompendium(root: string = COMPENDIUM_ROOT): LoadedCompendium
 }
 
 /**
- * The conversion manifest: the content hash of each converted file by
- * the entry's identity, which the seed stores as the baseline of a row seeded
- * before the hash existed ("Adoption"). A later task deletes it once
- * production has adopted.
+ * The conversion manifest: the content hash of each converted file by entry identity, stored as the baseline of a row seeded before the hash
+ * existed ("Adoption"). Deleted once production has adopted.
  */
 export const CONVERSION_MANIFEST = '.converted-hashes.json';
 

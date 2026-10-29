@@ -4,13 +4,8 @@ import type { SQL } from 'drizzle-orm';
 import type { ExtraConfigColumn } from 'drizzle-orm/pg-core';
 import type { LiveTable, SeedKeyedTable, VocabularyTable } from './types';
 
-// The columns and indexes several tables declare alike, each built by one
-// function so that a table cannot drift from its siblings.
-// Client-free, like audit.ts, and nothing here may change a name: every
-// builder produces what the migrations already created, which `db:generate`
-// writing no migration proved (claude-docs/db/soft-delete.md, "Soft-delete
-// filtering and the partial-index convention"; claude-docs/db/categories.md,
-// "Categories, and the two group vocabularies").
+// The columns and indexes several tables declare alike, each built by one function so a table cannot drift from its siblings. Client-free,
+// and nothing here may change a name: every builder produces what the migrations created (claude-docs/db/soft-delete.md, "Soft-delete filtering and the partial-index convention").
 
 /** The surrogate key: a uuid the database generates, so an insert never names one. */
 export function idColumn() {
@@ -64,13 +59,9 @@ export function vocabularyColumns() {
 }
 
 /**
- * A vocabulary table's indexes, named `<prefix>_…` as its migrations created
- * them: the seed key's unique; the slug's, partial per rule 4 and on the slug
- * alone, never the display name; the CHECK that refuses a blank description,
- * since NOT NULL alone accepts ''; and, where the autofill searches the table,
- * the trigram index it matches a name and a description alike through, by `%`
- * and `<%` under per-transaction thresholds — never a `similarity()`
- * comparison (claude-docs/db/member-autofill.md, "The member's autofill").
+ * A vocabulary table's indexes, named `<prefix>_…`: the seed key's unique; the slug's, partial per rule 4; the CHECK refusing a blank description;
+ * and where the autofill searches, the trigram index matched by `%` and `<%` under per-transaction thresholds, never `similarity()`
+ * (claude-docs/db/member-autofill.md, "The member's autofill").
  */
 export function vocabularyIndexes(
   prefix: string,
