@@ -1,0 +1,12 @@
+# Gathered for M14.29; the seed never reads this folder.
+entry: botanical/water-plantain-alisma-plantago-aquatica
+status: approved
+listings:
+  - list: iucn
+    name: "IUCN Red List of Threatened Species, as printed in Wikipedia's taxobox"
+    value: 'LC'
+    listedAs: Alisma plantago-aquatica
+    scope: 'global'
+    nameBasis: stated
+    source: iucn-alisma-plantago-aquatica
+    locator: 'Taxobox: status = LC, status_system = IUCN3.1; Lansdown, R.V.; Beentje, H.J., 2017, 10.2305/IUCN.UK.2017-1.RLTS.T164129A84275593.en'

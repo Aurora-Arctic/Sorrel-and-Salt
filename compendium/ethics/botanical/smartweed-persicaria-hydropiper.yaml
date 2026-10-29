@@ -1,0 +1,12 @@
+# Gathered for M14.29; the seed never reads this folder.
+entry: botanical/smartweed-persicaria-hydropiper
+status: approved
+listings:
+  - list: iucn
+    name: "IUCN Red List of Threatened Species, as printed in Wikipedia's taxobox"
+    value: 'LC'
+    listedAs: Persicaria hydropiper
+    scope: 'global'
+    nameBasis: stated
+    source: iucn-persicaria-hydropiper
+    locator: 'Taxobox: status = LC, status_system = IUCN3.1; Lansdown, R.V., 2014, 10.2305/IUCN.UK.2014-1.RLTS.T163977A42399743.en'
