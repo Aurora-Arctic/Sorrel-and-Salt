@@ -1,0 +1,11 @@
+# Gathered for M14.29; the seed never reads this folder.
+entry: botanical/clivia-gardenii-clivia-gardenii
+status: approved
+listings:
+  - list: other
+    name: 'Wikipedia article text (no assessor named)'
+    value: 'Habitat loss of 30% in 90 years; fewer than ten subpopulations'
+    listedAs: 'Clivia gardenii'
+    nameBasis: stated
+    source: wikipedia-clivia-gardenii
+    locator: 'lead: "the species has lost 30% of its habitat in the last 90 years due to its excessive use by traditional healers as well as its collection by horticulturalists"'

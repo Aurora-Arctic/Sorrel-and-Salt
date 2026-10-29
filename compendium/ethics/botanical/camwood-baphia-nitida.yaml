@@ -1,0 +1,11 @@
+# Gathered for M14.29; the seed never reads this folder.
+entry: botanical/camwood-baphia-nitida
+status: approved
+listings:
+  - list: iucn
+    name: 'IUCN Red List of Threatened Species'
+    value: 'Least Concern (IUCN 3.1)'
+    listedAs: 'Baphia nitida'
+    nameBasis: stated
+    source: wikipedia-baphia-nitida
+    locator: 'taxobox, "Conservation status": "Least Concern (IUCN 3.1)"'

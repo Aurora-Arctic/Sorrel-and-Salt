@@ -1,0 +1,11 @@
+# Gathered for M14.29; the seed never reads this folder.
+entry: botanical/cat-thorn-scutia-myrtina
+status: approved
+listings:
+  - list: iucn
+    name: 'IUCN Red List and Red List of South African Plants (as worded by Wikipedia)'
+    value: 'Least Concern'
+    listedAs: 'Scutia myrtina'
+    nameBasis: stated
+    source: wikipedia-scutia-myrtina
+    locator: 'text: "Scutia myrtina has been assessed as least concern by the IUCN Red List and the Red List of South African Plants."'
