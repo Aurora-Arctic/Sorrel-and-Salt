@@ -36,7 +36,8 @@ import Notice from '../Notice';
 import SaveStatus from '../SaveStatus';
 import Skeleton from '../Skeleton';
 import { SpellCategoriesField, sameCategories, useCategoryName } from './categories-field';
-import { JarAside } from './jar-aside';
+import { SpellComparison } from './comparison-panel';
+import { JarDetails } from './jar-details';
 import { DAYS_OF_THE_WEEK, MOON_PHASES } from './constants';
 import { saveSpell } from './autosave';
 import { useSaveOnClose } from './save-on-close';
@@ -649,63 +650,53 @@ const SpellBuilder = ({
             {section(
               'Purpose',
               <>
-                <div className="spell-purpose">
-                  <div className="spell-purpose__columns">
-                    <div className="spell-purpose__text">
-                      <TextField<SpellBuilderValues>
-                        name="title"
-                        label="Title"
-                        placeholder="Add a title"
-                        autoComplete="off"
-                      />
-                      <TextField<SpellBuilderValues>
-                        name="intent"
-                        label="Intent"
-                        placeholder="Add an intent"
-                        multiline
-                        rows={3}
-                      />
-                    </div>
-                    <SpellCategoriesField />
-                  </div>
-                </div>
+                <TextField<SpellBuilderValues>
+                  name="title"
+                  label="Title"
+                  placeholder="Add a title"
+                  autoComplete="off"
+                />
+                <TextField<SpellBuilderValues>
+                  name="intent"
+                  label="Intent"
+                  placeholder="Add an intent"
+                  multiline
+                  rows={3}
+                />
+                <SpellCategoriesField />
               </>,
             )}
             {section(
               'Jar',
               <>
-                <div className="spell-jar-layout">
-                  <div className="spell-jar-layout__list">
-                    {jarReady ? (
-                      <SpellSteps workspaceId={workspaceId} look={look} />
-                    ) : stepsRead === 'failed' ? (
-                      <Notice kind="error">{STEPS_FAILED}</Notice>
-                    ) : (
-                      <section className="spell-steps" aria-label="Steps" aria-busy="true">
-                        <Skeleton shape="line" />
-                      </section>
-                    )}
-                  </div>
-                  <JarAside
-                    ready={jarReady}
-                    descriptionField={
-                      <TextField<SpellBuilderValues>
-                        name="jarDescription"
-                        label="Jar Description"
-                        placeholder="Add a description"
-                        autoComplete="off"
-                      />
-                    }
-                    waxField={
-                      <TextField<SpellBuilderValues>
-                        name="sealWaxColor"
-                        label="Seal Wax"
-                        placeholder="Add a colour"
-                        autoComplete="off"
-                      />
-                    }
-                  />
-                </div>
+                <JarDetails
+                  descriptionField={
+                    <TextField<SpellBuilderValues>
+                      name="jarDescription"
+                      label="Jar Description"
+                      placeholder="Add a description"
+                      autoComplete="off"
+                    />
+                  }
+                  waxField={
+                    <TextField<SpellBuilderValues>
+                      name="sealWaxColor"
+                      label="Seal Wax"
+                      placeholder="Add a colour"
+                      autoComplete="off"
+                    />
+                  }
+                />
+                {jarReady ? (
+                  <SpellSteps workspaceId={workspaceId} look={look} />
+                ) : stepsRead === 'failed' ? (
+                  <Notice kind="error">{STEPS_FAILED}</Notice>
+                ) : (
+                  <section className="spell-steps" aria-label="Steps" aria-busy="true">
+                    <Skeleton shape="line" />
+                  </section>
+                )}
+                {jarReady && <SpellComparison />}
               </>,
             )}
             {/* The recipe's timing: when to work the spell, not when it was worked,
@@ -713,42 +704,34 @@ const SpellBuilder = ({
             {section(
               'When to Work It',
               <>
-                <div className="spell-main-column">
-                  <div className="spell-main-column__fields">
-                    <SpellSuggestField
-                      name="moonPhase"
-                      label="Moon Phase"
-                      placeholder="Add a phase"
-                      options={MOON_PHASES}
-                      icon={moonPhaseIcon}
-                    />
-                    <SpellSuggestField
-                      name="dayOfWeek"
-                      label="Day"
-                      placeholder="Add a day"
-                      options={DAYS_OF_THE_WEEK}
-                    />
-                  </div>
-                </div>
+                <SpellSuggestField
+                  name="moonPhase"
+                  label="Moon Phase"
+                  placeholder="Add a phase"
+                  options={MOON_PHASES}
+                  icon={moonPhaseIcon}
+                />
+                <SpellSuggestField
+                  name="dayOfWeek"
+                  label="Day"
+                  placeholder="Add a day"
+                  options={DAYS_OF_THE_WEEK}
+                />
               </>,
             )}
             {section(
               'Notes',
               <>
-                <div className="spell-main-column">
-                  <div className="spell-main-column__fields">
-                    <TextField<SpellBuilderValues>
-                      name="note"
-                      label="Note"
-                      placeholder="Add a note"
-                      multiline
-                    />
-                    <SpellVisibilityField
-                      created={opened !== undefined || createdId !== null}
-                      flush={flush}
-                    />
-                  </div>
-                </div>
+                <TextField<SpellBuilderValues>
+                  name="note"
+                  label="Note"
+                  placeholder="Add a note"
+                  multiline
+                />
+                <SpellVisibilityField
+                  created={opened !== undefined || createdId !== null}
+                  flush={flush}
+                />
               </>,
             )}
           </div>
