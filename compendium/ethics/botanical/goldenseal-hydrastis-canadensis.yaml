@@ -16,3 +16,10 @@ listings:
     nameBasis: stated
     source: wikipedia-iucn-hydrastis-canadensis
     locator: 'Taxobox: status = VU, status_system = IUCN3.1; its status_ref reads: "Hydrastis canadensis", Oliver, L., 2016, e.T44340011A44340071'
+  - list: cites
+    name: CITES Appendices I, II and III, valid from 5 March 2026
+    value: Appendix II
+    listedAs: Hydrastis canadensis
+    nameBasis: stated
+    source: cites-appendices
+    locator: 'p. 77, Appendix II column, family RANUNCULACEAE: "Hydrastis canadensis", annotation #8: "Underground parts (i.e. roots, rhizomes): whole, parts and powdered."'

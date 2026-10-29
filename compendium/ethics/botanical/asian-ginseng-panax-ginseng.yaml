@@ -1,0 +1,13 @@
+# Gathered for M14.29; the seed never reads this folder.
+entry: botanical/asian-ginseng-panax-ginseng
+status: needs-review
+listings:
+  - list: cites
+    name: CITES Appendices I, II and III, valid from 5 March 2026
+    value: Appendix II (Russian Federation population only)
+    listedAs: Panax ginseng
+    nameBasis: stated
+    source: cites-appendices
+    locator: 'p. 62, Appendix II column, family ARALIACEAE: "Panax ginseng (Only the population of the Russian Federation; no other population is included in the Appendices)", annotation #3: "Whole and sliced roots and parts of roots, excluding manufactured parts or derivatives, such as powders, pills, extracts, tonics, teas and confectionery."'
+questions:
+  - 'CITES lists Panax ginseng only for "the population of the Russian Federation; no other population is included in the Appendices". Whether this entry (as the compendium describes it) falls inside that population is not something the Appendices say. Owner: say whether to keep this listing on the entry or drop it. Recommendation: keep it, as the formal name is printed, with the population limit shown.'

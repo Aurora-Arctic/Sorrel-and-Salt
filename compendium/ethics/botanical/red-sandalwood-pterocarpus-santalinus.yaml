@@ -9,3 +9,10 @@ listings:
     nameBasis: stated
     source: wikipedia-iucn-pterocarpus-santalinus
     locator: 'Taxobox: status = EN, status_system = IUCN3.1; its status_ref reads: "Pterocarpus santalinus", Ahmedullah, M., 2021, 10.2305/IUCN.UK.2021-1.RLTS.T32104A187622484.en'
+  - list: cites
+    name: CITES Appendices I, II and III, valid from 5 March 2026
+    value: Appendix II
+    listedAs: Pterocarpus santalinus
+    nameBasis: stated
+    source: cites-appendices
+    locator: 'p. 71, Appendix II column: "Pterocarpus santalinus", annotation #7: "Logs, woodchips, powder and extracts."'
