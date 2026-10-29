@@ -956,7 +956,7 @@ describe('the spell builder’s In Coven Inventory', () => {
     suggest();
     renderBuilder();
     await addOneOff('Testwort');
-    fireEvent.click(screen.getByRole('button', { name: 'Add an Instruction' }));
+    fireEvent.click(screen.getByRole('button', { name: 'Add Instruction' }));
 
     expect(within(hold()).getAllByRole('listitem')).toHaveLength(1);
     expect(line('Testwort')).toHaveTextContent('one-off · nothing to hold');
@@ -985,7 +985,7 @@ describe('the spell builder’s jar fill', () => {
     await addOneOff('Testwort');
     expect(bands()).toBe(2);
 
-    fireEvent.click(screen.getByRole('button', { name: 'Add an Instruction' }));
+    fireEvent.click(screen.getByRole('button', { name: 'Add Instruction' }));
     expect(bands()).toBe(2);
   });
 });
@@ -1146,7 +1146,7 @@ describe('the spell builder’s open and closed steps', () => {
       'true',
     );
 
-    act(() => screen.getByRole('button', { name: 'Add an Instruction' }).focus());
+    act(() => screen.getByRole('button', { name: 'Add Instruction' }).focus());
 
     expect(screen.getByRole('button', { name: /^(Edit|Close) Fixture Rosewort$/ })).toHaveAttribute(
       'aria-expanded',

@@ -174,7 +174,7 @@ $spell-columns-switch: $spell-main-min + $spell-columns-gap + $spell-side;
   color: $text-muted;
 }
 
-// The box, Add an Instruction and the list in one grid, so that one button can sit after the box
+// The box, Add Instruction and the list in one grid, so that one button can sit after the box
 // on a wide column and be the list's last line on a narrow one, by `order` alone. The
 // column is its own container for the query, named for it.
 .spell-steps {
@@ -195,11 +195,18 @@ $spell-columns-switch: $spell-main-min + $spell-columns-gap + $spell-side;
   min-width: 0;
 }
 
+.spell-steps__box .field__label {
+  line-height: 1.5;
+}
+
 .spell-steps__add-step {
   grid-column: 2;
   grid-row: 2;
-  // Level with the box, not the label above it, and flat: the box beside it has no shadow.
-  align-self: end;
+  // Its top edge is level with the top of the box's frame, not the label above it, and it stays
+  // there as the filter tray grows the frame downward. The label's line is pinned (below) so the
+  // offset is a known height. Flat: the box beside it has no shadow.
+  align-self: start;
+  margin-block-start: calc(#{type-size('small')} * 1.5 + #{space(2)});
   box-shadow: none;
   white-space: nowrap;
 }
@@ -396,6 +403,8 @@ $spell-columns-switch: $spell-main-min + $spell-columns-gap + $spell-side;
   .spell-steps__add-step {
     grid-column: 1;
     grid-row: 3;
+    align-self: auto;
+    margin-block-start: 0;
     justify-content: flex-start;
     gap: space(2);
     border: 1px dashed $hairline;
