@@ -146,6 +146,34 @@ describe('an ingredient step', () => {
     expect((await liveStepsOf(spell.id)).map((row) => row.id)).toEqual([saved.id]);
   });
 
+  it('lays one form in several steps, and keeps each through a reorder and a later save', async () => {
+    const rosewort = await formOf('Fixture Rosewort');
+    const spell = await createSpell(asUser(B), WORKSPACE_W_ID, {
+      title: 'Fixture Working',
+      steps: [
+        { ...rosewort, quantity: 2, unit: 'g' },
+        { body: 'Stir' },
+        { ...rosewort, quantity: 5, unit: 'g' },
+      ],
+    });
+
+    const saved = await liveStepsOf(spell.id);
+    expect(saved).toHaveLength(3);
+    expect(saved.filter((row) => row.variant_id === rosewort.variantId)).toHaveLength(2);
+
+    // Swapped ends: both rows move through the same form at once.
+    const [first, stir, last] = saved.map((row) => row.id as string);
+    await updateSpell(asUser(B), WORKSPACE_W_ID, spell.id, {
+      expectedRevision: null,
+      steps: [
+        { id: last, ...rosewort, quantity: 5, unit: 'g' },
+        { id: stir, body: 'Stir' },
+        { id: first, ...rosewort, quantity: 2, unit: 'g' },
+      ],
+    });
+    expect((await liveStepsOf(spell.id)).map((row) => row.id)).toEqual([last, stir, first]);
+  });
+
   it('as a one-off name and form, writes no ingredients row', async () => {
     const before = await countIngredients();
 

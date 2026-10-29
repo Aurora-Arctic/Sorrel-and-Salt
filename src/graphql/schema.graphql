@@ -1207,7 +1207,20 @@ type Query {
   The curated forms by name, each under a live group: those whose name holds `query`, case-insensitively, and those filed under `groupId`, when given.
   """
   ingredientFormValues(after: String, before: String, first: Int, groupId: ID, last: Int, query: String): QueryIngredientFormValuesConnection!
-  ingredientSuggestions(after: String, before: String, first: Int, form: String, last: Int, query: String, workspaceId: ID!): QueryIngredientSuggestionsConnection!
+  ingredientSuggestions(
+    after: String
+    before: String
+
+    """
+    Keep only entries carrying any of these categories. Empty or null is no filter.
+    """
+    categoryIds: [ID!]
+    first: Int
+    form: String
+    last: Int
+    query: String
+    workspaceId: ID!
+  ): QueryIngredientSuggestionsConnection!
   me: User!
   ok: Boolean!
   possibleDuplicates(after: String, before: String, first: Int, last: Int, name: String!, workspaceId: ID): QueryPossibleDuplicatesConnection!
@@ -1813,7 +1826,6 @@ type SpellStep {
   The linked ingredient's name in this coven; the one-off row's own otherwise; null on an instruction-only step.
   """
   name: String
-  note: String
   position: Int!
   quantity: Float
   unit: InventoryUnit
@@ -1833,7 +1845,6 @@ input SpellStepInput {
   id: ID
   ingredientId: ID
   name: String
-  note: String
   quantity: Float
   unit: InventoryUnit
 
@@ -1937,7 +1948,7 @@ input UpdateJarInput {
 }
 
 """
-Changes a spell: a field left out keeps its value, and null clears it. Visibility only widens.
+Changes a spell: a field left out keeps its value, and null clears it. Visibility only widens once the spell is complete.
 """
 input UpdateSpellInput {
   """

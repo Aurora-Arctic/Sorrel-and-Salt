@@ -8,7 +8,6 @@ import type { StepRow } from './types';
 
 // §5's columns; `name` and `form` are a custom one-off layer's, in place of an
 // `ingredient_id` (MB.40), and `body` is a step's instruction (M13.1).
-// `layer_order` is held beside `position` until M13.9 drops it.
 const OWN_COLUMNS = [
   'id',
   'spell_id',
@@ -18,17 +17,14 @@ const OWN_COLUMNS = [
   'form',
   'quantity',
   'unit',
-  'layer_order',
   'position',
   'body',
-  'note',
 ];
 
 // A removed step is a tombstone that must not hold its place, so the key is a
 // surrogate id and the place is unique among live rows — claude-docs/db/grimoire.md,
 // "Position is the identity, and what that costs the reorder".
 const POSITION_INDEX = 'spell_steps_spell_id_position_unique';
-const VARIANT_INDEX = 'spell_steps_spell_id_variant_id_unique';
 const VARIANT_KEY = 'spell_steps_variant_fk';
 const CHECK_VARIANT_WITH_INGREDIENT = 'spell_steps_variant_with_ingredient';
 const CUSTOM_NAME_INDEX = 'spell_steps_spell_id_custom_name_unique';
@@ -69,8 +65,7 @@ const liveVariantOf = (ingredientId: string) => sql`
 `;
 
 /**
- * One step, a linked layer of Mugwort by default. It writes `layer_order`
- * beside `position`, as the code does until M13.9 (rule 10).
+ * One step, a linked layer of Mugwort by default.
  */
 async function layer({
   spellId = hearthGuard,
@@ -81,18 +76,16 @@ async function layer({
   quantity = '2.000',
   unit = 'tbsp',
   position = 1,
-  layerOrder = position,
-  note = null,
   body = null,
 }: StepRow = {}): Promise<void> {
   await sql`
     insert into spell_steps
-      (spell_id, ingredient_id, variant_id, name, form, quantity, unit, position, layer_order,
-       note, body, created_by, updated_by)
+      (spell_id, ingredient_id, variant_id, name, form, quantity, unit, position,
+       body, created_by, updated_by)
     values (${spellId}, ${ingredientId},
             ${variantId === undefined && ingredientId !== null ? sql`(${liveVariantOf(ingredientId)})` : (variantId ?? null)},
             ${name}, ${form}, ${quantity}, ${unit}::inventory_unit,
-            ${position}, ${layerOrder}, ${note}, ${body}, ${AUTHOR}, ${AUTHOR})
+            ${position}, ${body}, ${AUTHOR}, ${AUTHOR})
   `;
 }
 
@@ -154,11 +147,11 @@ beforeEach(async () => {
 });
 
 describe('spell_steps table', () => {
-  it('stores the measurement, the place and the note', async () => {
-    await layer({ quantity: '0.125', unit: 'tsp', position: 3, note: 'crushed, not ground' });
+  it('stores the measurement and the place', async () => {
+    await layer({ quantity: '0.125', unit: 'tsp', position: 3 });
 
     const [row] = await sql`
-      select quantity, unit::text, position, note from spell_steps
+      select quantity, unit::text, position from spell_steps
       where spell_id = ${hearthGuard}
     `;
 
@@ -166,20 +159,16 @@ describe('spell_steps table', () => {
     expect(row.quantity).toBe('0.125');
     expect(row.unit).toBe('tsp');
     expect(row.position).toBe(3);
-    expect(row.note).toBe('crushed, not ground');
   });
 
-  // Nullable until M13.9, because the deploy before 0083 writes `layer_order`
-  // alone, through the view, and a `NOT NULL` would refuse its inserts.
-  it('admits a step with no position, as the deploy before writes one', async () => {
-    await sql`
-      insert into spell_ingredients (spell_id, ingredient_id, variant_id, layer_order, created_by, updated_by)
-      values (${hearthGuard}, ${MUGWORT}, (${liveVariantOf(MUGWORT)}), 1, ${AUTHOR}, ${AUTHOR})
-    `;
+  // Set NOT NULL by 0089.
+  it('refuses a step with no position', async () => {
+    const error = await failureOf(sql`
+      insert into spell_steps (spell_id, ingredient_id, variant_id, created_by, updated_by)
+      values (${hearthGuard}, ${MUGWORT}, (${liveVariantOf(MUGWORT)}), ${AUTHOR}, ${AUTHOR})
+    `);
 
-    const [row] =
-      await sql`select position, layer_order from spell_steps where spell_id = ${hearthGuard}`;
-    expect(row).toEqual({ position: null, layer_order: 1 });
+    expect(error.code).toBe('23502');
   });
 
   // Story 80: a step is an instruction, an ingredient, or both.
@@ -217,15 +206,14 @@ describe('spell_steps table', () => {
       expect(error.constraint_name).toBe(CHECK_BODY_NOT_BLANK);
     });
 
-    // An amount or a note says how much of an ingredient, or what it is for;
-    // on an instruction alone it is about nothing. Admitted beside an
+    // An amount says how much of an ingredient; on an instruction alone it
+    // is about nothing. Admitted beside an
     // ingredient, as the first test of this table shows.
-    it('refuses a quantity, a unit or a note on an instruction alone', async () => {
+    it('refuses a quantity or a unit on an instruction alone', async () => {
       const quantity = await failureOf(instruction('Stir.', { quantity: '1.000' }));
       const unit = await failureOf(instruction('Stir.', { unit: 'pinch' }));
-      const note = await failureOf(instruction('Stir.', { note: 'clockwise' }));
 
-      for (const error of [quantity, unit, note]) {
+      for (const error of [quantity, unit]) {
         expect(error.code).toBe('23514');
         expect(error.constraint_name).toBe(CHECK_AMOUNT_ON_INGREDIENT);
       }
@@ -302,22 +290,17 @@ describe('spell_steps table', () => {
     });
   });
 
-  // One live step per place in a recipe, whichever kind of step it is. Each
-  // refused row below takes a free `layer_order`, so the refusal is
-  // `position`'s index alone; the `layer_order` index is the partial-unique
-  // sweep's until M13.9 drops it.
+  // One live step per place in a recipe, whichever kind of step it is.
   describe('the position is the identity', () => {
     // 23505 is unique_violation, named: the refusal is the position index's,
     // across the kinds of step.
     it('refuses a second live step at a place, whichever kind either is', async () => {
       await layer();
-      const linked = await failureOf(layer({ ingredientId: ROSEMARY, layerOrder: 11 }));
-      const customOnLinked = await failureOf(custom('Garden dust', { layerOrder: 12 }));
-      const instructionOnLinked = await failureOf(instruction('Stir.', { layerOrder: 13 }));
+      const linked = await failureOf(layer({ ingredientId: ROSEMARY }));
+      const customOnLinked = await failureOf(custom('Garden dust'));
+      const instructionOnLinked = await failureOf(instruction('Stir.'));
       await custom('Garden dust', { spellId: otherSpell });
-      const customOnCustom = await failureOf(
-        custom('Threshold salt', { spellId: otherSpell, layerOrder: 14 }),
-      );
+      const customOnCustom = await failureOf(custom('Threshold salt', { spellId: otherSpell }));
 
       for (const error of [linked, customOnLinked, instructionOnLinked, customOnCustom]) {
         expect(error.code).toBe('23505');
@@ -406,14 +389,10 @@ describe('spell_steps table', () => {
     });
   });
 
-  // The old primary key's guarantee, now a partial index over linked rows'
-  // variants and its mirror over custom rows: inside one jar an ambiguous
-  // label is a mistake, not a distinction.
-  describe('one variant per jar, one custom name per jar', () => {
-    // The pair is unique, not either half: another form of the ingredient in
-    // the spell, and the same one in another spell, are both admitted, so a
-    // jar may lay Mugwort herb and Mugwort oil (MB.217).
-    it('refuses the same variant twice in one spell, and admits another form of it', async () => {
+  // A custom row is matched against nothing, so inside one jar its name is its
+  // identity; a linked form is not (the owner, 2026-10-28).
+  describe('one custom name per jar, any form any number of times', () => {
+    it('admits the same variant twice in one spell, as well as another form of it', async () => {
       const [oil] = await sql`
         insert into ingredient_variants ${sql({
           ingredient_id: MUGWORT,
@@ -424,17 +403,14 @@ describe('spell_steps table', () => {
         returning id
       `;
       await layer();
-
-      const error = await failureOf(layer({ position: 2 }));
-      await layer({ variantId: oil.id as string, position: 2 });
+      await layer({ position: 2 });
+      await layer({ variantId: oil.id as string, position: 3 });
       await layer({ spellId: otherSpell });
 
-      expect(error.code).toBe('23505');
-      expect(error.constraint_name).toBe(VARIANT_INDEX);
       const forms = await sql`
         select count(*)::int as count from spell_steps where spell_id = ${hearthGuard}
       `;
-      expect(forms[0].count).toBe(2);
+      expect(forms[0].count).toBe(3);
     });
 
     it('refuses the same custom name twice in one spell, whatever its case', async () => {

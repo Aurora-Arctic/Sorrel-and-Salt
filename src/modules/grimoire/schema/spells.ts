@@ -36,10 +36,6 @@ export const spells = pgTable(
     sealWaxColor: text('seal_wax_color'),
     moonPhase: text('moon_phase'),
     dayOfWeek: text('day_of_week'),
-    // The old name of `note`, kept until M13.9 drops it. The saves write
-    // `note` alone and leave this as it was, as DESIGN.md §5 says
-    // (claude-docs/db/grimoire.md, "Steps (M13.1)").
-    instructions: text('instructions'),
     // The spell's single free-text note. What to do lives in its steps
     // (`spell_steps.body`) now, not here.
     note: text('note'),

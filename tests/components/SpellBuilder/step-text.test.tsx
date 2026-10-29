@@ -1,15 +1,16 @@
 import { QueryClientProvider } from '@tanstack/react-query';
-import { fireEvent, render, screen, waitFor, within } from '@testing-library/react';
+import { act, fireEvent, render, screen, waitFor, within } from '@testing-library/react';
 import { describe, expect, it, vi } from 'vitest';
 import type { SpellBuilderProps, SpellBuilderSpell } from '@/components/SpellBuilder/types';
 import type {
+  SpellIngredientSuggestionsQuery,
   CreateSpellMutation,
   CreateSpellMutationVariables,
   UpdateSpellMutation,
   UpdateSpellMutationVariables,
 } from '@/gql/graphql';
 import { makeQueryClient } from '@/lib/graphql-client';
-import { mockGraphQLMutation } from '../../support/msw/graphql';
+import { mockGraphQLMutation, mockGraphQLQuery } from '../../support/msw/graphql';
 import { offerCategories } from '../../support/msw/ingredient-lookups';
 
 vi.mock('next/navigation', () => ({ useRouter: () => ({ push: vi.fn(), refresh: vi.fn() }) }));
@@ -34,7 +35,6 @@ const savedStep = (
   form: null,
   quantity: null,
   unit: null,
-  note: null,
   body: null,
   ingredient: null,
   variant: null,
@@ -106,6 +106,11 @@ const steps = () => screen.getByRole('list', { name: 'Steps' });
 const rows = () => within(steps()).queryAllByRole('listitem');
 const instructions = () =>
   within(steps()).queryAllByRole('textbox', { name: /^Instruction/ }) as HTMLTextAreaElement[];
+/** Opens a step row by its pencil, unless it is open already. */
+const openStep = (n: number) => {
+  const pencil = screen.getByRole('button', { name: `Edit step ${n}` });
+  if (pencil.getAttribute('aria-expanded') !== 'true') fireEvent.click(pencil);
+};
 const save = () => screen.getByRole('button', { name: /^Sav/ });
 const submit = () => fireEvent.submit(save().closest('form') as HTMLFormElement);
 const announced = () =>
@@ -113,12 +118,18 @@ const announced = () =>
     .getAllByRole('status')
     .map((region) => region.textContent)
     .join(' | ');
-const addStep = () => fireEvent.click(screen.getByRole('button', { name: 'Add a Step' }));
-const addOneOff = (name: string) => {
-  fireEvent.change(screen.getByRole('textbox', { name: 'One-Off Name' }), {
-    target: { value: name },
-  });
-  fireEvent.click(screen.getByRole('button', { name: 'Add One-Off Ingredient' }));
+const addStep = () => fireEvent.click(screen.getByRole('button', { name: 'Add Instruction' }));
+/** Types a name into the Add to Jar box and picks its first row: a one-off ingredient. */
+const addOneOff = async (name: string) => {
+  mockGraphQLQuery<SpellIngredientSuggestionsQuery>('SpellIngredientSuggestions', () => ({
+    ingredientSuggestions: { edges: [] },
+  }));
+  const box = screen.getByRole('combobox', { name: 'Add to Jar' });
+  act(() => box.focus());
+  fireEvent.change(box, { target: { value: name } });
+  fireEvent.click(
+    await screen.findByRole('option', { name: `Add "${name}" as a one-off ingredient` }),
+  );
 };
 
 describe('the spell builder’s step text', () => {
@@ -142,8 +153,10 @@ describe('the spell builder’s step text', () => {
 
     addStep();
     fireEvent.change(instructions()[0] as HTMLElement, { target: { value: 'Light the candle' } });
-    addOneOff('Testwort');
-    fireEvent.change(instructions()[1] as HTMLElement, { target: { value: 'Crush it first' } });
+    await addOneOff('Testwort');
+    // Only one row is open at a time: the new ingredient step is, the instruction step is closed.
+    expect(instructions()).toHaveLength(1);
+    fireEvent.change(instructions()[0] as HTMLElement, { target: { value: 'Crush it first' } });
     submit();
 
     await waitFor(() => expect(calls).toHaveLength(1));
@@ -172,21 +185,23 @@ describe('the spell builder’s step text', () => {
 
   it('reads a saved spell’s texts back into their fields, an ingredient step’s beneath it', () => {
     renderSaved();
-
-    expect(instructions().map((field) => field.value)).toEqual([
-      'Light the candle',
-      'Crush it first',
-    ]);
+    fireEvent.click(screen.getByRole('button', { name: /^(Edit|Close) Testwort$/ }));
+    // The instruction-only step reads as its text while closed, and as a field once opened.
+    expect(within(rows()[0] as HTMLElement).getByText('Light the candle')).toBeInTheDocument();
+    expect(instructions().map((field) => field.value)).toEqual(['Crush it first']);
     expect(within(rows()[1] as HTMLElement).getByRole('spinbutton')).toBeInTheDocument();
-    expect(save()).toBeDisabled();
+    openStep(1);
+    expect(instructions().map((field) => field.value)).toEqual(['Light the candle']);
+    expect(save().matches(':disabled, [aria-disabled="true"]')).toBe(true);
   });
 
   it('saves an edited text on a saved step by its id, and leaves the other alone', async () => {
     const calls = acceptUpdate();
     renderSaved();
 
+    openStep(1);
     fireEvent.change(instructions()[0] as HTMLElement, { target: { value: 'Snuff the candle' } });
-    expect(save()).toBeEnabled();
+    expect(save().matches(':disabled, [aria-disabled="true"]')).toBe(false);
     submit();
 
     await waitFor(() => expect(calls).toHaveLength(1));
@@ -200,18 +215,55 @@ describe('the spell builder’s step text', () => {
     const calls = acceptUpdate();
     renderSaved();
 
-    fireEvent.change(instructions()[1] as HTMLElement, { target: { value: '' } });
+    fireEvent.click(screen.getByRole('button', { name: /^(Edit|Close) Testwort$/ }));
+    fireEvent.change(instructions()[0] as HTMLElement, { target: { value: '' } });
     submit();
 
     await waitFor(() => expect(calls).toHaveLength(1));
     expect(calls[0]?.input.steps?.[1]).toEqual({ id: ID.stepCrush, name: 'Testwort' });
   });
 
+  it('shows a closed instruction step as its text, opens one row at a time, and opens a blank one on its error', async () => {
+    renderSaved();
+    const first = screen.getByRole('button', { name: 'Edit step 1' });
+    expect(first).toHaveAttribute('aria-expanded', 'false');
+    expect(instructions()).toHaveLength(0);
+
+    fireEvent.click(first);
+    expect(first).toHaveAttribute('aria-expanded', 'true');
+    expect(instructions().map((field) => field.value)).toEqual(['Light the candle']);
+
+    fireEvent.click(screen.getByRole('button', { name: /^(Edit|Close) Testwort$/ }));
+    expect(first).toHaveAttribute('aria-expanded', 'false');
+    expect(instructions().map((field) => field.value)).toEqual(['Crush it first']);
+  });
+
+  it('opens a closed instruction from a click on its text, as an ingredient row opens, and shows Close, not Remove, while open', () => {
+    renderSaved();
+    expect(screen.getByRole('button', { name: 'Remove step 1' })).toBeInTheDocument();
+
+    fireEvent.click(screen.getByText('Light the candle', { selector: 'p' }));
+
+    expect(screen.getByRole('button', { name: 'Close step 1' })).toHaveAttribute(
+      'aria-expanded',
+      'true',
+    );
+    expect(instructions().map((field) => field.value)).toEqual(['Light the candle']);
+    expect(screen.queryByRole('button', { name: 'Remove step 1' })).toBeNull();
+
+    fireEvent.click(screen.getByRole('button', { name: 'Close step 1' }));
+    expect(screen.getByRole('button', { name: 'Edit step 1' })).toHaveAttribute(
+      'aria-expanded',
+      'false',
+    );
+    expect(screen.getByRole('button', { name: 'Remove step 1' })).toBeInTheDocument();
+  });
+
   it('removes an instruction-only step, says so, and leaves it out of what is sent', async () => {
     const calls = acceptUpdate();
     renderSaved();
 
-    fireEvent.click(screen.getByRole('button', { name: 'Remove Light the candle' }));
+    fireEvent.click(screen.getByRole('button', { name: 'Remove step 1' }));
 
     expect(announced()).toContain('Removed Light the candle, from position 1 of 2.');
     expect(rows()).toHaveLength(1);
@@ -225,7 +277,7 @@ describe('the spell builder’s step text', () => {
   it('keeps the focus in the list after a removal', () => {
     renderSaved();
 
-    fireEvent.click(screen.getByRole('button', { name: 'Remove Light the candle' }));
+    fireEvent.click(screen.getByRole('button', { name: 'Remove step 1' }));
 
     expect(steps().contains(document.activeElement)).toBe(true);
   });

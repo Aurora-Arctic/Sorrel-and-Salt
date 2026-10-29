@@ -16,15 +16,25 @@
 
 // A step's handle (M10.16): the grip it is moved by, a button unboxed as the
 // combobox's chip handle is. `touch-action` is dnd-kit's ask, so that a drag
-// by touch moves the step rather than the page. Laid out no further until the
-// section's design review.
+// by touch moves the step rather than the page. Muted, as a grip is a
+// means to move a step and not the step itself (the owner's pass, 2026-10-28).
 .spell-step__handle {
   @include button-reset(grab);
 
+  color: $text-muted;
   display: inline-flex;
   align-items: center;
   border-radius: radius('sharp');
   touch-action: none;
+
+  // The grip is drawn 8 by 16 px; its hit area reaches 24 px wide and 44 px tall around it (WCAG
+  // 2.5.8, the control floor) without changing the drawing. The row positions the handle.
+  &::before {
+    content: '';
+    position: absolute;
+    inset-block: -14px;
+    inset-inline: -8px;
+  }
 
   &:focus-visible {
     @include focus-ring;
@@ -35,17 +45,540 @@
   }
 }
 
-// The step being moved stays above the rows it passes.
-.spell-step.is-dragging {
+// The step being moved is lifted off the list: a deeper shadow and the accent
+// on its edge. The rows it passes are not restyled; dnd-kit slides them aside.
+// Both classes, so that this outranks the card's own border and shadow
+// (`.step-row.step-row--card`); only the colour is set, the row owns the width.
+.step-row.spell-step.is-dragging {
   position: relative;
   z-index: 1;
+  border-color: $accent;
+  box-shadow: $shadow-lifted;
 }
 
-// The comparison panel (M10.17): the two levels of the second list are told
-// apart in words first. Weight and ink follow the words and are not what
-// carries them; laid out no further until the section's design review.
-.comparison-panel__stray:not(.is-unplaced) {
+// The jar's list and what surrounds it (the owner's pass, 2026-10-28): one
+// column, spaced by its gap alone, so a row carries no margin of its own. The
+// list is the size container the row stacks by, declared in StepRow's
+// stylesheet beside its only query.
+.spell-steps {
+  display: flex;
+  flex-direction: column;
+  align-items: stretch;
+  gap: space(4);
+}
+
+// What Goes In: the heading with a muted count at the right of its line.
+.spell-steps__head {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: space(1) space(3);
+}
+
+.spell-steps__heading,
+.spell-steps__summary {
+  margin: 0;
+}
+
+.spell-steps__summary {
   color: $text-muted;
+}
+
+// The box, Add Instruction and the list in one grid, so that one button can sit after the box
+// on a wide column and be the list's last line on a narrow one, by `order` alone. The
+// column is its own container for the query, named for it.
+.spell-steps {
+  container: spell-column / inline-size;
+}
+
+.spell-steps__body {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  align-items: start;
+  // The list, then the add row beneath it, space(5) apart.
+  gap: space(5) space(3);
+}
+
+.spell-steps__box {
+  grid-column: 1;
+  grid-row: 2;
+  min-width: 0;
+}
+
+.spell-steps__box .field__label {
+  line-height: 1.5;
+}
+
+.spell-steps__add-step {
+  grid-column: 2;
+  grid-row: 2;
+  // Its top edge is level with the top of the box's frame, not the label above it, and it stays
+  // there as the filter tray grows the frame downward. The label's line is pinned (below) so the
+  // offset is a known height. Flat: the box beside it has no shadow.
+  align-self: start;
+  margin-block-start: calc(#{type-size('small')} * 1.5 + #{space(2)});
+  box-shadow: none;
+  white-space: nowrap;
+}
+
+// The picker row's chips are the compact size Category Match uses (the owner's call, 2026-10-29),
+// still in their group colours.
+.combobox__list .combobox__note--meta .chip {
+  @include chip($size: compact);
+}
+
+// A row's category chips may wrap onto a second line rather than be clipped (the owner's call,
+// 2026-10-29): the one-line clip would cut the pills' tops. The line height gives wrapped lines
+// the room the chips have side to side, and the block padding keeps the first line clear of the
+// name above. Only a note holding chips, so a plain-text note keeps its single ellipsised line.
+.combobox__list .combobox__note--meta:has(.chip) {
+  padding-block: space(1);
+  line-height: 2;
+  overflow: visible;
+  white-space: normal;
+}
+
+// The In Jar mark on a picker row: the site's compact badge size, as the step rows' marks wear.
+// The label line becomes a flex row when it holds the mark, so the mark sits flush at the row's
+// inline end on the name's line whatever the name's length, with no fixed width.
+.combobox__label:has(> .spell-steps__in-jar) {
+  display: flex;
+  align-items: baseline;
+  gap: space(1);
+}
+
+.spell-steps__in-jar {
+  @include badge-size('small');
+  margin-inline-start: auto;
+}
+
+// The picker's frame: the box and the filter tray share one border, so the filter reads as part
+// of the search. The box inside gives up its own edge; the frame draws it, and takes the focus
+// ring the box would have drawn.
+.spell-steps__frame {
+  border: 1px solid $text-muted;
+  border-radius: radius('control');
+  background-color: $surface-card;
+
+  .combobox__control {
+    border: 0;
+    border-radius: radius('control');
+  }
+
+  &:has(.combobox__input:focus-visible) {
+    @include focus-ring;
+  }
+
+  &:has(.combobox__control.is-invalid) {
+    border-color: $secondary;
+  }
+}
+
+// The picker's category filter, the tray under the box inside the frame, separated by a hairline:
+// the caption and its InfoTip on one line, the chips (and Clear) on the next. Each chip is a toggle.
+.spell-steps__filter {
+  display: flex;
+  flex-direction: column;
+  gap: space(1);
+  padding: space(2);
+  border-block-start: 1px solid $hairline;
+}
+
+.spell-steps__filter-head {
+  display: flex;
+  align-items: center;
+  gap: space(2);
+}
+
+// The caption beside the chips, the muted style Category Match's row labels wear.
+.spell-steps__filter-label {
+  color: $text-muted;
+  font-size: type-size('caption');
+  font-weight: 500;
+}
+
+.spell-steps__filter-row {
+  display: flex;
+  align-items: flex-start;
+  gap: space(2);
+}
+
+.spell-steps__filter-chips {
+  display: flex;
+  flex: 1;
+  flex-wrap: wrap;
+  gap: space(1);
+}
+
+// Clear, quiet, at the right end of the caption line, level with the caption; drawn only while a
+// chip is pressed.
+.spell-steps__filter-clear {
+  margin-inline-start: auto;
+  padding: 0;
+  border: 0;
+  background: none;
+  color: $text-primary;
+  font: inherit;
+  font-size: type-size('caption');
+  font-weight: 500;
+  text-decoration: underline;
+  white-space: nowrap;
+  cursor: pointer;
+
+  &:focus-visible {
+    @include focus-ring;
+  }
+}
+
+// The resting dot in the chip's group colour. It fills the same 12px slot as the check that
+// replaces it when pressed, so the chip is the same width in both states: the 8px dot is drawn
+// inside the slot, not sized to it.
+.spell-steps__filter-dot {
+  flex: none;
+  inline-size: 12px;
+  block-size: 12px;
+  background: radial-gradient(
+    circle,
+    light-dark(var(--chip-light), var(--chip-dark)) 4px,
+    transparent 4.5px
+  );
+}
+
+.spell-steps__filter-chip svg {
+  flex: none;
+}
+
+// A toggle, not a label (the owner's call, 2026-10-29): at rest a neutral outline and ink with a
+// dot in the group colour; pressed, a solid fill of the group colour, card-coloured ink and a
+// check, so the state is not carried by colour alone. Under .spell-steps__filter so these beat the
+// global .chip's own 400ms transition. Border width and style stay fixed across states; only
+// colours change, so each eases.
+.spell-steps__filter .spell-steps__filter-chip {
+  @include chip($state: quiet);
+  display: inline-flex;
+  align-items: center;
+  gap: space(1);
+  border-color: $hairline;
+  background-color: transparent;
+  color: $text-primary;
+  cursor: pointer;
+  transition:
+    background-color 150ms ease,
+    border-color 150ms ease,
+    color 150ms ease;
+
+  @include reduced-motion {
+    transition: none;
+  }
+
+  &[aria-pressed='false']:hover {
+    border-color: light-dark(var(--chip-light), var(--chip-dark));
+  }
+
+  &[aria-pressed='true'] {
+    border-color: light-dark(var(--chip-light), var(--chip-dark));
+    background-color: light-dark(var(--chip-light), var(--chip-dark));
+    color: $surface-card;
+  }
+
+  &[aria-pressed='true']:hover {
+    background-color: color-mix(
+      in srgb,
+      light-dark(var(--chip-light), var(--chip-dark)) 85%,
+      $text-primary
+    );
+  }
+}
+
+// The formal name on a row's second line, italic as botanical names are set.
+.combobox__list .spell-steps__formal {
+  font-style: italic;
+}
+
+.spell-steps__body > .spell-steps__list {
+  grid-column: 1 / -1;
+  grid-row: 1;
+}
+
+// No steps: no row, so no gap above the add row.
+.spell-steps__body > .spell-steps__list:empty {
+  display: none;
+}
+
+@container spell-column (max-width: #{$narrow-column}) {
+  .spell-steps__body {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .spell-steps__box,
+  .spell-steps__body > .spell-steps__list {
+    grid-column: 1;
+  }
+
+  // The dashed last line of the list, full width, with no number (the owner, 2026-10-29).
+  .spell-steps__add-step {
+    grid-column: 1;
+    grid-row: 3;
+    align-self: auto;
+    margin-block-start: 0;
+    justify-content: flex-start;
+    gap: space(2);
+    border: 1px dashed $hairline;
+    background-color: transparent;
+    color: $text-primary;
+  }
+}
+
+// The steps themselves: unnumbered, unindented, a gap between them: space(4),
+// where it was space(3), so the cards do not blur into one column (design review,
+// 2026-10-28, finding 3).
+.spell-steps__list {
+  display: flex;
+  flex-direction: column;
+  gap: space(4);
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+// An empty list takes no room, so the controls above are not left with a gap
+// above a blank.
+.spell-steps__list:empty {
+  display: none;
+}
+
+.spell-aside__empty {
+  margin: 0;
+  color: $text-muted;
+}
+
+// The builder's sections: space(6) under the fields of an open one, so the gap between
+// sections is plainly bigger than the space(5) between fields (design review,
+// 2026-10-28). Here and not in the shared component, which IngredientForm also uses.
+body .spell-builder .collapsible-section__fields {
+  padding-block-end: space(6);
+}
+
+// The fields' own gap spaces the steps and the category match; a bare `section` carries
+// space(4) of margin (_layout.scss) that would sit on top of it.
+body .spell-builder .collapsible-section__fields > section {
+  margin-block: 0;
+}
+
+// The jar details above the step list: the jar at the left of Seal Wax, then Jar
+// Description on its own line (the owner's call, 2026-10-29).
+.jar-details {
+  display: flex;
+  flex-direction: column;
+  gap: space(5);
+}
+
+// Seal Wax takes the width the jar leaves. The jar stretches to the row's height, so it spans
+// the label and the input together (the owner's call, 2026-10-29).
+.jar-details__wax {
+  display: flex;
+  align-items: stretch;
+  gap: space(3);
+}
+
+.jar-details__wax-field {
+  flex: 1 1 auto;
+  min-width: 0;
+}
+
+.spell-jar {
+  display: flex;
+  flex: none;
+  align-items: center;
+  inline-size: 4rem;
+  // Stretched to the Seal Wax row, label and input together; the svg keeps its aspect ratio
+  // inside that box (the default `meet`), so the drawing is never distorted.
+  align-self: stretch;
+  min-block-size: $control-height;
+
+  svg {
+    display: block;
+    flex: none;
+    inline-size: 100%;
+    block-size: 100%;
+    // The stroke is centred on the path, so a path on the box's bottom edge loses half its
+    // width to the svg's clip; letting it overflow keeps the jar's base whole.
+    overflow: visible;
+  }
+
+  .jar-shelf__glass,
+  .jar-shelf__lid,
+  .jar-shelf__facet {
+    stroke: $text-muted;
+  }
+}
+
+// In Coven Inventory: a small jar, the name, and the words under it.
+.spell-inventory {
+  display: flex;
+  flex-direction: column;
+  gap: space(2);
+}
+
+.spell-inventory__list {
+  display: flex;
+  flex-direction: column;
+  gap: space(2);
+  // Not a bulleted list: no ◆ marker from typography-base's `ul li::before`.
+  @include list-reset;
+}
+
+.spell-inventory__line {
+  display: grid;
+  grid-template-areas:
+    'jar name'
+    'jar words';
+  grid-template-columns: 2rem minmax(0, 1fr);
+  column-gap: space(2);
+
+  // A one-off holds no stock, but its jar looks as if it holds something: the glass, the level
+  // and the wave are all muted ink in place of the stock green, at the middling level.
+  &.is-one-off .spell-inventory__jar {
+    .jar-shelf__glass,
+    .jar-shelf__lid,
+    .jar-shelf__facet,
+    .jar-shelf__wave {
+      stroke: $text-muted;
+    }
+
+    .jar-shelf__level {
+      fill: $text-muted;
+    }
+  }
+}
+
+.spell-inventory__jar {
+  grid-area: jar;
+  align-self: center;
+
+  svg {
+    display: block;
+    inline-size: 100%;
+    block-size: auto;
+    // As `.spell-jar svg`: the stroke on the bottom edge is not clipped.
+    overflow: visible;
+  }
+}
+
+// The name line: the name, which is cut short with an ellipsis, then the Low or Out state,
+// which is not.
+.spell-inventory__title {
+  display: flex;
+  grid-area: name;
+  gap: space(2);
+  align-items: baseline;
+  min-width: 0;
+}
+
+.spell-inventory__name {
+  min-width: 0;
+  overflow: hidden;
+  font-weight: 500;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.spell-inventory__words {
+  grid-area: words;
+  color: $text-muted;
+}
+
+.spell-inventory__verdict {
+  display: inline-flex;
+  flex: none;
+  // Pushed to the line's right end; the name keeps the rest and is the one cut short.
+  margin-inline-start: auto;
+  align-items: center;
+  gap: space(1);
+  color: $text-muted;
+
+  &.is-low {
+    color: $stock-low-ink;
+  }
+
+  &.is-out {
+    color: $stock-out-ink;
+  }
+}
+
+// Units Differ's mark: a button only so the tip can be reached by focus; it does nothing.
+.spell-inventory__mark {
+  display: inline-flex;
+  padding: 0;
+  border: 0;
+  background: none;
+  color: inherit;
+  // A button does not inherit the font; its own size (13.33px) would shrink the 1em icon inside.
+  font: inherit;
+  cursor: default;
+}
+
+.spell-inventory__icon {
+  inline-size: 1em;
+  block-size: 1em;
+  flex: none;
+}
+
+@container spell-column (max-width: #{$narrow-column}) {
+  .spell-inventory__name {
+    overflow: visible;
+    white-space: normal;
+  }
+}
+
+// Category Match: Carried, Missing and Extra, each a row of chips.
+.comparison-panel {
+  display: flex;
+  flex-direction: column;
+  gap: space(2);
+
+  h5 {
+    margin: 0;
+  }
+}
+
+.comparison-panel__rows {
+  display: flex;
+  flex-direction: column;
+  gap: space(2);
+  margin: 0;
+}
+
+.comparison-panel__row {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: space(1) space(2);
+
+  // One quiet label: caption size, normal case, left-aligned, so the chips start on one edge.
+  dt {
+    flex: none;
+    inline-size: 5.5rem;
+    color: $text-muted;
+    font-size: type-size('caption');
+    font-weight: 500;
+  }
+
+  dd {
+    flex: 1 1 8rem;
+    margin: 0;
+  }
+}
+
+// The recovery banner: a flex row like the save status's notices, with space(2) between the
+// sentence and its buttons, so the buttons wrap to their own line, not touch the text, when the
+// sentence fills the width.
+.spell-builder .spell-builder__restored {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: space(2);
 }
 
 // The recovery banner's two choices (M13.17), side by side after the sentence.

@@ -22,6 +22,10 @@ import { CompendiumFilter } from '../validation/compendium-filter';
  * a link. A blank query offers all, and so does one under the compendium's
  * `MIN_QUERY_LENGTH`, since it matches as the compendium search does.
  *
+ * `categoryIds` keeps only entries carrying any of them (the spell builder
+ * narrows its Add to Jar picker by the spell's own categories); none, or an
+ * empty list, is no filter.
+ *
  * A `form` ranks the entries holding that form first, then those holding another
  * form of its curated group (M8.3), within each group. A coven's own
  * ingredient and a compendium entry sharing its name are both listed, in their
@@ -38,8 +42,12 @@ export async function suggestIngredients(
   query: string,
   page: PageRequest,
   form?: string,
+  categoryIds?: readonly string[],
 ): Promise<PageEntry<IngredientRow, CompendiumScore & SuggestionGroupTag>[]> {
   const membership = await assertMembership(session, workspaceId, { ingredient: ['read'] });
-  const filter = parseInput(CompendiumFilter, { query });
-  return findIngredientSuggestions(membership, filter.query ?? '', page, form);
+  const filter = parseInput(CompendiumFilter, {
+    query,
+    categoryIds: categoryIds ? [...categoryIds] : undefined,
+  });
+  return findIngredientSuggestions(membership, filter.query ?? '', page, form, filter.categoryIds);
 }

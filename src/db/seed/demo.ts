@@ -191,20 +191,19 @@ export const DEMO_SPELLS: SeedSpell[] = [
         ingredient: fromCompendium('Sea Salt', 'Sodium chloride'),
         quantity: '2.000',
         unit: 'tbsp',
-        note: 'The base. Everything above it sits on salt.',
+        body: 'The base. Everything above it sits on salt.',
       },
       {
         ingredient: fromCompendium('Black Salt'),
         quantity: '1.000',
         unit: 'tbsp',
-        note: null,
       },
       { body: 'Tamp the salts down before the next layer goes in.' },
       {
         ingredient: fromWorkspace(HEARTH_ASH),
         quantity: '1.000',
         unit: 'pinch',
-        note: 'From our own grate, which is the whole point of the jar.',
+        body: 'From our own grate, which is the whole point of the jar.',
       },
       {
         // The custom, one-off layer: never an `ingredients` row, and `dust` is
@@ -212,13 +211,13 @@ export const DEMO_SPELLS: SeedSpell[] = [
         ingredient: { tier: 'custom', name: 'Dust from the front step', form: 'dust' },
         quantity: '1.000',
         unit: 'pinch',
-        note: 'Swept from our own doorstep at dusk. Not something to go on a shelf.',
+        body: 'Swept from our own doorstep at dusk. Not something to go on a shelf.',
       },
       {
         ingredient: fromCompendium('Rosemary', 'Salvia rosmarinus'),
         quantity: null,
         unit: null,
-        note: 'A sprig laid on top, whole, before the wax goes on.',
+        body: 'A sprig laid on top, whole, before the wax goes on.',
       },
       {
         body: 'Seal with black wax while it is still warm and bury it at the front step, upright.',
@@ -238,29 +237,26 @@ export const DEMO_SPELLS: SeedSpell[] = [
     categories: ['Dream Work', 'Sleep', 'Divination'],
     steps: [
       {
-        body: 'Crush the mugwort between your hands before it goes in.',
+        body: 'Crush the mugwort between your hands before it goes in.\n\nToo much and nobody sleeps at all.',
         ingredient: fromCompendium('Mugwort', 'Artemisia vulgaris'),
         quantity: '1.000',
         unit: 'tbsp',
-        note: 'Too much and nobody sleeps at all.',
       },
       {
         ingredient: fromCompendium('Lavender', 'Lavandula angustifolia'),
         quantity: '2.000',
         unit: 'tsp',
-        note: null,
       },
       {
         ingredient: fromCompendium('German Chamomile', 'Matricaria chamomilla'),
         quantity: '2.000',
         unit: 'tsp',
-        note: null,
       },
       {
         ingredient: fromCompendium('Amethyst', 'Quartz var. amethyst'),
         quantity: '1.000',
         unit: 'piece',
-        note: 'A tumbled stone, small enough not to be felt through the pillow.',
+        body: 'A tumbled stone, small enough not to be felt through the pillow.',
       },
       { body: 'Stitch the bag closed and keep it inside the pillowcase.' },
     ],
@@ -287,7 +283,7 @@ export const DEMO_SPELLS: SeedSpell[] = [
         ingredient: ASH,
         quantity: '1.000',
         unit: 'pinch',
-        note: 'Last winter’s, scattered under the new kindling.',
+        body: 'Last winter’s, scattered under the new kindling.',
       },
       { body: 'Say the blessing once the flames catch, and not before.' },
     ],
@@ -305,7 +301,7 @@ export const DEMO_SPELLS: SeedSpell[] = [
     categories: ['Cleansing', 'Purification'],
     steps: [
       { body: 'Open every window in the room first.' },
-      { ingredient: SEA_SALT, quantity: '1.000', unit: 'tbsp', note: 'Heaped in the saucer.' },
+      { ingredient: SEA_SALT, quantity: '1.000', unit: 'tbsp', body: 'Heaped in the saucer.' },
       { body: 'Leave the saucer in the cold grate overnight and throw the salt out at dawn.' },
     ],
   },
@@ -325,7 +321,7 @@ export const DEMO_SPELLS: SeedSpell[] = [
         ingredient: ROSEMARY,
         quantity: null,
         unit: null,
-        note: 'A needle or two pressed into the wax.',
+        body: 'A needle or two pressed into the wax.',
       },
       { body: 'Set it in the window that faces the road and let it burn low.' },
     ],
@@ -342,7 +338,7 @@ export const DEMO_SPELLS: SeedSpell[] = [
     status: 'complete',
     categories: ['Warding', 'Protection'],
     steps: [
-      { ingredient: SEA_SALT, quantity: '2.000', unit: 'tbsp', note: null },
+      { ingredient: SEA_SALT, quantity: '2.000', unit: 'tbsp' },
       { body: 'Pour it in one unbroken line along the inside of the front step.' },
     ],
   },
@@ -358,7 +354,7 @@ export const DEMO_SPELLS: SeedSpell[] = [
     status: 'complete',
     categories: ['Memory', 'Ancestor Work', 'Grief Work'],
     steps: [
-      { ingredient: ROSEMARY, quantity: '3.000', unit: 'piece', note: 'Sprigs, bruised first.' },
+      { ingredient: ROSEMARY, quantity: '3.000', unit: 'piece', body: 'Sprigs, bruised first.' },
       { body: 'Cover with warm oil and leave it on the windowsill for a fortnight.' },
       { body: 'Strain into the bottle and seal it.' },
     ],
@@ -379,7 +375,7 @@ export const DEMO_SPELLS: SeedSpell[] = [
         ingredient: { tier: 'custom', name: 'Heather honey', form: 'liquid' },
         quantity: '3.000',
         unit: 'tbsp',
-        note: 'From the stall two along.',
+        body: 'From the stall two along.',
       },
       { body: 'Write the stall’s name on a slip of paper and push it under the honey.' },
       { body: 'Keep the jar under the till.' },
@@ -397,7 +393,7 @@ export const DEMO_SPELLS: SeedSpell[] = [
     status: 'complete',
     categories: ['Peace', 'Self-Love'],
     steps: [
-      { ingredient: LAVENDER, quantity: '2.000', unit: 'tbsp', note: 'Tied in a muslin square.' },
+      { ingredient: LAVENDER, quantity: '2.000', unit: 'tbsp', body: 'Tied in a muslin square.' },
       { body: 'Steep the bundle in the bath as it runs, and stay in until it cools.' },
     ],
   },
@@ -417,7 +413,7 @@ export const DEMO_SPELLS: SeedSpell[] = [
         ingredient: { tier: 'custom', name: 'Red wool cord', form: 'cord' },
         quantity: '1.000',
         unit: 'piece',
-        note: 'An arm’s length.',
+        body: 'An arm’s length.',
       },
       { body: 'Tie seven knots, naming what must stop at each.' },
       { body: 'Drip black wax over the last knot.' },
@@ -454,7 +450,7 @@ export const DEMO_SPELLS: SeedSpell[] = [
     categories: ['Reversal', 'Hex-Breaking'],
     steps: [
       { body: 'Line the inside of the tin with mirror card, shiny side in.' },
-      { ingredient: SEA_SALT, quantity: '1.000', unit: 'tsp', note: null },
+      { ingredient: SEA_SALT, quantity: '1.000', unit: 'tsp' },
       { body: 'Close the lid and leave it facing the way the trouble came.' },
     ],
   },
@@ -470,8 +466,8 @@ export const DEMO_SPELLS: SeedSpell[] = [
     status: 'complete',
     categories: ['Clarity', 'Confidence'],
     steps: [
-      { ingredient: ROSEMARY, quantity: '1.000', unit: 'tsp', note: 'Dried and crumbled.' },
-      { ingredient: LAVENDER, quantity: '1.000', unit: 'pinch', note: null },
+      { ingredient: ROSEMARY, quantity: '1.000', unit: 'tsp', body: 'Dried and crumbled.' },
+      { ingredient: LAVENDER, quantity: '1.000', unit: 'pinch' },
       { body: 'Tie it shut the night before.' },
     ],
   },
@@ -487,7 +483,7 @@ export const DEMO_SPELLS: SeedSpell[] = [
     status: 'complete',
     categories: ['Courage', 'Strength'],
     steps: [
-      { ingredient: CHAMOMILE, quantity: '1.000', unit: 'tsp', note: null },
+      { ingredient: CHAMOMILE, quantity: '1.000', unit: 'tsp' },
       { body: 'Steep for five minutes, covered, and drink it slowly.' },
     ],
   },
@@ -504,7 +500,7 @@ export const DEMO_SPELLS: SeedSpell[] = [
     categories: ['Ancestor Work', 'Spirit Work'],
     steps: [
       { body: 'Lay the plate at the head of the table with a little of everything served.' },
-      { ingredient: ROSEMARY, quantity: null, unit: null, note: 'A sprig beside the plate.' },
+      { ingredient: ROSEMARY, quantity: null, unit: null, body: 'A sprig beside the plate.' },
       { body: 'Say each name aloud before anyone eats.' },
     ],
   },
@@ -520,7 +516,7 @@ export const DEMO_SPELLS: SeedSpell[] = [
     status: 'complete',
     categories: ['Divination', 'Psychic Work'],
     steps: [
-      { ingredient: MUGWORT, quantity: '1.000', unit: 'tbsp', note: null },
+      { ingredient: MUGWORT, quantity: '1.000', unit: 'tbsp' },
       { body: 'Infuse in hot water, let it cool, and wipe the bowl with it.' },
     ],
   },
@@ -536,8 +532,8 @@ export const DEMO_SPELLS: SeedSpell[] = [
     status: 'complete',
     categories: ['Career', 'Success'],
     steps: [
-      { ingredient: ROSEMARY, quantity: '1.000', unit: 'tsp', note: null },
-      { ingredient: SEA_SALT, quantity: '1.000', unit: 'pinch', note: null },
+      { ingredient: ROSEMARY, quantity: '1.000', unit: 'tsp' },
+      { ingredient: SEA_SALT, quantity: '1.000', unit: 'pinch' },
       { body: 'Carry it to every interview.' },
     ],
   },
@@ -569,7 +565,7 @@ export const DEMO_SPELLS: SeedSpell[] = [
     status: 'complete',
     categories: ['Fertility', 'Abundance', 'Grounding'],
     steps: [
-      { ingredient: ASH, quantity: '1.000', unit: 'tbsp', note: 'Worked into the soil.' },
+      { ingredient: ASH, quantity: '1.000', unit: 'tbsp', body: 'Worked into the soil.' },
       { body: 'Walk the beds once clockwise, speaking to each.' },
     ],
   },
@@ -585,7 +581,7 @@ export const DEMO_SPELLS: SeedSpell[] = [
     status: 'complete',
     categories: ['Communication', 'Truth', 'Reconciliation'],
     steps: [
-      { ingredient: LAVENDER, quantity: '1.000', unit: 'pinch', note: 'Rolled into the wax.' },
+      { ingredient: LAVENDER, quantity: '1.000', unit: 'pinch', body: 'Rolled into the wax.' },
       { body: 'Light it between the two of you and talk until it is spent.' },
     ],
   },
@@ -601,7 +597,7 @@ export const DEMO_SPELLS: SeedSpell[] = [
     status: 'complete',
     categories: ['Grief Work', 'Release', 'Healing'],
     steps: [
-      { ingredient: SEA_SALT, quantity: '1.000', unit: 'tsp', note: 'Stirred into cool water.' },
+      { ingredient: SEA_SALT, quantity: '1.000', unit: 'tsp', body: 'Stirred into cool water.' },
       { body: 'Speak into the bowl until there is nothing left to say.' },
     ],
   },
@@ -618,7 +614,7 @@ export const DEMO_SPELLS: SeedSpell[] = [
     categories: ['Friendship', 'Fidelity'],
     steps: [
       { body: 'Braid three threads, one for each of you and one for the friendship.' },
-      { ingredient: LAVENDER, quantity: null, unit: null, note: 'A sprig worked into the end.' },
+      { ingredient: LAVENDER, quantity: null, unit: null, body: 'A sprig worked into the end.' },
     ],
   },
   {
@@ -638,7 +634,7 @@ export const DEMO_SPELLS: SeedSpell[] = [
         ingredient: ROSEMARY,
         quantity: '1.000',
         unit: 'piece',
-        note: 'One sprig, left in overnight.',
+        body: 'One sprig, left in overnight.',
       },
       { body: 'Wash the hands and face with it at sunrise.' },
     ],
@@ -672,7 +668,7 @@ export const DEMO_SPELLS: SeedSpell[] = [
     categories: ['Nightmare Protection', 'Sleep'],
     steps: [
       { body: 'Weave a net of white thread across a willow hoop.' },
-      { ingredient: LAVENDER, quantity: '1.000', unit: 'pinch', note: 'Tucked into the knots.' },
+      { ingredient: LAVENDER, quantity: '1.000', unit: 'pinch', body: 'Tucked into the knots.' },
       { body: 'Hang it above the headboard.' },
     ],
   },
@@ -688,7 +684,7 @@ export const DEMO_SPELLS: SeedSpell[] = [
     status: 'complete',
     categories: ['Familiar Work', 'Protection'],
     steps: [
-      { ingredient: SEA_SALT, quantity: '1.000', unit: 'pinch', note: null },
+      { ingredient: SEA_SALT, quantity: '1.000', unit: 'pinch' },
       { body: 'Stitch the pouch to the inside of the collar, where she cannot chew it.' },
     ],
   },
@@ -704,7 +700,7 @@ export const DEMO_SPELLS: SeedSpell[] = [
     status: 'complete',
     categories: ['Meditation', 'Peace'],
     steps: [
-      { ingredient: CHAMOMILE, quantity: '1.000', unit: 'tsp', note: 'As a tea, beforehand.' },
+      { ingredient: CHAMOMILE, quantity: '1.000', unit: 'tsp', body: 'As a tea, beforehand.' },
       { body: 'Sit where the moonlight reaches and count breaths back from a hundred.' },
     ],
   },
@@ -738,7 +734,7 @@ export const DEMO_SPELLS: SeedSpell[] = [
         ingredient: LAVENDER,
         quantity: '1.000',
         unit: 'tbsp',
-        note: 'Steeped in the water first.',
+        body: 'Steeped in the water first.',
       },
       { body: 'Mist the pillow once, from arm’s length.' },
     ],
@@ -770,7 +766,7 @@ export const DEMO_SPELLS: SeedSpell[] = [
     categories: ['Wisdom', 'Intuition'],
     steps: [
       { body: 'Write each choice on its own slip and fold both the same way.' },
-      { ingredient: MUGWORT, quantity: '1.000', unit: 'pinch', note: null },
+      { ingredient: MUGWORT, quantity: '1.000', unit: 'pinch' },
     ],
   },
   {
@@ -786,7 +782,7 @@ export const DEMO_SPELLS: SeedSpell[] = [
     categories: ['Joy', 'Home Blessing'],
     steps: [
       { body: 'Bend a willow ring and bind it with eight spokes of straw.' },
-      { ingredient: ROSEMARY, quantity: null, unit: null, note: 'Woven through the spokes.' },
+      { ingredient: ROSEMARY, quantity: null, unit: null, body: 'Woven through the spokes.' },
     ],
   },
   {
@@ -818,7 +814,6 @@ export const DEMO_SPELLS: SeedSpell[] = [
         ingredient: { tier: 'custom', name: 'Brown sugar', form: 'granules' },
         quantity: '2.000',
         unit: 'tbsp',
-        note: null,
       },
       { body: 'Write the address on the lid.' },
     ],
@@ -848,7 +843,7 @@ export const DEMO_SPELLS: SeedSpell[] = [
     status: 'draft',
     categories: ['Forgiveness', 'Release'],
     steps: [
-      { ingredient: CHAMOMILE, quantity: '1.000', unit: 'tsp', note: null },
+      { ingredient: CHAMOMILE, quantity: '1.000', unit: 'tsp' },
       { body: 'Pour it into running water and do not watch it go.' },
     ],
   },
@@ -878,7 +873,7 @@ export const DEMO_SPELLS: SeedSpell[] = [
     categories: ['Wealth', 'Prosperity'],
     steps: [
       { body: 'Drop a coin in every day until the rent is due.' },
-      { ingredient: SEA_SALT, quantity: '1.000', unit: 'pinch', note: 'Under the first coin.' },
+      { ingredient: SEA_SALT, quantity: '1.000', unit: 'pinch', body: 'Under the first coin.' },
     ],
   },
   {
@@ -897,7 +892,6 @@ export const DEMO_SPELLS: SeedSpell[] = [
         ingredient: { tier: 'custom', name: 'Dried rose petals', form: 'petals' },
         quantity: '1.000',
         unit: 'tbsp',
-        note: null,
       },
       { body: 'Cover with oil and leave it a full moon cycle.' },
     ],
@@ -927,7 +921,7 @@ export const DEMO_SPELLS: SeedSpell[] = [
     status: 'draft',
     categories: ['Banishing', 'Cleansing'],
     steps: [
-      { ingredient: SEA_SALT, quantity: '3.000', unit: 'tbsp', note: null },
+      { ingredient: SEA_SALT, quantity: '3.000', unit: 'tbsp' },
       { body: 'Wash from the back of the flat towards the front door, and out.' },
     ],
   },
@@ -942,7 +936,7 @@ export const DEMO_SPELLS: SeedSpell[] = [
     note: null,
     status: 'draft',
     categories: ['Truth', 'Clarity'],
-    steps: [{ ingredient: ROSEMARY, quantity: '1.000', unit: 'tsp', note: null }],
+    steps: [{ ingredient: ROSEMARY, quantity: '1.000', unit: 'tsp' }],
   },
   {
     id: '00000000-0000-0000-0002-000000000043',
@@ -956,7 +950,7 @@ export const DEMO_SPELLS: SeedSpell[] = [
     status: 'draft',
     categories: ['Uncrossing', 'Purification'],
     steps: [
-      { ingredient: SEA_SALT, quantity: '1.000', unit: 'cup', note: null },
+      { ingredient: SEA_SALT, quantity: '1.000', unit: 'cup' },
       { body: 'Pour the bathwater over the head, from the crown down, seven times.' },
     ],
   },
@@ -972,7 +966,7 @@ export const DEMO_SPELLS: SeedSpell[] = [
     status: 'draft',
     categories: ['Prophecy', 'Divination'],
     steps: [
-      { ingredient: MUGWORT, quantity: '1.000', unit: 'tbsp', note: 'Dried, on charcoal.' },
+      { ingredient: MUGWORT, quantity: '1.000', unit: 'tbsp', body: 'Dried, on charcoal.' },
       { body: 'Watch which way the smoke leans, and write it down at once.' },
     ],
   },
@@ -1044,7 +1038,7 @@ export const DEMO_SPELLS: SeedSpell[] = [
         ingredient: SEA_SALT,
         quantity: '1.000',
         unit: 'pinch',
-        note: 'In each corner of each room.',
+        body: 'In each corner of each room.',
       },
     ],
   },
@@ -1060,7 +1054,7 @@ export const DEMO_SPELLS: SeedSpell[] = [
     status: 'draft',
     categories: ['Longevity', 'Healing'],
     steps: [
-      { ingredient: ROSEMARY, quantity: '2.000', unit: 'piece', note: 'Sprigs.' },
+      { ingredient: ROSEMARY, quantity: '2.000', unit: 'piece', body: 'Sprigs.' },
       { body: 'Stir clockwise, and say what you wish for each person at the table.' },
     ],
   },
@@ -1077,7 +1071,7 @@ export const DEMO_SPELLS: SeedSpell[] = [
     categories: ['Transformation', 'Release'],
     steps: [
       { body: 'Write what is done with on paper, and burn it.' },
-      { ingredient: ASH, quantity: '1.000', unit: 'pinch', note: 'Mixed with the new ash.' },
+      { ingredient: ASH, quantity: '1.000', unit: 'pinch', body: 'Mixed with the new ash.' },
     ],
   },
   {
@@ -1091,7 +1085,7 @@ export const DEMO_SPELLS: SeedSpell[] = [
     note: null,
     status: 'draft',
     categories: ['Peace', 'Safe Travel'],
-    steps: [{ ingredient: CHAMOMILE, quantity: '1.000', unit: 'pinch', note: null }],
+    steps: [{ ingredient: CHAMOMILE, quantity: '1.000', unit: 'pinch' }],
   },
   // Fixture B's own, private: another member never reads them, a search
   // that matches them included.
@@ -1124,7 +1118,7 @@ export const DEMO_SPELLS: SeedSpell[] = [
     author: MEMBER_B,
     categories: ['Peace', 'Legal Matters'],
     steps: [
-      { ingredient: CHAMOMILE, quantity: '1.000', unit: 'tbsp', note: null },
+      { ingredient: CHAMOMILE, quantity: '1.000', unit: 'tbsp' },
       { body: 'Hold the jar in both hands for a minute before going in.' },
     ],
   },
@@ -1284,7 +1278,7 @@ async function variantIdByIngredient(tx: SeedTransaction): Promise<Map<string, s
   return new Map([...first].map(([ingredientId, row]) => [ingredientId, row.id]));
 }
 
-/** An instruction-only step: no identity, and so no amount or note. */
+/** An instruction-only step: no identity, and so no amount. */
 const NO_LAYER = {
   ingredientId: null,
   variantId: null,
@@ -1345,13 +1339,10 @@ async function insertMissingSteps(
             ...layerIdentity(step.ingredient, ingredientIds, variantIds),
             quantity: step.quantity,
             unit: step.unit,
-            note: step.note,
           }
         : NO_LAYER),
-      // The place in the array, one per jar from 1, written to `layer_order`
-      // too until M13.9 drops it.
+      // The place in the array, one per jar from 1.
       position: index + 1,
-      layerOrder: index + 1,
     }),
   });
 }

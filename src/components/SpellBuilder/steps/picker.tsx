@@ -2,10 +2,18 @@
 
 import { formLabel } from '@/modules/ingredients/validation/form-label';
 
-import { type ReactElement, useCallback, useId, useState } from 'react';
+import { type ReactElement, type ReactNode, useId, useMemo, useState } from 'react';
+import { useFormContext, useWatch } from 'react-hook-form';
+import { chipColors } from '../../../lib/chip-colors';
+import type { GroupColors } from '../../../lib/types';
+import { compareJar } from '../comparison-panel';
+import { useCategoryColors, useCategoryNames } from '../category-colors';
+import type { SpellBuilderValues } from '../types';
 import type { SpellIngredientSuggestionsQuery } from '../../../gql/graphql';
 import type { FormGroupIcon } from '@/modules/vocabulary/schema/form-group-icons';
 import Combobox from '../../Combobox';
+import InfoTip from '../../InfoTip';
+import CategoryChips from '../../CategoryChips';
 import { FieldError } from '../../Field';
 import FormIcon from '../../FormIcon';
 import { useLookup } from '../../IngredientForm/suggestions';
@@ -14,30 +22,117 @@ import { SpellIngredientSuggestionsDocument } from './documents';
 import type { IngredientPickOption, SpellStepValue } from './types';
 import { jarOf, jarUnitOf, newStep } from './values';
 
-// Add to Jar (M10.15, story 49): the type-ahead over the coven's ingredients
-// and the compendium's, one row per form, since a step lays a form; and a
-// one-off ingredient written for this jar alone, which makes no ingredient.
+// Add to Jar (M10.15, story 49): one box, the type-ahead over the coven's ingredients
+// and the compendium's, one row per form, since a step lays a form. Its first row
+// offers what was typed as a one-off ingredient, written for this jar alone, which
+// makes no ingredient; the form and amount are typed in the opened row.
 // See claude-docs/components/spell-builder.md, "Steps".
 
 export interface StepPickerProps {
   workspaceId: string;
-  /** The forms already in the jar: offered, but not pickable again. */
-  taken: ReadonlySet<string>;
   /** The one-off names already in the jar, case and spaces aside. */
   oneOffs: ReadonlySet<string>;
   onAdd: (step: SpellStepValue) => void;
 }
 
-const ALREADY_IN_JAR = 'Already in the jar';
 const ONE_OFF_TAKEN = 'This ingredient is already in the jar';
 
 /** A one-off's name as the jar compares it: case and outer spaces aside. */
 export const oneOffKey = (name: string): string => name.trim().toLocaleLowerCase();
 
+/** How many of a row's categories are drawn before the rest fold into a "+N" chip. */
+export const ROW_CATEGORY_CAP = 1;
+
+/**
+ * A row's categories in three runs: the spell's assigned categories that Category Match counts
+ * Missing (none of the jar's steps carries them yet), then its other assigned ones (Carried),
+ * then the rest. Stable, so each run keeps the order the server sent.
+ */
+const assignedFirst = <T extends { id: string }>(
+  categories: readonly T[],
+  assigned: ReadonlySet<string>,
+  missing: ReadonlySet<string>,
+): T[] => [
+  ...categories.filter(({ id }) => missing.has(id)),
+  ...categories.filter(({ id }) => assigned.has(id) && !missing.has(id)),
+  ...categories.filter(({ id }) => !assigned.has(id)),
+];
+
+/** The chip colours of a category whose group has not loaded (or has none): a neutral grey. */
+const NEUTRAL: GroupColors = { colorDark: '#a1a1aa', colorLight: '#52525b' };
+
+/**
+ * The categories as small print on a row, drawn by CategoryChips (compact size, group colours)
+ * so the "+N" is the same CategoryMore button and floating panel the cards and the admin table
+ * have. The first `ROW_CATEGORY_CAP` show; the rest fold behind it. The click and press are
+ * kept from the option, so using the chips never picks the row or closes the list.
+ */
+const categoryNames = (
+  name: string,
+  categories: readonly { id: string; name: string }[],
+  colors: ReadonlyMap<string, GroupColors>,
+  assigned: ReadonlySet<string>,
+  missing: ReadonlySet<string>,
+): ReactNode => {
+  if (categories.length === 0) return undefined;
+  return (
+    // oxlint-disable-next-line jsx-a11y/no-static-element-interactions, jsx-a11y/click-events-have-key-events -- only stops a pointer reaching the option
+    <span
+      onClick={(event) => event.stopPropagation()}
+      onMouseDown={(event) => event.preventDefault()}
+    >
+      <CategoryChips
+        compact
+        label={name}
+        limit={ROW_CATEGORY_CAP}
+        categories={assignedFirst(categories, assigned, missing).map(
+          ({ id, name: categoryName }) => ({
+            category: { id, name: categoryName },
+            group: colors.get(id) ?? NEUTRAL,
+          }),
+        )}
+      />
+    </span>
+  );
+};
+
+/** A row's second line: the formal name in italics, then the chips, a dot between those two only. */
+const noteOf = (formal: string | null | undefined, chips: ReactNode): ReactNode => {
+  if (!formal) return chips;
+  return (
+    <>
+      <span className="spell-steps__formal">{formal}</span>
+      {chips && ' · '}
+      {chips}
+    </>
+  );
+};
+
+/** Lucide's Check (not a dependency here), drawn at 12px: the mark on a pressed filter chip. */
+const CheckMark = (): ReactElement => (
+  <svg
+    width="12"
+    height="12"
+    viewBox="0 0 24 24"
+    fill="none"
+    stroke="currentColor"
+    strokeWidth="3"
+    strokeLinecap="round"
+    strokeLinejoin="round"
+    aria-hidden="true"
+  >
+    <path d="M20 6 9 17l-5-5" />
+  </svg>
+);
+
 /** Every live form of every live ingredient found, under the heading of where it came from. */
 function pickRows(
   data: SpellIngredientSuggestionsQuery,
-  taken: ReadonlySet<string>,
+  colors: ReadonlyMap<string, GroupColors>,
+  assigned: ReadonlySet<string>,
+  missing: ReadonlySet<string>,
+  inJar: ReadonlySet<string>,
+  narrowedNames: readonly string[],
 ): IngredientPickOption[] {
   return data.ingredientSuggestions.edges.flatMap(({ group, node }) =>
     // A retired entry is kept where a spell lays it, never added anew.
@@ -46,15 +141,35 @@ function pickRows(
       : node.variants.map(({ form, ...variant }) => {
           const name = node.cupboardEntry?.label ?? node.name;
           const icon = (variant.formChoice?.group.icon ?? null) as FormGroupIcon | null;
-          const inJar = taken.has(variant.id);
           return {
             value: name,
             label: `${name} (${formLabel(form)})`,
-            note: inJar ? ALREADY_IN_JAR : (node.canonicalName ?? undefined),
-            heading: group === 'yours' ? YOUR_INGREDIENTS : COMPENDIUM_HEADING,
+            // Information only: the row stays pickable, since a form may be laid again.
+            badge: inJar.has(variant.id) ? (
+              <span className="badge badge--retired spell-steps__in-jar">
+                <span aria-hidden="true">In Jar</span>
+                <span className="visually-hidden">already in the jar</span>
+              </span>
+            ) : undefined,
+            // The form's categories, else the ingredient's, as small print on that line.
+            // The formal name in italics, then the chips, with a dot between the two only.
+            meta: noteOf(
+              node.canonicalName,
+              categoryNames(
+                name,
+                variant.categories.length > 0 ? variant.categories : node.categories,
+                colors,
+                assigned,
+                missing,
+              ),
+            ),
+            // A pressed filter is named in the heading, where the results are read.
+            heading: [
+              group === 'yours' ? YOUR_INGREDIENTS : COMPENDIUM_HEADING,
+              ...(narrowedNames.length > 0 ? [`In ${narrowedNames.join(', ')}`] : []),
+            ].join(' · '),
             key: variant.id,
             icon: <FormIcon name={icon} />,
-            disabled: inJar || undefined,
             step: newStep({
               ingredientId: node.id,
               variantId: variant.id,
@@ -76,27 +191,60 @@ function pickRows(
   );
 }
 
-export function StepPicker({ workspaceId, taken, oneOffs, onAdd }: StepPickerProps): ReactElement {
+export function StepPicker({ workspaceId, oneOffs, onAdd }: StepPickerProps): ReactElement {
   const id = useId();
   const [text, setText] = useState('');
   const [active, setActive] = useState(false);
-  const shape = useCallback(
-    (data: SpellIngredientSuggestionsQuery) => pickRows(data, taken),
-    [taken],
+  const [refused, setRefused] = useState(false);
+  const colors = useCategoryColors();
+  const names = useCategoryNames();
+  const { control } = useFormContext<SpellBuilderValues>();
+  const assignedIds = useWatch({ control, name: 'categoryIds' });
+  const assigned = useMemo(() => new Set(assignedIds ?? []), [assignedIds]);
+  // Category Match's Missing: assigned, and carried by no step in the jar yet.
+  const jarSteps = useWatch({ control, name: 'steps' });
+  const missing = useMemo(
+    () => new Set(compareJar([...assigned], jarSteps ?? []).intendedNotPresent),
+    [assigned, jarSteps],
+  );
+  // The assigned categories pressed to narrow the results. One that is no longer assigned
+  // drops out of the filter, so removing it from the field never leaves a hidden filter.
+  const [pressed, setPressed] = useState<readonly string[]>([]);
+  const narrowedBy = useMemo(() => pressed.filter((id) => assigned.has(id)), [pressed, assigned]);
+  const narrowedNames = useMemo(
+    () => narrowedBy.flatMap((categoryId) => names.get(categoryId) ?? []),
+    [narrowedBy, names],
+  );
+  // The forms already laid as a step, marked on their rows.
+  const inJar = useMemo(
+    () => new Set((jarSteps ?? []).flatMap(({ variantId }) => (variantId ? [variantId] : []))),
+    [jarSteps],
+  );
+  const shape = useMemo(
+    () => (data: SpellIngredientSuggestionsQuery) =>
+      pickRows(data, colors, assigned, missing, inJar, narrowedNames),
+    [colors, assigned, missing, inJar, narrowedNames],
   );
   const suggestions = useLookup(
     SpellIngredientSuggestionsDocument,
-    { workspaceId },
+    { workspaceId, categoryIds: narrowedBy },
     text,
     active,
     shape,
   );
 
-  const [oneOffName, setOneOffName] = useState('');
-  const [oneOffForm, setOneOffForm] = useState('');
-  const [refused, setRefused] = useState(false);
+  const typed = text.trim();
+  // The first row is offered for text no row already reads as, as a typed row is.
+  const offerOneOff = useMemo(
+    () =>
+      typed !== '' &&
+      !suggestions.options.some(
+        (option) => (option.label ?? option.value).trim().toLocaleLowerCase() === oneOffKey(typed),
+      ),
+    [typed, suggestions.options],
+  );
   const addOneOff = () => {
-    if (oneOffs.has(oneOffKey(oneOffName))) {
+    if (oneOffs.has(oneOffKey(typed))) {
       setRefused(true);
       return;
     }
@@ -104,8 +252,8 @@ export function StepPicker({ workspaceId, taken, oneOffs, onAdd }: StepPickerPro
       newStep({
         ingredientId: null,
         variantId: null,
-        name: oneOffName.trim(),
-        form: oneOffForm.trim() || null,
+        name: typed,
+        form: null,
         icon: null,
         categories: [],
         safety: null,
@@ -113,25 +261,26 @@ export function StepPicker({ workspaceId, taken, oneOffs, onAdd }: StepPickerPro
         jar: null,
       }),
     );
-    setOneOffName('');
-    setOneOffForm('');
+    setText('');
   };
 
+  const labelId = `${id}-label`;
   return (
-    <fieldset className="fieldset">
-      <legend className="fieldset__legend">Add to Jar</legend>
-      <div className="field">
-        <div className="field__label-row">
-          <label className="field__label" id={`${id}-search-label`} htmlFor={`${id}-search`}>
-            Search Ingredients
-          </label>
-        </div>
+    <div className="field">
+      <label className="field__label" id={labelId} htmlFor={`${id}-search`}>
+        Add to Jar
+      </label>
+      {/* One frame round the box and the filter tray: the filter reads as part of the search. */}
+      <div className="spell-steps__frame">
         <Combobox<IngredientPickOption>
           id={`${id}-search`}
-          label="Search Ingredients"
-          labelId={`${id}-search-label`}
+          label="Add to Jar"
+          labelId={labelId}
           value={text}
-          onChange={setText}
+          onChange={(value) => {
+            setText(value);
+            setRefused(false);
+          }}
           onFocus={() => setActive(true)}
           onPick={(_, option) => {
             if (option === null || option.disabled) return;
@@ -139,51 +288,81 @@ export function StepPicker({ workspaceId, taken, oneOffs, onAdd }: StepPickerPro
             setText('');
           }}
           suggestions={suggestions}
+          action={
+            offerOneOff
+              ? { label: `Add "${typed}" as a one-off ingredient`, onSelect: addOneOff }
+              : undefined
+          }
           toggle={false}
           offerTyped={false}
+          actionFirst
           noun="ingredient"
-          placeholder="Search"
-        />
-      </div>
-      <div className="field">
-        <div className="field__label-row">
-          <label className="field__label" htmlFor={`${id}-name`}>
-            One-Off Name
-          </label>
-        </div>
-        <input
-          id={`${id}-name`}
-          className="input"
-          autoComplete="off"
-          placeholder="Add a name"
-          value={oneOffName}
-          onChange={(event) => {
-            setOneOffName(event.target.value);
-            setRefused(false);
-          }}
+          placeholder="Add an ingredient or search"
           aria-invalid={refused || undefined}
-          aria-describedby={refused ? `${id}-name-error` : undefined}
+          aria-describedby={refused ? `${id}-error` : undefined}
         />
-        <FieldError id={`${id}-name-error`} message={refused ? ONE_OFF_TAKEN : undefined} />
+        {/* The tray inside the frame; the open list is layered over it (z-index, Combobox). Each chip
+          is a toggle: none pressed is no filter, one or more keeps ingredients carrying any. */}
+        {assigned.size > 0 && (
+          <div className="spell-steps__filter">
+            <div className="spell-steps__filter-head">
+              <span id={`${id}-filter-label`} className="spell-steps__filter-label">
+                Filter By Category
+              </span>
+              <InfoTip id={`${id}-filter-tip`} label="Filter By Category">
+                Show only ingredients in any of the pressed categories.
+              </InfoTip>
+              {narrowedBy.length > 0 && (
+                <button
+                  type="button"
+                  className="spell-steps__filter-clear"
+                  onClick={() => setPressed([])}
+                >
+                  Clear
+                </button>
+              )}
+            </div>
+            <div className="spell-steps__filter-row">
+              <div
+                role="group"
+                aria-labelledby={`${id}-filter-label`}
+                className="spell-steps__filter-chips"
+              >
+                {[...assigned].flatMap((categoryId) => {
+                  const name = names.get(categoryId);
+                  if (name === undefined) return [];
+                  const on = narrowedBy.includes(categoryId);
+                  const pair = colors.get(categoryId);
+                  return [
+                    <button
+                      key={categoryId}
+                      type="button"
+                      className="chip spell-steps__filter-chip"
+                      style={pair ? chipColors(pair) : undefined}
+                      aria-pressed={on}
+                      onClick={() =>
+                        setPressed(
+                          on
+                            ? narrowedBy.filter((id) => id !== categoryId)
+                            : [...narrowedBy, categoryId],
+                        )
+                      }
+                    >
+                      {on ? (
+                        <CheckMark />
+                      ) : (
+                        <span className="spell-steps__filter-dot" aria-hidden="true" />
+                      )}
+                      {name}
+                    </button>,
+                  ];
+                })}
+              </div>
+            </div>
+          </div>
+        )}
       </div>
-      <div className="field">
-        <div className="field__label-row">
-          <label className="field__label" htmlFor={`${id}-form`}>
-            One-Off Form
-          </label>
-        </div>
-        <input
-          id={`${id}-form`}
-          className="input"
-          autoComplete="off"
-          placeholder="Add a form"
-          value={oneOffForm}
-          onChange={(event) => setOneOffForm(event.target.value)}
-        />
-      </div>
-      <button type="button" className="btn" disabled={oneOffName.trim() === ''} onClick={addOneOff}>
-        Add One-Off Ingredient
-      </button>
-    </fieldset>
+      <FieldError id={`${id}-error`} message={refused ? ONE_OFF_TAKEN : undefined} />
+    </div>
   );
 }

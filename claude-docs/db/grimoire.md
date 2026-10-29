@@ -23,21 +23,20 @@ holds (`inventory_items`).
 
 M13.1 made the recipe one ordered list ([`m13.1-spell-steps.md`](../design-decisions/m13.1-spell-steps.md)):
 `0083` renamed `spell_ingredients` to `spell_steps`, with every index, CHECK
-and foreign key renamed after it, and added `position` and `body`. Until M13.9
-contracts it, three things from before stay:
+and foreign key renamed after it, and added `position` and `body`. `0089` (M13.9) then contracted what the
+rename left standing, in one transaction:
 
-- **A view named `spell_ingredients`**, `SELECT * FROM spell_steps`, made after
-  the `ADD COLUMN`s so it carries `position` and `body` too. The deploy before
-  `0083` reads and writes the rows through it.
-- **`layer_order`**, the old name of `position`. The code writes both, the same
-  number. `position` is nullable until M13.9, because the deploy before writes
-  `layer_order` alone and a `NOT NULL` would refuse its inserts; `0083` filled
-  `position` from `layer_order` for the rows already there.
-- **`spells.instructions`**, the old name of `spells.note`, filled into it by
-  `0083`. The saves write `note` alone and leave `instructions` as it was
-  ("Saving a recipe" below).
+- It refilled `position` from `layer_order` wherever they differed, then set
+  `position` `NOT NULL`. It needed no copy of `spells.instructions`, which
+  `0083` had already filled into `spells.note`.
+- It dropped the view named `spell_ingredients`, which the deploy before
+  `0083` read and wrote the rows through.
+- It dropped `layer_order` and its unique index, `spell_steps.note` (retired
+  2026-10-28; `0088` had copied it into `body`, see
+  [`pr1308-step-note-retired.md`](../design-decisions/pr1308-step-note-retired.md)),
+  and `spells.instructions`.
 
-`tests/db/schema-drift.test.ts` lists all three in `PENDING_DROPS`.
+`PENDING_DROPS` in `tests/db/schema-drift.test.ts` is empty again.
 
 **`visibility` arrived a wave later than the rest of the table** (M10.3,
 `0018_spell-visibility.sql`), after M1.23 had seeded spells against it — which
@@ -62,9 +61,7 @@ key and the pair swaps which one reddens.
 `position` is an integer unique within a spell among live rows:
 `spell_steps_spell_id_position_unique` on
 `(spell_id, position) WHERE deleted_at IS NULL`. It was `layer_order` until
-M13.1, and until M13.9 `layer_order` stays beside it, `NOT NULL`, under its
-own index `spell_steps_spell_id_layer_order_unique`, which the code keeps
-equal ("Steps (M13.1)" above). M10.2 had the pair as a
+M13.1 (dropped by `0089`, "Steps (M13.1)" above). M10.2 had the pair as a
 unique index beside a `(spell_id, ingredient_id)` key; MB.40 made it the
 primary key once a row could exist without an ingredient id; MB.110 moved the
 key onto a surrogate `id` once removing a layer became a soft delete, because
@@ -73,10 +70,9 @@ load-bearing:
 
 - **Stored, not inferred.** Stories 51 and 80 make the order part of the recipe, and no
   query may lean on insertion order.
-- **NOT NULL from M13.9**, because a nullable column would satisfy neither half
+- **NOT NULL**, since `0089`, because a nullable column would satisfy neither half
   of "stored and unique within a spell": distinct NULLs collide with nothing, so
-  an unordered row would sit outside the index meant to constrain it. Until
-  then `layer_order`'s `NOT NULL` holds that line, and the code writes both.
+  an unordered row would sit outside the index meant to constrain it.
 - **Leading on `spell_id`**, which both scopes the index to the one jar and
   makes it the one that answers "read this spell's steps in order" —
   every read of the table in M10.9 and MB.6.
@@ -103,7 +99,7 @@ within is written down before the reorder is.
 `createSpell` and `updateSpell` (`src/modules/grimoire/services/spells.ts`)
 take the recipe as **one ordered list of steps**, and
 `src/modules/grimoire/services/recipe.ts` writes it. A step's place is its
-index in the list, written to `position` and `layer_order` alike. The list is
+index in the list, written to `position`. The list is
 the whole recipe:
 
 - **A step with an `id` is a saved step, kept.** The id must name one of this
@@ -220,8 +216,9 @@ this is what holds it in the database.
   `num_nonnulls(ingredient_id, name, body) >= 1`, so a step is never empty.
   The two replaced MB.40's `spell_ingredients_ingredient_or_name`,
   `num_nonnulls(ingredient_id, name) = 1`, in M13.1, once a row could be an
-  instruction alone. `spell_steps_amount_on_ingredient` refuses `quantity`,
-  `unit` or `note` on a step with no ingredient, since each describes one, and
+  instruction alone. `spell_steps_amount_on_ingredient` refuses `quantity`
+  or `unit` on a step with no ingredient, since each describes one (it named
+  `note` too until `0088`), and
   `spell_steps_body_not_blank` is the not-blank idiom on `body`.
   `spell_steps_form_only_on_custom` is
   `ingredient_id is null or form is null`, because `form` beside an ingredient
@@ -229,21 +226,21 @@ this is what holds it in the database.
   `spell_steps_name_not_blank` and `spell_steps_form_not_blank` are
   the `ingredients_form_not_blank` idiom, since a blank name would satisfy
   `num_nonnulls` and name nothing.
-- **Two partial unique indexes, one per kind of row.**
-  `spell_steps_spell_id_variant_id_unique` on
-  `(spell_id, variant_id)`, live rows only, is one form per jar since MB.217,
-  where `spell_ingredients_spell_id_ingredient_id_unique` was one ingredient
-  per jar — what the M10.2 key used to give. A linked layer names its form in
+- **No unique index on the form.** `spell_steps_spell_id_variant_id_unique` on
+  `(spell_id, variant_id)` was one form per jar since MB.217 and was dropped by
+  `0087_spell-steps-repeat-forms.sql` (owner, 2026-10-28): a spell may lay one
+  form in several steps, so the custom-name index is the one identity index
+  left (a custom name is still once per jar). A linked layer names its form in
   `variant_id`, set exactly when `ingredient_id` is
   (`spell_steps_variant_with_ingredient`) and held to it by the
   composite key `spell_steps_variant_fk`, so a jar may lay Rosemary
-  herb and Rosemary oil. Migration `0063` filled each existing linked layer
+  herb and Rosemary oil, or the herb twice. Migration `0063` filled each existing linked layer
   from its ingredient's one live variant, refusing a database where one had
   none or several; and
   `spell_steps_spell_id_custom_name_unique` on
   `(spell_id, lower(name)) WHERE ingredient_id IS NULL` is one custom name per
-  jar, the shape of `ingredients_workspace_label_unique`. Both are partial on
-  the discriminator, so each index covers exactly the rows that have the column
+  jar, the shape of `ingredients_workspace_label_unique`. It is partial on
+  the discriminator, so the index covers exactly the rows that have the column
   it is unique on, and since MB.110 on rule 4's `deleted_at IS NULL` beside it.
 - **Name only, not name plus form, in the custom-name index**, since a custom
   row is matched against nothing. It is the one judgment call in the shape,
@@ -259,7 +256,7 @@ this is what holds it in the database.
 `constraint_name` and pairs each with the insert that shows why it could have
 succeeded: `form` on a linked row is refused where the same `form` on a custom
 row is accepted; `Threshold Salt` and `threshold salt` collide in one jar and
-not across two; the same ingredient twice is refused by the partial index, a
+not across two; the same form twice is accepted, a
 place collision by the position index; an instruction-only step, an
 ingredient-only step and a step with both are each accepted, and an empty
 step, a blank instruction and an amount on an instruction alone are each

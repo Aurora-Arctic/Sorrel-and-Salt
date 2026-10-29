@@ -55,7 +55,8 @@ export function readGraphqlIssues(error: unknown): ValidationIssue[] {
 
 /**
  * Places every issue a failed save carries on a react-hook-form form: each
- * one `toField` names a field for beside that field, the rest joined into one
+ * one `toField` names a field for beside that field, the rest, each distinct
+ * message once, joined into one
  * sentence on the form's `root`, which its alert region shows. Both as
  * `type: 'server'`, so the next submit or an edit to the field clears them
  * as it clears the resolver's own. Answers whether it set any error.
@@ -83,8 +84,11 @@ export function placeServerIssues<Name extends string>(
   for (const issue of readGraphqlIssues(error)) {
     const field = toField(issue);
     if (field === false) continue;
-    if (field === undefined) unplaced.push(issue.message);
-    else {
+    if (field === undefined) {
+      // Each distinct message once: a rule the schema and the service both state (a step that
+      // is not the spell's) would otherwise print twice, run together.
+      if (!unplaced.includes(issue.message)) unplaced.push(issue.message);
+    } else {
       setError(field, { type: 'server', message: issue.message });
       placed = true;
     }

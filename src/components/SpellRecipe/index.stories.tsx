@@ -32,7 +32,6 @@ export const Complete: Story = {
           href: '/coven/fixture-coven/ingredients/a' as Route,
           oneOff: false,
           deleted: false,
-          note: null,
           body: null,
         },
         { kind: 'instruction', id: 'b', body: 'Stir three times, sunwise.' },
@@ -47,8 +46,7 @@ export const Complete: Story = {
           href: null,
           oneOff: true,
           deleted: false,
-          note: 'From the garden wall.',
-          body: null,
+          body: 'From the garden wall.',
         },
       ]}
     />

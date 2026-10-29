@@ -21,7 +21,7 @@ import type { SpellStepView } from '../types';
  * the finder withholds it. Four statements whatever the number of spells: the
  * steps, the ingredients, and the forms, which read their parents again.
  *
- * Order is `position`, falling back to `layer_order` until M13.9 drops it.
+ * Order is `position`.
  */
 export async function stepsInSpells(
   membership: Membership,
@@ -39,7 +39,7 @@ export async function stepsInSpells(
   const formById = new Map(forms.map((row) => [row.id, row]));
 
   const steps = rows
-    .sort((a, b) => (a.position ?? a.layerOrder) - (b.position ?? b.layerOrder))
+    .sort((a, b) => a.position - b.position)
     .map((step): SpellStepView => {
       const ingredient =
         step.ingredientId === null ? undefined : ingredientById.get(step.ingredientId);

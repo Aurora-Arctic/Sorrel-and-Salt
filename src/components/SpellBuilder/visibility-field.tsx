@@ -27,9 +27,9 @@ const MEANS = {
   private: 'Only you can see it, until you share it with the coven.',
 } as const satisfies Record<SpellVisibility, string>;
 
-/** Said under the shut control: why it is shut, and the way to a private copy (M13.20). */
-const SHARED_FOR_GOOD =
-  'Shared with the coven, so it cannot be made private again. Duplicate makes a private copy.';
+/** Said under the shut control, and why it is shut in a tip beside it, with the way to a private copy (M13.20). */
+const SHARED_FOR_GOOD = 'Shared with the coven';
+const SHARED_FOR_GOOD_TIP = 'It cannot be made private again. Duplicate makes a private copy.';
 
 export function SpellVisibilityField({ created, flush }: SpellVisibilityFieldProps): ReactElement {
   const { control, setValue } = useFormContext<SpellBuilderValues, unknown, SpellBuilderInput>();
@@ -75,14 +75,15 @@ export function SpellVisibilityField({ created, flush }: SpellVisibilityFieldPro
         onChange={choose}
         disabled={shared}
         note={shared ? SHARED_FOR_GOOD : MEANS[field.value]}
+        noteTip={shared ? SHARED_FOR_GOOD_TIP : undefined}
       />
       {asking && (
         <ConfirmQuestion
           question="Share With the Coven?"
           details={
             <p>
-              Every member of the coven will be able to see this spell, and it cannot be made
-              private again. Any other changes are saved with it.
+              Every member of the coven will be able to see this spell. Once it is marked complete,
+              it cannot be made private again. Any other changes are saved with it.
             </p>
           }
           confirmLabel="Share"

@@ -35,15 +35,19 @@ describe('SpellStepInput', () => {
     expect(SpellStepInput.safeParse({ name: 'Testwort', form: 'dried' }).success).toBe(true);
   });
 
-  it('takes an instruction beside an identity, with an amount and a note', () => {
+  it('takes an instruction beside an identity, with an amount', () => {
     const input = {
       body: 'Layer it first',
       name: 'Testwort',
       quantity: 2.5,
       unit: 'g',
-      note: 'for grounding',
     };
     expect(SpellStepInput.parse(input)).toMatchObject(input);
+  });
+
+  // The step note is retired: `body` is the one text (pr1308-step-note-retired.md).
+  it('drops a note an old client still sends', () => {
+    expect(SpellStepInput.parse({ body: 'Stir', note: 'old' })).toEqual({ body: 'Stir' });
   });
 
   // spell_steps_not_empty
@@ -63,15 +67,14 @@ describe('SpellStepInput', () => {
   it.each([
     ['quantity', { quantity: 1 }],
     ['unit', { unit: 'g' }],
-    ['note', { note: 'a line' }],
   ])('refuses %s on an instruction-only step', (field, extra) => {
     expect(failedPaths({ body: 'Stir', ...extra })).toEqual([[field]]);
   });
 
-  it('takes null for the amount and note on an instruction-only step', () => {
-    expect(
-      SpellStepInput.safeParse({ body: 'Stir', quantity: null, unit: null, note: null }).success,
-    ).toBe(true);
+  it('takes null for the amount on an instruction-only step', () => {
+    expect(SpellStepInput.safeParse({ body: 'Stir', quantity: null, unit: null }).success).toBe(
+      true,
+    );
   });
 
   // spell_steps_form_only_on_custom
@@ -217,17 +220,13 @@ describe('UpdateSpellInput', () => {
 });
 
 describe('a recipe’s steps, taken together', () => {
-  const OTHER_VARIANT = '33333333-3333-4333-8333-333333333333';
   const STEP = '44444444-4444-4444-8444-444444444444';
   const pathsOf = (steps: unknown[]) =>
     SpellInput.safeParse({ steps }).error?.issues.map((issue) => issue.path);
 
-  it('refuses one form laid twice, mirroring spell_steps_spell_id_variant_id_unique', () => {
+  it('admits one form laid in several steps', () => {
     const linked = { ingredientId: INGREDIENT, variantId: VARIANT };
-    expect(
-      pathsOf([linked, { ingredientId: INGREDIENT, variantId: OTHER_VARIANT }]),
-    ).toBeUndefined();
-    expect(pathsOf([linked, { body: 'Stir' }, linked])).toEqual([['steps', 2, 'variantId']]);
+    expect(pathsOf([linked, { body: 'Stir' }, linked])).toBeUndefined();
   });
 
   it('refuses one custom name twice, case aside, mirroring spell_steps_spell_id_custom_name_unique', () => {

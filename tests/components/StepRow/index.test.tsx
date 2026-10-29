@@ -59,4 +59,42 @@ describe('StepRow', () => {
     expect(within(row()).getByRole('textbox', { name: 'Quantity' })).toBeInTheDocument();
     expect(row()).not.toHaveTextContent('Plain');
   });
+
+  describe('as an open or closed card', () => {
+    const card = (open: boolean) => (
+      <ol>
+        <StepRow
+          position={1}
+          name="Testwort"
+          open={open}
+          fieldsId="fields"
+          summary="2 tsp · Crush it first"
+          badge={<span>One-Off</span>}
+          edit={<button aria-label="Edit Testwort">Edit</button>}
+          aside={<span>Goes in this jar only</span>}
+          quantityField={<input aria-label="Quantity" />}
+        />
+      </ol>
+    );
+
+    it('closed, draws the name, badge, summary and pencil, and none of the fields', () => {
+      render(card(false));
+
+      expect(row()).toHaveTextContent('Testwort');
+      expect(row()).toHaveTextContent('One-Off');
+      expect(row()).toHaveTextContent('2 tsp');
+      expect(row()).toHaveTextContent('Crush it first');
+      expect(within(row()).getByRole('button', { name: 'Edit Testwort' })).toBeInTheDocument();
+      expect(within(row()).queryByRole('textbox', { name: 'Quantity' })).toBeNull();
+      expect(row()).not.toHaveTextContent('Goes in this jar only');
+    });
+
+    it('open, draws the fields and the aside line under the id the pencil controls', () => {
+      render(card(true));
+
+      expect(within(row()).getByRole('textbox', { name: 'Quantity' })).toBeInTheDocument();
+      expect(row()).toHaveTextContent('Goes in this jar only');
+      expect(row().querySelector('#fields')).not.toBeNull();
+    });
+  });
 });

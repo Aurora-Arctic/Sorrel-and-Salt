@@ -27,7 +27,6 @@ const ingredient = (
   href: null,
   oneOff: false,
   deleted: false,
-  note: null,
   body: null,
   ...over,
 });

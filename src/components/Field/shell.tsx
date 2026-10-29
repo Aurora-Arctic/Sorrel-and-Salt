@@ -1,4 +1,5 @@
 import type { ReactElement } from 'react';
+import { createPortal } from 'react-dom';
 import InfoTip from '../InfoTip';
 import type { FieldErrorProps, FieldShellProps } from './types';
 
@@ -44,6 +45,7 @@ export function FieldShell({
   after,
   action,
   className,
+  errorInto,
 }: FieldShellProps): ReactElement {
   return (
     <div className={['field', className].filter(Boolean).join(' ')}>
@@ -68,7 +70,11 @@ export function FieldShell({
         </p>
       )}
       {children}
-      <FieldError id={errorId} message={error} />
+      {errorInto ? (
+        createPortal(<FieldError id={errorId} message={error} />, errorInto)
+      ) : (
+        <FieldError id={errorId} message={error} />
+      )}
       {after}
     </div>
   );

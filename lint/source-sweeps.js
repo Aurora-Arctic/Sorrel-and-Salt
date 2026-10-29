@@ -102,7 +102,7 @@ export const rules = {
       const OLD_WAY = /capitalise\([^)]*\.form\)/;
       /** What a line may do with `x.form` besides show it. */
       const NOT_SHOWN =
-        /\bfold(ed)?\(|\bslugify\(|\bkey=|\bconst form = |^\s*(\/\/|\*|\/\*)|\$\{at\}\.form|\.form\.trim\(\) [!=]==|[!=]== [\w.]*\.form\b|\bLIST_KINDS\b|\bGROUP_READERS\b|\bsameForm\(|\bsaid\(|\.map\(\(variant\) => variant\.form\)|variants\.\$\{/;
+        /\bfold(ed)?\(|\bslugify\(|\bkey=|\bconst form = |^\s*(\/\/|\*|\/\*)|\$\{at\}\.form|\.form\.trim\(\) [!=]==|[!=]== [\w.]*\.form\b|\bLIST_KINDS\b|\bGROUP_READERS\b|\bsameForm\(|\bsaid\(|\.map\(\(variant\) => variant\.form\)|(variants|steps)\.\$\{/;
       return {
         Program() {
           context.sourceCode.lines.forEach((line, index) => {

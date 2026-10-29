@@ -71,7 +71,7 @@ const spellPage = async (membership: Membership) =>
 const stepPage = async (membership: Membership) =>
   // Every fixture step sits at place 1 of its own spell, so the order is the
   // id's and the bodies are compared as a set.
-  (await findPageInReadableSpells(membership, spellSteps, [spellSteps.layerOrder], FIRST_PAGE))
+  (await findPageInReadableSpells(membership, spellSteps, [spellSteps.position], FIRST_PAGE))
     .map((entry) => entry.node.body)
     .sort();
 

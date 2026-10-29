@@ -34,7 +34,7 @@ const Name = ({ step }: { step: IngredientRecipeStep }): ReactElement => (
       <span>{labelOf(step)}</span>
     )}
     {step.formal !== null && <span className="meta spell-recipe__formal"> ({step.formal})</span>}
-    {step.oneOff && <span className="badge spell-recipe__one-off"> One-Off</span>}
+    {step.oneOff && <span className="badge badge--retired spell-recipe__one-off"> One-Off</span>}
     {step.deleted && <span className="meta"> (Deleted)</span>}
   </>
 );
@@ -111,7 +111,6 @@ const SpellRecipe = ({
                       <Name step={step} />
                     </p>
                     {step.body && <p>{step.body}</p>}
-                    {step.note && <p className="meta">{step.note}</p>}
                   </>
                 )}
               </li>
