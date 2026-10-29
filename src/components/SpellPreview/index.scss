@@ -1,0 +1,39 @@
+@use '../../scss/variables' as *;
+
+// The pane covers the window: the native dialog's top layer, sized to the viewport and no longer a
+// box in the middle. Tokens only; the look is the grimoire's design review's (MB.123).
+.spell-preview {
+  box-sizing: border-box;
+  width: 100%;
+  height: 100%;
+  max-width: none;
+  max-height: none;
+  margin: 0;
+  padding: space(5);
+  border: 0;
+  overflow-y: auto;
+
+  &:focus {
+    outline: none;
+  }
+}
+
+.spell-preview__close {
+  position: sticky;
+  top: 0;
+  float: right;
+}
+
+.spell-preview__title {
+  margin-block-end: space(4);
+}
+
+.spell-preview__steps {
+  display: flex;
+  flex-direction: column;
+  gap: space(2);
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  max-width: 48rem;
+}
