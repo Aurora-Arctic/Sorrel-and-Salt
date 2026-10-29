@@ -1,10 +1,13 @@
 'use client';
 
-import type { ReactElement } from 'react';
+import type { ReactElement, ReactNode } from 'react';
 import { useFormContext, useWatch } from 'react-hook-form';
 import IconTip from '../IconTip';
 import { JarDrawing, pickJarShape } from '../JarShelf';
+import { formLabel } from '@/modules/ingredients/validation/form-label';
 import { StockIcon } from '../StockBadge';
+import { StockJarButton } from '../StockDialog';
+import type { StockDialogProps } from '../StockDialog/types';
 import { stockState } from '../StockBadge/stock-state';
 import { amountText } from '../StockBadge/stock-words';
 import { UnitsDifferIcon, NotEnoughIcon } from './supply-icon';
@@ -18,7 +21,10 @@ import { isInstruction, stepNameOf } from './steps/values';
 // Every verdict is a symbol alone (StockBadge's for Out and Low, supply-icon.tsx's for Not Enough
 // and Units Differ): the words are the button's name and the reason is its IconTip (the owner's
 // call, 2026-10-28), the verdict's `mark`. A step with an instruction only has
-// no line. See claude-docs/components/spell-builder.md, "The aside".
+// no line. On the spell's recipe page (M13.21) a line may carry doors (`doorsOf`): a Quick
+// Look eye after the name, and Edit Stock behind the jar and the name (a `StockJarButton`
+// stretched over both, as the entry page's shelf stretches it over a jar). The builder's
+// lines carry none. See claude-docs/components/spell-builder.md, "The aside".
 
 const UNITS_DIFFER_TIP = 'The units don’t match, so it can’t tell if you have enough.';
 const NOT_ENOUGH_TIP = 'The jar holds less than this step needs.';
@@ -32,6 +38,12 @@ const OutIcon = ({ className }: { className: string }): ReactElement => (
 const LowIcon = ({ className }: { className: string }): ReactElement => (
   <StockIcon out={false} className={className} />
 );
+
+/** What a line opens, where the page offers it: the Quick Look eye, and the Edit Stock dialog. */
+export interface LineDoors {
+  look?: ReactNode;
+  edit?: StockDialogProps;
+}
 
 /** The verdict is its `mark` alone: the symbol in a button named `words`, whose IconTip says why. */
 type Verdict = {
@@ -77,12 +89,15 @@ function HoldLine({
   step,
   steps,
   seed,
+  doors,
 }: {
   step: SpellStepValue;
   steps: readonly SpellStepValue[];
   seed: string;
+  doors?: LineDoors;
 }): ReactElement {
   const { parts, verdict } = holdWords(step, steps);
+  const name = stepNameOf(step);
   const oneOff = step.ingredientId === null;
   const jar = step.jar;
   // The form only picks the vessel's shape here; it is not shown.
@@ -95,7 +110,22 @@ function HoldLine({
         <JarDrawing shape={pickJarShape(seed, formKey ?? '')} held={oneOff ? null : jar} />
       </span>
       <span className="spell-inventory__title">
-        <span className="spell-inventory__name">{stepNameOf(step)}</span>
+        {doors?.edit ? (
+          // The button is the name, stretched over the jar by its `::after`; the eye and the
+          // verdict are raised above the stretch to keep their own press.
+          <StockJarButton
+            {...doors.edit}
+            ariaLabel={['Edit Stock', doors.edit.ingredientName, step.form && formLabel(step.form)]
+              .filter(Boolean)
+              .join(', ')}
+            className="spell-inventory__name spell-inventory__press"
+          >
+            {name}
+          </StockJarButton>
+        ) : (
+          <span className="spell-inventory__name">{name}</span>
+        )}
+        {doors?.look && <span className="spell-inventory__look">{doors.look}</span>}
         {verdict && (
           <span className={`spell-inventory__verdict is-${verdict.tone}`}>
             <IconTip tip={verdict.mark.tip}>
@@ -114,10 +144,13 @@ function HoldLine({
 export function InCovenInventory({
   steps,
   heading: Heading = 'h5',
+  doorsOf,
 }: {
   steps: readonly SpellStepValue[];
   /** The heading's level: h5 under the builder's Jar heading, h2 on the recipe page (M13.21). */
   heading?: 'h2' | 'h5';
+  /** A line's doors, where the page offers them (the recipe page); none in the builder. */
+  doorsOf?: (step: SpellStepValue) => LineDoors | undefined;
 }): ReactElement {
   const lines = steps.filter((step) => !isInstruction(step));
   return (
@@ -133,6 +166,7 @@ export function InCovenInventory({
               step={step}
               steps={lines}
               seed={step.ingredientId ?? step.name ?? ''}
+              doors={doorsOf?.(step)}
             />
           ))}
         </ul>

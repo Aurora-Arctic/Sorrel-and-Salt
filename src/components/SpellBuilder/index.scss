@@ -456,6 +456,8 @@ body .spell-builder .collapsible-section__fields {
 }
 
 .spell-inventory__line {
+  // The Edit Stock press's stretch (`__press::after`) is placed against the line.
+  position: relative;
   display: grid;
   grid-template-areas:
     'jar name'
@@ -508,6 +510,72 @@ body .spell-builder .collapsible-section__fields {
 .spell-inventory__words {
   grid-area: words;
   color: $text-muted;
+}
+
+// Edit Stock behind the jar and the name on the recipe page (M13.21; the owner, 2026-10-29):
+// the button is the name, stretched over the whole line by its `::after`, as the entry page's
+// shelf stretches a jar's button (`.jar-shelf__press`). The name grows on hover and focus;
+// the ring is drawn inset on the stretch, and the name grows a little on hover and focus as
+// the shelf's does.
+.spell-inventory__press {
+  @include button-reset;
+
+  display: inline-block;
+  text-align: start;
+  color: inherit;
+  font: inherit;
+  transition: transform $motion-short ease-out;
+
+  &::after {
+    content: '';
+    position: absolute;
+    inset: 0;
+  }
+
+  &:focus-visible {
+    outline: 0;
+
+    &::after {
+      @include focus-ring($text-primary, $focus-ring-strength, inset);
+    }
+  }
+}
+
+@media (hover: hover) {
+  .spell-inventory__press:hover {
+    transform: scale(1.04);
+  }
+}
+
+.spell-inventory__press:focus-visible {
+  transform: scale(1.04);
+}
+
+@include reduced-motion {
+  .spell-inventory__press,
+  .spell-inventory__press:hover,
+  .spell-inventory__press:focus-visible {
+    transition: none;
+    transform: none;
+  }
+}
+
+// The eye (the owner, 2026-10-29) at seven eighths of its size, as the recipe's steps draw it,
+// and raised above the press's stretch with the verdict, so each keeps its own press.
+.spell-inventory__look {
+  display: inline-flex;
+  flex: none;
+  align-self: center;
+
+  .icon-tip__look {
+    @include icon-button($icon-size * 0.875, $glyph-size * 0.875);
+  }
+}
+
+.spell-inventory__look,
+.spell-inventory__verdict {
+  position: relative;
+  z-index: 1;
 }
 
 .spell-inventory__verdict {

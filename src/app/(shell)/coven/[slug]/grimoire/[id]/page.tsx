@@ -56,7 +56,15 @@ export default async function SpellRecipePage({ params, searchParams }: SpellRec
   const recipe = await readRecipeOf(session, spell, recipePath);
   // The side column (the owner, 2026-10-29): the builder's In Coven Inventory and Category
   // Match on the saved spell, for the page and not the Quick Look modal.
-  const aside = await readRecipeAsideOf(session, workspace.id, recipe.views, recipe.categories);
+  const aside = await readRecipeAsideOf(
+    session,
+    workspace.id,
+    recipe.views,
+    recipe.categories,
+    recipePath,
+    // Edit Stock on the inventory's lines, on the permission `saveStock` asserts: none for a viewer.
+    rolePermits(membership.role, { inventory: ['update'] }),
+  );
   const canUpdate = rolePermits(membership.role, { spell: ['update'] });
   const query = await searchParams;
   const edit = query.edit;

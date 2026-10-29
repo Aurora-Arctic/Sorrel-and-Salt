@@ -15,7 +15,7 @@ export const UNAVAILABLE_INGREDIENT = 'Unavailable Ingredient';
  * `?spell=` kept, plus `entry=<id>`, so the details open over the spell rather than leaving it
  * (the owner, 2026-10-28).
  */
-const entryHrefOf = (hereHref: Route, id: string): Route =>
+export const entryHrefOf = (hereHref: Route, id: string): Route =>
   `${hereHref}${hereHref.includes('?') ? '&' : '?'}entry=${id}` as Route;
 
 /** `views` as the recipe draws them on the page at `hereHref`, whose address the Quick Look eyes add `entry=` to. */

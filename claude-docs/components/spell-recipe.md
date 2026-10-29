@@ -82,6 +82,17 @@ its own `jarOf`, with the assigned categories as the intended set and the group 
 withholds has no categories and no jar; no form icon or safety is read, since the column draws
 neither.
 
+Each inventory line of a linked step carries two doors (the owner, 2026-10-29), read in the same
+pass as `doors` and drawn by `InCovenInventory`'s `doorsOf`: a Quick Look eye after the name,
+the same `QuickLookLink` the steps carry, to this page's `?entry=<id>`; and, for a role that
+may update stock (`rolePermits(role, { inventory: ['update'] })`, the permission `saveStock`
+asserts), Edit Stock behind the jar and the name, a `StockJarButton` ([`stock-dialog.md`](stock-dialog.md))
+named "Edit Stock, <name>" and opening on the step's form, with the ingredient's forms
+(`variantsOf`, read only for such a role) and the coven's jars through `stockDialogOf`. A
+viewer gets the eye and no button; an ingredient or form deleted since gets neither. The
+button is the name stretched over the line, as the shelf's jar button is, with the eye and the
+verdict raised above it. The builder's own inventory carries no doors.
+
 ## Quick Look
 
 The body below the head is `SpellRecipeBody` (`body.tsx`), described above. The recipe page and

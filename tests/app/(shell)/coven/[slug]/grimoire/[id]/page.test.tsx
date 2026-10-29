@@ -45,11 +45,13 @@ const none = async (_s: unknown, refs: unknown[]): Promise<unknown[][]> => refs.
 const categoriesOf = vi.fn(none);
 const categoriesOfVariants = vi.fn(none);
 const stockOf = vi.fn(none);
+const variantsOf = vi.fn(none);
 vi.mock('@/modules/ingredients', async (importOriginal) => ({
   ...(await importOriginal<typeof import('@/modules/ingredients')>()),
   categoriesOf,
   categoriesOfVariants,
   stockOf,
+  variantsOf,
 }));
 const displayNamesOf = vi.fn();
 vi.mock('@/modules/identity', async (importOriginal) => ({
@@ -159,7 +161,9 @@ describe('the spell recipe page', () => {
 
   it("gives an ingredient step a Quick Look eye to this page's own address with ?entry=<id>, so the details open over the recipe", async () => {
     await draw();
-    expect(screen.getByRole('link', { name: 'Quick Look Testwort' })).toHaveAttribute(
+    // The step's own eye, in the recipe's list: the inventory line carries another.
+    const steps = within(screen.getByRole('list', { name: 'Steps' }));
+    expect(steps.getByRole('link', { name: 'Quick Look Testwort' })).toHaveAttribute(
       'href',
       `/coven/fixture-coven/grimoire/${SPELL_ID}?entry=ing-1`,
     );

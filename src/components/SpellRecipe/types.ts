@@ -4,6 +4,7 @@ import type { CardCategory } from '../CategoryChips/types';
 import type { LastEditProps } from '../LastEdit/types';
 import type { SpellStepValue, StepCategory } from '../SpellBuilder/steps/types';
 import type { GroupColors } from '../../lib/types';
+import type { StockDialogProps } from '../StockDialog/types';
 import type { SafetyMarkProps } from '../SafetyNote/types';
 import type { SpellStatus, SpellVisibility } from '@/modules/grimoire';
 import type { IngredientRow } from '@/modules/ingredients';
@@ -85,12 +86,25 @@ export interface SpellRecipeProps {
 }
 
 /**
+ * An In Coven Inventory line's doors on the recipe page (M13.21; the owner, 2026-10-29): the
+ * Quick Look eye beside the name, and Edit Stock behind the jar and the name, each null where
+ * there is nothing to open (the ingredient deleted since; a role that may not update stock).
+ */
+export interface InventoryDoor {
+  stepId: string;
+  look: IngredientLook | null;
+  stock: StockDialogProps | null;
+}
+
+/**
  * What the recipe page's side column draws (M13.21): the spell's steps as the builder's Jar
  * aside holds them, the categories the spell is assigned, and each category's group colours
  * as entries, since a Map cannot cross from the server page to the client component.
  */
 export interface SpellRecipeAsideProps {
   steps: SpellStepValue[];
+  /** Each linked step's doors; a one-off or an instruction has none. */
+  doors: InventoryDoor[];
   intended: StepCategory[];
   groups: [string, GroupColors][];
 }
