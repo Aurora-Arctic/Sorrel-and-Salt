@@ -87,7 +87,7 @@ const Looping = (): ReactElement => {
         hidden={step !== 'shown'}
         data-leaving={step === 'leaving' ? '' : undefined}
       />
-      <p role="status">{LABELS[step]}</p>
+      <output>{LABELS[step]}</output>
     </>
   );
 };

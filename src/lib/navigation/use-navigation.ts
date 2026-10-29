@@ -6,7 +6,7 @@ import {
   useCallback,
   useContext,
   useMemo,
-  useRef,
+  useState,
   useSyncExternalStore,
 } from 'react';
 import { ActiveNavigationContext, NavigationActionsContext } from './provider';
@@ -41,7 +41,7 @@ export function useNavigationState(): NavigationState {
 export function usePendingNavigation(): PendingNavigation {
   const actions = useContext(NavigationActionsContext);
   const active = useContext(ActiveNavigationContext);
-  const owner = useRef(Symbol('navigation'));
+  const [owner] = useState(() => Symbol('navigation'));
   const router = useRouter();
 
   // Outside the provider (a Storybook story, a component test) a call is a plain
@@ -50,19 +50,19 @@ export function usePendingNavigation(): PendingNavigation {
   const reload = actions?.refresh;
   const navigate = useCallback(
     (href: string, options?: NavigateOptions) => {
-      if (start) return start(owner.current, href, options);
+      if (start) return start(owner, href, options);
       const go = options?.replace ? router.replace : router.push;
       startTransition(() => {
         if (options?.scroll === undefined) go(href as never);
         else go(href as never, { scroll: options.scroll });
       });
     },
-    [start, router],
+    [start, router, owner],
   );
   const refresh = useCallback(() => {
-    if (reload) return reload(owner.current);
+    if (reload) return reload(owner);
     startTransition(() => router.refresh());
-  }, [reload, router]);
+  }, [reload, router, owner]);
 
-  return { pending: active?.owner === owner.current, navigate, refresh };
+  return { pending: active?.owner === owner, navigate, refresh };
 }

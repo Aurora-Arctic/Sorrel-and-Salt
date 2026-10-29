@@ -65,7 +65,7 @@ export default function AnnotateMore({
   // whatever held it as it opened, and a menu item that chose goes with its
   // menu, so the focus is put on this first.
   const trigger = useRef<HTMLButtonElement>(null);
-  const ask = (what: 'remove' | 'own') => () => {
+  const ask = (what: 'remove' | 'own') => {
     trigger.current?.focus();
     setAsking(what);
   };
@@ -80,9 +80,9 @@ export default function AnnotateMore({
     onRefused,
   });
   const items: MenuButtonItem[] = [
-    ...(canMakeOurs ? [{ key: 'own', label: 'Make It Ours', onSelect: ask('own') }] : []),
+    ...(canMakeOurs ? [{ key: 'own', label: 'Make It Ours', onSelect: () => ask('own') }] : []),
     ...(canRemove
-      ? [{ key: 'remove', label: 'Remove', destructive: true, onSelect: ask('remove') }]
+      ? [{ key: 'remove', label: 'Remove', destructive: true, onSelect: () => ask('remove') }]
       : []),
   ];
   const only = items.length === 1 ? items[0] : undefined;
@@ -102,7 +102,7 @@ export default function AnnotateMore({
           ref={trigger}
           type="button"
           className={only.destructive ? 'btn btn--destructive' : 'btn btn--quiet'}
-          onClick={ask(only.key === 'own' ? 'own' : 'remove')}
+          onClick={() => ask(only.key === 'own' ? 'own' : 'remove')}
         >
           {only.label}
         </button>

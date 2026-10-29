@@ -288,6 +288,7 @@ export default function MenuButton({
         ref={setList}
         id={menuId}
         role="menu"
+        tabIndex={-1}
         aria-label={menuLabel ?? label}
         aria-hidden={!open || undefined}
         inert={!open}

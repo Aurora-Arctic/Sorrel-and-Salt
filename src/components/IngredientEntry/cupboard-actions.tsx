@@ -1,14 +1,7 @@
 'use client';
 
 import type { Route } from 'next';
-import {
-  type ReactElement,
-  useCallback,
-  useEffect,
-  useLayoutEffect,
-  useRef,
-  useState,
-} from 'react';
+import { type ReactElement, useCallback, useLayoutEffect, useRef, useState } from 'react';
 import { useClickFeedback } from '../ClickFeedback';
 import { editHeading } from '../CompendiumList/heading';
 import { AnnotateButton, AnnotateLink, BinButton, CompendiumEditLink, MoreMenu } from '../IconTip';
@@ -207,9 +200,7 @@ export default function CupboardActions(
   // from its coven; it closes in that render (below), and the choice is
   // forgotten here.
   const targetHeld = targetPlace.held;
-  useEffect(() => {
-    if (!targetHeld) setAsking((was) => (was === 'remove' || was === 'own' ? undefined : was));
-  }, [targetHeld]);
+  if (!targetHeld && (asking === 'remove' || asking === 'own')) setAsking(undefined);
   const openEdit = useOpenModalClick(
     edit?.href ?? ('' as Route),
     editHeading(
@@ -242,7 +233,7 @@ export default function CupboardActions(
     onRefused: reportRefusal,
   });
 
-  const ask = (what: Asking, among: readonly CupboardPlace[], write?: CupboardWrite) => () => {
+  const ask = (what: Asking, among: readonly CupboardPlace[], write?: CupboardWrite) => {
     lastAsked.current = what;
     binFeedback.report(undefined);
     moreFeedback.report(undefined);
@@ -286,7 +277,7 @@ export default function CupboardActions(
     main !== 'annotate' && mayAnnotate
       ? annotators.length === 1
         ? { key: 'annotate', label: 'Annotate', href: annotateHref, onClick: openAnnotate }
-        : { key: 'annotate', label: 'Annotate', onSelect: ask('annotate', annotators) }
+        : { key: 'annotate', label: 'Annotate', onSelect: () => ask('annotate', annotators) }
       : undefined;
   const editItem: MenuButtonItem | undefined =
     main !== 'edit' && edit
@@ -294,7 +285,7 @@ export default function CupboardActions(
       : undefined;
   const ownItem: MenuButtonItem | undefined =
     owners.length > 0
-      ? { key: 'own', label: 'Make It Ours', onSelect: ask('own', owners, writes.makeOurs) }
+      ? { key: 'own', label: 'Make It Ours', onSelect: () => ask('own', owners, writes.makeOurs) }
       : undefined;
   const removeItem: MenuButtonItem | undefined =
     removers.length > 0
@@ -302,7 +293,7 @@ export default function CupboardActions(
           key: 'remove',
           label: 'Remove',
           destructive: true,
-          onSelect: ask('remove', removers, writes.remove),
+          onSelect: () => ask('remove', removers, writes.remove),
         }
       : undefined;
   const covenItems = [stockItem, annotateItem, ownItem, removeItem].filter(
@@ -349,7 +340,11 @@ export default function CupboardActions(
             heading={ANNOTATE_HEADING}
           />
         ) : (
-          <AnnotateButton ref={annotateControl} name={name} onClick={ask('annotate', annotators)} />
+          <AnnotateButton
+            ref={annotateControl}
+            name={name}
+            onClick={() => ask('annotate', annotators)}
+          />
         ))}
       {more && <MoreMenu ref={moreRef} name={name} {...moreChoices} />}
       {bin && (
@@ -357,7 +352,7 @@ export default function CupboardActions(
           ref={binRef}
           verb="Remove"
           name={name}
-          onClick={ask('remove', removers, writes.remove)}
+          onClick={() => ask('remove', removers, writes.remove)}
         />
       )}
       {binFeedback.feedback}

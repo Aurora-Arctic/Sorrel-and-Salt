@@ -27,10 +27,13 @@ export function DeleteUsers({ id }: { id: string }): ReactElement | null {
   });
   if (data === undefined) return null;
   return (
-    <p role="status">
-      {data.compendiumEntryUsers === 1
-        ? 'Used by 1 coven.'
-        : `Used by ${data.compendiumEntryUsers} covens.`}
+    // The paragraph keeps the text styling and block box a bare <output> would lose.
+    <p>
+      <output>
+        {data.compendiumEntryUsers === 1
+          ? 'Used by 1 coven.'
+          : `Used by ${data.compendiumEntryUsers} covens.`}
+      </output>
     </p>
   );
 }

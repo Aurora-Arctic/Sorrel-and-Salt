@@ -269,13 +269,13 @@ const StockDialogForm = ({
   const found = rows.findIndex((row) => row.variantId === chosenVariant);
   const chosen = found >= 0 ? found : rows.length > 0 ? 0 : -1;
 
+  const focusIndex =
+    focusAdded === null ? -1 : rows.findIndex((row) => row.variantId === focusAdded);
   useEffect(() => {
-    if (focusAdded === null) return;
-    const index = rows.findIndex((row) => row.variantId === focusAdded);
-    if (index < 0) return;
-    setFocus(`rows.${index}.quantityOnHand`);
+    if (focusIndex < 0) return;
+    setFocus(`rows.${focusIndex}.quantityOnHand`);
     setFocusAdded(null);
-  }, [focusAdded, rows, setFocus]);
+  }, [focusIndex, setFocus]);
 
   /** New, or a held jar whose amounts differ from when the dialog opened. */
   const edited = (row: StockRow): boolean => {
