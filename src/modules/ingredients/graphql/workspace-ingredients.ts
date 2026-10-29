@@ -22,7 +22,7 @@ const IngredientInput = builder.inputType('IngredientInput', {
 // An update replaces the row, so a field left out would be cleared. Non-null
 // makes leaving one out a schema error; GraphQL has no required-but-nullable
 // field, so a caller clears with an empty value instead of null — which is
-// why `elements` is a list (MB.157): a single enum had no empty value to send.
+// why `elements` is a list: a single enum had no empty value to send.
 const IngredientUpdateInput = builder.inputType('IngredientUpdateInput', {
   description:
     'The whole ingredient, replacing the row. Every field is sent, and "" or [] clears one.',

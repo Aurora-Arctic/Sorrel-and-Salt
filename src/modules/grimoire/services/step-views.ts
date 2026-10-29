@@ -11,13 +11,13 @@ import type { SpellStepView } from '../types';
 /**
  * The live steps of each readable spell named, in recipe order, each with its
  * ingredient and the form it lays: what `stepsOfSpells`, `Spell.steps`'
- * batch, answers (M10.9). Internal to the module, so not exported from its
+ * batch, answers. Internal to the module, so not exported from its
  * index.
  *
  * A linked ingredient is read through the finder that keeps a deleted one,
  * and its forms through the one that keeps deleted forms, each marked
  * `deleted`: a spell records a working, so what went into the jar stays in
- * it, whether the ingredient or only its form was deleted since (M5.3, M10.9). A link to another coven's ingredient reads `null`, as
+ * it, whether the ingredient or only its form was deleted since. A link to another coven's ingredient reads `null`, as
  * the finder withholds it. Four statements whatever the number of spells: the
  * steps, the ingredients, and the forms, which read their parents again.
  *
@@ -47,7 +47,7 @@ export async function stepsInSpells(
       return {
         ...step,
         ingredient: ingredient ? { ...ingredient, deleted: ingredient.deletedAt !== null } : null,
-        // A form carries its ingredient's tier, which the GraphQL type reads (MB.215).
+        // A form carries its ingredient's tier, which the GraphQL type reads.
         variant:
           form && ingredient
             ? { ...form, workspaceId: ingredient.workspaceId, deleted: form.deletedAt !== null }

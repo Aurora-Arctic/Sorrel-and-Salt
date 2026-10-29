@@ -5,7 +5,7 @@ import type { Session } from '../../../lib/session';
 import { users } from '../schema/users';
 import type { UserRow } from '../types';
 
-// Who the primary admin is, asked of a row or of the session (MB.59): read
+// Who the primary admin is, asked of a row or of the session: read
 // from ADMIN_BOOTSTRAP_EMAIL at each check, never stored, so the protection
 // follows whatever the variable names now
 // (claude-docs/design-decisions/m2.9-granting-admin.md, "The primary admin").

@@ -1,7 +1,7 @@
 import type { z } from 'zod';
 import { curatedValueInput, requiredRowId } from '../../../lib/validation';
 
-// A curated form as an admin writes one (M5.6a). No slug: it is derived from
+// A curated form as an admin writes one. No slug: it is derived from
 // the name and the group's name by src/lib/slugify.ts, never written beside
 // them, so one in the input is dropped. No `endRedirect` either since MB.220:
 // a rename moves no compendium entry's address, so ends no redirect.

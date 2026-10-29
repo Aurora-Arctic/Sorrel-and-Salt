@@ -13,7 +13,7 @@ export type {
 
 /**
  * A celestial body or a zodiac sign: the two tables share one shape, so the celestial bodies'
- * row type stands for both (MB.95).
+ * row type stands for both.
  */
 export type AstrologyValueRow = typeof celestialBodies.$inferSelect;
 
@@ -27,7 +27,7 @@ export type IngredientFormValueRow = typeof ingredientForms.$inferSelect;
 
 /**
  * A live row a group's rename or delete moves, whose slug carries the group's
- * name — a form under its group (M5.6b), a deity under its tradition (MB.132)
+ * name — a form under its group, a deity under its tradition
  * — and the slug its name and its new group's name give it: the same slug
  * when neither changed.
  */
@@ -111,14 +111,14 @@ export type DeityTraditionRow = typeof deityTraditions.$inferSelect;
 
 /**
  * An ingredient field whose compendium values are held to a curated
- * vocabulary by spelling, by the input's name (MB.162): the celestial bodies and the
+ * vocabulary by spelling, by the input's name: the celestial bodies and the
  * signs, which record no pick.
  */
 export type CuratedField = 'celestialBodies' | 'zodiacSigns';
 
 /**
  * An ingredient field that records the curated row a member picked beside its
- * text, by the input's name (MB.165), and whose compendium values are held to
- * a pick rather than a spelling (MB.167).
+ * text, by the input's name, and whose compendium values are held to
+ * a pick rather than a spelling.
  */
 export type PickedField = 'form' | 'deities';

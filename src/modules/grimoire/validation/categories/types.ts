@@ -5,7 +5,7 @@
  * depend on the table's columns (M13.1 reshapes them).
  */
 export type StepCategories = {
-  /** `null` for an instruction-only step or a custom one-off ingredient (MB.40). */
+  /** `null` for an instruction-only step or a custom one-off ingredient. */
   readonly ingredientId: string | null;
   readonly categoryIds: readonly string[];
 };

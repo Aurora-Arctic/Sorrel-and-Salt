@@ -1,6 +1,6 @@
 import { type Unit, dimensionOf } from '../../ingredients/schema/units';
 
-// Story 77's unit rule (M13.2), shared by the builder, which shows it on the
+// Story 77's unit rule, shared by the builder, which shows it on the
 // step's Unit field as the member picks, and the service, which refuses a save
 // that breaks it. Built on the unit dimensions alone, not on `unitConvert`,
 // because a validation file imports only dependency-free files
@@ -14,7 +14,7 @@ export const UNMEASURABLE_UNIT = 'Choose a unit your coven’s stock of this can
 /**
  * Whether an amount in `unit` can be taken out of a jar kept in `jarUnit`:
  * the same unit, or two weights, or two volumes. A count matches only itself,
- * since a working subtracts a count without converting it (M13.5).
+ * since a working subtracts a count without converting it.
  */
 export function measurable(unit: Unit, jarUnit: Unit): boolean {
   if (unit === jarUnit) return true;

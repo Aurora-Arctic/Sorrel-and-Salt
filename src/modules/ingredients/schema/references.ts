@@ -26,7 +26,7 @@ const OPTIONAL_NOT_BLANK = [
 ] as const;
 
 // One source per row, in Chicago bibliography form, kept once and linked from
-// every row it supports through `reference_links` (MB.151). Every field is
+// every row it supports through `reference_links`. Every field is
 // text as Chicago prints it — `authors` with its role, `published` at a
 // year's or a season's precision — because name order and dates are not
 // mechanical across the sources; only the two days are `date`s. One table,

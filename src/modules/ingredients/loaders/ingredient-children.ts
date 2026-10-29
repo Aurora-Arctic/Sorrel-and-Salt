@@ -50,7 +50,7 @@ const CHILD_LOADERS = {
   /** `Ingredient.deities`, batched: the deities of each ingredient loaded in one request. */
   deitiesByIngredient: defineLoader<IngredientKey, IngredientDeityRow[], string>(deitiesOf, byId),
 
-  /** `Ingredient.variants`, batched: the forms of each ingredient loaded in one request (MB.218). */
+  /** `Ingredient.variants`, batched: the forms of each ingredient loaded in one request. */
   variantsByIngredient: defineLoader<IngredientKey, IngredientVariantRow[], string>(
     variantsOf,
     byId,
@@ -58,7 +58,7 @@ const CHILD_LOADERS = {
 };
 
 // A variant's child loaders, keyed by the variant row as the ingredient's are
-// by the ingredient row (MB.218). A record of their own: an ingredient write
+// by the ingredient row. A record of their own: an ingredient write
 // knows the ingredient, not which of its variants a request has loaded, so
 // `clearIngredientChildren` empties these whole.
 const VARIANT_CHILD_LOADERS = {

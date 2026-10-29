@@ -32,7 +32,7 @@ export interface SchemaTypes {
   DefaultNodeNullability: false;
   // The schema's second check, behind the service layer's (DESIGN.md §7).
   // `self` takes a user id and holds when it is the session's own; `curator`
-  // holds for a curator and an admin, `admin` for an admin alone (M11.20).
+  // holds for a curator and an admin, `admin` for an admin alone.
   AuthScopes: {
     signedIn: boolean;
     admin: boolean;
@@ -53,7 +53,7 @@ export type ErrorCode = 'VALIDATION' | 'FORBIDDEN' | 'NOT_FOUND' | 'STALE_WRITE'
 
 /**
  * What a mapped error carries under `extensions`: `fieldErrors` only on
- * VALIDATION, `currentRevision` only on STALE_WRITE (M13.16).
+ * VALIDATION, `currentRevision` only on STALE_WRITE.
  */
 export interface ErrorExtensions {
   code: ErrorCode;
@@ -78,7 +78,7 @@ export interface PagedConnectionOptions<
   /** The field's own arguments, beside the four the connection adds. */
   args?: Args;
   /**
-   * The field's scope (M5.7), checked before `resolve` is asked: the second
+   * The field's scope, checked before `resolve` is asked: the second
    * check in front of a service that refuses again.
    */
   authScopes?: FieldAuthScopes<Types, ParentShape, InputShapeFromFields<Args>>;

@@ -34,7 +34,7 @@ const SpellFields = z.object({
   note: optionalText(),
   // The recipe, in order: a step's place is its index.
   steps: z.array(SpellStepInput).default([]),
-  // The categories the spell is assigned, what it intends (M10.14), never the
+  // The categories the spell is assigned, what it intends, never the
   // ones derived from its ingredients. The whole set when given, so an id left
   // out is unassigned; left out altogether, they are unchanged on update and
   // none on create.

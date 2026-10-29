@@ -7,7 +7,7 @@ import type { Tier } from '../types';
 // The fields of the ingredient's four input types — a coven's and the
 // compendium's, each a create and a whole-row update — declared once, so the
 // two tiers' writes cannot take different fields. A child table is one
-// field here, as `variants` is (MB.219). The types themselves stay beside their mutations.
+// field here, as `variants` is. The types themselves stay beside their mutations.
 
 /**
  * One substitute: an ingredient to link, or the name of one not entered —
@@ -42,7 +42,7 @@ const IngredientDeityInput = builder.inputType('IngredientDeityInput', {
  * `ingredient_variants`; MB.219): written inside the ingredient's own save,
  * never by a mutation of its own. Every field but `id` is non-null, since an
  * entry replaces the form it names in a create and an update alike, so
- * leaving one out is a schema error rather than a silent clear (MB.159).
+ * leaving one out is a schema error rather than a silent clear.
  */
 const IngredientVariantInput = builder.inputType('IngredientVariantInput', {
   description:
@@ -80,7 +80,7 @@ const IngredientVariantInput = builder.inputType('IngredientVariantInput', {
  * An ingredient input type's fields. The two switches are the two ways the
  * four types differ: `whole` is an update's, which replaces the row, so every
  * field is non-null and leaving one out is a schema error rather than a
- * silent clear (MB.159); and `tier`, since the compendium declares a
+ * silent clear; and `tier`, since the compendium declares a
  * `nomenclature` for every entry (DESIGN.md §5), where a coven's create may
  * leave it out. Only `name` and `variants` are required otherwise, so story
  * 29's stub saves with `variants: []`.
@@ -123,7 +123,7 @@ export function ingredientInputFields<T extends Tier, Whole extends boolean>(
         ? 'The categories it is filed under; [] when none.'
         : 'The categories it is filed under.',
     }),
-    // Required on every type, a create's included (MB.222): the only place
+    // Required on every type, a create's included: the only place
     // a form is written, so a caller always says which it has, [] for none.
     variants: t.field({
       type: [IngredientVariantInput],

@@ -90,7 +90,7 @@ async function covenScope(
  * cupboard row of any picked coven names, or, under Not In, to the entries
  * none names. With no coven filter in effect, the cached `listCompendium`.
  *
- * @throws {Forbidden} Reviewed is set and `session` does not curate (M14.8).
+ * @throws {Forbidden} Reviewed is set and `session` does not curate.
  * @throws {ValidationError} as `listCompendium` does.
  */
 export async function listCompendiumHeldIn(
@@ -134,7 +134,7 @@ export async function compendiumFacetsHeldIn(
 ): Promise<CompendiumFacets> {
   const scope = await covenScope(session, covens);
   if (!scope) return compendiumFacets(filter, session);
-  // The Reviewed filter and counts stay a curator's (M14.8) on this read as on the cached one.
+  // The Reviewed filter and counts stay a curator's on this read as on the cached one.
   return findCompendiumFacets(
     { ...compendiumFilterFor(filter, session), ...scope },
     seesReview(session),

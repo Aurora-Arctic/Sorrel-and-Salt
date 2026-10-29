@@ -13,7 +13,7 @@ import type { UserRow } from '../types';
 
 // MB.59, M11.20: an admin sets a user's site role, `user`, `curator` or
 // `admin`, from `/admin/users`. Each change is declared `via: 'admin'` and
-// the trigger on `users` records it in the privilege ledger (MB.195); the
+// the trigger on `users` records it in the privilege ledger; the
 // service writes no ledger row. Why each rule is what it is:
 // claude-docs/design-decisions/m2.9-granting-admin.md, "The primary admin",
 // "Granting" and "Revoking", and m11.20-curator-role.md; the shape is
@@ -31,8 +31,8 @@ const ROLE_NOUNS: Record<UserRole, string> = {
 /**
  * The grant of a curating role every route but the bootstrap shares, inside
  * the caller's transaction: the creation flag too, since the users CHECK
- * refuses a curator or an admin without it (MB.177, M11.20). An admin's role
- * change and an accepted site invitation (MB.70) both write it; the route is
+ * refuses a curator or an admin without it. An admin's role
+ * change and an accepted site invitation both write it; the route is
  * the caller's declaration.
  */
 export function writeSiteRoleGrant(
@@ -88,7 +88,7 @@ async function writeRole(
  * would record nothing; the user is the primary admin and the role is not
  * `admin`, for every caller, the primary admin included; the change would
  * leave no live admin; or the primary admin has paused admin changes and the
- * caller is another admin (MB.63).
+ * caller is another admin.
  * @throws {NotFound} no live user has this id.
  */
 export async function setUserRole(

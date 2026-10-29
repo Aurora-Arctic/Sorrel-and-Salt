@@ -29,11 +29,11 @@ export const auditColumns = { ...auditStampColumns, ...deletionColumnsReferencin
 // own migration (0084). A save names the revision it read and is refused if
 // the row has moved since. Named `revision`, not `version`, which v2 keeps
 // for a saved snapshot a person can open (claude-docs/db/grimoire.md,
-// "Revision (M13.15)"; claude-docs/design-decisions/m13.14-autosave.md).
+// "Revision"; claude-docs/design-decisions/m13.14-autosave.md).
 export const revisionColumn = () => integer('revision').notNull().default(1);
 
 // Admins curate the global vocabularies and manage the people page; curators
-// curate the same vocabularies and reach no people page (M11.20). A closed set
+// curate the same vocabularies and reach no people page. A closed set
 // of site roles, so a column is enough.
 export const userRole = pgEnum('user_role', ['user', 'curator', 'admin']);
 

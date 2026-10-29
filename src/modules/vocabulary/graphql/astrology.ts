@@ -10,9 +10,9 @@ import {
 import type { AstrologyValueRow, CuratedField } from '../types';
 import { curatedVocabularyWrites } from './curated';
 
-// `CelestialBody` and `ZodiacSign`: the two curated astrology vocabularies (MB.95),
+// `CelestialBody` and `ZodiacSign`: the two curated astrology vocabularies,
 // one type each though the rows share a shape, so a client never asks which
-// table a value came from. Public (MB.80), so no scope and no session in the
+// table a value came from. Public, so no scope and no session in the
 // readers; tests/db/graphql-query-scopes.test.ts holds every other query to
 // its refusal. The writes are the site admin's.
 

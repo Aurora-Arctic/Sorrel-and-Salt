@@ -8,7 +8,7 @@ import { assertCurator } from '@/modules/identity';
 
 // The compendium list's filter as its three reads take it: the page, the
 // count and the facets. Each parses it the same way, and each refuses the
-// Reviewed setting (M14.8) to anyone but a curator, since the review mark is
+// Reviewed setting to anyone but a curator, since the review mark is
 // the curators' alone and the compendium is otherwise public. Not exported
 // from the module: the reads are its API.
 

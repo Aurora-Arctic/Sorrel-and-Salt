@@ -113,7 +113,7 @@ const ReferenceInput = builder.inputType('ReferenceInput', {
 
 /**
  * The tier the `workspaceId` argument names, as a scope: a null one writes the
- * compendium's, which only a site admin's scope admits (M5.7), and a coven's
+ * compendium's, which only a site admin's scope admits, and a coven's
  * admits anyone signed in, the membership check deciding who may.
  */
 const tierScope = (_root: unknown, { workspaceId }: { workspaceId?: string | null }) =>
@@ -152,7 +152,7 @@ builder.mutationField('updateReference', (t) =>
   }),
 );
 
-// One source whole, for the edit panel to open on (MB.115). Signed-in
+// One source whole, for the edit panel to open on. Signed-in
 // whatever the tier, as the picker it is opened from is; one row, so no page.
 builder.queryField('reference', (t) =>
   t.field({

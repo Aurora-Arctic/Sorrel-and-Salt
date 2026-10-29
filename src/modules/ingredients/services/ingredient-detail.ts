@@ -51,10 +51,10 @@ function only<T>([answer]: readonly (T | Error)[]): T {
  * with their groups, deities with their traditions, substitutes,
  * references, one detail per live form in form order, and the cupboard entry
  * of `workspaceId`, the coven the page is read in, when it holds this
- * compendium entry (M12.14). No `workspaceId` is the public page, which
+ * compendium entry. No `workspaceId` is the public page, which
  * reads no cupboard. A compendium entry the curators have retired is read
  * only in a coven whose cupboard names it, and marked `retired`; its
- * children are read on that coven's proof (M12.24).
+ * children are read on that coven's proof.
  *
  * @throws {Forbidden} `entry` is a coven's and `session` is not in that coven,
  * or `session` is not in `workspaceId`.
@@ -157,7 +157,7 @@ export async function ingredientDetailOf(
   const formOf = new Map(live.map((form) => [form.id, form]));
 
   // The name of the form a link names, read beneath the ingredient it links
-  // and never by the form's id alone (MB.218). A link the reader may not
+  // and never by the form's id alone. A link the reader may not
   // follow shows no form.
   const formsOfLinked = new Map(
     linked.map(({ id }, i) => {

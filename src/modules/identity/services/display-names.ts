@@ -4,7 +4,7 @@ import type { Session } from '../../../lib/session';
 import { RowId } from '../../../lib/validation';
 import { inIdOrder } from '../../../lib/in-id-order';
 
-// The display names a member reads (MB.10): a members list, and a row's last
+// The display names a member reads: a members list, and a row's last
 // editor. Gated to co-members, not to site admins, whose ledger reads whole
 // rows through `usersForAdmin` under a rule of its own
 // (claude-docs/auth/display-names.md, "Display names").

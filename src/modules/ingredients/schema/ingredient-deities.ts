@@ -6,7 +6,7 @@ import { ingredients } from './ingredients';
 import { idColumn, liveUnique } from '../../../db/schema-parts';
 
 // The deities an ingredient names, one row per entry in the order entered
-// (MB.165): a name, and beside it a link to the curated deity the member
+//: a name, and beside it a link to the curated deity the member
 // picked, so Greek and Roman Hecate stay told apart after a save. A child
 // table rather than `ingredients.deities text[]`, which a link cannot live in;
 // MB.166 filled it from that list, MB.167 switched to it and MB.168 dropped
@@ -44,8 +44,8 @@ export const ingredientDeities = pgTable(
     uniqueIndex('ingredient_deities_name_unique')
       .on(table.ingredientId, sql`lower(${table.name})`)
       .where(sql`${table.deityId} is null and ${table.deletedAt} is null`),
-    // The pick read backwards (MB.132): the live rows linking a deity, which
-    // hold its delete and follow its rename (MB.167). Partial on live links,
+    // The pick read backwards: the live rows linking a deity, which
+    // hold its delete and follow its rename. Partial on live links,
     // the only rows either reads; the parent's tier is the reader's to join,
     // and a deity is soft-deleted, so the foreign key's own check never runs.
     index('ingredient_deities_deity_id_idx')

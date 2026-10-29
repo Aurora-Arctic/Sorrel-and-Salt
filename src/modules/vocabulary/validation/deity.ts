@@ -1,12 +1,12 @@
 import { z } from 'zod';
 import { curatedValueInput, requiredRowId } from '../../../lib/validation';
 
-// A curated deity as an admin writes one (MB.132), a form's shape with its
+// A curated deity as an admin writes one, a form's shape with its
 // tradition in place of a group. No slug (curatedValueInput says why). No
 // `endRedirect`, which a form's input carries: a deity is no part of a
 // compendium entry's address, so its rename ends no redirect.
 //
-// `otherNames` is the whole list the form shows (M14.23), as an entry's
+// `otherNames` is the whole list the form shows, as an entry's
 // `folkNames` is: each trimmed, and an absent list read as an empty one by
 // the service, since a save brings the stored names to the list sent. A plain
 // object, with no refinement, so the form can still `omit` and `extend` it;

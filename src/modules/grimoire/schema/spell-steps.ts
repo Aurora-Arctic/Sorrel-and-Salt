@@ -26,7 +26,7 @@ import { idColumn, liveUnique } from '../../../db/schema-parts';
 //
 // It references the ingredient, never the inventory item: stock is what a
 // workspace holds today, and a recipe pointing at it would be damaged by
-// running out. Soft-deleted, unlike the other two join tables (MB.110): a
+// running out. Soft-deleted, unlike the other two join tables: a
 // spell is a record of a working, so a step taken out of it is a tombstone
 // (claude-docs/db/grimoire.md, "The grimoire").
 export const spellSteps = pgTable(
@@ -41,7 +41,7 @@ export const spellSteps = pgTable(
     // Nullable: a custom row and an instruction-only step have no ingredient.
     // The CHECKs below allow at most one of this and `name`.
     ingredientId: uuid('ingredient_id').references(() => ingredients.id),
-    // The form laid (MB.217), set exactly when `ingredient_id` is: a jar may
+    // The form laid, set exactly when `ingredient_id` is: a jar may
     // hold Rosemary herb and Rosemary oil, a custom layer neither.
     variantId: uuid('variant_id'),
     // The custom row's label and form. Never becomes an `ingredients` row and

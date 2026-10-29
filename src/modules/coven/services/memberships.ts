@@ -51,7 +51,7 @@ export function byCovenName(a: { name: string }, b: { name: string }): number {
 /**
  * The slug of the first coven the switcher lists for this account, or
  * `undefined` for one in none. The sign-in callback lands a member there
- * itself, so the browser makes no stop at `/coven` on the way (MB.257).
+ * itself, so the browser makes no stop at `/coven` on the way.
  */
 export async function firstCovenSlugOf(session: Session): Promise<string | undefined> {
   const [memberships] = await membershipsOf(session, [session.userId]);

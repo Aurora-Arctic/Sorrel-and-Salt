@@ -22,7 +22,7 @@ const filterText = optionalText().transform((value) => value ?? undefined);
 /**
  * A list of text values as a filter takes it: each trimmed and the blank ones
  * dropped, and a list left empty, null or missing is no filter. Any one of
- * the values matches (M11.22).
+ * the values matches.
  */
 const filterTexts = z
   .array(z.string())
@@ -46,7 +46,7 @@ const filterIds = z
 /**
  * A list of elements as a filter takes it: a value that is none of the five is
  * refused rather than matched to nothing, and a list left empty, null or
- * missing is no filter. Any one of them matches (M8.13).
+ * missing is no filter. Any one of them matches.
  */
 const filterElements = z
   .array(z.enum(INGREDIENT_ELEMENTS))
@@ -66,7 +66,7 @@ export const CompendiumFilter = z.object({
     query && Array.from(query.normalize('NFC')).length >= MIN_QUERY_LENGTH ? query : undefined,
   ),
   categoryIds: filterIds,
-  // `all`, like null or missing, is no change: every listed category (M8.12).
+  // `all`, like null or missing, is no change: every listed category.
   categoryMode: z
     .enum(CATEGORY_MODES)
     .nullish()
@@ -84,24 +84,24 @@ export const CompendiumFilter = z.object({
     .enum(TOXIC_FILTERS)
     .nullish()
     .transform((setting) => (setting === 'any' ? undefined : (setting ?? undefined))),
-  // The admin's to-do list: entries citing nothing (MB.153). False is no filter.
+  // The admin's to-do list: entries citing nothing. False is no filter.
   withoutReferences: z
     .boolean()
     .nullish()
     .transform((only) => (only === true ? true : undefined)),
-  // The admin's other to-do list: entries with no live form (M12.30). False is no filter.
+  // The admin's other to-do list: entries with no live form. False is no filter.
   withoutForms: z
     .boolean()
     .nullish()
     .transform((only) => (only === true ? true : undefined)),
-  // A curator's review mark (M14.8): true keeps the reviewed entries, false the
+  // A curator's review mark: true keeps the reviewed entries, false the
   // ones needing review; null or missing is no filter. The service refuses it
   // without a curator's session, so the coven list never picks it.
   reviewed: z
     .boolean()
     .nullish()
     .transform((reviewed) => reviewed ?? undefined),
-  // How the entries are classified; `unknown` is the formal names still to look up (M5.5).
+  // How the entries are classified; `unknown` is the formal names still to look up.
   nomenclature: z
     .enum(NOMENCLATURE_KINDS)
     .nullish()
@@ -112,9 +112,9 @@ export type CompendiumFilterInput = z.input<typeof CompendiumFilter>;
 export type CompendiumFilter = z.output<typeof CompendiumFilter>;
 
 // The coven's ingredient list takes the compendium's search, categories and
-// facets (M9.4, M11.22), but not the admin's two to-do lists, so it parses
+// facets, but not the admin's two to-do lists, so it parses
 // them exactly as the compendium does; the two settings that need a coven's
-// own rows and jars (M9.7) are its alone.
+// own rows and jars are its alone.
 export const WorkspaceIngredientFilter = CompendiumFilter.pick({
   query: true,
   categoryIds: true,

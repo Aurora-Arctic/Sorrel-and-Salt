@@ -61,7 +61,7 @@ export type SpellStepUpdate = SpellStepInput;
 /** The ingredient a linked step names, with whether it has been deleted since. */
 export type SpellStepIngredient = IngredientRow & { deleted: boolean };
 
-/** The form a linked step lays, with whether it has been deleted since (M10.9). */
+/** The form a linked step lays, with whether it has been deleted since. */
 export type SpellStepVariant = IngredientVariantRow & { deleted: boolean };
 
 /**

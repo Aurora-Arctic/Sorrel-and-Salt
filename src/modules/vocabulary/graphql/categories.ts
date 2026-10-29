@@ -11,11 +11,11 @@ import type { CategoryRow } from '../types';
 import { CategoryGroupRef } from './category-groups';
 import { curatedVocabularyWrites } from './curated';
 
-// The category vocabulary as a chip reads it (M8.11): each category with its
-// group, whose two stored colours are what the chip wears (MB.36). Public
+// The category vocabulary as a chip reads it: each category with its
+// group, whose two stored colours are what the chip wears. Public
 // reference data, so no scope on either type or on the list, and no `audit`:
 // who curated a vocabulary row is the admin pages' business, not a chip's.
-// The writes are the site admin's (M5.6).
+// The writes are the site admin's.
 
 export const CategoryRef = curatedVocabularyWrites({
   ref: builder.objectRef<CategoryRow>('Category'),

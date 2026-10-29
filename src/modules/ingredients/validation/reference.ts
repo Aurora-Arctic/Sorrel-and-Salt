@@ -12,7 +12,7 @@ import {
 } from './reference-format';
 import type { ReferenceTextField } from './types';
 
-// One reference as the form submits it and the service parses it (MB.153):
+// One reference as the form submits it and the service parses it:
 // the CHECKs MB.152 put on `references`, each refusal pathed to the field it
 // is about rather than surfacing as a constraint name, plus the form's own
 // rule that a book needs a date (claude-docs/db/references.md). Each field is

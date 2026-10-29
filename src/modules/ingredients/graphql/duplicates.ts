@@ -11,7 +11,7 @@ builder.queryField('possibleDuplicates', (t) =>
   t.pagedConnection({
     type: IngredientRef,
     args: {
-      // Null reads the compendium alone: the admin's compendium form names no coven (M5.5).
+      // Null reads the compendium alone: the admin's compendium form names no coven.
       workspaceId: t.arg.id({ required: false }),
       name: t.arg.string({ required: true }),
     },

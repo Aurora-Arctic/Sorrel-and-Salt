@@ -3,7 +3,7 @@ import { auditColumns, users } from './users';
 import { idColumn } from '../../../db/schema-parts';
 
 // pgEnums because each set is closed. The privilege names the `users` column
-// a change was to, `role` as `admin` or `curator` (M11.20) and
+// a change was to, `role` as `admin` or `curator` and
 // `can_create_workspace` as `create_workspace`, so a future flag is a value
 // here and a line in MB.195's trigger rather than a table.
 export const userPrivilege = pgEnum('user_privilege', ['admin', 'create_workspace', 'curator']);

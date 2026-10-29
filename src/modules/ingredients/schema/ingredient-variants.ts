@@ -5,7 +5,7 @@ import { ingredientForms } from '../../vocabulary/schema/ingredient-forms';
 import { ingredientElement, ingredients } from './ingredients';
 import { idColumn, liveUnique } from '../../../db/schema-parts';
 
-// One form of an ingredient (MB.215, MB.216): the ingredient holds what its
+// One form of an ingredient: the ingredient holds what its
 // forms share, and a variant adds what is particular to one form. A union,
 // never an override: nothing here hides a value the ingredient carries, so no
 // read coalesces (claude-docs/design-decisions/mb.215-ingredient-variants.md).
@@ -22,11 +22,11 @@ export const ingredientVariants = pgTable(
     // value stays writable.
     form: text('form').notNull(),
     // The curated row a member picked, beside the text and never instead of it
-    // (MB.165): two live forms may share a name, and only the link says which.
+    //: two live forms may share a name, and only the link says which.
     formId: uuid('form_id').references(() => ingredientForms.id),
     description: text('description'),
     safetyNotes: text('safety_notes'),
-    // Whether this form is dangerous (M11.21): on only where its own flag is,
+    // Whether this form is dangerous: on only where its own flag is,
     // whatever its ingredient says, so not a union with the ingredient's
     // (DESIGN.md §5, "The toxic flag is the one exception").
     toxic: boolean('toxic').notNull().default(false),
@@ -51,14 +51,14 @@ export const ingredientVariants = pgTable(
     // Not partial, the one named exception to CLAUDE.md rule 4: it is the
     // target of the composite foreign keys that tie a stock row, a layer, a
     // category pair or a substitute to a variant of its own ingredient
-    // (MB.217), which a partial index cannot be. It reserves nothing the
+    //, which a partial index cannot be. It reserves nothing the
     // primary key does not, since `id` alone is already unique.
     uniqueIndex('ingredient_variants_id_ingredient_id_unique').on(table.id, table.ingredientId),
-    // The pick read backwards, for the vocabulary's in-use reads (MB.220).
+    // The pick read backwards, for the vocabulary's in-use reads.
     index('ingredient_variants_form_id_idx')
       .on(table.formId)
       .where(sql`${table.deletedAt} is null`),
-    // The search's arm into a form and its description (MB.218), folded as
+    // The search's arm into a form and its description, folded as
     // `ingredients_unaccent_trgm` folds the name, so a fold reaches the index.
     // Not partial: it reserves nothing.
     index('ingredient_variants_unaccent_trgm').using(

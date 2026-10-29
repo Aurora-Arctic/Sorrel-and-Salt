@@ -40,7 +40,7 @@ export const WorkspaceMemberRef = builder
         nullable: true,
         resolve: (member) => (member.invitedBy ? { id: member.invitedBy } : null),
       }),
-      // The owner's alone (M11.19), on a field of its own rather than on
+      // The owner's alone, on a field of its own rather than on
       // `user`, a `CoMember` every member reads. Through `memberEmailsByMember`,
       // one read per page of members; anyone else gets `FORBIDDEN`.
       email: t.field({
@@ -60,7 +60,7 @@ export const WorkspaceMemberRef = builder
 
 // Here rather than in `WorkspaceRef`'s own fields, which are built before
 // `WorkspaceMemberRef` exists. A coven at a time: the service checks
-// `member: read` and reads one page (M6.11).
+// `member: read` and reads one page.
 builder.objectField(WorkspaceRef, 'members', (t) =>
   t.pagedConnection({
     type: WorkspaceMemberRef,
@@ -72,7 +72,7 @@ builder.objectField(WorkspaceRef, 'members', (t) =>
 
 // On `User` from here rather than in identity, which may import no module.
 // A caller reads their own; a site admin reads anyone's, by name and role only
-// (M9.19), and the service answers a `Forbidden` for the rest.
+//, and the service answers a `Forbidden` for the rest.
 builder.objectField(UserRef, 'memberships', (t) =>
   t.field({
     type: [WorkspaceMemberRef],

@@ -7,7 +7,7 @@ import type { SpellStatus, SpellVisibility } from '../types';
 
 /**
  * The one-way rule itself, for every write that names a visibility: this one
- * and a save (`updateSpell`). It binds a **complete** spell only (M10.20): a
+ * and a save (`updateSpell`). It binds a **complete** spell only: a
  * draft is shared and made private again as often as its author likes, and the
  * lock starts once the spell is complete. It reads the status the row holds
  * before the write, so the save that completes a shared draft is the one that

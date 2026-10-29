@@ -18,7 +18,7 @@ export const deityTraditions = pgTable(
 // key target for their text (ingredient-deities-schema.test.ts asserts so): `traditionId`
 // can be a key because only an admin writes it, as `ingredient_forms.group_id`
 // is, while a member must be able to write a god before anyone curates one. A
-// pick is keyed beside its name, as `ingredient_deities.deity_id` (MB.165).
+// pick is keyed beside its name, as `ingredient_deities.deity_id`.
 // The slug is unique globally rather than per tradition, and the display name
 // is deliberately unindexed: one god honoured under two traditions is two
 // rows, and the autofill tells them apart by tradition. The description is

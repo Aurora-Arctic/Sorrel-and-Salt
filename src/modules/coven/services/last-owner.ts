@@ -5,8 +5,8 @@ import type { WorkspaceRole } from '../types';
 import type { Membership } from './membership';
 
 // M6.8: a workspace never loses its last owner. Called by every write that can
-// take the owner role from someone — a demotion (M9.14), a removal and a
-// voluntary leave (M6.15) — inside the transaction that writes, so the count
+// take the owner role from someone — a demotion, a removal and a
+// voluntary leave — inside the transaction that writes, so the count
 // it reads is the one the write lands on.
 
 /** What the interface can offer instead: promote one of `promotable`, or delete the workspace. */

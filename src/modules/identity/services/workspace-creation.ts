@@ -9,10 +9,10 @@ import type { UserRow } from '../types';
 
 // M5.8's approval route and its undoing: an admin lets someone with no
 // invitation create a workspace, or stops them. The invitation route is
-// M7.5's, and being made admin sets the flag in its own write (MB.177). Each
+// M7.5's, and being made admin sets the flag in its own write. Each
 // change is declared `via: 'admin'`, and the trigger on `users` records it
 // in the privilege ledger, since the user's own stamps go with their next
-// update (MB.195): claude-docs/auth/admin-users.md, "Approving workspace creation".
+// update: claude-docs/auth/admin-users.md, "Approving workspace creation".
 
 const REFUSAL = 'Only a site admin may change who can create a coven';
 
@@ -46,7 +46,7 @@ async function setFlag(
  * reason, and answers the row as written.
  *
  * @throws {Forbidden} the session's role is not `admin`; admin changes are
- * paused and the caller is not the primary admin (MB.63); or the user may
+ * paused and the caller is not the primary admin; or the user may
  * already create one — a second approval would record a change that never
  * happened.
  * @throws {NotFound} no live user has this id.
@@ -68,9 +68,9 @@ export async function grantWorkspaceCreation(
  * created stay theirs: the flag governs creating, not keeping.
  *
  * @throws {Forbidden} the session's role is not `admin`; admin changes are
- * paused and the caller is not the primary admin (MB.63); the user cannot
+ * paused and the caller is not the primary admin; the user cannot
  * create one already; or the user is an admin or a curator, whom the users
- * CHECK holds to the flag (MB.177, M11.20), so making them a user is the
+ * CHECK holds to the flag, so making them a user is the
  * route.
  * @throws {NotFound} no live user has this id.
  */

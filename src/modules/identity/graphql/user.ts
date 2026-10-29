@@ -61,7 +61,7 @@ builder.mutationField('setEmail', (t) =>
   }),
 );
 
-// The account page's Name section (MB.88): the session's own row, renamed
+// The account page's Name section: the session's own row, renamed
 // through the audited write; a refusal is `VALIDATION` on `name`.
 builder.mutationField('setName', (t) =>
   t.field({
@@ -72,7 +72,7 @@ builder.mutationField('setName', (t) =>
   }),
 );
 
-// The admin user list (MB.52): a read, so the service's own check refuses a
+// The admin user list: a read, so the service's own check refuses a
 // non-admin rather than M5.7's mutation scope. Its nodes are the ordinary
 // `User`, so `email` resolves through the scope above and no second path.
 builder.queryField('users', (t) =>

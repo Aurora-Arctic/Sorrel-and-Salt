@@ -48,7 +48,7 @@ export function suggestionConnection<Node>(
     t.pagedConnection({
       type,
       args: {
-        // Null reads the compendium alone: the admin's compendium form names no coven (M5.5).
+        // Null reads the compendium alone: the admin's compendium form names no coven.
         workspaceId: t.arg.id({ required: false }),
         query: t.arg.string({ required: false }),
       },

@@ -2,7 +2,7 @@ import { builder } from '../../../graphql/builder';
 
 /**
  * A user as a co-member reads them: the id, which tells one member's row from
- * another's, and the display name through `usersById` (MB.10). A type of its
+ * another's, and the display name through `usersById`. A type of its
  * own rather than `User`, whose email a scope guards: this one has no email to
  * guard (claude-docs/auth/display-names.md, "Display names").
  */

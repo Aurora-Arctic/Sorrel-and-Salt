@@ -9,7 +9,7 @@ import type { CategoryGroupRow, DeityTraditionRow, IngredientFormGroupRow } from
 
 // The group lookups behind `Category.group`, `IngredientFormValue.group` and
 // `Deity.tradition`. Public reference data — a compendium chip wears its
-// group's colours for a signed-out visitor too (MB.80) — so none takes a
+// group's colours for a signed-out visitor too — so none takes a
 // session.
 
 /**

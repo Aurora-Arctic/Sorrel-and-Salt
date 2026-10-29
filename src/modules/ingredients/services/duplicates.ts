@@ -11,7 +11,7 @@ import type { PageEntry, PageRequest } from '../../../lib/types';
  * `name`, best first, each with its score. Each row carries `canonicalName`,
  * which is what tells five Cat's Claws apart. A warning, never a refusal —
  * nothing here blocks a create. Without a workspace, the compendium's entries
- * alone, as the admin's compendium form warns (M5.5).
+ * alone, as the admin's compendium form warns.
  *
  * Asks only `ingredient: ['read']`: every row it can return is one a reader of
  * this workspace could already list.

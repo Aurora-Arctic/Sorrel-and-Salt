@@ -13,7 +13,7 @@ import type { WorkspaceRow } from '../types';
 
 // M6.7: a signed-in user with the right makes a workspace and is its owner.
 // The right is `users.can_create_workspace` and nothing else — every admin
-// holds it (MB.177), so `role` is never read. DESIGN.md §9 and
+// holds it, so `role` is never read. DESIGN.md §9 and
 // claude-docs/auth/admin-users.md, "Approving workspace creation".
 
 const NAME_LIMIT = 80;
@@ -33,7 +33,7 @@ const SLUG_ATTEMPTS = 5;
 /**
  * The first free slug for `name`: the plain slug, then `-2`, `-3` and so on,
  * so the same names made in the same order always get the same addresses.
- * A segment the router already answers, `new` for the create page (M9.16),
+ * A segment the router already answers, `new` for the create page,
  * counts as taken, so a coven named "New" is `new-2` and stays reachable.
  * Free as of this read; the unique index decides a race, and the caller
  * retries.
