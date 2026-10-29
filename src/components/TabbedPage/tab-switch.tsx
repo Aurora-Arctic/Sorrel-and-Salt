@@ -12,7 +12,7 @@ import type {
 } from './types';
 
 // A tab pressed on its way: the row and the action grey out and the panel shows the new tab's skeleton until it has rendered,
-// held by a transition (claude-docs/components/tabbed-page.md, "Component notes").
+// held by a transition (claude-docs/components/tabbed-page.md, "Pressing a tab").
 
 /** Whether a tab is on its way, which, and the way to press one; exported so the workshop's stub router can draw a tab on its way. */
 export const TabSwitchContext = createContext<TabSwitch | null>(null);

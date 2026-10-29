@@ -1,4 +1,4 @@
-/** Where an entry's "Back to …" link may return to, from the previous page's address (claude-docs/components/ingredient-entry.md, "Component notes"). */
+/** Where an entry's "Back to …" link may return to, from the previous page's address (claude-docs/components/ingredient-entry.md, "The back link"). */
 export function listReturnHref(
   previous: string | null | undefined,
   origin: string,

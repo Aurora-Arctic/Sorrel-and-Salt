@@ -59,8 +59,8 @@ in light the muted ink itself, 5.99:1 on the page and higher on the card. The pl
 4.22:1 on the page in light, under 4.5:1, so light takes the muted ink; dark keeps its colour
 unchanged. `tests/scss/tokens.test.ts` holds both on the card and the page.
 
-## Source notes
+## The compact line and its tip
 
-Comments in the source that point here; each is the detail behind a one-line comment.
+The compact line reads "Edited 3 days ago" once the page has hydrated and "Edited 1 Sep 2026" before it, inside a `<time>`. The full sentence is the tip. The relative phrase depends on the reader's clock, so it is drawn only after hydration (`useHydrated`), which keeps the server's HTML and the first client render in agreement.
 
-- `last-edit-tip.tsx`: The compact line and its tooltip. The line is "Edited 3 days ago" once the page has hydrated and "Edited 1 Sep 2026" before, inside the `<time>`; the full sentence is the tip. The phrase depends on the reader's clock, so it is drawn only after hydration (`useHydrated`), keeping the server's HTML and the first client render in agreement. The text is a button so a keyboard reaches the tip; it is InfoTip's pattern rather than IconTip's, since here the tip holds what the line leaves out, so the button lists it in `aria-describedby` and the sentence stays in the page while closed.
+The text is a button, so a keyboard reaches the tip. It follows InfoTip's pattern rather than IconTip's: the tip holds what the line leaves out, so the button lists it in `aria-describedby` and the sentence stays in the page while the tip is closed.

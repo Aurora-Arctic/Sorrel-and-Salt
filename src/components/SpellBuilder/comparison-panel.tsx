@@ -15,7 +15,7 @@ import type { SpellStepValue, StepCategory } from './steps/types';
 import { stepNameOf } from './steps/values';
 
 // Category Match: the assigned categories set against the jar's, as Carried, Missing and Extra rows (empty rows left out), read from the builder's current state
-// (claude-docs/components/spell-builder.md, "Notes from code comments: the comparison panel rows").
+// (claude-docs/components/spell-builder.md, "The comparison panel").
 
 export interface ComparisonPanelProps {
   /** The categories the spell is assigned, named. */

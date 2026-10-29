@@ -9,12 +9,9 @@ import LockedControl from './locked-control';
 import { unverifiedWarning } from './warning';
 import type { CreationControlProps } from './types';
 
-// The row's Approve or Revoke, beside the mark it changes: lets a user
-// with no invitation create a coven, or stops them, behind a confirmation
-// naming them, with an optional reason the ledger keeps, as Change Role
-// takes one. A success re-reads the page, whose row then offers the
-// other action. Approving an unverified address warns first, and still
-// approves.
+// The row's Approve or Revoke: lets a user with no invitation create a coven, or stops them, behind
+// a confirmation with an optional ledger reason. A success re-reads the page. Approving an
+// unverified address warns first and still approves.
 
 const GrantWorkspaceCreationDocument = graphql(`
   mutation GrantWorkspaceCreation($userId: ID!, $note: String) {

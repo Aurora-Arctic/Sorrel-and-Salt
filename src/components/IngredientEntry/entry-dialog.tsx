@@ -13,7 +13,7 @@ import type { EditableEntry, IngredientEntryEdit } from './types';
 
 // The edit modal over an entry's own page, shaped like `compendium-dialog.tsx`; a client part as the
 // form's handlers are functions. Always rendered, so a press's skeleton and the form are one dialog
-// (claude-docs/components/ingredient-entry.md, "Component notes").
+// (claude-docs/components/ingredient-entry.md, "The entry dialog").
 
 /** A compendium entry's public page: also where a near match or a linked substitute is opened. */
 const publicAddress = (slug: string): Route => `/compendium/ingredients/${slug}` as Route;

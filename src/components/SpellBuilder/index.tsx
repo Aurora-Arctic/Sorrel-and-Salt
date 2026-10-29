@@ -61,8 +61,8 @@ import './index.scss';
 
 // The spell builder: a spell's title, intent, jar and note in four folding sections, inside the
 // dialog (./spell-dialog.tsx). It autosaves (./autosave.ts) and Close saves first
-// (./save-on-close.ts). (claude-docs/components/spell-builder.md, "Notes from code comments: the
-// builder")
+// (./save-on-close.ts). (claude-docs/components/spell-builder.md, "The builder's sections and
+// autosave")
 
 /** A step's saved id, set by a save's answer: bookkeeping, never a step of the history. */
 const isStepIdName = (name: string): boolean => /^steps\.\d+\.stepId$/.test(name);
@@ -255,11 +255,8 @@ const SpellBuilder = ({
     formState: { errors, defaultValues },
   } = methods;
 
-  // Something to save: a field that reads differently from the last save,
-  // blank and spaces alike reading as none, as the schema reads them, or a
-  // visibility or status other than the last save's, which is a choice worth
-  // saving on its own, a changed category pick,
-  // or a changed step.
+  // Something to save: a field that reads differently from the last save (blank and spaces reading
+  // as none, as the schema does), a changed visibility or status, category pick or step.
   const typed = useWatch({ control, name: [...FIELDS] });
   const picked = useWatch({ control, name: 'categoryIds' });
   const categoriesChanged = !sameCategories(picked, defaultValues?.categoryIds);
@@ -610,11 +607,9 @@ const SpellBuilder = ({
     if (mirror) clearMirror(mirror);
     setRecovered(null);
   };
-  // Where the two notices that ask for a decision go, the recovery banner and
-  // the conflict notice: under the dialog's title, in view however far the
-  // form has scrolled, since in the footer and above the fields they were
-  // missed. Outside a modal they stay in the
-  // form's flow.
+  // Where the recovery banner and the conflict notice go: under a dialog's title, in view however
+  // far the form has scrolled, since in the footer or above the fields they were missed. Outside a
+  // modal they stay in the form's flow.
   const headerNote = useModalHeaderNote();
   const recovery = recovered && jarReady && (
     <Notice kind="warn" block className="spell-builder__restored">
@@ -633,7 +628,7 @@ const SpellBuilder = ({
 
   /**
    * Reload Latest, after a stale save: replaces the form, typing included, with the spell as the server has it; a failed read leaves the conflict as it is
-   * (claude-docs/components/spell-builder.md, "Notes from code comments: reload latest").
+   * (claude-docs/components/spell-builder.md, "The save module and its conflicts").
    */
   const reloadLatest = async () => {
     const id = createdId ?? opened?.id;

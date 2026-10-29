@@ -159,7 +159,7 @@ const PICKED_SUBSTITUTE_FORM = 'substituteVariantId';
 /**
  * The values as the mutation takes them: closed sets and lists as chosen, links by id, the boxes
  * left behind, nothing trimmed or dropped, so an issue's index is its index here
- * (claude-docs/components/ingredient-form.md, "Notes behind the code").
+ * (claude-docs/components/ingredient-form.md, "How values become the mutation").
  */
 export function toInput(values: IngredientFormValues): IngredientFormInput {
   const {
@@ -246,7 +246,7 @@ const isDeityLink = (link: SubstituteLink | DeityLink): link is DeityLink => 'tr
 
 /**
  * What an entry's pill reads: its text, beside what tells it from a same-named one, and for a
- * substitute naming one form, that form after a dot (claude-docs/components/ingredient-form.md, "Notes behind the code").
+ * substitute naming one form, that form after a dot (claude-docs/components/ingredient-form.md, "How values become the mutation").
  */
 export function entryText(entry: AnyListEntry): string {
   const link = linkOf(entry);
@@ -327,7 +327,7 @@ export function rankForForm(
 /**
  * A variant's substitute rows: each ingredient the lookup found as one row per form it comes in,
  * likeliest first, never the whole ingredient and never `own`, the variant's saved row
- * (claude-docs/components/ingredient-form.md, "Notes behind the code").
+ * (claude-docs/components/ingredient-form.md, "How values become the mutation").
  */
 export function formRows(
   options: readonly ListOption[],
@@ -471,7 +471,7 @@ export function repeatOf(
 
 /**
  * The values an edit opens on, each linked substitute holding a `variantId` ("" for Any Form) so
- * the Form of X box adding the key as it mounts is no change (claude-docs/components/ingredient-form.md, "Notes behind the code").
+ * the Form of X box adding the key as it mounts is no change (claude-docs/components/ingredient-form.md, "How values become the mutation").
  */
 export function openingValues(values: IngredientFormValues): IngredientFormValues {
   return {
@@ -542,7 +542,7 @@ type Issues = Record<string, unknown>;
 
 /**
  * The schema's issues among `lists` and the references, moved to where the form draws them, as
- * `fieldNameOf` puts a server's (claude-docs/components/ingredient-form.md, "Notes behind the code").
+ * `fieldNameOf` puts a server's (claude-docs/components/ingredient-form.md, "How values become the mutation").
  */
 function placeIssues(raw: Issues, lists: readonly string[]): Issues {
   const errors = { ...raw };

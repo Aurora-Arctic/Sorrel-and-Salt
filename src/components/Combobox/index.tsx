@@ -65,7 +65,7 @@ function bucketByHeading<O extends ComboboxOption>(options: O[]): Bucket<O>[] {
 
 /**
  * The rows in the order the list shows them, flat for Downshift and bucketed for the headings; a caller's `action` row goes last in place of the typed row first
- * (claude-docs/components/combobox.md, "Component notes").
+ * (claude-docs/components/combobox.md, "Row order").
  */
 function arrange<O extends ComboboxOption>(
   options: O[],
@@ -276,7 +276,7 @@ function Combobox<O extends ComboboxOption = ComboboxOption>({
     // A printable key is one character long; a shortcut is not typing.
     if (event.key.length === 1 && !event.ctrlKey && !event.metaKey && !event.altKey) hideTip();
     // Escape on a box with no open list is the dialog's, unless the "no matches" message is showing, which Downshift cannot see and Escape closes alone
-    // (claude-docs/components/combobox.md, "Component notes").
+    // (claude-docs/components/combobox.md, "Typed box and Escape").
     if (event.key === 'Escape' && !isOpen) {
       if (showEmpty) {
         setWantsOpen(false);
@@ -434,7 +434,7 @@ function Combobox<O extends ComboboxOption = ComboboxOption>({
                   'aria-busy': busy || undefined,
                   onKeyDown,
                   // Typing always wants the list: Downshift's open callback alone misses a key landing just after a pick closed it, before that render committed
-                  // (claude-docs/components/combobox.md, "Component notes").
+                  // (claude-docs/components/combobox.md, "Typing always wants the list").
                   onChange: () => setWantsOpen(true),
                   onFocus: () => {
                     tip.show();

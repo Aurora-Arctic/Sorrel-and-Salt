@@ -60,8 +60,8 @@ them with Remove in place of Revoke); Empty, drawn in the app shell as the page 
 the status region once done, and each refusal said under its button, with the focus on it and the
 badge bringing it back.
 
-## Source notes
+## What the table lists
 
-Comments in the source that point here; each is the detail behind a one-line comment.
+Under the members roll, the table lists the invitations an owner has sent and nobody has accepted: address, role and status, newest first, with its own pager. A pending invitation shows when it expires and offers Revoke. One the invitee declined shows when, and offers Remove.
 
-- `index.tsx`: The invitations an owner has sent and nobody has accepted, under the members roll: address, role and status, newest first, with its own pager. A pending one shows when it expires and offers Revoke; one the invitee declined shows when, and offers Remove. The table carries the name "Pending Invitations" and there is no region around it to repeat it: the page's heading and its open tab already say what the page is. The page draws it for owners only and reads it through the services that check `member: invite`; nothing here decides who may see it (claude-docs/components/pending-invitations.md).
+The table carries the name "Pending Invitations" and has no region around it to repeat that, because the page's heading and its open tab already say what the page is. The page draws the table for owners only and reads it through the services that check `member: invite`; nothing in the component decides who may see it.

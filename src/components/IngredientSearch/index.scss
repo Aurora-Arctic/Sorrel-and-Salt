@@ -13,7 +13,7 @@
 
 // The search row sticks once scrolled to, with the Filters button, Clear All and the tray; the sticky
 // box is the opaque `<search>`
-// (claude-docs/components/ingredient-search.md, "The sticky row's styling notes").
+// (claude-docs/components/ingredient-search.md, "The sticky box").
 $stuck-pad: space(4);
 
 // The page's side gutter, the same in the shell and the public frame; no wider, or the page would
@@ -65,7 +65,7 @@ $page-gutter: space(4);
 
 // The row's fill, and a copy of the sorrel the fill would hide, as a sticky box is its own stacking
 // context; a solid `mask-image` cuts the copies to the row
-// (claude-docs/components/ingredient-search.md, "The sticky row's styling notes").
+// (claude-docs/components/ingredient-search.md, "The space under the row").
 .ingredient-search > search > .filter-sorrel {
   position: absolute;
   inset: 0 calc(-1 * #{$page-gutter});
@@ -116,7 +116,7 @@ $page-gutter: space(4);
 
 // On a phone the row is two lines: the search box, then the Filters button and Clear All sharing
 // the second, the Filters button growing to fill it. Scoped here, so other filter rows are
-// unchanged (claude-docs/components/ingredient-search.md, "The sticky row's styling notes").
+// unchanged (claude-docs/components/ingredient-search.md, "The phone row").
 @container filter-row (max-width: #{$narrow-column}) {
   .ingredient-search .facet-panel__button {
     flex: 1 1 auto;
@@ -129,7 +129,7 @@ $page-gutter: space(4);
 
 // A focus or a jump lands a control below the stuck row, not under it: the bar, the row's own
 // height and a step of air. The root cannot read the frames' `--sticky-top`
-// (claude-docs/components/ingredient-search.md, "The sticky row's styling notes").
+// (claude-docs/components/ingredient-search.md, "Scroll margin").
 html:has(:is(.app-shell, .public-frame) .ingredient-search) {
   scroll-padding-top: calc(
     #{$top-inset} + #{$shell-bar-height} + #{$control-height} + #{$stuck-pad} + #{space(2)} +

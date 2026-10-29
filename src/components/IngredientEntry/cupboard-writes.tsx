@@ -15,9 +15,9 @@ import type { CupboardQuestionProps, CupboardWritesOptions, CupboardWrites } fro
 
 // Make It Ours and Remove, the two writes a coven's member makes to a compendium entry it holds,
 // shared by the entry page and the Annotate dialog so the two ask the same confirmation and land in
-// the same place (claude-docs/components/ingredient-entry.md, "Component notes").
+// the same place (claude-docs/components/ingredient-entry.md, "What the cupboard actions draw").
 
-/** The Annotate dialog's menu of further cupboard writes, named "More" because its foot already says Save and Cancel (claude-docs/components/ingredient-entry.md, "Component notes"). */
+/** The Annotate dialog's menu of further cupboard writes, named "More" because its foot already says Save and Cancel (claude-docs/components/ingredient-entry.md, "What the cupboard actions draw"). */
 export const CUPBOARD_MENU_LABEL = 'More';
 
 const RemoveCupboardEntryDocument = graphql(`
@@ -141,7 +141,7 @@ export function RemoveDialog({
   );
 }
 
-/** The two writes with what follows each: a remove leads to `removedHref` or reads the page again, a refusal goes to `onRefused` (claude-docs/components/ingredient-entry.md, "Component notes"). */
+/** The two writes with what follows each: a remove leads to `removedHref` or reads the page again, a refusal goes to `onRefused` (claude-docs/components/ingredient-entry.md, "What the cupboard actions draw"). */
 export function useCupboardWrites({
   workspaceId,
   covenSlug,

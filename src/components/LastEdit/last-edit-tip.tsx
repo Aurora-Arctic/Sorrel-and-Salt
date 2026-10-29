@@ -6,11 +6,9 @@ import { useHydrated } from '@/lib/hydrated';
 import { relativePhrase } from './relative';
 import './index.scss';
 
-// The compact line and its tooltip: "Edited 3 days ago" once hydrated (`useHydrated`, since it
-// depends on the reader's clock), "Edited 1 Sep 2026" before, inside the `<time>`; the full
-// sentence is the tip. The text is a button so a keyboard reaches the tip, InfoTip's pattern rather
-// than IconTip's: it lists the tip in `aria-describedby` and the sentence stays in the page while
-// closed.
+// The compact line is "Edited 3 days ago" once hydrated (it depends on the reader's clock), a date
+// before. The text is a button so a keyboard reaches the tip, InfoTip's pattern rather than
+// IconTip's: the sentence stays in the page, listed in `aria-describedby`.
 
 export default function LastEditTip({
   moment,

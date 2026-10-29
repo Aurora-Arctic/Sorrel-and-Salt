@@ -12,12 +12,10 @@ import ConfirmedAction from './confirmed-action';
 import LockedControl from './locked-control';
 import type { PauseControlProps } from './types';
 
-// The primary admin's switch on admin grants and revokes, beside the
-// page's heading: a warning while changes are paused, and the control that
-// flips it. Every admin sees both; only the primary admin can use the
-// control, whose reason the others see in a tip, and again when they try.
-// Pause asks first, saying whom it stops; Resume gives back, so it acts at once.
-// The service is the guard (claude-docs/components/user-list.md).
+// The primary admin's switch on admin grants and revokes: a warning while paused and the control
+// that flips it. Every admin sees both; only the primary admin can use it, others see the reason in
+// a tip. Pause asks first; Resume acts at once. The service is the guard
+// (claude-docs/components/user-list.md).
 
 const PauseAdminRoleChangesDocument = graphql(`
   mutation PauseAdminRoleChanges {

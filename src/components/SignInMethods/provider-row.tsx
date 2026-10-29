@@ -6,11 +6,9 @@ import ProviderMark from '../ProviderMark';
 import { ProviderUnavailableNote } from '../ProviderMark/unavailable-note';
 import type { ProviderRowProps } from './types';
 
-// One provider in the account's sign-in methods, in one of three states told apart by control and
-// words, not hue: linked (Remove, greyed with a reason for the only method left), addable (Add),
-// unavailable (greyed Add with a note). A press's failure is a callout under the control; a failed
-// link's callback error sits beneath the controls as a `Notice`.
-// claude-docs/components/sign-in-methods.md, "The rows".
+// One provider as linked (Remove), addable (Add) or unavailable (greyed Add with a note), told
+// apart by control and words, not hue. A press's failure is a callout under the control
+// (claude-docs/components/sign-in-methods.md, "The rows").
 export function ProviderRow({
   provider,
   state,

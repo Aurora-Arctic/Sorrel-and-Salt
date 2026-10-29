@@ -113,8 +113,8 @@ M10.33). The coven index's entries are asserted in
 `tests/app/(shell)/coven/page.test.tsx`: one per section drawn, each landing on
 a section that exists.
 
-## Source notes
+## The break before a set-apart item
 
-Comments in the source that point here; each is the detail behind a one-line comment.
+An item set apart (an ingredient's Forms, and its References, whether one link or a group of Notes and Bibliography) takes a break one step wider than a group label's, so the line in it has air on both sides. A group's label carries its own break, so here the item takes the gap and the label gives its own up, which keeps the gap from being doubled.
 
-- `index.scss`: An item set apart (an ingredient's Forms, and its References, one link or a group of Notes and Bibliography) takes a break a step wider than a group label's, so the line in it has air on both sides. A group's label carries its own break, so here the item takes the gap and the label gives its own up, which keeps the gap from being doubled. A short hairline sits halfway through that gap, drawn by a pseudo-element so the list gains no element: it starts at the entries' own inset and, where the menu is right-aligned, ends there. The entries above and the item itself both pad their text by space(1) top and bottom, so the middle of the margin is the middle between the two texts. The rule is 1px tall and hangs below its offset, so half a pixel is taken off to put its centre on the middle.
+A short hairline sits halfway through that gap. A pseudo-element draws it, so the list gains no element. It starts at the entries' own inset and, where the menu is right-aligned, ends there. The entries above and the item itself both pad their text by `space(1)` top and bottom, so the middle of the margin is the middle between the two texts. The rule is 1px tall and hangs below its offset, so half a pixel is taken off to put its centre on the middle.

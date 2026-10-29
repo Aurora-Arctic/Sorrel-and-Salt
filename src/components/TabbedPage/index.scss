@@ -10,7 +10,7 @@ $pill-height: 2.25rem;
 $track-inset: calc(1px + 0.125rem);
 
 // Between the heading and the action, on the heading's line: only the action is pushed to the end, and the tabs are centred.
-// The selector is doubled to outweigh the primitives' narrow-width rules (claude-docs/components/tabbed-page.md, "Style notes").
+// The selector is doubled to outweigh the primitives' narrow-width rules (claude-docs/components/tabbed-page.md, "The header at narrow widths").
 .tabbed-page > .page-header {
   justify-content: flex-start;
 }
@@ -43,7 +43,7 @@ $track-inset: calc(1px + 0.125rem);
   }
 }
 
-// Reflow of the action and the pills under the forms' column (claude-docs/components/tabbed-page.md, "Style notes"):
+// Reflow of the action and the pills under the forms' column (claude-docs/components/tabbed-page.md, "The header at narrow widths"):
 // a flex box cannot put an item on a line of its own at its own width, so a line break is forced by a zero-height pseudo-element
 // the width of the line, ordered between the action and the pills, and the pills give back the row gap it takes.
 @container page-header (max-width: #{$tabbed-reflow-width-labelled}) {
@@ -130,7 +130,7 @@ $track-inset: calc(1px + 0.125rem);
 }
 
 // A list, not bulleted: `typography-base`'s ◆ marker, indent and item margins cleared. The pills keep one line at their own widths and a wider row
-// scrolls inside the track with no scrollbar (claude-docs/components/tabbed-page.md, "Style notes").
+// scrolls inside the track with no scrollbar (claude-docs/components/tabbed-page.md, "The track and the pills").
 .tabbed-page__row {
   display: flex;
   // What the pill and the links measure their place from.

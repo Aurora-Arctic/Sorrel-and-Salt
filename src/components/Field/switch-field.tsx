@@ -8,7 +8,7 @@ import type { SwitchFieldProps } from './types';
 /**
  * An on-or-off choice as a slide toggle: a native checkbox with `role="switch"`, so it submits
  * `name=value` in a GET form before hydration. Enter answers with a click, as a checkbox flips on
- * Space alone (claude-docs/components/field.md, "Notes from code comments: filter and action fields").
+ * Space alone (claude-docs/components/field.md, "Switch, search and select fields for filters").
  */
 export function SwitchField({
   label,

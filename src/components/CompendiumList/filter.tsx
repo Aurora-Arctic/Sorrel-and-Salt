@@ -27,7 +27,7 @@ import type { CompendiumListFilterProps } from './types';
 
 // The compendium's filter row: the name search, the Filters button with its panel of facets and the
 // search sentence. The panel holds its changes until it shuts; a coven's list is the same row on
-// COVEN_PARAMS (claude-docs/components/compendium-list.md, "Notes from code comments: the filter row").
+// COVEN_PARAMS (claude-docs/components/compendium-list.md, "The filter row").
 
 type Held = CompendiumListFilterProps['filter'];
 

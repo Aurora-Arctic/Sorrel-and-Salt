@@ -15,11 +15,9 @@ import type { SpellStepValue, SpellStepsValues } from './types';
 import { type QuickLookCoven, StepQuickLook } from '../step-quick-look';
 import { isInstruction, safetyOf, stepNameOf } from './values';
 
-// One step of the jar: the handle it is moved by, then StepRow's drawing of it with the controls
-// around it. An ingredient's step is a line, open or closed like the ingredient form's variant
-// card: closed it reads its amount and its instruction on one muted line beneath the name; open it
-// shows its amount, unit and instruction (and, for a one-off, its form). An instruction-only step
-// has the instruction alone. See claude-docs/components/spell-builder.md, "Steps".
+// One step of the jar: its drag handle, then StepRow's drawing with the controls around it. Closed
+// it reads amount and instruction on one muted line; open it shows amount, unit, instruction and,
+// for a one-off, form (claude-docs/components/spell-builder.md, "Steps").
 
 export interface BuilderStepRowProps {
   /** The row's field-array key, its place in the sortable list. */

@@ -80,7 +80,7 @@
   overflow: hidden;
   // Clip where known, not hide: a hidden box can still be scrolled by the browser's focus step,
   // which slid the content up inside a still-short panel as it opened. `hidden` above is the
-  // older browsers' fallback (claude-docs/components/facet-panel.md, "Styling notes").
+  // older browsers' fallback (claude-docs/components/facet-panel.md, "Opening and clipping").
   overflow: clip;
   border-radius: radius('surface');
 }
@@ -133,7 +133,7 @@
 
 // Each half of the public compendium's Forms line (`halves` in index.tsx), for a viewer with
 // covens, is a line of its own inside the outer one; both halves grow alike
-// (claude-docs/components/facet-panel.md, "Styling notes").
+// (claude-docs/components/facet-panel.md, "Layout of the Forms line").
 
 // The chips and switches of a row, side by side and wrapping on a phone. Each stands where a
 // labelled field would, tops level: the chip's spacer is the height of a label.
@@ -269,7 +269,7 @@
 
 // A chip at the end of a row opens its menu leftward, from its right edge, so the slide's clip does
 // not cut it; choice-chip.tsx measures on open and adds this class
-// (claude-docs/components/facet-panel.md, "Styling notes").
+// (claude-docs/components/facet-panel.md, "Menus and tips inside the panel").
 .facet-chip__menu--end {
   inset-inline: auto 0;
 }
@@ -323,7 +323,7 @@
 
     // Taller than the room below it, the tray scrolls inside itself, only once open, and the
     // animation holds the clip for the slide's length so no scrollbar shows through it
-    // (claude-docs/components/facet-panel.md, "Styling notes").
+    // (claude-docs/components/facet-panel.md, "Opening and clipping").
     .facet-panel__clip--open > .facet-panel__inner {
       max-height: calc(100dvh - var(--sticky-top, 0px) - #{$control-height} - #{space(6)});
       overflow: auto;
@@ -367,7 +367,7 @@ $sheet-slide: 250ms ease-out;
 
   // It slides in from and back out to the right edge while the backdrop fades. In is CSS alone,
   // from `@starting-style`; out is `.is-closing`, which the component sets and waits on
-  // (claude-docs/components/facet-panel.md, "Styling notes").
+  // (claude-docs/components/facet-panel.md, "The modal sheet").
   transform: none;
   transition: transform $sheet-slide;
 
@@ -456,7 +456,7 @@ $sheet-slide: 250ms ease-out;
 
 // The compact scale: every input in the panel is a step shorter than the app's forms (`$control-height`).
 // Scoped here, so the primitives are unchanged; the height is a custom property so the workshop can
-// compare scales (claude-docs/components/facet-panel.md, "Styling notes").
+// compare scales (claude-docs/components/facet-panel.md, "Compact scale").
 $compact-control: 2.5rem;
 
 .facet-panel--compact {

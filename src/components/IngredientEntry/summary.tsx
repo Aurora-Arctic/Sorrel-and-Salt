@@ -57,7 +57,7 @@ export default function IngredientSummary({
   const listed = rows.length > 0 || folkNames.length > 0 || categories.length > 0;
   // Each form as a jar line: icon and name, then with the coven's jars its stock in a grid cell so
   // quantities end in one column; a form in no jar says "Not Stocked" to a screen reader alone
-  // (claude-docs/components/ingredient-entry.md, "Component notes").
+  // (claude-docs/components/ingredient-entry.md, "Structure").
   const forms = variants.length > 0 && (
     <ListBlock
       block={blockOf('summary', 'forms')}

@@ -4,7 +4,7 @@ import { useId, useLayoutEffect, useRef, useState, type ReactElement } from 'rea
 
 // The details modal's description: the page's paragraph cut to its first six lines, Show More
 // opening the rest in place. The cut is the script's, so without JavaScript the whole text shows
-// (claude-docs/components/ingredient-entry.md, "Component notes").
+// (claude-docs/components/ingredient-entry.md, "Structure").
 
 const LINES = 6;
 

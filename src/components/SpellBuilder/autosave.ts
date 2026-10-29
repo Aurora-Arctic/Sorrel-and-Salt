@@ -3,7 +3,7 @@ import { graphqlRequest } from '../../lib/graphql-client';
 import type { SpellBuilderInput, SpellBuilderSpell } from './types';
 
 // The builder's one save call, used by autosave, Save, Close and Mark Complete, and the read Reload Latest makes after a stale write
-// (claude-docs/components/spell-builder.md, "Saving", "Two people, one spell" and "Notes from code comments: the save module").
+// (claude-docs/components/spell-builder.md, "Saving", "Two people, one spell" and "The save module and its conflicts").
 
 const CreateSpellDocument = graphql(`
   mutation CreateSpell($workspaceId: ID!, $input: SpellInput!) {
@@ -190,7 +190,7 @@ export type SpellSaveTarget =
 
 /**
  * Saves `input` to `target`: `createSpell` for a new spell, else `updateSpell` against the target's revision; a `null` revision overwrites
- * (claude-docs/components/spell-builder.md, "Notes from code comments: the save call").
+ * (claude-docs/components/spell-builder.md, "The save module and its conflicts").
  */
 export async function saveSpell(
   workspaceId: string,

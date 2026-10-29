@@ -1,11 +1,9 @@
 @use '../../scss/variables' as *;
 @use '../../scss/mixins' as *;
 
-// The box a fading skeleton is placed against. A plain block, so wearing it
-// permanently changes no layout; `SectionBody` puts the class on its own frame
-// instead of wrapping it. Clipped only while the skeleton fades, so a skeleton
-// taller than the page that arrived cannot lengthen the document for those
-// 200ms (`clip`, not `hidden`, so a sticky menu inside still sticks).
+// The box a fading skeleton is placed against: a plain block, so `SectionBody` puts the class on
+// its own frame. Clipped only while the skeleton fades, so a taller skeleton cannot lengthen the
+// document (`clip`, not `hidden`, so a sticky menu still sticks).
 .skeleton-fade-host {
   position: relative;
 }
@@ -14,12 +12,9 @@
   overflow: clip;
 }
 
-// The last skeleton over the arrived page, on the page's own ground so the
-// page shows through as it fades: the one keyframe `arrived` uses
-// (`list-frame-fade-in`, _primitives.scss) run backwards. Out of layout and
-// out of the pointer's way. The ground takes the host's padding, so the
-// skeleton stands where the waiting frame stood. Under reduced motion it is
-// gone at once, as `arrived` shows content at once.
+// The last skeleton over the arrived page, on the page's ground so it shows through as it fades:
+// `list-frame-fade-in` (_primitives.scss) run backwards, out of layout and pointer reach. It takes
+// the host's padding; under reduced motion it is gone at once.
 .skeleton-fade {
   position: absolute;
   inset-block-start: 0;
@@ -34,12 +29,9 @@
     display: none;
   }
 
-  // It has already faded in once; it must not do so again as it is mounted.
-  // Nothing inside moves either: the fade is the one animation, on this
-  // element as a whole. The bars' shimmer (and, under reduced motion, their
-  // pulse) kept running through it, so each bar's highlight band sat in a
-  // different place from its neighbours' as the group faded, which read as
-  // parts fading at different rates. Frozen, every bar is the same fill.
+  // It has already faded in once, so it must not again on mount, and nothing inside moves: the
+  // bars' shimmer and pulse are frozen, since running through the fade they made parts fade at
+  // different rates.
   .skeleton,
   .skeleton * {
     animation: none;

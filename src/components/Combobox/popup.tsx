@@ -1,6 +1,6 @@
 import type { CSSProperties, ReactElement, ReactNode } from 'react';
 
-/** The one placed panel holding a box's listbox and, beneath it, its empty message, so the two move together (claude-docs/components/combobox.md, "Component notes"). */
+/** The one placed panel holding a box's listbox and, beneath it, its empty message, so the two move together (claude-docs/components/combobox.md, "The popup"). */
 export function Popup({
   wrapped,
   popupRef,

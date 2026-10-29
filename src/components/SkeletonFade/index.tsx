@@ -7,7 +7,7 @@ import './index.scss';
 
 // The skeleton's way out: the bodies keep the last skeleton over the arrived page and fade it away, as an out-of-layout overlay, not by wrapping the page
 // (claude-docs/components/skeleton-fade.md).
-// (claude-docs/components/skeleton-fade.md, "Notes from code comments: the fade out").
+// (claude-docs/components/skeleton-fade.md, "The fade out").
 
 /**
  * The skeleton to keep over the page for the length of its fade-out, or null.
@@ -44,7 +44,7 @@ export const skeletonFadeHost = (leaving: boolean): string =>
 
 /**
  * The props holding the page during a wait: mounted at full height, unseen (`visibility`, not `display: none`) and `inert`, because Back needs the scroll position kept
- * (claude-docs/components/skeleton-fade.md, "Notes from code comments: holding the page").
+ * (claude-docs/components/skeleton-fade.md, "Holding the page during a wait").
  */
 export const heldPage = (waiting: boolean, className?: string) => ({
   className: [className, waiting && 'skeleton-held'].filter(Boolean).join(' ') || undefined,

@@ -2,7 +2,7 @@
 @use '../../scss/mixins' as *;
 
 // The Edit Stock dialog: the coven's jars listed on the left, the chosen jar's fields at full size on the right,
-// in a container of its own so the dialog's width stacks them (claude-docs/components/stock-dialog.md, "Style notes").
+// in a container of its own so the dialog's width stacks them (claude-docs/components/stock-dialog.md, "Layout and states").
 .stock-dialog {
   container: stock-dialog / inline-size;
 }
@@ -113,7 +113,7 @@
 }
 
 // The chosen form's accent ink is the same green a step further from the ground per theme, clearing 6.39:1 in every state
-// (claude-docs/components/stock-dialog.md, "Edited").
+// (claude-docs/components/stock-dialog.md, "Layout: a list and the chosen jar").
 .stock-dialog__choose[aria-current='true'] .stock-dialog__edited {
   color: $accent-hover;
 }

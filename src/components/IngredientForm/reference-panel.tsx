@@ -332,7 +332,7 @@ export default function ReferencePanel(props: ReferencePanelProps): ReactElement
 
 /**
  * The panel's head, one line: its title, then at the end edge its Undo and Redo, any tip, and a ×
- * that closes it as Cancel does (claude-docs/components/ingredient-form.md, "Notes behind the code").
+ * that closes it as Cancel does (claude-docs/components/ingredient-form.md, "The reference panel").
  */
 function PanelHead({
   legend,
@@ -373,7 +373,7 @@ function PanelHead({
 
 /**
  * How to cite, said once for the whole panel and named by its `aria-describedby`, one rule to a
- * line (claude-docs/components/ingredient-form.md, "Notes behind the code").
+ * line (claude-docs/components/ingredient-form.md, "The reference panel").
  */
 const CITE_RULES = [
   'Names as printed, the first author inverted (Shelley, Mary).',

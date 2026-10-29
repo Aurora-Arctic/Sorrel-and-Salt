@@ -64,7 +64,7 @@
 }
 
 // The card: the ingredient form's variant card look, one row of handle, number, icon, name, amount and Remove, with the marks, instruction and safety note beneath
-// (claude-docs/components/step-row.md, "Notes from code comments: the card").
+// (claude-docs/components/step-row.md, "The card").
 .step-row.step-row--card {
   display: grid;
   grid-template-areas: 'handle position name amount remove';
@@ -132,11 +132,9 @@
   }
 }
 
-// Open and closed (the ingredient form's variant card): closed is one line, the name
-// then a muted summary of the amount and the instruction, the marks, the pencil and
-// Remove; open adds the fields beneath the name's column: Form, Quantity and Unit on one
-// line where they fit, the Instruction on its own line beneath.
-// The height of a paragraph's line (typography-base's 1.65), which the name takes.
+// Open and closed, like the ingredient form's variant card: closed is one line (name, muted
+// summary, marks, pencil, Remove); open adds Form, Quantity and Unit on one line where they fit and
+// the Instruction beneath. The name takes a paragraph's line height (1.65).
 $step-line: type-size('body') * 1.65;
 // A name's lettering (mostly lowercase) sits a little below the middle of its line, measured
 // at 0.8px under 16px type, so an icon centred on the line looks high beside it. Each icon
@@ -161,11 +159,8 @@ $step-ink-drop: 0.05rem;
     // line.
     grid-template-columns: auto auto minmax(6rem, 1fr) auto auto;
 
-    // Everything on the first line sits on that line's centre, and not on the
-    // centre of the whole row: a name that wraps, or the summary that stands
-    // beneath it when the row is narrow, must not carry the handle, the number
-    // and the buttons down with it. Each is given the name's line (a paragraph's
-    // 1.65) to centre in, or margins that centre it there.
+    // Everything on the first line centres on that line (a paragraph's 1.65), not the whole row, so
+    // a wrapped name or a narrow row's summary does not carry the handle, number and buttons down.
     align-items: start;
 
     .step-row__name,

@@ -19,7 +19,7 @@ import {
 import type { SortableStepsProps } from './types';
 
 // The jar's steps in order, each moved by a handle on the dnd-kit setup of `src/lib/sortable`; keyboard Space or Enter lifts, arrows, Home and End move, Escape cancels
-// (claude-docs/components/spell-builder.md, "Notes from code comments: reordering steps").
+// (claude-docs/components/spell-builder.md, "Reordering").
 
 /** The keys that move a lifted step: a column has no Left or Right. */
 const STEP_KEYS = new Set(['ArrowUp', 'ArrowDown', 'Home', 'End']);

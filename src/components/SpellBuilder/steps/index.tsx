@@ -11,7 +11,7 @@ import type { SpellStepValue, SpellStepsValues } from './types';
 import { isInstruction, newInstruction, stepNameOf, warningOf } from './values';
 
 // The jar's steps under What Goes In: the add box, Add Instruction and the list, one step open at a time, each moved by a handle
-// (claude-docs/components/spell-builder.md, "Notes from code comments: the steps list").
+// (claude-docs/components/spell-builder.md, "Steps").
 
 export function SpellSteps({
   workspaceId,
@@ -59,11 +59,9 @@ export function SpellSteps({
     addedId.current = id;
     setOpenId(id);
   }, [keys]);
-  // An open row closes when a click or the focus lands outside it, so one row is open at a
-  // time without a second click to shut it. A row just added is also kept open while the
-  // focus stays in Add to Jar (the next ingredient is typed there); a click on the row's own
-  // pencil is inside it, and a popover a box opened (a listbox) counts as inside its owner.
-  // A row whose Unit is refused stays open whatever this says (BuilderStepRow).
+  // An open row closes when a click or focus lands outside it. A just-added row stays open while
+  // focus is in Add to Jar; a click on its pencil and a popover its box opened count as inside. A
+  // row whose Unit is refused stays open (BuilderStepRow).
   useEffect(() => {
     if (openId === null) return;
     // The row closes when the click lands, not when the button goes down: a taller open row above

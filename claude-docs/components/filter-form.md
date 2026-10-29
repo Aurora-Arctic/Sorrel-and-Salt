@@ -209,9 +209,12 @@ the server (`drawnOnServer`, beside the rows).
 Where the row's fields stand, and Clear at its end, is presentation, the
 workshop's (rule 4): the stories above at desktop and phone widths.
 
-## Source notes
+## What the form does
 
-Comments in the source that point here; each is the detail behind a one-line comment.
+A list's filter is a toolbar that applies as it changes: a select or a switch on its change, a type-ahead once a choice settles, and the search on its own submit (the magnifier, `SearchField`) or Enter. Each opens the new filter from the first page as a soft navigation through the list's `ListFrame`, so while the list reads, the row greys out as a tabbed page's tabs do.
 
-- `index.tsx`: A list's filter, a toolbar that applies as it changes: a select or a switch on its change, a type-ahead once a choice settles, and the search on its own submit (the magnifier, `SearchField`) or Enter. Each opens the new filter from the first page as a soft navigation through the list's `ListFrame`, so while the list reads, the row greys out as a tabbed page's tabs do. A GET form to the page itself, so before hydration the search's submit still sends every field. Clear, a plain link to the page itself, is drawn only while the page shows a filter. The caller holds its fields; this holds the form, Clear and the navigation (claude-docs/components/filter-form.md).
-- `index.tsx`: The row's control to focus again once the list a filter opened arrives, by its place among the row's controls, `-1` for none. The list keys its filter by the filter shown, so the row that applied is thrown away and a new one drawn. By place rather than id, since `useId` numbers a browser-drawn row afresh; Clear, which comes and goes, is last. Module state, since the filter's handlers sit above the FilterForm a context would come from; one list navigates at a time, so one slot is enough.
+It is a GET form to the page itself, so before hydration the search's submit still sends every field. Clear is a plain link to the page itself, drawn only while the page shows a filter. The caller holds the fields; the form holds the form, Clear and the navigation.
+
+## Focus after a filter applies
+
+The list keys its filter by the filter shown, so the row that applied is thrown away and a new one drawn. The control to focus again is remembered by its place among the row's controls (`-1` for none). A place is used rather than an id because `useId` numbers a browser-drawn row afresh, and Clear, which comes and goes, is last. The slot is module state because the filter's handlers sit above the FilterForm a context would come from; one list navigates at a time, so one slot is enough.

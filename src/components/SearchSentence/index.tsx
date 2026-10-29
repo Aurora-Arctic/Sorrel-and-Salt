@@ -87,7 +87,7 @@ function tailNode(parts: readonly ClausePart[], shown: number, caret: ReactNode)
 /**
  * The sentence above a list saying what it searches for: one closed line, opening to its clauses, typed out while a search is in flight;
  * a status region announces the finished sentence once (claude-docs/components/search-sentence.md).
- * (claude-docs/components/search-sentence.md, "Notes from code comments: the sentence").
+ * (claude-docs/components/search-sentence.md, "The sentence and its loading animation").
  */
 export default function SearchSentence({
   sentence,

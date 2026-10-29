@@ -12,7 +12,7 @@ import Modal from '../Modal';
 import type { CupboardQuestionProps, CupboardWrite, DeleteEntryOptions } from './types';
 
 // Delete Ingredient asked in a dialog, for a coven's own entry: the entry page's bin and a list
-// card's More share it (claude-docs/components/ingredient-entry.md, "Component notes").
+// card's More share it (claude-docs/components/ingredient-entry.md, "Structure").
 
 const DeleteOwnIngredientDocument = graphql(`
   mutation DeleteOwnIngredient($id: ID!, $workspaceId: ID!) {

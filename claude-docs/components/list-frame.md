@@ -124,10 +124,10 @@ rendering the pager in a `ListFrame`. `tests/support/navigating.tsx` holds a
 mocked `push` pending as the App Router does, and its `arrives` promise lets
 a test settle it.
 
-## Notes from code comments: navigation modes
+## Navigation modes
 
-How a list moves to another of its pages: `soft`, a client-side navigation inside a transition; `page`, a soft one for a pager end, which keeps the reader at the list instead of scrolling to the page top; or `full`, a whole page load, which runs the admin layout's guard again (claude-docs/components/pager.md).
+A list moves to another of its pages in one of three ways. `soft` is a client-side navigation inside a transition. `page` is a soft one for a pager end, which keeps the reader at the list instead of scrolling to the page top. `full` is a whole page load, which runs the admin layout's guard again (see `pager.md`).
 
-## Notes from code comments: the navigation provider
+## The navigation provider
 
-Holds the navigation the filter, the pager and the body share. A soft navigation runs inside this transition, so `pending` stays true until Next has rendered the new page. A full load has no transition: a flag holds `pending` from the press until the browser unloads the page, and a `pageshow` from the back-forward cache drops it, so Back does not land on a skeleton. A provider already above, the workshop's, is kept rather than shadowed.
+The provider holds the navigation the filter, the pager and the body share. A soft navigation runs inside its transition, so `pending` stays true until Next has rendered the new page. A full load has no transition: a flag holds `pending` from the press until the browser unloads the page, and a `pageshow` from the back-forward cache drops it, so Back does not land on a skeleton. A provider already above, the workshop's, is kept rather than shadowed.

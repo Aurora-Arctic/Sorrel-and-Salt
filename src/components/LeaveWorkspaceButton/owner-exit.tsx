@@ -17,11 +17,9 @@ import { workspaceRoleLabel } from '../UserDetail/roles';
 import { LeaveWorkspaceDocument } from './documents';
 import type { OwnerExitProps, WayOut } from './types';
 
-// The only owner's Leave. The last-owner guard would refuse them, so the button explains
-// instead: it opens a dialog asking what happens to the coven, handing it to someone or
-// deleting it, the way Change Role asks which role. Promote-then-leave is two requests in
-// this order on purpose: if the leave fails after the promotion, the coven has two owners,
-// never none. The service is still the guard (claude-docs/components/leave-workspace-button.md).
+// The only owner's Leave: a dialog asking whether to hand the coven over or delete it.
+// Promote-then-leave is two requests in that order so a failed leave leaves two owners, never none
+// (claude-docs/components/leave-workspace-button.md).
 
 const PromoteSuccessorDocument = graphql(`
   mutation PromoteSuccessor($workspaceId: ID!, $userId: ID!, $role: WorkspaceRole!) {

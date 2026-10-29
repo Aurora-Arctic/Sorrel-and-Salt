@@ -15,7 +15,7 @@ import type { CardMoreProps } from './types';
 
 // A coven card's More menu: Delete Ingredient on the coven's own entry; Make It Ours and Remove on a
 // held compendium entry. A lone Delete or Remove is its own bin, as a one-choice menu costs two presses
-// (claude-docs/components/coven-cards.md, "Source notes").
+// (claude-docs/components/coven-cards.md, "The More menu on a card").
 
 type Asking = 'delete' | 'makeOurs' | 'remove';
 

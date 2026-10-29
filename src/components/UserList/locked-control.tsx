@@ -11,7 +11,7 @@ import './controls.scss';
 /**
  * A control that cannot be used, and says why. `aria-disabled` keeps it in the tab order, and
  * its reason is a tip placed against the viewport (claude-docs/components/user-list.md,
- * "Notes from code comments: locked control").
+ * "Locked controls").
  */
 const LockedControl = ({
   label,

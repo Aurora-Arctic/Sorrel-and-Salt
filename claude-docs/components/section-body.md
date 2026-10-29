@@ -62,8 +62,8 @@ switcher to mount, which focuses its box. See `workspace-switcher.md`.
 
 `Shell / Section Body`: `States`, with a control that chooses Loading List, Loading List With Action, Loading Tabs, Loading With Menu, Loading Entry and Loading Contents. The states draw the wait with a title and filter, with the tab row, and with the contents menu.
 
-## Source notes
+## The frame under a context row
 
-Comments in the source that point here; each is the detail behind a one-line comment.
+The section body is the frame under a section's context row, the coven's or the admin area's. While a navigation aimed at this section's region is on its way, the old page is hidden and put out of reach at once, so nobody acts on the wrong coven's data, and the destination's skeleton stands over it. The context row above it, with the section's nav, is outside this frame and stays.
 
-- `index.tsx`: The frame under a section's context row: the coven's, or the admin area's. While a navigation aimed at this section's region is on its way, the old page is hidden and put out of reach at once, so nobody acts on the wrong coven's data, and the destination's skeleton stands over it. The context row above it, with the section's nav, is outside this frame and stays. Not a dimmed page and not a `loading.tsx`: a boundary would turn the guards' 404 and 403 into 200s (claude-docs/components/section-body.md). The pages own their `<main>`, so the skeleton brings one, and a hidden level-one heading, so neither landmark vanishes for the length of the wait.
+It is not a dimmed page and not a `loading.tsx`: a boundary would turn the guards' 404 and 403 into 200s. The pages own their `<main>`, so the skeleton brings one, and a hidden level-one heading, so neither landmark vanishes for the length of the wait.

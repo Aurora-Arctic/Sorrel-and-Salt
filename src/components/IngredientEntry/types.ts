@@ -57,7 +57,7 @@ export interface IngredientEntryProps {
   back?: { href: Route; label: string };
   /** The entry that moved off this address while its redirect's window is open: its name, and its page now. */
   movedAway?: { name: string; href: Route };
-  /** The side column's "In the Compendium" block (claude-docs/components/ingredient-entry.md, "Prop notes"); left out for a local with no match. */
+  /** The side column's "In the Compendium" block (claude-docs/components/ingredient-entry.md, "Props in detail"); left out for a local with no match. */
   replaces?: {
     tip: string;
     entries: { title: string; href: Route }[];
@@ -136,11 +136,11 @@ export interface CupboardProps {
   canRemove: boolean;
   /** Make It Ours, on the permission the service asserts (`MAKE_IT_OURS_PERMISSION`); offered once the coven holds the entry, a retired one included. */
   canMakeOurs: boolean;
-  /** Annotate opens its dialog from the address: the link, where closing goes back to, and whether the address asks for it now (claude-docs/components/ingredient-entry.md, "Prop notes"). */
+  /** Annotate opens its dialog from the address: the link, where closing goes back to, and whether the address asks for it now (claude-docs/components/ingredient-entry.md, "Props in detail"). */
   annotate: { href: Route; closeHref: Route; opened: boolean };
   /** Where a remove leads for a retired entry, whose page reads nothing once its cupboard row is gone; left out, a remove reads the page again. */
   removedHref?: Route;
-  /** The plus beside the pencil, read by `plusCovensOf` (src/app/plus-covens.ts); left out, neither the plus nor its check is drawn (claude-docs/components/ingredient-entry.md, "Prop notes"). */
+  /** The plus beside the pencil, read by `plusCovensOf` (src/app/plus-covens.ts); left out, neither the plus nor its check is drawn (claude-docs/components/ingredient-entry.md, "Props in detail"). */
   plus?: CupboardPlus;
   /** What Edit Stock reads, as on a `CupboardPlace`; left out, the menu has no Edit Stock. */
   stock?: StockData;
@@ -181,7 +181,7 @@ export interface IngredientDetailsOpened {
   footControl?: ReactNode;
   /** The entry's own page, which the foot's link (See in Compendium or See in Your Cupboard) reaches. */
   pageHref: Route;
-  /** An Edit opening the edit modal over the details at the list's own `?edit=`, for whoever may edit the entry (claude-docs/components/ingredient-entry.md, "Prop notes"). */
+  /** An Edit opening the edit modal over the details at the list's own `?edit=`, for whoever may edit the entry (claude-docs/components/ingredient-entry.md, "Props in detail"). */
   editAction?: RouteModalLink & {
     /** The card's own name for the entry, name then formal name, which its Edit link is read as. */
     name?: string;
@@ -192,7 +192,7 @@ export interface IngredientDetailsOpened {
   more?: ReactNode;
   /** The coven card's foot controls (`covenCardActions`) in place of `editAction`; a delete or a remove leads to the list without the details, which closes them. */
   actions?: ReactNode;
-  /** The plus beside the pencil for a live compendium entry, read per request by `plusCovensOf` (src/app/plus-covens.ts); needs `ingredientId` (claude-docs/components/ingredient-entry.md, "Prop notes"). */
+  /** The plus beside the pencil for a live compendium entry, read per request by `plusCovensOf` (src/app/plus-covens.ts); needs `ingredientId` (claude-docs/components/ingredient-entry.md, "Props in detail"). */
   plus?: CupboardPlus;
   /** The compendium entry's id, which the plus adds. */
   ingredientId?: string;

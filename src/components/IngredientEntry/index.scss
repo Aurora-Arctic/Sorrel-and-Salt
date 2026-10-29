@@ -25,7 +25,7 @@ $jump-link-line: 1.25;
 
 // From a tablet up the jump menu stands in a sticky column left of the content, on `.page-with-nav`'s
 // breakpoint and offset, giving way first on a smaller desktop (claude-docs/components/ingredient-entry.md,
-// "Style notes").
+// "Styling").
 .ingredient-entry--with-nav {
   @include entry-nav-grid;
 
@@ -46,7 +46,7 @@ $jump-link-line: 1.25;
 }
 
 // Clear of the top of the frame, with the eyebrow close over its heading.
-// (claude-docs/components/ingredient-entry.md, "Style notes")
+// (claude-docs/components/ingredient-entry.md, "Styling")
 .ingredient-entry__head {
   @include stack(3);
 
@@ -54,7 +54,7 @@ $jump-link-line: 1.25;
 }
 
 // The row holding the back link (left) and the New / Updated marker (right), on one centre line
-// (claude-docs/components/ingredient-entry.md, "Style notes").
+// (claude-docs/components/ingredient-entry.md, "Styling").
 .ingredient-entry__bar {
   display: flex;
   align-items: center;
@@ -88,7 +88,7 @@ $jump-link-line: 1.25;
   margin: 0;
   // Room for the badges under the action: a long name wraps the action onto its own line, and `top`
   // and the row gap keep the heading-to-action gap. (claude-docs/components/ingredient-entry.md,
-  // "Style notes")
+  // "Styling")
   row-gap: space(1);
 
   > :not(h1, .page-header__title) {
@@ -99,7 +99,7 @@ $jump-link-line: 1.25;
 
 // A name wraps inside the column at every width: `break-word`, not `anywhere` or hyphens, breaks a
 // long word only when it cannot fit a line of its own. (claude-docs/components/ingredient-entry.md,
-// "Style notes")
+// "Styling")
 .ingredient-entry__head h1 {
   max-inline-size: 100%;
   overflow-wrap: break-word;
@@ -114,7 +114,7 @@ $jump-link-line: 1.25;
 
 // The entry's icons (one to four) as one row at the end of the formal name's line, out of the name's row
 // so a screen reader meets them after the heading; `:has()` finds it from `data-icons` (Baseline Widely
-// Available) (claude-docs/components/ingredient-entry.md, "Style notes").
+// Available) (claude-docs/components/ingredient-entry.md, "Styling").
 $formal-line: $icon-size;
 
 .ingredient-entry__naming:has(> .page-header > .ingredient-entry__cupboard--icons)
@@ -139,7 +139,7 @@ $formal-line: $icon-size;
 }
 
 // In Your Cupboard: the shelf before the name, at the heading's size in the muted ink, a button to
-// carry its tip. (claude-docs/components/ingredient-entry.md, "Style notes")
+// carry its tip. (claude-docs/components/ingredient-entry.md, "Styling")
 .ingredient-entry__held {
   display: inline-flex;
   flex: none;
@@ -163,14 +163,14 @@ $formal-line: $icon-size;
 }
 
 // Beside a jump menu the shelf hangs out into the menu's column so the name keeps its line with the
-// text beneath it. (claude-docs/components/ingredient-entry.md, "Style notes")
+// text beneath it. (claude-docs/components/ingredient-entry.md, "Styling")
 @media (min-width: calc(#{$shell-phone-width} + 0.01rem)) {
   .ingredient-entry--with-nav .page-header__title {
     position: relative;
   }
 
   // Its right end on the menu's right edge; the tip's wrapper moves, not the button, so the tip
-  // stays over the icon. (claude-docs/components/ingredient-entry.md, "Style notes")
+  // stays over the icon. (claude-docs/components/ingredient-entry.md, "Styling")
   .ingredient-entry--with-nav .page-header__title > .icon-tip {
     position: absolute;
     inset-inline-end: calc(100% + #{space(6)} - #{heading-size(1)} * 0.72 * 1.9 / 32);
@@ -184,7 +184,7 @@ $formal-line: $icon-size;
 }
 
 // Without the menu column the shelf stands on a line of its own above the name, 30% larger (the
-// drawing's own size, not a transform). (claude-docs/components/ingredient-entry.md, "Style notes")
+// drawing's own size, not a transform). (claude-docs/components/ingredient-entry.md, "Styling")
 @media (max-width: #{$shell-phone-width}) {
   .ingredient-entry__head .page-header__title {
     flex-direction: column;
@@ -247,7 +247,7 @@ $formal-line: $icon-size;
 }
 
 // The side column's blocks stand further apart than the text's parts, so each heading reads as its
-// own list. (claude-docs/components/ingredient-entry.md, "Style notes")
+// own list. (claude-docs/components/ingredient-entry.md, "Styling")
 .ingredient-entry__body > .ingredient-entry__side {
   @include entry-column-side;
 }
@@ -258,7 +258,7 @@ $formal-line: $icon-size;
 
 // Said where a field holds nothing, so it reads as a statement: faded italic in a placeholder's
 // ink, and in the page's own container the muted ink instead, for contrast.
-// (claude-docs/components/ingredient-entry.md, "Style notes")
+// (claude-docs/components/ingredient-entry.md, "Styling")
 .ingredient-entry__empty {
   margin: 0;
   color: $text-placeholder;
@@ -271,7 +271,7 @@ $formal-line: $icon-size;
 
 @media (min-width: calc(#{$shell-tablet-width} + 0.01rem)) {
   // The head keeps to the text column, so Edit ends where the text does.
-  // (claude-docs/components/ingredient-entry.md, "Style notes")
+  // (claude-docs/components/ingredient-entry.md, "Styling")
   .ingredient-entry__head {
     display: grid;
     grid-template-columns: minmax(0, 1fr) $side-column;
@@ -284,7 +284,7 @@ $formal-line: $icon-size;
 }
 
 // The Stock section's heading, with Edit Stock at the end of its line, in the text column.
-// (claude-docs/components/ingredient-entry.md, "Style notes")
+// (claude-docs/components/ingredient-entry.md, "Styling")
 .ingredient-entry__stock-head {
   display: flex;
   align-items: center;
@@ -305,7 +305,7 @@ $formal-line: $icon-size;
 }
 
 // The Stock section's head and shelf as one stack, in no box.
-// (claude-docs/components/ingredient-entry.md, "Style notes")
+// (claude-docs/components/ingredient-entry.md, "Styling")
 .ingredient-entry__stock-panel {
   @include stack(4);
 
@@ -348,7 +348,7 @@ $formal-line: $icon-size;
 }
 
 // In the side column a row is a term over a list that may wrap, with a clear break before the next
-// row. (claude-docs/components/ingredient-entry.md, "Style notes")
+// row. (claude-docs/components/ingredient-entry.md, "Styling")
 .ingredient-entry__correspondences {
   @include stack(4);
 
@@ -384,7 +384,7 @@ $formal-line: $icon-size;
 }
 
 // The note numbers ending a section's text: a superscript link each; the one a jump lands on is
-// marked by `:target`. (claude-docs/components/ingredient-entry.md, "Style notes")
+// marked by `:target`. (claude-docs/components/ingredient-entry.md, "Styling")
 .ingredient-entry__marks {
   @include stack(1);
 
@@ -399,7 +399,7 @@ $formal-line: $icon-size;
 }
 
 // The References section at the foot of the page: notes numbered, bibliography beneath.
-// (claude-docs/components/ingredient-entry.md, "Style notes")
+// (claude-docs/components/ingredient-entry.md, "Styling")
 .ingredient-entry__references {
   @include stack(4);
 
@@ -423,7 +423,7 @@ $formal-line: $icon-size;
 }
 
 // The notes keep their numbers (the list reset would drop them); a long citation wraps under its
-// text. (claude-docs/components/ingredient-entry.md, "Style notes")
+// text. (claude-docs/components/ingredient-entry.md, "Styling")
 .ingredient-entry__notes {
   @include stack(2);
 
@@ -437,7 +437,7 @@ $formal-line: $icon-size;
 
 // A note's way back to where it is cited: its own class, not the top Back link's, whose pull to the
 // column's edge would draw it back over the gap. (claude-docs/components/ingredient-entry.md,
-// "Style notes")
+// "Styling")
 .ingredient-entry__return {
   margin-inline-start: space(2);
   white-space: nowrap;
@@ -447,7 +447,7 @@ $formal-line: $icon-size;
 .ingredient-entry__note:target,
 // A citation prints its url as plain text, so `anywhere` lets it break at any character;
 // `break-word` would still let the url set the list's min-content width.
-// (claude-docs/components/ingredient-entry.md, "Style notes")
+// (claude-docs/components/ingredient-entry.md, "Styling")
 .ingredient-entry__reference {
   overflow-wrap: anywhere;
 }
@@ -469,7 +469,7 @@ $formal-line: $icon-size;
 }
 
 // A short hairline under "In the Compendium" midway in a gap twice the column's, between its last
-// line and the Correspondences heading. (claude-docs/components/ingredient-entry.md, "Style notes")
+// line and the Correspondences heading. (claude-docs/components/ingredient-entry.md, "Styling")
 .ingredient-entry__replaces {
   position: relative;
   margin-block-end: space(6);
@@ -482,7 +482,7 @@ $formal-line: $icon-size;
 }
 
 // The space from the heading to the first entry, equal in both blocks; the block's own stack gap is
-// dropped. (claude-docs/components/ingredient-entry.md, "Style notes")
+// dropped. (claude-docs/components/ingredient-entry.md, "Styling")
 $replaces-gap: space(5);
 
 .ingredient-entry__replaces {
@@ -491,7 +491,7 @@ $replaces-gap: space(5);
 
 // "In the Compendium" and "Similar in the Compendium": the heading with its one ⓘ after it, as
 // running text, so a wrapped heading's ⓘ follows its last word and a word joiner (U+2060, drawn by
-// CSS) forbids a break before it. (claude-docs/components/ingredient-entry.md, "Style notes")
+// CSS) forbids a break before it. (claude-docs/components/ingredient-entry.md, "Styling")
 .ingredient-entry__heading-row {
   margin-block-end: $replaces-gap;
 
@@ -505,7 +505,7 @@ $replaces-gap: space(5);
   }
 
   // The ⓘ centres on the heading's capitals, from cap height to baseline; `middle` left it about
-  // 5px below them. (claude-docs/components/ingredient-entry.md, "Style notes")
+  // 5px below them. (claude-docs/components/ingredient-entry.md, "Styling")
   > .info-tip {
     @include heading-face;
     margin-inline-start: space(1);
@@ -520,10 +520,10 @@ $replaces-gap: space(5);
 }
 
 // The whole name is the link, the chain icon after it; where the side column stacks, the icon ends
-// the name's last line. (claude-docs/components/ingredient-entry.md, "Style notes")
+// the name's last line. (claude-docs/components/ingredient-entry.md, "Styling")
 .ingredient-entry__replaced {
   // More air between the entries than a plain list has.
-  // (claude-docs/components/ingredient-entry.md, "Style notes")
+  // (claude-docs/components/ingredient-entry.md, "Styling")
   gap: space(3);
 }
 
@@ -534,7 +534,7 @@ $replaces-gap: space(5);
 
 // Beside the text the icons of a block stand in one column ending under the heading's ⓘ; titles are
 // sized by `contain: inline-size` so they wrap to the heading's width.
-// (claude-docs/components/ingredient-entry.md, "Style notes")
+// (claude-docs/components/ingredient-entry.md, "Styling")
 @media (min-width: calc(#{$shell-tablet-width} + 0.01rem)) {
   .ingredient-entry__replaces {
     inline-size: fit-content;
@@ -561,11 +561,11 @@ $replaces-gap: space(5);
 }
 
 // "See All N" is the way on to the rest, not an entry: a step smaller, underlined, without the
-// chain icon, close under the list. (claude-docs/components/ingredient-entry.md, "Style notes")
+// chain icon, close under the list. (claude-docs/components/ingredient-entry.md, "Styling")
 .ingredient-entry__see-all {
   margin: 0;
   // Close to the list it belongs to, a step more than before.
-  // (claude-docs/components/ingredient-entry.md, "Style notes")
+  // (claude-docs/components/ingredient-entry.md, "Styling")
   margin-block-start: space(3);
   font-size: type-size('small');
   // The line the text itself fills, so the hairline under the block, centred
@@ -573,7 +573,7 @@ $replaces-gap: space(5);
   line-height: 1.3;
 
   // Underlined, in the body ink whether followed or not, pointing at the darker link colour on
-  // hover as body links do. (claude-docs/components/ingredient-entry.md, "Style notes")
+  // hover as body links do. (claude-docs/components/ingredient-entry.md, "Styling")
   a {
     color: $text-primary;
     text-decoration: underline;
@@ -590,7 +590,7 @@ $replaces-gap: space(5);
 
 // Links in the References section and the note numbers rest in the body ink and fade to `$accent-hover`
 // when pointed at or focused, with a faded underline (`faded-underline`); the details modal's covens
-// share it (claude-docs/components/ingredient-entry.md, "Style notes").
+// share it (claude-docs/components/ingredient-entry.md, "Styling").
 .ingredient-entry__marks a,
 .ingredient-entry__references a,
 .ingredient-summary__covens a {
@@ -622,7 +622,7 @@ $replaces-gap: space(5);
 }
 
 // The cupboard choices beside the title: the icons or one plain button, and a refusal's notice, in
-// a row that wraps on a phone. (claude-docs/components/ingredient-entry.md, "Style notes")
+// a row that wraps on a phone. (claude-docs/components/ingredient-entry.md, "Styling")
 .ingredient-entry__cupboard {
   margin-block-end: space(3);
   display: flex;

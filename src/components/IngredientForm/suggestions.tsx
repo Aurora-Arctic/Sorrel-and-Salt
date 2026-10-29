@@ -386,7 +386,7 @@ export const useCompendiumSubstitutes: UseSuggestions = (_workspaceId, text, act
 /**
  * A variant's Form field, suggesting from the curated vocabulary and the forms in use. A pick links
  * a curated form and an edit away drops the link; on the compendium it must be a pick
- * (claude-docs/components/ingredient-form.md, "Notes behind the code").
+ * (claude-docs/components/ingredient-form.md, "Suggestion lists and fields").
  */
 export function FormField({ workspaceId, at, pickOnly }: FormFieldProps): ReactElement {
   const { control, getValues, setValue, clearErrors } = useFormContext<IngredientFormValues>();

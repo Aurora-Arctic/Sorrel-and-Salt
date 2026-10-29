@@ -9,7 +9,7 @@ import type { GroupedValueListFilterProps } from './types';
 
 // A curated vocabulary's filter: a name search and, for a grouped kind, its group; the group applies
 // once a choice settles, carrying the unsearched name. The server draws a native `<select>`, so before
-// hydration the magnifier submits `query=&group=` (claude-docs/components/grouped-value-list.md, "Source notes").
+// hydration the magnifier submits `query=&group=` (claude-docs/components/grouped-value-list.md, "The filter").
 
 const GroupedValueListFilter = ({
   kind,

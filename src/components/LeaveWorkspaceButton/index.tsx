@@ -9,11 +9,9 @@ import { LeaveWorkspaceDocument } from './documents';
 import OwnerExit from './owner-exit';
 import type { LeaveWorkspaceButtonProps } from './types';
 
-// Leave on the coven index page, shown to every role. It asks first, naming the coven, then
-// sends the leave and goes to the coven landing. The service is the guard: the last owner is
-// refused there and the refusal is said in a callout under this button. The coven's only
-// owner is given `successors` and gets the guided exit instead (`owner-exit.tsx`;
-// claude-docs/components/leave-workspace-button.md).
+// Leave on the coven index page, for every role: it asks first, sends the leave, and goes to the
+// coven landing. The service refuses the last owner, shown in a callout; the only owner gets
+// `owner-exit.tsx` instead (claude-docs/components/leave-workspace-button.md).
 
 const LeaveWorkspaceButton = ({
   workspaceId,

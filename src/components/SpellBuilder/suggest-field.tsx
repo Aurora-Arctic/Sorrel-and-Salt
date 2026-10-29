@@ -9,7 +9,7 @@ import type { SpellBuilderValues, SpellSuggestFieldProps } from './types';
 
 /**
  * A spell field that suggests from a fixed list (./constants): a pick fills the name and anything else typed is kept as typed
- * (claude-docs/components/spell-builder.md, "Notes from code comments: the suggest field").
+ * (claude-docs/components/spell-builder.md, "The suggest field").
  */
 export function SpellSuggestField({
   name,

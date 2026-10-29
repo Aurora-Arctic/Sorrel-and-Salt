@@ -82,7 +82,7 @@ const newRowKey = (): string =>
 /**
  * Steps written back from stored values made safe to save: an unknown saved id becomes none (added as new) and a step with no row key gets one.
  * `live` is the ids of the spell's steps as last saved.
- * (claude-docs/components/spell-builder.md, "Notes from code comments: stored step values").
+ * (claude-docs/components/spell-builder.md, "Step values, documents and totals").
  */
 export const restoredSteps = (
   steps: readonly SpellStepValue[],

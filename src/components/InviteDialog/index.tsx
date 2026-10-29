@@ -14,11 +14,9 @@ import Notice from '../Notice';
 import { workspaceRoleLabel } from '../UserDetail/roles';
 import type { InviteFieldsProps, InviteDialogProps, InviteRole } from './types';
 
-// An owner's Invite, on the members page: a `ModalButton` that opens a dialog taking an
-// address and a role, sent as `createInvitation`, which mails the link and answers no link.
-// The dialog then says where the mail went. No copy control and no link is ever drawn,
-// since the browser never holds one: the token exists only in the mail. The service is the
-// guard; a refused address is said beside the field (claude-docs/components/invite-dialog.md).
+// An owner's Invite: a dialog taking an address and a role, sent as `createInvitation`, which mails
+// the link. No link or copy control is drawn, since the browser never holds the token
+// (claude-docs/components/invite-dialog.md).
 
 const CreateInvitationDocument = graphql(`
   mutation CreateInvitation($workspaceId: ID!, $email: String!, $role: InvitableRole!) {

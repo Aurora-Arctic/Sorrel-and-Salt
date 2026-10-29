@@ -10,12 +10,9 @@ import { useCovenSwitchRegistration } from '../CovenSwitchTargets/context';
 import type { WorkspaceSwitcherProps } from './types';
 import './index.scss';
 
-// A select over the viewer's workspaces, called covens on screen; the current one is read off the
-// address, never kept in state, so two tabs do not interfere. A switch goes to the same page there
-// when the page said it opens there, else the same section; a viewer who may create gets a last
-// choice whose value is the create page's path, which no slug can equal. While a switch is on its
-// way the box shows the pick, the one state held, and is busy.
-// claude-docs/components/workspace-switcher.md.
+// A select over the viewer's workspaces (covens on screen); the current one is read off the
+// address, so two tabs do not interfere. A viewer who may create gets a last choice whose value is
+// the create page's path, which no slug can equal (claude-docs/components/workspace-switcher.md).
 
 const CREATE = { value: NEW_COVEN_PATH, label: 'Create Coven', create: true };
 
@@ -24,11 +21,9 @@ function targetOf(path: string): NavigationTarget {
   return covenTarget(path);
 }
 
-// Set when a switch to another coven starts and read once by the next switcher to mount, so focus
-// survives the `[slug]` layout's remount; a module variable survives it and, unlike
-// `sessionStorage`, dies with the page. It holds the picked coven's slug: a switcher mounting
-// anywhere else reads it as stale, clears it and takes no focus. A switch ending without a remount
-// clears it.
+// Set when a switch starts and read once by the next switcher to mount, so focus survives the
+// `[slug]` layout's remount; a module variable survives it and, unlike `sessionStorage`, dies with
+// the page. It holds the picked slug; a switcher anywhere else clears it and takes no focus.
 let focusAfterSwitch: string | undefined;
 
 export default function WorkspaceSwitcher({

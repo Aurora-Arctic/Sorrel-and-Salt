@@ -4,7 +4,7 @@ import { stockAmountsOf, stockFormValues } from '../StockFields';
 import type { StockBatchRows, StockForm, StockJar, StockRow } from './types';
 
 // The rows as `saveStock` takes them, and the way back from an issue's path to its row. Only what changed is sent, so no jar
-// is ever in two lists, which the service refuses (claude-docs/components/stock-dialog.md, "Component notes").
+// is ever in two lists, which the service refuses (claude-docs/components/stock-dialog.md, "What is sent").
 
 const AMOUNTS: readonly (keyof StockFormValues)[] = ['quantityOnHand', 'unit', 'lowStockThreshold'];
 

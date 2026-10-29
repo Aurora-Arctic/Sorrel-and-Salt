@@ -230,9 +230,16 @@ titled "Sign In / Sign-In Methods".
 - The link and unlink flows themselves are asserted against Better Auth's
   endpoints in `tests/db/account-linking.test.ts`.
 
-## Source notes
+## The list of ways in
 
-Comments in the source that point here; each is the detail behind a one-line comment.
+The account page lists every roster provider as linked or addable, and a linked one can be removed while another remains. Adding is Better Auth's `/link-social`, which leaves for the provider and lands back on the account page. Removing is `/unlink-account`, answered in place. A session too old for Better Auth to remove a method is offered a fresh sign-in in place of every Remove, rather than a press it would refuse. The section's heading and intro belong to the page, so the section is a named region like the other two.
 
-- `index.tsx`: The account page's list of the ways into this account: each roster provider, linked or addable, removable while another is left. Adding one is Better Auth's /link-social, which leaves for the provider and lands back on the account page; removing one is /unlink-account, answered in place. A session too old for Better Auth to remove one is offered a fresh sign-in in place of every Remove, rather than a press it would refuse. The section's heading and intro are the page's, so the section is a named region like the other two. See claude-docs/components/sign-in-methods.md.
-- `provider-row.tsx`: One provider in the account's list of sign-in methods, in one of three states, each told apart by its control and its words rather than by hue: linked has Remove (greyed for the only method left, with a line saying why; or, from a stale session, nothing, since the list says why once), addable has Add, and unavailable has a greyed Add with the note saying why. A press's failure is a callout under the control pressed; a failed link's callback error, which no press here raised, sits in the row beneath the controls as a `Notice`. claude-docs/components/sign-in-methods.md, "The rows".
+## A provider row
+
+A row is in one of three states, told apart by its control and its words rather than by hue.
+
+- Linked has Remove. Remove is greyed for the only method left, with a line saying why. From a stale session there is no Remove at all, since the list says why once.
+- Addable has Add.
+- Unavailable has a greyed Add with a note saying why.
+
+A press's failure is a callout under the control pressed. A failed link's callback error, which no press here raised, sits in the row beneath the controls as a `Notice`.

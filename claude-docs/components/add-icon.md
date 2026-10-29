@@ -48,11 +48,18 @@ Stories ([`index.stories.tsx`](../../src/components/AddIcon/index.stories.tsx), 
 
 Tests: `tests/components/AddIcon/index.test.tsx` (the names and tips) and `tests/components/CompendiumCards/add-icon.test.tsx` (the add, the menu, busy, the check and the refusal). E2e: `tests/e2e/compendium-add.spec.ts`.
 
-## Source notes
+## What the plus is
 
-Comments in the source that point here; each is the detail behind a one-line comment.
+The plus is Add to My Ingredients as an icon, at a compendium card's bottom right and beside the public entry page's pencil, so both are one control. Its tip and accessible name are both ADD followed by the entry's name (the name in `visually-hidden`), so a list of buttons tells one card's plus from the next and the words on screen are the name. It is a client component of its own because the card stays a server component and a press needs the browser (`claude-docs/components/compendium-cards.md`, "Contracts").
 
-- `index.tsx`: The plus. Where the viewer may write in one coven alone it adds there directly, with no quantity: it sends `addCupboardEntry` and reads the page again, which then draws the check. With two or more it is always a menu of every one by name, never adding at once because one coven alone lacks the entry; choosing one adds there at once. A coven that holds the entry is shown disabled, with a green check, and named "<coven>, in its cupboard"; the plus's own check says when every one holds it. A refusal is said in a callout under the plus, and the focus is given back to the plus, since the chosen item went with the menu. The plus is `aria-disabled` and not `disabled` while it works (the lone plus here, the menu's button in MenuButton), so the focus stays on it.
-- `index.tsx`: The plus: Add to My Ingredients as an icon, at a compendium card's bottom right and beside the public entry page's pencil, so both are one control. Its tip and accessible name are both ADD then the entry's name (the name in `visually-hidden`), so a list of buttons tells one card's plus from the next and the words on screen are the name. A client component of its own, because the card stays a server component and a press needs the browser (claude-docs/components/compendium-cards.md, "Contracts").
-- `index.scss`: The plus after an add: the spinner turns into the check, drawn along its stroke, which holds, then cross-fades back to the plus (`returning`); AddIcon sets `data-state` and times the hold. While the check shows, the plus wears the held mark's look (no wash, default cursor), so where the add left every coven holding the entry the held mark takes its place with nothing moving. Under reduced motion the check and then the plus simply appear.
-- `index.tsx`: The check after a success: it holds for ADDED_HOLD_MS and until the page has been read again, then fades back to the plus, unless the add left every coven holding the entry, when it stays until the page draws the held mark, so nothing jumps. `useFade` keeps it drawn while it fades and drops the fade under reduced motion.
+## Adding
+
+Where the viewer may write in one coven alone, the plus adds there directly with no quantity: it sends `addCupboardEntry` and reads the page again, which then draws the check. With two or more covens it is always a menu of every one by name, and it never adds at once just because one coven lacks the entry. Choosing one adds there at once. A coven that holds the entry is shown disabled with a green check and named "<coven>, in its cupboard". The plus's own check says when every coven holds it.
+
+A refusal is said in a callout under the plus, and the focus is given back to the plus, since the chosen item went with the menu. While it works the plus is `aria-disabled` and not `disabled` (the lone plus here, the menu's button in `MenuButton`), so the focus stays on it.
+
+## After an add
+
+The spinner turns into the check, drawn along its stroke. The check holds for `ADDED_HOLD_MS` and until the page has been read again, then cross-fades back to the plus (`returning`). `AddIcon` sets `data-state` and times the hold, and `useFade` keeps the check drawn while it fades and drops the fade under reduced motion, when the check and then the plus simply appear.
+
+If the add left every coven holding the entry, the check stays until the page draws the held mark, so nothing jumps. While the check shows, the plus wears the held mark's look (no wash, default cursor), so the held mark takes its place with nothing moving.

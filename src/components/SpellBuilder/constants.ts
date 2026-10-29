@@ -1,8 +1,6 @@
-// The two lists the spell builder suggests from. Each
-// is a constant, not a curated vocabulary table as celestial bodies are
-//: the set is closed, typed text stays allowed beside it, and adding a
-// name is a one-line change here, where the celestial bodies keep growing.
-// The columns stay free text (claude-docs/db/grimoire.md).
+// The two lists the builder suggests from. Constants, not curated vocabulary tables like celestial
+// bodies: the set is closed, typed text stays allowed, and the columns stay free text
+// (claude-docs/db/grimoire.md).
 
 /**
  * The moon's phases in a fixed order: the eight phases, then Dark Moon, Waxing Moon and Waning Moon (a half-cycle for a recipe asking for a half).

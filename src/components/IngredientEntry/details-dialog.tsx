@@ -15,9 +15,9 @@ import type { IngredientDetailsDialogProps, IngredientDetailsOpened } from './ty
 
 // The details modal an ingredient's name opens over a list, so an Edit inside opens the edit modal over
 // it. A client part since RouteModal takes its body as a function (claude-docs/components/ingredient-entry.md,
-// "Component notes").
+// "The details modal").
 
-/** The head's marks and actions: the top line's beside Close, and the end of the formal name's line holds the controls of the card the window opened from (claude-docs/components/ingredient-entry.md, "Component notes"). */
+/** The head's marks and actions: the top line's beside Close, and the end of the formal name's line holds the controls of the card the window opened from (claude-docs/components/ingredient-entry.md, "The details modal"). */
 export function headingOf({
   lastEdit,
   heading,
@@ -72,7 +72,7 @@ const EditAction = ({
 }: NonNullable<IngredientDetailsOpened['editAction']> & { name: string }): ReactElement =>
   inCompendium ? <CompendiumEditLink {...link} /> : <EditLink {...link} />;
 
-/** The link to the entry's page: a bar in the modal's `foot` slot, outside the scrolling body (claude-docs/components/ingredient-entry.md, "Component notes"). */
+/** The link to the entry's page: a bar in the modal's `foot` slot, outside the scrolling body (claude-docs/components/ingredient-entry.md, "The details modal"). */
 function PageLinkBar({ pageHref, footControl }: IngredientDetailsOpened): ReactElement {
   // Named by where it goes, not by who is looking: the public compendium's page, or the coven's own
   // page for an entry it holds.

@@ -66,11 +66,9 @@ body:has(.app-shell, .public-frame) > .theme-toggle--corner {
   display: none;
 }
 
-// The disc in the flow (the shell's bar). The
-// button is transparent and padded out to a control's height, so the target
-// is a finger's; the disc inside is what is drawn, round and clipping the
-// facet that swings out of it, which a bare button's own box could not do
-// without hiding its padding too.
+// The disc in the flow (the shell's bar). The button is transparent and padded to a control's
+// height for a finger's target; the disc inside is round and clips the swinging facet, which a bare
+// button's box could not without hiding its padding.
 $theme-toggle-disc: 2rem;
 $theme-toggle-facet: 1.1875rem;
 

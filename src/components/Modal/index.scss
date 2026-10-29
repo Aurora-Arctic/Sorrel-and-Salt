@@ -21,7 +21,7 @@ $eyebrow-line: calc(#{type-size('overline')} * 1.65);
 
 // Only what the native element needs beyond the `.modal` primitive: border and padding gone, a
 // width that fits a phone, a backdrop. Border-box, a column, open only, and clipped rather than
-// hidden so it is no scroll container at all (claude-docs/components/modal.md, "Styling notes").
+// hidden so it is no scroll container at all (claude-docs/components/modal.md, "Clipped, not hidden").
 .modal-dialog {
   container: modal / inline-size;
   box-sizing: border-box;
@@ -92,7 +92,7 @@ $eyebrow-line: calc(#{type-size('overline')} * 1.65);
 
 // It fades in and out, dialog and backdrop together: in is CSS alone from `@starting-style`, out is
 // `.is-closing`, which the component waits on (FADE_LIMIT_MS there outlasts this). The theme's
-// colour transitions are restated beside it (claude-docs/components/modal.md, "Styling notes").
+// colour transitions are restated beside it (claude-docs/components/modal.md, "The fade's colour transitions").
 .modal.modal-dialog {
   opacity: 1;
   transition:
@@ -167,7 +167,7 @@ $eyebrow-line: calc(#{type-size('overline')} * 1.65);
 
 // The × stands out of the header's flow, so the head's first line is level with it, and stays at
 // the top as a long form scrolls beneath. A control the contents put in the header goes in a row of
-// its own under the heading at every width (claude-docs/components/modal.md, "Styling notes").
+// its own under the heading at every width (claude-docs/components/modal.md, "The × and the toolbar row").
 .modal-dialog__header {
   display: grid;
   flex: none;
@@ -202,7 +202,7 @@ $eyebrow-line: calc(#{type-size('overline')} * 1.65);
 
 // The top line: the entry page's top bar, its marks at the start and the × level with them at the
 // end, each mark centred on the × 's middle. The margin is set through the heading's own class
-// (claude-docs/components/modal.md, "Styling notes").
+// (claude-docs/components/modal.md, "The top line").
 .modal-dialog__heading > .modal-dialog__top {
   display: flex;
   align-items: center;
@@ -220,7 +220,7 @@ $eyebrow-line: calc(#{type-size('overline')} * 1.65);
 
 // The formal name, the title and the title's controls (`formalActions`: the details window's Edit
 // pencil and plus), laid out as the entry page lays its own: the controls at the end of the formal
-// name's line, the title beneath (claude-docs/components/modal.md, "Styling notes").
+// name's line, the title beneath (claude-docs/components/modal.md, "The naming grid").
 .modal-dialog__naming {
   display: grid;
   grid-template-columns: minmax(0, 1fr) auto;
@@ -428,7 +428,7 @@ $eyebrow-line: calc(#{type-size('overline')} * 1.65);
 
 // A warning among a question's details, set apart with off-scale margins by a class the caller gives
 // the Notice, so no other Notice moves; both classes outrank `.notice`'s zero margin
-// (claude-docs/components/modal.md, "Styling notes").
+// (claude-docs/components/modal.md, "The scrim and the card").
 .notice.confirm-overlay__warning {
   margin-block: space(5) 1.75rem;
 }

@@ -344,7 +344,7 @@ export function useFormHistory<V extends FieldValues>(
 
   // The chords are heard by native document listeners, as a React `onKeyDown` on the form runs after
   // them; each root owns its nearest marked ancestor's chords, so one never undoes twice
-  // (claude-docs/components/field.md, "Notes from code comments: undo and redo chords").
+  // (claude-docs/components/field.md, "How the undo and redo chords are heard").
   const held = useRef(false);
   useEffect(() => {
     const element = root.current;

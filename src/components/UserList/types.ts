@@ -127,12 +127,12 @@ export interface ConfirmedActionProps {
   closeOnSent?: boolean;
   /**
    * Drawn inside the user's modal: asks through its confirm layer and says a refusal in a plain notice, unless `refusalInModal` says otherwise
-   * (claude-docs/components/user-list.md, "Notes from code comments: inside a modal").
+   * (claude-docs/components/user-list.md, "Inside a modal").
    */
   inModal?: boolean;
   /**
    * How a refusal is said inside a modal: a plain notice (default), or the callout under the control; outside a modal it is always the callout
-   * (claude-docs/components/user-list.md, "Notes from code comments: refusal display").
+   * (claude-docs/components/user-list.md, "Inside a modal").
    */
   refusalInModal?: 'notice' | 'callout';
 }

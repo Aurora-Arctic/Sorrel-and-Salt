@@ -11,7 +11,7 @@ import type { FilterSelectFieldProps } from './types';
 /**
  * A list filter's closed set: a native `<select>` from the server, so the search's magnifier sends it
  * before the script loads, then one of Combobox's boxes. Not `SelectField`, which needs form state: a
- * filter submits natively (claude-docs/components/field.md, "Notes from code comments: filter and action fields").
+ * filter submits natively (claude-docs/components/field.md, "Switch, search and select fields for filters").
  */
 export function FilterSelectField({
   label,

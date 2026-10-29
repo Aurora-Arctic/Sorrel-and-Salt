@@ -11,11 +11,9 @@ import {
 } from '../UserList/impersonation';
 import type { UserDetailUser } from './types';
 
-// Impersonate inside the user's modal. It asks over the modal's own body through
-// ConfirmQuestion, since ConfirmedAction would open a second modal on top. The endpoint is
-// the guard: it refuses a non-admin and an admin target whatever this shows. A success swaps
-// the session cookie, so the next page is a full load as the user, the question busy until it
-// opens.
+// Impersonate inside the user's modal, asking over the modal's body through ConfirmQuestion, since
+// ConfirmedAction would open a second modal. The endpoint is the guard. A success swaps the session
+// cookie, so the next page is a full load as the user.
 
 const ImpersonateAction = ({ user }: { user: UserDetailUser }): ReactElement => {
   const [asked, setAsked] = useState(false);

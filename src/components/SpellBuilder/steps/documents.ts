@@ -1,7 +1,7 @@
 import { graphql } from '../../../gql';
 
 // The steps' GraphQL, with the saved step's selection written out in full, not a fragment, to stay within DESIGN.md §7's depth of 7
-// (claude-docs/components/spell-builder.md, "Notes from code comments: step documents").
+// (claude-docs/components/spell-builder.md, "Step values, documents and totals").
 
 /**
  * The picker's lookup: the coven's ingredients and the compendium's, each
@@ -69,7 +69,7 @@ export const SpellIngredientSuggestionsDocument = graphql(`
 /**
  * A saved spell's steps as the builder opens it, read once the dialog opens on `?edit=<id>`, since the page's server read gives the fields alone
  * and an update's steps are the whole recipe; the jar units are the ingredient's for the coven `$workspaceId`.
- * (claude-docs/components/spell-builder.md, "Notes from code comments: the saved steps read").
+ * (claude-docs/components/spell-builder.md, "Step values, documents and totals").
  */
 export const SpellBuilderStepsDocument = graphql(`
   query SpellBuilderSteps($workspaceId: ID!, $id: ID!) {

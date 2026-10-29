@@ -49,8 +49,13 @@ What it looks like is the owner's calls. The area has a crosshair cursor. The ve
 
 `tests/components/ChipColorField/index.test.tsx` covers the hex box and the picker's named parts, the three formats and their channels, a channel committed by Enter and by leaving it, the channels following a whole hex and not half of one, the tooltip on the format toggle, Match from the partner and waiting for a whole one, the ratio in the box's description and none for half a hex, the warning naming the nearest group, following the colour and falling silent, and a passed error described first. The veil, its edge and the sample are presentation, owned by the workshop stories. The picker answers a channel a moment after the key, so that test waits for it.
 
-## Source notes
+## What the field shows
 
-Comments in the source that point here; each is the detail behind a one-line comment.
+The field sets one of a category group's two chip colours. It is Ark's colour picker (an area, a hue slider, and the channels of a format the admin chooses) kept in step with the hex box the form validates. Around it the field shows the checks as the admin chooses:
 
-- `index.tsx`: One of a category group's two chip colours: Ark's colour picker (an area, a hue slider and the channels of a format the admin chooses) kept in step with the hex box the form validates, a light veil over the colours that fall short of 4.5:1 on the colour's ground, a button setting the colour from its partner, a sample chip with the ratio it reads there, and a warning when another group's colour in this theme is too close. The checks are the schema's; this shows them while the admin chooses (claude-docs/components/chip-color-field.md).
+- a light veil over the colours that fall short of 4.5:1 on the colour's ground;
+- a button that sets the colour from its partner;
+- a sample chip with the ratio it reads there;
+- a warning when another group's colour in this theme is too close.
+
+The checks themselves belong to the schema; the field only shows them.

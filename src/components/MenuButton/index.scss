@@ -173,11 +173,9 @@
   }
 }
 
-// The items in the button's own type, top and bottom padding and height, as `.btn` sets them
-// (`buttonType`): the Annotate dialog's More, whose items are the actions of the dialog's
-// foot. The sides take one step less than the button's space(5), not so wide in a list. The
-// label is centred by the flex box, as `.btn` centres its own. Every other menu keeps the
-// lighter, shorter item.
+// The Annotate dialog's More shows its items in the button's own type, padding and height
+// (`buttonType`), with sides one step under `space(5)`. Every other menu keeps the lighter, shorter
+// item.
 .menu-button__menu--button-type .menu-button__item {
   display: flex;
   align-items: center;

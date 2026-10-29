@@ -45,11 +45,9 @@
   }
 }
 
-// The chain icon that becomes the ring (`LinkIconHint`): one 1em box holding both, stacked,
-// so the swap moves nothing. The box takes the place and spacing the bare svg had in the
-// link (the `icon-link` mixin's). The icon is hidden once the ring appears (`loading-appear`,
-// the same zero-length step the ring uses); where motion is reduced the ring pulses
-// (Spinner's own `loading-motion`).
+// The chain icon and the ring stacked in one 1em box, so the swap moves nothing; the box takes the
+// bare svg's place and spacing (`icon-link`). The icon hides once the ring appears
+// (`loading-appear`); reduced motion pulses the ring.
 .link-icon-hint {
   display: inline-grid;
   width: 1em;

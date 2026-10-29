@@ -18,7 +18,7 @@ import type { AnnotateMoreProps } from './types';
 
 // The Annotate dialog's Make It Ours and Remove at the form's foot: a More menu with both, a button
 // with one, each asking in the form's own confirmation card
-// (claude-docs/components/ingredient-entry.md, "Component notes").
+// (claude-docs/components/ingredient-entry.md, "Discarding while annotating").
 
 interface AnnotateMoreBodyProps extends AnnotateMoreProps {
   workspaceId: string;

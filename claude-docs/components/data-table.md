@@ -99,6 +99,6 @@ No test of its own: each list's test asserts the table it draws — its rows,
 its columns and its empty state — by role and label, which covers the
 scaffold through every list that uses it.
 
-## Notes from code comments: the group chip
+## The group chip
 
-A group's name in its own chip, as the category picker shows it, where the group carries both colours; plain text otherwise, a tradition having none. A form group's name leads with its icon, the generic where it has none: `icon` is `undefined` for a group of another kind, which draws no icon. A table's cell, the group list's and the value list's (claude-docs/components/data-table.md).
+A group's name is drawn in its own chip, as the category picker draws it, wherever the group carries both theme colours. A group without colours (a tradition has none) is plain text. A form group leads with its icon, or the generic icon where it has none; for a group of any other kind `icon` is `undefined` and no icon is drawn. The group list and the value list both use it as a table cell.

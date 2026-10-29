@@ -1,12 +1,9 @@
 @use '../../scss/variables' as *;
 @use '../../scss/mixins' as *;
 
-// The section nav (claude-docs/components/section-nav.md, "Styling"). One markup in three
-// shapes, chosen here by the window's width and not the nav's own: the nav is the window's
-// bottom bar on a phone, so it is measured against the window, as the shell's other bars are.
-// Wider than `$shell-phone-width` the sections that fit are tabs filling the context row's
-// height and the rest go behind More; at or under it the row becomes a bar along the
-// window's foot.
+// The section nav (claude-docs/components/section-nav.md, "Styling"). One markup in three shapes
+// chosen by the window's width: above `$shell-phone-width` tabs fill the context row and the rest
+// go behind More; at or under it the row becomes a bar along the window's foot.
 
 // The row's own ground and the current tab's: a quiet fill, the same one a
 // hover takes, with the heavy accent rule telling the current tab, so
@@ -132,11 +129,9 @@
   }
 }
 
-// --------------------------------------------------------------------------- Wider than the phone:
-// as many leading tabs as fit the context row, the rest behind More (Priority+), measured in the
-// browser (section-links.tsx), which marks the others `--extra`. The count is not fixed here: four
-// labelled tabs and More overflow the row from 642px up. Takes the room the lead leaves, which is
-// what the tabs are fitted to.
+// Wider than the phone: the leading tabs that fit the context row, the rest behind More, measured
+// in the browser (section-links.tsx), which marks the others `--extra`. The count is not fixed:
+// four labelled tabs and More overflow from 642px.
 .section-nav {
   flex: 1 1 0;
 }
@@ -201,11 +196,9 @@
   // rounded corners clip it, so the entries need no rounding of their own.
   padding: 0;
   overflow: hidden;
-  // The fade, the tip bubble's pattern: `hidden` is display none, which cannot animate, so the
-  // sheet stays displayed and `hidden` takes it out of sight and out of the accessibility tree
-  // with `visibility`, held until the opacity has faded. Over the theme's duration, since the
-  // short one reads as a snap. Said after the panel mixin, whose own theme transition would
-  // otherwise replace it.
+  // The fade, the tip bubble's pattern: `hidden` cannot animate, so `visibility` holds the sheet
+  // until the opacity has faded, over the theme's duration. Said after the panel mixin, whose own
+  // transition would otherwise replace it.
   display: block;
   visibility: hidden;
   opacity: 0;
@@ -251,11 +244,9 @@
   content: none;
 }
 
-// ---------------------------------------------------------------------------
-// Phone: a bar fixed along the foot of the window. Icon above label, equal
-// widths, the current one told by weight and a short accent rule above its
-// icon. The page clears it by `$bottom-bar-height` (AppShell's padding).
-// ---------------------------------------------------------------------------
+// Phone: a bar fixed along the window's foot, icon above label, equal widths, the current one
+// marked by weight and an accent rule. The page clears it by `$bottom-bar-height` (AppShell's
+// padding).
 @media (max-width: #{$shell-phone-width}) {
   .section-nav {
     position: fixed;

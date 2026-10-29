@@ -2,7 +2,7 @@
 @use '../../scss/mixins' as *;
 
 // The badge is a bare drawing in the matching jar's colour, not a `.badge`, so the badge palettes
-// and sizes do not reach it (claude-docs/components/stock-badge.md, "Component notes").
+// and sizes do not reach it (claude-docs/components/stock-badge.md, "Where the badge sits and what it draws").
 .stock-badge {
   @include button-reset(help);
 

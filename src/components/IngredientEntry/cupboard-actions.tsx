@@ -24,7 +24,7 @@ import type {
 } from './types';
 
 // The icons beside a compendium entry's title: a main icon, More, or the bin, after the plus
-// (claude-docs/components/ingredient-entry.md, "Cupboard actions layout").
+// (claude-docs/components/ingredient-entry.md, "What the cupboard actions draw").
 
 /** The public page's plus, from its covens: those that may add, and which hold the entry. */
 const plusOfPlaces = (
@@ -115,7 +115,7 @@ export default function CupboardActions(
   const targetPlace = places.find(({ workspaceId }) => workspaceId === target) ?? places[0];
   const anyHeld = places.some(({ held }) => held);
   // The controls a dialog's focus returns to, read as it closes so the refs are the commit's own
-  // (claude-docs/components/ingredient-entry.md, "Cupboard actions layout").
+  // (claude-docs/components/ingredient-entry.md, "What the cupboard actions draw").
   const annotateControl = useRef<HTMLAnchorElement & HTMLButtonElement>(null);
   const moreControl = useRef<HTMLButtonElement | null>(null);
   const binControl = useRef<HTMLButtonElement | null>(null);

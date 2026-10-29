@@ -13,7 +13,7 @@ import './review-mark.scss';
 
 // The admin's review switch on a compendium entry, in the foot of the entry's details on the admin
 // list; the badge saying where the entry stands is drawn for everyone (EntryMarks)
-// (claude-docs/components/ingredient-entry.md, "Component notes").
+// (claude-docs/components/ingredient-entry.md, "Structure").
 
 const SetCompendiumEntryReviewedDocument = graphql(`
   mutation SetCompendiumEntryReviewed($id: ID!, $reviewed: Boolean!) {

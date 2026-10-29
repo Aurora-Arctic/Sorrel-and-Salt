@@ -10,7 +10,7 @@ type ReferenceRow = CitedReference['reference'];
 
 // The entry's sources in Chicago's notes-and-bibliography form: note numbers at the end of each
 // section they support, the notes and the full bibliography in the References section at the foot
-// (claude-docs/components/ingredient-entry.md, "Component notes").
+// (claude-docs/components/ingredient-entry.md, "Structure").
 
 /** One note: a source cited by one section, with the locator it was cited at. */
 interface Note {
@@ -94,7 +94,7 @@ const endNote = (text: string): string => (/[?!.]$/.test(text) ? text : `${text}
 /** The id of a number's link, which its note's way back targets. */
 const markId = (number: number) => `note-ref-${number}`;
 const noteId = (number: number) => `note-${number}`;
-/** The two blocks of the References section, as bare words so no prefixed id can equal them (claude-docs/components/ingredient-entry.md, "Component notes"). */
+/** The two blocks of the References section, as bare words so no prefixed id can equal them (claude-docs/components/ingredient-entry.md, "Structure"). */
 export const NOTES_ID = 'notes';
 export const BIBLIOGRAPHY_ID = 'bibliography';
 

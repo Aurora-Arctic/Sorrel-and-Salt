@@ -5,7 +5,7 @@ import type { FormActionsProps } from './types';
 
 /**
  * A form's row of actions: Save, quiet Cancel, destructive Delete at the far end, and further saves
- * (claude-docs/components/field.md, "Notes from code comments: filter and action fields"). `aside` takes
+ * (claude-docs/components/field.md, "Form actions"). `aside` takes
  * Delete's place; `saveReason` makes Save `aria-disabled`, so it keeps focus and the tip.
  */
 export function FormActions({

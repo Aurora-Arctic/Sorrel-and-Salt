@@ -25,7 +25,7 @@ const edges = () => ({
   bottom: EDGE_PX + bottomBarPx(),
 });
 
-/** Room the phone's fixed bottom bar takes from the foot of the window, or 0; measured because its height includes the device's safe area (claude-docs/components/combobox.md, "Component notes"). */
+/** Room the phone's fixed bottom bar takes from the foot of the window, or 0; measured because its height includes the device's safe area (claude-docs/components/combobox.md, "Bottom bar room"). */
 function bottomBarPx(): number {
   const bar = document.querySelector('.section-nav');
   if (!bar || getComputedStyle(bar).position !== 'fixed') return 0;

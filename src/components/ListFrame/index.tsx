@@ -5,11 +5,9 @@ import { usePendingNavigation } from '../../lib/navigation';
 import SwapPanel from '../Skeleton/swap-panel';
 import type { ListBodyProps, ListFrameProps, ListNavigation, ListNavigationKind } from './types';
 
-// A list page's root, `.list-frame`, and the one record of whether another of its pages is
-// on its way. The filter, as it applies, and the pager's ends each navigate through it, so
-// while the new page reads, the filter row greys out and the list beneath it is the tabs'
-// own skeleton; the new list fades in as a tab's content does. A direct request renders on
-// the server with no skeleton (claude-docs/components/list-frame.md).
+// A list page's root, `.list-frame`, and the record of whether another of its pages is coming. The
+// filter and pager ends navigate through it, so the row greys out and the list shows the tabs'
+// skeleton; a direct request has none (claude-docs/components/list-frame.md).
 
 /**
  * Whether a page of the list is on its way, and the way to open one.
@@ -20,7 +18,7 @@ export const ListNavigationContext = createContext<ListNavigation | null>(null);
 
 /**
  * Holds the navigation the filter, pager and body share; `pending` stays true until Next has rendered the new page
- * (claude-docs/components/list-frame.md, "Notes from code comments: the navigation provider").
+ * (claude-docs/components/list-frame.md, "The navigation provider").
  */
 const ListFrame = ({ className, children }: ListFrameProps): ReactElement => {
   const outer = useContext(ListNavigationContext);

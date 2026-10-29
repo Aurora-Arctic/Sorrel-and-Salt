@@ -2,11 +2,9 @@
 @use '../../scss/variables' as *;
 @use '../../scss/mixins' as *;
 
-// The compact look of the spell card, as IngredientCard's `_compact.scss` is for its card:
-// the same padding, gap, title step, badge size and chip size, so the two lists read alike.
-// The card takes no density prop; the look is switched by the list's `data-density` and a
-// stored Regular choice on <html> (CardDensitySwitch), so it works before React runs.
-// claude-docs/components/spell-card.md, "Compact".
+// The compact look, as IngredientCard's `_compact.scss`: the same padding, gap, title step, badge
+// and chip size. Switched by the list's `data-density` and the stored choice on <html>, so it works
+// before React runs (claude-docs/components/spell-card.md, "Compact").
 @mixin spell-card-compact {
   .spell-card {
     padding: space(3) space(4);

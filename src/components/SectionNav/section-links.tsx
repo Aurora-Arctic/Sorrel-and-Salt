@@ -84,12 +84,9 @@ const measureNatural = (list: HTMLElement): Natural | null => {
   };
 };
 
-// The most leading tabs, never fewer than one, that fit `available` beside More; all of them
-// when they fit without it. More is reserved at its own width, unless the current page's tab
-// is among those it would hide: then More wears that tab's label, so it is reserved at that
-// tab's width plus the gap inside the button and the chevron, or at its own if that is wider.
-// Not at the widest tab it would hide, which tucks a tab away while the row still has room
-// for it: More wears no other tab's label, and a navigation measures the row afresh.
+// The most leading tabs, at least one, that fit `available` beside More. More is reserved at its
+// own width, or at the current tab's width plus the button's gap and chevron if that tab would be
+// hidden, whichever is wider. Not the widest hidden tab, which would hide one while room remains.
 const countThatFit = (
   { widths, current, currentWidth, gap, more, buttonGap, chevron }: Natural,
   available: number,

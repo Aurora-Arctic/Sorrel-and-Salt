@@ -2,12 +2,9 @@ import type { ReactElement } from 'react';
 import type { SkeletonHead, SkeletonProps, SkeletonShape } from './types';
 import './index.scss';
 
-// The one skeleton every region wait uses: placeholder shapes drawn
-// as the layout they stand in for, so the page does not snap from one to the
-// next. The shapes are for the eye alone, `aria-hidden`; a screen reader
-// hears the `<output>`, a status by its tag, saying "Loading", the only
-// announcement. Shown at once, never held back by `$loading-delay`.
-// claude-docs/components/skeleton.md
+// The one skeleton every region wait uses, shaped as the layout it stands in for. The shapes are
+// `aria-hidden`; the `<output>` saying "Loading" is the only announcement. Shown at once, never
+// held by `$loading-delay` (claude-docs/components/skeleton.md).
 const DEFAULT_COUNT: Record<SkeletonShape, number> = {
   table: 6,
   cards: 6,

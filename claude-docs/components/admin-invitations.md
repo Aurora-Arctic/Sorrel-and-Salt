@@ -176,11 +176,16 @@ and the next cursor reading the rest, the filter narrowing every page, and
 the count. `tests/e2e/admin-invitations.spec.ts` invites, follows the mailed link and
 revokes against the built server, with axe.
 
-## Source notes
+## The Invitations tab
 
-Comments in the source that point here; each is the detail behind a one-line comment.
+`/admin/invitations` is the People page's Invitations tab. It shows a filter by address and by expiry within 24 hours, a page of the pending invitations the filter leaves (address, site role granted, reason, expiry, Revoke), the pager, and the invite form that `?invite` opens over them. New Invitation is the tab's action, beside the heading. While admin changes are paused both are in view but locked for any admin but the primary one, with the pause as the reason. The confirmation and the locked control are the user list's own, each bringing its own rules.
 
-- `filter.tsx`: The Invitations tab's filter, on the shared FilterForm as the user list's is. Only the email text is held here, until the magnifier or Enter sends it; the Expires in 24 Hrs switch is uncontrolled and applies as it changes, carrying the email. Both open the first page softly, as the admin layout's guard runs on every page under /admin, and there is no Filter button. Before hydration the form submits natively (`email=`, `expiring=`), which the page reads the same as the bare flag. The list keys this by the filter shown, so another page starts it again from that one.
-- `index.tsx`: The People page's Invitations tab, `/admin/invitations`: a filter by address and by expiry within 24 hours, a page of the pending invitations it leaves (address, site role granted, reason, expiry, Revoke), the pager, and the invite form `?invite` opens over them. New Invitation is the tab's action, beside the heading. While admin changes are paused both are in view but locked for any admin but the primary one, with the pause as the reason. The confirmation and the locked control are the user list's own, each bringing its own rules (claude-docs/components/admin-invitations.md).
-- `index.tsx`: A region named as a heading would name it, though it shows none: the page's heading and open tab already say what it holds, and the name keeps the sent notice and the rows findable as one. The sent notice is this component's state, set before the form closes, so it outlasts `?invite` and names the address without carrying it in one.
-- `index.tsx`: New Invitation, the tab's action beside the heading: a link to `?invite`, which opens the form over the list, or locked with the pause as its reason. A link rather than a button holding the form, since the heading line and the list are rendered apart. It keeps the tab's filter and page and opens the modal at once, the form arriving with the navigation.
+The region is named as a heading would name it, though it shows none: the page's heading and open tab already say what it holds, and the name keeps the sent notice and the rows findable as one. The sent notice is this component's state, set before the form closes, so it outlasts `?invite` and names the address without carrying it in one.
+
+## New Invitation
+
+New Invitation is a link to `?invite`, which opens the form over the list, or it is locked with the pause as its reason. It is a link rather than a button holding the form because the heading line and the list are rendered apart. It keeps the tab's filter and page and opens the modal at once, the form arriving with the navigation.
+
+## The filter
+
+The filter is on the shared `FilterForm`, as the user list's is. Only the email text is held in state, until the magnifier or Enter sends it. The Expires in 24 Hrs switch is uncontrolled and applies as it changes, carrying the email. Both open the first page softly, because the admin layout's guard runs on every page under `/admin`, and there is no Filter button. Before hydration the form submits natively (`email=`, `expiring=`), which the page reads the same as the bare flag. The list keys on the filter shown, so another page starts again from that one.

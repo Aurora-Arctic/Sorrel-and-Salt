@@ -10,7 +10,7 @@
 }
 
 // The side a tip prefers, read by `useTip` as it opens (`--tip-placement`); `side` by default, centred above in a table row
-// (claude-docs/components/icon-tip.md, "Style notes").
+// (claude-docs/components/icon-tip.md, "Placement").
 .icon-tip--side {
   --tip-placement: left;
 }
@@ -46,7 +46,7 @@
   }
 }
 
-// Centred above, as a table row has it and as `placement="above"` asks (claude-docs/components/icon-tip.md, "Style notes").
+// Centred above, as a table row has it and as `placement="above"` asks (claude-docs/components/icon-tip.md, "Placement").
 .data-table .icon-tip__bubble,
 .icon-tip--above .icon-tip__bubble {
   // stylelint-disable-next-line plugin/use-baseline -- enhancement: the element appears without fading in, widely available 2027-02-06
@@ -61,7 +61,7 @@
   }
 }
 
-// Below the control, its right edge on the control's (claude-docs/components/icon-tip.md, "Style notes").
+// Below the control, its right edge on the control's (claude-docs/components/icon-tip.md, "Placement").
 .icon-tip--below .icon-tip__bubble {
   // stylelint-disable-next-line plugin/use-baseline -- enhancement: the element appears without fading in, widely available 2027-02-06
   @starting-style {
@@ -81,7 +81,7 @@
   @include icon-button-edit;
 }
 
-// A coven card foot's Edit and Annotate icons in `$text-primary`, not the accent green (claude-docs/components/icon-tip.md, "Style notes").
+// A coven card foot's Edit and Annotate icons in `$text-primary`, not the accent green (claude-docs/components/icon-tip.md, "Ink and size").
 .icon-tip__edit--plain {
   &,
   &:hover,
@@ -91,7 +91,7 @@
   }
 }
 
-// The three dots in the page's ink, `$card-more-ink`, at rest and pressed; the compendium card's Edit in Compendium wears it too (claude-docs/components/icon-tip.md, "Style notes").
+// The three dots in the page's ink, `$card-more-ink`, at rest and pressed; the compendium card's Edit in Compendium wears it too (claude-docs/components/icon-tip.md, "Ink and size").
 .icon-tip__more,
 .icon-tip__edit--ink {
   &,
@@ -113,7 +113,7 @@
   @include icon-button-remove;
 }
 
-// An entry's Quick Look beside its name: the pencil's box and green round an eye a third bigger, `$glyph-size-large` * 4 / 3, via `math.div` (claude-docs/components/icon-tip.md, "Style notes").
+// An entry's Quick Look beside its name: the pencil's box and green round an eye a third bigger, `$glyph-size-large` * 4 / 3, via `math.div` (claude-docs/components/icon-tip.md, "Ink and size").
 .icon-tip__look {
   @include icon-button($icon-size-large, math.div($glyph-size-large * 4, 3));
   @include icon-button-edit;
@@ -139,7 +139,7 @@
 }
 
 // The action icons of a card's foot, an entry page's head and the Quick Look window's head, 13% past the large size (`$action-icon-size`)
-// (claude-docs/components/icon-tip.md, "Style notes").
+// (claude-docs/components/icon-tip.md, "Tip behaviour").
 .ingredient-card .specimen__actions,
 .spell-card .specimen__actions,
 .ingredient-entry__cupboard--icons,

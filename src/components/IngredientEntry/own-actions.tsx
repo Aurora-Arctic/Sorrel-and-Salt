@@ -13,7 +13,7 @@ import type { OwnEntryActionsProps } from './types';
 
 // A coven's own entry's actions beside its title, drawn as a list card's foot draws them: the
 // pencil, Delete Ingredient (the bin when alone) and, where the role may update stock, Edit Stock
-// in the three dots (claude-docs/components/ingredient-entry.md, "Component notes").
+// in the three dots (claude-docs/components/ingredient-entry.md, "Structure").
 
 export default function OwnEntryActions({ edit, entry }: OwnEntryActionsProps): ReactElement {
   const [asking, setAsking] = useState<'stock' | 'delete'>();

@@ -5,7 +5,7 @@ import { useTip } from '../InfoTip/use-tip';
 import './index.scss';
 
 // A mark or logo with a hover-only tip bubble, placed by `useTip`, hidden from assistive technology, taking no pointer
-// (claude-docs/components/user-list.md, "Notes from code comments: the hint").
+// (claude-docs/components/user-list.md, "Marks, logos and links with tips").
 const Hint = ({
   className,
   label,

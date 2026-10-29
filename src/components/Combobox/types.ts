@@ -14,7 +14,7 @@ export interface ComboboxOption {
   meta?: ReactNode;
   /** Which bucket it is in, curated or in use; left out by a source with one bucket. */
   curated?: boolean;
-  /** The heading of the bucket it is listed under, in place of `curated`'s two (claude-docs/components/combobox.md, "Prop notes"). */
+  /** The heading of the bucket it is listed under, in place of `curated`'s two (claude-docs/components/combobox.md, "Props in detail"). */
   heading?: string;
   /** What tells it from a row that reads the same — an ingredient's id — where its text cannot. */
   key?: string;
@@ -60,9 +60,9 @@ export interface ComboboxProps<O extends ComboboxOption = ComboboxOption> {
   empty?: string | false;
   /** The entries a list holds, drawn inside the control ahead of the box. */
   entries?: ReactNode;
-  /** A control that empties the box; `empty` hides it but keeps its room (claude-docs/components/combobox.md, "Prop notes"). */
+  /** A control that empties the box; `empty` hides it but keeps its room (claude-docs/components/combobox.md, "Props in detail"). */
   clear?: { label: string; onClear: () => void; empty: boolean };
-  /** A caller's own control inside the control box before the text, such as a submit (claude-docs/components/combobox.md, "Prop notes"). */
+  /** A caller's own control inside the control box before the text, such as a submit (claude-docs/components/combobox.md, "Props in detail"). */
   leading?: ReactNode;
   /** Whether a box with `suggestions` draws its chevron button; true unless said, false for free-text search that opens as you type. */
   toggle?: boolean;
