@@ -13,12 +13,24 @@
 // would add 16px above the caution and below it on top of the stack's gap.
 .ingredient-summary .safety-note {
   margin: 0;
+  gap: space(2);
+}
+
+// The heading stands off its text by the stack gap alone, space(2) (8px), as every other
+// heading in the modal stands off its list; its own bottom margin on top of a section's gap
+// put it 24px off.
+.ingredient-summary .safety-note__heading {
+  margin: 0;
 }
 
 // The side column's own top margin and grid column are the page's, set
 // against the viewport, which would put 16px under the caution on a phone and
-// none on a desktop; the stack above spaces it instead.
+// none on a desktop; the stack above spaces it instead. Its blocks take the
+// summary's own gap: the page's stack is on `.ingredient-entry__body > …`,
+// which the modal is not, so without it Correspondences and Categories touched.
 .ingredient-summary .ingredient-entry__side {
+  @include stack(6);
+
   grid-column: auto;
   margin-block-start: 0;
 }
