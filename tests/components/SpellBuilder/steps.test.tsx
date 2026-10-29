@@ -844,7 +844,9 @@ describe('the spell builder’s In Coven Inventory', () => {
 
     await add('Mock', /Fixture Mockroot/);
 
-    expect(within(line('Fixture Mockroot')).getByText('Out')).toBeInTheDocument();
+    expect(
+      within(line('Fixture Mockroot')).getByRole('button', { name: 'Out' }),
+    ).toBeInTheDocument();
     expect(line('Fixture Mockroot')).toHaveTextContent('hold none');
   });
 
@@ -858,16 +860,19 @@ describe('the spell builder’s In Coven Inventory', () => {
 
     await add('Rose', /Fixture Rosewort/);
 
-    expect(within(line('Fixture Rosewort')).getByText('Out')).toBeInTheDocument();
+    expect(
+      within(line('Fixture Rosewort')).getByRole('button', { name: 'Out' }),
+    ).toBeInTheDocument();
     expect(line('Fixture Rosewort')).toHaveTextContent('hold none');
   });
 
-  it('gives Not Enough in words, and not Out, once the amount typed passes the jar, and clears when it fits', async () => {
+  it('gives Not Enough as an icon button, and not Out, once the amount typed passes the jar, and clears when it fits', async () => {
     suggest(HELD);
     renderBuilder();
     await add('Rose', /Fixture Rosewort/);
     const row = stepRow('Fixture Rosewort');
-    const notEnough = () => within(line('Fixture Rosewort')).queryByText('Not Enough');
+    const notEnough = () =>
+      within(line('Fixture Rosewort')).queryByRole('button', { name: 'Not Enough' });
     expect(notEnough()).not.toBeInTheDocument();
 
     fireEvent.change(within(row).getByRole('spinbutton', { name: /^Quantity/ }), {
@@ -877,7 +882,7 @@ describe('the spell builder’s In Coven Inventory', () => {
 
     await waitFor(() => expect(notEnough()).toBeInTheDocument());
     expect(line('Fixture Rosewort')).toHaveTextContent('need 9 g · hold 5 g');
-    expect(within(line('Fixture Rosewort')).queryByText('Out')).toBeNull();
+    expect(within(line('Fixture Rosewort')).queryByRole('button', { name: 'Out' })).toBeNull();
 
     fireEvent.change(within(row).getByRole('spinbutton', { name: /^Quantity/ }), {
       target: { value: '4' },
@@ -895,7 +900,7 @@ describe('the spell builder’s In Coven Inventory', () => {
       within(hold())
         .getAllByRole('listitem')
         .filter((li) => li.textContent?.includes('Fixture Rosewort'));
-    const notEnough = (li: HTMLElement) => within(li).queryByText('Not Enough');
+    const notEnough = (li: HTMLElement) => within(li).queryByRole('button', { name: 'Not Enough' });
 
     for (const index of [0, 1]) {
       // One row is open at a time: open each in turn.
@@ -925,9 +930,13 @@ describe('the spell builder’s In Coven Inventory', () => {
     chooseUnit(row, 'ml');
 
     await waitFor(() =>
-      expect(within(line('Fixture Rosewort')).getByText('Units Differ')).toBeInTheDocument(),
+      expect(
+        within(line('Fixture Rosewort')).getByRole('button', { name: 'Units Differ' }),
+      ).toBeInTheDocument(),
     );
-    expect(within(line('Fixture Rosewort')).queryByText('Not Enough')).toBeNull();
+    expect(
+      within(line('Fixture Rosewort')).queryByRole('button', { name: 'Not Enough' }),
+    ).toBeNull();
   });
 
   it('follows a one-off’s new name in its inventory line', async () => {

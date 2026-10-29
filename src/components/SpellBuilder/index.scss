@@ -456,7 +456,6 @@ body .spell-builder .collapsible-section__fields {
   align-items: center;
   gap: space(1);
   color: $text-muted;
-  font-size: type-size('small');
 
   &.is-low {
     color: $stock-low-ink;
@@ -465,6 +464,18 @@ body .spell-builder .collapsible-section__fields {
   &.is-out {
     color: $stock-out-ink;
   }
+}
+
+// Units Differ's mark: a button only so the tip can be reached by focus; it does nothing.
+.spell-inventory__mark {
+  display: inline-flex;
+  padding: 0;
+  border: 0;
+  background: none;
+  color: inherit;
+  // A button does not inherit the font; its own size (13.33px) would shrink the 1em icon inside.
+  font: inherit;
+  cursor: default;
 }
 
 .spell-inventory__icon {

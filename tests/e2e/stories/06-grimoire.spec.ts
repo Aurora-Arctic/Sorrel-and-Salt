@@ -342,7 +342,7 @@ test(
     const hold = page.getByRole('region', { name: 'In Coven Inventory' });
     const rosemary = hold.getByRole('listitem').filter({ hasText: 'Rosemary' });
     await expect(rosemary).toContainText('hold none');
-    await expect(rosemary.getByText('Out', { exact: true })).toBeVisible();
+    await expect(rosemary.getByRole('button', { name: 'Out' })).toBeVisible();
   },
 );
 
