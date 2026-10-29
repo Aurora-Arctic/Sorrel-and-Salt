@@ -539,6 +539,16 @@ export interface AuditWriter {
   /** The proof's coven's live jars of its ingredient `ingredientId`, locked in jar-id order. */
   lockJarsOfIngredient(membership: Membership, ingredientId: string): Promise<StockRow[]>;
   /**
+   * Takes up to `amount` (in the jar's own unit) out of the proof's coven's live jar, never below zero, and returns what it took: the one path that
+   * decrements stock, so a completed working's deduction joins the working's transaction and cannot race another (M13.5). The jar is locked first,
+   * so the amount read is the amount written. A jar kept without an amount, or not the coven's, gives `taken: 0`.
+   */
+  decrementStock(
+    membership: Membership,
+    inventoryItemId: string,
+    amount: number,
+  ): Promise<{ taken: number }>;
+  /**
    * The live steps, in live spells of the proof's coven, that lay any of these forms, locked in step-id order until the transaction ends:
    * what a convert moves and checks for a spell that would hold one form twice. Private spells included; another coven's steps never.
    */
