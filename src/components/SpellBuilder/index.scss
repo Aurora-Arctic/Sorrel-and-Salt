@@ -230,10 +230,16 @@ $spell-columns-switch: $spell-main-min + $spell-columns-gap + $spell-side;
 // not carried by colour alone.
 .spell-steps__filter {
   display: flex;
-  flex-wrap: wrap;
-  align-items: center;
-  gap: space(1) space(2);
+  flex-direction: column;
+  gap: space(1);
   margin-block-start: space(2);
+}
+
+// The caption and its InfoTip on a line of their own, above the chips.
+.spell-steps__filter-head {
+  display: flex;
+  align-items: center;
+  gap: space(2);
 }
 
 // The caption beside the chips, the muted style Category Match's row labels wear.
