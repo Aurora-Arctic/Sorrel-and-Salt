@@ -555,3 +555,8 @@ These are also unwritten, for the reasons given:
 ### Traditions left out because they are not a people or a religion
 
 A tradition is a people or a religion. These are medical systems, practices, regions or nationalities: Ayurveda, Siddha, Unani, Sinhala folk medicine, Traditional Chinese medicine, Tibetan medicine, Traditional Mongolian medicine, Kampo, Traditional Korean medicine, Japanese incense, Chinese incense, African traditional medicine, Zimbabwean traditional medicine, West African and Central African traditional medicine, South African traditional medicine, Central African ordeal practice, East African animist practice, the Middle Eastern, Arabian, Arabic, Iranian, Iraqi, Jordanian, Lebanese, Moroccan, Saudi, Turkish, Yemeni, Omani and Emirati medicine and culinary entries, and the nationalities and regions Filipino, Vietnamese, Cambodian, Thai, Malaysian, Indonesian, Southeast Asian and Pacific Islander.
+
+## M14.18 — East Asia
+
+- 816 Dragon Bones: the only source is a disambiguation page whose one relevant sentence says dragon bones (long gu) are fossilised remains of prehistoric life used in traditional Chinese medicine. It names no species or formal name and is too short for a description. It needs a source that says what the fossils are.
+- 826 Hisakaki (Eurya japonica): the only source (Wikipedia, oldid 1267052140) has three sentences on the plant (size, range, ornamental use, a sacred tree in Shinto whose leaves are offerings), too short for 100 words without padding. It needs a second source on its Shinto use.
