@@ -8,14 +8,9 @@ import { ADD, HELD } from '../support/cupboard-wording';
 import { insertIngredient } from '../support/db/insert-ingredient';
 import { compendiumList, seedCoven, withSql } from './stories/coven-ingredients';
 
-// The public compendium page (M8.18; MB.80), against the built server. Story 14 walks a
-// visitor through narrowing the list and opening an entry (tests/e2e/stories/02-compendium);
-// this proves what no story walks: the page is whole in the HTML as served, the pager
-// reaches the last page, one coven's add shows as held to its other members on the cached
-// list, the search row sticks under the top bar, the category chips cover every category, a
-// curator's Edit opens the compendium's edit dialog over the search (M8.17), and the page
-// holds at a phone's width. The curators' filters doing nothing here, and a filtered view's
-// noindex, are the page test's (tests/app/(public)/compendium/page.test.tsx) and seo.spec.ts's.
+// The public compendium page against the built server, for what no story walks: the page is whole in the HTML
+// as served, the pager reaches the last page, one coven's add shows as held to its other members, the search
+// row sticks, the category chips cover every category, a curator's Edit opens over the search, and it holds at 375px.
 
 // The cards page by 24 (`CARD_PAGE_SIZE`), so the grid ends on a full row.
 const PAGE_SIZE = 24;
@@ -76,7 +71,7 @@ test('Next from the first page reaches a last page that reads Page Y of Y', asyn
   await expect(pager.getByRole('link', { name: 'Next' })).toBeDisabled();
 });
 
-// The viewer's empty foot is story 14's (tests/e2e/stories/02-compendium.spec.ts).
+// A viewer's empty foot is stories/02-compendium.spec.ts's.
 test("an owner's add shows as held to a member of the same coven, on the cached list", async ({
   page,
 }) => {
@@ -85,7 +80,7 @@ test("an owner's add shows as held to a member of the same coven, on the cached 
     B: 'member',
   });
 
-  // The plus works (M9.12): a member of one coven adds with a press, and the card shows the
+  // The plus works: a member of one coven adds with a press, and the card shows the
   // check in its place. The covens' held marks are the coven's own, so B, in the same coven,
   // finds that card already held when the page is opened.
   for (const [index, key] of ['A', 'B'].entries()) {
@@ -105,10 +100,8 @@ test("an owner's add shows as held to a member of the same coven, on the cached 
   }
 });
 
-// The search row sticks to the top once scrolled to (the owner's call, 2026-10-19): the box,
-// the Filters button and Clear All stay in view while the cards go by, and the tray they open
-// stays in view with them.
-// The sticky box is the `<search>` landmark; the form inside is the controls alone.
+// The search box, the Filters button and Clear All stay in view while the cards go by, and so does the tray
+// they open. The sticky box is the `<search>` landmark; the form inside is the controls alone.
 const searchRow = (page: Page) => page.getByRole('search');
 const searchForm = (page: Page) => searchRow(page).locator('form');
 
@@ -161,8 +154,7 @@ test('signed in, the search row sticks under the top bar and its tray stays in v
 });
 
 // Under the narrow column the row is two lines, the search box and then Filters beside Clear All,
-// and both stick together as the desktop row does (the MB.120 review, item 6; the owner's call,
-// 2026-10-20).
+// and both stick together as the desktop row does.
 test('the stuck row holds at 375px without a sideways scroll or an axe violation', async ({
   page,
 }) => {
@@ -213,10 +205,9 @@ test('the search row is marked stuck once scrolled past, and unmarked back at th
   await expect(row).not.toHaveAttribute('data-stuck', /.*/);
 });
 
-// The chips shown and the +N button together account for every category. Opening the panel
-// floats it over the card, so the card and its grid row do not change height; a component
-// test cannot measure either. No seeded entry has more than three categories, so the test
-// files Amethyst under three more first, and holds the card at the grid's narrowest, 20rem.
+// The chips shown and the +N button together account for every category, and opening the panel floats it over
+// the card without changing the card's or its grid row's height (a component test cannot measure either).
+// The test files Amethyst under three more categories first, at the grid's narrowest, 20rem.
 test('the category chips and the +N count cover every category, and opening the panel does not change the card height', async ({
   page,
 }) => {
@@ -273,7 +264,7 @@ test('the category chips and the +N count cover every category, and opening the 
   await expect(more).toBeFocused();
 });
 
-// M8.17: a curator edits an entry from the public search, in the compendium's edit dialog over
+// A curator edits an entry from the public search, in the compendium's edit dialog over
 // the results, and closes back onto the same search with the focus on the card's Edit. An
 // account that cannot curate gets no Edit, and the same address opens nothing for it.
 test("a curator's Edit opens the compendium's edit dialog over the search, and closes back to it", async ({

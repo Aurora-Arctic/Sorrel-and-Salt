@@ -2,10 +2,8 @@ import { readFileSync } from 'node:fs';
 import { resolve } from 'node:path';
 import type { Story } from './types';
 
-// The v1 user stories, parsed out of DESIGN.md §10 rather than copied: a second
-// list here would drift without a test failing. The path starts from the working
-// directory, not tests/support/paths.ts: Playwright loads its reporters as
-// CommonJS, where `import.meta` does not exist, and both runners start at the root.
+// The v1 user stories, parsed out of DESIGN.md §10 rather than copied. The path starts from the working
+// directory: Playwright loads its reporters as CommonJS, where `import.meta` does not exist.
 
 const SECTION_HEADING = /^## 10\. User stories\s*$/m;
 const NEXT_SECTION = /^## \d+\./m;

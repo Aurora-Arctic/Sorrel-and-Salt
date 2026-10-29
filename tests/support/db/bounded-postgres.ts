@@ -1,18 +1,10 @@
 import postgres from 'postgres';
 import type { ClientOptions } from './types';
 
-// What `import postgres from 'postgres'` resolves to inside the `db` project:
-// postgres.js itself, every pool capped at
-// TEST_POOL_MAX. The app's client in src/db/connection.ts and the client each
-// test file opens would otherwise each default to ten, and eleven workers of
-// those are more than Postgres's slots once another run or an idle e2e server
-// shares them (MB.179). A cap rather than a default, so a call site cannot
-// raise it; one lowering its own `max` (postgres.js's ordering guarantee is
-// `max: 1`) keeps the lower number. Resolved here by
-// tests/support/db-project.mts's plugin rather than passed at every call —
-// sixty files open a client of their own, and the env var postgres.js would
-// read for `max` is undocumented and hands a string to `Array()`, which makes
-// any value a pool of one (claude-docs/testing/db-harness.md, "Connections per run").
+// What `import postgres from 'postgres'` resolves to in the `db` project: postgres.js with every pool capped
+// at TEST_POOL_MAX, so the app's client and each file's own do not exceed Postgres's slots. A lower `max` set
+// at a call site is kept. Resolved by tests/support/db-project.mts's plugin, as postgres.js's env var for `max`
+// makes any value a pool of one (claude-docs/testing/db-harness.md, "Connections per run").
 
 /** The most connections one client under test may open, one term of the run's connection budget. */
 export const TEST_POOL_MAX = 4;

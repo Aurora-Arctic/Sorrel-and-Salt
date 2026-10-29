@@ -8,7 +8,7 @@ test('a seeded violation fails the scan', async ({ page }) => {
   await expect(assertNoAccessibilityViolations(page)).rejects.toThrow();
 });
 
-// MB.265: a soft navigation removes the <title> and puts the next one back a
+// A soft navigation removes the <title> and puts the next one back a
 // moment later. The scan waits for it rather than reporting a page that has one.
 test('a title that is briefly absent does not fail the scan', async ({ page }) => {
   await page.setContent(

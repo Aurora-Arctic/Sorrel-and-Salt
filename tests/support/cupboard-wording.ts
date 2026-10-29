@@ -1,7 +1,6 @@
-// The cupboard words a visitor sees, stated here for the e2e specs and component tests to share.
-// They are deliberately NOT imported from `src` (src/components/AddIcon/wording.ts): a test that
-// read the component's own constant would still pass after the words changed. Change a word
-// there and these fail until this file says it too.
+// The cupboard words a visitor sees, shared by the e2e specs and component tests. Deliberately not
+// imported from `src` (src/components/AddIcon/wording.ts): a test reading the component's own
+// constant would still pass after the words changed.
 
 /** The plus's tip and name, before the entry's name. */
 export const ADD = 'Add to My Ingredients';

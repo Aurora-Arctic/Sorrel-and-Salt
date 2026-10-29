@@ -2,10 +2,9 @@ import { test, expect } from './fixtures';
 import { LAST_USED_PROVIDER_COOKIE } from '@/lib/sign-in';
 import { assertNoAccessibilityViolations, assertNoSidewaysScroll } from './axe';
 
-// Runs only in the `chromium-configured-providers` project, against a server
-// whose four providers carry placeholder credentials — the brand-coloured
-// state a real user sees, which the gate project's server, its providers
-// greyed, never renders. claude-docs/components/sign-in-panel.md, "Testing".
+// Runs only in the `chromium-configured-providers` project, against a server whose four providers carry
+// placeholder credentials, so the brand-coloured state shows that the gate project's greyed server never
+// renders. claude-docs/components/sign-in-panel.md, "Testing".
 const PROVIDER_NAMES = ['Discord', 'Google', 'Facebook', 'Microsoft'];
 
 // The placeholder ids are useless to a real authorization endpoint, so

@@ -6,13 +6,9 @@ import { makeIngredient } from '../support/fixtures/ingredient';
 import { insertIngredient } from '../support/db/insert-ingredient';
 import { type Coven, localIngredient, seedCoven, withSql } from './stories/coven-ingredients';
 
-// The coven switcher keeps the page it can (M9.12): from a page that exists in the coven
-// picked it lands on that page, and otherwise on the same section, as it always did.
-// Component tests prove the choice of address (tests/components/WorkspaceSwitcher,
-// tests/lib/coven-path.test.ts) and the service proves which covens an entry opens in
-// (tests/modules/ingredients/services/covens-opening-entry.test.ts). This walks the real
-// layout, page and router: the page's word reaches the layout's switcher, and the address
-// it lands on is served rather than a 404.
+// The coven switcher keeps the page it can: it lands on the same page in the coven picked if that exists,
+// and otherwise on the same section. Component tests prove the choice of address and the service proves
+// which covens an entry opens in; this walks the real layout and router, so the address it lands on is served.
 
 test.beforeAll(async () => {
   await recreateE2eDatabase();

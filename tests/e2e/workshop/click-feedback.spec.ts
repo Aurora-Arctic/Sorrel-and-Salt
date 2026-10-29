@@ -1,14 +1,9 @@
 import { expect, test, type Locator, type Page } from '@playwright/test';
 import { assertNoAccessibilityViolations } from '../axe';
 
-// The click-feedback callout's layout facts (M12.31, design F;
-// claude-docs/components/click-feedback.md): that the callout stays clear of
-// its control and inside the window or its box, that nothing moves as it comes and goes, that the badge's
-// press target covers no neighbour, and that reduced motion stills the fade.
-// Measured in the component's Storybook stories, which draw each placement on
-// its own, though pages use it too (the root layout, the ingredient entry's
-// actions, SignInMethods, AddIcon); what it says and where the focus goes are in
-// tests/components/ClickFeedback.
+// The click-feedback callout's layout facts (claude-docs/components/click-feedback.md), measured in its Storybook
+// stories: clear of its control, inside the window, nothing moving as it comes and goes, and reduced motion
+// stilling the fade. What it says and where the focus goes are tests/components/ClickFeedback's.
 
 const WIDTHS = [1280, 375] as const;
 const THEMES = ['dark', 'light'] as const;
@@ -26,11 +21,9 @@ const storyPath = (story: string) =>
   story in STATE_OF ? `states&args=state:${STATE_OF[story]}` : story;
 
 /**
- * The story in Storybook's bare preview (`iframe.html`), in `theme`, with its text in the web
- * font: measured before the font arrives, on a cold Storybook, a control is
- * narrower than it will be and every place taken from it is wrong. The fonts
- * are waited for once the story's controls are drawn, since a font is fetched
- * only when text first asks for it.
+ * The story in Storybook's bare preview (`iframe.html`) in `theme`, with its text in the web font: measured
+ * before the font arrives, a control is narrower than it will be and every place taken from it is wrong. The
+ * font is waited for once the controls are drawn, since it is fetched only when text first asks for it.
  */
 async function openStory(page: Page, story: string, theme: string, width: number) {
   await page.setViewportSize({ width, height: 800 });
@@ -278,11 +271,9 @@ async function takeFrames(page: Page): Promise<Record<Piece, Frame[]>> {
 }
 
 /**
- * Holds back each piece's place by `frames` frames: `is-placed` is taken off
- * as the script sets it, before any frame can draw it, and put back after.
- * Floating UI places within the press's own task in the workshop, but a slower
- * page (`next dev`) can land it frames later, and a fade that started at the
- * mount would then be spent before the piece is seen.
+ * Holds back each piece's place by `frames` frames: `is-placed` is taken off as the script sets it and put
+ * back after. A slower page (`next dev`) can place it frames late, and a fade started at the mount would then
+ * be spent before the piece is seen.
  */
 async function holdPlacement(page: Page, frames: number): Promise<void> {
   await page.evaluate(

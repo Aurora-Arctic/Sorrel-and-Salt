@@ -14,11 +14,9 @@ export function workerDatabaseName(slot: number | string): string {
 }
 
 /**
- * `DATABASE_URL` with only the database name swapped for this worker's clone.
- *
- * The slot is `VITEST_POOL_ID`, never `VITEST_WORKER_ID`: the first is a pool
- * slot in `1..maxWorkers`, the second counts test files across the run and so
- * soon names a clone db-global-setup.ts never made.
+ * `DATABASE_URL` with only the database name swapped for this worker's clone. The slot is `VITEST_POOL_ID`,
+ * never `VITEST_WORKER_ID`: the first is a pool slot in `1..maxWorkers`, the second counts test files across
+ * the run and so soon names a clone db-global-setup.ts never made.
  */
 export function workerDatabaseUrl(env: WorkerEnv): string {
   const base = env.DATABASE_URL;

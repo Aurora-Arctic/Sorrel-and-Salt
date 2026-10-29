@@ -5,10 +5,8 @@ import { recreateE2eDatabase } from './database';
 import { signInAgainAs } from './session';
 import { seedCoven } from './stories/coven-ingredients';
 
-// The spell builder's save status (M13.17) in each state it can show, scanned
-// with axe: saving, saved, failed with Retry, and conflict. Story 81 walks the
-// autosave itself (tests/e2e/stories/06-grimoire.spec.ts); this proves only
-// what no story walks, that every state is accessible.
+// The spell builder's save status in each state (saving, saved, failed with Retry, conflict), scanned with
+// axe. The autosave itself is stories/06-grimoire.spec.ts's.
 
 test.beforeAll(async () => {
   await recreateE2eDatabase();

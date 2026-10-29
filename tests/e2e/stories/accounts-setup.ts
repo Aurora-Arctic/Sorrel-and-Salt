@@ -5,12 +5,9 @@ import { slugify } from '@/lib/slugify';
 import { e2eDatabaseUrl } from '../database';
 import { signInAs } from '../session';
 
-// Setup for the accounts and members stories, written straight to this
-// worker's slot database as the gate specs write theirs (coven.spec.ts): the
-// people and covens a story starts from are not what it proves, so they
-// bypass the code under test (MB.101). Each story's own step goes through
-// the browser. Kept beside the two specs that share it rather than in
-// tests/e2e/, which holds the harness every spec uses.
+// Setup for the accounts and members stories, written straight to this worker's slot database as the gate
+// specs write theirs (coven.spec.ts), so it bypasses the code under test. Kept beside the two specs that
+// share it, not in tests/e2e/, which holds the harness every spec uses.
 
 type CovenRole = 'owner' | 'member' | 'viewer';
 
@@ -25,10 +22,9 @@ export async function withSql<T>(fn: (sql: postgres.Sql) => Promise<T>): Promise
 }
 
 /**
- * A verified user signed in on `page`, renamed from `signInAs`'s shared
- * "Fixture Person" so the members table can tell each row apart, and holding
- * the right to create a coven when `canCreate` says so. A curator or an
- * admin holds that right already, by the database's own check.
+ * A verified user signed in on `page`, renamed from `signInAs`'s shared "Fixture Person" so the members table
+ * can tell rows apart, holding the right to create a coven when `canCreate` says so (a curator or admin
+ * already does, by the database's own check).
  */
 export async function makeUser(
   page: Page,
@@ -81,17 +77,15 @@ export async function seatsOf(covenId: string): Promise<Record<string, CovenRole
 }
 
 /**
- * The roll as the members page draws it: each row's role by the member's
- * name. The role word is read because it is the only rendering of the role
- * (layer-ownership.md rule 2's exception); the name is matched against the
- * names the spec gave, since the current user's cell also carries a "You"
- * mark. Read through `expect.poll` after an action, which this does not wait for.
+ * The roll as the members page draws it: each row's role by the member's name. The role word is the only
+ * rendering of the role (layer-ownership.md rule 2's exception); the name is matched against the given
+ * names, since the current user's cell also carries a "You" mark. Wrap in `expect.poll`: it does not wait.
  */
 async function rollOf(page: Page, names: readonly string[]): Promise<Record<string, string>> {
   const table = page.getByRole('table', { name: 'Members' });
   const rows = await table.getByRole('row').all();
   // The Role column found by its heading, since an owner's table has the
-  // Email column before it (M11.19).
+  // Email column before it.
   const headings = await table.getByRole('columnheader').allInnerTexts();
   const role = headings.findIndex((heading) => heading.trim() === 'Role');
   const roll: Record<string, string> = {};

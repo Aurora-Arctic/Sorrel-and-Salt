@@ -20,11 +20,8 @@ function mergeInto(base: Plain, overrides: Plain): Plain {
 }
 
 /**
- * `defaults` with `overrides` applied — a fresh deep copy every call, so two
- * fixtures from one module constant share no array or nested object.
- *
- * `NoInfer` is load-bearing: without it TypeScript infers `T` from the partial
- * overrides and hands back a fixture whose every field is optional.
+ * `defaults` with `overrides` applied, a fresh deep copy every call. `NoInfer` is load-bearing: without it
+ * TypeScript infers `T` from the partial overrides and every field becomes optional.
  */
 export function mergeFixture<T extends object>(
   defaults: T,

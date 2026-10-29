@@ -1,14 +1,8 @@
 import type { ProbeSet } from '../types';
 
-// The probes of tests/guards/lint-db-client-boundary.test.ts: only
-// `src/db/repository/` may import the database client (CLAUDE.md rule 2), and
-// only the database layer may import `drizzle-orm` at runtime (rule 4).
-// Written and linted once by unit-global-setup.ts.
-//
-// Probes are written to throwaway `__lint-probe__` directories inside the
-// repo, since both rules are path-scoped and a file in `tmpdir` matches no
-// `overrides` block; not committed, since oxlint skips anything matched by
-// `ignorePatterns` even when passed explicitly (`--no-ignore` does not override it).
+// The probes of tests/guards/lint-db-client-boundary.test.ts: only `src/db/repository/` may import the
+// database client (CLAUDE.md rule 2) and only the database layer `drizzle-orm` at runtime (rule 4). Written
+// and linted once by unit-global-setup.ts, in throwaway `__lint-probe__` directories: oxlint skips `ignorePatterns` files.
 
 /**
  * Files whose import of the client is exempted by a disable comment: the

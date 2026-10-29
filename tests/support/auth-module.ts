@@ -2,14 +2,9 @@ import { vi } from 'vitest';
 import type { AuthInstance } from './types';
 
 /**
- * `@/lib/auth` built afresh under `env`, for a file's `beforeAll`: the module
- * reads its secret, provider credentials, origin, limiter and impersonation
- * flags once, at import, so a file whose env does not change pays for the
- * import once rather than per test. `env` is applied for the import alone and
- * restored after, so every test in the file sees the same environment; a
- * variable read per request — `ADMIN_BOOTSTRAP_EMAIL` — is stubbed by the test
- * or describe that varies it. Modules imported after this call share its graph
- * (claude-docs/auth/tests.md, "Tests").
+ * `@/lib/auth` built afresh under `env`, for a file's `beforeAll`: the module reads its secret, providers,
+ * origin and flags once, at import. `env` applies for the import alone, so every test in the file sees the
+ * same environment (claude-docs/auth/tests.md, "Tests").
  */
 export async function importAuth(env: Readonly<Record<string, string>>): Promise<AuthInstance> {
   vi.resetModules();

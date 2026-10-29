@@ -1,7 +1,7 @@
 import { test, expect } from './fixtures';
 import { recreateE2eDatabase } from './database';
 
-// What a crawler reads on the public pages (MB.84), from the HTML as served and signed out.
+// What a crawler reads on the public pages, from the HTML as served and signed out.
 // The e2e servers run outside production, so the robots and sitemap files are proved by
 // their unit tests; this proves the pages, and that nothing here is indexable off production.
 

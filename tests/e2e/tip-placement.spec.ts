@@ -8,10 +8,8 @@ import { insertCupboardEntry } from '../support/db/insert-cupboard-entry';
 import { insertIngredient } from '../support/db/insert-ingredient';
 import { makeIngredient } from '../support/fixtures/ingredient';
 
-// Every tip stays on screen (M8.14, amended 2026-10-18). No story walks this:
-// it is a layout fact at the narrowest phone, so this gate opens the tips of
-// the Add Ingredient dialog at 320px and measures each one's box, and the
-// formal name's on both entry pages at a 390px phone.
+// Every tip stays on screen at the narrowest phone: the Add Ingredient dialog's tips at 320px, and the formal
+// name's on both entry pages at 390px.
 
 test.beforeAll(async () => {
   await recreateE2eDatabase();
@@ -22,9 +20,8 @@ test.use({ viewport: { width: 320, height: 640 } });
 type Box = NonNullable<Awaited<ReturnType<Locator['boundingBox']>>>;
 
 /**
- * The tip's box once its fade and first placement have settled: two polled
- * reads in a row that agree, rather than a fixed sleep that guesses how long
- * the settling takes.
+ * The tip's box once its fade and first placement have settled: two polled reads in a row that agree,
+ * rather than a fixed sleep.
  */
 async function settledBox(tip: Locator): Promise<Box | null> {
   const read: { last: string; box: Box | null } = { last: '', box: null };
@@ -85,10 +82,9 @@ test('every tip in the Add Ingredient dialog opens inside a 320px viewport', asy
   expect(Math.max(...edges)).toBeGreaterThan(160);
 });
 
-// The formal name's ⓘ heads both pages of an entry, a coven's and the public one, and opens
-// below the ⓘ on a phone, where the shell's sticky bar would cover a tip above. The page's own
-// stylesheet once moved the bubble after useTip had placed it, so it stood off its ⓘ
-// (claude-docs/components/ingredient-entry.md, "The formal name is never blank").
+// The formal name's ⓘ heads a coven's entry page and the public one, and opens below on a phone, where the
+// shell's sticky bar would cover a tip above (claude-docs/components/ingredient-entry.md, "The formal name is
+// never blank").
 test('the formal name\u2019s tip opens inside a 390px viewport on a coven\u2019s page and the public page', async ({
   page,
   browser,
@@ -142,8 +138,7 @@ test('the formal name\u2019s tip opens inside a 390px viewport on a coven\u2019s
   }
 
   // The same ⓘ in the Quick Look window, which scrolls under a clipped dialog: the tip must
-  // stay inside the viewport there too, below the ⓘ on a phone and beside it on a wide screen
-  // (the owner's call, 2026-10-20).
+  // stay inside the viewport there too, below the ⓘ on a phone and beside it on a wide screen.
   for (const [width, height] of [
     [390, 844],
     [1280, 800],

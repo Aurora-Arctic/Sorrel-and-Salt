@@ -238,10 +238,8 @@ export const answerCounts = (withoutReferences: number) =>
 /** The filter the sentence cases search with: one category chosen. */
 export const SEARCHED: CompendiumListFilter = { ...NO_FILTER, categories: ['testcraft'] };
 
-// The sentence types on a 16ms interval, a render a tick. On real timers a test sat through the
-// whole animation, some seventy renders of the list, and in a loaded full run, where a render
-// takes hundreds of milliseconds, that outran the 20s timeout. On a fake clock the line types
-// only when the test advances it.
+// The sentence types on a 16ms interval, a render a tick. On real timers a loaded full run outran the 20s
+// timeout, so a fake clock types the line only when the test advances it.
 export const typingClock = () => {
   vi.useFakeTimers({ toFake: ['setTimeout', 'clearTimeout', 'setInterval', 'clearInterval'] });
   onTestFinished(() => {

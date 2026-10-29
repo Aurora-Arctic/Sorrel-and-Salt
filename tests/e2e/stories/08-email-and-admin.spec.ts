@@ -7,14 +7,9 @@ import { e2eDatabaseUrl, recreateE2eDatabase } from '../database';
 import { latestMessageTo } from '../mailpit';
 import { PRIMARY_ADMIN_EMAIL, signInAgainAs, signInAs } from '../session';
 
-// Stories 58–62 walked in the browser, as a user and an admin would walk
-// them: proving an address, changing it, granting and revoking admin, reading
-// the privilege ledger, and inviting an admin by email
-// (claude-docs/auth/admin-bootstrap.md, "The email page";
-// claude-docs/design-decisions/mb.61-email-verification-and-delivery.md).
-// Accounts are made by `signInAs` and rows a flow needs in place by raw SQL
-// (MB.101); the story's own step goes through the page, and a mailed link is
-// read from Mailpit and followed.
+// Proving an address, changing it, granting and revoking admin, the privilege ledger and inviting an admin by
+// email (claude-docs/auth/admin-bootstrap.md, "The email page"; claude-docs/design-decisions/mb.61-email-verification-and-delivery.md).
+// A mailed link is read from Mailpit and followed.
 test.beforeAll(async () => {
   await recreateE2eDatabase();
 });
@@ -37,11 +32,8 @@ async function rename(userId: string, name: string): Promise<void> {
 }
 
 /**
- * Opens `path` in this page, following each redirect itself. The session
- * rides as an extra request header (tests/e2e/session.ts), which the browser
- * drops on a redirect it follows, so a followed hop would arrive signed out.
- * Here each hop the server answers with a redirect is read and opened afresh,
- * session and all, as a browser holding the cookie would arrive there.
+ * Opens `path` in this page, following each redirect itself. The session rides as an extra request header
+ * (tests/e2e/session.ts), which the browser drops on a followed redirect, so each hop is read and opened afresh.
  */
 async function visit(page: Page, path: string): Promise<Response> {
   let target = path;
@@ -62,10 +54,8 @@ const VERIFY_LINK = /https?:\/\/[^\s\])>"]+\/verify-email\?[^\s\])>"]+/;
 const INVITE_LINK = /https?:\/\/[^\s\])>"]+\/invite\/[A-Za-z0-9_-]+/;
 
 /**
- * The path of the link in the newest mail to `to` matching `pattern`, waiting
- * for one not in `seen`, and checking the mail went to that address alone.
- * The path rather than the URL: the build's origin is the link's fallback,
- * not this slot's server.
+ * The path of the link in the newest mail to `to` matching `pattern`, waiting for one not in `seen` and
+ * checking the mail went to that address alone. The path, not the URL: the link's origin is the build's, not this slot's.
  */
 async function mailedPath(
   to: string,
@@ -96,9 +86,8 @@ async function signedOutPage(browser: Browser, baseURL: string | undefined): Pro
 }
 
 /**
- * Sends a GraphQL operation from the page, as anyone could from the
- * browser's console: the direct action behind a control the page withholds.
- * A refusal must come from the server, not only from the page.
+ * Sends a GraphQL operation from the page, as anyone could from the console: the direct action behind a
+ * control the page withholds, so a refusal must come from the server.
  */
 async function sendFromPage(
   page: Page,
@@ -145,10 +134,7 @@ async function expectAdminArea(page: Page, reached: boolean): Promise<void> {
   }
 }
 
-/**
- * The primary admin's id: the account an earlier test signed in at the
- * address, or one made now, since the email index admits the address once.
- */
+/** The primary admin's id: the account an earlier test signed in at the address, or one made now (the email index admits it once). */
 async function primaryAdminId(page: Page): Promise<string> {
   const [row] = await withSql(
     (sql) => sql`select id from users where email = ${PRIMARY_ADMIN_EMAIL}`,
@@ -167,10 +153,7 @@ async function userRow(page: Page, email: string) {
 /** The role cell, the third: its text opens with the role. */
 const roleCell = (row: ReturnType<Page['getByRole']>) => row.getByRole('cell').nth(2);
 
-/**
- * Opens `name`'s Change Role dialog from `row` and picks `role` in it,
- * answering the dialog for the caller to confirm (M11.20).
- */
+/** Opens `name`'s Change Role dialog from `row`, picks `role` and answers the dialog for the caller to confirm. */
 async function chooseRole(
   page: Page,
   row: ReturnType<Page['getByRole']>,
@@ -184,10 +167,7 @@ async function chooseRole(
   return dialog;
 }
 
-/**
- * Invites `email` from /admin/invitations as the signed-in admin, to the
- * admin role unless told otherwise, and answers the mailed link's path.
- */
+/** Invites `email` from /admin/invitations as the signed-in admin, to the admin role unless told otherwise, and answers the mailed link's path. */
 async function inviteAdmin(
   page: Page,
   email: string,
@@ -382,10 +362,9 @@ test(
   },
 );
 
-// Story 60's three tests on the primary admin share one worker, in this order,
-// because the last demotes every other admin in the worker's database, the
-// primary included, which the two before it need in place. Serial inside this
-// block alone: the tests after it make their own admins.
+// The three tests on the primary admin share one worker, in this order, because the last demotes every other
+// admin in the worker's database, the primary included, which the two before need in place. Serial in this
+// block alone.
 test.describe('the primary admin', () => {
   test.describe.configure({ mode: 'serial' });
 
@@ -441,7 +420,7 @@ test.describe('the primary admin', () => {
       const { userId: grantee } = await signInAs(page, granteeEmail);
       const { userId: other } = await signInAs(page, address('other-admin'), ['discord'], 'admin');
       const list = `/admin/users?query=${encodeURIComponent(granteeEmail)}`;
-      // The page's statement while paused, and none while open (the owner's call).
+      // The page's statement while paused, and none while open.
       const status = page.getByRole('main').getByRole('status');
 
       // Another admin sees the switch, unusable, and why.
@@ -595,7 +574,7 @@ test(
       }),
     );
 
-    // The ledger, by its tab on the People page beside Users (MB.115).
+    // The ledger, by its tab on the People page beside Users.
     await visit(page, '/admin/users');
     const tab = page
       .getByRole('navigation', { name: 'People' })
@@ -730,12 +709,12 @@ test(
     await visit(page, '/admin/invitations');
 
     const section = page.getByRole('region', { name: 'Admin Invitations' });
-    // New Invitation is the tab's action, beside the page's heading (MB.115).
+    // New Invitation is the tab's action, beside the page's heading.
     await page.getByRole('link', { name: 'New Invitation' }).click();
     const dialog = page.getByRole('dialog', { name: 'New Invitation' });
     const send = dialog.getByRole('button', { name: 'Send Invitation' });
     const email = dialog.getByRole('textbox', { name: 'Email Address' });
-    // It opens on its first field (MB.115), with nothing to send yet.
+    // It opens on its first field, with nothing to send yet.
     await expect(email).toBeFocused();
     await expect(send).toBeDisabled();
     await email.fill(invited);
@@ -747,7 +726,7 @@ test(
     await expect(section.getByRole('status')).toContainText(invited);
     const row = section.getByRole('row', { name: new RegExp(invited.replace(/[.]/g, '\\.')) });
     await expect(row).toContainText('Curates the resins');
-    // The role the form starts on, the lesser one (M11.20).
+    // The role the form starts on, the lesser one.
     await expect(row).toContainText('Curator');
     // Mailed to the invited address alone, and the page answers no link:
     // the mail is the only place the token is.
@@ -869,7 +848,7 @@ test(
   },
 );
 
-// M11.20: the same invitation, to the curator role. The acceptance is the
+// The same invitation, to the curator role. The acceptance is the
 // admin's above; this proves what accepting it grants, and what it does not.
 test(
   'an invitation to the curator role lands its invitee on /admin with the curation pages and no People, both grants in the ledger',
@@ -967,7 +946,7 @@ test(
     await expect(
       section.getByRole('row', { name: new RegExp(withdrawnEmail.replace(/[.]/g, '\\.')) }),
     ).toHaveCount(0);
-    // Its Revoke went with the row: the page's heading has the focus (M8.17).
+    // Its Revoke went with the row: the page's heading has the focus.
     await expect(page.getByRole('main').getByRole('heading', { level: 1 })).toBeFocused();
     // Still listed: the two that were not withdrawn, the lapsed one until it lapses.
     await expect(

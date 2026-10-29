@@ -5,13 +5,9 @@ import { recreateE2eDatabase } from '../database';
 import { signInAgainAs } from '../session';
 import { expectRoll, makeCoven, makeUser, seatsOf, withSql } from './accounts-setup';
 
-// Stories 9, 10 and 11, walked in the browser against the built server: the
-// members page's roll, removing a member and leaving, and the last-owner
-// guard. Each test builds a coven of its own by SQL (accounts-setup.ts), so a
-// removal or a role change in one cannot reach another; the step each story
-// is about goes through the page. A refusal is shown twice over: the control
-// is absent where the page knows better, and where a page loaded earlier
-// still offers it, the server refuses it and the page says so.
+// The members page's roll, removing a member and leaving, and the last-owner guard, walked against the built
+// server. Each test builds its own coven by SQL (accounts-setup.ts). A refusal shows twice: the control is
+// absent where the page knows better, and where a stale page still offers it the server refuses and the page says so.
 
 test.beforeAll(async () => {
   await recreateE2eDatabase();
@@ -23,9 +19,8 @@ const CEDAR = 'Fixture Cedar';
 const NAMES = [ASH, BIRCH, CEDAR];
 
 /**
- * Ash, Birch and Cedar, with addresses of the test's own (`key`) since the
- * email index is unique, seated in a new coven at the roles given. The page
- * is left signed in as the last of them made.
+ * Ash, Birch and Cedar, with addresses of the test's own (`key`) since the email index is unique, seated in a
+ * new coven at the roles given. The page is left signed in as the last of them.
  */
 async function covenOfThree(
   page: Page,
@@ -70,7 +65,7 @@ test.describe('who is in a coven', () => {
         await expect(page).toHaveURL(new RegExp(`/coven/${coven.slug}/members$`));
         await expect(membersLink(page)).toHaveAttribute('aria-current', 'page');
         await expectRoll(page, { [ASH]: 'Owner', [BIRCH]: 'Member', [CEDAR]: 'Viewer' }, NAMES);
-        // The addresses are the owner's alone (M11.19): each row carries its
+        // The addresses are the owner's alone: each row carries its
         // member's for Ash, and none reaches Birch's page.
         const table = page.getByRole('table', { name: 'Members' });
         for (const [name, address] of [
@@ -161,7 +156,7 @@ test.describe('removing a member, and leaving', () => {
       await expect(dialog).toHaveCount(0);
       await expectRoll(page, { [ASH]: 'Owner', [CEDAR]: 'Viewer' }, NAMES);
       // The Remove that had the focus went with its row: the page's heading
-      // takes it, rather than the page losing it (M8.17).
+      // takes it, rather than the page losing it.
       await expect(page.getByRole('main').getByRole('heading', { level: 1 })).toBeFocused();
       await page.setViewportSize({ width: 375, height: 812 });
       await assertNoAccessibilityViolations(page);

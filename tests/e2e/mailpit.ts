@@ -18,9 +18,8 @@ async function get<T>(url: URL): Promise<T> {
 }
 
 /**
- * The newest message to `address`, waiting up to `timeout` ms for one to
- * arrive — a send the app makes in the background lands after the click
- * that caused it.
+ * The newest message to `address`, waiting up to `timeout` ms: a send the app makes in the background
+ * lands after the click that caused it.
  */
 export async function latestMessageTo(address: string, timeout = 10_000): Promise<MailpitMessage> {
   const search = mailpitUrl('/api/v1/search');

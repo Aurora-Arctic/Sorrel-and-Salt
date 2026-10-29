@@ -1,10 +1,9 @@
 import type postgres from 'postgres';
 import type { ReferenceSeed } from './types';
 
-// How a test seeds a reference, and a link to one, that it is not testing the
-// writing of. Raw, as `insertIngredient` is (MB.101): setup must not depend on
-// the code under test, and the tier rule the service holds is not held here,
-// so a test can write the link the service would refuse.
+// How a test seeds a reference, and a link to one, that it is not testing the writing of. Raw, as
+// `insertIngredient` is: setup must not depend on the code under test, and the tier rule the service
+// holds is not held here, so a test can write the link the service would refuse.
 
 /** A compendium book carrying the least it needs, unless `fields` says otherwise. */
 const BOOK = { kind: 'book', title: 'A Herbal of Fixture Covens', published: '1988' };
@@ -45,9 +44,8 @@ export async function insertReferenceLink(
 }
 
 /**
- * Links `referenceId` from one form of an ingredient, `variantId` (MB.217),
- * stamped by `author`, and returns the link's id. Raw, as
- * `insertReferenceLink` is.
+ * Links `referenceId` from one form of an ingredient, `variantId`, stamped by `author`, and returns
+ * the link's id. Raw, as `insertReferenceLink` is.
  */
 export async function insertVariantReferenceLink(
   sql: postgres.Sql,

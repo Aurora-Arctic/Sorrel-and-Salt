@@ -1,9 +1,8 @@
 import { fireEvent, screen, within } from '@testing-library/react';
 
-// The ingredient form's sections fold (MB.115): an edit opens with every one
-// closed, its fields in the page but hidden, so a role query finds none of
-// them until its section is opened, as a person opens it, by its heading.
-// An open variant's sections fold the same way, under its own headings.
+// The ingredient form's sections fold: an edit opens with every one closed, its fields in the page but
+// hidden, so a role query finds none of them until its section is opened by its heading. An open
+// variant's sections fold the same way, under its own headings.
 
 /** A variant's sections, in page order, each named by its heading. */
 export const VARIANT_SECTIONS = [

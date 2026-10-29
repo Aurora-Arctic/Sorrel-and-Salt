@@ -1,10 +1,9 @@
 import { act, fireEvent } from '@testing-library/react';
 import { vi } from 'vitest';
 
-// Moving a sortable list's chips (MB.170) in happy-dom, which lays nothing out:
-// dnd-kit finds where a chip may go from each chip's box, so the chips are
-// given one, on one line, 100px apart and 80px wide, and their list a box
-// as wide as the row it lays them out in.
+// Moving a sortable list's chips in happy-dom, which lays nothing out: dnd-kit finds where a chip may go
+// from each chip's box, so the chips are given one, on one line, 100px apart and 80px wide, and their
+// list a box as wide as the row it lays them out in.
 
 /** Lays every chip out on one line, in its list's order; restore with `vi.restoreAllMocks`. */
 export function layOutChips() {
