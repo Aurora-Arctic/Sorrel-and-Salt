@@ -289,7 +289,10 @@ $step-ink-drop: 0.05rem;
     flex-wrap: wrap;
     // From the top, so an error under one field never drops its neighbours to its foot.
     align-items: flex-start;
-    gap: space(2);
+    // A line of fields from the next: `space(4)`, the gap between fields in the ingredient form's
+    // variant sections (`.collapsible-section__fields`); it was `space(2)`, so the Instruction
+    // stood too close under Quantity and Unit. Beside each other they keep `space(2)`.
+    gap: space(4) space(2);
   }
 
   // A field's error, across the whole row of inputs and not wrapped in its narrow column.
