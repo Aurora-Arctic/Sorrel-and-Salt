@@ -24,12 +24,9 @@ export function SpellStatusField({ flush }: SpellStatusFieldProps): ReactElement
   const complete = defaultValues?.status === 'complete';
 
   const change = async () => {
-    // The form holds the status being asked for while it validates, so the
-    // schema's title rule (the CHECK's mirror) refuses a blank title through
-    // the same submit as any field, shown on the title field with focus on it.
-    // It is put back if the title is refused or the save fails, so the form's
-    // own status is never one the server has not taken. Drawn before the flush
-    // so the autosave has seen the change when it is asked to save.
+    // The form holds the status being asked for while it validates, so the schema's title rule
+    // refuses a blank title through the same submit as any field. It is put back if the title is
+    // refused or the save fails, and drawn before the flush so the autosave sees the change.
     const before = getValues('status');
     flushSync(() => setValue('status', 'complete'));
     setBusy(true);

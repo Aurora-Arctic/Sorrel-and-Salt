@@ -8,11 +8,9 @@ import LinkHint from '../LinkHint';
 import type { SpellCardProps } from './types';
 import './index.scss';
 
-// One spell in the grimoire's list: its title, its intent, a Draft badge on a draft, a Private
-// badge on a private spell, the categories its author assigned it, and who last edited it.
-// Presentational, in IngredientCard's pattern: the Foundations specimen for the layout and the
-// card's surface, with no drawer. The title links to the spell's recipe page where the caller gives
-// `href`. claude-docs/components/spell-card.md.
+// One spell in the grimoire's list: title, intent, Draft and Private badges, assigned categories,
+// last editor. Presentational, in IngredientCard's pattern, with no drawer; the title links where
+// `href` is given (claude-docs/components/spell-card.md).
 
 /** What a spell with no title is called, here and wherever it is listed. */
 export const UNTITLED_SPELL = 'Untitled Spell';

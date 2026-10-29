@@ -231,10 +231,8 @@ $burn-glow-blur: 1.25rem;
   }
 
   // The same rim, inward, round the burnt corner's curve. Inside the hole the curve would be a
-  // stray line across the burnt part, so everything below the hole's top (its overhang plus
-  // its depth) is clipped off, and 0.1rem more, so the curve's rim starts inside the hole's rim
-  // rather than poking past it. The curve meets the card's bottom inside the hole's straight
-  // stretch, where that cut is level with the hole's top.
+  // stray line, so everything below the hole's top is clipped, plus 0.1rem so the rim starts inside
+  // the hole's rim.
   .spell-card__burn-curve {
     box-shadow: ember-rim(true, 0, 1.5px, 0.95, 3px, 0.85, 3.5px);
     clip-path: inset(0 0 0.6rem 0);
@@ -243,12 +241,9 @@ $burn-glow-blur: 1.25rem;
       clip-path $burn-leave-duration ease-in;
   }
 
-  // The embers in the burnt part, over the page: brightest along the ember line (the top
-  // edge, against the card) and at the advancing front (the left end), fading towards the
-  // corner. Sized to the hole, so it grows and shrinks with it. The mask fades them out
-  // well above the card's bottom edge, where the layer is clipped, so the clip draws no line
-  // of the card's old edge across the hole. Without mask support the embers stop at that
-  // edge in a faint straight line.
+  // The embers in the burnt part, brightest along the top edge and at the advancing front, fading
+  // towards the corner. The mask fades them out above the card's bottom edge so the clip draws no
+  // line; without mask support they stop at that edge in a faint straight line.
   .spell-card__burn-hole::before {
     content: '';
     position: absolute;

@@ -255,11 +255,8 @@ const SpellBuilder = ({
     formState: { errors, defaultValues },
   } = methods;
 
-  // Something to save: a field that reads differently from the last save,
-  // blank and spaces alike reading as none, as the schema reads them, or a
-  // visibility or status other than the last save's, which is a choice worth
-  // saving on its own, a changed category pick,
-  // or a changed step.
+  // Something to save: a field that reads differently from the last save (blank and spaces reading
+  // as none, as the schema does), a changed visibility or status, category pick or step.
   const typed = useWatch({ control, name: [...FIELDS] });
   const picked = useWatch({ control, name: 'categoryIds' });
   const categoriesChanged = !sameCategories(picked, defaultValues?.categoryIds);
@@ -610,11 +607,9 @@ const SpellBuilder = ({
     if (mirror) clearMirror(mirror);
     setRecovered(null);
   };
-  // Where the two notices that ask for a decision go, the recovery banner and
-  // the conflict notice: under the dialog's title, in view however far the
-  // form has scrolled, since in the footer and above the fields they were
-  // missed. Outside a modal they stay in the
-  // form's flow.
+  // Where the recovery banner and the conflict notice go: under a dialog's title, in view however
+  // far the form has scrolled, since in the footer or above the fields they were missed. Outside a
+  // modal they stay in the form's flow.
   const headerNote = useModalHeaderNote();
   const recovery = recovered && jarReady && (
     <Notice kind="warn" block className="spell-builder__restored">

@@ -3,11 +3,9 @@ import type { Unit } from '@/modules/ingredients/schema/units';
 import { stockState } from '../../StockBadge/stock-state';
 import type { StepJar, SpellStepValue } from './types';
 
-// What the coven's cupboard says about a step while it is built, as one
-// value the row draws. Pure, so a test walks every case without rendering. Never a guess:
-// where the step's unit cannot be set against the jar's, it says so (`unitConvert` refuses
-// a count, and a pair from two dimensions), and does not call the jar enough or short.
-// claude-docs/components/spell-builder.md, "Steps".
+// What the cupboard says about a step, as one value the row draws; pure, so a test walks every
+// case. Never a guess: where the unit cannot be set against the jar's (a count, or two dimensions)
+// it says so (claude-docs/components/spell-builder.md, "Steps").
 
 export type StepSupply =
   /** A one-off: nothing in the cupboard could ever answer it. */
