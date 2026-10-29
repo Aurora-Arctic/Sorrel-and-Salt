@@ -473,3 +473,14 @@ which `tests/db/updated-at-trigger.test.ts` compares against the catalogue
 new file is picked up by `npm run db:generate` with no registration step. A
 `*.test.ts` file must never sit in `schema/`: the glob would hand it to
 drizzle-kit, which cannot load Vitest.
+
+## Vocabulary shared write steps
+
+`src/modules/vocabulary/services/curated-writes.ts` holds the steps every curated vocabulary's admin write is made of, so how a slug collision, a missing row or a group's move is refused is one edit across the seven services. They are shared steps rather than a descriptor factory: each service keeps its own exported functions and JSDoc, and its own `assertCurator(` and `expireCompendium()`, so the check and the expiry are read together. The file is internal to the module and the index exports no part of it.
+
+- A write that broke the vocabulary's slug index is a `ValidationError` on `name` (the slug is derived and has no field of its own), naming the row holding the address; any other error passes unchanged.
+- Reading a row by id answers `NotFound` for an id that is not a uuid, which names nothing and would be a driver error at the comparison.
+- A group's input is parsed with its group checked live (a foreign key admits a retired one); the refusal is the input schema's own words for a missing group, on its field.
+- A delete's `moveTo` is refused, beside the picker that names it, when none is named or it names the group itself or no other live group.
+- Rewriting a group whole follows the name into the slug of every live row under it whose slug carries the group's name; a category's carries none, so a category group's rename moves nothing. A move onto another row's address is refused on `name`, naming both, before the write and again after one the index refused.
+- Deleting a group first moves its live rows to the `moveTo` group, re-slugged where the slug carries the group's name, in the same transaction. The rows are read before the transaction, so one filed under the group in the instant between is left under a deleted one, which every read drops.

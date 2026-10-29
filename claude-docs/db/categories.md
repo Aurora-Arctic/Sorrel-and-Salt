@@ -314,3 +314,12 @@ The owner's calls on the delete are
 [`design-decisions/m5.6b-admin-groups.md`](../design-decisions/m5.6b-admin-groups.md).
 Each write expires the `compendium` tag once it has committed (M8.7;
 ([`compendium-cache.md`](compendium-cache.md), "Expiring the tag")).
+
+## Category group service details
+
+`src/modules/vocabulary/services/category-groups.ts` holds the category groups: public reads, and writes for a curator or an admin alone (claude-docs/design-decisions/m5.6b-admin-groups.md).
+
+- Each colour is held to 4.5:1 against its own theme's harder surface by the input schema, on its own column.
+- A category's slug is its own name alone, so a group's rename touches no category. A group is deleted only once its live categories have somewhere to go: the admin names a group (`moveTo`) and they move there in the same write, since a category under a deleted group is read by nothing yet still holds its address. Their slugs and every link to them, a compendium entry's or a coven's, stay as they were. A group with no live category needs no `moveTo`.
+- The categories are read before the transaction, so one filed under the group in the instant between is left under a deleted one, which every read drops, as a category's own delete leaves an entry filed under it.
+- A rewrite leaves `seedKey` as it was.
