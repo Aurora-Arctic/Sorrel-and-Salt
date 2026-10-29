@@ -480,7 +480,6 @@ One line per entry: `<nomenclature>/<entry-file-slug>`. An entry with an ethics 
 - botanical/haritaki-terminalia-chebula
 - botanical/heartleaf-bergenia-bergenia-ciliata
 - botanical/himalayan-barberry-berberis-aristata
-- botanical/indian-snakeroot-rauvolfia-serpentina
 - botanical/indian-valerian-valeriana-jatamansi
 - botanical/jackfruit-artocarpus-heterophyllus
 - botanical/khejri-prosopis-cineraria
@@ -585,10 +584,8 @@ One line per entry: `<nomenclature>/<entry-file-slug>`. An entry with an ethics 
 - botanical/kudzu-pueraria-montana
 - botanical/meconopsis-aculeata-meconopsis-aculeata
 - botanical/monk-fruit-siraitia-grosvenorii
-- botanical/noble-dendrobium-dendrobium-nobile
 - botanical/oriental-water-plantain-alisma-orientale
 - botanical/pinellia-pinellia-ternata
-- botanical/rhodiola-rhodiola
 - botanical/safflower-carthamus-tinctorius
 - botanical/salvia-nubicola-salvia-nubicola
 - botanical/shiwei-pyrrosia-lingua
@@ -670,7 +667,6 @@ One line per entry: `<nomenclature>/<entry-file-slug>`. An entry with an ethics 
 - botanical/borotutu-cochlospermum-angolense
 - botanical/bougainvillea-bougainvillea
 - botanical/calabar-bean-physostigma-venenosum
-- botanical/candelabra-tree-euphorbia-candelabrum
 - botanical/common-buttercup-ranunculus-multifidus
 - botanical/deinbollia-oblongifolia-deinbollia-oblongifolia
 - botanical/dwarf-coral-tree-erythrina-humeana
