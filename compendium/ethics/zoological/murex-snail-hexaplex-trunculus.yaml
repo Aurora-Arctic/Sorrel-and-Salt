@@ -1,0 +1,7 @@
+# Gathered for M14.29; the seed never reads this folder.
+entry: zoological/murex-snail-hexaplex-trunculus
+status: needs-review
+animalPart:
+  - quote: the red 6,6'-Dibromoindigo extracted from the hypobranchial gland of H. trunculus snails
+    source: wikipedia-tekhelet
+    locator: History

@@ -1,0 +1,11 @@
+# Gathered for M14.29; the seed never reads this folder.
+entry: botanical/gall-oak-quercus-infectoria
+status: approved
+listings:
+  - list: iucn
+    name: IUCN Red List of Threatened Species, as printed by Wikipedia
+    value: Least Concern
+    listedAs: Quercus infectoria
+    nameBasis: stated
+    source: wikipedia-quercus-infectoria
+    locator: 'taxobox status LC (IUCN3.1); reference printed: Jerome, D. 2018, Quercus infectoria, e.T194176A58075577'

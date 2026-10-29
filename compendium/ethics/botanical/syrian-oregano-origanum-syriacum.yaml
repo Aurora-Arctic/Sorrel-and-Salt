@@ -1,0 +1,13 @@
+# Gathered for M14.29; the seed never reads this folder.
+entry: botanical/syrian-oregano-origanum-syriacum
+status: needs-review
+listings:
+  - list: other
+    name: Israeli law (as described by Wikipedia; statute not named)
+    value: protected under Israeli law as endangered plants (the page says "Wild hyssop and sage")
+    listedAs: wild hyssop
+    nameBasis: stated
+    source: wikipedia-origanum-syriacum
+    locator: Distribution
+questions:
+  - 'Wikipedia (Origanum syriacum) says "Wild hyssop and sage are protected under Israeli law as endangered plants, but no major studies on their status have been conducted since 1977. Foraging for za''atar is illegal under Israeli law" but names no statute or assessor. Find the assessment, or drop the row? Recommendation: find the Israeli nature-protection regulation and cite it, because "wild hyssop" is not tied to this species by the page.'
