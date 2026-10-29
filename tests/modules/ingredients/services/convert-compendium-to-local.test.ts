@@ -243,8 +243,8 @@ describe('convertCompendiumEntryToLocal', () => {
   it('moves both layers of a spell laying two of its forms, each to its own', async () => {
     const { spellId, layerId } = await spellOfEntry();
     const [other] = await sql`
-      insert into spell_steps (spell_id, ingredient_id, variant_id, position, layer_order, created_by, updated_by)
-      values (${spellId}, ${entry}, ${otherForm}, 99, 99, ${A.id}, ${A.id}) returning id`;
+      insert into spell_steps (spell_id, ingredient_id, variant_id, position, created_by, updated_by)
+      values (${spellId}, ${entry}, ${otherForm}, 99, ${A.id}, ${A.id}) returning id`;
 
     const { entry: own } = await convert();
 

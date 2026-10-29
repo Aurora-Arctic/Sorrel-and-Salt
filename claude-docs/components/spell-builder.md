@@ -474,8 +474,8 @@ instruction steps move alike.
   from position 2 of 4.").
 - **A move is a change to save.** The field array's `move` reorders the
   steps, the dirty check compares them in order, and Save Spell sends them in
-  their new order, each saved one by id. The service writes `position` and
-  `layer_order` from that order, moving the live rows in place under the
+  their new order, each saved one by id. The service writes `position`
+  from that order, moving the live rows in place under the
   `(spell_id, position)` partial unique index through a negative scratch
   place, never by removing a step and adding it again.
 

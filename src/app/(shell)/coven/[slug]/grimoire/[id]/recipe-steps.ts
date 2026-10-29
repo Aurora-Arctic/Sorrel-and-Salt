@@ -33,7 +33,6 @@ export function recipeStepsOf(views: readonly SpellStepView[], covenSlug: string
           : null,
       oneOff: !linked,
       deleted: linked && (ingredient?.deleted === true || variant?.deleted === true),
-      note: view.note,
       body: view.body,
     };
   });

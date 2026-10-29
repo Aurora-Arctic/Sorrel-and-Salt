@@ -35,8 +35,6 @@ export interface IngredientRecipeStep {
   oneOff: boolean;
   /** The ingredient or its form has been deleted since; the step still says what went in. */
   deleted: boolean;
-  /** The step's own line on the ingredient's role. */
-  note: string | null;
   /** An instruction given on the same step. */
   body: string | null;
 }

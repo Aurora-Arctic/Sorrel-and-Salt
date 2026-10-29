@@ -111,7 +111,6 @@ const SpellRecipe = ({
                       <Name step={step} />
                     </p>
                     {step.body && <p>{step.body}</p>}
-                    {step.note && <p className="meta">{step.note}</p>}
                   </>
                 )}
               </li>

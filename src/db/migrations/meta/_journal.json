@@ -624,6 +624,13 @@
       "when": 1793230432882,
       "tag": "0088_spell-steps-note-into-body",
       "breakpoints": true
+    },
+    {
+      "idx": 89,
+      "version": "7",
+      "when": 1793232216747,
+      "tag": "0089_drop-spell-steps-old-columns",
+      "breakpoints": true
     }
   ]
 }

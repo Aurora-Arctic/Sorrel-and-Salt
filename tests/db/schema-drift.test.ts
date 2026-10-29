@@ -55,17 +55,7 @@ const PENDING_DROPS: readonly {
   kind: 'column' | 'index' | 'check' | 'foreignKey' | 'table' | 'view';
   name: string;
   droppedBy: string;
-}[] = [
-  {
-    table: 'spell_ingredients',
-    kind: 'view',
-    name: 'spell_ingredients',
-    droppedBy: 'M13.9',
-  },
-  { table: 'spell_steps', kind: 'column', name: 'layer_order', droppedBy: 'M13.9' },
-  { table: 'spell_steps', kind: 'column', name: 'note', droppedBy: 'M13.9' },
-  { table: 'spells', kind: 'column', name: 'instructions', droppedBy: 'M13.9' },
-];
+}[] = [];
 
 const pendingIn = (table: string, kind: (typeof PENDING_DROPS)[number]['kind']) =>
   new Set(
