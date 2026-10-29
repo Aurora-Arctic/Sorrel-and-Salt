@@ -438,3 +438,13 @@ spell is recorded. M13.15 has since let a draft go nameless on purpose; its
 CHECK is proved by `tests/modules/grimoire/schema/spells-schema.test.ts`. MB.110's were checked the same way: with
 `deleted_at IS NULL` stripped from the layer index or the ingredient index, a
 removed layer's depth or ingredient stays reserved.
+
+## Grimoire read details
+
+`src/modules/grimoire/services/spell-reads.ts` holds the grimoire's reads: the paged list and its count, one spell, and the batches a spell's fields load through.
+
+- Every read is a reader's of the coven (`spell: ['read']`) and every row comes through the finders that keep a private spell its author's (claude-docs/db/spell-visibility.md), so a spell the reader may not see is `NotFound` by id and absent from a batch. A private spell counts for its author alone, in every count and facet.
+- A search shorter than `MIN_QUERY_LENGTH` is dropped, counted in composed code points as the compendium counts it: one character matches nearly every spell.
+- The category counts give a category's id and its count; a category no readable spell carries is absent. The facet counts (Moon Phase, Day of Week, Visibility, Coven Member) each count under the rest of the query with their own picks left out, and are also the facets' choices. A maker is a user id, named by the caller.
+- Batches answer one coven at a time: each coven named is checked once, its spells read together, and a ref naming a coven the caller may not read gets a `Forbidden` in its slot while the rest stands. A spell the caller may not read, or one not in the coven its ref names, answers as a spell with no rows. A step batch is four reads per coven named plus a role lookup each; the category batches are two and four.
+- Assigned categories are what the author intended, sorted by name; a category deleted since drops out. Derived categories are the union of a linked step's ingredient's own pairs and the pairs of the form it lays, never another form's; a one-off row and an instruction contribute none, and an ingredient deleted since still contributes, read through the finder that keeps it (DESIGN.md §5, "Two kinds of spell category").

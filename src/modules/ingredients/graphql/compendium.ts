@@ -12,14 +12,14 @@ import {
 import { CompendiumFacetsRef } from './ingredient-facets';
 
 // The compendium's three queries. Public, so none carries the `signedIn`
-// scope (MB.80); tests/db/graphql-query-scopes.test.ts holds every other
+// scope; tests/db/graphql-query-scopes.test.ts holds every other
 // query to its refusal. The filtering is the service's, in SQL: the browser
 // never holds more than a page, so it cannot be the search
 // (claude-docs/graphql/schema.md, "compendium, ingredient and ingredientFormValues").
 
 /**
  * The six facet arguments the compendium and a coven's ingredient list share
- * (M11.22, M8.13, claude-docs/design-decisions/m11.22-search-facets.md): within each
+ * (claude-docs/design-decisions/m11.22-search-facets.md): within each
  * list any value matches, and every argument given must match.
  */
 export const facetArgs = builder.args((t) => ({
@@ -56,7 +56,7 @@ export const facetArgs = builder.args((t) => ({
 
 /**
  * The category arguments the compendium and a coven's ingredient list share:
- * the ids, and how many of them an entry needs (M8.12).
+ * the ids, and how many of them an entry needs.
  */
 export const categoryArgs = builder.args((t) => ({
   categoryIds: t.idList({ required: false }),
@@ -76,20 +76,20 @@ builder.queryField('compendium', (t) =>
       query: t.arg.string({ required: false }),
       ...categoryArgs,
       ...facetArgs,
-      // The admin's to-do list: live entries citing no live reference (M5.5).
+      // The admin's to-do list: live entries citing no live reference.
       withoutReferences: t.arg.boolean({ required: false }),
-      // The admin's other to-do list: live entries with no live form (M12.30).
+      // The admin's other to-do list: live entries with no live form.
       withoutForms: t.arg.boolean({ required: false }),
-      // The formal names still to look up are the `unknown` entries (M5.5).
+      // The formal names still to look up are the `unknown` entries.
       nomenclature: t.arg({ type: NomenclatureEnum, required: false }),
-      // A curator's review mark (M14.8): FORBIDDEN to anyone else.
+      // A curator's review mark: FORBIDDEN to anyone else.
       reviewed: t.arg.boolean({
         required: false,
         description:
           'Keeps the entries a curator has marked reviewed, or with false the ones needing review. A curator or admin alone may set it.',
       }),
     },
-    // The session reaches the read for the Reviewed setting alone, a curator's (M14.8).
+    // The session reaches the read for the Reviewed setting alone, a curator's.
     resolve: (_root, args, page, { session }) => listCompendium(filterOf(args), page, session),
     // "Page X of Y" (claude-docs/graphql/pagination.md, "Pagination").
     count: (_root, args, start, { session }) => countCompendium(filterOf(args), start, session),
@@ -104,7 +104,7 @@ builder.queryField('compendium', (t) =>
   }),
 );
 
-// How many entries each filter value would list (M12.3), under the same
+// How many entries each filter value would list, under the same
 // arguments as `compendium`, so the counts sit beside the page they narrow.
 builder.queryField('compendiumFacets', (t) =>
   t.field({
@@ -118,13 +118,13 @@ builder.queryField('compendiumFacets', (t) =>
       withoutReferences: t.arg.boolean({ required: false }),
       withoutForms: t.arg.boolean({ required: false }),
       nomenclature: t.arg({ type: NomenclatureEnum, required: false }),
-      // A curator's review mark (M14.8): FORBIDDEN to anyone else.
+      // A curator's review mark: FORBIDDEN to anyone else.
       reviewed: t.arg.boolean({
         required: false,
         description:
           'Keeps the entries a curator has marked reviewed, or with false the ones needing review. A curator or admin alone may set it.',
       }),
-      // M12.55: the In My Covens filter, the viewer's own; signed out, or naming a coven
+      // The In My Covens filter, the viewer's own; signed out, or naming a coven
       // they are not in, it filters nothing and the counts are the cached public ones.
       covenIds: t.arg.idList({
         required: false,

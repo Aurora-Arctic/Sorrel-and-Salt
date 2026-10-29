@@ -11,8 +11,8 @@ import { clearIngredientChildren } from '../loaders/ingredient-children';
 import { IngredientRef } from './ingredient';
 import { ingredientInputFields } from './ingredient-input';
 
-// The compendium's writes (M5.5, M14.8), a curator's or an admin's: scoped here
-// and refused again by the service, which is the real gate, as M5.6's
+// The compendium's writes, a curator's or an admin's: scoped here
+// and refused again by the service, which is the real gate, as the
 // category writes are. Neither input names a tier or a stamp — the
 // compendium is the mutation, and the stamps are the session's.
 
@@ -28,7 +28,7 @@ const CompendiumIngredientInput = builder.inputType('CompendiumIngredientInput',
 // An update replaces the entry, so a field left out would be cleared — the
 // categories above all, which the form may not show. Non-null makes leaving
 // one out a schema error, and "" or [] clears one, as `IngredientUpdateInput`
-// does for a coven's (MB.159).
+// does for a coven's.
 const CompendiumIngredientUpdateInput = builder.inputType('CompendiumIngredientUpdateInput', {
   description: 'The whole entry, replacing the row. Every field is sent, and "" or [] clears one.',
   fields: (t) => ingredientInputFields(t, { tier: 'compendium', whole: true }),
@@ -87,7 +87,7 @@ builder.mutationField('deleteCompendiumIngredient', (t) =>
   }),
 );
 
-// The curator's review mark (M14.8): set or cleared by hand, curator-scoped
+// The curator's review mark: set or cleared by hand, curator-scoped
 // here and refused again by the service. It answers the entry and never the
 // mark, which `Ingredient` does not carry: the admin page reads it through
 // the service, and a client refreshes after the write.
@@ -106,7 +106,7 @@ builder.mutationField('setCompendiumEntryReviewed', (t) =>
   }),
 );
 
-// The delete confirm's number (M12.25): a read, curator-scoped here and
+// The delete confirm's number: a read, curator-scoped here and
 // refused again by the service. A count only, so no coven is named.
 builder.queryField('compendiumEntryUsers', (t) =>
   t.int({

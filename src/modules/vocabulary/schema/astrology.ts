@@ -7,7 +7,7 @@ import { vocabularyColumns, vocabularyIndexes } from '../../../db/schema-parts';
 // holds the table's own keys to its workspace and form pick): a member must be able to write `Eris` before anyone curates it.
 // Two tables rather than one with a `kind`, so a suggestion query has no
 // predicate to forget; one tier, no colour, and a nullable `position`
-// (M12.52) that sets where a facet lists a row: calendar order for signs,
+// that sets where a facet lists a row: calendar order for signs,
 // Sun outward for bodies, null for any a curator adds, which sort after by
 // name (claude-docs/design-decisions/m12.52-facet-sort-order.md; claude-docs/db/astrology-vocabularies.md, "The astrology vocabularies").
 // The description is search surface, which the trigram index serves: Lilith's

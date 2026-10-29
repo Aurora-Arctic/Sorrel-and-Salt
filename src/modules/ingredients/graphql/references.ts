@@ -16,12 +16,8 @@ import type { CitedReference, ReferenceRow } from '../types';
 import { REFERENCE_TEXT_FIELDS } from '../validation/reference-format';
 import type { ReferenceTextField } from '../validation/types';
 
-// A reference as DESIGN.md §7 sketches it (MB.151, built by MB.153): its
-// fields, the tier as `isGlobal`, and the citation rendered on the server by
-// the one renderer, plain. Its two writes and the picker's search are here;
-// `Ingredient.references` reads through the request's loader in
-// `ingredient.ts`, and `reference` reads one whole, for the form that edits
-// it. `workspaceId` stays off the wire, as it does on `Ingredient`.
+// A reference as DESIGN.md §7 sketches it: its fields, the tier as `isGlobal`, and the citation rendered on the server by the one
+// renderer. `Ingredient.references` reads through the request's loader; `workspaceId` stays off the wire, as it does on `Ingredient`.
 
 /** Every text field but the title, which every kind of reference requires. */
 const OPTIONAL_FIELDS = REFERENCE_TEXT_FIELDS.filter(
@@ -113,7 +109,7 @@ const ReferenceInput = builder.inputType('ReferenceInput', {
 
 /**
  * The tier the `workspaceId` argument names, as a scope: a null one writes the
- * compendium's, which only a site admin's scope admits (M5.7), and a coven's
+ * compendium's, which only a site admin's scope admits, and a coven's
  * admits anyone signed in, the membership check deciding who may.
  */
 const tierScope = (_root: unknown, { workspaceId }: { workspaceId?: string | null }) =>
@@ -152,7 +148,7 @@ builder.mutationField('updateReference', (t) =>
   }),
 );
 
-// One source whole, for the edit panel to open on (MB.115). Signed-in
+// One source whole, for the edit panel to open on. Signed-in
 // whatever the tier, as the picker it is opened from is; one row, so no page.
 builder.queryField('reference', (t) =>
   t.field({
@@ -168,5 +164,5 @@ builder.queryField('reference', (t) =>
   }),
 );
 
-// The reference picker's search (MB.154 reads it).
+// The reference picker's search.
 suggestionConnection('referenceSuggestions', ReferenceRef, suggestReferences);

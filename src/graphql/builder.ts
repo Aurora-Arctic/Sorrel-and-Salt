@@ -66,7 +66,7 @@ export function createBuilder() {
     },
   });
   created.addScalarType('DateTime', DateTimeISOResolver);
-  // A day, not an instant: a reference's `modified` and `accessed` (MB.153).
+  // A day, not an instant: a reference's `modified` and `accessed`.
   created.addScalarType('LocalDate', LocalDateResolver);
   return created;
 }

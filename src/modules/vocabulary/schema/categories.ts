@@ -3,7 +3,7 @@ import { auditColumns } from '../../identity/schema/users';
 import { vocabularyColumns, vocabularyIndexes } from '../../../db/schema-parts';
 
 // Category groups: global, admin-curated. A table rather than an enum so an
-// admin can add a ninth without DDL (MB.35). Two colours because one hex cannot
+// admin can add a ninth without DDL. Two colours because one hex cannot
 // clear 4.5:1 on both grounds; stored as hexes because a runtime group has no
 // build-time Sass token; no CHECK on the contrast — the service validates,
 // where it can name the ratio missed. No order column: groups list

@@ -61,7 +61,7 @@ builder.mutationField('setEmail', (t) =>
   }),
 );
 
-// The account page's Name section (MB.88): the session's own row, renamed
+// The account page's Name section: the session's own row, renamed
 // through the audited write; a refusal is `VALIDATION` on `name`.
 builder.mutationField('setName', (t) =>
   t.field({
@@ -72,8 +72,8 @@ builder.mutationField('setName', (t) =>
   }),
 );
 
-// The admin user list (MB.52): a read, so the service's own check refuses a
-// non-admin rather than M5.7's mutation scope. Its nodes are the ordinary
+// The admin user list: a read, so the service's own check refuses a
+// non-admin rather than the mutation scope. Its nodes are the ordinary
 // `User`, so `email` resolves through the scope above and no second path.
 builder.queryField('users', (t) =>
   t.pagedConnection({
@@ -88,7 +88,7 @@ builder.queryField('users', (t) =>
   }),
 );
 
-// M5.8's approval and its revoke: the site admin's alone, scoped here and
+// The approval and its revoke: the site admin's alone, scoped here and
 // refused again by the service, which is the real gate. Each answers the row,
 // so the list re-reads it.
 const CREATION_WRITES = [
@@ -119,7 +119,7 @@ for (const { field, description, write } of CREATION_WRITES) {
   );
 }
 
-// MB.59's and M11.20's role change: the site admin's alone, a curator's
+// The role change: the site admin's alone, a curator's
 // not, scoped here and refused again by the service, which is the real gate.
 // The note is the confirmation's optional reason, kept on the ledger row the
 // trigger writes; the actor is the session's, never an argument.
@@ -139,7 +139,7 @@ builder.mutationField('setUserRole', (t) =>
   }),
 );
 
-// MB.63's switch: the site admin's scope here, and the service refuses every
+// The pause switch: the site admin's scope here, and the service refuses every
 // admin but the primary one. Each answers whether changes are paused now, so
 // a second click answers the state rather than an error; the stamps are the
 // session's, and neither takes an argument.

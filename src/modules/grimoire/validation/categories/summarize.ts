@@ -9,7 +9,7 @@ import type { StepCategories } from './types';
 // so it runs the same in the builder as on the server and touches no database.
 // A step with no `ingredientId` is skipped even if it carries category ids: an
 // instruction-only step has no ingredient, and a custom one-off ingredient
-// (MB.40) is never an `ingredients` row, so it contributes nothing.
+// is never an `ingredients` row, so it contributes nothing.
 // Order is first seen, so the result does not shuffle between renders.
 export function summarizeSpellCategories(steps: readonly StepCategories[]): string[] {
   const seen = new Set<string>();

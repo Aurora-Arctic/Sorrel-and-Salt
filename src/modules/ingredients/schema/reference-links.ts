@@ -9,8 +9,8 @@ import { ingredientVariants } from './ingredient-variants';
 import { references } from './references';
 import { idColumn } from '../../../db/schema-parts';
 
-// Which row a reference supports, one per citation (MB.151): a nullable key
-// per sourced table under one `num_nonnulls` CHECK, MB.40's shape, rather
+// Which row a reference supports, one per citation: a nullable key
+// per sourced table under one `num_nonnulls` CHECK, as a spell's layers do, rather
 // than a join table per table, which would cost a table, a trigger, a finder
 // and a loader each. Full `auditColumns`, as substitutes: a link is content,
 // and unlinking leaves a tombstone (DESIGN.md §5, "References";
@@ -35,7 +35,7 @@ export const SOURCED = {
   deityTraditionId: { column: 'deity_tradition_id', table: deityTraditions },
   celestialBodyId: { column: 'celestial_body_id', table: celestialBodies },
   zodiacSignId: { column: 'zodiac_sign_id', table: zodiacSigns },
-  // One form's own sources, beside its ingredient's (MB.217).
+  // One form's own sources, beside its ingredient's.
   ingredientVariantId: { column: 'ingredient_variant_id', table: ingredientVariants },
 } as const;
 

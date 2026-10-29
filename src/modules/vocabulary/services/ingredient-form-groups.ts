@@ -19,14 +19,8 @@ import { IngredientFormGroupInput } from '../validation/ingredient-form-group';
 import { deleteGroup, refuseSlugCollision, updateGroup } from './curated-writes';
 import type { CuratedGroup, IngredientFormGroupRow } from '../types';
 
-// The ingredient form groups: their reads, public reference data like every
-// curated vocabulary (MB.80), and their writes, a curator's or an admin's alone
-// (M5.6b). A form's slug is its name and its group (M5.6a), so a rename moves
-// every live form's slug under the group, and a delete first moves its live
-// forms to the group the admin names, each re-slugged there. The forms stay
-// curated either way, so no compendium entry's pick, nor a coven's, is
-// orphaned, and no ingredient is rewritten: an ingredient holds a form's name,
-// not its slug (claude-docs/design-decisions/m5.6b-admin-groups.md).
+// The ingredient form groups: public reads, and writes for a curator or an admin alone. A rename or delete re-slugs the forms
+// under them (claude-docs/db/form-vocabulary-seed.md, "Form group service details").
 
 /** The form groups, and the forms under them, which a rename or delete re-slugs under the group's name. */
 const GROUPS: CuratedGroup<typeof ingredientFormGroups> = {
@@ -43,23 +37,20 @@ const GROUPS: CuratedGroup<typeof ingredientFormGroups> = {
     under: (groupId) => allPages((page) => findIngredientFormValues({ groupId }, page)),
   },
 };
-/** One page of the live form groups, alphabetical by name (MB.35): a form's group is picked from these. */
+/** One page of the live form groups, alphabetical by name: a form's group is picked from these. */
 export function listIngredientFormGroups(
   page: PageRequest,
 ): Promise<PageEntry<IngredientFormGroupRow>[]> {
   return findPage(ingredientFormGroups, [ingredientFormGroups.name], page);
 }
 
-/**
- * How many live form groups `listIngredientFormGroups` pages, and how many come before `start`
- * — a page's first row, none on an empty page: "Page X of Y" on the admin page.
- */
+/** How many live form groups `listIngredientFormGroups` pages, and how many come before `start`: "Page X of Y". */
 export function countIngredientFormGroups(start: Cursor | undefined): Promise<PageCount> {
   return findPageCount(ingredientFormGroups, [ingredientFormGroups.name], start);
 }
 
 /**
- * The live form group at this address — how the admin page opens one to edit.
+ * The live form group at this address, for the admin page to edit.
  *
  * @throws {NotFound} no live group holds the slug.
  */
@@ -70,13 +61,10 @@ export async function getIngredientFormGroupBySlug(slug: string): Promise<Ingred
 }
 
 /**
- * Adds a form group, its slug derived from the name, and with no icon the
- * generic one (M12.6).
+ * Adds a form group, its slug derived from the name, and with no icon the generic one.
  *
- * @throws {Forbidden} the caller is neither a curator nor an admin — checked before the
- * input is read.
- * @throws {ValidationError} the input breaks `IngredientFormGroupInput`, or
- * its slug is a live group's.
+ * @throws {Forbidden} the caller is neither a curator nor an admin.
+ * @throws {ValidationError} the input breaks `IngredientFormGroupInput`, or its slug is a live group's.
  */
 export async function createIngredientFormGroup(
   session: Session,
@@ -99,18 +87,11 @@ export async function createIngredientFormGroup(
 }
 
 /**
- * Rewrites a form group whole, its slug following the name and its icon
- * cleared when the input carries none, and on a rename the slug of every live
- * form under it, in the same transaction. Its `seedKey` is left as it was, so
- * a renamed seeded row is still the seed's (MB.171).
- *
- * The forms are read before the transaction, so one added under the group in
- * the instant between keeps the slug it was given.
+ * Rewrites a form group whole, its slug following the name and its icon cleared when the input carries none, and on a rename the
+ * slug of every live form under it (claude-docs/db/form-vocabulary-seed.md, "Form group service details"). Its `seedKey` is left as it was.
  *
  * @throws {Forbidden} the caller is neither a curator nor an admin.
- * @throws {ValidationError} as `createIngredientFormGroup` throws it, the
- * row's own slug excepted; on `name`, a rename that would move a form onto
- * another form's address, naming both.
+ * @throws {ValidationError} as `createIngredientFormGroup` throws it, the row's own slug excepted; on `name`, a rename that would move a form onto another's address.
  * @throws {NotFound} no live group has this id.
  */
 export async function updateIngredientFormGroup(
@@ -128,17 +109,11 @@ export async function updateIngredientFormGroup(
 }
 
 /**
- * Soft-deletes a form group, first moving its live forms to the group
- * `moveTo` names, each re-slugged under it, in the same transaction. A group
- * with no live form needs no `moveTo`.
- *
- * The forms are read before the transaction, so one added under the group in
- * the instant between is left under a deleted one, which reads as uncurated.
+ * Soft-deletes a form group, first moving its live forms to the group `moveTo` names (claude-docs/db/form-vocabulary-seed.md,
+ * "Form group service details").
  *
  * @throws {Forbidden} the caller is neither a curator nor an admin.
- * @throws {ValidationError} on `moveTo`, the group has live forms and
- * `moveTo` names no other live group, or a form would move onto another
- * form's address, naming both.
+ * @throws {ValidationError} on `moveTo`, a missing target or a form that would move onto another's address.
  * @throws {NotFound} no live group has this id.
  */
 export async function deleteIngredientFormGroup(

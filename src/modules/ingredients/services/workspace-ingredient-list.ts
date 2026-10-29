@@ -15,9 +15,9 @@ import type { IngredientRow } from '../types';
 import { assertMembership } from '@/modules/coven';
 
 /**
- * One page of a coven's ingredients (story 14, M9.4, M12.18): its own entries,
+ * One page of a coven's ingredients: its own entries,
  * and every compendium entry its cupboard holds, filtered by search, category
- * and the five facets (M11.22) as the compendium is, over the coven's
+ * and the five facets as the compendium is, over the coven's
  * overrides. Each entry carries its cupboard row, null for the coven's own
  * (claude-docs/db/stock.md, "The workspace ingredient list"). Each entry's
  * jars are `Ingredient.stock`'s, read apart.
@@ -43,7 +43,7 @@ export async function listWorkspaceIngredients(
 /**
  * How many entries a coven's ingredient list holds under `filter`, and how
  * many come before `start`, the page's first row: the "Page X of Y" of the
- * page `listWorkspaceIngredients` serves (M9.6). Not cached: the data is the
+ * page `listWorkspaceIngredients` serves. Not cached: the data is the
  * coven's (CLAUDE.md rule 6).
  *
  * @throws {Forbidden} the caller may not read this coven's ingredients.

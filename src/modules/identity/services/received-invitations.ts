@@ -10,7 +10,7 @@ import type { Cursor, PageCount, PageEntry, PageRequest } from '../../../lib/typ
 import type { ReceivedInvitation } from '../types';
 
 // The coven invitations addressed to the signed-in account, for the account
-// page's Invitations section and the shell's count (M10.32). No permission
+// page's Invitations section and the shell's count. No permission
 // to assert: the session is the scope, and the repository matches its
 // verified address in SQL, so there is no workspace id to be handed. The
 // site tier is never listed; an admin invitation is accepted by its mailed

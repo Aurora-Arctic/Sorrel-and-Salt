@@ -44,7 +44,7 @@ export async function curatedSpellings(
 /**
  * The name of each of `ids` that a curated row of `field`'s vocabulary holds
  * — live, under a live group or tradition — keyed by id; an id naming none is
- * absent. How a pick is checked before it is written (MB.167). A public read,
+ * absent. How a pick is checked before it is written. A public read,
  * as `curatedSpellings` is.
  */
 export async function curatedNames(
@@ -59,7 +59,7 @@ export async function curatedNames(
  * The curated forms by id, one answer per id in the order given: the row, or
  * null where no curated form carries the id — none ever did, or it or its
  * group is retired since it was picked, which `IngredientVariant.formChoice` reads
- * as no pick (MB.167). One read whatever the batch size, and public, as the
+ * as no pick. One read whatever the batch size, and public, as the
  * forms are.
  */
 export async function formChoicesOf(

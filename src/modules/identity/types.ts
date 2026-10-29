@@ -14,7 +14,7 @@ export type UserRow = typeof users.$inferSelect;
 /** What an Updated stamp shows of an editor: the account and its display name, no ledger field. */
 export type EditorName = Pick<UserRow, 'id' | 'name'>;
 
-/** What `/admin/invitations` is narrowed by (MB.115). Each part is optional, and absent means no filter. */
+/** What `/admin/invitations` is narrowed by. Each part is optional, and absent means no filter. */
 export interface AdminInvitationFilter {
   /** A fragment of the invited address, case-insensitive. */
   email?: string;
@@ -22,7 +22,7 @@ export interface AdminInvitationFilter {
   expiringSoon?: boolean;
 }
 
-/** One row of the privilege ledger (MB.194). */
+/** One row of the privilege ledger. */
 export type PrivilegeChangeRow = typeof userPrivilegeChanges.$inferSelect;
 
 /** What the provider said at this callback — never the stored row, which a later feature may set. */
@@ -55,7 +55,7 @@ export interface EmailVerificationSender {
   requestChange(current: string, address: string, next?: string): Promise<void>;
 }
 
-/** Whether admin changes are paused (MB.63), and whether the asking admin may switch that. */
+/** Whether admin changes are paused, and whether the asking admin may switch that. */
 export interface AdminRoleChangePauseState {
   paused: boolean;
   /** Only the primary admin may pause or resume. */
@@ -63,7 +63,7 @@ export interface AdminRoleChangePauseState {
 }
 
 /**
- * How an invitation's link, admin or coven, reaches the invited address (MB.70, M7.3). Built
+ * How an invitation's link, admin or coven, reaches the invited address. Built
  * per request by the GraphQL context, as `EmailVerificationSender` is: the
  * link's origin is Better Auth's to resolve against its allowed hosts, and a
  * service may not import it.
@@ -71,7 +71,7 @@ export interface AdminRoleChangePauseState {
 export interface InvitationSender {
   /**
    * Mails `to` the link that accepts the site invitation `token` names,
-   * saying which site role it grants and who sent it (M11.20). Never throws
+   * saying which site role it grants and who sent it. Never throws
    * on a failed send.
    */
   siteInvitation(
@@ -81,7 +81,7 @@ export interface InvitationSender {
   ): Promise<void>;
   /**
    * Mails `to` the link that accepts the coven invitation `token` names,
-   * saying which coven, in what role and who invited them (M7.3). Never
+   * saying which coven, in what role and who invited them. Never
    * throws on a failed send.
    */
   workspaceInvitation(
@@ -114,7 +114,7 @@ export interface ReceivedInvitation {
   note: string | null;
 }
 
-/** Why an invitation link cannot be accepted by this session, one reason per link (MB.70, M7.7). */
+/** Why an invitation link cannot be accepted by this session, one reason per link. */
 export type InvitationRefusal =
   | 'invalid'
   | 'accepted'
@@ -128,7 +128,7 @@ export type InvitationRefusal =
 
 /** Whether this session may accept the invitation a link names, and if not, why, in words. */
 export type InvitationStanding =
-  /** The site role accepting grants, curator or admin (M11.20). */
+  /** The site role accepting grants, curator or admin. */
   | { acceptable: true; tier: 'site'; siteRole: InvitableSiteRole }
   /** The coven's name, for the matching verified account alone, and its slug, where accepting lands: `/coven/[slug]`. */
   | { acceptable: true; tier: 'workspace'; slug: string; name: string }

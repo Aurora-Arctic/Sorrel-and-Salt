@@ -16,7 +16,7 @@ declare const curatorBrand: unique symbol;
 declare const adminBrand: unique symbol;
 
 /**
- * Proof that `assertCurator` found this user a curator or an admin (M11.20).
+ * Proof that `assertCurator` found this user a curator or an admin.
  * It names no workspace: a curator curates the compendium and reaches no coven.
  */
 export type Curator = {

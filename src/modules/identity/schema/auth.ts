@@ -24,7 +24,7 @@ export const sessions = pgTable(
       .notNull()
       .references(() => users.id, { onDelete: 'cascade' }),
     // The admin acting as `user_id`, on an impersonation session alone; the
-    // `admin` plugin's column, registered outside production only (MB.53).
+    // `admin` plugin's column, registered outside production only.
     impersonatedBy: uuid('impersonated_by').references(() => users.id),
   },
   (table) => [index('sessions_userId_idx').on(table.userId)],

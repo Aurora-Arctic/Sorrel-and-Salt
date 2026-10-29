@@ -11,10 +11,10 @@ import { inUtc } from '../../../lib/utc';
 import type { HeldWording } from '../types';
 
 // How a write names the compendium entries it would disturb: a vocabulary
-// delete refused while live entries hold the row — a category's (M5.6), a
-// form's (M5.6a), a deity's, a celestial body's or a sign's — and a slug a
-// compendium write would take from another entry's running redirect (MB.82);
-// a form's rename moves no slug since MB.220. The index exports
+// delete refused while live entries hold the row — a category's, a
+// form's, a deity's, a celestial body's or a sign's — and a slug a
+// compendium write would take from another entry's running redirect;
+// a form's rename moves no slug. The index exports
 // `describeEntry` and `redirectRefusal` for the ingredient services, and no
 // other part of it.
 
@@ -48,8 +48,8 @@ export async function refuseWhileHeld(
 /**
  * An entry as a person tells it apart, as every refusal naming one does: its
  * label, then its formal name, which is its identity — two entries may share
- * a label, never a formal name (MB.215). No form: an entry may have several
- * (MB.222). The label unquoted, so a list of entries reads as one:
+ * a label, never a formal name. No form: an entry may have several.
+ * The label unquoted, so a list of entries reads as one:
  * `Rose (Rosa gallica)`.
  */
 export function describeEntry(entry: { name: string; canonicalName: string | null }): string {
@@ -58,7 +58,7 @@ export function describeEntry(entry: { name: string; canonicalName: string | nul
 
 /**
  * The refusal of a write moving entries onto slugs other entries' redirects
- * still run from (MB.82), naming each address, the entry it redirects to and
+ * still run from, naming each address, the entry it redirects to and
  * the instant its window closes; `undefined` when none does. Each slug is
  * read beside the entry moving onto it, whose own redirect is no refusal. On
  * `endRedirect`, so the form can ask and send the write again once the admin

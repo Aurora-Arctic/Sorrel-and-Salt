@@ -1,6 +1,6 @@
-// The icons a form group may carry (M12.6), written down once: the
+// The icons a form group may carry, written down once: the
 // `form_group_icon` pgEnum in ingredient-forms.ts, the Zod input in
-// ../validation/ingredient-form-group.ts, the form seed and M12.7's
+// ../validation/ingredient-form-group.ts, the form seed and the
 // `FormIcon` component all read this list. Like ingredient-enums.ts it
 // imports nothing, so a client component reaches it without dragging in
 // drizzle-orm. A group with none draws the generic icon, which is why the

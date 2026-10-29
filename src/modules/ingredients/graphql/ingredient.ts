@@ -25,19 +25,19 @@ import type {
 // database's own, and the tier is a flag.
 
 export const NomenclatureEnum = builder.enumType('Nomenclature', { values: NOMENCLATURE_KINDS });
-// A search's toxic setting (M11.22), an argument rather than a field.
+// A search's toxic setting, an argument rather than a field.
 export const ToxicFilterEnum = builder.enumType('ToxicFilter', {
   values: TOXIC_FILTERS,
   description:
     'Which entries a search keeps by toxicity: any (no filter); toxic, flagged on the entry or on any live form; or not_toxic, flagged on neither.',
 });
-// Where a coven's list reads from (M9.7), an argument rather than a field.
+// Where a coven's list reads from, an argument rather than a field.
 export const IngredientSourceEnum = builder.enumType('IngredientSource', {
   values: INGREDIENT_SOURCES,
   description:
     "Where a coven's list reads from: local, the coven's own entries; or compendium, the compendium entries it holds. Leaving it out lists both.",
 });
-// How a search combines its categories (M8.12), an argument rather than a field.
+// How a search combines its categories, an argument rather than a field.
 export const CategoryModeEnum = builder.enumType('CategoryMode', {
   values: CATEGORY_MODES,
   description:
@@ -52,7 +52,7 @@ export const IngredientRef = builder.objectRef<IngredientRow>('Ingredient');
 export const IngredientVariantRef = builder.objectRef<IngredientVariantRow>('IngredientVariant');
 
 /**
- * A link or a typed name (DESIGN.md §7, MB.138). No `audit`, as `folkNames`
+ * A link or a typed name (DESIGN.md §7). No `audit`, as `folkNames`
  * carries none.
  */
 export const SubstituteRef = builder.objectRef<SubstituteRow>('Substitute').implement({
@@ -71,7 +71,7 @@ export const SubstituteRef = builder.objectRef<SubstituteRow>('Substitute').impl
       resolve: (substitute) => substitute.ingredient,
     }),
     // Read beneath the linked ingredient, through the loader its variants are
-    // read by, never by the variant's id alone (MB.218): a form takes its
+    // read by, never by the variant's id alone: a form takes its
     // ingredient's tier, so a link the reader may not follow shows no form.
     variant: t.field({
       type: IngredientVariantRef,
@@ -101,7 +101,7 @@ export const FolkNameRef = builder.objectRef<FolkNameRow>('FolkName').implement(
 });
 
 /**
- * A deity picked or typed (DESIGN.md §7, MB.167). No `audit`, as `folkNames`
+ * A deity picked or typed (DESIGN.md §7). No `audit`, as `folkNames`
  * carries none.
  */
 export const IngredientDeityRef = builder
@@ -124,7 +124,7 @@ export const IngredientDeityRef = builder
   });
 
 /**
- * One form of an ingredient (DESIGN.md §7, MB.215): what it adds to its
+ * One form of an ingredient (DESIGN.md §7): what it adds to its
  * ingredient, never what it overrides, so a client shows both. `ingredientId`
  * and `workspaceId` stay off the wire: a variant is read beneath its
  * ingredient, whose tier it takes.
@@ -220,12 +220,12 @@ IngredientRef.implement({
       type: [SubstituteRef],
       resolve: (row, _args, { loaders }) => loaders.substitutesByIngredient.load(row),
     }),
-    // In the order entered, `[]` when there are none (MB.165).
+    // In the order entered, `[]` when there are none.
     deities: t.field({
       type: [IngredientDeityRef],
       resolve: (row, _args, { loaders }) => loaders.deitiesByIngredient.load(row),
     }),
-    // By form, case aside, `[]` for an entry that is information only (MB.218).
+    // By form, case aside, `[]` for an entry that is information only.
     // A bare list, bounded by its parent, as every child list here is.
     variants: t.field({
       type: [IngredientVariantRef],

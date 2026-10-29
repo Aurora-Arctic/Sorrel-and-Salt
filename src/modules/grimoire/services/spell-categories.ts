@@ -6,10 +6,10 @@ import type { ValidationIssue } from '../../../lib/types';
 import type { Membership } from '@/modules/coven';
 import { categories } from '@/modules/vocabulary/schema/categories';
 
-// How a save writes the categories a spell is assigned (M10.14): what it
+// How a save writes the categories a spell is assigned: what it
 // intends, never the ones its ingredients bring (claude-docs/db/grimoire.md).
 // The ids a save sends are the whole set, as a chip is on or off. The pairs
-// carry no `deleted_at` (MB.34) and no `workspace_id`, so the spell is read as
+// carry no `deleted_at` and no `workspace_id`, so the spell is read as
 // the caller first, and the pairs are reached through it.
 
 /** A category picked twice is one, so the set is written once. */

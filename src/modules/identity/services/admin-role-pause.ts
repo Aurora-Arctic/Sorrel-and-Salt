@@ -7,11 +7,11 @@ import { assertSiteAdmin, type SiteAdmin } from './site-admin';
 import { actsAsPrimaryAdmin } from './primary-admin';
 import type { AdminRoleChangePauseState } from '../types';
 
-// MB.63: the primary admin's switch on admin grants and revokes, so a rogue
+// The primary admin's switch on admin grants and revokes, so a rogue
 // admin can neither make admins nor remove the good ones while it is dealt
 // with. Only the primary admin may flip it, being the one account a rogue
-// admin cannot become; `setUserRole` reads it. Each pause is a row of MB.62's
-// ledger, opened and ended through the writer's named calls, stamped from the
+// admin cannot become; `setUserRole` reads it. Each pause is a row of the
+// pause ledger, opened and ended through the writer's named calls, stamped from the
 // session (claude-docs/auth/admin-users.md, "Pausing admin changes").
 
 const REFUSAL = 'Only a site admin may see or change whether admin changes are paused';
@@ -21,8 +21,7 @@ const NOT_PRIMARY_REFUSAL = 'Only the primary admin may pause or resume admin ch
  * Refuses an admin change while the primary admin has paused them, unless the
  * caller is the primary admin, whom the pause exempts so it can clean up
  * without resuming first: the one guard the role service and coven
- * creation's approve and revoke both call (MB.63; the latter amended
- * 2026-10-10, on the owner's call).
+ * creation's approve and revoke both call.
  *
  * @throws {Forbidden} a pause is open and the caller is another admin.
  */

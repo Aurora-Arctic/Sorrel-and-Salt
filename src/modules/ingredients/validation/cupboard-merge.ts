@@ -1,6 +1,6 @@
 import type { CupboardEntryRow, IngredientRow } from '../../../db/repository';
 
-// A cupboard entry laid over its compendium row (M12.14). Pure, with no
+// A cupboard entry laid over its compendium row. Pure, with no
 // `server-only` marker, because the entry page merges while it renders, in a
 // component, and the GraphQL `annotated` field asks the same question.
 

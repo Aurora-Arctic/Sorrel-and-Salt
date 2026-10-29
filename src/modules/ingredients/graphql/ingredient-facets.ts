@@ -9,7 +9,7 @@ import type {
 } from '../types';
 import { IngredientElementEnum, IngredientSourceEnum, ToxicFilterEnum } from './ingredient';
 
-// M12.3's answer: how many entries each search filter value would list, for
+// How many entries each search filter value would list, for
 // the compendium (`compendiumFacets`, in compendium.ts, which adds the No Refs
 // count) and a coven's list (`workspaceIngredientFacets`, in
 // workspace-ingredient-list.ts). One small

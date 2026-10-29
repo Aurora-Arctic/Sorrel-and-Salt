@@ -3,42 +3,21 @@ import { createAccessControl } from 'better-auth/plugins/access';
 import type { RoleAuthorizeRequest } from 'better-auth/plugins/access';
 import type { WorkspaceRole } from '../types';
 
-// What each **workspace** role may do. The site role on the session
-// (`user` | `admin`) is a different axis and is not read here: an admin
-// curates the compendium and reaches no workspace at all (CLAUDE.md).
-//
-// Permission statements rather than a rank comparison, because
-// viewer < member < owner happens to be a line today and a role that is not on
-// it — a curator, a billing contact — would leave every "at least member"
-// call site meaning something nobody checked. The argument is
-// claude-docs/design-decisions/m6.3-permission-statements.md.
+// What each **workspace** role may do. The site role on the session is a different axis and is not read here: an admin curates
+// the compendium and reaches no workspace at all. Permission statements rather than a rank comparison, so a role that is not on
+// the viewer < member < owner line cannot make an "at least member" check mean something nobody checked
+// (claude-docs/design-decisions/m6.3-permission-statements.md).
 
-/**
- * The resources a workspace role acts on, one per surface DESIGN.md §9 routes
- * to. Later milestones extend this map in their own PR, the way each adopts
- * the `Membership` proof in its own PR.
- */
+/** The resources a workspace role acts on, one per surface DESIGN.md §9 routes to. */
 const statements = {
-  /**
-   * A workspace's own ingredient entries and folk names — what you *have*.
-   * Never the compendium, which is global, carries no `workspace_id`, and is
-   * curated by site role rather than workspace role (M5.2, M5.7).
-   */
+  /** A workspace's own ingredient entries and folk names: what you *have*. Never the compendium, which is curated by site role. */
   ingredient: ['read', 'create', 'update', 'delete'],
-  /**
-   * Stock: the jars a coven holds, one per form, of its own entries or the
-   * compendium's. No `create` or `delete`: adding and throwing out a jar are
-   * writes to the coven's stock like any change to it, so all three check
-   * `update` (M9.3).
-   */
+  /** Stock: the jars a coven holds. No `create` or `delete`: adding and throwing out a jar are writes like any change, so all three check `update`. */
   inventory: ['read', 'update'],
   spell: ['read', 'create', 'update', 'delete'],
   /**
-   * Members and invitations. `/coven/[slug]/members` shows the roll to owners
-   * and members (`read`); each member's address (`readEmail`, M11.19),
-   * inviting, changing a role and removing stay with owners (M6.13). The
-   * address is its own action rather than part of `read`, since a member
-   * reads the roll and an owner alone needs to tell two people apart by it.
+   * Members and invitations. Owners and members read the roll (`read`); a member's address (`readEmail`), inviting, changing a
+   * role and removing stay with owners. The address is its own action since a member reads the roll but only an owner needs it to tell two people apart.
    */
   member: ['read', 'readEmail', 'invite', 'update', 'remove'],
   /** The coven itself: renaming it, and deleting it. */
@@ -55,10 +34,7 @@ const viewer = ac.newRole({
   workspace: ['read'],
 });
 
-/**
- * The viewer's reads, plus what a coven is for: its ingredients, its stock, its
- * grimoire, and who else is in the coven (`member: read`, M6.13).
- */
+/** The viewer's reads, plus what a coven is for: its ingredients, stock, grimoire, and who else is in the coven (`member: read`). */
 const member = ac.newRole({
   ingredient: ['read', 'create', 'update', 'delete'],
   inventory: ['read', 'update'],

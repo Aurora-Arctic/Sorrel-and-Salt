@@ -10,7 +10,7 @@ import type { SpellRow, SpellStepView } from '../types';
 import { IngredientRef, IngredientVariantRef, InventoryUnitEnum } from '@/modules/ingredients';
 import { CategoryRef, type CategoryRow } from '@/modules/vocabulary';
 
-// The grimoire over the wire (M10.9): a coven's spells a page at a time, one
+// The grimoire over the wire: a coven's spells a page at a time, one
 // spell by id, and each spell's steps and its two kinds of category. Every
 // field a list could repeat per spell reads through a loader, so a page of
 // spells costs a fixed number of statements, not one per spell (CLAUDE.md
@@ -25,7 +25,7 @@ const SpellVisibilityEnum = builder.enumType('SpellVisibility', {
 
 const SpellStatusEnum = builder.enumType('SpellStatus', { values: spellStatus.enumValues });
 
-// How a grimoire page is ordered (M10.9), an argument rather than a field.
+// How a grimoire page is ordered, an argument rather than a field.
 const GrimoireOrderEnum = builder.enumType('GrimoireOrder', {
   values: GRIMOIRE_ORDERS,
   description:
@@ -190,7 +190,7 @@ builder.queryField('spell', (t) =>
   }),
 );
 
-// The saves (M10.10). Each sends the whole recipe as one ordered list, so a
+// The saves. Each sends the whole recipe as one ordered list, so a
 // step's place is its index; claude-docs/graphql/schema.md, "The grimoire",
 // says how a step is kept, added and removed.
 

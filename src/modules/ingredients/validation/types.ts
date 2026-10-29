@@ -44,7 +44,7 @@ export interface LinkOrNameMessages {
 
 /**
  * One substitute as the schema reads it, and the form of the linked
- * ingredient it names, if any (MB.215).
+ * ingredient it names, if any.
  */
 export type SubstituteFields = LinkOrNameFields<'ingredientId'> & {
   substituteVariantId?: string | null;
@@ -85,7 +85,7 @@ export type DeityFields = LinkOrNameFields<'deityId'>;
 export type DeityEntry = LinkOrName<'deityId'>;
 
 /**
- * What `crossFieldRules` reads of one form in `variants` (MB.215): its id and
+ * What `crossFieldRules` reads of one form in `variants`: its id and
  * its text. Zod runs the rules across the list only once each entry has its
  * fields, so the text is there.
  */
@@ -110,7 +110,7 @@ export interface Parsed {
   variants?: VariantFields[] | null;
 }
 
-/** A reference's text fields, every one but the kind: what `FORMAT_OF` formats (MB.154). */
+/** A reference's text fields, every one but the kind: what `FORMAT_OF` formats. */
 export type ReferenceTextField = Exclude<keyof CitationFields, 'kind'>;
 
 /** How one text field is tidied, the same on the form as it is left and in the schema. */

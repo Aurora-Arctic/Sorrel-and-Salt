@@ -10,7 +10,7 @@ const cachedSlugs = cachedCompendiumRead('compendium-slugs', findCompendiumSlugs
 /**
  * Every current compendium entry's slug, name, formal name and description, by name, with
  * when it last really changed. What the sitemap and `llms.txt` list. Takes no
- * session, because the compendium is public (MB.80) and a cache entry shared
+ * session, because the compendium is public and a cache entry shared
  * by every viewer may not depend on one.
  */
 export function listCompendiumSlugs(): Promise<CompendiumSlugEntry[]> {

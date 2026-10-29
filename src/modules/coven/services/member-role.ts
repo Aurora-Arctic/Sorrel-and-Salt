@@ -8,7 +8,7 @@ import type { MembershipWithWorkspace, WorkspaceRole } from '../types';
 import { assertNotLastOwner } from './last-owner';
 import { assertMembership } from './membership';
 
-// M9.14: an owner moves a member between viewer, member and owner, either way.
+// An owner moves a member between viewer, member and owner, either way.
 // It changes an existing member's row and nothing else — a pending invitation
 // is not a member, and ownership never comes through one (DESIGN.md §5).
 

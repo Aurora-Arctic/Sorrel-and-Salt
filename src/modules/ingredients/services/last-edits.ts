@@ -5,7 +5,7 @@ import type { IngredientRow, LastEdit } from '../types';
 import { assertMembership } from '@/modules/coven';
 import { displayNamesOf } from '@/modules/identity';
 
-// The "last edited by" of a coven's Ingredients cards (M6.18). The editor shown is the stock
+// The "last edited by" of a coven's Ingredients cards. The editor shown is the stock
 // row's, never the compendium entry's, whose editor is an admin and no business of the
 // coven's.
 

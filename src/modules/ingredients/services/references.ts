@@ -18,18 +18,9 @@ import { type Curator, assertCurator } from '@/modules/identity';
 import type { PageEntry, PageRequest } from '../../../lib/types';
 import type { ReferenceValues } from '../types';
 
-// A reference, kept once in its tier and linked from every row it supports
-// (MB.151; claude-docs/db/references.md). Two tiers, as ingredients are: a
-// null `workspaceId` is the compendium's, written under the `Curator` proof
-// alone, and a coven's is written under its `Membership`, whoever links it —
-// so a member who cites a compendium reference reads it and cannot change it.
-// Nothing deletes one in v1. Revalidating the `compendium` tag on a
-// compendium-tier write is M8.7's, with every other admin mutation.
+// A reference, kept once in its tier and linked from every row it supports (claude-docs/db/references.md, "Reference service details").
 
-/**
- * Every optional field cleared, under the parsed input: Zod leaves an absent
- * key absent, and an update replaces the row rather than merging into it.
- */
+/** Every optional field cleared, under the parsed input: Zod leaves an absent key absent, and an update replaces the row. */
 const NOTHING = {
   authors: null,
   container: null,
@@ -52,11 +43,8 @@ const NOTHING = {
 /**
  * Creates a reference in the compendium (`workspaceId` null) or in this coven.
  *
- * @throws {Forbidden} a compendium reference and the caller is not a site
- * admin, or a coven's and the caller may not write its ingredients — checked
- * before the input is read.
- * @throws {ValidationError} the input breaks `ReferenceInput`, pathed to the
- * field.
+ * @throws {Forbidden} a compendium reference and the caller is not a site admin, or a coven's and the caller may not write its ingredients.
+ * @throws {ValidationError} the input breaks `ReferenceInput`, pathed to the field.
  */
 export async function createReference(
   session: Session,
@@ -83,16 +71,11 @@ export async function createReference(
 }
 
 /**
- * Replaces a reference with `input` — every field as the form submits it, so
- * one left out is cleared — in the compendium (`workspaceId` null) or in this
- * coven. The edit reaches every row citing it, which is the point of keeping
- * a source once.
+ * Replaces a reference with `input`, every field as the form submits it, so one left out is cleared; the edit reaches every row citing it.
  *
  * @throws {Forbidden} as `createReference`.
  * @throws {ValidationError} as `createReference`.
- * @throws {NotFound} no live reference with this id in that tier — a
- * compendium reference asked for under a coven, another coven's, and an id
- * that is not one included.
+ * @throws {NotFound} no live reference with this id in that tier.
  */
 export async function updateReference(
   session: Session,
@@ -122,16 +105,10 @@ export async function updateReference(
 }
 
 /**
- * One reference by id, whole, for the form that edits it: the compendium's
- * without a coven, and with one, that coven's own or the compendium's —
- * never another coven's, whose existence is private. The tiers are the
- * picker's, read under the same `ingredient: ['read']`, so it returns no
- * row the picker would not already offer.
+ * One reference by id, whole, for the form that edits it, from the tiers the picker offers (claude-docs/db/references.md, "Reference service details").
  *
- * @throws {Forbidden} a coven is named and the caller may not read its
- * ingredients.
- * @throws {NotFound} no live reference with this id in those tiers — another
- * coven's, a soft-deleted one, and an id that is not one included.
+ * @throws {Forbidden} a coven is named and the caller may not read its ingredients.
+ * @throws {NotFound} no live reference with this id in those tiers.
  */
 export async function getReference(
   session: Session,
@@ -147,18 +124,10 @@ export async function getReference(
 }
 
 /**
- * What the reference picker offers as `query` is typed: the references an
- * ingredient in this coven may cite — the compendium's and its own, never
- * another coven's — matched on authors, title and container, best match
- * first. A blank query, or one under the compendium search's
- * `MIN_QUERY_LENGTH`, offers all by title. Without a coven, the compendium's
- * alone, which is all a compendium entry may cite (M5.5).
+ * What the reference picker offers as `query` is typed (claude-docs/db/references.md, "Reference service details"). Asks only
+ * `ingredient: ['read']`, so every row it returns is one a reader of this coven could already see cited.
  *
- * Asks only `ingredient: ['read']`: every row it can return is one a reader of
- * this coven could already see cited.
- *
- * @throws {Forbidden} a coven is named and the caller may not read its
- * ingredients.
+ * @throws {Forbidden} a coven is named and the caller may not read its ingredients.
  */
 export async function suggestReferences(
   session: Session,

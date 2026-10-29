@@ -12,7 +12,7 @@ export const spellStatus = pgEnum('spell_status', ['draft', 'complete']);
 // does not: `public`.
 export const spellVisibility = pgEnum('spell_visibility', ['private', 'workspace']);
 
-// Not a column: the orders a grimoire page takes (M10.9), kept here so the
+// Not a column: the orders a grimoire page takes, kept here so the
 // GraphQL enum and the repository read one list. Last edited first is the
 // default; claude-docs/graphql/schema.md, "The grimoire", says what each does.
 export const GRIMOIRE_ORDERS = ['UPDATED_DESC', 'CREATED_DESC', 'TITLE_ASC'] as const;
@@ -27,7 +27,7 @@ export const spells = pgTable(
       .references(() => workspaces.id),
     // Absent on a draft: autosave writes the row on the first keystroke, before
     // the member may have named it, and a placeholder would read as a real
-    // title. A title is required to complete, by the CHECK below (M13.15).
+    // title. A title is required to complete, by the CHECK below.
     title: text('title'),
     // What the spell is *for*, in the member's words; nothing compares it.
     intent: text('intent'),
@@ -46,7 +46,7 @@ export const spells = pgTable(
     // cannot see it is missing, and widening it back is the author's alone.
     // The author is `created_by` — §5 gives spells no separate author column.
     visibility: spellVisibility('visibility').notNull().default('workspace'),
-    // Raised by one on every UPDATE by the database; a save names it (M13.15).
+    // Raised by one on every UPDATE by the database; a save names it.
     revision: revisionColumn(),
     ...auditColumns,
   },

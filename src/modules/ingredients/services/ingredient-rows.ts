@@ -45,19 +45,10 @@ import type {
 import type { LocalIngredientInput } from '../validation/ingredient';
 import type { ReferenceLinkEntry, SubstituteEntry } from '../validation/types';
 
-// What an ingredient write does the same way in either tier: the parsed
-// input as columns, the picks it records checked against the vocabularies,
-// the folk names, substitutes, deities, references, categories and forms
-// written beside the row, and the soft delete. Internal to the module — the two
-// services import it, and the index does not. A tier is told by
-// `memberships`, as the repository's two-tier finders take it: none for a
-// compendium entry, the proof's coven for a coven's.
+// What an ingredient write does the same way in either tier, shared by the two services
+// (claude-docs/db/ingredient-children.md, "Ingredient row writes"). `memberships` is none for a compendium entry.
 
-/**
- * The proof that `session` may read the ingredients of coven `workspaceId`,
- * or `undefined` for a caller who may not (or none): a read that skips that
- * coven's rows rather than failing the batch it sits in.
- */
+/** The proof that `session` may read coven `workspaceId`'s ingredients, or `undefined` so a batch skips that coven. */
 export async function proofFor(
   session: Session | null,
   workspaceId: string,
@@ -71,13 +62,7 @@ export async function proofFor(
   }
 }
 
-/**
- * The parsed input as columns, every optional one written — `null` where the
- * input has nothing — so an update replaces the row rather than merging into
- * it; and the slug, derived from the label and the formal name
- * (M4.3) rather than sent beside them. No form: an entry's forms are its
- * variants, written by `writeChildren` (MB.222).
- */
+/** The parsed input as columns, every optional one written (`null` for none) so an update replaces the row. */
 export function ingredientColumns(fields: IngredientFields) {
   return {
     name: fields.name,
@@ -94,11 +79,7 @@ export function ingredientColumns(fields: IngredientFields) {
   };
 }
 
-/**
- * The parsed input split into the row's fields, the lists `resolvePicks`
- * checks — the deities and the forms — and the child lists written as sent,
- * so a service passes each on without naming them. Either tier's parse.
- */
+/** The parsed input split into row fields, the lists `resolvePicks` checks, and the child lists as sent. */
 export function splitChildren<P extends LocalIngredientInput>(parsed: P) {
   const { folkNames, substitutes, references, deities, variants, ...fields } = parsed;
   return {
@@ -109,19 +90,10 @@ export function splitChildren<P extends LocalIngredientInput>(parsed: P) {
 }
 
 /**
- * Writes an ingredient's child rows beside it, in its `withAudit`: its folk
- * names, substitutes, deities, references, categories and forms, in that
- * order, each form with its own substitutes, references and categories.
- * `'add'` is a new row's, which holds nothing yet, so nothing is read first;
- * `'replace'` brings each list to exactly the input's, as each `replace…`
- * below says. The one child write both tiers' create and update make, so the
- * compendium's and a coven's cannot write different children: a seventh child
- * table is its writers here, a line in each branch, and its list in
- * `splitChildren` and `IngredientChildren`, and neither service is edited.
+ * Writes an ingredient's child rows beside it, in its `withAudit` (claude-docs/db/ingredient-children.md,
+ * "Ingredient row writes"): `'add'` for a new row, `'replace'` to bring each list to the input's.
  *
- * @throws {ValidationError} a substitute link or a reference the tier rule
- * forbids, a form the ingredient already holds, or a substitute's form not of
- * the ingredient it links, pathed to its entry.
+ * @throws {ValidationError} a forbidden link or reference, a repeated form, or a substitute form of the wrong ingredient.
  */
 export async function writeChildren(
   write: AuditWriter,
@@ -151,7 +123,7 @@ export async function writeChildren(
   const references = children.references ?? [];
   const categoryIds = children.categoryIds ?? [];
   const variants = children.variants ?? [];
-  // The ingredient's own rows, beside its forms' (MB.217).
+  // The ingredient's own rows, beside its forms'.
   const parent: ChildOwner = { ingredientId, variantId: null, at: [] };
 
   if (mode === 'add') {
@@ -171,20 +143,13 @@ export async function writeChildren(
   await replaceReferenceLinks(changes.write, memberships, parent, references);
   await replaceCategories(changes.write, memberships, parent, categoryIds);
   await replaceVariants(changes.write, memberships, ingredientId, variants);
-  // The parent's own `updated_at` is what says the entry changed (MB.106), so a
-  // child list that changed moves it; a save that changed nothing leaves it.
+  // A changed child list moves the parent's `updated_at`; a save that changed nothing leaves it.
   if (!changes.changed()) return;
   if ('workspaceId' in proof) await write.touchByIdInWorkspace(proof, ingredients, ingredientId);
   else await write.touchByIdInCompendium(proof, ingredients, ingredientId);
 }
 
-/**
- * `write` with a note of whether any write through it changed a row: a call
- * that answered at least one row, since each `replace…` leaves a list that
- * changes nothing unwritten and a writer that matches nothing answers none.
- * Wrapped rather than counted in each `replace…`, so a seventh child table
- * is watched with no line of its own.
- */
+/** `write` that notes whether any write through it answered a row. */
 function watchWrites(write: AuditWriter): { write: AuditWriter; changed: () => boolean } {
   let changed = false;
   const watched = new Proxy(write, {
@@ -202,13 +167,10 @@ function watchWrites(write: AuditWriter): { write: AuditWriter; changed: () => b
 }
 
 /**
- * Soft-deletes one ingredient through `remove`, its tier's writer, stamping
- * who deleted it. Its children stay, so a spell holding it still reaches them
+ * Soft-deletes one ingredient through `remove`, leaving its children for spells that hold it
  * (claude-docs/db/spell-visibility.md, "What a spell holds").
  *
- * @throws {NotFound} `missing`, when `remove` finds no live row — and before
- * the write when `id` is not a uuid, which names nothing and would be a
- * driver error at the comparison.
+ * @throws {NotFound} `missing`, when `remove` finds no live row or `id` is not a uuid.
  */
 export async function softDeleteIngredient(
   session: Session,
@@ -228,11 +190,7 @@ function inTierWords(memberships: readonly Membership[], words: Record<Tier, str
   return memberships.length === 0 ? words.compendium : words.coven;
 }
 
-/**
- * The live deity rows an ingredient holds, which a save keeps where it lists
- * them again. `memberships` is the tier the parent is read in, as
- * `findManyOfIngredients` takes it: none for a compendium entry.
- */
+/** The live deity rows an ingredient holds, which a save keeps where it lists them again. */
 export function heldDeities(
   memberships: readonly Membership[],
   ingredientId: string,
@@ -241,32 +199,10 @@ export function heldDeities(
 }
 
 /**
- * The input's picks checked against the vocabularies, and its forms and
- * deities as they are written (DESIGN.md §5; MB.167). Read before the write,
- * on another connection, as MB.162's check is: an admin retiring a row at the
- * instant a member picks it can see the pick written.
+ * The input's picks checked against the vocabularies, and its forms and deities as they are written
+ * (claude-docs/db/ingredient-children.md, "Ingredient row writes").
  *
- * The forms are `variants` (MB.219), each held to the rule one form was held
- * to: a `formId` must name a curated form — live, under a live group — and
- * the text beside it fold to that form's name, written in its spelling; on
- * the compendium every form must be such a pick. A form's pick is a column,
- * so one sent without its id is kept as its text. No list sent is no form.
- *
- * A deity picked anew must name a curated deity, its name written in that
- * deity's spelling. A pick the ingredient already `held` is kept on a coven's
- * ingredient once its deity is retired, under the name it was saved with,
- * and so is the typed name a member sends back for it, having read it as one,
- * as MB.138 keeps a substitute's link. Every deity on a compendium entry must
- * be a curated pick, held or not, since the compendium holds curated values
- * alone (MB.162).
- *
- * Each category, the ingredient's and each form's, must name a live one, in
- * either tier and held or not, and one named twice is filed once (MB.125).
- *
- * @returns the fields; the lists `writeChildren` takes that were checked here
- * — the categories each once, each deity to write in order, and the forms —
- * and every issue found, each pathed to the entry the caller sent, for the
- * caller to throw beside its own.
+ * @returns the fields, the checked lists `writeChildren` takes, and every issue found, pathed to the sent entry.
  */
 export async function resolvePicks(
   tier: Tier,
@@ -356,10 +292,7 @@ export async function resolvePicks(
   };
 }
 
-/**
- * One form as the input sent it, at `at`, with each `""` and `[]` the
- * whole-row input type sends for none read as the none the row holds.
- */
+/** One form as sent, with each `""` and `[]` the whole-row input sends for none read as none. */
 function asPicked(variant: VariantEntry, at: IssuePath): PickedVariant {
   const listOrNone = <T>(list: T[]) => (list.length > 0 ? list : null);
   return {
@@ -376,12 +309,7 @@ function asPicked(variant: VariantEntry, at: IssuePath): PickedVariant {
   };
 }
 
-/**
- * One form's text as it is written, its pick checked against `forms`, the
- * curated names by id: a pick's text folds to the pick's name and takes its
- * spelling; on the compendium a form must be picked. A refusal is pushed onto
- * `issues` beneath the form's `at`, and the text is kept as sent.
- */
+/** One form's text as written, its pick checked against `forms`; a refusal is pushed onto `issues` beneath `at`. */
 function pickedForm(
   tier: Tier,
   { form, formId, at }: PickedVariant,
@@ -432,16 +360,8 @@ function refuseDeadCategories(
 }
 
 /**
- * Brings the live deity rows to exactly `deities`, in order (DESIGN.md §5,
- * `ingredient_deities`): a pick is matched by the deity it links and a name
- * as written, so an entry still listed keeps its row and takes its new
- * `position`, one dropped is soft-deleted, and a new one is inserted. Dropped
- * rows go first, so a name re-added in another case clears the case-folded
- * index. `ingredient_deities_position_unique` is checked per row, so the rows
- * that move go through a scratch offset above every live position, then to
- * their own, as a spell's layers do (claude-docs/db/grimoire.md) — never a
- * tombstone and re-add. A kept pick takes its curated row's spelling now, if
- * it was renamed since. A list that changes nothing writes nothing.
+ * Brings the live deity rows to exactly `deities`, in order, moving positions through a scratch offset
+ * (claude-docs/db/ingredient-children.md, "Ingredient row writes").
  */
 async function replaceDeities(
   write: AuditWriter,
@@ -487,12 +407,7 @@ async function replaceDeities(
   }
 }
 
-/**
- * The live rows `owner` holds of a child table that names a form (MB.217):
- * the ingredient's own, which `findManyOfIngredients` keeps to those naming
- * no form, or one form's, read beneath the form (MB.218). Either is read under
- * `memberships`, the tier the parent is read in: none for a compendium entry.
- */
+/** The live rows `owner` holds of a form-naming child table: the ingredient's own, or one form's. */
 function heldBy<TTable extends typeof ingredientCategories | typeof ingredientSubstitutes>(
   memberships: readonly Membership[],
   owner: ChildOwner,
@@ -514,18 +429,7 @@ async function addCategories(
   }
 }
 
-/**
- * Brings the owner's categories to exactly `categoryIds` (MB.125): a pair
- * still listed is left as it is, its stamps the first filer's; one dropped is
- * hard-deleted, as a chip toggled off leaves no row (MB.34); a new one is
- * inserted, stamped from the session; and a set that changes nothing writes
- * nothing. The pairs compared are the ones the owner shows, as
- * `replaceReferenceLinks` compares links, so a pair whose category is
- * soft-deleted is left in place for a restore to return. A form's pairs carry
- * its ingredient too, so the delete names the owner's variant, null for the
- * ingredient's own, and neither touches the other's (MB.217). `memberships` is the tier the parent
- * is read in, as `findManyOfIngredients` takes it: none for a compendium entry.
- */
+/** Brings the owner's categories to exactly `categoryIds` (claude-docs/db/ingredient-children.md, "Ingredient row writes"). */
 async function replaceCategories(
   write: AuditWriter,
   memberships: readonly Membership[],
@@ -555,13 +459,7 @@ async function addFolkNames(write: AuditWriter, ingredientId: string, names: rea
   for (const name of names) await write.insert(ingredientFolkNames, { ingredientId, name });
 }
 
-/**
- * Brings the live folk names to exactly `names`, compared as written: a change
- * of case is a new name. Dropped rows go first, so a name re-added in another
- * case clears the case-folded unique index. `memberships` is the tier the
- * parent is read in, as `findManyOfIngredients` takes it: none for a
- * compendium entry.
- */
+/** Brings the live folk names to exactly `names`, compared as written, dropped rows first. */
 async function replaceFolkNames(
   write: AuditWriter,
   memberships: readonly Membership[],
@@ -584,9 +482,7 @@ async function replaceFolkNames(
 }
 
 /**
- * Writes a new owner's substitutes, each new link held to `refuseUnlinkable`.
- * `memberships` is the tier the ingredient is written in: none for a
- * compendium entry.
+ * Writes a new owner's substitutes, each held to `refuseUnlinkable`.
  *
  * @throws {ValidationError} a link the tier rule forbids, pathed to its entry.
  */
@@ -600,16 +496,7 @@ async function addSubstitutes(
 }
 
 /**
- * Brings the owner's live substitutes to exactly `entries`, as
- * `replaceFolkNames` brings folk names (DESIGN.md §5, `ingredient_substitutes`):
- * a link is matched by the ingredient it links and a name as written, so an
- * entry still listed keeps its row, and takes the linked form sent; one
- * dropped is soft-deleted, a new one is inserted, and a list that changes
- * nothing writes nothing. A link already held is kept whether or not its
- * ingredient is deleted; a new one, or a new form on a held one, is held to
- * `refuseUnlinkable`. The ingredient's own list and each form's are kept
- * apart (MB.217). `memberships` is the tier the parent is read in, as
- * `findManyOfIngredients` takes it: none for a compendium entry.
+ * Brings the owner's live substitutes to exactly `entries` (claude-docs/db/ingredient-children.md, "Ingredient row writes").
  *
  * @throws {ValidationError} a new link the tier rule forbids, pathed to its entry.
  */
@@ -623,10 +510,7 @@ async function replaceSubstitutes(
   await bringSubstitutesTo(write, memberships, owner, entries, current);
 }
 
-/**
- * The diff both writes share. Dropped rows go first, so a name re-added in
- * another case clears the case-folded unique index.
- */
+/** The diff both writes share; dropped rows go first so a re-cased name clears the case-folded index. */
 async function bringSubstitutesTo(
   write: AuditWriter,
   memberships: readonly Membership[],
@@ -666,18 +550,9 @@ function keyOf(linkedId: string | null, name: string | null): string {
 }
 
 /**
- * Refuses each new link the tier rule forbids (DESIGN.md §5, "A substitute
- * links only what its ingredient's readers may read"): the linked id must be
- * a live ingredient the writer's own scope reads — the compendium, and the
- * proof's coven for a coven write — and not the owner itself, the same
- * ingredient and the same form, while a sibling form may stand in (MB.217).
- * A form a link names, new or changed, must be a live form of the ingredient
- * it links (MB.219), read in the same scope. An id that names nothing reads
- * as one in another coven does, since that coven's contents are private. A
- * link already `held` with the form it had is not checked again.
+ * Refuses each new substitute link the tier rule forbids (claude-docs/db/ingredient-children.md, "Ingredient row writes").
  *
- * @throws {ValidationError} one issue per refused entry, pathed to it, or to
- * its `substituteVariantId` when the form is what is refused.
+ * @throws {ValidationError} one issue per refused entry, pathed to it or to its `substituteVariantId`.
  */
 async function refuseUnlinkable(
   memberships: readonly Membership[],
@@ -728,8 +603,6 @@ async function refuseUnlinkable(
 
 /**
  * Writes a new owner's references, each held to `refuseUncitable`.
- * `memberships` is the tier the ingredient is written in: none for a
- * compendium entry.
  *
  * @throws {ValidationError} a reference the tier rule forbids, pathed to its entry.
  */
@@ -743,15 +616,7 @@ async function addReferenceLinks(
 }
 
 /**
- * Brings the owner's references to exactly `entries`, as
- * `replaceSubstitutes` brings substitutes (DESIGN.md §5, `reference_links`):
- * a link is matched by the reference it cites, so one still listed keeps its
- * row and takes the locator sent, one dropped is soft-deleted, a new one is
- * inserted, and a list that changes nothing writes nothing. The links compared
- * are the ones the owner shows, so a link to a soft-deleted reference is
- * left in place for a restore to return. A new one is held to
- * `refuseUncitable`; one already held is not checked again. A form's links
- * name it alone, through `ingredient_variant_id` (MB.217).
+ * Brings the owner's references to exactly `entries` (claude-docs/db/ingredient-children.md, "Ingredient row writes").
  *
  * @throws {ValidationError} a new reference the tier rule forbids, pathed to its entry.
  */
@@ -803,11 +668,7 @@ async function bringReferencesTo(
 }
 
 /**
- * Refuses each new reference the tier rule forbids (DESIGN.md §5, "A link
- * names only what its row's readers may read"): the id must be a live
- * reference the writer's own scope reads — the compendium's, and the proof's
- * coven's for a coven write. An id naming nothing reads as one in another
- * coven does, since that coven's contents are private. One read for the list.
+ * Refuses each new reference the tier rule forbids, in one read for the list (claude-docs/db/ingredient-children.md, "Ingredient row writes").
  *
  * @throws {ValidationError} one issue per refused entry, pathed to it.
  */
@@ -838,8 +699,7 @@ async function refuseUncitable(
 }
 
 /**
- * Writes a new ingredient's forms (MB.219), each with its own substitutes,
- * references and categories, in the order sent.
+ * Writes a new ingredient's forms, each with its own children, in the order sent.
  *
  * @throws {ValidationError} as `writeVariant` and each child's writer do.
  */
@@ -859,18 +719,8 @@ async function addVariants(
 }
 
 /**
- * Brings the ingredient's live forms to exactly `variants` (DESIGN.md §5,
- * "Variants are written inside the ingredient's save"; MB.219). An entry
- * keeps the row its `id` names when the ingredient holds it, and otherwise
- * the row its form folds to, `lower(btrim(form))` as the unique index folds
- * it, so a form can be respelt in place under its id. A row no entry keeps is
- * soft-deleted, its children left for a restore; a kept row is rewritten only
- * where it differs, then its children are brought to the entry's; a new one
- * is inserted with its children. An id the ingredient does not hold is not a
- * row to write, so it falls back to the form. Dropped rows go first, then the
- * kept, then the new, so a form handed from one row to another clears the
- * unique index before it is taken. `memberships` is the tier the parent is
- * read in: none for a compendium entry.
+ * Brings the ingredient's live forms to exactly `variants`: kept by `id`, else by folded form, dropped first
+ * (claude-docs/db/ingredient-children.md, "Ingredient row writes").
  *
  * @throws {ValidationError} as `writeVariant` and each child's writer do.
  */
@@ -935,16 +785,9 @@ export function foldForm(form: string): string {
 }
 
 /**
- * Inserts `variant` as a form of the ingredient, or rewrites `row` with it
- * where any column differs, so a form saved unchanged is not written. Answers
- * the row's id.
+ * Inserts `variant` as a form of the ingredient, or rewrites `row` where a column differs, and answers the row's id.
  *
- * @throws {ValidationError} the ingredient already holds another live form
- * folding alike — `ingredient_variants_form_unique`, which the schema's own
- * repeat rule leaves to a concurrent save, or a form handed between two kept
- * rows in one save — on that entry's `form`. Mapped here rather than in
- * the services' `refuseCollision`, since only this write knows which entry
- * it was writing.
+ * @throws {ValidationError} another live form folds alike, reported on that entry's `form`.
  */
 async function writeVariant(
   write: AuditWriter,
@@ -989,9 +832,7 @@ async function writeVariant(
       .catch(refuse);
     return inserted.id;
   }
-  // A list the input leaves out (undefined) and a row holding none (null) are
-  // the same answer; read as different, every save rewrote every form and the
-  // parent could never read as unchanged (MB.106).
+  // `undefined` and `null` are the same answer here; read as different, every save would rewrite every form.
   const differs = (Object.keys(columns) as (keyof typeof columns)[]).some(
     (key) => JSON.stringify(columns[key] ?? null) !== JSON.stringify(row[key] ?? null),
   );
@@ -1000,13 +841,9 @@ async function writeVariant(
 }
 
 /**
- * The folk name `folkNameId` of ingredient `ingredientId`, and the names the
- * ingredient's other live folk names hold — the two things a promotion reads
- * before it writes. `memberships` is the tier the parent is read in, as
- * `findManyOfIngredients` takes it: none for a compendium entry.
+ * The folk name `folkNameId` of ingredient `ingredientId` and the ingredient's other live folk names, read before a promotion.
  *
- * @throws {NotFound} the ingredient holds no live folk name with this id —
- * another ingredient's included, and an id that is not one.
+ * @throws {NotFound} the ingredient holds no live folk name with this id.
  */
 export async function readPromotedFolkName(
   memberships: readonly Membership[],
@@ -1024,12 +861,7 @@ export async function readPromotedFolkName(
   };
 }
 
-/**
- * The folk-name half of a promotion, in the caller's `withAudit`: the promoted
- * row is soft-deleted first, so the case-folded unique index is clear, and then
- * the old display name is written as a folk name — unless another live folk
- * name already matches it in any case, which keeps it once.
- */
+/** The folk-name half of a promotion: soft-deletes the promoted row, then writes the old display name as a folk name unless one matches in any case. */
 export async function swapFolkName(
   write: AuditWriter,
   ingredientId: string,
@@ -1047,16 +879,8 @@ export async function swapFolkName(
 type NameFields = Pick<IngredientFields, 'name' | 'canonicalName'>;
 
 /**
- * A write that broke one of the coven's unique indexes, as a `ValidationError`
- * on the field that caused it; any other error unchanged. An identity
- * collision — a second ingredient under a formal name the coven holds
- * (MB.215) — is reported on `canonicalName`, or on `name` for one with none,
- * whose label is its identity, naming the ingredient holding it, read after
- * the write rolled back, and pointing at adding the form to it — whichever
- * index Postgres names: the label and address indexes are older than the
- * identity one, so the oil written under the herb's label meets them first.
- * `slug` is the one this write set, `id` the ingredient an update writes,
- * never its own collision.
+ * A write that broke one of the coven's unique indexes, as a `ValidationError` on the field that caused it;
+ * any other error unchanged (claude-docs/db/ingredient-children.md, "Ingredient row writes").
  */
 export async function refuseCollision(
   error: unknown,

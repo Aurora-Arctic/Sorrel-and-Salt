@@ -8,7 +8,7 @@ import type { UserRow } from '../types';
 
 // What an admin's change to a user, and an admin's batch read of users, are
 // made of, written once for the role service, coven creation's approval and
-// the admin invitations (MB.210). Internal to the module; the index exports
+// the admin invitations. Internal to the module; the index exports
 // no part of it.
 
 /**
@@ -37,7 +37,7 @@ export async function liveUser(userId: string): Promise<UserRow> {
 }
 
 /**
- * An admin's change as the privilege trigger records it (MB.195): `via:
+ * An admin's change as the privilege trigger records it: `via:
  * 'admin'`, with `note`, the confirmation's optional reason, trimmed and a
  * blank one as none — the same note an admin invitation stores for its
  * acceptance to record.

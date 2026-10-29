@@ -7,14 +7,14 @@ import { categoryArgs, facetArgs } from './compendium';
 import { IngredientRef, IngredientSourceEnum } from './ingredient';
 import { IngredientFacetsRef } from './ingredient-facets';
 
-// Story 14's list (M9.4): a coven's own entries and the compendium entries its
+// The list: a coven's own entries and the compendium entries its
 // cupboard holds, a page at a time, each entry's jars read through
-// `Ingredient.stock` and its cupboard row primed from the page (M12.18);
-// and beside it how many entries each filter value would list (M12.3). The
+// `Ingredient.stock` and its cupboard row primed from the page;
+// and beside it how many entries each filter value would list. The
 // resolvers refuse only a missing session; who may read which coven is the
 // service's check (claude-docs/graphql/schema.md, "workspaceIngredients").
 
-// The two settings only a coven's list has (M9.7), so not in `facetArgs`,
+// The two settings only a coven's list has, so not in `facetArgs`,
 // which the compendium shares.
 const stockArgs = builder.args((t) => ({
   source: t.field({
@@ -55,7 +55,7 @@ builder.queryField('workspaceIngredients', (t) =>
       );
       // The page read each entry's cupboard row beside it, under the same
       // read permission the loader's service asks, so `Ingredient.cupboardEntry`
-      // is answered from here rather than by a second read (M12.18).
+      // is answered from here rather than by a second read.
       for (const { node, cupboardEntry } of entries) {
         context.loaders.cupboardEntryByIngredient.prime(
           { ingredientId: node.id, workspaceId: args.workspaceId },

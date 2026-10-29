@@ -10,7 +10,7 @@ import type { z } from 'zod';
 import type { SpellStepInput } from '../validation/spell-step';
 import { UNMEASURABLE_UNIT, measurable } from '../validation/step-unit';
 
-// How a save writes a spell's recipe (M10.10): the steps a member sends are
+// How a save writes a spell's recipe: the steps a member sends are
 // the whole recipe, in order, so a step's place is its index, a saved step
 // left out is removed, and a step with no id is new. claude-docs/db/grimoire.md,
 // "Saving a recipe", says why each part is the way it is.
@@ -102,7 +102,7 @@ export async function checkRecipe(
 }
 
 /**
- * Story 77 (M13.2): a step laying a form the coven holds a jar of, in a unit
+ * A step laying a form the coven holds a jar of, in a unit
  * that jar cannot be measured in, so a working could not take it out of stock.
  * One read for every step's jar, under the caller's proof, so only this
  * coven's live jars count. A custom step, a step with no unit, a form with no

@@ -8,7 +8,7 @@ import { NameInput } from '../validation/name';
 import { getMe } from './profile';
 import type { UserRow } from '../types';
 
-// The name the site shows for an account (MB.88): its owner's to change, on
+// The name the site shows for an account: its owner's to change, on
 // the account page, through `withAudit`. Better Auth's `/update-user` would
 // write it too, outside the audit, so `src/lib/auth.ts` disables that path
 // and this is the name's one write (claude-docs/auth/admin-bootstrap.md,

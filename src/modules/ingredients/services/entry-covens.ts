@@ -14,7 +14,7 @@ import { heldCompendiumEntry, isRetired } from './cupboard-entries';
  * only, one held read per coven under that coven's own `Membership` proof (the live held reads
  * skip a retired entry, which is why they cannot answer). The covens come from the viewer's
  * memberships, never from who holds the entry, so a coven they are not in is never named, and an
- * admin or curator gets only their own (M6.6). Per viewer, so never cached (rule 6).
+ * admin or curator gets only their own. Per viewer, so never cached (rule 6).
  */
 export async function covensOpeningEntry(
   session: Session,

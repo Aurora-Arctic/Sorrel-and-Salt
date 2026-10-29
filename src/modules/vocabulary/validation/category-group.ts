@@ -4,13 +4,13 @@ import { MAX_HUE_DISTANCE, hueDistance, isAchromatic } from '../../../lib/group-
 import type { GroupColorColumn } from '../../../lib/types';
 import { curatedValueInput } from '../../../lib/validation';
 
-// A category group as an admin writes one (M5.6b): a curated value's name and
+// A category group as an admin writes one: a curated value's name and
 // description, and the chip's two colours. Built on curatedValueInput rather
 // than on a form group's input, which carries an icon a category group does
-// not take (M12.6): its chip colours stand for it, so an `icon` is dropped.
+// not take: its chip colours stand for it, so an `icon` is dropped.
 // Each colour is held to 4.5:1 against the harder of its own theme's surfaces
-// (MB.36) here rather than by a CHECK, so the refusal can name the column and
-// the ratio, beside the picker that chose it (MB.43); and here rather than in
+// here rather than by a CHECK, so the refusal can name the column and
+// the ratio, beside the picker that chose it; and here rather than in
 // the service alone, so the form refuses before the request. Refused, never
 // corrected: the admin gets the colour they chose or an error, as
 // `unitConvert` refuses (§11).
@@ -34,7 +34,7 @@ const color = (column: GroupColorColumn) =>
       });
     });
 
-// The pair is one family, the owner's call: one hue to within
+// The pair is one family: one hue to within
 // MAX_HUE_DISTANCE, as every seeded pair keeps to within a degree, or two
 // greys. Read only once both colours have passed their own checks, and
 // refused beside the second picker, under the pair.

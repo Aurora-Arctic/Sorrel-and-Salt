@@ -26,7 +26,7 @@ const OPTIONAL_NOT_BLANK = [
 ] as const;
 
 // One source per row, in Chicago bibliography form, kept once and linked from
-// every row it supports through `reference_links` (MB.151). Every field is
+// every row it supports through `reference_links`. Every field is
 // text as Chicago prints it — `authors` with its role, `published` at a
 // year's or a season's precision — because name order and dates are not
 // mechanical across the sources; only the two days are `date`s. One table,
@@ -65,7 +65,7 @@ export const references = pgTable(
   (table) => [
     seedKeyUnique('references_seed_key_unique', table),
     // Required *and non-empty*: NOT NULL alone accepts ''. One CHECK per
-    // column, so MB.153 paths the refusal to its field.
+    // column, so the service paths the refusal to its field.
     check('references_title_not_blank', sql`btrim(title) <> ''`),
     ...OPTIONAL_NOT_BLANK.map((column) =>
       check(
@@ -75,7 +75,7 @@ export const references = pgTable(
     ),
 
     // The four that make the renderer total: every row admitted renders
-    // without a branch for a missing required field (MB.151, decision 3).
+    // without a branch for a missing required field (claude-docs/design-decisions/mb.151-plan.md, "3. CHECKs").
     check('references_url_absolute', sql`url is null or url ~ '^https?://'`),
     check('references_accessed_needs_url', sql`accessed is null or url is not null`),
     check(

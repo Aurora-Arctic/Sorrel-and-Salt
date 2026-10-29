@@ -21,23 +21,15 @@ import {
 import { assertMembership } from '@/modules/coven';
 import type { IngredientRow, IngredientValues } from '../types';
 
-// Story 15: a coven's own ingredients. Every read and write is under the
-// proof, so the tier is the proof's — `workspace_id` is never read from the
-// input, and nothing here can write the compendium or move a row into it
-// (claude-docs/db/workspace-ingredients.md, "Workspace ingredients").
+// A coven's own ingredients. Every read and write is under the proof, so the tier is the proof's: `workspace_id` is never read from
+// the input, and nothing here can write the compendium (claude-docs/db/workspace-ingredients.md, "Workspace ingredients").
 
 /**
- * Creates an ingredient in this coven, with its folk names, substitutes,
- * deities, references, categories and forms, in one transaction. The slug is set here from the
- * label and the formal name.
+ * Creates an ingredient in this coven with its children in one transaction (claude-docs/db/workspace-ingredients.md,
+ * "Workspace ingredient service details").
  *
- * @throws {Forbidden} the caller may not write this coven's ingredients or
- * its stock.
- * @throws {ValidationError} the input breaks `LocalIngredientInput`,
- * collides with another of the coven's ingredients or a label it gave a
- * compendium entry, picks a form or deity no
- * curated row holds, files it under no live category, links a substitute
- * or cites a reference outside the compendium and this coven.
+ * @throws {Forbidden} the caller may not write this coven's ingredients or its stock.
+ * @throws {ValidationError} the input breaks `LocalIngredientInput`, or collides, or links outside the compendium and this coven.
  */
 export async function createWorkspaceIngredient(
   session: Session,
@@ -63,24 +55,12 @@ export async function createWorkspaceIngredient(
 }
 
 /**
- * Replaces an ingredient of this coven with `input` — the whole ingredient as
- * the form submits it, so a field left out is cleared — and its folk names,
- * substitutes, deities, references, categories and forms with the input's, in
- * one transaction. A folk name, substitute, deity, reference, category or
- * form still listed keeps its row; one dropped is soft-deleted, and a
- * category's hard-deleted (MB.34). A form is matched by its id, else by its
- * text folded, and keeps its own children when dropped (MB.219). The slug follows the label and the formal
- * name, and nothing redirects from the old one: no route reads a coven
- * ingredient's slug.
+ * Replaces an ingredient of this coven with `input`, the whole ingredient as the form submits it, and its children with the
+ * input's in one transaction (claude-docs/db/workspace-ingredients.md, "Workspace ingredient service details").
  *
- * @throws {Forbidden} the caller may not write this coven's ingredients or
- * its stock.
- * @throws {ValidationError} the input breaks `LocalIngredientInput`,
- * collides with another of the coven's ingredients, picks a form or deity no
- * curated row holds, files it under no live category, adds a substitute
- * link or a reference outside the compendium and this coven.
- * @throws {NotFound} no such ingredient in this coven — the compendium's and
- * other covens' included, and an id that is not one.
+ * @throws {Forbidden} the caller may not write this coven's ingredients or its stock.
+ * @throws {ValidationError} the input breaks `LocalIngredientInput`, or collides, or links outside the compendium and this coven.
+ * @throws {NotFound} no such ingredient in this coven, the compendium's and other covens' included.
  */
 export async function updateWorkspaceIngredient(
   session: Session,
@@ -117,19 +97,12 @@ export async function updateWorkspaceIngredient(
   }).catch((error: unknown) => refuseCollision(error, membership, fields, columns.slug, id));
 }
 /**
- * Swaps the display name of an ingredient of this coven with one of its folk
- * names, in one transaction: the folk name becomes the display name and the
- * old display name becomes a folk name, kept once whatever its case. The slug
- * follows the label, and nothing redirects from the old one (as in
- * `updateWorkspaceIngredient`). A row with a formal name keeps its identity
- * key; one without moves it, and may meet another entry's.
+ * Swaps the display name of an ingredient of this coven with one of its folk names, in one transaction
+ * (claude-docs/db/workspace-ingredients.md, "Workspace ingredient service details").
  *
- * @throws {Forbidden} the caller may not write this coven's ingredients or
- * its stock.
- * @throws {ValidationError} the new display name collides with another of the
- * coven's ingredients.
- * @throws {NotFound} no such ingredient in this coven, or no such live folk
- * name on it.
+ * @throws {Forbidden} the caller may not write this coven's ingredients or its stock.
+ * @throws {ValidationError} the new display name collides with another of the coven's ingredients.
+ * @throws {NotFound} no such ingredient in this coven, or no such live folk name on it.
  */
 export async function promoteWorkspaceFolkName(
   session: Session,
@@ -161,14 +134,11 @@ export async function promoteWorkspaceFolkName(
 }
 
 /**
- * Soft-deletes an ingredient of this coven, stamping who deleted it. Its folk
- * names, category links and stock stay; a spell holding it still reaches it
- * (claude-docs/db/workspace-ingredients.md, "Workspace ingredients").
+ * Soft-deletes an ingredient of this coven, stamping who deleted it. Its folk names, category links and stock stay; a spell
+ * holding it still reaches it (claude-docs/db/workspace-ingredients.md, "Workspace ingredients").
  *
  * @throws {Forbidden} the caller may not delete this coven's ingredients.
- * @throws {NotFound} no live ingredient in this coven has this id — one
- * already deleted, the compendium's and other covens' included, and an id
- * that is not one.
+ * @throws {NotFound} no live ingredient in this coven has this id.
  */
 export async function deleteWorkspaceIngredient(
   session: Session,
@@ -185,8 +155,7 @@ export async function deleteWorkspaceIngredient(
  * One of this coven's ingredients, for any member, viewers included.
  *
  * @throws {Forbidden} the caller may not read this coven's ingredients.
- * @throws {NotFound} no such ingredient in this coven — the compendium's and
- * other covens' included.
+ * @throws {NotFound} no such ingredient in this coven.
  */
 export async function getWorkspaceIngredient(
   session: Session,

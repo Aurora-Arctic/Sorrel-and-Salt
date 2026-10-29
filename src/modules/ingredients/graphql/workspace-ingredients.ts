@@ -14,7 +14,7 @@ import { ingredientInputFields } from './ingredient-input';
 // for, and the stamps are the session's (claude-docs/graphql/schema.md, "The workspace
 // ingredient mutations").
 
-/** DESIGN.md §7's `IngredientInput`: only `name` is required, so story 29's stub saves. */
+/** DESIGN.md §7's `IngredientInput`: only `name` is required. */
 const IngredientInput = builder.inputType('IngredientInput', {
   fields: (t) => ingredientInputFields(t, { tier: 'coven', whole: false }),
 });
@@ -22,7 +22,7 @@ const IngredientInput = builder.inputType('IngredientInput', {
 // An update replaces the row, so a field left out would be cleared. Non-null
 // makes leaving one out a schema error; GraphQL has no required-but-nullable
 // field, so a caller clears with an empty value instead of null — which is
-// why `elements` is a list (MB.157): a single enum had no empty value to send.
+// why `elements` is a list: a single enum had no empty value to send.
 const IngredientUpdateInput = builder.inputType('IngredientUpdateInput', {
   description:
     'The whole ingredient, replacing the row. Every field is sent, and "" or [] clears one.',

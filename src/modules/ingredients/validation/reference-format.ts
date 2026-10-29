@@ -1,15 +1,9 @@
 import { ISO_DAY, QUOTE_PAIRS } from '../../../lib/citation';
 import type { FieldFormat, ReferenceTextField } from './types';
 
-// How a reference's fields are tidied, and the shapes the schema's extra
-// checks accept (MB.154, the owner's calls). Pure and client-safe: the shared
-// schema applies each format as it parses, so the server stores it, and the
-// form applies the same one as a field is left, so the user sees it first. A
-// format changes only what it can read with certainty — spacing, the marks
-// around a title, a dash between numbers, an address's missing scheme, an
-// edition given as a number — and leaves everything else as typed, since
-// Chicago's forms vary more than any rule here would guess
-// (claude-docs/db/references.md, "Formatting and checks").
+// How a reference's fields are tidied, and the shapes the schema's extra checks accept. Pure and client-safe, so the server stores
+// what the form already showed. A format changes only what it can read with certainty and leaves the rest as typed, since
+// Chicago's forms vary more than any rule would guess (claude-docs/db/references.md, "Formatting and checks").
 
 /** Trimmed, every run of whitespace — a newline, a tab — one space. */
 export const tidy: FieldFormat = (text) => text.replace(/\s+/g, ' ').trim();
