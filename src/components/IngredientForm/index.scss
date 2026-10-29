@@ -205,7 +205,7 @@ $skeleton-fade: 300ms;
 
     // Another name's answer on its way: each row it replaces cross-fades to the skeleton's shapes
     // (`skeleton-shape`) after $skeleton-delay, on its own layer, so a quick answer shows none
-    // (claude-docs/components/ingredient-form.md, "Notes behind the code").
+    // (claude-docs/components/ingredient-form.md, "Duplicate list styling").
     .ingredient-form__match {
       position: relative;
       will-change: transform;

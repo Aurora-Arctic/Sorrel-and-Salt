@@ -9,7 +9,7 @@ import { ROLES, ROLE_LABELS } from './roles';
 import type { UserListFilterProps, UserListFilterValue } from './types';
 
 // The user list's filter in `FilterForm`: search text is sent by the magnifier or Enter; Role and Needs Approval apply on change
-// (claude-docs/components/user-list.md, "Notes from code comments: the filter").
+// (claude-docs/components/user-list.md, "The user link and the filter").
 const UserListFilter = ({ query, awaitingApproval, role }: UserListFilterProps): ReactElement => {
   const [draftQuery, setDraftQuery] = useState(query);
   const apply = useApplyFilter();

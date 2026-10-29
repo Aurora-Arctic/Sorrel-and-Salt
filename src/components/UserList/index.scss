@@ -3,7 +3,7 @@
 @use 'layers' as *;
 
 // The user list's own rules: cell alignment, marks and tips, the sticky Impersonate column and its stacked-card fallback; the layout primitives are shared
-// (claude-docs/components/user-list.md, "Notes from code comments: the stylesheet").
+// (claude-docs/components/user-list.md, "The list's stylesheet").
 
 // Every cell centred on its row rather than on the text's baseline, which
 // the primitive uses: these rows mix text with logo circles, marks and
@@ -14,7 +14,7 @@
 }
 
 // No cell wraps (`.data-table--nowrap`, `--roomy`); borders are separate so each rule belongs to its own cell, not the grid
-// (claude-docs/components/user-list.md, "Notes from code comments: the table styles").
+// (claude-docs/components/user-list.md, "The list's stylesheet").
 .user-list .data-table {
   border-collapse: separate;
   border-spacing: 0;

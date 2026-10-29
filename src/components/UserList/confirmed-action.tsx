@@ -13,7 +13,7 @@ import './controls.scss';
 
 // An action that asks first, in a modal: the confirm sends the write and stays busy until the
 // page is read again. A refusal closes the modal and says why in a callout under the button.
-// (claude-docs/components/user-list.md, "Notes from code comments: confirmed action")
+// (claude-docs/components/user-list.md, "Actions that ask first")
 
 const ConfirmedAction = ({
   label,

@@ -67,7 +67,7 @@ import {
 
 // The Variants section: the forms an ingredient comes in, each a group of what that form adds to
 // the ingredient, and the New Form box that adds one. Each variant is one summary line until its
-// Edit opens it (claude-docs/components/ingredient-form.md, "Notes behind the code").
+// Edit opens it (claude-docs/components/ingredient-form.md, "Variant fields and their folds").
 
 const BOX = 'drafts.variants';
 
@@ -84,7 +84,7 @@ const sameVariant = (a: RestoredVariant, b: RestoredVariant): boolean =>
 
 /**
  * Which of each variant's own sections are open, by place, kept in step as a form is added or
- * removed; a variant added here opens fully (claude-docs/components/ingredient-form.md, "Notes behind the code").
+ * removed; a variant added here opens fully (claude-docs/components/ingredient-form.md, "Variant fields and their folds").
  */
 export function useVariantFolds(): VariantFolds {
   const [folds, setFolds] = useState<VariantFoldList>([]);

@@ -17,7 +17,7 @@ export const useEditedFieldsContext = (): ReadonlySet<string> | null =>
 
 /**
  * Records every field ever edited, even if its value returns to the default (react-hook-form's `dirtyFields` unsets it); `clear` empties it on reset
- * (claude-docs/components/field.md, "Notes from code comments: the edited-fields record").
+ * (claude-docs/components/field.md, "The edited-fields record").
  */
 export function useEditedFields<V extends FieldValues>(
   subscribe: UseFormSubscribe<V>,

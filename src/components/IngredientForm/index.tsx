@@ -286,7 +286,7 @@ const IngredientForm = ({
 
   // Save & Add Another empties every field and list once the save has landed, and the name takes
   // the focus. It runs in an effect, counted here, not read off `isSubmitSuccessful`
-  // (claude-docs/components/ingredient-form.md, "Notes behind the code").
+  // (claude-docs/components/ingredient-form.md, "Save & Add Another and the toolbar").
   const [saves, setSaves] = useState(0);
   // What the last save wrote, said above the fields where a refusal would be,
   // so the cleared form is not the only sign it landed. A new save drops it.
@@ -315,7 +315,7 @@ const IngredientForm = ({
 
   // Open All / Close All: Close All while any section is open, and it reaches every variant's
   // sections too. Off while the form asks a question over itself, as Undo and Redo are then
-  // (claude-docs/components/ingredient-form.md, "Notes behind the code").
+  // (claude-docs/components/ingredient-form.md, "Save & Add Another and the toolbar").
   const anyOpen = open.size > 0;
   const headerNote = useModalHeaderNote();
   const compendiumNotice = <Notice kind="plain">{COMPENDIUM_EDIT_NOTICE}</Notice>;
@@ -455,7 +455,7 @@ const IngredientForm = ({
   /**
    * A compendium match's +: the entry goes in under its own name, and what else was typed rides as
    * the coven's overrides. The form stays open with what was typed; answers whether it went in
-   * (claude-docs/components/ingredient-form.md, "Notes behind the code").
+   * (claude-docs/components/ingredient-form.md, "How the duplicate list behaves").
    */
   const useEntry = async (match: Duplicate): Promise<boolean> => {
     if (workspaceId === null) return false;
@@ -713,7 +713,7 @@ const IngredientForm = ({
                       />
                       {/* Each list but the colours suggests, from the curated vocabularies where
             there are some and from this coven and the compendium otherwise
-            (claude-docs/components/ingredient-form.md, "Notes behind the code"). */}
+            (claude-docs/components/ingredient-form.md, "Suggestion lists and fields"). */}
                       <LookupListField
                         workspaceId={workspaceId}
                         useSuggestions={useCelestialBodySuggestions}
