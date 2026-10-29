@@ -4,8 +4,7 @@ One line per entry: `<nomenclature>/<entry-file-slug>`. An entry with an ethics 
 
 ## M14.29
 
-Checked against: United Plant Savers Species At-Risk List (current page, 2026-10-29); the IUCN category and any other conservation statement printed in the entry's English Wikipedia page (revisions in `compendium/ethics/sources/`); the CITES Appendices valid from 5 March 2026, matched locally by formal name (`cites-appendices`); a keyword scan for animal-part and closed-practice statements; and a targeted reread of the animal-product entries and the entries linked to Indigenous or initiatory traditions. An entry whose canonical name is blank (18 entries: the unnamed mineral and chemical rows) was not matched against CITES, and an entry with no Wikipedia page has no IUCN check. Absence from a list is not a statement that an entry is safe.
-
+- Checked against: United Plant Savers Species At-Risk List (current page, 2026-10-29); the IUCN category and any other conservation statement printed in the entry's English Wikipedia page (revisions in `compendium/ethics/sources/`); the CITES Appendices valid from 5 March 2026, matched locally by formal name (`cites-appendices`); a keyword scan for animal-part and closed-practice statements; and a targeted reread of the animal-product entries and the entries linked to Indigenous or initiatory traditions. An entry whose canonical name is blank (18 entries: the unnamed mineral and chemical rows) was not matched against CITES, and an entry with no Wikipedia page has no IUCN check. Absence from a list is not a statement that an entry is safe.
 - botanical/adam-and-eve-root-aplectrum-hyemale
 - botanical/adders-tongue-erythronium-americanum
 - botanical/agrimony-agrimonia-eupatoria
@@ -541,8 +540,7 @@ Checked against: United Plant Savers Species At-Risk List (current page, 2026-10
 
 ## M14.18
 
-Checked for everything except CITES (the M14.29 sweep covers CITES).
-
+- Checked for everything except CITES (the M14.29 sweep covers CITES).
 - botanical/aconitum-carmichaelii-aconitum-carmichaelii
 - botanical/amur-cork-tree-phellodendron-amurense
 - botanical/atractylodes-atractylodes-macrocephala
@@ -595,3 +593,38 @@ Checked for everything except CITES (the M14.29 sweep covers CITES).
 - unknown/cattle-gallstone
 - unknown/cicada-shells
 - zoological/silkworm-droppings-bombyx-mori
+
+## M14.20
+
+- botanical/applebush-pterocaulon-sphacelatum
+- botanical/australian-lemongrass-cymbopogon-ambiguus
+- botanical/ayahuasca-vine-banisteriopsis-caapi
+- botanical/aztec-marigold-tagetes-erecta
+- botanical/beach-naupaka-scaevola-taccada
+- botanical/big-sagebrush-artemisia-tridentata
+- botanical/blue-cohosh-caulophyllum-thalictroides
+- botanical/cabbage-tree-cordyline-australis
+- botanical/clinacanthus-nutans-clinacanthus-nutans
+- botanical/coca-erythroxylum-coca
+- botanical/creosote-bush-larrea-tridentata
+- botanical/delal-a-kar-phaleria-nisidai
+- botanical/devils-club-oplopanax-horridus
+- botanical/emu-bush-eremophila-longifolia
+- botanical/gac-momordica-cochinchinensis
+- botanical/gumby-gumby-pittosporum-angustifolium
+- botanical/kacip-fatimah-labisia-pumila
+- botanical/kencur-kaempferia-galanga
+- botanical/koromiko-veronica-stricta
+- botanical/kowhai-sophora-microphylla
+- botanical/kumarahou-pomaderris-kumeraho
+- botanical/labrador-tea-rhododendron-groenlandicum
+- botanical/lemon-myrtle-backhousia-citriodora
+- botanical/mamane-sophora-chrysophylla
+- botanical/manuka-leptospermum-scoparium
+- botanical/muna-minthostachys-mollis
+- botanical/ololiuqui-ipomoea-corymbosa
+- botanical/pacific-yam-dioscorea-alata
+- mineral/ammolite-ammolite
+- mineral/ochre-ochre
+- mineral/palygorskite-palygorskite
+- none/alaea-salt
