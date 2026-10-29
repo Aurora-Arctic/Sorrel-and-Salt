@@ -1,0 +1,10 @@
+# Gathered for M14.29; the seed never reads this folder.
+entry: unknown/sea-cucumber
+status: approved
+animalPart:
+  - quote: Overfishing of sea cucumbers in the Great Barrier Reef is threatening their population. Their popularity as luxury seafood in East Asian countries poses a serious threat.
+    source: wikipedia-sea-cucumber
+    locator: Harvesting and trade
+  - quote: In India, the commercial harvest and transportation of sea cucumbers has been strictly banned under Schedule I of the Wild Life (Protection) Act, 1972 (WLPA) since 2001.
+    source: wikipedia-sea-cucumber
+    locator: Conservation
