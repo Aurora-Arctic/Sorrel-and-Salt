@@ -43,6 +43,7 @@ deities:
   - Frigg
   - Thor
   - Zeus
+  - Hymen
 categories:
   - Fertility
   - Ancestor Work
@@ -165,7 +166,3 @@ variants:
 # Hawthorn
 
 Hawthorns, the genus Crataegus of the family Rosaceae, are thorny shrubs and small trees, mostly five to fifteen metres tall, native to the temperate lands of Europe, Asia, North Africa and North America. Some botanists once counted a thousand species; about two hundred is now thought a reasonable number. Their leaves are lobed or toothed, their five-petalled flowers come in flat-topped clusters, usually white but sometimes pink, and their small fruits, the haws, feed birds through the winter. The genus name joins Greek words for strength, after the hard wood, and for sharpness, after the thorns, while 'haw' was once an Old English word for a hedge. Greeks, Romans, Celts and Germanic peoples all held the tree sacred. Its flowering branches decked May Day, and the ancient Greeks are said to have carried them in wedding processions. In Britain and Ireland it is a fairy tree that marks the way into the otherworld, and harming one, above all a lone thorn, invites bad luck; lone thorns were also thought to spring from lightning and to guard against it. Hawthorns stand beside healing wells hung with strips of cloth, and the twice-flowering Glastonbury thorn was said to have grown from Joseph of Arimathea's staff. Cunningham names it with oak and ash in Britain's fairy triad, records that the Romans laid it in cradles against evil spells, and uses it for fertility, at spring weddings and to cheer the sad.
-
-#### Edit Notes for Claude
-
-Deity gap: Hymen (Cunningham, under "Hawthorn"), not in the vocabulary; link once M14.15 adds it.

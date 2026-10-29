@@ -31,6 +31,8 @@ deities:
   - Minerva
   - Persephone
   - Venus
+  - Modron
+  - Morpheus
 categories:
   - Dream Work
   - Fertility
@@ -101,8 +103,3 @@ variants:
 # Corn Poppy
 
 The corn poppy is an annual of the poppy family, Papaveraceae, native to North Africa and temperate Eurasia and now introduced on every continent except Antarctica. It is a weed of disturbed ground that was once plentiful in cereal fields before herbicides, hence the names corn poppy and field poppy, and it still springs up in fallow land; the garden Shirley poppy is one of its cultivars. The plant reaches about seventy centimetres and carries single flowers five to ten centimetres across, each with four vivid red petals usually blotched black at the base. A flower lasts only a day, but one plant may open up to four hundred in a warm season, and the hairless, egg-shaped capsule holds black seeds. Broken tissue seeps a white to yellowish latex, and the plant contains rhoeadine, a mildly sedative alkaloid. The seeds are edible, and the petals give a red dye used in some medicines and wines. In Ireland it was regarded as a witch's flower and in Wales it was associated with goblins. In China it bears the name of Consort Yu, since folklore says poppies grew where she fell, and it became an emblem of loyalty unto death. Kynes treats it with the opium poppy in a single entry, whose magical uses turn on dreams, fertility, love and wisdom.
-
-#### Edit Notes for Claude
-
-- Deity gap: Modron (Kynes, under "Poppy"), not in the vocabulary; link once M14.15 adds it.
-- Deity gap: Morpheus (Kynes, under "Poppy"), not in the vocabulary; link once M14.15 adds it.

@@ -35,6 +35,7 @@ folkNames:
   - Hurtsickle
 deities:
   - Flora
+  - Puck
 categories:
   - Love
   - Divination
@@ -55,6 +56,7 @@ references:
       - folkNames
       - categories
       - description
+      - deities
   - source: kynes-plants
     locator: under "Cornflower"
     nameBasis: resolved
@@ -125,7 +127,3 @@ Cornflower is an annual flowering plant of the family Asteraceae, native to Euro
 <!-- audit:cunningham-herbs:Bachelor's Buttons -->
 
 Does cunningham-herbs under "Bachelor's Buttons", cited on the entry, the Flower, describe Centaurea cyanus? It may mean Tanacetum parthenium instead. The audit found: "Bachelor's Buttons" is the folk name of ingredients/botanical/feverfew-tanacetum-parthenium.md (Tanacetum parthenium). "Bachelor's Buttons" prints no formal name. Settle it as `stated` or `resolved` from the source, or replace the citation.
-
-#### Edit Notes for Claude
-
-- Deity gap: Robin Goodfellow (Cunningham, under "Bachelor's Buttons"), not in the vocabulary; link once M14.15 adds it.

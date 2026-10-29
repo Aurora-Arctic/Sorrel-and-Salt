@@ -40,6 +40,9 @@ deities:
   - Manannan mac Lir
   - Minerva
   - Odin
+  - Uranus
+  - Macha
+  - Nemesis
 categories:
   - Protection
   - Prosperity
@@ -179,9 +182,3 @@ seedUpdate: 1a551d79e80c250cbd348ba43cee82dd0f2aba5d36e7a3b0980ab57eeb19b258
 # Ash
 
 The common or European ash is a tall deciduous tree of the olive family, native across mainland Europe from the north of Spain to Russia, east to the Caucasus, and throughout Britain and Ireland, where it favours limestone. Its compound leaves carry seven to thirteen toothed leaflets, its winter buds are jet black, and its winged seeds, called keys, hang in bunches until the following spring. Its tough, springy timber has made spears, bows, tool handles and carts, and in Ireland every hurley. In Norse myth the world tree Yggdrasil, which holds up the nine worlds, is an ash. Old superstitions recorded by Grieve used it to charm away warts and, by passing a child through a split sapling, to cure rupture; Cunningham adds that snakes will not cross its wood, and Kynes that where ash, oak and hawthorn grow together the faery realm may be seen. Culpeper places it under the Sun. In magic it is a tree of protection and of the sea: a solar cross carved from its wood guards against drowning, a staff of it over the door keeps harm away, its leaves under the pillow bring prophetic dreams, and ash burned at Yule brings prosperity.
-
-#### Edit Notes for Claude
-
-- Deity gap: Uranus (Cunningham, under "Ash"), not in the vocabulary; link once M14.15 adds it.
-- Deity gap: Macha (Kynes, under "Ash"), not in the vocabulary; link once M14.15 adds it.
-- Deity gap: Nemesis (Kynes, under "Ash"), not in the vocabulary; link once M14.15 adds it.

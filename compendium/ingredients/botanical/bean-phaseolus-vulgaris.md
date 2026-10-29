@@ -111,4 +111,4 @@ The common bean, Phaseolus vulgaris, is an annual of the legume family, Fabaceae
 
 #### Edit Notes for Claude
 
-- Deity gap: Carna (Kynes, under "Bean"), not in the vocabulary; link once M14.15 adds it.
+- Deity gap: Carna (Kynes, under "Bean"), not in the vocabulary after M14.15: Carna is a Roman goddess whom some sources conflate with Cardea; the source does not say which it means.

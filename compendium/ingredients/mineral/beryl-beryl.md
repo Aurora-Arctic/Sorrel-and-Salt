@@ -19,6 +19,7 @@ colours:
 deities:
   - Poseidon
   - Neptune
+  - Tiamat
 categories:
   - Psychic Work
   - Healing
@@ -91,5 +92,4 @@ Beryl is a mineral, a silicate of beryllium and aluminium, that grows as six-sid
 
 #### Edit Notes for Claude
 
-- Deity gap: Tiamat (Cunningham's Crystals, pp. 76–78; p. 190), not in the vocabulary; link once M14.15 adds it.
-- Deity gap: Mara (Cunningham's Crystals, pp. 76–78; p. 190), not in the vocabulary; link once M14.15 adds it.
+- Deity gap: Mara (Cunningham's Crystals, pp. 76–78; p. 190), not in the vocabulary after M14.15: Mara is a demon in Buddhism and a sea deity elsewhere; the source does not say which.

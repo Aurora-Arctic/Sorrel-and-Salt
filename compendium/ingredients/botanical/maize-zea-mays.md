@@ -26,6 +26,7 @@ deities:
   - Lugh
   - Osiris
   - Persephone
+  - Centeotl
 categories:
   - Protection
   - Divination
@@ -123,7 +124,3 @@ seedUpdate: c66017fcaaaa97ae7e599849d9c16b7de0d002f4ad0d4087c9daff2967048d7b
 # Maize
 
 Maize, known in North America as corn, is a tall annual grass, from about 1.2 to 4 metres high, grown for its cereal grain. Its male flowers form a tassel at the top of the stem and shed pollen on the wind, while the female flowers sit lower down as ears, first appearing as silk, each strand of which becomes a kernel. Modern varieties usually have yellow or white kernels, though others are red, blue, purple or black. Indigenous peoples of southern Mexico domesticated it from wild teosinte some nine thousand years ago, and it still depends on people to spread. It is now a staple across the world, eaten as tortillas, polenta and grits, fed to livestock, and pressed or processed into oil, starch, syrup and fuel. Its name reached English through Spanish from the Taíno word mahis. In Mesoamerica maize was honoured as a god, and Kynes notes that it was held sacred in Mexico and in Central and South America. Cunningham tells of the Corn Mother, a goddess of plenty and fertility, and of the Zuni use of differently coloured corn in ritual, with blue cornmeal scattered to bless and as an offering. In folk magic an ear of corn laid in a cradle guards the baby, cornstalks hung over a mirror bring the household luck, and a necklace of dried red kernels is worn against nosebleeds.
-
-#### Edit Notes for Claude
-
-- Deity gap: Centeotl (Kynes's Plants, under "Grain"), not in the vocabulary; link once M14.15 adds it.

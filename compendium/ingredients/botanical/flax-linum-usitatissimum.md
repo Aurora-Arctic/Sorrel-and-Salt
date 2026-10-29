@@ -19,6 +19,8 @@ deities:
   - Freya
   - Frigg
   - Minerva
+  - Moirai
+  - Norns
 categories:
   - Protection
   - Psychic Work
@@ -146,8 +148,3 @@ seedUpdate: f5846bd91ee32fb0f139acdc8469b27af51629630a2fd79a9bdb8fe1ede185bc
 # Flax
 
 Flax is an annual of the family Linaceae, grown for food and for fibre wherever the climate is temperate. It is known only in cultivation, the outcome of a single domestication from the wild pale flax in the Fertile Crescent, within a native range running from the eastern Mediterranean to India. Slender stems reach about 1.2 metres and carry narrow, blue-green leaves. Kynes describes pale blue, five-petalled flowers, followed by round capsules of small, flat, reddish-brown seeds that Wikipedia likens to apple pips. The species name usitatissimum means "most useful": the seeds are ground into meal or pressed for linseed oil, and the fibres are made into linen. Ancient Egypt grew it widely, painting flowering flax on temple walls and wrapping its mummies in linen, and Egyptian priests wore linen alone because flax stood for purity. In Norway and Denmark flax grown near the house kept ghosts away and seeds laid in a coffin stopped the dead from wandering, while in the Basque country it went into shoes against bewitchment. Witches were believed to brew with the seeds yet to hate the flowers. Cunningham and Northcote both name Hulda as the goddess who first taught people to grow flax and to spin and weave it, and a child who danced among growing flax at seven was expected to grow up beautiful.
-
-#### Edit Notes for Claude
-
-- Deity gap: Fates (Kynes, under "Flax"), not in the vocabulary; link once M14.15 adds it.
-- Deity gap: Norns (Kynes, under "Flax"), not in the vocabulary; link once M14.15 adds it.

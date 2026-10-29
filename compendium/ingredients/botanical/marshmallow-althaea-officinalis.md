@@ -149,4 +149,4 @@ Does kynes-plants under "Mallow", cited on the entry, the Root, the Leaf, the Fl
 
 #### Edit Notes for Claude
 
-- Deity gap: Althea (Kynes's Plants, under "Mallow"), not in the vocabulary; link once M14.15 adds it.
+- Deity gap: Althea (Kynes's Plants, under "Mallow"), not in the vocabulary after M14.15: The source does not say which Althea it means.

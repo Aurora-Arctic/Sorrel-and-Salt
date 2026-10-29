@@ -21,6 +21,8 @@ folkNames:
   - Euphrasy
   - Casse-lunette
   - Augentröst
+deities:
+  - Charites
 categories:
   - Psychic Work
   - Clarity
@@ -52,6 +54,7 @@ references:
       - categories
       - folkNames
       - description
+      - deities
   - source: ahpa-safety
     locator: pp. 356–357; p. xxii
     nameBasis: unaudited
@@ -128,7 +131,3 @@ Does grieve-eyebright under "Eyebright", cited on the entry, the Herb, describe 
 <!-- audit:kynes-plants:Eyebright -->
 
 Does kynes-plants under "Eyebright", cited on the entry, the Flower, describe Euphrasia officinalis? It may mean Lobelia inflata instead. The audit found: "Eyebright" is the folk name of ingredients/botanical/lobelia-lobelia-inflata.md (Lobelia inflata). "Eyebright" prints no formal name. Settle it as `stated` or `resolved` from the source, or replace the citation.
-
-#### Edit Notes for Claude
-
-- Deity gap: Graces (Kynes, under "Eyebright"), not in the vocabulary; link once M14.15 adds it.

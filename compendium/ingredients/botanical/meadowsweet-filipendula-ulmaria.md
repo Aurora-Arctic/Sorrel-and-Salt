@@ -32,6 +32,7 @@ deities:
   - Blodeuwedd
   - Danu
   - Gwydion
+  - Cu Chulainn
 categories:
   - Love
   - Divination
@@ -128,7 +129,3 @@ seedUpdate: d6b4ce8ca326b4da7d4250d18772c2dcb18ae35a3d89ade3eca982c7097e197b
 # Meadowsweet
 
 Meadowsweet is a perennial herb of the rose family that favours damp meadows, fens and wet woods. It is native to most of Europe and western Asia, is common throughout the British Isles, and has naturalised in North America. Its furrowed, reddish stems reach one to two metres, its divided leaves are dark green above and pale and downy beneath, and from early summer into early autumn it carries dense clusters of small, creamy-white, strongly scented flowers. The name first meant a herb for sweetening mead rather than a sweet plant of the meadow, and the Anglo-Saxons called it meadwort. It was strewn in churches and woven into bridal garlands, which earned it the name bridewort, and Elizabeth I liked it above every other herb for strewing her rooms. It has been found with cremated remains in a Bronze Age cairn in Carmarthenshire, and in Welsh legend Gwydion and Math made Blodeuwedd partly from its flowers. Salicylic acid was first obtained from its buds in 1838, and its old name, Spiraea ulmaria, gave aspirin its name. Irish lore put it under the bed of someone made ill by the faeries, and an Icelandic custom gathered it at Midsummer and dropped it on water to tell whether a thief was a man, if it sank, or a woman, if it floated. In magical practice it is laid fresh on the altar or mixed dried into love blends, and strewn through the house to keep the peace.
-
-#### Edit Notes for Claude
-
-- Deity gap: Cú Chulainn (Kynes's Plants, under "Meadowsweet"), not in the vocabulary; link once M14.15 adds it.

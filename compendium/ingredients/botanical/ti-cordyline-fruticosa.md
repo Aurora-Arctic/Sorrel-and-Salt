@@ -18,6 +18,7 @@ deities:
   - Lono
   - Pele
   - Laka
+  - Kanehekili
 categories:
   - Protection
   - Healing
@@ -86,7 +87,3 @@ Ti is a palm-like evergreen of the family Asparagaceae, with fans of red to gree
 <!-- audit:cunningham-herbs:Ti -->
 
 Does cunningham-herbs under "Ti", cited on the entry, describe Cordyline fruticosa alone? The heading prints the name as "Cordyline tenninalis", which is not a name of this plant, and no cited authority maps that spelling to it. Settle it as `stated` or `resolved` from the source, or replace the citation.
-
-#### Edit Notes for Claude
-
-- Deity gap: Kane-Hekili (Kynes, under "Ti Plant"), not in the vocabulary; link once M14.15 adds it.

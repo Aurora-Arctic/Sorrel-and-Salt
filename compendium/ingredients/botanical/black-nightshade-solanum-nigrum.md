@@ -21,6 +21,7 @@ folkNames:
 deities:
   - Circe
   - Hecate
+  - Macha
 categories:
   - Creativity
   - Divination
@@ -118,7 +119,3 @@ seedUpdate: 4cec74c4c27c8af859607fa9af035c70978e742c20432320be35ebc523857164
 # Black Nightshade
 
 Black nightshade is a herb or short-lived shrubby perennial of the nightshade family, Solanaceae. Native to Eurasia, it has spread to the Americas, to Australasia and to South Africa; Grieve calls it one of the world's most widespread wild plants, and it is a weed of crops in dozens of countries. It grows 30 to 120 centimetres tall, with oval to heart-shaped, wavy-edged leaves, small white flowers round a bright yellow centre, and clusters of berries that ripen from green to black. It has been found in Palaeolithic and Mesolithic deposits in Britain, and Dioscorides knew it. Older herbalists called it petty morel to set it apart from the great morel, deadly nightshade, with which it is still confused: black nightshade carries its berries in bunches and has white petals, where belladonna bears its berries singly and has purple flowers. Culpeper found it under walls and along paths, called it a cold plant of Saturn, and warned readers not to take the deadly kind for it. In several countries its cooked leaves and ripe berries are eaten. Kynes notes that the Anglo-Saxons used it in medicine and in healing charms, and that Central Europeans hung it above cradles to help babies sleep, as Grieve also records of Bohemia. Kynes treats it beside belladonna, advises working with it symbolically, and asks anyone who finds it growing wild to lay an offering for Hecate next to it.
-
-#### Edit Notes for Claude
-
-- Deity gap: Macha (Kynes, under "Nightshade"), not in the vocabulary; link once M14.15 adds it.

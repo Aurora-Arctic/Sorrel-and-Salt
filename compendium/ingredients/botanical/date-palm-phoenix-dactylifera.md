@@ -31,6 +31,8 @@ deities:
   - Hermes
   - Inanna
   - Mercury
+  - Leto
+  - Nike
 categories:
   - Fertility
   - Abundance
@@ -141,8 +143,3 @@ seedUpdate: 228517fee2e58d49f91ffdadfcb8ba7d15c20861963001afa24fcba4128d9e89
 # Date Palm
 
 The date palm is a palm of the family Arecaceae, native to the lands from the Gulf States and Iraq to Pakistan and India, and it can reach about 30 metres. Its trunk keeps the scars of old leaf stalks, the fronds of its crown can grow to sixteen feet, and male and female flowers grow on separate trees, so orchard growers pollinate the female trees by hand. A single cluster can carry more than a thousand oval fruits, red to yellow when ripe, each around a single stone. It has been grown for its fruit for thousands of years, with early evidence from Neolithic Mehrgarh in Pakistan and from eastern Arabia. Its leaves make huts, mats and baskets, the fronds borne in Roman triumphs were most likely its own, and it is one of the Seven Species of Jewish tradition, its closed frond waved at Sukkot as the lulav; dates traditionally break the Ramadan fast. Linnaeus named the genus Phoenix because the palm stood for life and rebirth. The Greeks and Romans planted it around temples and shrines, the Assyrians used date wine in rites of prophecy, and the fruit was thought an aphrodisiac. Cunningham calls it a celebrated fertility tree for the sheer quantity of fruit it bears: dates are eaten to increase fertility, and a palm growing in a place is said to shield it from bad weather.
-
-#### Edit Notes for Claude
-
-- Deity gap: Leto (Kynes, under "Date"), not in the vocabulary; link once M14.15 adds it.
-- Deity gap: Nike (Kynes, under "Date"), not in the vocabulary; link once M14.15 adds it.
