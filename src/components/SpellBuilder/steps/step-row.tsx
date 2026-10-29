@@ -103,7 +103,9 @@ export function BuilderStepRow({
     if (!open || !focusOnOpen.current) return;
     focusOnOpen.current = false;
     row.current
-      ?.querySelector<HTMLElement>('.step-row__open input, .step-row__open textarea')
+      ?.querySelector<HTMLElement>(
+        '.step-row__open input, .step-row__open textarea, .step-row__field textarea',
+      )
       ?.focus();
   }, [open]);
   const handle = <StepHandle name={name} sortable={sortable} />;
@@ -119,14 +121,10 @@ export function BuilderStepRow({
   );
   return (
     <StepRow
-      onToggle={
-        instruction
-          ? undefined
-          : () => {
-              focusOnOpen.current = !open;
-              onToggle();
-            }
-      }
+      onToggle={() => {
+        focusOnOpen.current = !open;
+        onToggle();
+      }}
       rowRef={(node) => {
         row.current = node;
         sortable.setNodeRef(node);
@@ -186,12 +184,8 @@ export function BuilderStepRow({
           type="button"
           // One disclosure button in one place (second design review): the pencil while the row is
           // closed, the up chevron, light, once it is open. It keeps the focus when it flips.
-          className={['step-row__edit', !instruction && open && 'step-row__edit--close']
-            .filter(Boolean)
-            .join(' ')}
-          aria-label={
-            instruction ? `Edit step ${index + 1}` : `${open ? 'Close' : 'Edit'} ${step.name}`
-          }
+          className={['step-row__edit', open && 'step-row__edit--close'].filter(Boolean).join(' ')}
+          aria-label={`${open ? 'Close' : 'Edit'} ${instruction ? `step ${index + 1}` : step.name}`}
           aria-expanded={open}
           aria-controls={fieldsId}
           onClick={() => {
@@ -199,7 +193,7 @@ export function BuilderStepRow({
             onToggle();
           }}
         >
-          {!instruction && open ? <ChevronIcon /> : <EditIcon />}
+          {open ? <ChevronIcon /> : <EditIcon />}
         </button>
       }
       nameField={
@@ -253,7 +247,7 @@ export function BuilderStepRow({
       }
       actions={
         // Remove is for a closed row, so a row being edited is never deleted by a stray press.
-        !instruction && open ? null : (
+        open ? null : (
           <button
             type="button"
             className="step-row__remove"

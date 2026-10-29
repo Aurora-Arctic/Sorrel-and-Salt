@@ -162,6 +162,8 @@ describe('the spell builder’s saves', () => {
     expect(screen.queryByRole('alert')).toBeNull();
     expect(screen.queryByText(/Failed|could not be saved/i)).toBeNull();
 
+    // The new instruction is open, and an open row has no Remove: close it first.
+    fireEvent.click(screen.getByRole('button', { name: 'Close step 1' }));
     fireEvent.click(screen.getByRole('button', { name: /^Remove/ }));
     await act(async () => {
       await vi.advanceTimersByTimeAsync(3100);
