@@ -9,7 +9,7 @@ import type { SpellStepsValues } from './steps/types';
 import { isInstruction } from './steps/values';
 
 // The Jar section's details, above its step list (the owner's call, 2026-10-29: with In Coven
-// Inventory gone, one column): the Seal Wax field with the jar drawn at its right, level with
+// Inventory gone, one column): the Seal Wax field with the jar drawn at its left, level with
 // the input only (the owner's call, 2026-10-29), then the Jar Description on its own line.
 // The jar fills as steps are added.
 // claude-docs/components/spell-builder.md, "The jar details".
@@ -55,7 +55,7 @@ export function JarDetails({
   waxField,
   descriptionField,
 }: {
-  /** The Seal Wax field, on the first line with the jar drawn at its right. */
+  /** The Seal Wax field, on the first line with the jar drawn at its left. */
   waxField: ReactNode;
   /** The Jar Description field, on its own full-width line beneath. */
   descriptionField: ReactNode;
@@ -63,8 +63,8 @@ export function JarDetails({
   return (
     <div className="jar-details" role="group" aria-label="Jar Details">
       <div className="jar-details__wax">
-        <div className="jar-details__wax-field">{waxField}</div>
         <SpellJar />
+        <div className="jar-details__wax-field">{waxField}</div>
       </div>
       {descriptionField}
     </div>
