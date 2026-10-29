@@ -413,7 +413,7 @@ The substitute picker's search (MB.138), registered by `ingredients` over
 `suggestIngredients` and the finder `findIngredientSuggestions`
 ([`db/compendium-read.md`](../db/compendium-read.md), "The ingredient
 picker's search"). MB.131's combobox calls it as a substitute is typed, with
-`workspaceId`, `query`, an optional `form` and the connection arguments, and picking a node
+`workspaceId`, `query`, an optional `form`, an optional `categoryIds` and the connection arguments, and picking a node
 writes a link to it (DESIGN.md §5, `ingredient_substitutes`).
 
 - **A node is an `Ingredient`**, as on `possibleDuplicates`, because a pick
@@ -431,6 +431,7 @@ writes a link to it (DESIGN.md §5, `ingredient_substitutes`).
   first, under the compendium's weights, with no score on the edge, since a picker ranks rather than reports.
   A blank `query` lists both groups by name, so an opened box lists something.
 - **Each edge carries a `group` (M12.19)**, the `SuggestionGroup` enum, `yours` or `compendium`. `yours` is the coven's cupboard, its own entries and the compendium entries it holds, listed first; `compendium` is the rest. Each group is ranked by score within itself and holds up to eight to start. A coven's own entry and a compendium entry sharing its name both appear: a name match hides nothing (M12.28). A held entry's node answers `cupboardEntry(workspaceId)` for the label the coven gave it. `group` is on the edge, not the node, because it depends on the viewing coven, as `score` does on `compendium`. `form` ranks within each group ([`db/compendium-read.md`](../db/compendium-read.md)).
+- **`categoryIds` keeps entries carrying any of the ids**, on the entry or on one of its variants, through the compendium filter's `any` mode. Null or empty is no filter. The spell builder's Add to Jar picker sends the categories pressed above its box; the list is paged, so a filter applied after fetching would miss matches.
 - **The refusals are `possibleDuplicates`'**: `Forbidden` for a signed-out
   caller from the resolver, then `assertMembership` for `ingredient: ['read']`.
   A viewer is answered, a coven the caller is not in is refused, and so is a

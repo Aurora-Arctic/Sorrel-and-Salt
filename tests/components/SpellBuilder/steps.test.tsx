@@ -1198,3 +1198,103 @@ describe('the spell builder’s open and closed steps', () => {
     );
   });
 });
+
+describe('the spell builder’s Add to Jar categories', () => {
+  const group = { id: 'g-all', name: 'All', colorDark: '#50a58e', colorLight: '#1d755d' };
+  const offered = (...names: string[]) =>
+    names.map((name) => ({ ...category(name), description: null, group })) as never;
+  // A saved spell opens with its empty sections folded; the picker is in the Jar's.
+  const openAll = () => fireEvent.click(screen.getByRole('button', { name: 'Open All' }));
+  const assigned = (...names: string[]) => ({
+    ...answer('s3', 1),
+    categoryIds: names.map((name) => category(name).id),
+  });
+  const MANY = suggestion(
+    'yours',
+    ID.twinwort,
+    'Fixture Manywort',
+    [{ id: ID.twinLeaf, form: 'dried leaf', icon: 'botanical' }],
+    ['Aid', 'Bind', 'Calm', 'Dawn', 'Ember'],
+  );
+
+  it('folds the categories past the third into a +N chip that keeps their names', async () => {
+    suggest(MANY, MOCKROOT);
+    renderBuilder({}, offered('Aid', 'Bind', 'Calm', 'Dawn', 'Ember', 'Love', 'Protection'));
+
+    const many = await lookUp('Fixture', /Fixture Manywort/);
+    const mockroot = screen.getByRole('option', { name: /Fixture Mockroot/ });
+
+    expect(many).toHaveTextContent('Aid · Bind · Calm · +2');
+    expect(within(many).getByText(/^\+2/)).toHaveTextContent('+2 more: Dawn, Ember');
+    // Why this could have folded: Mockroot has two, under the cap, and is whole.
+    expect(within(mockroot).queryByText(/^\+/)).toBeNull();
+    expect(mockroot).toHaveTextContent('Love · Protection');
+  });
+
+  it('lists the categories the spell already has first, the rest after in their order', async () => {
+    suggest(MANY);
+    renderBuilder(
+      { spell: assigned('Ember', 'Bind') },
+      offered('Aid', 'Bind', 'Calm', 'Dawn', 'Ember'),
+    );
+    openAll();
+
+    const many = await lookUp('Fixture', /Fixture Manywort/);
+
+    // Bind and Ember are the spell's; Aid and Calm follow, and Dawn folds into the +N.
+    expect(many).toHaveTextContent('Bind · Ember · Aid · +2');
+    expect(many).toHaveTextContent('more: Calm, Dawn');
+  });
+
+  it('narrows the results to the pressed assigned categories, asking the server for them', async () => {
+    const asked: unknown[] = [];
+    mockGraphQLQuery<SpellIngredientSuggestionsQuery, { categoryIds?: string[] | null }>(
+      'SpellIngredientSuggestions',
+      ({ categoryIds }) => {
+        asked.push(categoryIds ?? []);
+        const wanted = categoryIds ?? [];
+        const edges = [ROSEWORT, MOCKROOT].filter(
+          ({ node }) =>
+            wanted.length === 0 ||
+            [...node.categories, ...node.variants.flatMap((v) => v.categories)].some(({ id }) =>
+              wanted.includes(id),
+            ),
+        );
+        return { ingredientSuggestions: { edges } };
+      },
+    );
+    renderBuilder({ spell: assigned('Calm', 'Protection') }, offered('Calm', 'Love', 'Protection'));
+    openAll();
+
+    const filter = screen.getByRole('group', { name: 'Filter by category' });
+    const calm = await within(filter).findByRole('button', { name: 'Calm' });
+    expect(within(filter).getByRole('button', { name: 'Protection' })).toHaveAttribute(
+      'aria-pressed',
+      'false',
+    );
+    // Why it could narrow: with none pressed both ingredients are offered.
+    await lookUp('Fixture', /Fixture Rosewort/);
+    expect(screen.getByRole('option', { name: /Fixture Mockroot/ })).toBeInTheDocument();
+
+    fireEvent.click(calm);
+    expect(calm).toHaveAttribute('aria-pressed', 'true');
+    await waitFor(() =>
+      expect(screen.queryByRole('option', { name: /Fixture Mockroot/ })).not.toBeInTheDocument(),
+    );
+    expect(screen.getByRole('option', { name: /Fixture Rosewort/ })).toBeInTheDocument();
+    expect(asked.at(-1)).toEqual([category('Calm').id]);
+
+    fireEvent.click(calm);
+    expect(calm).toHaveAttribute('aria-pressed', 'false');
+    expect(await screen.findByRole('option', { name: /Fixture Mockroot/ })).toBeInTheDocument();
+    await waitFor(() => expect(asked.at(-1)).toEqual([]));
+  });
+
+  it('shows no filter while the spell has no categories of its own', async () => {
+    suggest(ROSEWORT);
+    renderBuilder({}, offered('Calm'));
+    await lookUp('Fixture', /Fixture Rosewort/);
+
+    expect(screen.queryByRole('group', { name: 'Filter by category' })).toBeNull();
+  });
+});

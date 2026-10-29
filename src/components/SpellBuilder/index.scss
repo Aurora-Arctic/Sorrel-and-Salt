@@ -201,6 +201,37 @@ $spell-columns-switch: $spell-main-min + $spell-columns-gap + $spell-side;
   white-space: nowrap;
 }
 
+// The Add to Jar picker's folded categories: a neutral "+N" in place of an ellipsis. It sits in
+// the combobox, which owns the row, so the rule is scoped to the list.
+.combobox__list .chip--more {
+  @include chip($dark: $text-primary, $light: $text-primary, $state: quiet, $size: compact);
+  border-color: $hairline;
+}
+
+// The picker's category filter, above the box: the spell's assigned categories as toggles. Off
+// is an outline in the group's colours; on is the full wash with a heavier ring, so the state is
+// not carried by colour alone.
+.spell-steps__filter {
+  display: flex;
+  flex-wrap: wrap;
+  gap: space(1);
+  margin-block-end: space(2);
+}
+
+.spell-steps__filter-chip {
+  @include chip;
+  cursor: pointer;
+
+  &[aria-pressed='false'] {
+    background-color: transparent;
+  }
+
+  &[aria-pressed='true'] {
+    box-shadow: inset 0 0 0 1px light-dark(var(--chip-light), var(--chip-dark));
+    font-weight: 600;
+  }
+}
+
 // The next step's number, shown only where the button is a line of the list.
 .spell-steps__next {
   display: none;

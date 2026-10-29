@@ -3,9 +3,11 @@
 import { formLabel } from '@/modules/ingredients/validation/form-label';
 
 import { Fragment, type ReactElement, type ReactNode, useId, useMemo, useState } from 'react';
+import { useFormContext, useWatch } from 'react-hook-form';
 import { chipColors } from '../../../lib/chip-colors';
 import type { GroupColors } from '../../../lib/types';
-import { useCategoryColors } from '../category-colors';
+import { useCategoryColors, useCategoryNames } from '../category-colors';
+import type { SpellBuilderValues } from '../types';
 import type { SpellIngredientSuggestionsQuery } from '../../../gql/graphql';
 import type { FormGroupIcon } from '@/modules/vocabulary/schema/form-group-icons';
 import Combobox from '../../Combobox';
@@ -35,37 +37,75 @@ const ONE_OFF_TAKEN = 'This ingredient is already in the jar';
 /** A one-off's name as the jar compares it: case and outer spaces aside. */
 export const oneOffKey = (name: string): string => name.trim().toLocaleLowerCase();
 
+/** How many of a row's categories are drawn before the rest fold into a "+N" chip. */
+export const ROW_CATEGORY_CAP = 3;
+
+/**
+ * A row's categories, the spell's own (its Categories field) first and the rest in the order
+ * given. Stable, so within each half the order is the one the server sent.
+ */
+const assignedFirst = <T extends { id: string }>(
+  categories: readonly T[],
+  assigned: ReadonlySet<string>,
+): T[] => [
+  ...categories.filter(({ id }) => assigned.has(id)),
+  ...categories.filter(({ id }) => !assigned.has(id)),
+];
+
 /**
  * The categories as small print on a row: each in its group's chip colours, as CategoryChips
- * draws them, plain text until the colours land or for a category without a group. The words
- * and the " · " between them are the same either way, so the row's name does not change.
+ * draws them, plain text until the colours land or for a category without a group. The first
+ * `ROW_CATEGORY_CAP` are drawn and the rest fold into a neutral "+N" chip rather than an
+ * ellipsis, a fixed count because a measured fit would need the row's laid-out width. The folded
+ * names stay in the row's accessible name, as visually hidden text inside the chip.
  */
 const categoryNames = (
   categories: readonly { id: string; name: string }[],
   colors: ReadonlyMap<string, GroupColors>,
+  assigned: ReadonlySet<string>,
 ): ReactNode => {
   if (categories.length === 0) return undefined;
-  return categories.map(({ id, name }, index) => {
-    const pair = colors.get(id);
-    return (
-      <Fragment key={id}>
-        {index > 0 && ' · '}
-        {pair ? (
-          <span className="chip" style={chipColors(pair)}>
-            {name}
+  const ordered = assignedFirst(categories, assigned);
+  const shown = ordered.slice(0, ROW_CATEGORY_CAP);
+  const hidden = ordered.slice(ROW_CATEGORY_CAP);
+  return (
+    <>
+      {shown.map(({ id, name }, index) => {
+        const pair = colors.get(id);
+        return (
+          <Fragment key={id}>
+            {index > 0 && ' · '}
+            {pair ? (
+              <span className="chip" style={chipColors(pair)}>
+                {name}
+              </span>
+            ) : (
+              name
+            )}
+          </Fragment>
+        );
+      })}
+      {hidden.length > 0 && (
+        <>
+          {' · '}
+          <span className="chip chip--more">
+            +{hidden.length}
+            <span className="visually-hidden">
+              {' '}
+              more: {hidden.map(({ name }) => name).join(', ')}
+            </span>
           </span>
-        ) : (
-          name
-        )}
-      </Fragment>
-    );
-  });
+        </>
+      )}
+    </>
+  );
 };
 
 /** Every live form of every live ingredient found, under the heading of where it came from. */
 function pickRows(
   data: SpellIngredientSuggestionsQuery,
   colors: ReadonlyMap<string, GroupColors>,
+  assigned: ReadonlySet<string>,
 ): IngredientPickOption[] {
   return data.ingredientSuggestions.edges.flatMap(({ group, node }) =>
     // A retired entry is kept where a spell lays it, never added anew.
@@ -82,6 +122,7 @@ function pickRows(
             meta: categoryNames(
               variant.categories.length > 0 ? variant.categories : node.categories,
               colors,
+              assigned,
             ),
             heading: group === 'yours' ? YOUR_INGREDIENTS : COMPENDIUM_HEADING,
             key: variant.id,
@@ -113,13 +154,21 @@ export function StepPicker({ workspaceId, oneOffs, onAdd }: StepPickerProps): Re
   const [active, setActive] = useState(false);
   const [refused, setRefused] = useState(false);
   const colors = useCategoryColors();
+  const names = useCategoryNames();
+  const { control } = useFormContext<SpellBuilderValues>();
+  const assignedIds = useWatch({ control, name: 'categoryIds' });
+  const assigned = useMemo(() => new Set(assignedIds ?? []), [assignedIds]);
+  // The assigned categories pressed to narrow the results. One that is no longer assigned
+  // drops out of the filter, so removing it from the field never leaves a hidden filter.
+  const [pressed, setPressed] = useState<readonly string[]>([]);
+  const narrowedBy = useMemo(() => pressed.filter((id) => assigned.has(id)), [pressed, assigned]);
   const shape = useMemo(
-    () => (data: SpellIngredientSuggestionsQuery) => pickRows(data, colors),
-    [colors],
+    () => (data: SpellIngredientSuggestionsQuery) => pickRows(data, colors, assigned),
+    [colors, assigned],
   );
   const suggestions = useLookup(
     SpellIngredientSuggestionsDocument,
-    { workspaceId },
+    { workspaceId, categoryIds: narrowedBy },
     text,
     active,
     shape,
@@ -158,6 +207,34 @@ export function StepPicker({ workspaceId, oneOffs, onAdd }: StepPickerProps): Re
 
   return (
     <div className="field">
+      {/* Above the box, since an open list covers whatever is beneath it. Each is a toggle:
+          none pressed is no filter, one or more keeps ingredients carrying any of them. */}
+      {assigned.size > 0 && (
+        <div role="group" aria-label="Filter by category" className="spell-steps__filter">
+          {[...assigned].flatMap((categoryId) => {
+            const name = names.get(categoryId);
+            if (name === undefined) return [];
+            const on = narrowedBy.includes(categoryId);
+            const pair = colors.get(categoryId);
+            return [
+              <button
+                key={categoryId}
+                type="button"
+                className="chip spell-steps__filter-chip"
+                style={pair ? chipColors(pair) : undefined}
+                aria-pressed={on}
+                onClick={() =>
+                  setPressed(
+                    on ? narrowedBy.filter((id) => id !== categoryId) : [...narrowedBy, categoryId],
+                  )
+                }
+              >
+                {name}
+              </button>,
+            ];
+          })}
+        </div>
+      )}
       <Combobox<IngredientPickOption>
         id={`${id}-search`}
         label="Add to Jar"

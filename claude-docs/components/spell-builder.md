@@ -388,6 +388,12 @@ being read the column is a skeleton, and if the read fails, an error in its plac
   the save. A one-off, or an instruction, has no safety value (null) and draws
   nothing: it is not called safe either.
 
+### Add to Jar: categories on the rows and the filter
+
+- **Folded categories.** A row draws its first three categories in their group colours. Any more fold into a neutral "+N" chip (N is the hidden count) instead of an ellipsis. The cap is a fixed count (`ROW_CATEGORY_CAP`), not a measured fit, because measuring needs the row's laid-out width. The hidden names stay in the row's accessible name as visually hidden text inside the chip ("+2 more: Dawn, Ember").
+- **Order.** The categories the spell already has in its own Categories field (`categoryIds`, read with `useWatch`) come first, then the rest in the order the server sent. This decides which three are drawn.
+- **Filter.** When the spell has categories, a group "Filter by category" sits above the box (an open list covers anything below it) with one toggle chip each (`aria-pressed`). None pressed is no filter. One or more keeps ingredients carrying any of them. A pressed category the spell no longer has drops out of the filter. The filter is sent as `categoryIds` on `ingredientSuggestions`, not applied after fetching, because that query is paged at ten rows and a client-side filter would miss matches beyond the page.
+
 ## The Jar aside
 
 `jar-aside.tsx` is an `aside` named The Jar, the right column of the Jar section (the owner's
