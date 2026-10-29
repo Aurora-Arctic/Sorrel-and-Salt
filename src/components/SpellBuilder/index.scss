@@ -374,11 +374,11 @@ body .spell-builder .collapsible-section__fields > section {
   gap: space(5);
 }
 
-// Seal Wax takes the width the jar leaves. The jar is the input box's height and sits at the
-// row's end, so it is level with the input and not the label above it.
+// Seal Wax takes the width the jar leaves. The jar stretches to the row's height, so it spans
+// the label and the input together (the owner's call, 2026-10-29).
 .jar-details__wax {
   display: flex;
-  align-items: flex-end;
+  align-items: stretch;
   gap: space(3);
 }
 
@@ -392,13 +392,16 @@ body .spell-builder .collapsible-section__fields > section {
   flex: none;
   align-items: center;
   inline-size: 4rem;
-  block-size: $control-height;
+  // Stretched to the Seal Wax row, label and input together; the svg keeps its aspect ratio
+  // inside that box (the default `meet`), so the drawing is never distorted.
+  align-self: stretch;
+  min-block-size: $control-height;
 
   svg {
     display: block;
     flex: none;
     inline-size: 100%;
-    block-size: auto;
+    block-size: 100%;
     // The stroke is centred on the path, so a path on the box's bottom edge loses half its
     // width to the svg's clip; letting it overflow keeps the jar's base whole.
     overflow: visible;
