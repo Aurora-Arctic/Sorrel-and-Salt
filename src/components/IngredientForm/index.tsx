@@ -862,12 +862,14 @@ const IngredientForm = ({
               words show the saved state, the switch the form's own value, a field that Save
               carries and Cancel discards. For a curator or admin only. */}
                   {compendium && review && (
-                    <ReviewRow
-                      standing={reviewedSaved}
-                      reviewedAt={reviewedSaved === review.reviewed ? review.reviewedAt : null}
-                      checked={reviewed}
-                      onChange={setReviewed}
-                    />
+                    <div data-focus-skip>
+                      <ReviewRow
+                        standing={reviewedSaved}
+                        reviewedAt={reviewedSaved === review.reviewed ? review.reviewedAt : null}
+                        checked={reviewed}
+                        onChange={setReviewed}
+                      />
+                    </div>
                   )}
                   {/* Two saves, both held down from the press to the answer, the
               duplicate check included: Save Ingredient, first and so the

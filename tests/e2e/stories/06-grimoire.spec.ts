@@ -957,7 +957,7 @@ test(
 
     // A member who may change the spell is offered Edit, which opens the builder on it.
     await eye.click();
-    await look.getByRole('link', { name: 'Edit Spell', exact: true }).click();
+    await look.getByRole('link', { name: 'Edit Fixture Working', exact: true }).click();
     await expect(page.getByRole('dialog', { name: 'Edit Spell, Fixture Working' })).toBeVisible();
 
     // A viewer sees the same details and is offered no Edit.

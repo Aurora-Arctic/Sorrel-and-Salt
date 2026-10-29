@@ -476,6 +476,24 @@ describe('IngredientForm on the compendium', () => {
         expect(reviewSwitch()).toBeChecked();
       });
 
+      // Regression: with every section closed on an edit, the switch was the first shown field, so
+      // the modal opened with the focus on it at the form's foot rather than on the dialog.
+      it('leaves the focus off the switch as the modal opens on an edit', async () => {
+        offerNothing();
+        renderInModal(() => (
+          <IngredientForm
+            duplicateHref={duplicateHref}
+            workspaceId={null}
+            entry={{ id: ENTRY_ID, values: TESTWORT }}
+            review={{ reviewed: false }}
+          />
+        ));
+        await act(async () => {});
+
+        expect(reviewSwitch()).not.toHaveFocus();
+        expect(screen.getByRole('dialog')).toHaveFocus();
+      });
+
       it('makes the form changed when flipped, without saving anything', async () => {
         const review = acceptReview();
         const saves = acceptUpdate();
