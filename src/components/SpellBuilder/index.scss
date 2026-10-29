@@ -255,9 +255,14 @@ $spell-columns-switch: $spell-main-min + $spell-columns-gap + $spell-side;
   gap: space(1);
 }
 
-.spell-steps__filter-chip {
+// Under .spell-steps__filter so these beat the global .chip's own 400ms transition, which lists
+// no box-shadow: that left the pressed ring snapping while the fill eased. Border width and style
+// stay fixed across states; only colours change, and the ring is a box-shadow that is always
+// present (clear when unpressed) so it has something to ease from.
+.spell-steps__filter .spell-steps__filter-chip {
   @include chip;
   cursor: pointer;
+  box-shadow: inset 0 0 0 1px transparent;
   transition:
     background-color 150ms ease,
     border-color 150ms ease,
