@@ -564,3 +564,17 @@ No row of the 60 (861 to 920) was left out; every one has an entry file. Thirty-
 
 - 816 Dragon Bones: the only source is a disambiguation page whose one relevant sentence says dragon bones (long gu) are fossilised remains of prehistoric life used in traditional Chinese medicine. It names no species or formal name and is too short for a description. It needs a source that says what the fossils are.
 - 826 Hisakaki (Eurya japonica): the only source (Wikipedia, oldid 1267052140) has three sentences on the plant (size, range, ornamental use, a sacred tree in Shinto whose leaves are offerings), too short for 100 words without padding. It needs a second source on its Shinto use.
+
+## M14.29 — Endangered species (owner, 2026-10-29)
+
+The owner ruled "No endangered species in the compendium please." These entries are removed because the species is globally IUCN Endangered or Critically Endangered, or is on CITES Appendix I. The full record, with the cultivated exceptions that were kept, is `compendium/ethics/endangered-removals.md`; each entry's ethics file stays as the record of why it went.
+
+- agarwood-aquilaria-malaccensis: IUCN CR, scope global, listed as Aquilaria malaccensis, source `wikipedia-iucn-aquilaria-malaccensis`. Already landed on staging; it still needs removing from seeded databases by a separate task.
+- red-sandalwood-pterocarpus-santalinus: IUCN EN, scope global, listed as Pterocarpus santalinus, source `wikipedia-iucn-pterocarpus-santalinus`. Already landed on staging; it still needs removing from seeded databases by a separate task.
+- spikenard-nardostachys-jatamansi: IUCN CR, scope global, listed as Nardostachys jatamansi, source `wikipedia-iucn-nardostachys-jatamansi`. Already landed on staging; it still needs removing from seeded databases by a separate task.
+- storax-liquidambar-orientalis: IUCN EN, scope global, listed as Liquidambar orientalis, source `wikipedia-iucn-liquidambar-orientalis`. Already landed on staging; it still needs removing from seeded databases by a separate task.
+- himalayan-yew-taxus-wallichiana: IUCN Endangered, scope global, listed as Taxus wallichiana, source `wikipedia-taxus-wallichiana`.
+- indian-atees-aconitum-heterophyllum: IUCN Endangered, scope global, listed as Aconitum heterophyllum, source `wikipedia-aconitum-heterophyllum`.
+- pepper-bark-tree-warburgia-salutaris: IUCN Endangered (IUCN 2.3), scope global, listed as Warburgia salutaris, source `wikipedia-warburgia-salutaris`.
+- costus-dolomiaea-costus: CITES Appendix I, scope global, listed as Saussurea costus, source `cites-appendices`.
+- grey-parrot-psittacus-erithacus: IUCN Endangered (IUCN 3.1), scope global, listed as Psittacus erithacus, source `wikipedia-grey-parrot`; CITES Appendix I, scope global, listed as Psittacus erithacus, source `cites-appendices`.

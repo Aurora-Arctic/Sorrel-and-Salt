@@ -3,7 +3,6 @@
 ingredients/botanical/adam-and-eve-root-aplectrum-hyemale.md
 ingredients/botanical/adders-tongue-erythronium-americanum.md
 ingredients/botanical/african-violet-streptocarpus-ionanthus.md
-ingredients/botanical/agarwood-aquilaria-malaccensis.md
 ingredients/botanical/agrimony-agrimonia-eupatoria.md
 ingredients/botanical/ague-root-aletris-farinosa.md
 ingredients/botanical/alder-alnus-glutinosa.md
@@ -178,7 +177,6 @@ ingredients/botanical/myrrh-commiphora-myrrha.md
 ingredients/botanical/opoponax-commiphora-guidottii.md
 ingredients/botanical/ragwort-jacobaea-vulgaris.md
 ingredients/botanical/raspberry-rubus-idaeus.md
-ingredients/botanical/red-sandalwood-pterocarpus-santalinus.md
 ingredients/botanical/rhubarb-rheum-palmatum.md
 ingredients/botanical/rice-oryza-sativa.md
 ingredients/botanical/roman-chamomile-chamaemelum-nobile.md
@@ -205,7 +203,6 @@ ingredients/botanical/snapdragon-antirrhinum-majus.md
 ingredients/botanical/snowdrop-galanthus-nivalis.md
 ingredients/botanical/solomons-seal-polygonatum-multiflorum.md
 ingredients/botanical/southernwood-artemisia-abrotanum.md
-ingredients/botanical/storax-liquidambar-orientalis.md
 ingredients/botanical/sweet-gum-liquidambar-styraciflua.md
 ingredients/botanical/sweetgrass-hierochloe-odorata.md
 ingredients/botanical/tolu-balsam-myroxylon-balsamum-var-balsamum.md
