@@ -67,8 +67,9 @@ themselves: the h3 size and no rule beneath (the owner, 2026-10-29).
 The Quick Look modal draws neither. `SpellRecipe` takes the column as its `aside` slot and
 wraps it in an `aside` named The Jar (a landmark needs the name inside an `article`), beside the
 body in the ingredient entry page's columns (`entry-section` and `entry-side`: the same side
-width and gutter, the column beneath the body on a phone), the article widened by the column so
-the body keeps its width and the head capped to the body's, so the Edit pencil ends where the
+width and gutter, the column beneath the body on a phone), the article sized to the paragraphs'
+`$measure`, the gutter and the column, so the column starts one gutter after the text ends (the
+owner, 2026-10-29), and the head capped to the body's width, so the Edit pencil ends where the
 text does. `aside.tsx` (`SpellRecipeAside`, client) hands the panels their props and loads the
 builder's styles itself. The page reads them with `readRecipeAsideOf` (`[id]/recipe-aside.ts`):
 each linked step's categories (`categoriesOf`, then `categoriesOfVariants`, the union rule) and

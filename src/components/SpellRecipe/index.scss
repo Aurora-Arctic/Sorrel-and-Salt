@@ -29,11 +29,12 @@ $recipe-column: 48rem;
   min-width: 0;
 }
 
-// With the side column the article widens by the column and its gutter, so the body keeps its
-// width; the head stays over the body, so the Edit pencil ends where the text does, as the
-// entry page's does.
+// With the side column the article is the paragraphs' measure, the gutter and the column, no
+// wider: the body's sections are capped at the measure, so a wider body column would stand
+// empty before the gutter (the owner, 2026-10-29). The head stays over the body, so the Edit
+// pencil ends where the text does, as the entry page's does.
 .spell-recipe--with-aside {
-  max-width: calc(#{$recipe-column} + #{space(8)} + #{$side-column});
+  max-width: calc(#{$measure} + #{space(8)} + #{$side-column});
 
   @media (min-width: calc(#{$shell-tablet-width} + 0.01rem)) {
     > .spell-recipe__head {
