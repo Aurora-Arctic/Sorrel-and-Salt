@@ -14,6 +14,20 @@ The seed files record almost none of this. A lane that met a missing word usuall
 
 No source or locator below is invented. Each entry line gives the entry's file name (without `.md`), the source handle and the locator as the file records it.
 
+## Owner Decisions, 2026-10-29
+
+These supersede the "Proposed decision" column in the table below wherever they differ. The table is the step 1 record and is not rewritten.
+
+- Money maps to **Wealth**, not Prosperity. Exorcism maps to **Banishing**. The README lines "money is not Prosperity" and "exorcism is not Banishing" are amended to record both as deliberate.
+- New categories accepted: Luck (Prosperity & Work); Chastity, Compassion, Trust (Love & Connection); Spirituality, Focus, Past-Life Work (Mind & Spirit); Patience, Hope, Determination (Wellbeing); Rain Magic (Practice & Place); Renewal (Cleansing & Release).
+- Death/Funeral Practices becomes **Funeral Rites** (Practice & Place). No category name joins two words with "&".
+- Consecrate/Bless becomes two categories, **Consecration** and **Blessing** (both Practice & Place). An entry under Kynes's joined "Consecrate/Bless" heading gets both.
+- New categories, with a one-line description written in step 2b for the owner to review: Prophetic Dreams, Awareness (Mind & Spirit); Youth, Energy (Wellbeing); Security, Snake Repelling (Protection & Defense); Relationships (Love & Connection).
+- Dream(s) maps to Dream Work. Wishes maps to Manifestation.
+- These mappings stand: Psychism, Centering, Eloquence, Travel, Anti-Confusion, Popularity, Defense, Happiness, Employment, Loss/Sorrow.
+- Left off, each with an Edit Notes line: Image Magic, Flying, Changing Sex (Persimmon).
+- Shadow Work: no change.
+
 ## The Gaps
 
 38 gaps, plus Shadow Work, which was reported but is already seeded. 22 propose a mapping, 16 propose a new category, and 13 are marked unsure.
@@ -59,6 +73,81 @@ No source or locator below is invented. Each entry line gives the entry's file n
 | Renewal          | Renewal                                       | MB.245                                                         | 52 (kynes-plants)                                         | Add **Renewal** (Cleansing & Release): "Starting again after an ending: a fresh start, a restored season, a restored self."                | Release is letting go and Transformation is deliberate change. Renewal is what comes after an ending, which neither says.                                                                                                                                                                                                    |
 | Relationships    | Relationship(s)                               | MB.245                                                         | 40 (kynes-plants)                                         | Map to **Harmony**. **Unsure.**                                                                                                            | Harmony is "ease between people sharing a life, a house or a table". Love is romantic in its description. The alternative is a new Love & Connection category named Relationships.                                                                                                                                           |
 | Exorcism         | Exorcism                                      | The Mint entry (Questions for the Curator)                     | 43 (cunningham-herbs)                                     | Map to **Banishing**.                                                                                                                      | Banishing is "driving out something already present, and telling it not to return", which is exorcism. The seed README says exorcism is not Banishing only because a different word is never mapped silently; this row maps it on purpose.                                                                                   |
+
+## Sweep Of Every Printed Powers Word
+
+Step 2a swept the Powers lines of the three sources (cunningham-herbs, kynes-plants, cunningham-crystals) for every printed word that has no category, either by the decisions above or in the existing 63. Counts are distinct entries, machine-matched as described above, so a count can be low. "Unsure" marks a proposal where more than one answer is reasonable. Where a proposal names a category "if seeded", I have not checked the seed for it and step 2b will.
+
+### Printed Words The Existing 63 Do Not Name
+
+| Printed as                                                         | Entries | Source                                | Proposal                                                            | Unsure                                              |
+| ------------------------------------------------------------------ | ------- | ------------------------------------- | ------------------------------------------------------------------- | --------------------------------------------------- |
+| Negativity                                                         | 124     | kynes-plants                          | Map to **Purification**.                                            | Yes. Banishing is also close.                       |
+| Hexes                                                              | 106     | kynes-plants                          | Map to **Hex-Breaking** if seeded, otherwise Uncrossing.            | Yes.                                                |
+| Sex/Sexuality                                                      | 82      | kynes-plants                          | Map to **Lust**.                                                    | Yes. A new category "Sexuality" is the alternative. |
+| Challenges/Obstacles                                               | 54      | kynes-plants                          | Map to **Success**.                                                 | Yes. Uncrossing is the alternative.                 |
+| Family and Home                                                    | 51      | kynes-plants                          | Map to **Home Blessing** for home and **Relationships** for family. | Yes.                                                |
+| Changes/Transitions                                                | 40      | kynes-plants                          | Map to **Transformation**.                                          | No.                                                 |
+| Emotions                                                           | 39      | kynes-plants                          | New category **Emotions** (Wellbeing).                              | Yes.                                                |
+| Health                                                             | 39      | cunningham-herbs, cunningham-crystals | Map to **Healing**.                                                 | No.                                                 |
+| Secrets                                                            | 37      | kynes-plants                          | New category **Secrets** (Mind & Spirit).                           | Yes.                                                |
+| Growth                                                             | 24      | kynes-plants                          | New category **Growth** (Wellbeing).                                | Yes.                                                |
+| See Faeries                                                        | 23      | kynes-plants                          | New category **Faerie Sight** (Mind & Spirit).                      | Yes.                                                |
+| Mental Powers; Mental Abilities                                    | 19      | cunningham-herbs, cunningham-crystals | Map to **Clarity**.                                                 | Yes.                                                |
+| Skills                                                             | 17      | kynes-plants                          | New category **Skill** (Craft & Change).                            | Yes.                                                |
+| Adaptability                                                       | 16      | kynes-plants                          | New category **Adaptability** (Craft & Change).                     | Yes.                                                |
+| Authority/Leadership                                               | 15      | kynes-plants                          | New category **Leadership** (Prosperity & Work).                    | Yes.                                                |
+| Power                                                              | 15      | cunningham-herbs, cunningham-crystals | Map to **Strength**.                                                | Yes.                                                |
+| Support                                                            | 13      | kynes-plants                          | Map to **Relationships** (accepted).                                | Yes.                                                |
+| Beauty                                                             | 11      | cunningham-herbs, cunningham-crystals | Map to **Beauty** if seeded, otherwise new.                         | No.                                                 |
+| Invisibility                                                       | 7       | cunningham-herbs, cunningham-crystals | New category **Invisibility** (Craft & Change).                     | Yes.                                                |
+| Potency                                                            | 7       | cunningham-herbs                      | Map to **Lust**.                                                    | Yes.                                                |
+| Love Divination                                                    | 7       | cunningham-herbs                      | Map to **Divination**.                                              | Yes. Love is the alternative.                       |
+| Visions                                                            | 6       | cunningham-herbs                      | Map to **Prophecy**.                                                | Yes. Scrying is the alternative.                    |
+| Astral Projection                                                  | 6       | cunningham-herbs, cunningham-crystals | New category **Astral Projection** (Mind & Spirit).                 | No.                                                 |
+| Gardening; Garden Magic; Agriculture                               | 9       | cunningham-crystals, cunningham-herbs | New category **Garden Magic** (Practice & Place).                   | Yes.                                                |
+| Defensive Magic                                                    | 4       | cunningham-crystals                   | Map to **Protection**.                                              | No.                                                 |
+| Gem & Metal Magic                                                  | 5       | cunningham-crystals                   | Leave off.                                                          | Yes.                                                |
+| Immortality                                                        | 3       | cunningham-herbs                      | Map to **Longevity**.                                               | Yes.                                                |
+| Eyesight                                                           | 3       | cunningham-crystals                   | Map to **Healing**.                                                 | Yes.                                                |
+| Fishing Magic; Hunting                                             | 4       | cunningham-herbs                      | Leave off.                                                          | Yes.                                                |
+| Anti-Lightning; Anti-Fire; Halting Storms                          | 4       | cunningham-herbs                      | Map to **Protection**.                                              | Yes.                                                |
+| Victory                                                            | 2       | cunningham-herbs, cunningham-crystals | Map to **Success**.                                                 | No.                                                 |
+| Male Sexual Dysfunction; Sexual Dysfunction; Sexual Energy; Sexual | 6       | cunningham-crystals                   | Map to **Lust**.                                                    | Yes.                                                |
+| Reducing Sexual Desires                                            | 1       | cunningham-crystals                   | Map to **Chastity** (accepted).                                     | Yes.                                                |
+| Lactation                                                          | 2       | cunningham-crystals                   | Leave off.                                                          | Yes.                                                |
+| Single-entry words (below)                                         | 1 each  | see below                             | Leave off unless a mapping is listed below.                         | Yes.                                                |
+
+Single-entry words, each printed once: Anti-Hunger, Sea Rituals, Sea Spells, Wart Charming, Wind Spells, Wind, Wind Raising, Cat Magic, Snake-Removing, Repel Snakes, Snake Charming, Snake-Enraging, Removing Obstacles, Favors, Frugality, Commitment, Tenacity, Treasure-Finding, Comfort, Knot Magic, Strengthening Spells, Bullet-Proofing, Heating, Escape, Repelling Monsters, Tying Dog's Tongues, Respect, Breaking Love Spells, Lock-Opening, Release/Transformation, Halts Gossip, Anti-Gossip, Transformation in the Subconscious, Ending Relationships, Infertility, Raising the Dead, Transmutation, Energy Direction, Return of Stolen Goods, Invocation, Overcoming Alcoholism, Protection Against Thieves, Halting Bleeding, Relaxation, Will, Games of Chance, Dieting, Weight Loss, Easing Childbirth, Facilitating Childbirth, Marital Happiness, Past-Life Regression, Regulating Menstruation.
+
+Likely mappings among them, all unsure: Tenacity and Commitment to Determination (accepted); Repel Snakes and Snake-Removing to Snake Repelling (accepted); Anti-Gossip, Halts Gossip, Protection Against Thieves, Bullet-Proofing and Anti-Fire to Protection; Breaking Love Spells to Hex-Breaking if seeded; Past-Life Regression to Past-Life Work (accepted); Marital Happiness to Happiness; Games of Chance to Luck (accepted); Weight Loss, Dieting, Infertility, Halting Bleeding, Easing and Facilitating Childbirth and Regulating Menstruation to Healing; Relaxation to Peace; Removing Obstacles to Success; Return of Stolen Goods to Protection. The rest are left off.
+
+The crystals OCR also yields sentence fragments that are not Powers words (for example from the boji stones and staurolite pages). They are ignored.
+
+### Printed Words The Existing 63 Name Only Loosely
+
+These have a near category already. They are listed so the owner decides whether the near category is the answer.
+
+| Printed as                      | Entries | Source                                | Proposal                                             | Unsure |
+| ------------------------------- | ------- | ------------------------------------- | ---------------------------------------------------- | ------ |
+| Spirit Guides/Spirits           | 98      | kynes-plants                          | Map to **Spirit Work**.                              | Yes.   |
+| Nightmares; Anti-Nightmare      | 37      | kynes-plants, cunningham-crystals     | Map to **Nightmare Protection**.                     | No.    |
+| Ancestors                       | 23      | kynes-plants                          | Map to **Ancestor Work**.                            | No.    |
+| Calling Spirits; Spirit Calling | 4       | cunningham-crystals                   | Map to **Spirit Work**.                              | No.    |
+| Anti-Theft                      | 7       | cunningham-herbs, cunningham-crystals | Map to **Protection**.                               | Yes.   |
+| Riches                          | 3       | cunningham-crystals                   | Map to **Wealth**.                                   | No.    |
+| Friendship; Friendships         | 8       | cunningham-herbs, cunningham-crystals | Map to **Friendship** if seeded.                     | No.    |
+| Manifestations                  | 2       | cunningham-crystals                   | Map to **Manifestation**.                            | No.    |
+| Business Success                | 1       | cunningham-crystals                   | Map to **Business** if seeded, otherwise Success.    | Yes.   |
+| Attraction; Reconciliations     | 2       | cunningham-crystals                   | Map to **Love** and to **Reconciliation** if seeded. | Yes.   |
+
+## Recheck Of The Unmatched Locators
+
+The earlier figure was 39 unmatched herb and plant locators. A better matcher (it strips parentheses and qualifiers, tries prefix and suffix matches, and uses a short alias list) leaves 25 unmatched lines across the three sources.
+
+- Herbs and plants still unmatched: Avens, Belladonna, Black Hellebore, German Chamomile, Hemlock, Henbane, Sandarac, Charcoal. For Hemlock, Henbane, Belladonna and Hellebore I checked that the book prints no Powers line. I did not check Avens, German Chamomile or Sandarac.
+- Crystals and metals still unmatched: Ammonite, Egg, Electrum, Honey, Mercury, Pipestone, Snakeskin, Rose Quartz, Smoky Quartz, Rutilated Quartz, Tourmalinated Quartz, Charcoal. The OCR text has no separate Powers line for these, or they share the "Crystal, Quartz" entry. I did not confirm each.
+- Unmatched entries are missing from every list in this file and from the counts above.
 
 ## Proposed New Group
 
