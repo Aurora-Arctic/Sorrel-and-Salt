@@ -1,0 +1,11 @@
+# Gathered for M14.29; the seed never reads this folder.
+entry: botanical/slender-amaranth-amaranthus-viridis
+status: approved
+listings:
+  - list: iucn
+    name: 'IUCN Red List of Threatened Species'
+    value: 'Least Concern (IUCN 3.1)'
+    listedAs: 'Amaranthus viridis'
+    nameBasis: stated
+    source: wikipedia-amaranthus-viridis
+    locator: 'taxobox, "Conservation status": "Least Concern (IUCN 3.1)"'
