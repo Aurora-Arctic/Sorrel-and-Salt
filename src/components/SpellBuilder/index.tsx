@@ -621,7 +621,7 @@ const SpellBuilder = ({
           noValidate
         >
           {recovered && jarReady && (
-            <Notice kind="plain" block>
+            <Notice kind="plain" block className="spell-builder__restored">
               <span>Restored unsaved changes from {clockTime(recovered.at)}</span>
               <span className="spell-builder__recovered">
                 <button type="button" className="btn btn--small" onClick={keepRecovered}>
