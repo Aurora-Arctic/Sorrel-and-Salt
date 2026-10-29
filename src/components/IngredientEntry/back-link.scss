@@ -2,7 +2,7 @@
 @use '../../scss/mixins' as *;
 
 // The "Back to …" link's look, shared by the ingredient entry page and the spell recipe page
-// (claude-docs/components/ingredient-entry.md, "Component notes").
+// (claude-docs/components/ingredient-entry.md, "The back link").
 .back-link {
   // The chevron's drawing starts inside its box; this pulls the stroke to the column's edge.
   margin-inline-start: -$back-chevron-pull;

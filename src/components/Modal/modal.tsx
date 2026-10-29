@@ -123,7 +123,7 @@ const Modal = ({
       dialog.showModal();
       // The focus goes to the body's first field, or the dialog itself with none, not to Close.
       // After showModal() since autoFocus runs before it, and in a microtask the cleanup can cancel
-      // (claude-docs/components/modal.md, "Notes behind the code"). Contents that take it keep it.
+      // (claude-docs/components/modal.md, "The first field's focus"). Contents that take it keep it.
       queueMicrotask(() => {
         if (cancelled || body.current?.contains(document.activeElement)) return;
         (firstShownField(body.current ?? dialog) ?? dialog).focus();

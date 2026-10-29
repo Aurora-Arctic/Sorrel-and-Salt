@@ -38,7 +38,7 @@ function subscribe(onChange: () => void): () => void {
 
 /**
  * The "Back to …" link of an ingredient entry and a spell's recipe page, taking the previous list's
- * address from history (claude-docs/components/ingredient-entry.md, "Component notes"). The Navigation
+ * address from history (claude-docs/components/ingredient-entry.md, "The back link"). The Navigation
  * API is past the browser floor, so an enhancement only: without it the link stays the bare list.
  */
 export default function BackLink({

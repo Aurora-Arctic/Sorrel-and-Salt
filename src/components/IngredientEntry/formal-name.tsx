@@ -32,7 +32,7 @@ const NAME_TIPS: Partial<Record<NomenclatureKind, string>> = {
 const FORMAL_NAME_TIP = 'Its formal name; which naming system it belongs to is not yet settled.';
 const NO_FORMAL_NAME_TIP = 'No naming system names it.';
 
-/** The formal name beside the label, never blank (claude-docs/components/ingredient-entry.md, "Component notes"). */
+/** The formal name beside the label, never blank (claude-docs/components/ingredient-entry.md, "Structure"). */
 export default function FormalName({
   entry,
 }: {
@@ -59,7 +59,7 @@ export default function FormalName({
   }
   return (
     // The name alone as an eyebrow, with what it is in a tip
-    // (claude-docs/components/ingredient-entry.md, "Component notes").
+    // (claude-docs/components/ingredient-entry.md, "Structure").
     <dl className="ingredient-entry__formal">
       <div>
         <dt>{label}</dt>

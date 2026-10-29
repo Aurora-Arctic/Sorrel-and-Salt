@@ -165,7 +165,7 @@ function FormSection({
 
 // The side column's links to the compendium entries this entry replaces, or to itself once; the
 // page chooses the ⓘ sentence, so this does not branch on tier
-// (claude-docs/components/ingredient-entry.md, "Component notes").
+// (claude-docs/components/ingredient-entry.md, "The replaced-by block").
 function ReplacesBlock({
   replaces,
   heading = 'In the Compendium',

@@ -8,7 +8,7 @@ import CovenChoice from './coven-choice';
 
 // Edit Stock from a compendium entry's three dots: the coven card's own dialog, opened at once for
 // one coven that may update stock and after asking which for two or more
-// (claude-docs/components/ingredient-entry.md, "Component notes").
+// (claude-docs/components/ingredient-entry.md, "Structure").
 
 /** One coven that may update stock, with what its dialog shows. */
 export interface StockPlace {

@@ -245,9 +245,7 @@ An entry's details open in a modal over the list it was found in (M12.5), so a p
 - **The header's rhythm.** The header has the Modal's top-lined head's bottom padding, `space(5)` (24px) in place of the shared `space(4)`, so the description stands off the name and its badges (the owner's call, 2026-10-20; `space(6)`, 32px, was the other step shown). That is the `.modal-dialog__header--topped` rule, which only the details window's head has. Nothing now sits in the header slot (Edit left it for the title's end), so the details have no wider rule of their own.
 - **The link to the entry's page is the foot bar** (the owner's calls, 2026-10-20). It is named for where it goes, not for who is looking (`PageLinkBar`, from the `pageHref`): **See in Compendium** where it opens the public compendium's page, which the public list and the admin list do, and **See in Your Cupboard** where it opens a coven's own page, which a coven's list does for every entry it shows, one the coven made and a compendium entry it holds or annotated alike, since all of them open `/coven/<slug>/ingredients/<id>`. The sentence under a form's caution that sent the reader to the button now says the ingredient's page shows it, as the button's name varies. `DetailsDialog` passes it to the Modal as `foot` ([`modal.md`](modal.md), "The foot"): a bar of its own under the body, outside the one element that scrolls, so the body's scrollbar starts under the head and ends above the bar's hairline. It was once the body's last child, held to the foot by `position: sticky`; the body's scrollbar then ran the body's whole height, down past the bar, and drew over it (the owner's screenshot, Chromium and the OS's own scrollbar, 2026-10-20, on a phone-height window with the description open). Nothing in the app styles a scrollbar (no `scrollbar-color`, `scrollbar-width` or `::-webkit-scrollbar` on the modal; the page behind an open modal is only padded by its own scrollbar's measured width, `--scrollbar-width`, and the body is not), so what the owner saw is the browser's and the OS's own, in the dark theme; the body's `overflow` stays `auto`, so it shows one for text that overflows and none otherwise. It has the modal's own surface (`$surface-card`) and a hairline (`$hairline`) along its top, and the body keeps its own padding. In it is one plain `btn`, the site's green outline button (a 1.6px `$accent` border and text on a clear ground, filling with the accent on hover and focus, all from `.btn` itself, with no variant and no colour restated here; the owner's call, 2026-10-20, replacing the solid `btn--solid`), at the site's normal button size (which the owner confirmed is right, 2026-10-20; it is not a larger one, and the `--medium` and `--small` steps are the smaller ones) centred in the bar and two thirds of its width, `66.6%` of the bar, which takes no side padding so the share is of the bar itself and holds at every window width, the label centred in the button (the owner's call, 2026-10-20; it was as wide as its label), still a link to the entry's page: a `PendingLink` carrying `ingredientLinkTarget` (`loading.md`), so a press shows the page's skeleton at once. The e2e (`ingredient-details-modal.spec.ts`) proves the bar is outside the body, that the body scrolls on overflow only (its `overflow` is `auto` and a short entry or an opened description that fits has nothing to scroll, through the 300ms opening), that the bar and the last text are both in view at the end of a long entry, and that the bar still navigates. The earlier guard drew the scrollbars through the `Emulation.setScrollbarsHidden` command; the browser server hides them whatever the page asks, so it measured nothing and is gone.
 
-## Prop notes
-
-The longer facts behind the one-line prop comments in `src/components/IngredientEntry/types.ts`.
+## Props in detail
 
 - **`IngredientEntryEdit.savedHref`**: a coven's address names the id, so a rename does not change it and a save stays on it. Left out, a save moves to the public address of the slug it saved, `?edit` kept, since a rename changes that slug.
 - **`IngredientEntryEdit.opened`** (M9.18): the modal renders with its form only when the page was asked for with `?edit`. Absent, the modal provider shows its skeleton over a press until the page with `?edit` arrives.
@@ -273,7 +271,7 @@ The longer facts behind the one-line prop comments in `src/components/Ingredient
 - **`DetailsMarks`**: the safety badge goes beside the name and the rest in a row under the formal name, so `provenance` and `safety` are the dialog's to set.
 - **`ReviewMarkProps`** (M14.8): the badge saying an entry needs review is the entry's own mark (`EntryMarks`), drawn for everyone.
 
-## Cupboard actions layout
+## What the cupboard actions draw
 
 What `src/components/IngredientEntry/cupboard-actions.tsx` draws beside a compendium entry's title (M12.17). It is drawn as a list card's foot draws its actions (the owner's calls, 2026-10-20): icons, with the three dots only for what is left over. Up to three icons come after the plus.
 
@@ -299,17 +297,18 @@ The component's comments also rest on these facts:
 - The remove's confirmation stays, busy, until the re-read drops the entry from its coven; it closes in that render and the choice is forgotten.
 - The stock dialog is asked in a dialog over the page, as Leave Coven asks (the owner's call, 2026-10-19), rather than in the title's row.
 
-## Component notes
+## The replaced-by block
 
-Facts moved out of the code comments of the ingredient entry components.
+A coven's own entry lists the compendium entries it replaces, and a compendium entry in a coven lists itself once. It is one block headed like its siblings, with one ⓘ for all the links and each link the entry's own title. At most three are shown, then a "See All" paragraph (not an item) leads to the compendium search.
 
-- ReplacesBlock (index.tsx): a coven's own entry lists the compendium entries it replaces; a compendium entry in a coven lists itself once. One block headed like its siblings, one ⓘ for all links, each link the entry's own title; three at most, then a "See All" paragraph (not an item) to the compendium search.
-- entry-dialog.tsx: a coven's own entry takes the dialog with the coven's form (a save closes it, Delete leaves for `deletedHref`); the coven's list renders it over its rows with no entry until `?edit=<id>` names one.
-- back-link.scss: the link is small, muted, with a chevron before it and no underline; the ink deepens on hover and focus.
-- annotate-more.tsx `discardAsking`: the form's confirmation and this one are drawn in the one place, so this one steps aside and returns on Keep Editing.
+## The entry dialog
 
-## Style notes
+A coven's own entry takes the dialog with the coven's form: a save closes it, and Delete leaves for `deletedHref`. The coven's list renders the dialog over its rows with no entry until `?edit=<id>` names one.
 
-Facts moved out of the stylesheet comments of the ingredient entry.
+## Discarding while annotating
 
-- `.ingredient-entry__bar`: the back link is a quiet way back above the heading, small and muted with a chevron before it and no underline, the ink deepening on hover and focus; the head is a stack, so it keeps to its own width rather than stretching across the column. The row is lifted to the head's top edge by `top`.
+The form's own confirmation and the annotate menu's are drawn in the one place, so the menu's (`discardAsking`) steps aside while the form's is up and returns on Keep Editing.
+
+## The back link
+
+The link is a quiet way back above the heading: small and muted, with a chevron before it and no underline, and its ink deepens on hover and focus. The head is a stack, so the link keeps to its own width rather than stretching across the column, and the row is lifted to the head's top edge by `top`.

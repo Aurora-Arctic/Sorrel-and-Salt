@@ -4,7 +4,7 @@ import IconTip from '../IconTip';
 
 // The shelf of two bottles before an entry's name, saying the coven's cupboard holds it: a button
 // to carry its tip, outside the `h1`, that opens on hover, focus and press
-// (claude-docs/components/ingredient-entry.md, "Component notes").
+// (claude-docs/components/ingredient-entry.md, "Structure").
 export const ShelfIcon = (): ReactElement => (
   <svg
     viewBox="0 0 32 32"

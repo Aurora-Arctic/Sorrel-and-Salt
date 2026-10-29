@@ -7,7 +7,7 @@ import type { EntryStock } from './types';
 
 // The entry page's Stock section: a shelf of drawn jars, one per form, under a heading carrying
 // Edit Stock for a role that may edit; forms with no jar go after those with one
-// (claude-docs/components/ingredient-entry.md, "Component notes").
+// (claude-docs/components/ingredient-entry.md, "Structure").
 
 export default function StockSection({
   stock,
