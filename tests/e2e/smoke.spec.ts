@@ -3,16 +3,16 @@ import { assertNoAccessibilityViolations, assertNoSidewaysScroll } from './axe';
 import { recreateE2eDatabase } from './database';
 
 // `fullyParallel` splits this file across workers, each running `beforeAll`
-// and a share of the tests against its own slot's database (MB.112). That is
+// and a share of the tests against its own slot's database. That is
 // the reseed every db-touching spec file opens with, and all this file needs:
 // a test signs in its own user when it needs one and reads only seed rows, so
-// no test waits on another (M11.18; claude-docs/testing/e2e.md, "Reseeding between spec files").
+// no test waits on another (claude-docs/testing/e2e.md, "Reseeding between spec files").
 
 test.beforeAll(async () => {
   await recreateE2eDatabase();
 });
 
-// The front door, signed out (MB.57): reachable without a redirect, nothing
+// The front door, signed out: reachable without a redirect, nothing
 // pushing it sideways at a phone's width, and axe-clean in both themes — the
 // one spec that checks this template so (claude-docs/testing/e2e.md). Signed
 // in, it swaps only the way in, for the landing of the visitor's role; where

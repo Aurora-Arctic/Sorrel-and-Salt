@@ -8,7 +8,7 @@ import { insertCupboardEntry } from '../support/db/insert-cupboard-entry';
 import { insertIngredient } from '../support/db/insert-ingredient';
 import { makeIngredient } from '../support/fixtures/ingredient';
 
-// Every tip stays on screen (M8.14, amended 2026-10-18). No story walks this:
+// Every tip stays on screen. No story walks this:
 // it is a layout fact at the narrowest phone, so this gate opens the tips of
 // the Add Ingredient dialog at 320px and measures each one's box, and the
 // formal name's on both entry pages at a 390px phone.
@@ -142,8 +142,7 @@ test('the formal name\u2019s tip opens inside a 390px viewport on a coven\u2019s
   }
 
   // The same ⓘ in the Quick Look window, which scrolls under a clipped dialog: the tip must
-  // stay inside the viewport there too, below the ⓘ on a phone and beside it on a wide screen
-  // (the owner's call, 2026-10-20).
+  // stay inside the viewport there too, below the ⓘ on a phone and beside it on a wide screen.
   for (const [width, height] of [
     [390, 844],
     [1280, 800],

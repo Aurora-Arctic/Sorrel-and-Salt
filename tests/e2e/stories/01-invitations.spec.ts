@@ -13,8 +13,8 @@ import { slugify } from '@/lib/slugify';
 // a pending invitation can be revoked, and a dead link — expired, revoked or
 // already used — is refused with a reason of its own, naming no coven and
 // making no seat. The link is read from the mail, the only place its token
-// ever is. Users, the coven and its seats are set up by SQL and `signInAs`
-// (MB.101); each story's own step goes through the page.
+// ever is. Users, the coven and its seats are set up by SQL and `signInAs`;
+// each story's own step goes through the page.
 //
 // A refusal is proved twice: the control is absent, and the request it would
 // have sent, made from the same browser by hand, is refused too — then the
@@ -543,7 +543,7 @@ test(
     await confirm.getByRole('button', { name: 'Revoke', exact: true }).click();
     await expect(confirm).toHaveCount(0);
     await expect(pendingRow(page, gone)).toHaveCount(0);
-    // Its Revoke went with the row: the page's heading has the focus (M8.17).
+    // Its Revoke went with the row: the page's heading has the focus.
     await expect(page.getByRole('main').getByRole('heading', { level: 1 })).toBeFocused();
     await page.reload();
     await expectInvitationsTab(page);
@@ -582,7 +582,7 @@ test(
 
     // The page still open offers Accept, and its press is refused: the
     // service's sentence in a callout from Accept, which keeps the focus, and
-    // a badge on Accept that brings it back once closed (design F, M12.31).
+    // a badge on Accept that brings it back once closed.
     const accept = page.getByRole('button', { name: 'Accept Invitation', exact: true });
     await accept.click();
     const callout = page.getByRole('main').getByRole('alert');

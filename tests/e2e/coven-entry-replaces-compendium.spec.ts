@@ -6,7 +6,7 @@ import { localIngredient, seedCoven, withSql } from './stories/coven-ingredients
 import { insertIngredient } from '../support/db/insert-ingredient';
 import { makeIngredient } from '../support/fixtures/ingredient';
 
-// A coven's own entry that replaces a compendium entry (M12.12): an "In the
+// A coven's own entry that replaces a compendium entry: an "In the
 // Compendium" block linking the public page by its title, with one ⓘ
 // beside the heading saying why it is shown. Each test here proves what no story
 // walks.

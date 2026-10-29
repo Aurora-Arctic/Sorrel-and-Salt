@@ -12,8 +12,8 @@ import { PRIMARY_ADMIN_EMAIL, signInAgainAs, signInAs } from '../session';
 // the privilege ledger, and inviting an admin by email
 // (claude-docs/auth/admin-bootstrap.md, "The email page";
 // claude-docs/design-decisions/mb.61-email-verification-and-delivery.md).
-// Accounts are made by `signInAs` and rows a flow needs in place by raw SQL
-// (MB.101); the story's own step goes through the page, and a mailed link is
+// Accounts are made by `signInAs` and rows a flow needs in place by raw SQL;
+// the story's own step goes through the page, and a mailed link is
 // read from Mailpit and followed.
 test.beforeAll(async () => {
   await recreateE2eDatabase();
@@ -169,7 +169,7 @@ const roleCell = (row: ReturnType<Page['getByRole']>) => row.getByRole('cell').n
 
 /**
  * Opens `name`'s Change Role dialog from `row` and picks `role` in it,
- * answering the dialog for the caller to confirm (M11.20).
+ * answering the dialog for the caller to confirm.
  */
 async function chooseRole(
   page: Page,
@@ -441,7 +441,7 @@ test.describe('the primary admin', () => {
       const { userId: grantee } = await signInAs(page, granteeEmail);
       const { userId: other } = await signInAs(page, address('other-admin'), ['discord'], 'admin');
       const list = `/admin/users?query=${encodeURIComponent(granteeEmail)}`;
-      // The page's statement while paused, and none while open (the owner's call).
+      // The page's statement while paused, and none while open.
       const status = page.getByRole('main').getByRole('status');
 
       // Another admin sees the switch, unusable, and why.
@@ -595,7 +595,7 @@ test(
       }),
     );
 
-    // The ledger, by its tab on the People page beside Users (MB.115).
+    // The ledger, by its tab on the People page beside Users.
     await visit(page, '/admin/users');
     const tab = page
       .getByRole('navigation', { name: 'People' })
@@ -730,12 +730,12 @@ test(
     await visit(page, '/admin/invitations');
 
     const section = page.getByRole('region', { name: 'Admin Invitations' });
-    // New Invitation is the tab's action, beside the page's heading (MB.115).
+    // New Invitation is the tab's action, beside the page's heading.
     await page.getByRole('link', { name: 'New Invitation' }).click();
     const dialog = page.getByRole('dialog', { name: 'New Invitation' });
     const send = dialog.getByRole('button', { name: 'Send Invitation' });
     const email = dialog.getByRole('textbox', { name: 'Email Address' });
-    // It opens on its first field (MB.115), with nothing to send yet.
+    // It opens on its first field, with nothing to send yet.
     await expect(email).toBeFocused();
     await expect(send).toBeDisabled();
     await email.fill(invited);
@@ -747,7 +747,7 @@ test(
     await expect(section.getByRole('status')).toContainText(invited);
     const row = section.getByRole('row', { name: new RegExp(invited.replace(/[.]/g, '\\.')) });
     await expect(row).toContainText('Curates the resins');
-    // The role the form starts on, the lesser one (M11.20).
+    // The role the form starts on, the lesser one.
     await expect(row).toContainText('Curator');
     // Mailed to the invited address alone, and the page answers no link:
     // the mail is the only place the token is.
@@ -869,7 +869,7 @@ test(
   },
 );
 
-// M11.20: the same invitation, to the curator role. The acceptance is the
+// The same invitation, to the curator role. The acceptance is the
 // admin's above; this proves what accepting it grants, and what it does not.
 test(
   'an invitation to the curator role lands its invitee on /admin with the curation pages and no People, both grants in the ledger',
@@ -967,7 +967,7 @@ test(
     await expect(
       section.getByRole('row', { name: new RegExp(withdrawnEmail.replace(/[.]/g, '\\.')) }),
     ).toHaveCount(0);
-    // Its Revoke went with the row: the page's heading has the focus (M8.17).
+    // Its Revoke went with the row: the page's heading has the focus.
     await expect(page.getByRole('main').getByRole('heading', { level: 1 })).toBeFocused();
     // Still listed: the two that were not withdrawn, the lapsed one until it lapses.
     await expect(

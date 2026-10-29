@@ -16,7 +16,7 @@ import {
 } from './stories/coven-ingredients';
 import { editIngredientDialog } from './stories/ingredient-dialogs';
 
-// M12.5: an entry's details in a modal over its list, opened by the Quick Look
+// An entry's details in a modal over its list, opened by the Quick Look
 // eye, left of the name on the admin Compendium list and at the card's foot on
 // a coven's Ingredients and the public compendium (claude-docs/components/ingredient-entry.md, "The details modal"). This
 // proves what no story walks: the eye opens the details and every close gives
@@ -45,7 +45,7 @@ const detailsDialog = (page: Page, name = NAME) => page.getByRole('dialog', { na
 
 /**
  * The details' Edit: the card's pencil, a link named as the card names it, "Edit Name, Formal"
- * (the owner's call, 2026-10-20: the window's icons follow the card's).
+ * (the window's icons follow the card's).
  */
 const editIn = (dialog: Locator, name = NAME) =>
   dialog.getByRole('link', { name: `Edit ${name}, ${FORMAL}`, exact: true });
@@ -331,7 +331,7 @@ test.describe('on the admin Compendium list', () => {
 
 test.describe("on a coven's Ingredients", () => {
   // Who gets Edit, and the unsaved close's question, are details-dialog's component test's and
-  // story 33's (tests/e2e/stories/04-modals.spec.ts); this is the real save behind the details.
+  // Story 33's (tests/e2e/stories/04-modals.spec.ts); this is the real save behind the details.
   test('a save from the details goes back to them, renamed there and on the list', async ({
     page,
   }) => {
@@ -369,7 +369,7 @@ test.describe("on a coven's Ingredients", () => {
     });
   });
 
-  // The owner's rule of 2026-10-27: a pick from the search opens its Quick Look, not its page.
+  // A pick from the search opens its Quick Look, not its page.
   test('a pick from the search opens the details over the list, the filter kept, and a close gives the search box its focus back', async ({
     page,
   }) => {

@@ -4,7 +4,7 @@ import { test, expect } from './fixtures';
 import { COMPENDIUM_CACHE_DATABASE, e2eDatabaseUrl } from './database';
 import { signInAs } from './session';
 
-// M8.6 and M8.7: the compendium read answered from Next's data cache rather
+// The compendium read answered from Next's data cache rather
 // than Postgres, until an admin's write expires it. Runs only in the `chromium-compendium-cache` project, against the
 // one e2e server that keeps its data cache, over a database no spec reseeds
 // (claude-docs/db/compendium-cache.md, "In tests"). Nothing here assumes the
@@ -12,7 +12,7 @@ import { signInAs } from './session';
 // each run's names are its own.
 // Serial, because the tests chain: the second reads the cache the first
 // warmed and renamed beneath, and both share the one cache server, which
-// another worker's test would be warming at the same time (M11.18).
+// another worker's test would be warming at the same time.
 test.describe.configure({ mode: 'serial' });
 
 async function inDatabase<T>(work: (sql: postgres.Sql) => Promise<T>): Promise<T> {
@@ -37,7 +37,7 @@ test('a repeat read of the compendium is answered from the cache, not Postgres',
 
   // Renamed underneath the cache to a name that sorts first, so a read of
   // Postgres would put it on the first page. A row is found by its name link:
-  // its cell also holds the Quick Look eye (M12.5), so the cell reads as more
+  // its cell also holds the Quick Look eye, so the cell reads as more
   // than the name.
   const renamed = `Aaa Fixture Cached ${run}`;
   await inDatabase(
@@ -57,7 +57,7 @@ test('a repeat read of the compendium is answered from the cache, not Postgres',
   await expect(page.getByRole('link', { name: renamed, exact: true })).toBeVisible();
 });
 
-// M8.7: an admin's write expires the tag, so the very next load reads
+// An admin's write expires the tag, so the very next load reads
 // Postgres — the admin's own entry, and the rename the cache was hiding above.
 test('an admin edit is visible on the next page load', async ({ page }) => {
   await signInAs(page, `writer-${run}@compendium-cache.test`, ['discord'], 'admin', asAdmin);
@@ -80,7 +80,7 @@ test('an admin edit is visible on the next page load', async ({ page }) => {
     .getByRole('option', { name: 'None' })
     .click();
   await adding.getByRole('button', { name: 'Save Ingredient' }).click();
-  // The edit dialog, named by the entry's saved name (MB.115), is the save landed.
+  // The edit dialog, named by the entry's saved name, is the save landed.
   await expect(
     page.getByRole('dialog', { name: `Edit Ingredient, ${added}`, exact: true }),
   ).toBeVisible();

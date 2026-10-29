@@ -4,8 +4,8 @@ import { assertNoAccessibilityViolations } from './axe';
 import { signInAgainAs } from './session';
 import { insertSpell, openFilters, seedCoven, withSql } from './stories/coven-ingredients';
 
-// The grimoire's Moon Phase, Day of Week, Visibility and Coven Member facets
-// (M13.22), and its Compact switch. Story 84 walks picking Moon Phase,
+// The grimoire's Moon Phase, Day of Week, Visibility and Coven Member facets,
+// and its Compact switch. Story 84 walks picking Moon Phase,
 // Visibility and Coven Member in the panel; what it does not walk is the GET
 // form's address filtering before hydration, the maker read as created_by, a
 // hidden spell's phase never suggested, the Compact switch, axe and 375px.

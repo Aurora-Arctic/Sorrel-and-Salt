@@ -9,12 +9,10 @@ import { e2eDatabaseUrl } from '../database';
 import { signInAs } from '../session';
 
 // What the coven's ingredient stories share: the rows each sets up, and the
-// locators of the pages Waves 11 and 12 build. The rows go in through the raw
+// locators of the pages they walk. The rows go in through the raw
 // client, as tests/e2e/coven.spec.ts writes its coven, because setup must not
 // depend on the code a story is proving (CLAUDE.md, Testing). The locators are
-// here once rather than in each spec because the pages are not built yet: the
-// task that builds one corrects a guessed name in one place, and every story
-// walking that page follows.
+// here once rather than in each spec, so a changed name is corrected in one place.
 
 export type Role = 'owner' | 'member' | 'viewer';
 
@@ -141,15 +139,15 @@ type StockUnit = keyof typeof DIMENSION_OF;
 export interface Stock {
   quantity: number;
   unit: StockUnit;
-  /** The low-stock threshold, in `unit`; a zero turns the warning off (M9.8). */
+  /** The low-stock threshold, in `unit`; a zero turns the warning off. */
   threshold: number;
 }
 
 /**
- * A stock row, the coven's jar of `held`, written by `author` as M9.3's
+ * A stock row, the coven's jar of `held`, written by `author` as
  * `createStock` would write it: the threshold stated on the row, never left to
- * a constant read later (M9.8), and a jar of a compendium entry putting the
- * entry in the coven's cupboard first when it is not there already (M12.15),
+ * a constant read later, and a jar of a compendium entry putting the
+ * entry in the coven's cupboard first when it is not there already,
  * since the coven's list holds only what its cupboard names.
  */
 export async function insertStock(
@@ -191,7 +189,7 @@ export async function insertStock(
 /**
  * A spell in the coven's grimoire, as raw SQL: the spell factory imports the whole seed. A
  * draft unless `status` says otherwise, as the table's default is; the Grimoire lists a
- * complete spell on its Spells tab and a draft on its Drafts tab (M10.11).
+ * complete spell on its Spells tab and a draft on its Drafts tab.
  */
 export async function insertSpell(
   sql: postgres.Sql,
@@ -288,10 +286,10 @@ export async function stillSameDocument(page: Page): Promise<boolean> {
 // The locators of the pages the stories walk. Each name is the one the task
 // entry or a component doc gives where there is one; where neither names it,
 // the choice is made here and says so, for the building task to confirm or
-// correct. The coven's list (M9.6) and the compendium's (M8.18) are built.
+// correct. The coven's list and the compendium's are built.
 
 /**
- * The coven's ingredient list (M9.6): CovenCards' `IngredientCardList`,
+ * The coven's ingredient list: CovenCards' `IngredientCardList`,
  * named after its page, "Ingredients" (claude-docs/components/coven-cards.md).
  */
 export function ingredientList(page: Page): Locator {
@@ -307,7 +305,7 @@ export function cardsIn(list: Locator): Locator {
 }
 
 /**
- * The compendium's list (M8.18), named after its page, as the coven's list
+ * The compendium's list, named after its page, as the coven's list
  * is. The name is this file's choice.
  */
 export function compendiumList(page: Page): Locator {
@@ -316,7 +314,7 @@ export function compendiumList(page: Page): Locator {
 
 /**
  * One card in `list`, by the label it shows and, where the label is shared,
- * the formal name its secondary line carries (M8.14). Found by what the row
+ * the formal name its secondary line carries. Found by what the row
  * says about itself, as a table row is found by its cells: these are data,
  * not copy.
  */
@@ -326,17 +324,16 @@ export function rowOf(list: Locator, name: string, canonicalName?: string): Loca
 }
 
 /**
- * The badge marking a coven's own entry (M8.19: "Local entries are badged";
- * M9.7: "in every state"). Found by its word, as a button is by its name;
- * "Local" is this file's choice, after M9.7's "local only".
+ * The badge marking a coven's own entry ("Local entries are badged"
+ * in every state). Found by its word, as a button is by its name;
+ * "Local" is this file's choice, after the "local only" filter.
  */
 export function localBadge(row: Locator): Locator {
   return row.getByText('Local', { exact: true });
 }
 
 /**
- * M9.8's two badges. Each is a button, drawn as an icon alone (the owner's call,
- * 2026-10-20), named "Low Stock" or "Out of Stock"; its tip opens from it.
+ * The two stock badges. Each is a button, drawn as an icon alone, named "Low Stock" or "Out of Stock"; its tip opens from it.
  * "Low Stock" and "Out of Stock" are this file's choice, after the entry's "low
  * and out-of-stock badges", in title case as every label is.
  */
@@ -350,7 +347,7 @@ export function outBadge(row: Locator): Locator {
 
 /**
  * The filter above a list: FilterForm's `<search>` landmark
- * (claude-docs/components/filter-form.md), M8.10's search row. It holds the
+ * (claude-docs/components/filter-form.md), the search row. It holds the
  * type-ahead named "Name", the Filters button that opens the facet panel,
  * and on the coven's list the Compact switch.
  */
@@ -365,7 +362,7 @@ export function nameSearch(page: Page): Locator {
 
 /**
  * Searches the coven's list for `text`: Enter applies the typed text to the
- * paged list rather than picking a suggestion (M8.10). Waits for the address
+ * paged list rather than picking a suggestion. Waits for the address
  * to carry the text, so the list asserted next is the searched one and not
  * the one before it.
  */
@@ -441,7 +438,7 @@ export function chipChoice(group: Locator, name: string | RegExp): Locator {
 const fieldName = (label: string, form: string): RegExp => new RegExp(`^${label}\\s*, ${form}$`);
 
 /**
- * M9.9's Edit Stock dialog, opened from the stock button in a coven card's foot (or the
+ * The Edit Stock dialog, opened from the stock button in a coven card's foot (or the
  * one in its Quick Look). The button is named "Edit Stock, <name>" (the formal name
  * follows when the label is shared, as the admin lists' "Edit Ingredient, <name>" does)
  * and opens a dialog of the same name: a list of the jars held, one button per form, and
@@ -457,7 +454,7 @@ export function stockEditor(row: Locator, name: string, coven?: string) {
   const page = row.page();
   const title = `Edit Stock, ${name}`;
   // Opened from a page that is not a coven's (the compendium), the dialog's eyebrow names the
-  // coven, "Edit Stock for <Coven>, <name>" (M9.12), so it is found by that name.
+  // coven, "Edit Stock for <Coven>, <name>", so it is found by that name.
   const dialog = page.getByRole('dialog', {
     name: coven ? `Edit Stock for ${coven}, ${name}` : title,
   });
@@ -508,7 +505,7 @@ export function stockEditor(row: Locator, name: string, coven?: string) {
 }
 
 /**
- * When the row was last edited (M6.18): a `<time>`, whose `datetime` holds
+ * When the row was last edited: a `<time>`, whose `datetime` holds
  * the absolute moment the relative text stands for. Found by the element
  * rather than a role because the moment is an attribute, not a name.
  */

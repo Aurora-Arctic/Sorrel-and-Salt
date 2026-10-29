@@ -7,10 +7,10 @@ import { insertIngredient } from '../support/db/insert-ingredient';
 import { variantIdOf } from '../support/db/read-variants';
 import { makeIngredient, makeVariant } from '../support/fixtures/ingredient';
 
-// Make It Ours (M12.23): a member turns a compendium entry the coven holds
+// Make It Ours: a member turns a compendium entry the coven holds
 // into the coven's own, lands on the own entry's page, and the coven's jar
 // went with it. Where the jar went is read from the database, by the id the
-// page's address names; the entry page's own jar list (M12.29) is
+// page's address names; the entry page's own jar list is
 // entry-stock.spec.ts's.
 
 test.beforeAll(async () => {

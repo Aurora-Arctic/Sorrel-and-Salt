@@ -70,7 +70,7 @@ test.describe('who is in a coven', () => {
         await expect(page).toHaveURL(new RegExp(`/coven/${coven.slug}/members$`));
         await expect(membersLink(page)).toHaveAttribute('aria-current', 'page');
         await expectRoll(page, { [ASH]: 'Owner', [BIRCH]: 'Member', [CEDAR]: 'Viewer' }, NAMES);
-        // The addresses are the owner's alone (M11.19): each row carries its
+        // The addresses are the owner's alone: each row carries its
         // member's for Ash, and none reaches Birch's page.
         const table = page.getByRole('table', { name: 'Members' });
         for (const [name, address] of [
@@ -161,7 +161,7 @@ test.describe('removing a member, and leaving', () => {
       await expect(dialog).toHaveCount(0);
       await expectRoll(page, { [ASH]: 'Owner', [CEDAR]: 'Viewer' }, NAMES);
       // The Remove that had the focus went with its row: the page's heading
-      // takes it, rather than the page losing it (M8.17).
+      // takes it, rather than the page losing it.
       await expect(page.getByRole('main').getByRole('heading', { level: 1 })).toBeFocused();
       await page.setViewportSize({ width: 375, height: 812 });
       await assertNoAccessibilityViolations(page);

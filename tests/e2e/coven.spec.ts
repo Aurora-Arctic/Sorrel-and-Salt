@@ -7,7 +7,7 @@ import { slotUrl } from './slots';
 import type { Page } from '@playwright/test';
 import { slugify } from '@/lib/slugify';
 
-// The coven page and its section nav against the built server (M9.15): a
+// The coven page and its section nav against the built server: a
 // viewer opens the page with Leave and without Delete, the keyboard reaches
 // the nav, and the only owner's exit keeps its refusal inside the dialog.
 // Story 9 opens the page as an owner and a member (stories/01-members.spec.ts),
@@ -110,7 +110,7 @@ test('real Tab presses reach the Overview link, and the page passes the scans', 
 });
 
 // A refusal said inside the only owner's exit dialog, at a phone's width,
-// where the notice once pushed Cancel past the dialog's edge (M12.31). The
+// where the notice once pushed Cancel past the dialog's edge. The
 // page offers this owner the exit dialog because the fixture's owner is its
 // only one.
 test("a refused deletion in the only owner's exit keeps Cancel inside the dialog at 375px", async ({

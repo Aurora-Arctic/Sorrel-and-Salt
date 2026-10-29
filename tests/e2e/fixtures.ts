@@ -3,11 +3,9 @@ import MCR from 'monocart-coverage-reports';
 import coverageOptions, { coverageRequested } from './coverage.config';
 import { currentSlot, slotUrl } from './slots';
 
-// Every spec imports `test`/`expect` from here so these fixtures run for
-// every test.
-// The projects that run in Chromium: the gate suite's `chromium` and the story
-// suite's `stories` (playwright.stories.config.ts). Matching the first alone
-// left the story suite with no coverage at all (M14.28).
+// Every spec imports `test`/`expect` from here so these fixtures run for every test.
+// The projects that run in Chromium: the gate suite's `chromium` and the story suite's `stories`
+// (playwright.stories.config.ts). Matching the first alone left the story suite with no coverage.
 const CHROMIUM_PROJECTS = new Set(['chromium', 'stories']);
 
 export const test = base.extend<{ coverageAutoFixture: string }, { slot: number }>({

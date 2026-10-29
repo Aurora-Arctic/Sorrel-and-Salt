@@ -9,7 +9,7 @@ import { destinationMenu } from './stories/ingredient-dialogs';
 // this: it is a layout fact, measured here in a real browser on the bar's Add
 // Ingredient chevron, a MenuButton at the end of the bar, at a desktop width
 // and at the narrowest phone. It replaced a Vitest case that computed the
-// placement over mocked element sizes (M14.27). The More menu's fit inside a
+// placement over mocked element sizes. The More menu's fit inside a
 // dialog is coven-ingredients.spec.ts's.
 
 test.beforeAll(async () => {

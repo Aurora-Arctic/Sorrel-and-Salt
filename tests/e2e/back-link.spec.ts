@@ -15,7 +15,7 @@ import {
   withSql,
 } from './stories/coven-ingredients';
 
-// MB.271: an entry's "Back to …" link returns to the search, filters and page the entry was
+// An entry's "Back to …" link returns to the search, filters and page the entry was
 // opened from, with the opened card where it was. The link reads the tab's history through
 // the Navigation API, an enhancement past the browser floor, so where the browser has none it
 // is the bare list, as it is opened directly. The `chromium` project runs this, and Chromium

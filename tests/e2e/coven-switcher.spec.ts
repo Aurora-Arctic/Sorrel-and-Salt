@@ -6,7 +6,7 @@ import { makeIngredient } from '../support/fixtures/ingredient';
 import { insertIngredient } from '../support/db/insert-ingredient';
 import { type Coven, localIngredient, seedCoven, withSql } from './stories/coven-ingredients';
 
-// The coven switcher keeps the page it can (M9.12): from a page that exists in the coven
+// The coven switcher keeps the page it can: from a page that exists in the coven
 // picked it lands on that page, and otherwise on the same section, as it always did.
 // Component tests prove the choice of address (tests/components/WorkspaceSwitcher,
 // tests/lib/coven-path.test.ts) and the service proves which covens an entry opens in

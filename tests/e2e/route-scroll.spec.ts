@@ -2,7 +2,7 @@ import { test, expect } from './fixtures';
 import { recreateE2eDatabase } from './database';
 import { signInAs } from './session';
 
-// A move to another page lands at the top (M12.33). The page has
+// A move to another page lands at the top. The page has
 // `scroll-behavior: smooth` (src/app/globals.scss), and unless <html> carries
 // `data-scroll-behavior="smooth"` Next's own jump to the top glides, then its
 // scroll-into-view glides on and stops part-way down: 62px at a desktop's

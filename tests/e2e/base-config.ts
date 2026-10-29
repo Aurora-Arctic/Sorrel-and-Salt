@@ -32,10 +32,9 @@ export const baseConfig = {
     // screenshot and a DOM snapshot per action, and the final screenshot.
     trace: process.env.CI ? 'on-first-retry' : 'retain-on-failure',
     screenshot: process.env.CI ? 'off' : 'only-on-failure',
-    // Never a video, locally either (M11.18): recording every test cost a tenth
-    // to a sixth of the summed test time, measured, and was encoded on the
-    // browser server, which shares these cores, for a failure the trace already
-    // shows (claude-docs/testing/e2e.md, "Where a run's time goes").
+    // Never a video, locally either: recording every test cost a tenth to a sixth of the summed test
+    // time, measured, and was encoded on the browser server, which shares these cores, for a failure
+    // the trace already shows (claude-docs/testing/e2e.md, "Where a run's time goes").
     video: 'off',
     ...(wsEndpoint ? { connectOptions: { wsEndpoint } } : {}),
     // `.btn` transitions its colours; without this an axe scan can sample

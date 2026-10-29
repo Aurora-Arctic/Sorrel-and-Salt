@@ -7,12 +7,12 @@ import { asTouch } from '../support/db/touch-row';
 import { slugify } from '@/lib/slugify';
 
 // The admin pages against the built server, for what no story walks: the
-// layout, the user list and its filters, a curator's refusals (M11.20), the
+// layout, the user list and its filters, a curator's refusals, the
 // zodiac filter and the edit stamps. A non-admin's 403 on every admin route,
 // each curated page's add, edit and delete, and the user modal are the story
 // suite's (tests/e2e/stories/07-admin.spec.ts, stories 17–19); admin grants,
 // the curator role and the pause are story 60's, and approving coven creation
-// story 61's (08-email-and-admin.spec.ts). An address naming no user is the
+// Story 61's (08-email-and-admin.spec.ts). An address naming no user is the
 // users page test's. A signed-out visitor's redirect is
 // route-protection.spec.ts's.
 test.beforeAll(async () => {
@@ -29,7 +29,7 @@ test('an admin sees the admin layout and its nav', async ({ page }) => {
 
   expect(response?.status()).toBe(200);
   // One link per page, each at its first tab: a group list is a tab of the
-  // list it organises, and Astrology holds the celestial bodies and zodiac signs (MB.115).
+  // list it organises, and Astrology holds the celestial bodies and zodiac signs.
   const nav = page.getByRole('navigation', { name: 'Admin' });
   const pages = [
     ['Compendium', '/admin/compendium'],
@@ -66,7 +66,7 @@ test('an admin lists the users at /admin/users, filtered, with their sign-in met
     'admin-users.test',
   );
   // A filter's switch takes Space as a checkbox does, which only a browser's
-  // own keyboard handling shows, and applies the moment it changes (MB.115):
+  // own keyboard handling shows, and applies the moment it changes:
   // the address gains the flag, the list narrows to the one user not yet
   // approved, and the switch, drawn afresh with the new list, has the focus
   // back, so a second Space widens the list again.
@@ -96,12 +96,12 @@ test('an admin lists the users at /admin/users, filtered, with their sign-in met
     /an-admin@admin-users\.test$/,
     /^Admin/,
     // A mark alone: every admin may create a workspace, and the users CHECK
-    // says so (MB.177), so the cell offers no control.
+    // says so, so the cell offers no control.
     'Yes',
     /Discord.*Google/,
     /\d/,
   ]);
-  // The mark's tip bubble shows on hover, a real browser's CSS (the owner's review).
+  // The mark's tip bubble shows on hover, a real browser's CSS.
   const email = admin.getByRole('cell').nth(1);
   const tip = email.locator('.user-list__tip');
   await expect(tip).toBeHidden();
@@ -117,7 +117,7 @@ test('an admin lists the users at /admin/users, filtered, with their sign-in met
   await assertNoAccessibilityViolations(page);
 });
 
-// M11.20: a curator reaches every curation page and nothing on People. The
+// A curator reaches every curation page and nothing on People. The
 // navigation leaving People out is only what they see; each People page
 // refuses them itself, and a coven they hold no seat in is a 404 as for
 // anyone else.
@@ -202,7 +202,7 @@ test('a curator opens the compendium and a vocabulary list with edited rows and 
   let name: string;
   try {
     [{ name }] = await sql`select name from users where id = ${userId}`;
-    // Stamps alone: the trigger keeps them unless the write declares itself a touch (MB.106).
+    // Stamps alone: the trigger keeps them unless the write declares itself a touch.
     let entries = 0;
     let forms = 0;
     await asTouch(sql, async (tx) => {

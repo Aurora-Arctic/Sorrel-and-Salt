@@ -19,19 +19,17 @@ import { categoryChip, pickCategoryIn } from './ingredient-dialogs';
 import { makeVariant } from '../../support/fixtures/ingredient';
 
 // Stories 47 to 57, 76 to 80, 83 and 84: the grimoire, from naming a spell to the
-// workings recorded against it. Every story here is a scaffold: the page it
-// walks is not built yet, and the task named in its annotation turns its
-// `fixme` into `test` and makes it pass. Each body is the flow as the finished
-// page will allow it, so the page task edits locators rather than inventing a
-// flow. Stories 76 to 80 are not in DESIGN.md §10 until M13.1, M13.2 and
-// M13.4 add them, so the reporter prints "Not a v1 story" for them meanwhile.
+// workings recorded against it. A story left as `test.fixme` is a scaffold: the page it
+// walks does not exist, and its annotation names the task that turns it into `test`. Each body is
+// the flow as the finished page will allow it, so that task edits locators rather than inventing a
+// flow. Stories 76 to 80 are not in DESIGN.md §10, so the reporter prints "Not a v1 story" for them.
 
 test.beforeAll(async () => {
   await recreateE2eDatabase();
 });
 
 /**
- * The spell builder (M10.12), reached as a member reaches it: from the Grimoire, through the
+ * The spell builder, reached as a member reaches it: from the Grimoire, through the
  * New Spell at its heading, which only a role that may create a spell is shown. It opens as a
  * dialog over the grimoire under `?new=spell-<slug>`, and the dialog is what it returns.
  */
@@ -44,12 +42,12 @@ async function openBuilder(page: Page, slug: string): Promise<Locator> {
   return dialog;
 }
 
-/** The builder's one ordered list of steps (M10.15, M10.16, M13.3). */
+/** The builder's one ordered list of steps. */
 function stepList(page: Page): Locator {
   return page.getByRole('list', { name: 'Steps' });
 }
 
-/** The grimoire's list of spells (M10.11), named after its page. */
+/** The grimoire's list of spells, named after its page. */
 function grimoireList(page: Page): Locator {
   return page.getByRole('list', { name: 'Grimoire' });
 }
@@ -107,7 +105,7 @@ test('a member names a spell and states its intent', { tag: '@story-47' }, async
   await expect(edit.getByRole('textbox', { name: 'Intent' })).toHaveValue('To see clearly');
   await edit.getByRole('button', { name: 'Close', exact: true }).click();
   await expect(page).toHaveURL(`/coven/${coven.slug}/grimoire`);
-  // A new spell is a draft, listed under the grimoire's Drafts tab (M10.11).
+  // A new spell is a draft, listed under the grimoire's Drafts tab.
   await page.getByRole('link', { name: 'Drafts' }).click();
   await expect(page).toHaveURL(`/coven/${coven.slug}/grimoire/drafts`);
   await expect(grimoireList(page).getByText('Fixture Working', { exact: true })).toBeVisible();
@@ -202,8 +200,7 @@ test(
     // Saved: nothing left to save.
     await expect(save).toBeDisabled();
     await expect(save).not.toHaveAttribute('aria-busy', 'true');
-    // The builder has no page to reopen a saved spell on until M13.10, so the
-    // step is read where the save left it.
+    // The step is read in SQL, where the save left it.
     const rows = await withSql(
       (sql) => sql<{ quantity: string; unit: string; name: string | null }[]>`
         select st.quantity, st.unit, st.name from spell_steps st
@@ -254,8 +251,7 @@ test(
     await save.click();
     await expect(save).toBeDisabled();
     await expect(save).not.toHaveAttribute('aria-busy', 'true');
-    // The builder has no page to reopen a saved spell on until M13.10, so the
-    // order is read where the save left it: the position.
+    // The order is read in SQL, where the save left it: the position.
     const rows = await withSql(
       (sql) => sql<{ name: string; position: number }[]>`
         select i.name, st.position from spell_steps st
@@ -430,7 +426,7 @@ test(
     await signInAgainAs(page, A);
     await page.goto(path);
     await expect(grimoireList(page).getByRole('listitem')).toHaveCount(2);
-    // Its author is told it is theirs alone, in a word, not a colour (M10.13).
+    // Its author is told it is theirs alone, in a word, not a colour.
     const item = (name: string) => grimoireList(page).getByRole('listitem', { name });
     await expect(item('Private Working').getByText('Private', { exact: true })).toBeVisible();
     await expect(item('Shared Working').getByText('Private', { exact: true })).toHaveCount(0);
@@ -621,7 +617,7 @@ test(
     await expect(page).toHaveURL(/\?edit=[0-9a-f-]{36}$/);
     await expect(save).toBeDisabled();
     await page.reload();
-    // A saved spell opens with its sections shut (M10.12).
+    // A saved spell opens with its sections shut.
     await page.getByRole('button', { name: 'Open All' }).click();
     await expect(steps).toHaveCount(2);
     // A saved instruction step is shut too, and reads as its text; its pencil opens the field.

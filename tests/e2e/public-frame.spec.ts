@@ -2,7 +2,7 @@ import { test, expect } from './fixtures';
 import { recreateE2eDatabase } from './database';
 import { signInAs } from './session';
 
-// The chrome round the public compendium (MB.83), against the built server.
+// The chrome round the public compendium, against the built server.
 // Story 63 walks a visitor in and on to Sign In; this proves what no story
 // walks: the chrome is in the HTML with no script, a signed-in request gets
 // the shell from the same layout, and the sticky bar leaves a scrolled-to

@@ -6,7 +6,7 @@ import { insertCupboardEntry } from '../support/db/insert-cupboard-entry';
 import { insertIngredient } from '../support/db/insert-ingredient';
 import { makeIngredient } from '../support/fixtures/ingredient';
 
-// The plus on the public compendium's cards asks the signed-in member's coven alone (M9.12): an
+// The plus on the public compendium's cards asks the signed-in member's coven alone: an
 // entry another coven holds is still offered unheld. The add itself, the check, its reload and a
 // viewer's lack of either mark are story 14's (stories/02-compendium.spec.ts); the two-coven menu
 // is the plus's component test's (tests/components/CompendiumCards/add-icon.test.tsx) and

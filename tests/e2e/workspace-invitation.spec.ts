@@ -9,13 +9,12 @@ import { slotUrl } from './slots';
 import type { Page } from '@playwright/test';
 
 // The parts of a coven invitation no v1 story walks, against the built
-// server (M7.7): the /coven notice and the account menu's count of waiting
+// server: the /coven notice and the account menu's count of waiting
 // invitations, the shell's redraw after an accept, declining, and a link to a
 // coven since deleted. The send, the accept from the link and from the
 // account page, the seat it gives, and the used, revoked and expired refusals
 // are the story suite's (tests/e2e/stories/01-invitations.spec.ts, stories 4
-// to 7, M9.1). The
-// accept service's checks are the unit tests'; this walks them in a browser.
+// to 7). The accept service's checks are the unit tests'; this walks them in a browser.
 // Each worker builds the owner and the coven in its own database before its
 // first test, and every walk invites a new address, so the walks are
 // independent and spread across workers.

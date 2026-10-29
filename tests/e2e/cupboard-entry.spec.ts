@@ -7,10 +7,10 @@ import { insertCupboardEntry } from '../support/db/insert-cupboard-entry';
 import { insertIngredient } from '../support/db/insert-ingredient';
 import { makeIngredient } from '../support/fixtures/ingredient';
 
-// A compendium entry in a coven's cupboard (M12.16): the coven's page shows
+// A compendium entry in a coven's cupboard: the coven's page shows
 // the coven's label and changes with the marks, and the public page of the
 // same entry shows neither, and a coven's own entry with no formal name passes
-// the scan with its list of the compendium entries it might be (M12.22).
+// the scan with its list of the compendium entries it might be.
 
 test.beforeAll(async () => {
   await recreateE2eDatabase();
@@ -73,7 +73,7 @@ test('a member sees a held compendium entry with the coven’s label and marks, 
       .getByRole('link', { name: /^Fixture Reference Wort/ }),
   ).toBeVisible();
   await expect(page.getByRole('button', { name: 'Annotated' })).toBeVisible();
-  // Annotated wins over Compendium (the owner's call, 2026-10-20).
+  // Annotated wins over Compendium.
   await expect(page.getByRole('status').filter({ hasText: /^Compendium$/ })).toHaveCount(0);
   await expect(page.getByText('Local', { exact: true })).toHaveCount(0);
   // At a phone's width, the narrowest a section signs off at.
@@ -84,9 +84,9 @@ test('a member sees a held compendium entry with the coven’s label and marks, 
   await expect(
     page.getByRole('heading', { level: 1, name: 'Fixture Reference Wort' }),
   ).toBeVisible();
-  // Every page holds an empty status region for click feedback (M12.31); it is
+  // Every page holds an empty status region for click feedback; it is
   // the coven's marks, a status with words in it, that the public page lacks. The review mark
-  // (M14.8) is the compendium's own, shown to everyone, so it is not one of them.
+  //  is the compendium's own, shown to everyone, so it is not one of them.
   await expect(
     page
       .getByRole('status')
@@ -96,8 +96,8 @@ test('a member sees a held compendium entry with the coven’s label and marks, 
   await expect(page.getByText('Fixture Our Hedgewort')).toHaveCount(0);
 
   // The coven's own entry of the same name, with no formal name, lists the compendium's as
-  // Similar (M12.22): the scan of that page state. What the list holds, and that it offers
-  // nothing to convert the entry (M12.42), are the entry page's and IngredientEntry's tests'.
+  // Similar: the scan of that page state. What the list holds, and that it offers
+  // nothing to convert the entry, are the entry page's and IngredientEntry's tests'.
   const own = await withSql((sql) =>
     localIngredient(sql, coven.id, coven.users.A, {
       name: 'Fixture Reference Wort',

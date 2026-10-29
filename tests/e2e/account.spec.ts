@@ -5,7 +5,7 @@ import { assertNoAccessibilityViolations, assertNoSidewaysScroll, settleTransiti
 import { e2eDatabaseUrl, recreateE2eDatabase } from './database';
 import { signInAs } from './session';
 
-// The one account page, signed in (MB.71, MB.88): its Name, Email and
+// The one account page, signed in: its Name, Email and
 // Sign-In Methods sections. The default server configures no provider, so
 // every Add is greyed; linking itself is asserted through Better Auth's
 // endpoints in tests/db/account-linking.test.ts, and a rename through
@@ -70,7 +70,7 @@ test('two linked and a failed link have no accessibility violations', async ({ p
   await assertNoAccessibilityViolations(page);
 });
 
-// MB.256: a link followed into the shell is a client-side navigation, which
+// A link followed into the shell is a client-side navigation, which
 // once refetched the email page about every 80 ms without end. Settled means
 // two quiet seconds with no further fetch of it.
 //

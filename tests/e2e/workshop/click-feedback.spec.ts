@@ -1,14 +1,11 @@
 import { expect, test, type Locator, type Page } from '@playwright/test';
 import { assertNoAccessibilityViolations } from '../axe';
 
-// The click-feedback callout's layout facts (M12.31, design F;
-// claude-docs/components/click-feedback.md): that the callout stays clear of
-// its control and inside the window or its box, that nothing moves as it comes and goes, that the badge's
-// press target covers no neighbour, and that reduced motion stills the fade.
-// Measured in the component's Storybook stories, which draw each placement on
-// its own, though pages use it too (the root layout, the ingredient entry's
-// actions, SignInMethods, AddIcon); what it says and where the focus goes are in
-// tests/components/ClickFeedback.
+// The click-feedback callout's layout facts (claude-docs/components/click-feedback.md): the callout
+// stays clear of its control and inside the window or its box, nothing moves as it comes and goes,
+// the badge's press target covers no neighbour, and reduced motion stills the fade. Measured in the
+// component's Storybook stories, which draw each placement on its own; what it says and where the
+// focus goes are in tests/components/ClickFeedback.
 
 const WIDTHS = [1280, 375] as const;
 const THEMES = ['dark', 'light'] as const;

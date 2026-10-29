@@ -13,9 +13,9 @@ import { expect } from '../fixtures';
  * The shell's Add Ingredient, in the bar: the one global action
  * (claude-docs/components/app-shell.md; design-decisions/mb.7-navigation.md).
  * Found inside the banner, the bar's `header`, so the empty list's own Add
- * Ingredient (M9.11) is never taken for it. Its main part, a button that
+ * Ingredient is never taken for it. Its main part, a button that
  * opens a coven's dialog or, for the compendium, goes to the admin
- * Compendium's `?new=ingredient-compendium` (M8.16); a link is matched too, so "none" means neither.
+ * Compendium's `?new=ingredient-compendium`; a link is matched too, so "none" means neither.
  */
 export function shellAddIngredient(page: Page): Locator {
   const banner = page.getByRole('banner');
@@ -44,11 +44,10 @@ function entryName(name: string, formalName?: string): string {
 }
 
 /**
- * An entry's Edit in `scope`: a row of the coven's list (M9.6); the entry's
+ * An entry's Edit in `scope`: a row of the coven's list; the entry's
  * page has its own icon instead (`openEditIngredientFromMenu`). Named as the admin Compendium's Edit is, "Edit Testwort,
- * Fixtura testalis"; a link, if M8.17 opens the dialog by its address as
- * that list's EditLink does, or a button: both are matched, since the role is
- * M8.17's to choose. The name is this file's choice.
+ * Fixtura testalis"; a link (the dialog opens by its address, as
+ * that list's EditLink does) or a button: both are matched. The name is this file's choice.
  */
 export function editIngredientControl(scope: Locator, name: string, formalName?: string): Locator {
   const label = `Edit ${entryName(name, formalName)}`;
@@ -71,7 +70,7 @@ export function editIngredientDialog(page: Page, name: string, formalName?: stri
 
 /**
  * Opens the entry's Edit in `scope` and its sections: an edit opens with
- * every section shut (MB.115), and Open All opens them, so every field the
+ * every section shut, and Open All opens them, so every field the
  * form pre-fills can be read.
  */
 export async function openEditIngredient(
@@ -88,8 +87,8 @@ export async function openEditIngredient(
 }
 
 /**
- * Opens the edit from the entry's page (M8.19), where Edit is an icon of its own beside the bin
- * (M8.17), and its sections, as `openEditIngredient` does from a row.
+ * Opens the edit from the entry's page, where Edit is an icon of its own beside the bin,
+ * and its sections, as `openEditIngredient` does from a row.
  */
 export async function openEditIngredientFromMenu(
   page: Page,
@@ -169,7 +168,7 @@ export async function expectFieldError(field: Locator, valid: readonly string[])
  * Every Edit the shell offers: in its bar, the banner, and in each `nav`
  * landmark: the site nav and the coven's and the admin's section navs
  * (claude-docs/design-decisions/mb.7-navigation.md, "Landmarks"). Editing
- * lives where an ingredient is shown, never here (MB.7).
+ * lives where an ingredient is shown, never here.
  */
 export function shellEditControls(page: Page): Locator {
   const shell = page.getByRole('banner').or(page.getByRole('navigation'));
@@ -180,7 +179,7 @@ export function shellEditControls(page: Page): Locator {
 
 /**
  * The menu of places Add Ingredient can go, for someone with more than one
- * (M8.16; claude-docs/components/modal.md, "Add Ingredient"): the chevron
+ * (claude-docs/components/modal.md, "Add Ingredient"): the chevron
  * beside the bar's button, named "Choose Where to Add", opens a `menu`
  * listing each destination by name as a `menuitem`, the compendium first.
  * With one destination the chevron is not drawn.

@@ -18,8 +18,8 @@ test.beforeAll(async () => {
 // The slot servers blank every provider's credentials (playwright.config.ts),
 // so each button is drawn greyed with aria-disabled, the state checked here
 // with or without a developer's .env.local. A live OAuth round trip is
-// MB.12's, run by hand against real credentials: CI cannot finish one, so
-// story 1 is walked up to the provider's door.
+// run by hand against real credentials: CI cannot finish one, so
+// Story 1 is walked up to the provider's door.
 const PROVIDER_NAMES = ['Discord', 'Google', 'Facebook', 'Microsoft'];
 
 /** Scans `page` in each theme in turn: a Playwright page is light unless told. */

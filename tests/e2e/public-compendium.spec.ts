@@ -8,12 +8,12 @@ import { ADD, HELD } from '../support/cupboard-wording';
 import { insertIngredient } from '../support/db/insert-ingredient';
 import { compendiumList, seedCoven, withSql } from './stories/coven-ingredients';
 
-// The public compendium page (M8.18; MB.80), against the built server. Story 14 walks a
+// The public compendium page, against the built server. Story 14 walks a
 // visitor through narrowing the list and opening an entry (tests/e2e/stories/02-compendium);
 // this proves what no story walks: the page is whole in the HTML as served, the pager
 // reaches the last page, one coven's add shows as held to its other members on the cached
 // list, the search row sticks under the top bar, the category chips cover every category, a
-// curator's Edit opens the compendium's edit dialog over the search (M8.17), and the page
+// curator's Edit opens the compendium's edit dialog over the search, and the page
 // holds at a phone's width. The curators' filters doing nothing here, and a filtered view's
 // noindex, are the page test's (tests/app/(public)/compendium/page.test.tsx) and seo.spec.ts's.
 
@@ -85,7 +85,7 @@ test("an owner's add shows as held to a member of the same coven, on the cached 
     B: 'member',
   });
 
-  // The plus works (M9.12): a member of one coven adds with a press, and the card shows the
+  // The plus works: a member of one coven adds with a press, and the card shows the
   // check in its place. The covens' held marks are the coven's own, so B, in the same coven,
   // finds that card already held when the page is opened.
   for (const [index, key] of ['A', 'B'].entries()) {
@@ -105,7 +105,7 @@ test("an owner's add shows as held to a member of the same coven, on the cached 
   }
 });
 
-// The search row sticks to the top once scrolled to (the owner's call, 2026-10-19): the box,
+// The search row sticks to the top once scrolled to: the box,
 // the Filters button and Clear All stay in view while the cards go by, and the tray they open
 // stays in view with them.
 // The sticky box is the `<search>` landmark; the form inside is the controls alone.
@@ -161,8 +161,7 @@ test('signed in, the search row sticks under the top bar and its tray stays in v
 });
 
 // Under the narrow column the row is two lines, the search box and then Filters beside Clear All,
-// and both stick together as the desktop row does (the MB.120 review, item 6; the owner's call,
-// 2026-10-20).
+// and both stick together as the desktop row does.
 test('the stuck row holds at 375px without a sideways scroll or an axe violation', async ({
   page,
 }) => {
@@ -273,7 +272,7 @@ test('the category chips and the +N count cover every category, and opening the 
   await expect(more).toBeFocused();
 });
 
-// M8.17: a curator edits an entry from the public search, in the compendium's edit dialog over
+// A curator edits an entry from the public search, in the compendium's edit dialog over
 // the results, and closes back onto the same search with the focus on the card's Edit. An
 // account that cannot curate gets no Edit, and the same address opens nothing for it.
 test("a curator's Edit opens the compendium's edit dialog over the search, and closes back to it", async ({

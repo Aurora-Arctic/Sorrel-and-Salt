@@ -10,7 +10,7 @@ import { signInAgainAs, signInAs } from '../session';
 
 // Stories 17, 18 and 19, walked in the browser: what a site admin curates and
 // how, what everyone else is refused, and what an admin does not reach — a
-// coven's own pages. Setup goes straight to the database (MB.101); each
+// coven's own pages. Setup goes straight to the database; each
 // story's own step goes through the pages a person would use.
 
 test.beforeAll(async () => {
@@ -213,8 +213,7 @@ test.describe('story 19: an admin sees a user’s covens but reaches none of the
     },
   );
 
-  // W's own pages today. Its ingredients and grimoire join this list when
-  // their pages are built (M9.6's `/ingredients`, M10.11's `/grimoire`).
+  // W's own pages today. Its ingredients and grimoire pages are not in this list.
   const covenPages = (slug: string) => [
     `/coven/${slug}`,
     `/coven/${slug}/members`,
@@ -265,8 +264,7 @@ test.describe('story 19: an admin sees a user’s covens but reaches none of the
  * Holds every request for `path` whose address carries `param` — the press's
  * navigation and any prefetch of it — until `release` is called, which lets
  * them through and resolves once the last is answered: how a test sees a
- * modal open on the press, before the page that fills it arrives (M9.18;
- * claude-docs/components/modal.md, "Opening at once").
+ * modal open on the press, before the page that fills it arrives (claude-docs/components/modal.md, "Opening at once").
  */
 async function holdModalRequests(page: Page, path: string, param: string) {
   const held: PlaywrightRoute[] = [];
@@ -292,8 +290,8 @@ const busy = (dialog: Locator) => dialog.locator('[aria-busy="true"]');
 
 /**
  * The row naming `name`, in the list named `table` or the page's one list: a cell that is
- * exactly the name, or a link that is. An entry's name cell also holds its Quick Look link
- * (M12.5), so that cell's whole name is longer than the entry's and only its link matches.
+ * exactly the name, or a link that is. An entry's name cell also holds its Quick Look link,
+ * so that cell's whole name is longer than the entry's and only its link matches.
  */
 const rowOf = (page: Page, table: string | null, name: string) =>
   (table ? page.getByRole('table', { name: table, exact: true }) : page.getByRole('table'))
@@ -315,7 +313,7 @@ async function deleteFrom(dialog: Locator, noun: string) {
 /**
  * A group's delete that moves what it holds to `destination` first: the
  * question names how many, the picker is inside it, and the move is
- * confirmed before it is made (M5.6b).
+ * confirmed before it is made.
  */
 async function moveAndDelete(page: Page, dialog: Locator, picker: string, destination: string) {
   await dialog.getByRole('button', { name: /^Delete (Group|Tradition)$/ }).click();
@@ -337,7 +335,7 @@ test.describe('story 18: an admin adds, edits and soft-deletes what the compendi
       // and a delete. In CI, beside the other stories, it took 29.7s to 31.1s, the scans alone
       // 12s of that, and the default 30s ran out at the reloaded dialog's Close. The trace shows
       // the app quick throughout: that dialog was gone 0.4s after Close was pressed, and every
-      // request answered in under 0.15s, so the time is the story's own work (MB.267).
+      // request answered in under 0.15s, so the time is the story's own work.
       test.setTimeout(60_000);
       await signInAs(page, 'compendium@story-18.test', ['discord'], 'admin');
       expect((await page.goto('/admin/compendium'))?.status()).toBe(200);
@@ -360,7 +358,7 @@ test.describe('story 18: an admin adds, edits and soft-deletes what the compendi
       await expect(busy(adding)).toHaveCount(0);
       await assertNoAccessibilityViolations(page);
 
-      /** Picks the curated form `form` from the New Form box, which adds it as a variant (MB.221). */
+      /** Picks the curated form `form` from the New Form box, which adds it as a variant. */
       const addForm = async (dialog: Locator, form: string) => {
         const box = dialog.getByRole('combobox', { name: 'New Form' });
         await box.click();
@@ -381,7 +379,7 @@ test.describe('story 18: an admin adds, edits and soft-deletes what the compendi
       await addForm(adding, 'Herb');
       await adding.getByRole('button', { name: 'Save Ingredient' }).click();
 
-      // Save opens what it saved, at its address, under its saved name (MB.115).
+      // Save opens what it saved, at its address, under its saved name.
       const editing = page.getByRole('dialog', {
         name: 'Edit Ingredient, Aaa Testwort',
         exact: true,
@@ -397,7 +395,7 @@ test.describe('story 18: an admin adds, edits and soft-deletes what the compendi
       // Edited: renamed, described, and given a second form with a safety note of its own.
       await row.getByRole('link', { name: 'Edit Aaa Testwort' }).click();
       await expect(editing).toBeVisible();
-      // An edit opens with every section closed (MB.115); Open All opens them.
+      // An edit opens with every section closed; Open All opens them.
       await editing.getByRole('button', { name: 'Open All' }).click();
       const save = editing.getByRole('button', { name: 'Save Ingredient' });
       await expect(save).toBeDisabled();
@@ -503,7 +501,7 @@ test.describe('story 18: an admin adds, edits and soft-deletes what the compendi
       // Edited: its Edit opens the modal on the press, and the form fills that same dialog.
       const editGate = await holdModalRequests(page, '/admin/categories', 'edit');
       await row.getByRole('link', { name: 'Edit Aaa Testcraft' }).click();
-      // An edit dialog is named by its eyebrow and the saved name (MB.115).
+      // An edit dialog is named by its eyebrow and the saved name.
       const editing = page.getByRole('dialog', {
         name: 'Edit Category, Aaa Testcraft',
         exact: true,
@@ -784,7 +782,7 @@ test.describe('story 18: an admin adds, edits and soft-deletes what the compendi
       await expect(row.getByRole('cell', { name: 'Mineral', exact: true })).toBeVisible();
       await expect(row.getByRole('cell', { name: 'Made by the story', exact: true })).toBeVisible();
 
-      // A form's address is its name and its group's (MB.132).
+      // A form's address is its name and its group's.
       await row.getByRole('link', { name: 'Edit Aaa Testwort Shard' }).click();
       const editing = page.getByRole('dialog', {
         name: 'Edit Form, Aaa Testwort Shard',

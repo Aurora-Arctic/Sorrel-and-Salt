@@ -16,7 +16,7 @@ import {
   withSql,
 } from './stories/coven-ingredients';
 
-// Every wait looks the same (M12.33; claude-docs/design-decisions/m12.33-plan.md),
+// Every wait looks the same (claude-docs/design-decisions/m12.33-plan.md),
 // against the built server with the server's answer held back, so the wait
 // lasts until the test lets it end. Three navigations, each a different part
 // of the page: a coven switch (the coven's body), a section link (the same),
@@ -31,12 +31,12 @@ import {
 // 200. tests/e2e/coven-ingredients.spec.ts ("a non-member is told the page
 // does not exist") and tests/e2e/coven.spec.ts prove it on every run.
 
-/** The keyframes every loading mark pulses with under reduced motion (the owner's call). */
+/** The keyframes every loading mark pulses with under reduced motion. */
 const PULSE = 'loading-pulse';
 
 const HOLLOW = 'Fixture Coven Hollow';
 const WILLOW = 'Fixture Coven Willow';
-// Invented, so no seed can ever hold them (M1.25).
+// Invented, so no seed can ever hold them.
 const HOLLOW_ENTRY = 'Hollowwort';
 const WILLOW_ENTRY = 'Willowwort';
 
@@ -240,7 +240,7 @@ test("a site link takes the shell's page away at once and puts one status in its
   await expect(compendiumList(page)).toBeVisible();
 });
 
-// A bug that reached the owner's review of M10.11: a tabbed page held hidden under the
+// A bug that reached review: a tabbed page held hidden under the
 // shell's wait still showed its tab row's open pill through the skeleton, since the pill
 // set its own visibility rather than inheriting the held page's. Members is a tabbed page.
 test('a site link from a tabbed page shows nothing of the held page through the wait', async ({
@@ -419,7 +419,7 @@ test('under reduced motion, every loading mark of a wait pulses with the one sha
 });
 
 // Signed out, the public frame's body answers a move between public pages
-// as the shell's does (M12.47): the page gives way to the destination's
+// as the shell's does: the page gives way to the destination's
 // skeleton under the frame's bar and nav, in the page's one main landmark.
 // What these do not repeat: a retired slug still answers 308 on a direct
 // request, which tests/e2e/compendium-entry.spec.ts proves on every run.

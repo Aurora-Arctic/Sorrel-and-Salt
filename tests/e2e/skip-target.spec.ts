@@ -10,7 +10,7 @@ import { signInAs } from './session';
 // only. Before it, the target was a `tabindex="-1"` wrapper round the page, so
 // a click on plain text inside the page focused the wrapper, and the next Tab
 // went back to the first control on the page instead of the one after the
-// click. A regression test: that bug reached a PR (M12.48).
+// click. A regression test: that bug reached a PR.
 
 test.beforeAll(async () => {
   await recreateE2eDatabase();

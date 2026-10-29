@@ -15,7 +15,7 @@ import { insertCupboardEntry } from '../support/db/insert-cupboard-entry';
 import { insertIngredient } from '../support/db/insert-ingredient';
 import { makeIngredient } from '../support/fixtures/ingredient';
 
-// The public compendium's In My Covens filter (M12.55), a gate spec with no story behind it: the
+// The public compendium's In My Covens filter, a gate spec with no story behind it: the
 // panel lists the viewer's covens by name, a pick narrows the list to the entries those covens
 // hold and is kept in the address, Not In lists the entries none of them holds, a foreign
 // coven's id in the address narrows nothing, under In or Not In, and a visitor signed out is

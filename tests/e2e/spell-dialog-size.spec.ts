@@ -4,7 +4,7 @@ import { recreateE2eDatabase } from './database';
 import { signInAgainAs } from './session';
 import { seedCoven } from './stories/coven-ingredients';
 
-// Gate spec for a bug the owner found in M10.12's review: New Spell opened as the heading's
+// Gate spec for a bug found in review: New Spell opened as the heading's
 // skeleton, which the server's form then replaced, so the centred dialog grew and jumped up
 // under the pointer (518px to 720px at 1280 by 800). Its press now writes the address in the
 // browser and the dialog draws the form there, as Add Ingredient's does. Proved by state: from

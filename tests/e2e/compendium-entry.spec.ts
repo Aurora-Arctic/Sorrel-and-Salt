@@ -8,7 +8,7 @@ import { insertReference, insertReferenceLink } from '../support/db/insert-refer
 import { makeIngredient, makeVariant } from '../support/fixtures/ingredient';
 import { slugify } from '@/lib/slugify';
 
-// The public compendium entry page (M8.19; MB.80): what it answers a visitor
+// The public compendium entry page: what it answers a visitor
 // with no account. Each test here proves what no story walks. Story 14 reads
 // the page signed out and answers a coven's own slug with a 404; story 17
 // shows a non-admin its content with no Edit. What a story does not reach: the
@@ -68,7 +68,7 @@ test('a slug an entry has moved off answers 308 to its current address', async (
 
   expect(moved.status()).toBe(308);
   expect(moved.headers()['location']).toMatch(new RegExp(`/compendium/ingredients/${now}$`));
-  // A browser must not keep the move: the slug can be handed to a new entry (MB.84). Next sends
+  // A browser must not keep the move: the slug can be handed to a new entry. Next sends
   // `max-age=0` inside `no-store`; what is refused is any lifetime above zero.
   const headers = moved.headers();
   expect(headers['cache-control']).toContain('no-store');
@@ -79,7 +79,7 @@ test('a slug an entry has moved off answers 308 to its current address', async (
 
 // A citation prints its url as plain text, Chicago's form, and a url with no
 // hyphen or space is one long word with nowhere a line may break: unbroken, a
-// long one ran past a phone's column (MB.120). The bibliography lets it break
+// long one ran past a phone's column. The bibliography lets it break
 // anywhere instead.
 test('a visitor reads an entry with its details and each form on a phone, a long source url wrapping inside the column', async ({
   page,

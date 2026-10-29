@@ -17,7 +17,7 @@ import { insertIngredient } from '../support/db/insert-ingredient';
 import { makeIngredient, makeVariant } from '../support/fixtures/ingredient';
 import { ingredientSlug } from '@/lib/slugify';
 
-// MB.272: a click anywhere on an ingredient card opens its entry, as a click on its name does,
+// A click anywhere on an ingredient card opens its entry, as a click on its name does,
 // on the public compendium (CompendiumCards) and on a coven's Ingredients page (CovenCards),
 // while each control on the card keeps its own action and navigates nowhere. The card is one
 // stretched link (claude-docs/components/ingredient-card.md, "The whole card is the link"),
@@ -28,7 +28,7 @@ test.beforeAll(async () => {
   await recreateE2eDatabase();
 });
 
-// The card's face slides down under the pointer (the drawer, M12.44). Without motion it stays
+// The card's face slides down under the pointer (the drawer). Without motion it stays
 // put, so a point measured on the card at rest is the same point on the card when it is pressed.
 test.use({ reducedMotion: 'reduce' });
 

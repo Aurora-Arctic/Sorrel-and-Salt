@@ -1,14 +1,12 @@
 import AxeBuilder from '@axe-core/playwright';
 import { expect, type Page } from '@playwright/test';
 
-// Settles first: a spec that switches the theme and scans straight after would
-// otherwise read a colour part-way along its ease (the account disc, MB.7).
-// The title is waited for too: a soft navigation (a filter, a router refresh)
-// swaps the metadata, and for a few milliseconds on a quiet machine, hundreds
-// under load, the document has no <title> while the new rows are already in,
-// so axe's document-title rule fails a page that is about to have one (MB.265).
-// `skipRules` is for the component workshop, whose story page is one component
-// and not a whole page: it has no level-one heading unless the story draws one.
+// Settles first: a spec that switches the theme and scans straight after would otherwise read a
+// colour part-way along its ease. The title is waited for too: a soft navigation (a filter, a router
+// refresh) swaps the metadata, and for a few milliseconds, hundreds under load, the document has no
+// <title> while the new rows are in, so axe's document-title rule fails a page about to have one.
+// `skipRules` is for the component workshop, whose story page is one component and not a whole page:
+// it has no level-one heading unless the story draws one.
 export async function assertNoAccessibilityViolations(
   page: Page,
   { skipRules = [] }: { skipRules?: string[] } = {},
@@ -31,9 +29,8 @@ export async function assertNoAccessibilityViolations(
 export async function assertNoSidewaysScroll(page: Page, { restore = false } = {}) {
   const size = restore ? page.viewportSize() : null;
   await page.setViewportSize({ width: 375, height: 812 });
-  // Two frames for what follows the window by itself: a callout or badge placed
-  // by Floating UI moves on the resize event and a frame, not in the same task
-  // (M12.31), so a measurement at once read it where it stood at the old width.
+  // Two frames for what follows the window by itself: a callout or badge placed by Floating UI moves
+  // on the resize event and a frame, not in the same task, so a measurement at once read the old place.
   await page.evaluate(
     () =>
       new Promise<void>((done) => {
