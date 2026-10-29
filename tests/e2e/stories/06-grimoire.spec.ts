@@ -283,12 +283,12 @@ test(
       .getByRole('combobox')
       .fill('Prosperity');
     await page.getByRole('option', { name: 'Prosperity' }).click();
-    // The rows: Missing (intended, not in the jar) and Stray (in the jar, not intended).
+    // The rows: Missing (intended, not in the jar) and Extra (in the jar, not intended).
     const row = (label: string) => panel.locator('dt', { hasText: label });
     await expect(row('Missing')).toBeVisible();
     await expect(panel.getByText('Prosperity')).toBeVisible();
     await addIngredientStep(page, 'Mugwort');
-    await expect(row('Stray')).toBeVisible();
+    await expect(row('Extra')).toBeVisible();
     // Prosperity is still intended and nothing carries it: its chip says so in its tip.
     await expect(panel.getByRole('button', { name: 'Prosperity' })).toHaveAccessibleDescription(
       'Assigned to this spell, and nothing in the jar carries it',
@@ -296,7 +296,7 @@ test(
     // The step just added is open: its pencil reads Close, and Remove is hidden until it is shut.
     await page.getByRole('button', { name: /Close Mugwort/ }).click();
     await page.getByRole('button', { name: /Remove Mugwort/ }).click();
-    await expect(row('Stray')).toHaveCount(0);
+    await expect(row('Extra')).toHaveCount(0);
   },
 );
 
