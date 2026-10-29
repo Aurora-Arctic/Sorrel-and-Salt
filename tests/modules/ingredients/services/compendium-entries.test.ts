@@ -46,7 +46,7 @@ import {
 } from '../../../support/fixtures';
 import { useCompendiumEntryInput } from '../../../support/db/compendium-entry-input';
 
-// Story 17's service: the compendium's writes, which the site admin makes and
+// The compendium's writes, which the site admin makes and
 // nobody else does, whatever their standing in a coven (claude-docs/db/compendium-writes.md,
 // "Compendium writes"). The table is emptied per test, so every row a result
 // could come from is one this file wrote.
@@ -349,7 +349,7 @@ describe('deleteCompendiumEntry', () => {
   });
 });
 
-// M12.25: the number the delete confirm shows. Only a curator or admin may ask,
+// The number the delete confirm shows. Only a curator or admin may ask,
 // and only of a compendium entry, because the count is a fact about covens.
 describe('countCompendiumEntryUsers', () => {
   it.each(CURATORS)('answers how many covens hold the entry for %s', async (_who, user) => {
@@ -386,7 +386,7 @@ describe('countCompendiumEntryUsers', () => {
   });
 });
 
-// Story 25's promise, over the compendium: a deleted entry is gone from every
+// Deleting, over the compendium: a deleted entry is gone from every
 // read, and what it held is free again, while its row stays for a restore
 // (claude-docs/db/compendium-writes.md, "Compendium writes").
 describe('a deleted entry', () => {
@@ -474,7 +474,7 @@ describe('a deleted entry', () => {
         return Array.isArray(forms) && forms.length > 0;
       },
     ],
-    // A new link cannot reach a deleted ingredient, as a new spell layer cannot (M5.3).
+    // A new link cannot reach a deleted ingredient, as a new spell layer cannot.
     [
       "a coven's substitute picker",
       async (id) =>
@@ -551,7 +551,7 @@ describe('a deleted entry', () => {
     expect(await shows(id)).toBe(false);
   });
 
-  // M4.1a's partial index, through the service: without its `deleted_at IS
+  // The partial index, through the service: without its `deleted_at IS
   // NULL`, deleting an entry would reserve its identity for good. On the
   // formal name, since two live entries may share a label anyway, so a label
   // coming back proves nothing about the index.
@@ -604,7 +604,7 @@ describe('a deleted entry', () => {
     ]);
   });
 
-  // A layer is the spell's, and leaves it only when a member takes it out (MB.110).
+  // A layer is the spell's, and leaves it only when a member takes it out.
   it('leaves every layer holding it as it was', async () => {
     const id = await seed();
     const spellId = await insertSpell(sql, makeSpell({ steps: [{ ingredientId: id }] }), B.id);

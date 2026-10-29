@@ -28,9 +28,9 @@ export interface ScopeProbe {
 /**
  * What an admin write changes: the closed list of what a site admin governs —
  * the curated reference data (CLAUDE.md, "Admins curate …"), who may create
- * a coven (M5.8) and who is an admin (MB.59) — so a write outside it is a new
+ * a coven and who is an admin — so a write outside it is a new
  * entry here that a reviewer reads, not a line in a probe table. A coven's
- * contents are never on it (M6.6).
+ * contents are never on it.
  */
 export type Governed =
   | 'compendium'
@@ -95,8 +95,8 @@ export interface PartialIndexRow {
   row: () => Promise<Row>;
   clash?: string[];
   /**
-   * The table has no tombstone (MB.34): its index is partial on something
-   * else, so the holder is deleted outright to free the slot (MB.217).
+   * The table has no tombstone: its index is partial on something
+   * else, so the holder is deleted outright to free the slot.
    */
   hardDeleted?: true;
 }

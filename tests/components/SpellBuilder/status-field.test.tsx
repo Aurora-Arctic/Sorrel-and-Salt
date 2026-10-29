@@ -13,7 +13,7 @@ const { default: SpellBuilder } = await import('@/components/SpellBuilder');
 
 beforeEach(() => offerCategories([]));
 
-// The spell builder's status control (M10.20, story 55): a spell is a draft until
+// The spell builder's status control: a spell is a draft until
 // it is marked complete, and a complete spell shows no button (it cannot be reopened). That the service
 // keeps a complete spell titled is tests/modules/grimoire's; here the builder
 // refuses a blank title on the title field and sends the chosen status.

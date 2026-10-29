@@ -15,7 +15,7 @@ import { mockGraphQLError, mockGraphQLMutation } from '../../support/msw/graphql
 const router = vi.hoisted(() => ({ push: vi.fn(), replace: vi.fn(), refresh: vi.fn() }));
 vi.mock('next/navigation', () => ({ useRouter: () => router }));
 
-// The Edit and Delete icons on a coven's own entry's page (M8.17), Delete asked
+// The Edit and Delete icons on a coven's own entry's page, Delete asked
 // in a dialog shared with the list card's More (claude-docs/components/ingredient-entry.md).
 
 const WORKSPACE_ID = '00000000-0000-4000-8000-000000000001';
@@ -69,7 +69,7 @@ describe('OwnEntryActions', () => {
     router.push.mockClear();
   });
 
-  // The icons the list card has (the owner's call, 2026-10-20): the pencil, a link to the page's
+  // The icons the list card has: the pencil, a link to the page's
   // own edit address, and the bin; no menu to open for either.
   it('is an Edit link at its address and a Delete Ingredient bin, each named for the entry, and no menu', () => {
     renderOnPage();
@@ -134,7 +134,7 @@ describe('OwnEntryActions', () => {
     expect(router.replace).not.toHaveBeenCalled();
   });
 
-  // Edit Stock (M9.12; the owner's call, 2026-10-21): with the stock handed over the bin joins
+  // Edit Stock: with the stock handed over the bin joins
   // Edit Stock in the three dots, a lone choice being its own icon and two being a menu.
   describe('with the stock to edit', () => {
     const FLOWER = '00000000-0000-4000-8000-0000000000f1';

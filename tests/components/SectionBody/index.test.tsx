@@ -12,7 +12,7 @@ vi.mock('next/navigation', () => ({
 const { usePendingNavigation } = await import('@/lib/navigation');
 const { default: SectionBody } = await import('@/components/SectionBody');
 
-// A section's page under its context row, the coven's here (M12.33): while a navigation whose
+// A section's page under its context row, the coven's here: while a navigation whose
 // target is the coven region is on its way, the old coven's page is taken
 // away at once and the destination's skeleton, with its one status, stands
 // in its place, so nobody acts on the wrong coven's data. A navigation aimed
@@ -144,7 +144,7 @@ describe('SectionBody for the admin area', () => {
 
   // The skeleton does not vanish when the page arrives: it stays over it, out of
   // the way of assistive technology and the pointer, for the length of the fade
-  // (200ms, `arrived`), then goes (M12.33); the timing is SkeletonFade's own proof.
+  // (200ms, `arrived`), then goes; the timing is SkeletonFade's own proof.
   describe('when the page arrives', () => {
     beforeEach(() => {
       vi.useFakeTimers({ toFake: ['setTimeout', 'clearTimeout'] });

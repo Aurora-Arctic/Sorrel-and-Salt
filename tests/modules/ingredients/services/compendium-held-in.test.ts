@@ -13,9 +13,9 @@ import { insertCupboardEntry } from '../../../support/db/insert-cupboard-entry';
 import { insertIngredient } from '../../../support/db/insert-ingredient';
 import { makeIngredient } from '../../../support/fixtures';
 
-// M12.55: the compendium narrowed to the entries the viewer's covens hold. Each picked coven
+// The compendium narrowed to the entries the viewer's covens hold. Each picked coven
 // earns a proof or is dropped, so a coven the viewer is not in filters nothing; with none
-// left, the read is the cached public one. Not In (the owner's extension) keeps the entries no
+// left, the read is the cached public one. Not In keeps the entries no
 // picked coven holds, or, with none picked, the entries none of the viewer's covens hold.
 
 let sql: postgres.Sql;

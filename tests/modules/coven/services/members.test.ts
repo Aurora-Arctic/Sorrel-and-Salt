@@ -8,9 +8,9 @@ import { makeWorkspace, workspaceColumns } from '../../../support/fixtures';
 
 useRawClient();
 
-// A coven's members list (M6.11): its live seats, in the order they joined,
+// A coven's members list: its live seats, in the order they joined,
 // each carrying the coven, to the roles holding `member: read` — owners and
-// members, since M6.13. Every refusal names the coven
+// members. Every refusal names the coven
 // directly, so it is a `Forbidden` rather than a row missing from a list.
 
 const FIRST_PAGE = { limit: 26, inverted: false };
@@ -123,7 +123,7 @@ describe('listMembers', () => {
   });
 });
 
-// The roll's addresses (M11.19): read from each member's own user row, so a
+// The roll's addresses: read from each member's own user row, so a
 // changed address shows at once, and to owners alone, through a statement
 // only they hold. Each refusal names the coven directly.
 describe('memberEmails', () => {

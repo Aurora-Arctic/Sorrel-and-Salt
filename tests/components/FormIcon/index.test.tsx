@@ -3,7 +3,7 @@ import { describe, expect, it } from 'vitest';
 import FormIcon from '@/components/FormIcon';
 import { FORM_GROUP_ICONS, type FormGroupIcon } from '@/modules/vocabulary/schema/form-group-icons';
 
-// The mark beside a form (M12.7; claude-docs/components/form-icon.md): one
+// The mark beside a form (claude-docs/components/form-icon.md): one
 // icon per form-group icon name, and the generic salt spoon where a form has
 // none — a group without an icon, an uncurated form, or a name the component
 // does not know. Decorative, since the form's name always stands beside it.

@@ -12,7 +12,7 @@ import {
   type FixtureFolder,
 } from './files-fixture';
 
-// M14.6: the loader reads a folder of entry files as the one shard the seed
+// The loader reads a folder of entry files as the one shard the seed
 // and the guard take. The folder is the invented fixture written to a
 // temporary directory, so each case adds one thing that does not belong and
 // expects the one issue naming it.

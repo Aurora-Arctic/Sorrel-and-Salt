@@ -66,8 +66,7 @@ describe('parseInput', () => {
   });
 });
 
-// The shapes every module's schemas share (MB.209); each schema's own test
-// holds it to its messages.
+// The shapes every module's schemas share; each schema's own test holds it to its messages.
 describe('requiredText', () => {
   it('trims, and refuses blank and missing alike with the one message', () => {
     const Text = requiredText('Name it');

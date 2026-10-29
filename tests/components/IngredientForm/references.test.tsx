@@ -34,7 +34,7 @@ import {
 } from '../../support/msw/ingredient-lookups';
 import type { ReferenceNode } from './types';
 
-// The References field (MB.154) on its own (MB.182): `ReferencesField`, a
+// The References field on its own: `ReferencesField`, a
 // search over `referenceSuggestions`, each source picked becoming a row
 // beneath the box with its locator, and the new reference panel opened
 // beneath it, in a form of its own on the form's resolver; what the resolver
@@ -47,7 +47,7 @@ import type { ReferenceNode } from './types';
 const COMPENDIUM_ID = '1c2d3e4f-5a6b-4c7d-8e9f-0a1b2c3d4e5f';
 const COVEN_ID = '6f5e4d3c-2b1a-4f9e-8d7c-6b5a4f3e2d1c';
 
-// Invented sources (M1.25): a real title is only safe until someone seeds it.
+// Invented sources: a real title is only safe until someone seeds it.
 const HERBAL: ReferenceNode = {
   id: COMPENDIUM_ID,
   citation: 'Fixture, Ada. The Testwort Herbal. Mockford: Fixture Press, 1901.',
@@ -102,7 +102,7 @@ function renderForm() {
 }
 
 // Found by label rather than by role and name, so the whole form's tests
-// below do not name every element of a role in a 25-field form (MB.181).
+// below do not name every element of a role in a 25-field form.
 const box = () => screen.getByLabelText('Reference', { selector: '[role="combobox"]' });
 const references = () => box().closest('fieldset') as HTMLElement;
 const rows = () => within(references()).queryAllByRole('listitem');
@@ -232,7 +232,7 @@ describe('ReferencesField', () => {
       expect(rows()).toHaveLength(1);
       expect(changes()).toHaveTextContent(HERBAL_SHORT);
       expect(box()).toHaveValue('');
-      // The new row opens on its Locator, a page being what it most often needs next (MB.115).
+      // The new row opens on its Locator, a page being what it most often needs next.
       const inRow = within(row(HERBAL_SHORT));
       expect(inRow.getByRole('button', { name: `Edit ${HERBAL_SHORT}` })).toHaveAttribute(
         'aria-expanded',
@@ -291,7 +291,7 @@ describe('ReferencesField', () => {
       expect(inRow.getByRole('button', { name: 'About Locator' })).toBeInTheDocument();
     });
 
-    // Its × asks first, as a variant's does (the owner's call, 2026-10-16).
+    // Its × asks first, as a variant's does.
     it('removes a row by its × once confirmed, keeping the focus in the box, and says so', async () => {
       renderField();
       const calls = offerReferences([HERBAL, NOTES]);
@@ -325,7 +325,7 @@ describe('ReferencesField', () => {
     });
 
     // Unlike the chip lists, the keys never take a row, asked or not: only
-    // its ×, which asks (the owner's call, 2026-10-16).
+    // its ×, which asks.
     it('keeps every row on Backspace or Delete in the empty box, and asks nothing', async () => {
       renderField();
       const calls = offerReferences([HERBAL]);
@@ -391,7 +391,7 @@ describe('ReferencesField', () => {
       offerReferences([]);
     });
 
-    // The owner's call: asking again for a panel already open takes you
+    // Asking again for a panel already open takes you
     // back to it, rather than doing nothing; that the panel then focuses
     // Kind and keeps what was typed is reference-panel.test.tsx's.
     it('opens from the list’s last row, "New Reference", taking you to Kind, and again while open', async () => {
@@ -462,7 +462,7 @@ describe('ReferencesField', () => {
     });
   });
 
-  // MB.115: an open row's Edit Source opens the panel on that source whole,
+  // An open row's Edit Source opens the panel on that source whole,
   // and its save rewrites every row citing it. The rows start listed, the
   // ingredient's and a variant's citing the same source, as an edit opens them.
   describe('editing a source', () => {
@@ -613,7 +613,7 @@ describe('ReferencesField', () => {
       expect(editSource(NOTES_SHORT)).toHaveFocus();
     });
 
-    // MB.258: the × at the panel's top closes it as Cancel does.
+    // The × at the panel's top closes it as Cancel does.
     it('closes from its close button, saving nothing, the focus back on the row', async () => {
       offerReference(NOTES_WHOLE);
       const updates = acceptReferenceUpdate(RENAMED_CITATION);

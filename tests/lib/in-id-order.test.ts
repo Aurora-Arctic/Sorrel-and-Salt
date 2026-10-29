@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import { inIdOrder } from '@/lib/in-id-order';
 
-// A DataLoader's batch answered one slot per id, in the ids' order (MB.210).
+// A DataLoader's batch answered one slot per id, in the ids' order.
 
 describe('inIdOrder', () => {
   const rows = [

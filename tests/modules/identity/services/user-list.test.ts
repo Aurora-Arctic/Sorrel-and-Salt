@@ -9,7 +9,7 @@ import { useTestDatabase } from '../../../support/db/database';
 import { asManualFix } from '../../../support/db/privileges';
 import type { ListedUserRow } from './types';
 
-// MB.52's two reads behind `/admin/users`: the list itself and the providers
+// The two reads behind `/admin/users`: the list itself and the providers
 // linked to each listed account. Both are a site admin's alone, refused at
 // the service by direct call rather than by the page being out of reach
 // (claude-docs/auth/admin-users.md, "The user list").
@@ -29,7 +29,7 @@ const WILDCARD = '00000000-0000-0000-0000-0000000000a3';
 
 beforeAll(async () => {
   // The wildcard account is inserted holding the creation flag, a privilege
-  // change the trigger on `users` asks a route for (MB.195).
+  // change the trigger on `users` asks a route for.
   await asManualFix(
     sql,
     (tx) => tx`
@@ -106,7 +106,7 @@ describe('listUsers', () => {
     expect(await names({ query: '   ' })).toEqual((await listableUsers()).map((row) => row.name));
   });
 
-  // M5.8's to-do list: who may not yet create a workspace.
+  // The to-do list: who may not yet create a workspace.
   it('narrows to the users awaiting approval, alone or beside a query', async () => {
     const [{ count }] = await sql<{ count: number }[]>`
       select count(*)::int as count from users
@@ -120,7 +120,7 @@ describe('listUsers', () => {
 
     expect(awaiting).toHaveLength(count);
     expect(awaiting.every((entry) => !entry.node.canCreateWorkspace)).toBe(true);
-    // Every admin holds the flag (MB.177), so none waits on an approval.
+    // Every admin holds the flag, so none waits on an approval.
     expect(awaiting.some((entry) => entry.node.role === 'admin')).toBe(false);
     expect(await names({ awaitingApproval: true, query: 'pending' })).toEqual([
       'Pending Fixturewort',
@@ -145,7 +145,7 @@ describe('listUsers', () => {
     expect(await names({ role: 'user', awaitingApproval: true, query: 'pending' })).toEqual([
       'Pending Fixturewort',
     ]);
-    // Every admin and curator holds the flag (MB.177, M11.20), so none awaits approval.
+    // Every admin and curator holds the flag, so none awaits approval.
     expect(await names({ role: 'admin', awaitingApproval: true })).toEqual([]);
     expect(await names({ role: 'curator', awaitingApproval: true })).toEqual([]);
   });

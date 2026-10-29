@@ -15,7 +15,7 @@ import { mockGraphQLError, mockGraphQLMutation } from '../../support/msw/graphql
 const router = vi.hoisted(() => ({ push: vi.fn(), replace: vi.fn(), refresh: vi.fn() }));
 vi.mock('next/navigation', () => ({ useRouter: () => router }));
 
-// The three dots on a compendium card (the owner's call, 2026-10-20): what a signed-in member may
+// The three dots on a compendium card: what a signed-in member may
 // do about an entry in the covens that hold it. Drawn only when it holds a choice, so a viewer
 // whose role permits nothing and a page that found no holding coven see no dots
 // (claude-docs/components/compendium-cards.md).
@@ -97,8 +97,8 @@ describe('CompendiumCardMore', () => {
   it('holds Annotate, Make It Ours and Remove for a member of the coven that holds the entry', () => {
     renderMore(props([place()]));
     expect(choices()).toEqual(['Annotate', 'Make It Ours', 'Remove']);
-    // Every choice is the coven's, and the dots still draw the labelled section (the owner's call,
-    // 2026-10-20), with no empty Compendium one.
+    // Every choice is the coven's, and the dots still draw the labelled section,
+    // with no empty Compendium one.
     const menu = screen.getByRole('menu', { name: 'More for House Salt' });
     expect(within(menu).getAllByRole('group')).toHaveLength(1);
     expect(

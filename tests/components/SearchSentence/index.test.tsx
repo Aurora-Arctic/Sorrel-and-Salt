@@ -5,7 +5,7 @@ import { buildSearchSentence } from '@/components/IngredientSearch/sentence';
 import SearchSentence from '@/components/SearchSentence';
 import type { SearchSentenceProps } from '@/components/SearchSentence/types';
 
-// The sentence above a list that says what it is searching for (M12.4): a closed
+// The sentence above a list that says what it is searching for: a closed
 // one-line disclosure once a search has settled, typed out as the loading animation while
 // one is on its way, with the finished sentence given once to a status region
 // (claude-docs/components/search-sentence.md).

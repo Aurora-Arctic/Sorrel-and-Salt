@@ -12,7 +12,7 @@ import { useTestDatabase } from '../../support/db/database';
 import { insertSpell } from '../../support/db/insert-spell';
 import { makeSpell } from '../../support/fixtures';
 
-// M10.6: who may read which spell, as one matrix of relationship × visibility
+// Who may read which spell, as one matrix of relationship × visibility
 // (DESIGN.md §5; claude-docs/db/spell-visibility.md, "Reading"). Every finder
 // that reads a spell or its rows goes through `readableSpells`, so for each
 // cell the direct-id read and both of the spell's child tables must give the
@@ -153,10 +153,9 @@ describe('readableSpells, through every finder that reads a spell', () => {
 });
 
 describe('deleting a shared spell', () => {
-  // §5's one-way rule governs visibility, not existence: a `workspace` spell
-  // can still be deleted. The service that does it is M13.11's `deleteSpell`;
-  // this is the repository half, through the audited writer that service will
-  // call, so the delete is the write path and not a fixture.
+  // The one-way rule governs visibility, not existence: a `workspace` spell can still be deleted. This
+  // is the repository half, through the audited writer the `deleteSpell` service calls, so the delete is
+  // the write path and not a fixture.
   it('soft-deletes a workspace spell through withAudit, after which no finder returns it to anyone', async () => {
     const spellId = await spellBy(B, 'workspace');
     for (const user of [A, B, C]) {

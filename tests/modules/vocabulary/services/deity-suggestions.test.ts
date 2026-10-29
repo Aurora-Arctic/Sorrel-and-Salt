@@ -15,7 +15,7 @@ import type { ConnectionArgs, Page } from '@/lib/types';
 // vocabulary": the deities field's autofill offers the curated vocabulary
 // first, each row with its tradition, then the uncurated values in use in the
 // compendium and the caller's own workspace. The vocabulary is
-// MB.129's seed, revived per test since some tests retire a row; `ingredients`
+// the seed, revived per test since some tests retire a row; `ingredients`
 // is emptied per test, so every in-use value is one this file wrote.
 
 let sql: ReturnType<typeof postgres>;
@@ -59,7 +59,7 @@ async function addTradition(tradition: string, names: string[]): Promise<void> {
   for (const name of names) await addDeity(name, tradition);
 }
 
-/** An other name for the deity of this name (M14.23), live unless `dropped`. */
+/** An other name for the deity of this name, live unless `dropped`. */
 async function addOtherName(deity: string, name: string, dropped = false): Promise<void> {
   await sql`
     insert into deity_other_names (deity_id, name, created_by, updated_by, deleted_at, deleted_by)
@@ -145,7 +145,7 @@ describe('suggestDeities', () => {
       });
     });
 
-    // MB.167: what a pick sends — Greek Hecate's own row, never a spelling.
+    // What a pick sends — Greek Hecate's own row, never a spelling.
     it('carries each curated row’s id, and none on a value only in use', async () => {
       await addIngredient({ workspaceId: WORKSPACE_W_ID, deities: ['Hermes Trismegistus'] });
       const [hermes] = await sql`select id from deities where name = 'Hermes'`;
@@ -198,7 +198,7 @@ describe('suggestDeities', () => {
   });
 
   describe('what counts as curated', () => {
-    // MB.136's scan: each entry of each list is a value, folded before grouping.
+    // The scan: each entry of each list is a value, folded before grouping.
     it('reads Hecate and hecate in two ingredients’ lists as one in-use value', async () => {
       await retire('deities', 'Hecate');
       await addIngredient({ deities: ['Hecate', 'Selene'] });
@@ -302,7 +302,7 @@ describe('suggestDeities', () => {
       });
     });
 
-    // MB.167: the deities in use are the table's live rows.
+    // The deities in use are the table's live rows.
     it('drops a deity row soft-deleted from a live ingredient', async () => {
       await sql`
         update ingredient_deities set deleted_at = now(), deleted_by = ${A.id}
@@ -317,7 +317,7 @@ describe('suggestDeities', () => {
     });
   });
 
-  // M14.23: a source's other name for a deity reaches the deity, and the
+  // A source's other name for a deity reaches the deity, and the
   // picker says which name it matched, since the deity's own does not show it.
   describe('other names', () => {
     beforeEach(async () => {

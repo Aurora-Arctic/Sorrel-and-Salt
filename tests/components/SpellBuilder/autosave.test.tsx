@@ -19,7 +19,7 @@ vi.mock('next/navigation', () => ({ useRouter: () => ({ push: vi.fn(), refresh: 
 
 const { default: SpellBuilder } = await import('@/components/SpellBuilder');
 
-// The spell builder's autosave (M13.17): what it sends and to whom, and the
+// The spell builder's autosave: what it sends and to whom, and the
 // banner offering back a copy kept in the browser. The save itself is the
 // engine's, tests/lib/autosave/use-autosave.test.tsx.
 

@@ -63,7 +63,7 @@ describe('the /account/email page', () => {
     expect(continueLink()).toHaveAttribute('href', '/coven');
   });
 
-  // Into the coven itself, never via the /coven landing's redirect (MB.257).
+  // Into the coven itself, never via the /coven landing's redirect.
   it("continues a member's confirmed address straight into their first coven", async () => {
     firstCovenSlugOf.mockResolvedValue('fixture-coven');
     await renderPage('user', { verified: '' });
@@ -71,7 +71,7 @@ describe('the /account/email page', () => {
     expect(continueLink()).toHaveAttribute('href', '/coven/fixture-coven');
   });
 
-  // Its own way across, offered to a verified account (MB.88).
+  // Its own way across, offered to a verified account.
   it('links a verified account to the account page', async () => {
     await renderPage('user', {});
 

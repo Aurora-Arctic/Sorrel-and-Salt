@@ -9,7 +9,7 @@ import { adminRoleChangePauses } from '@/modules/identity/schema/admin-role-chan
 import type { NamedWrites } from '@/db/types';
 import type { PauseRow } from './types';
 
-// MB.62: M2.9's pause switch, table half. One row per pause rather than one
+// The pause switch, table half. One row per pause rather than one
 // row of settings, so no migration has to seed a row it has no user to stamp
 // with, and every pause keeps who began it and who ended it
 // (claude-docs/design-decisions/mb.62-pause-ledger.md).
@@ -99,7 +99,7 @@ describe('admin_role_change_pauses table', () => {
 
 // The repository's surface is three named calls under the `SiteAdmin` proof:
 // the open pause, opening one, and ending it. The table is marked
-// `namedWrites` (MB.198), so every generic write is refused it at compile
+// `namedWrites`, so every generic write is refused it at compile
 // time: a pause cannot be backdated, reopened or deleted, and its ended pair
 // is stamped from the session rather than passed.
 describe('the repository', () => {

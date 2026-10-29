@@ -3,7 +3,7 @@ import { beforeEach, describe, expect, it, vi } from 'vitest';
 import type { WorkspaceRole } from '@/modules/coven';
 import { encodeCursor } from '@/lib/pagination';
 
-// The invitations page (story 5; M7.6). The guard and the services are mocked;
+// The invitations page. The guard and the services are mocked;
 // the role check is the real one. Here: the list is read for an owner only,
 // by the permission and not by catching a refusal, and it pages through the
 // default cursor keys.

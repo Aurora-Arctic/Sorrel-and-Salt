@@ -20,7 +20,7 @@ import { type IngredientFixture, makeIngredient, makeVariant } from '../../../su
 import type { Overrides } from '../../../support/fixtures';
 import { clearDataCache } from '../../../support/next-data-cache';
 
-// M12.3's two services: the compendium's facets, public and cached as the
+// The two services: the compendium's facets, public and cached as the
 // list is, and a coven's, under the coven's proof and never cached. A data
 // cache that holds, as Next's does, so a row written underneath a read shows
 // whether the repeat read reached Postgres. The counting itself is

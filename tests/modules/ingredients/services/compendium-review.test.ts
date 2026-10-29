@@ -29,7 +29,7 @@ import {
 } from '../../../support/fixtures';
 import { curatedFormId } from '../../../support/db/curated-ids';
 
-// M14.8: a curator's review mark on a compendium entry. Set and cleared by hand through
+// A curator's review mark on a compendium entry. Set and cleared by hand through
 // `setCompendiumEntryReviewed` alone, and left as it was by every other curator
 // write to the entry; read
 // back only through the curator's own read, never through the public one.
@@ -284,7 +284,7 @@ describe('the public compendium reads', () => {
 
     for (const row of [listed, entry, shown.kind === 'entry' ? shown.detail.entry : undefined]) {
       expect(row).toBeDefined();
-      // The date is public (the owner's call, 2026-10-23); who marked it is not.
+      // The date is public; who marked it is not.
       expect(row).toHaveProperty('curatorReviewedAt', expect.any(Date));
       expect(row).not.toHaveProperty('curatorReviewedBy');
     }
@@ -349,8 +349,8 @@ describe('the Reviewed filter (M14.8)', () => {
     }
   });
 
-  // The coven-held reads (M12.55) filter the compendium by what covens hold, and
-  // must keep M14.8's gate: a read that parses the filter without it answers anyone.
+  // The coven-held reads filter the compendium by what covens hold, and
+  // must keep the gate: a read that parses the filter without it answers anyone.
   it.each([
     ['no coven picked, the cached read', []],
     ['W picked, the scoped read', [WORKSPACE_W_ID]],

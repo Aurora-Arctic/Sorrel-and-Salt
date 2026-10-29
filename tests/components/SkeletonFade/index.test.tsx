@@ -3,7 +3,7 @@ import type { ReactElement } from 'react';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { useLeavingSkeleton } from '@/components/SkeletonFade';
 
-// The skeleton kept for the length of its fade-out once its wait ends (M12.33):
+// The skeleton kept for the length of its fade-out once its wait ends:
 // the bodies' tests show it in place; this holds the timing and the cases the
 // navigation harness cannot start, a new wait in the middle of a fade.
 

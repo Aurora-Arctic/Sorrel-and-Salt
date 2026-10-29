@@ -4,7 +4,7 @@ import { encodeCursor } from '@/lib/pagination';
 import type { PageRequest } from '@/lib/types';
 import { filterForm, sent } from '../../../../../support/filter-form';
 
-// The `/admin/privilege-changes` page (MB.200): the guard, then the ledger
+// The `/admin/privilege-changes` page: the guard, then the ledger
 // read, its count and the users it names, the search parameters turned into
 // the filter and the page, and the pager's links keeping the filter. The guard
 // and the services are mocked: what they decide is

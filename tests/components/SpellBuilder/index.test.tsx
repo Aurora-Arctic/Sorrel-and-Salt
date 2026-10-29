@@ -17,7 +17,7 @@ vi.mock('next/navigation', () => ({ useRouter: () => ({ push, refresh: vi.fn() }
 
 const { default: SpellBuilder } = await import('@/components/SpellBuilder');
 
-// The spell builder's title, intent and jar fields (M10.12, story 47). The
+// The spell builder's title, intent and jar fields. The
 // saves are answered by MSW in the shape /api/graphql answers, so a refusal is
 // read through the route's own error mapping; that the service refuses a
 // viewer, and a complete spell with no title, is
@@ -118,7 +118,7 @@ describe('SpellBuilder', () => {
       expect(field(label)).toHaveValue('');
       expect(field(label)).not.toBeRequired();
     }
-    // The recipe's steps are M13.3's; a step's instruction is its own field there.
+    // The recipe's steps are their own field; a step's instruction is edited there.
     expect(screen.queryByRole('textbox', { name: 'Instructions' })).toBeNull();
   });
 
@@ -148,7 +148,7 @@ describe('SpellBuilder', () => {
     expect(save()).not.toHaveAccessibleDescription();
   });
 
-  // The owner's report, 2026-10-29: after an edit that the autosave had saved, the reason
+  // After an edit that the autosave had saved, the reason
   // "Nothing to save yet" came back and stayed, as the save left the form matching the row.
   it('does not say there is nothing to save after an edit has been saved', async () => {
     acceptCreate();
@@ -338,7 +338,7 @@ describe('SpellBuilder', () => {
   });
 
   // Moon phase and day of the week suggest a fixed list and still take what is
-  // typed (the owner, 2026-10-27): the columns stay free text.
+  // typed: the columns stay free text.
   describe('the moon phase and day of the week suggestions', () => {
     const listed = () => screen.getAllByRole('option').map((option) => option.textContent);
 
@@ -484,7 +484,7 @@ describe('SpellBuilder', () => {
           ).toBeVisible();
         }
       }
-      // M10.13's switch folds with the note.
+      // The switch folds with the note.
       expect(
         within(fieldsOf('Notes')).getByRole('switch', { name: 'Share With the Coven' }),
       ).toBeVisible();

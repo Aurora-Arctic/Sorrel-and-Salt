@@ -5,9 +5,9 @@ import type { CategoryDetail, IngredientDetail, VariantDetail } from '@/modules/
 import { formLabel } from '@/modules/ingredients/validation/form-label';
 import { entryDetail } from '../../support/entry-detail';
 
-// The details modal's body (M12.5; claude-docs/components/ingredient-entry.md,
-// "The details modal"): the entry page's Details section cut to the owner's
-// choice, the caution and the categories, the folk names and the
+// The details modal's body (claude-docs/components/ingredient-entry.md,
+// "The details modal"): the entry page's Details section cut down to
+// the caution and the categories, the folk names and the
 // correspondences, drawn by the page's own blocks. Every value is the test's own
 // data, so finding one proves what rendered.
 
@@ -105,7 +105,7 @@ describe('IngredientSummary', () => {
     expect(rowOf('Deities')).toBe('Fixtura (Fixture Pantheon)');
   });
 
-  // M14.23: a curated deity's other names follow its tradition, so a reader
+  // A curated deity's other names follow its tradition, so a reader
   // who knows it by another name finds it; a typed name has none to show.
   it('names each deity with its tradition and its other names', () => {
     render(
@@ -486,7 +486,7 @@ describe('IngredientSummary', () => {
       // A compendium page passes no jars: no quantity, no stock state, no badge.
       expect(screen.queryByText(/Unmeasured|Not Stocked/)).not.toBeInTheDocument();
       expect(screen.queryByRole('button', { name: /Stock/ })).not.toBeInTheDocument();
-      // After the caution in the document (the owner's call, 2026-10-20), so also after the description.
+      // After the caution in the document, so also after the description.
       const caution = screen.getByRole('region', { name: 'Caution' });
       expect(
         caution.compareDocumentPosition(screen.getByRole('heading', { name: 'Forms' })) &
@@ -522,7 +522,7 @@ describe('IngredientSummary', () => {
       expect(seed).toHaveTextContent('0 g');
       expect(within(seed).getByRole('button', { name: 'Out of Stock' })).toBeInTheDocument();
       // No jar: the coven holds the form in no jar, which is not out of stock. Nothing shows
-      // on screen (the owner's call, 2026-10-20), but the line's text, which a screen reader
+      // on screen, but the line's text, which a screen reader
       // reads, still says so.
       const root = lineOf('testroot');
       expect(within(root).getByText('Not Stocked')).toBeInTheDocument();

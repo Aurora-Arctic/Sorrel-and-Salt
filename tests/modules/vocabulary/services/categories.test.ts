@@ -21,7 +21,7 @@ import { useTestDatabase } from '../../../support/db/database';
 import { insertIngredient } from '../../../support/db/insert-ingredient';
 import { makeIngredient } from '../../../support/fixtures';
 
-// Story 18's category half: the vocabulary's writes, which the site admin
+// The category half: the vocabulary's writes, which the site admin
 // makes and nobody else does, and the reads the admin page lists them by
 // (claude-docs/db/categories.md, "Category writes"). The seeded vocabulary
 // stays, so every row a test writes carries a name of its own.
@@ -118,7 +118,7 @@ describe('listCategories', () => {
     // Why either could have been listed: both rows are there, the orphan live.
     expect((await rowOf(orphan)).deleted_at).toBeNull();
 
-    // The picker's order (MB.126): the group's name, then the category's.
+    // The picker's order: the group's name, then the category's.
     const expected = await sql<{ id: string }[]>`
       select c.id from categories c
       join category_groups g on g.id = c.group_id
@@ -391,7 +391,7 @@ describe('updateCategory', () => {
     },
   );
 
-  // MB.171: the seed recognises its own rows by the key, so a renamed seeded
+  // The seed recognises its own rows by the key, so a renamed seeded
   // row must keep it or the next deploy reinserts the original beside it.
   it("keeps a seeded row's seed key through a rename", async () => {
     const [seeded] = await sql<{ id: string; seed_key: string }[]>`
@@ -537,7 +537,7 @@ describe('deleteCategory', () => {
     });
 
     // Two formal names under one label, since one formal name is one entry
-    // per tier (MB.216); the formal names tell them apart (MB.222).
+    // per tier; the formal names tell them apart.
     it('tells two entries sharing a label apart by their formal names', async () => {
       const id = await seed('Testcraft Namesakes');
       for (const canonicalName of ['Fixtura testalis', 'Fixtura alteralis']) {

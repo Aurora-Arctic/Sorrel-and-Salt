@@ -78,7 +78,7 @@ describe('listCompendium', () => {
     expect(queries).toEqual([undefined, undefined, undefined, undefined, 'mu']);
   });
 
-  // M5.5's to-do list of formal names to look up: the entries declared
+  // The to-do list of formal names to look up: the entries declared
   // `unknown`, with the search and the citing filter on top.
   it('narrows to one nomenclature, with the search and the to-do filter beside it', async () => {
     const book = await insertReference(sql, {}, E.id);
@@ -111,7 +111,7 @@ describe('listCompendium', () => {
     expect(await names({ nomenclature: 'botanical' })).toEqual([]);
   });
 
-  // M12.30's to-do list of entries nobody can stock yet: no live variant.
+  // The to-do list of entries nobody can stock yet: no live variant.
   // Entries are seeded with no variant, the fixture's default one left off.
   const seedFormless = (name: string, workspaceId: string | null = null) =>
     insertIngredient(
@@ -184,7 +184,7 @@ describe('listCompendium', () => {
     expect(repository.findCompendiumPage).not.toHaveBeenCalled();
   });
 
-  // M8.12: `all` is the default, so it parses to no setting and only `any`
+  // `all` is the default, so it parses to no setting and only `any`
   // reaches the read; a mode that is neither is refused rather than read as all.
   it('hands the read only categoryMode any, and refuses a mode that is neither', async () => {
     const categoryIds = ['3d6b0d1a-0000-4000-8000-000000000001'];
@@ -207,7 +207,7 @@ describe('listCompendium', () => {
   });
 });
 
-// M11.22's facets (claude-docs/design-decisions/m11.22-search-facets.md): four
+// The facets (claude-docs/design-decisions/m11.22-search-facets.md): four
 // lists, any value matching within one, and a toxic setting, the kinds ANDed.
 // What each arm matches is the repository's test
 // (tests/db/repository/ingredients.test.ts); this holds what the service parses.

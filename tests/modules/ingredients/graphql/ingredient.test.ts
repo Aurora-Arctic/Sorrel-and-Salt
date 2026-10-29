@@ -88,7 +88,7 @@ describe('ingredient', () => {
     expect(result.data?.ingredient).toMatchObject({ id: localId, isGlobal: false });
   });
 
-  // The transport's half of M12.24: `retired` reaches the wire. Who reads a
+  // The transport's half of retirement: `retired` reaches the wire. Who reads a
   // retired entry is services/retired-entry.test.ts's.
   it('marks a retired entry retired to a coven whose cupboard names it', async () => {
     await insertCupboardEntry(
@@ -147,7 +147,7 @@ describe('ingredient', () => {
     });
   });
 
-  // The transport's half of `variants` (MB.218): each field reaches the wire,
+  // The transport's half of `variants`: each field reaches the wire,
   // in form order, a form's own children through its loaders. Who may read
   // them is the loader matrix's
   // (tests/modules/ingredients/loaders/ingredient-children.test.ts).
@@ -239,7 +239,7 @@ describe('ingredient', () => {
   });
 
   // `Substitute.variant` is the resolver's own: the linked ingredient's form,
-  // found among that ingredient's variants (MB.218).
+  // found among that ingredient's variants.
   it("answers a substitute's form, null without one and once that form is deleted", async () => {
     const formed = await insertIngredient(
       sql,

@@ -29,7 +29,7 @@ import {
 } from '../../../support/db/insert-reference';
 import { makeIngredient, makeVariant } from '../../../support/fixtures';
 
-// Story 63's service half (MB.85): the compendium's reads take no session, and
+// The service half: the compendium's reads take no session, and
 // a signed-out caller (a null session) is refused every read that names a
 // coven. The reads below are every one a null session can reach that can name
 // a coven: the batch reads behind an entry's fields, and the page body's

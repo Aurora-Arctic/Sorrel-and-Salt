@@ -6,7 +6,7 @@ import { E, asUser } from '../../../support/as-user';
 import { run } from '../../../support/graphql/run';
 import type { FormGroupNode } from './types';
 
-// M5.6b's three form-group writes over the wire. This file holds the
+// The three form-group writes over the wire. This file holds the
 // transport's half (claude-docs/testing/layer-ownership.md): the loaders
 // cleared by a write, `moveTo` reaching the delete, and per write one refusal
 // per error code, read as the browser reads it. Which roles are refused, and
@@ -93,7 +93,7 @@ describe('createIngredientFormGroup', () => {
   });
 });
 
-// The icon standing for the group (M12.6), an enum on the wire as in the
+// The icon standing for the group, an enum on the wire as in the
 // table. Which values the service takes, and that an absent one clears, are
 // the service test's; here, that the enum carries them both ways.
 describe('icon', () => {

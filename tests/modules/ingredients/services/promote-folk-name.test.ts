@@ -9,7 +9,7 @@ import { useTestDatabase } from '../../../support/db/database';
 import { insertIngredient } from '../../../support/db/insert-ingredient';
 import { type IngredientFixture, makeIngredient } from '../../../support/fixtures';
 
-// M8.3a: swapping an ingredient's display name with one of its folk names, in
+// Swapping an ingredient's display name with one of its folk names, in
 // one write. The table is emptied per test, so every row read back is one this
 // file wrote.
 

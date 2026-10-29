@@ -13,7 +13,7 @@ import { variantIdOf } from '../../../support/db/read-variants';
 import { type IngredientFixture, makeIngredient } from '../../../support/fixtures';
 import type { Overrides } from '../../../support/fixtures';
 
-// The count behind the coven list's "Page X of Y" (M9.6): the same rows as
+// The count behind the coven list's "Page X of Y": the same rows as
 // `listWorkspaceIngredients`, counted under the same proof.
 
 let sql: postgres.Sql;

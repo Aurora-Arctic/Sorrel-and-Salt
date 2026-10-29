@@ -6,7 +6,7 @@ import { makeQueryClient } from '@/lib/graphql-client';
 import { mockGraphQLQuery } from '../../../../../../support/msw/graphql';
 import { offerCategories } from '../../../../../../support/msw/ingredient-lookups';
 
-// MB.6: the spell recipe page. The guard and the services are mocked, since what they decide
+// The spell recipe page. The guard and the services are mocked, since what they decide
 // is their own tests' (tests/modules/grimoire/services/spell-reads.test.ts proves a private
 // spell reads as NotFound to anyone but its author); here: the page guards itself, a refusal
 // is the 404, and what the services give is drawn.
@@ -182,7 +182,7 @@ describe('the spell recipe page', () => {
     const match = within(aside).getByRole('region', { name: 'Category Match' });
     expect(within(match).getByText('Carried')).toBeInTheDocument();
     expect(within(match).getByText('Testwarding')).toBeInTheDocument();
-    // Category Match stands over the inventory (the owner, 2026-10-29).
+    // Category Match stands over the inventory.
     expect(
       match.compareDocumentPosition(inventory) & Node.DOCUMENT_POSITION_FOLLOWING,
     ).toBeTruthy();

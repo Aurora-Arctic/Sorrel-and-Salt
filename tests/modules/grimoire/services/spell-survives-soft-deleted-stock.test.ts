@@ -10,8 +10,8 @@ import { insertStock } from '../../../support/db/insert-stock';
 import { variantIdOf } from '../../../support/db/read-variants';
 import { makeIngredient, makeVariant } from '../../../support/fixtures';
 
-// M10.21: a spell names an ingredient and a form, never the coven's jar of it
-// (M10.15), so running out of the jar, which soft-deletes the stock row, leaves
+// A spell names an ingredient and a form, never the coven's jar of it
+// , so running out of the jar, which soft-deletes the stock row, leaves
 // the recipe whole. What changes is only that the form is no longer held.
 
 let sql: postgres.Sql;

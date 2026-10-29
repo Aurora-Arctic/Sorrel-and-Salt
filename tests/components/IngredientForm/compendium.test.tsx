@@ -55,7 +55,7 @@ import {
   offerReferences,
 } from '../../support/msw/ingredient-lookups';
 
-// The form on the compendium (M5.5), and only what the mode changes: written
+// The form on the compendium, and only what the mode changes: written
 // with no coven, so every lookup asks with a null `workspaceId`, the
 // vocabulary boxes are picked from the curated rows, a substitute is picked
 // from the compendium, the classification is required, and an entry given to
@@ -213,7 +213,7 @@ describe('IngredientForm on the compendium', () => {
       );
     });
 
-    // A regression (MB.115): an entry whose substitute links an ingredient
+    // A regression: an entry whose substitute links an ingredient
     // in forms, with none chosen, opened as the readback gives it, its
     // Form of X box registering a key the values lacked. React's development
     // double mount then counted the untouched entry changed, and Cancel asked.
@@ -256,7 +256,7 @@ describe('IngredientForm on the compendium', () => {
       expect(onClose).toHaveBeenCalledOnce();
     });
 
-    // Every way out asks first while the form has changes (MB.115): the
+    // Every way out asks first while the form has changes: the
     // guard's shape is tests/components/Modal's, and this its wiring.
     it('asks before Cancel or Escape discards a change, and closes on Discard Changes', async () => {
       offerNothing();
@@ -424,7 +424,7 @@ describe('IngredientForm on the compendium', () => {
   });
 
   describe('an entry given to it', () => {
-    // M8.17: an edit of the compendium says so at its head, as an add, which
+    // An edit of the compendium says so at its head, as an add, which
     // writes nothing yet anyone reads, does not.
     it('says that it edits the compendium, as a new entry does not', () => {
       renderForm();
@@ -468,7 +468,7 @@ describe('IngredientForm on the compendium', () => {
     });
 
     // An edit renames what exists rather than making another, so a near
-    // match warns and holds nothing (MB.115, the owner's call), and the entry
+    // match warns and holds nothing, and the entry
     // is never its own near match.
     it('saves a rename near another entry at once, the match named but not itself, and nothing to set aside', async () => {
       const calls = acceptUpdate();
@@ -565,7 +565,7 @@ describe('IngredientForm on the compendium', () => {
   });
 
   // Its questions are asked over the form, as the unsaved changes' is
-  // (MB.115, the owner's call): the long form inert behind each, and the
+  // : the long form inert behind each, and the
   // focus on its safe answer, Keep It.
   describe('an entry given to it, in a modal', () => {
     const renderInDialog = () =>

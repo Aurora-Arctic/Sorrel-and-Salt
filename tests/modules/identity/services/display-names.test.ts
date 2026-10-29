@@ -7,7 +7,7 @@ import { makeWorkspace, workspaceColumns } from '../../../support/fixtures';
 
 useRawClient();
 
-// MB.10: the display name a member may read, gated to co-members — anyone
+// The display name a member may read, gated to co-members — anyone
 // who holds or has held a seat in a coven the viewer sits in now. Every case
 // is a direct id, so a refusal is a null in its own slot rather than a row
 // missing from a list (claude-docs/auth/display-names.md, "Display names").

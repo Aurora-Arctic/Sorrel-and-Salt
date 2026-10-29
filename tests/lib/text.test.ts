@@ -1,9 +1,8 @@
 import { describe, expect, it } from 'vitest';
 import { addressTaken, capitalise, joinAnd, noMatchText, plural, titleCase } from '@/lib/text';
 
-// The English a refusal is phrased in (MB.210): one counting rule and one
-// list rule for every service, so a refusal never says "1 forms" or lists
-// with a serial comma.
+// The English a refusal is phrased in: one counting rule and one list rule for every service,
+// so a refusal never says "1 forms" or lists with a serial comma.
 
 describe('plural', () => {
   it('takes the singular for one and the plural for any other count', () => {
@@ -42,9 +41,8 @@ describe('capitalise', () => {
   });
 });
 
-// The admin lists' empty state (MB.115): the filters are the caller's, so the
-// test checks they all reach the sentence, joined as a list, and that an
-// unfiltered list gets the caller's own text untouched.
+// The admin lists' empty state: the filters are the caller's, so the test checks they all reach
+// the sentence, joined as a list, and that an unfiltered list gets the caller's own text untouched.
 describe('noMatchText', () => {
   it('names every filter in force, joined as a list, and the noun', () => {
     const sentence = noMatchText('NOUNS', ['FIRST', 'SECOND', 'THIRD'], 'EMPTY');

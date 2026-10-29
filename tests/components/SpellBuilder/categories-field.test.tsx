@@ -17,12 +17,12 @@ vi.mock('next/navigation', () => ({ useRouter: () => ({ push: vi.fn(), refresh: 
 
 const { default: SpellBuilder } = await import('@/components/SpellBuilder');
 
-// The categories a spell is assigned, in the builder (M10.14, story 48): what
+// The categories a spell is assigned, in the builder: what
 // it intends, picked as chips and sent with the save. That the service writes
 // exactly the set sent, and refuses a viewer and another coven's member, is
 // tests/modules/grimoire/services/spells.test.ts's.
 
-// Invented categories (M1.25), with uuid ids, as the shared schema refuses any other.
+// Invented categories, with uuid ids, as the shared schema refuses any other.
 const WARDS = { id: 'a3e1c9b2-0d4f-4a8e-9c71-5b2f6e8d0a11', name: 'Wards & Fixtures' };
 const colours = { colorDark: '#8fb8de', colorLight: '#2f5d86' };
 const CATEGORIES: CategoryNode[] = [
@@ -41,7 +41,7 @@ const CATEGORIES: CategoryNode[] = [
 ];
 const [TESTWARD, SHIELD] = CATEGORIES;
 
-// A saved spell opens with its sections shut (M10.12), so its are opened
+// A saved spell opens with its sections shut, so its are opened
 // with Open All, as a person reaches the field in Purpose, unless `shut`.
 function renderBuilder(props: Partial<SpellBuilderProps> = {}, { shut = false } = {}) {
   offerCategories(CATEGORIES);

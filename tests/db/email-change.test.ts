@@ -16,7 +16,7 @@ import { importAuth } from '../support/auth-module';
 import type { AuthInstance, Profile } from '../support/types';
 import type { UserRow } from './types';
 
-// Story 59, through Better Auth's real endpoints: an address becomes the
+// Through Better Auth's real endpoints: an address becomes the
 // account's when the mailed change link is followed from a session holding
 // the row, and never before — so an established account never re-enters the
 // provisional sweep (claude-docs/auth/admin-bootstrap.md, "The email page"). Also where an

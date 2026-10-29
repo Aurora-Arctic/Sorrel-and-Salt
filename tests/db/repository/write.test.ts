@@ -273,7 +273,7 @@ describe('app.current_user_id (M1.19)', () => {
 });
 
 // `write.delete` is how the two hard-deleted join tables are written, typed so it cannot
-// be pointed at anything else (MB.34).
+// be pointed at anything else.
 describe('hard delete on a table with no delete columns (MB.34)', () => {
   const herbId = '22222222-2222-2222-2222-222222222222';
   const charmId = '33333333-3333-3333-3333-333333333333';
@@ -306,8 +306,8 @@ describe('hard delete on a table with no delete columns (MB.34)', () => {
     expect(rows.map((row) => row.charm_id)).toEqual([otherCharmId]);
   });
 
-  // MB.125: a service names the rows by value, since it may not build an `SQL`
-  // predicate (MB.33).
+  // A service names the rows by value, since it may not build an `SQL`
+  // predicate.
   it('deletes every pair whose column is in a list, and nothing for an empty one', async () => {
     const thirdCharmId = '55555555-5555-5555-5555-555555555555';
     for (const charm of [charmId, otherCharmId, thirdCharmId]) {
@@ -451,7 +451,7 @@ describe('the compendium tier, under the Curator proof', () => {
     });
   });
 
-  // M11.20: a curator's proof is what the compendium tier asks for, and an
+  // A curator's proof is what the compendium tier asks for, and an
   // admin's is one, so the tests above write under either.
   it('inserts into the compendium under a curator’s proof', async () => {
     const curator = assertCurator({ ...session, role: 'curator' });
@@ -545,7 +545,7 @@ describe('the compendium tier, under the Curator proof', () => {
   });
 });
 
-// MB.198: a table marked `namedWrites` is reached only through its own named
+// A table marked `namedWrites` is reached only through its own named
 // writer methods, and the mark is the whole refusal: no column name is read
 // (claude-docs/db/write-path.md, "Table marks"). No body runs: each
 // `@ts-expect-error` fails `npm run typecheck` the moment a generic method

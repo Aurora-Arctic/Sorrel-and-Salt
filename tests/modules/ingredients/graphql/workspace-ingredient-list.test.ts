@@ -11,7 +11,7 @@ import { variantIdOf } from '../../../support/db/read-variants';
 import { makeIngredient, makeVariant } from '../../../support/fixtures';
 import { run as runOperation } from '../../../support/graphql/run';
 
-// The `workspaceIngredients` query (M9.4): a coven's ingredients, a page at a
+// The `workspaceIngredients` query: a coven's ingredients, a page at a
 // time, with each entry's stock and categories batched and its cupboard row
 // read by the page itself. Which rows the list
 // holds, and who may read it, is services/workspace-ingredient-list.test.ts's;
@@ -190,7 +190,7 @@ describe('workspaceIngredients', () => {
     ]);
   });
 
-  // M8.12: both entries hold Protection and neither Cleansing, so only the
+  // Both entries hold Protection and neither Cleansing, so only the
   // mode decides whether the pair lists them.
   it('takes a categoryMode, all by default, and refuses a mode that is neither', async () => {
     const rows = await sql`

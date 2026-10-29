@@ -19,7 +19,7 @@ import {
   variantInput,
 } from '../../../support/fixtures';
 
-// M11.21: an ingredient and each of its forms carry a toxic flag of their
+// An ingredient and each of its forms carry a toxic flag of their
 // own, written by whoever may write the row. Who may write it is the write path's
 // own test (workspace-ingredients.test.ts, compendium-entries.test.ts). The two are
 // independent — the one property that does not follow DESIGN.md §5's union
@@ -31,7 +31,7 @@ useTestDatabase((client) => {
   sql = client;
 });
 
-// A compendium entry's every form is a pick (MB.162), so its two forms are
+// A compendium entry's every form is a pick, so its two forms are
 // curated rows, read once by name.
 let formIds: Map<string, string>;
 beforeAll(async () => {

@@ -131,7 +131,7 @@ describe('SpellInput', () => {
     });
   });
 
-  // M13.15 CHECK: status <> 'complete' OR title IS NOT NULL
+  // The CHECK: status <> 'complete' OR title IS NOT NULL
   it('takes a draft with no title, blank or missing', () => {
     expect(SpellInput.safeParse({}).success).toBe(true);
     expect(SpellInput.safeParse({ status: 'draft' }).success).toBe(true);

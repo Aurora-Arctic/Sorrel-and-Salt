@@ -10,7 +10,7 @@ import { insertIngredient } from '../../../support/db/insert-ingredient';
 import { makeIngredient } from '../../../support/fixtures';
 
 // One coven's cupboard entry for a compendium entry: the read the public entry page makes for
-// the Annotate dialog a holding coven opens there (M9.12). The page names only the viewer's own
+// the Annotate dialog a holding coven opens there. The page names only the viewer's own
 // covens, and the coven's id comes from the viewer's memberships, never the address; this is the
 // guard behind that, refusing anyone the coven is not theirs.
 

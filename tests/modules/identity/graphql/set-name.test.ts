@@ -4,7 +4,7 @@ import { A, asUser } from '../../../support/as-user';
 import { run } from '../../../support/graphql/run';
 
 // `setName` over the real schema: the renamed row back, and a refusal read
-// as the browser reads it, a `VALIDATION` error pathed to `name` (MB.43).
+// as the browser reads it, a `VALIDATION` error pathed to `name`.
 // What the service refuses, and why, is services/name.test.ts's; a signed-out
 // caller is tests/db/graphql-query-scopes.test.ts's.
 

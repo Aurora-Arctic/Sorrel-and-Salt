@@ -6,7 +6,7 @@ import { run } from '../../../support/graphql/run';
 
 // The schema's second check on `User.email`, `emailVerified`, `role` and
 // `canCreateWorkspace` (DESIGN.md §7). `getMe` takes no id, and `users`
-// answers an admin alone (MB.52), so no query a non-admin can make reaches
+// answers an admin alone, so no query a non-admin can make reaches
 // another user's row; this test hands `me` B's row whoever asks — a service
 // that answered the wrong row, which is exactly the bug the scope stands behind.
 // The mock names the service's file because the index re-exports it: mocking

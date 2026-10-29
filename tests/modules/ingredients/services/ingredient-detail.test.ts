@@ -30,7 +30,7 @@ import {
   makeVariant,
 } from '../../../support/fixtures';
 
-// M8.19: the page body's one read, `ingredientDetailOf`, and the public
+// The page body's one read, `ingredientDetailOf`, and the public
 // route's cached read of an address, `readCompendiumEntry`. The table is
 // emptied per test, so every row a result could come from is one this file
 // wrote. Setup goes through the raw client; only the rename and the create
@@ -107,7 +107,7 @@ beforeAll(async () => {
       tradition_id: tradition.id,
       ...stamps,
     })} returning id`;
-  // Its other names (M14.23): two live, read alphabetically, and one dropped.
+  // Its other names: two live, read alphabetically, and one dropped.
   await sql`
     insert into deity_other_names ${sql([
       { deity_id: deityId, name: 'Fixturion', deleted_at: null, deleted_by: null, ...stamps },
@@ -372,8 +372,8 @@ describe('readCompendiumEntry', () => {
     await expect(readCompendiumEntry('nothing-here')).rejects.toThrow(NotFound);
   });
 
-  // MB.85 cites this test for "a coven's entry is a 404 at the public address"
-  // rather than repeating it.
+  // This test stands for "a coven's entry is a 404 at the public address"
+  // wherever that is cited, rather than repeating it.
   it("a workspace entry's slug at the public read is NotFound", async () => {
     const id = await seed({ workspaceId: WORKSPACE_W_ID });
     const [{ slug }] = await sql`select slug from ingredients where id = ${id}`;

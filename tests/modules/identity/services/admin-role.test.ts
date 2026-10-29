@@ -76,10 +76,10 @@ async function userRow(email: string) {
     | undefined;
 }
 
-// An admin holds the creation flag, which the users CHECK requires (MB.177);
+// An admin holds the creation flag, which the users CHECK requires;
 // a user starts without it, so a promotion setting it is what the tests see.
 // An admin inserted by hand is a privilege change, declared as a `psql` fix
-// declares one (MB.195), and the ledger is emptied after so a test reads only
+// declares one, and the ledger is emptied after so a test reads only
 // what it did.
 async function insertUser(email: string, role: 'user' | 'admin' = 'user'): Promise<string> {
   let id = '';
@@ -128,7 +128,7 @@ describe('promotePrimaryAdmin', () => {
     expect(outcome).toBe('promoted');
     const row = await userRow(PRIMARY);
     expect(row?.role).toBe('admin');
-    // Every admin may create a workspace, and the same write says so (MB.177).
+    // Every admin may create a workspace, and the same write says so.
     expect(row?.can_create_workspace).toBe(true);
     // The insert stamped the seed's bootstrap user; the promotion restamps it
     // as the user, which is withAudit taking identity from the session.

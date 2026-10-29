@@ -320,10 +320,9 @@ describe('the Membership proof (M6.3)', () => {
     expect(deleteAnUnscopedTableById).toBeInstanceOf(Function);
   });
 
-  // The same shape for M10.3's two extra scopes. A private spell excluded by a
-  // predicate the caller could simply not have written is absent; a private
-  // spell the generic finders will not compile against is impossible, and only
-  // the second survives the next service that forgets.
+  // The same shape for the two extra spell scopes. A private spell excluded by a predicate the caller
+  // could simply not have written is absent; a private spell the generic finders will not compile against
+  // is impossible, and only the second survives the next service that forgets.
   it('refuses the generic finders a spell and its contents at compile time', () => {
     const readSpellsWithoutTheVisibilityRule = (membership: Membership) =>
       // @ts-expect-error — `spells` carries `visibility`, so the generic scoped
@@ -396,7 +395,7 @@ describe('the Membership proof (M6.3)', () => {
 
     const readVariantsUnscoped = () =>
       // @ts-expect-error — `ingredient_variants` is an ingredient's child too
-      // (MB.216): a form of a coven's entry is that coven's, so it is read
+      // : a form of a coven's entry is that coven's, so it is read
       // under its parent's tier or not at all.
       findMany(ingredientVariants);
 

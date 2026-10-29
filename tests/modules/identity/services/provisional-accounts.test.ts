@@ -16,7 +16,7 @@ import { asTouch } from '../../../support/db/touch-row';
 import type { AuthInstance, Profile } from '../../../support/types';
 import type { ProvisionalUserRow } from './types';
 
-// Story 58, through Better Auth's real endpoints: an unverified account lapses
+// Through Better Auth's real endpoints: an unverified account lapses
 // one verification lifetime after its last mail, and the next OAuth callback
 // sweeps it (claude-docs/auth/admin-bootstrap.md, "Provisional accounts").
 
@@ -233,8 +233,8 @@ describe('Story 58: what the sweep removes', () => {
   });
 });
 
-// MB.204: an admin may approve an unverified account (M5.8) or make it an
-// admin (MB.59), and the ledger row that writes references the account with a
+// An admin may approve an unverified account or make it an
+// admin, and the ledger row that writes references the account with a
 // plain foreign key, so the sweep keeps it rather than fail on it.
 describe('Story 58: an account an admin has vouched for is not swept', () => {
   const VOUCHED = `vouched${DOMAIN}`;

@@ -13,7 +13,7 @@ import {
 // tests/modules/ingredients/validation/ingredient.test.ts's. A variant's
 // pick is not a field of its own: the box that made it is its Form's, so
 // the schema's issue with the pick, or with its text, lands on that
-// variant's `form` (MB.169, MB.221). And the one mapping from an issue's
+// variant's `form`. And the one mapping from an issue's
 // path to a field, which the server's issues go through. Pure functions,
 // so called here rather than reached through a render of the form.
 

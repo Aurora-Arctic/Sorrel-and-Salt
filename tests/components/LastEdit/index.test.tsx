@@ -4,7 +4,7 @@ import { describe, expect, it, vi } from 'vitest';
 import LastEdit from '@/components/LastEdit';
 import { clockTime, relativePhrase } from '@/components/LastEdit/relative';
 
-// M6.18: the line is compact. Its visible text is the short date on the server and the relative
+// The line is compact. Its visible text is the short date on the server and the relative
 // phrase once hydrated; the full sentence is the tip, which the button describes.
 
 const AT = '2026-09-01T10:30:00.000Z';

@@ -289,7 +289,7 @@ describe('findFormsInSpellsIncludingSoftDeleted', () => {
   });
 });
 
-// A layer pulled out of a jar is a tombstone (MB.110), and every read of the
+// A layer pulled out of a jar is a tombstone, and every read of the
 // jar lets it go: the ingredient it held is no longer something the spell holds.
 describe('a layer removed from a spell', () => {
   it('is gone from findManyInSpell, beside the layer still in the jar', async () => {

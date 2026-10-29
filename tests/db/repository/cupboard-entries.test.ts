@@ -18,10 +18,9 @@ import { insertIngredient } from '../../support/db/insert-ingredient';
 import { makeIngredient } from '../../support/fixtures';
 import { ingredientFolkNames } from '@/modules/ingredients/schema/ingredient-folk-names';
 
-// The reads over M12.13's table (M12.14): a coven's cupboard entry for a
-// compendium entry, one or a batch under the coven's proof, and the
-// compendium entries a typed name names exactly. Each case seeds the rows the
-// read must leave out beside the row it must keep.
+// The reads over the cupboard-entries table: a coven's entry for a compendium entry, one or a batch
+// under the coven's proof, and the compendium entries a typed name names exactly. Each case seeds the
+// rows the read must leave out beside the row it must keep.
 
 let sql: postgres.Sql;
 useTestDatabase((client) => {

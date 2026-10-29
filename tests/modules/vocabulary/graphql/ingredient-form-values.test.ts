@@ -17,8 +17,8 @@ import type {
 
 // `ingredientFormValues`: the curated form vocabulary as `IngredientFormValue`
 // — named apart from the `IngredientForm` component — a page at a time, each
-// with its group, answered to a signed-out visitor (MB.80); the groups it is
-// filed under; and M5.6a's three admin writes. This file holds the transport's
+// with its group, answered to a signed-out visitor; the groups it is
+// filed under; and the three admin writes. This file holds the transport's
 // half (claude-docs/testing/layer-ownership.md): a page, its groups in one
 // read, its count, the filters reaching the read, the loaders cleared by a
 // write, and per write one refusal per error code, read as the browser reads

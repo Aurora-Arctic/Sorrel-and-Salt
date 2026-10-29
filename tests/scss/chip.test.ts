@@ -3,20 +3,18 @@ import { describe, expect, it } from 'vitest';
 import { CHIP_GROUNDS, contrastRatio } from '@/lib/contrast';
 import { fromRoot } from '../support/paths';
 
-// A group colour the write check admits stays legible on every surface its
-// theme draws a chip on, in both states (MB.36; claude-docs/styling.md, "Chips,
-// badges and the solid-fill rule"). One assertion per theme: the functional half
-// of the chip's styling. How the chip looks is its workshop story's, and the
+// A group colour the write check admits stays legible on every surface its theme draws a chip on,
+// in both states (claude-docs/styling.md, "Chips, badges and the solid-fill rule"). One assertion
+// per theme: the functional half of the chip's styling. How it looks is its workshop story's and the
 // axe scan's (claude-docs/testing/layer-ownership.md, "What a test may assert").
 
 const SCSS_DIR = fromRoot('src/scss');
 
-// What M5.6b checks each column against is CHIP_GROUNDS: the harder of its
-// theme's two surfaces, the dark card and the light page (MB.36). The test
-// below proves the theme mixins still draw those two surfaces.
+// The write check tests each column against CHIP_GROUNDS: the harder of its theme's two surfaces,
+// the dark card and the light page. The test below proves the theme mixins still draw those two.
 
-// An invented pair, nowhere in the seed or the Sass map, that clears 4.5:1
-// against what M5.6b checks — what an admin's ninth group might carry.
+// An invented pair, nowhere in the seed or the Sass map, that clears 4.5:1 against what the write
+// check tests: what an admin's ninth group might carry.
 const NINTH = { dark: '#5f9a9f', light: '#7a3f10' } as const;
 
 function compile(source: string): string {

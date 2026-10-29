@@ -18,7 +18,7 @@ import { insertStock } from '../../../support/db/insert-stock';
 import { variantIdOf } from '../../../support/db/read-variants';
 import { makeIngredient, makeSpell, makeVariant } from '../../../support/fixtures';
 
-// M12.23: a compendium entry the coven holds, made into the coven's own. A
+// A compendium entry the coven holds, made into the coven's own. A
 // new own entry is written from the merged values with copies of the
 // compendium's children, the coven's jars and spell layers move to its forms
 // by folded name, and the cupboard row is soft-deleted. The compendium entry

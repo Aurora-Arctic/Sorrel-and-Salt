@@ -19,7 +19,7 @@ import {
   setUpInvitationAcceptance,
 } from '../../../support/db/invitation-acceptance';
 
-// M10.34: the account page's Decline. The same checks as the accept by id,
+// The account page's Decline. The same checks as the accept by id,
 // over the session's own read, so each refusal sits beside the call that
 // succeeds once its refusing fact is gone. A decline seats no one and grants
 // nothing; it kills the invitation, which its link and both accepts then refuse.

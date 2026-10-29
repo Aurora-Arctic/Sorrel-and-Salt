@@ -9,7 +9,7 @@ import { insertIngredient } from '../../../support/db/insert-ingredient';
 import { type IngredientFixture, type Overrides, makeIngredient } from '../../../support/fixtures';
 import type { PageRequest } from '@/lib/types';
 
-// The substitute picker's search (MB.138): ingredients a member may link, from
+// The substitute picker's search: ingredients a member may link, from
 // the compendium and the caller's own coven, matched as the compendium search
 // matches so a typed prefix finds its entry. The table is emptied per test, so
 // every row a result could come from is one this file wrote.
@@ -95,7 +95,7 @@ describe('suggestIngredients', () => {
     });
   });
 
-  // MB.131's picker shows which plant a suggestion is, and whose.
+  // The picker shows which plant a suggestion is, and whose.
   it('carries each entry’s formal name and tier', async () => {
     await addIngredient({ name: "Cat's Claw", canonicalName: 'Uncaria tomentosa' });
     // A coven entry naming another species, so the two are told apart by formal name.
@@ -157,7 +157,7 @@ describe('suggestIngredients', () => {
     });
   });
 
-  // M12.19: the picker offers the coven's cupboard, then the compendium.
+  // The picker offers the coven's cupboard, then the compendium.
   describe('the two groups', () => {
     const groupsFor = async (query: string, workspaceId = WORKSPACE_W_ID, user = B) =>
       (await suggestIngredients(asUser(user), workspaceId, query, PAGE)).map((entry) => ({

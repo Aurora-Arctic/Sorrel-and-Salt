@@ -21,7 +21,7 @@ import { insertStock } from '../../../support/db/insert-stock';
 import { variantIdOf } from '../../../support/db/read-variants';
 import { makeIngredient, makeVariant } from '../../../support/fixtures';
 
-// Story 12's stock half (M9.3): members and owners write a coven's stock,
+// The stock service: members and owners write a coven's stock,
 // viewers read it, and nobody outside the coven reaches it — the site admin
 // included. The ingredient tables are emptied per test, and the cascade
 // empties `inventory_items` with them, so every jar a result could come from
@@ -532,7 +532,7 @@ describe('stockOf', () => {
 });
 
 // createStock takes the coven's stock lock, which the cupboard's writes that
-// count or move jars queue on too (M12.15, M12.21, M12.23).
+// count or move jars queue on too.
 describe("a coven's stock lock", () => {
   const WAIT_MS = 200;
 
@@ -610,7 +610,7 @@ describe("a coven's stock lock", () => {
   });
 });
 
-// M9.9's batch: the dialog's one Save, a list of creates, updates and deletes
+// The batch: the dialog's one Save, a list of creates, updates and deletes
 // of one ingredient's jars in one transaction. Compendium entries are in the
 // cupboard only once stocked, so the cupboard rows are read raw below.
 describe('saveStock', () => {

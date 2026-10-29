@@ -31,7 +31,7 @@ import {
 } from '../../support/discard-guard';
 
 // The admin's form for a grouped curated value, one per kind: a category
-// (M5.6), an ingredient form (M5.6a) or a deity (MB.132) — a name, a description and a group,
+// , an ingredient form or a deity — a name, a description and a group,
 // saved through the kind's mutations, and on an existing value a delete
 // behind a confirmation. A form's rename says it carries onto the
 // compendium. The mutations are answered by MSW in the route's own shape
@@ -127,10 +127,10 @@ describe('GroupedValueForm, what every kind shares', () => {
   });
 });
 
-// Every way out asks first while the form has changes (MB.115): the
+// Every way out asks first while the form has changes: the
 // guard's shape is tests/components/Modal's, and this its wiring.
 // A Description keeps its tip only where suggestions match it as well as the
-// name, a flow its label does not say (the owner's call, 2026-10-20).
+// name, a flow its label does not say.
 describe('GroupedValueForm, its Description tip', () => {
   it.each([
     { kind: 'category', groups: CATEGORY_GROUPS, tip: false },
@@ -160,7 +160,7 @@ describe('GroupedValueForm, its unsaved changes', () => {
 });
 
 // The delete's question is asked over the form, as the unsaved changes' is
-// (MB.115, the owner's call): the form inert behind it until it is answered.
+// : the form inert behind it until it is answered.
 describe('GroupedValueForm, its delete question in a modal', () => {
   const renderEdit = () =>
     renderInModal((done) => (
@@ -375,7 +375,7 @@ describe('GroupedValueForm, a form', () => {
       ]);
     });
 
-    // MB.162: a rename carries onto every compendium entry that picked the form.
+    // A rename carries onto every compendium entry that picked the form.
     it('describes Save by the rename note once the name changes, and only then', () => {
       renderFormKind({ value: FORM });
 
@@ -411,7 +411,7 @@ describe('GroupedValueForm, a form', () => {
   });
 });
 
-// MB.132: a deity's input names its group `traditionId`, so the form sends
+// A deity's input names its group `traditionId`, so the form sends
 // that and lands a refusal pathed to it beside Tradition.
 describe('GroupedValueForm, a deity', () => {
   const renderDeity = (props: Partial<GroupedValueFormProps> = {}) =>
@@ -484,7 +484,7 @@ describe('GroupedValueForm, a deity', () => {
     ]);
   });
 
-  // M14.23: a deity's other names, a list as an entry's common names are.
+  // A deity's other names, a list as an entry's common names are.
   describe('its Other Names', () => {
     const otherNames = () => screen.getByRole('group', { name: 'Other Names' });
     const box = () => screen.getByRole('combobox', { name: 'Other Name' });
@@ -596,7 +596,7 @@ describe('GroupedValueForm, a deity', () => {
   });
 });
 
-// MB.95's flat kinds, folded in at MB.115: a celestial body or a zodiac sign has no
+// The flat kinds: a celestial body or a zodiac sign has no
 // group, so the form asks for none and sends none. What every kind shares
 // runs on the category above; each flat kind gets only what it changes, its
 // three mutations (claude-docs/testing/layer-ownership.md, rule 5).
@@ -667,7 +667,7 @@ describe.each(FLAT)('GroupedValueForm, the flat kind $kind', ({ kind, type: muta
   });
 });
 
-// Undo and redo (M12.9): the hook is tested in tests/components/Field; this
+// Undo and redo: the hook is tested in tests/components/Field; this
 // is its wiring, and where it is switched off.
 describe('GroupedValueForm, its undo and redo', () => {
   const save = () => screen.getByRole('button', { name: 'Save Category' });

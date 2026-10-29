@@ -1,8 +1,8 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { clearMirror, mirrorKey, readMirror, writeMirror } from '@/lib/autosave';
 
-// The localStorage copy an autosaving form keeps until the server confirms
-// (M13.16): one key per row and person, and nothing over a day old offered back.
+// The localStorage copy an autosaving form keeps until the server confirms: one key per row
+// and person, and nothing over a day old offered back.
 
 const AT = new Date('2026-10-27T14:02:00Z');
 const HOUR = 60 * 60 * 1000;

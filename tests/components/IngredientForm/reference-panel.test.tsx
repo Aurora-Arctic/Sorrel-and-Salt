@@ -22,8 +22,8 @@ import {
 } from '../../support/msw/ingredient-lookups';
 import { server } from '../../support/msw/server';
 
-// The new reference panel on its own (MB.182): `ReferencePanel`, the citation
-// sub-form MB.154 puts beneath the References field, saving through MSW as
+// The new reference panel on its own: `ReferencePanel`, the citation
+// sub-form beneath the References field, saving through MSW as
 // /api/graphql answers. How the field opens it, lists what it saves and is
 // held while it is open is references.test.tsx's; what the schema refuses and
 // how each field is tidied is tests/modules/ingredients/validation/'s
@@ -182,7 +182,7 @@ describe('ReferencePanel', () => {
     for (const label of ALL_LABELS) notInPanel(label);
   });
 
-  // The owner's call: asking again for a panel already open takes you
+  // Asking again for a panel already open takes you
   // back to it, rather than doing nothing.
   it('takes you back to Kind when asked again while open, keeping what was typed', () => {
     const { summon } = renderPanel();
@@ -218,7 +218,7 @@ describe('ReferencePanel', () => {
   );
 
   // One tip for how to cite, read once on entering the panel, in place of a
-  // hint beside each field (the owner's call, 2026-10-20).
+  // hint beside each field.
   it('describes the panel by one How to Cite tip, and no field by a hint of its own', () => {
     renderPanel();
 
@@ -232,8 +232,8 @@ describe('ReferencePanel', () => {
     for (const label of KINDS[0].fields) expect(inPanel(label)).not.toHaveAccessibleDescription();
   });
 
-  // One rule to a line, a list a screen reader can step through (the owner's
-  // call, 2026-10-20), rather than one run-on paragraph.
+  // One rule to a line, a list a screen reader can step through,
+  // rather than one run-on paragraph.
   it('gives How to Cite one list item per rule', () => {
     renderPanel();
 
@@ -351,7 +351,7 @@ describe('ReferencePanel', () => {
     await waitFor(() => expect(onSaved).toHaveBeenCalledOnce());
   });
 
-  // MB.154, the owner's calls: each field is tidied as it is left, as the
+  // Each field is tidied as it is left, as the
   // server will store it, so what is seen is what is saved. Each format is
   // FORMAT_OF's (validation/reference-format.test.ts); here, that the panel
   // applies its field's.
@@ -371,7 +371,7 @@ describe('ReferencePanel', () => {
     }
   });
 
-  // As the ingredient's saves are held, the owner's call: busy, and saying so.
+  // As the ingredient's saves are held: busy, and saying so.
   it('holds Save Reference down while it is in flight, busy and saying so, and Cancel with it', async () => {
     let release = () => {};
     const held = new Promise<void>((resolve) => {
@@ -426,7 +426,7 @@ describe('ReferencePanel', () => {
     expect(calls).toHaveLength(0);
   });
 
-  // MB.115: the edit saves through the same handling, so a refusal of the
+  // The edit saves through the same handling, so a refusal of the
   // edited source lands beside its field as a new one's does.
   it('puts a server field error on an edited source beside its field', async () => {
     offerReference({

@@ -10,7 +10,7 @@ import { insertStock } from '../../../support/db/insert-stock';
 import { variantIdOf } from '../../../support/db/read-variants';
 import { makeIngredient } from '../../../support/fixtures';
 
-// `Ingredient.stock`'s loader (M9.4): the jars of every ingredient a page
+// `Ingredient.stock`'s loader: the jars of every ingredient a page
 // lists, in one read. Who may read them is services/stock.test.ts's; this
 // file counts the reads, observed at the repository.
 const repository = vi.hoisted(() => ({ findStockOfIngredients: vi.fn() }));

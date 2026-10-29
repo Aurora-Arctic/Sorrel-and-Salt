@@ -8,7 +8,7 @@ import { asManualFix } from '../support/db/privileges';
 import { run } from '../support/graphql/run';
 import type { AuthInstance } from '../support/types';
 
-// MB.59: a revoked admin's sessions stay valid, since they are still a user,
+// A revoked admin's sessions stay valid, since they are still a user,
 // and their next request reads `role: 'user'` off the users row, so `/admin`
 // and every admin mutation close to them at once, with no new session issued
 // (claude-docs/design-decisions/m2.9-granting-admin.md, "Revoking"). Through

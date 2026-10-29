@@ -9,12 +9,12 @@ export interface SeedEntry {
   name: string;
   /** The seeds this one reads from, run for real first. */
   prepare?: (handle: SeedDatabase) => Promise<void>;
-  /** The seed itself, which a dry run rolls back (M14.26). */
+  /** The seed itself, which a dry run rolls back. */
   seed: (handle: SeedDatabase, options?: SeedRunOptions) => Promise<void>;
   /**
    * The seed the fill sweep runs in place of `seed`, when the other sweeps
    * take a smaller input: the compendium's real files, where they take the
-   * fixture (M14.27).
+   * fixture.
    */
   fillSeed?: (handle: SeedDatabase) => Promise<void>;
   /** `prepare`, then `seed`. */

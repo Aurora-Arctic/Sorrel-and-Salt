@@ -10,7 +10,7 @@ vi.mock('next/navigation', () => ({ useRouter: () => router, usePathname: () => 
 const { default: Modal, DiscardQuestion, useDiscardGuard } = await import('@/components/Modal');
 const { NavigationProvider, usePendingNavigation } = await import('@/lib/navigation');
 
-// useDiscardGuard's hold on leaving the page (M13.14), through useLeaveGuard:
+// useDiscardGuard's hold on leaving the page, through useLeaveGuard:
 // a tab close or reload asks the browser's question wherever the form is, and
 // an in-app navigation asks Discard or Keep Editing from a form on a page. In
 // a modal the page behind is inert, and the navigations that start there are

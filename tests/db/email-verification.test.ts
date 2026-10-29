@@ -16,7 +16,7 @@ import { asTouch } from '../support/db/touch-row';
 import { importAuth } from '../support/auth-module';
 import type { AuthInstance, Profile } from '../support/types';
 
-// Story 58, through Better Auth's real endpoints: an OAuth sign-up mails a
+// Through Better Auth's real endpoints: an OAuth sign-up mails a
 // link, and following it verifies the address only from a session holding
 // that account (claude-docs/auth/admin-bootstrap.md, "First-party verification").
 
@@ -298,7 +298,7 @@ describe('the update hook stamps other Better Auth writes', () => {
     expect(await userRow(OWNER)).toMatchObject({ email_verified: true, updated_by: id });
   });
 
-  // The name is `setName`'s, through `withAudit` (MB.88): Better Auth's own
+  // The name is `setName`'s, through `withAudit`: Better Auth's own
   // write of it, and of `image`, is refused before the endpoint runs.
   it('refuses /update-user, leaving the row unchanged', async () => {
     const response = await signIn('google', { sub: 'g-5', email: OWNER, verified: true });
@@ -334,7 +334,7 @@ describe('the update hook stamps other Better Auth writes', () => {
   });
 });
 
-// Promotion at verification (MB.68): our own mail vouches for the address the
+// Promotion at verification: our own mail vouches for the address the
 // way Google or Discord would, and only because the link is honoured from a
 // session holding the row.
 describe('the primary admin is promoted at first-party verification', () => {
@@ -365,7 +365,7 @@ describe('the primary admin is promoted at first-party verification', () => {
     expect((await userRow(OWNER))?.updated_by).toBe(before.id);
   });
 
-  // The email page's change link (MB.54): Better Auth's own change branch
+  // The email page's change link: Better Auth's own change branch
   // skips the session check, so src/lib/auth.ts gates it before the endpoint.
   // Followed from the row's session it swaps the address, and the address
   // being the bootstrap one, promotes — only the owner's inbox and the owner's

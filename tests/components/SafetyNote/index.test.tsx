@@ -3,7 +3,7 @@ import { describe, expect, it } from 'vitest';
 import SafetyNote, { CautionMark, SafetyMark, ToxicMark } from '@/components/SafetyNote';
 import { capitalise } from '@/lib/text';
 
-// The one presentation of an ingredient's caution (M8.13a;
+// The one presentation of an ingredient's caution (
 // claude-docs/components/safety-note.md): a region of its own, labelled by
 // its Caution heading, holding the ingredient's notes and then each shown
 // form's under that form's name; and the Toxic mark beside it. Both are text
@@ -158,7 +158,7 @@ describe('CautionMark', () => {
   });
 });
 
-// One safety badge wherever a row shows one (the owner's call, 2026-10-20): Toxic
+// One safety badge wherever a row shows one: Toxic
 // says more than Caution, so it stands alone when both apply.
 describe('SafetyMark', () => {
   const caution = () => screen.queryByText('Caution', { exact: true });

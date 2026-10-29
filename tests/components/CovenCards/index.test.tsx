@@ -17,7 +17,7 @@ import { DETAILS_PLACE } from '@/components/IngredientEntry/details';
 const router = vi.hoisted(() => ({ push: vi.fn() }));
 vi.mock('next/navigation', () => ({ useRouter: () => router }));
 
-// A coven's Ingredients list (M9.6): a link per entry inside the coven, the coven's own label,
+// A coven's Ingredients list: a link per entry inside the coven, the coven's own label,
 // the jars beneath the forms, Edit in the foot where an entry has an edit address, and a filter with the coven's three extra
 // choices (claude-docs/components/coven-cards.md).
 
@@ -264,7 +264,7 @@ describe('CovenCards', () => {
     expect(screen.getAllByRole('switch', { name: 'Compact' })).toHaveLength(1);
   });
 
-  // M9.11: an empty cupboard and a filter that matches nothing are two named status regions,
+  // An empty cupboard and a filter that matches nothing are two named status regions,
   // told apart by which one is drawn.
   const empty = { entries: [], total: 0 };
   const emptyState = () => screen.queryByRole('status', { name: 'No Ingredients' });
@@ -291,7 +291,7 @@ describe('CovenCards', () => {
     expect(screen.queryByRole('button', { name: 'Add Ingredient' })).toBeNull();
   });
 
-  // MB.121: a viewer, who cannot fill the cupboard, is told which roles can. The roles named
+  // A viewer, who cannot fill the cupboard, is told which roles can. The roles named
   // are the state's data (rule 2's exception): nothing else tells a viewer who to ask, and a
   // member, who has the button, is not told.
   it('names, to a viewer only, the roles that can fill an empty cupboard', () => {

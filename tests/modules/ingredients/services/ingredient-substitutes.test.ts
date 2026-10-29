@@ -20,7 +20,7 @@ import { useTestDatabase } from '../../../support/db/database';
 import { insertIngredient, insertSubstituteLink } from '../../../support/db/insert-ingredient';
 import { type IngredientFixture, type Overrides, makeIngredient } from '../../../support/fixtures';
 
-// MB.140: an ingredient's substitutes, each a link to another ingredient or a
+// An ingredient's substitutes, each a link to another ingredient or a
 // typed name (DESIGN.md §5, `ingredient_substitutes`), written in the
 // ingredient's own transaction by either tier's service and read back through
 // `substitutesOf`, the batch behind `Ingredient.substitutes`. The table is
@@ -348,7 +348,7 @@ describe('a save of an ingredient’s substitutes', () => {
   });
 });
 
-// MB.138's deletion rule: a link to a deleted ingredient is kept, and shown
+// The deletion rule: a link to a deleted ingredient is kept, and shown
 // by its last name with nothing to follow.
 describe('a substitute whose linked ingredient is deleted', () => {
   let linked: string;

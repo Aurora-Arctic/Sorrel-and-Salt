@@ -6,7 +6,7 @@ import { ingredientSubstitutes } from '@/modules/ingredients/schema/ingredient-s
 import { FIXTURE_USERS } from '@/db/seed/standard';
 import type { SubstituteEntry } from './types';
 
-// DESIGN.md §5's `ingredient_substitutes` (MB.138): one row per substitute,
+// DESIGN.md §5's `ingredient_substitutes`: one row per substitute,
 // a link to an ingredient or a typed name, never both and never neither.
 const OWN_COLUMNS = [
   'id',
@@ -29,7 +29,7 @@ describe('ingredient_substitutes schema', () => {
   const { byName } = tableFacts(ingredientSubstitutes);
 
   // The full six, as folk names carry: a substitute is content, so removing
-  // one leaves a tombstone (MB.138, "The audit shape").
+  // one leaves a tombstone ("The audit shape").
   it('has DESIGN.md §5 columns and nothing else', () => {
     expect(Object.keys(byName).sort()).toEqual([...OWN_COLUMNS, ...AUDIT_COLUMNS].sort());
   });
@@ -130,7 +130,7 @@ describe('ingredient_substitutes table', () => {
     });
   });
 
-  // MB.138, "No repeats": the shared schema refuses a repeat first (MB.140),
+  // "No repeats": the shared schema refuses a repeat first,
   // so these indexes are the floor beneath it.
   describe('an ingredient lists a substitute once', () => {
     it('refuses a second live link to the same ingredient', async () => {
@@ -163,7 +163,7 @@ describe('ingredient_substitutes table', () => {
       expect(count).toBe(4);
     });
 
-    // One is text and the other a link (MB.138).
+    // One is text and the other a link.
     it('does not count a name equal to a linked ingredient’s label as a repeat', async () => {
       const [{ name }] = await sql`select name from ingredients where id = ${ACACIA}`;
       await addSubstitute(UNCARIA, { substituteId: ACACIA });
@@ -173,7 +173,7 @@ describe('ingredient_substitutes table', () => {
   });
 });
 
-// MB.217: a row may stand in for one form of its ingredient (`variant_id`),
+// A row may stand in for one form of its ingredient (`variant_id`),
 // and a link may name one form of the linked ingredient
 // (`substitute_variant_id`), which must be that ingredient's.
 describe('ingredient_substitutes, by form', () => {

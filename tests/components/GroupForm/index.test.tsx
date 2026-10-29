@@ -33,10 +33,10 @@ import {
   renderInModal,
 } from '../../support/discard-guard';
 
-// The admin's form for a group (M5.6b), for every group vocabulary, a deity's
-// traditions included (MB.132): a name, a
+// The admin's form for a group, for every group vocabulary, a deity's
+// traditions included: a name, a
 // description, and for a category group its chip's two colours, each held to
-// 4.5:1 on its own ground (MB.36) before the request as well as by the
+// 4.5:1 on its own ground before the request as well as by the
 // service. A delete of a group holding rows first asks where they go, then
 // asks to confirm that move (claude-docs/components/group-form.md).
 
@@ -72,7 +72,7 @@ const description = () => screen.getByRole('textbox', { name: 'Description' });
 const dark = () => screen.getByRole('textbox', { name: 'Dark Theme Colour' });
 const light = () => screen.getByRole('textbox', { name: 'Light Theme Colour' });
 
-// Every way out asks first while the form has changes (MB.115): the
+// Every way out asks first while the form has changes: the
 // guard's shape is tests/components/Modal's, and this its wiring.
 describe('GroupForm, its unsaved changes', () => {
   it('asks before Cancel or Escape discards a change, and closes on Discard Changes', () => {
@@ -85,7 +85,7 @@ describe('GroupForm, its unsaved changes', () => {
 });
 
 // Each step of a delete is a question over the form, as the unsaved
-// changes' is (MB.115, the owner's call): the form inert behind it, each
+// changes' is: the form inert behind it, each
 // step's focus on its own safe answer.
 describe('GroupForm, its delete questions in a modal', () => {
   it('holds the form through both steps, the focus on each safe answer, and gives both back on Keep It', () => {
@@ -189,7 +189,7 @@ describe('GroupForm, for a category group', () => {
     });
   });
 
-  // The owner's call: the colour chosen first sets its partner, the same hue
+  // The colour chosen first sets its partner, the same hue
   // fitted to the other ground, until the admin sets the partner themselves.
   describe('the pair', () => {
     it('fills either colour from the other chosen first', () => {
@@ -248,7 +248,7 @@ describe('GroupForm, for a category group', () => {
     });
   });
 
-  // The owner's call: a colour too close to another group's in the same
+  // A colour too close to another group's in the same
   // theme is warned of, beside its picker, and never blocks the save.
   describe('the near-colour warning', () => {
     const COLOURED = [
@@ -458,7 +458,7 @@ describe('GroupForm, for a form group', () => {
     ]);
   });
 
-  // M12.7: the icon an admin picks, one of the six or None, the generic.
+  // The icon an admin picks, one of the six or None, the generic.
   describe('its icon', () => {
     const icons = () => screen.getByRole('group', { name: 'Icon' });
 
@@ -537,7 +537,7 @@ describe('GroupForm, for a form group', () => {
   });
 });
 
-// MB.132: a deity's tradition, a form group's shape under its own name, its
+// A deity's tradition, a form group's shape under its own name, its
 // deities moved and re-slugged on a delete.
 describe('GroupForm, for a deity tradition', () => {
   it('asks for no colours, and creates the tradition from its name and description alone', async () => {
@@ -584,7 +584,7 @@ describe('GroupForm, for a deity tradition', () => {
   });
 });
 
-// Undo and redo (M12.9): the hook is tested in tests/components/Field; this
+// Undo and redo: the hook is tested in tests/components/Field; this
 // is its wiring, and where it is switched off.
 describe('GroupForm, its undo and redo', () => {
   const save = () => screen.getByRole('button', { name: 'Save Group' });

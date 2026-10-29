@@ -8,7 +8,7 @@ import { ingredientSlug } from '@/lib/slugify';
 // two expression indexes are what let a fold reach a trigram index at all —
 // claude-docs/db/compendium-read.md, "The compendium read". That they are
 // reached is proved on the SQL the finder sends, in
-// tests/db/repository/compendium-search-query.test.ts (MB.184); what stays
+// tests/db/repository/compendium-search-query.test.ts; what stays
 // here is the fold they exist for.
 const AUTHOR = FIXTURE_USERS.A.id;
 

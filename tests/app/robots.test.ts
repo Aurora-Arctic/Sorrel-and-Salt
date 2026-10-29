@@ -8,7 +8,7 @@ vi.mock('@/modules/ingredients', () => ({
   ]),
 }));
 
-// MB.84: a crawler is let into the public compendium on production and
+// A crawler is let into the public compendium on production and
 // nowhere else; every other deploy asks to be left alone.
 
 afterEach(() => vi.unstubAllEnvs());

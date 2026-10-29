@@ -11,13 +11,13 @@ import { useTestDatabase } from '../../../support/db/database';
 import { insertIngredient } from '../../../support/db/insert-ingredient';
 import { makeIngredient } from '../../../support/fixtures';
 
-// M8.7: an admin's compendium-tier write expires the `compendium` tag, with
+// An admin's compendium-tier write expires the `compendium` tag, with
 // `{ expire: 0 }` so the admin's next read is a miss rather than a stale
 // answer (DESIGN.md §7). Under Vitest `revalidateTag` is the recorder
 // tests/support/next-cache.ts aliases in, so a write's call is asserted here
 // and Next's handling of it in tests/e2e/compendium-cache.spec.ts. This file
-// and that spec own the behaviour since MB.224 retired the guard that held
-// every admin write to the call: these show what the call does and when it
+// and that spec own the behaviour; no guard holds
+// every admin write to the call, so these show what the call does and when it
 // does not happen (claude-docs/db/compendium-cache.md, "Expiring the tag").
 
 let sql: postgres.Sql;

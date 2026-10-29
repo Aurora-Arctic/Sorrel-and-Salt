@@ -23,7 +23,7 @@ import { makeIngredient } from '../support/fixtures';
 import type { CompendiumWrite } from './types';
 
 // src/app/entry-values.ts: the values an edit modal opens with, for the
-// admin's compendium entry or a coven's own (M8.17), read from the database.
+// admin's compendium entry or a coven's own, read from the database.
 // What they must hold is every value and link of the entry, so that saving the
 // form untouched sends the entry back as it was: an edit that changes nothing
 // changes nothing.
@@ -70,7 +70,7 @@ beforeAll(async () => {
     makeIngredient({ name: 'Mockwort', canonicalName: 'Fixtura mockalis' }),
     A.id,
   );
-  // A form of the substitute, which a substitute may name (MB.215).
+  // A form of the substitute, which a substitute may name.
   mockoil = await insertVariant(sql, mockwort, { form: 'Mockoil' }, A.id);
   book = await insertReference(sql, {}, E.id);
 });
@@ -131,7 +131,7 @@ const everything = (): CompendiumWrite => ({
 async function rowOf(id: string) {
   // `updated_at` is the trigger's, and moves on any write, a no-op included.
   // `curator_reviewed_at` is the review mark's time: a curator's save marks the
-  // entry reviewed again, untouched or not (M14.8, proved in
+  // entry reviewed again, untouched or not (proved in
   // tests/modules/ingredients/services/compendium-review.test.ts).
   const [{ updated_at: _updated, curator_reviewed_at: _reviewed, ...row }] =
     await sql`select * from ingredients where id = ${id}`;

@@ -12,7 +12,7 @@ import { A, B, asUser } from '../../../support/as-user';
 import { asTouch } from '../../../support/db/touch-row';
 import type { EmailUserRow } from './types';
 
-// Story 59's service half: asking for an address writes nothing to
+// The service half: asking for an address writes nothing to
 // `users.email` — the address becomes the row's at verification — so an
 // established account never re-enters the provisional sweep
 // (claude-docs/auth/admin-bootstrap.md, "The email page"). What goes out is the sender's

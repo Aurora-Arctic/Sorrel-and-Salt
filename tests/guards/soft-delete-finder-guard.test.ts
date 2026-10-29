@@ -3,18 +3,17 @@ import { join } from 'node:path';
 import { describe, expect, it } from 'vitest';
 import { REPO_ROOT } from '../support/paths';
 
-// CLAUDE.md rule 4, read as text off the repository (claude-docs/db/soft-delete.md,
-// "Soft-delete filtering"): every finder the index exports filters tombstones,
-// bar the escape hatches, each of which says so in its name. The behaviour of
-// each reader is its service's READS table's (claude-docs/testing/layer-ownership.md,
-// "The owning layer"); this sweep is what fails a new finder in the diff that
-// adds it. Read as text rather than imported: importing the repository would
-// instantiate a Postgres client, which the `unit` project must not.
+// CLAUDE.md rule 4, read as text off the repository (claude-docs/db/soft-delete.md, "Soft-delete
+// filtering"): every finder the index exports filters tombstones, bar the escape hatches, each of which
+// says so in its name. Each reader's behaviour is its service's READS table's
+// (claude-docs/testing/layer-ownership.md, "The owning layer"); this sweep fails a new finder in the diff
+// that adds it. Read as text rather than imported: importing the repository would instantiate a Postgres
+// client, which the `unit` project must not.
 
 const REPOSITORY = 'src/db/repository';
 const INDEX = `${REPOSITORY}/index.ts`;
 
-/** Every exported finder allowed to skip a filter, each saying so in its name (M5.3, M10.9, MB.138, MB.10, M12.24). */
+/** Every exported finder allowed to skip a filter, each saying so in its name. */
 const ESCAPE_HATCHES = [
   'findManyIncludingSoftDeleted',
   'findIngredientsInSpellsIncludingSoftDeleted',
@@ -26,10 +25,8 @@ const ESCAPE_HATCHES = [
 ];
 
 /**
- * The folder's internal builders that skip a filter, none of them exported
- * from the index, each with the only functions allowed to call it. A finder
- * named here as a caller skips the filter through that hatch alone (M12.24,
- * M12.32; claude-docs/db/soft-delete.md, "Soft-delete filtering").
+ * The folder's internal builders that skip a filter, none of them exported from the index, each with
+ * the only functions allowed to call it (claude-docs/db/soft-delete.md, "Soft-delete filtering").
  */
 const INTERNAL_HATCHES: Record<string, string[]> = {
   existsInIncludingSoftDeleted: ['inUseIngredientParent'],

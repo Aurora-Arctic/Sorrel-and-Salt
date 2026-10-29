@@ -15,10 +15,10 @@ import { importAuth } from '../support/auth-module';
 import { asManualFix } from '../support/db/privileges';
 import type { AuthInstance, Profile } from '../support/types';
 
-// Where the callback lands a sign-in (MB.113): a return path wins, `/coven`
+// Where the callback lands a sign-in: a return path wins, `/coven`
 // included; with none, an admin — by the role held once any promotion at this
 // sign-in has run — lands on /admin, a member of a coven goes straight into the
-// first one the switcher lists (MB.257), and everyone else on /coven. An
+// first one the switcher lists, and everyone else on /coven. An
 // unverified account lands on the email page first, whatever its role. Driven
 // through Better Auth's real endpoints, as SignInPanel starts them
 // (claude-docs/auth/route-protection.md, "Route protection").
@@ -98,7 +98,7 @@ async function roleOf(email: string): Promise<string | undefined> {
 /** A verified row with no provider account yet: a verified Google sign-in links to it. */
 async function insertVerified(email: string, role: UserRole): Promise<void> {
   // A curator or an admin inserted by hand declares itself, as a `psql` fix
-  // must (MB.195), and holds the flag the CHECK asks of them (M11.20).
+  // must, and holds the flag the CHECK asks of them.
   await asManualFix(
     sql,
     (tx) => tx`
@@ -197,7 +197,7 @@ describe('a sign-in with no return path', () => {
   it('sends an unverified admin to the bare email page first, and the mailed link lands there bare too', async () => {
     const first = await signIn('microsoft', { sub: 'ms-admin', email: ADMIN, verified: true });
     expect(landingOf(first)).toBe('/account/email');
-    // An admin holds the creation flag, which the users CHECK requires (MB.177).
+    // An admin holds the creation flag, which the users CHECK requires.
     await asManualFix(
       sql,
       (tx) =>

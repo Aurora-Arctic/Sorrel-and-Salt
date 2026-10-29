@@ -7,7 +7,7 @@ import { FIXTURE_USERS, WORKSPACE_W_ID } from '@/db/seed/standard';
 import type { StepRow } from './types';
 
 // §5's columns; `name` and `form` are a custom one-off layer's, in place of an
-// `ingredient_id` (MB.40), and `body` is a step's instruction (M13.1).
+// `ingredient_id`, and `body` is a step's instruction.
 const OWN_COLUMNS = [
   'id',
   'spell_id',
@@ -40,7 +40,7 @@ const CHECK_BODY_NOT_BLANK = 'spell_steps_body_not_blank';
 describe('spell_steps schema', () => {
   const { byName } = tableFacts(spellSteps);
 
-  // The full six (MB.110): a spell is a record of a working, so a step
+  // The full six: a spell is a record of a working, so a step
   // pulled out of it is a tombstone rather than gone.
   it('has DESIGN.md §5 columns and nothing else', () => {
     expect(Object.keys(byName).sort()).toEqual([...OWN_COLUMNS, ...AUDIT_COLUMNS].sort());
@@ -171,7 +171,7 @@ describe('spell_steps table', () => {
     expect(error.code).toBe('23502');
   });
 
-  // Story 80: a step is an instruction, an ingredient, or both.
+  // A step is an instruction, an ingredient, or both.
   describe('a step is an instruction, an ingredient, or both', () => {
     it('stores an instruction alone, an ingredient alone, and both in one step', async () => {
       await instruction('Sweep the threshold.', { position: 1 });
@@ -240,7 +240,7 @@ describe('spell_steps table', () => {
     expect(row.unit).toBeNull();
   });
 
-  // Story 57: a layer is an ingredient or a custom name, never both — §14's
+  // A layer is an ingredient or a custom name, never both — §14's
   // "nullable FKs plus num_nonnulls" idiom. Neither is an instruction alone.
   describe('a layer names an ingredient or a custom name, never both', () => {
     it('stores a custom ingredient by name and form, with no ingredient row', async () => {
@@ -360,7 +360,7 @@ describe('spell_steps table', () => {
     });
   });
 
-  // MB.217: a linked layer names the form it lays, a custom layer none.
+  // A linked layer names the form it lays, a custom layer none.
   describe('a linked layer names a variant of its ingredient', () => {
     it('refuses a linked layer without a variant, and a custom one with a variant', async () => {
       const [mugwortHerb] = await liveVariantOf(MUGWORT);
@@ -390,7 +390,7 @@ describe('spell_steps table', () => {
   });
 
   // A custom row is matched against nothing, so inside one jar its name is its
-  // identity; a linked form is not (the owner, 2026-10-28).
+  // identity; a linked form is not.
   describe('one custom name per jar, any form any number of times', () => {
     it('admits the same variant twice in one spell, as well as another form of it', async () => {
       const [oil] = await sql`
@@ -452,7 +452,7 @@ describe('spell_steps table', () => {
     });
   });
 
-  // MB.110: pulled out is a tombstone; that it frees the depth, the
+  // Pulled out is a tombstone; that it frees the depth, the
   // ingredient and the custom name is the partial-unique sweep's.
   describe('removal is a soft delete', () => {
     it('keeps the removed step, stamped by whoever removed it', async () => {

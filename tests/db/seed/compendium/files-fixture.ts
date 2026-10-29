@@ -14,7 +14,7 @@ import type {
 } from '@/db/seed/types';
 
 // The invented two-entry shard (compendium-fixture.ts) as a folder of files
-// (M14.6): Testwort and Samplewort each in `ingredients/botanical/`, the two
+// : Testwort and Samplewort each in `ingredients/botanical/`, the two
 // fixture sources in `sources/`, and the template. Every citation gains
 // `nameBasis: stated`, which a file of an entry with a formal name must carry
 // and a literal never did. A test writes the folder to a temporary directory,

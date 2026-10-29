@@ -209,7 +209,7 @@ describe('the updated_at trigger', () => {
     });
   });
 
-  // MB.106: a statement that changes nothing leaves the stamps alone, so
+  // A statement that changes nothing leaves the stamps alone, so
   // `updated_at` says when the row last changed (migration 0079).
   describe('an update that changes nothing', () => {
     const session = { userId: AUTHOR };

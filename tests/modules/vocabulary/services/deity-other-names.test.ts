@@ -7,7 +7,7 @@ import type { DeityInput } from '@/modules/vocabulary/validation/deity';
 import { A, B, E, F, asUser } from '../../../support/as-user';
 import { useTestDatabase } from '../../../support/db/database';
 
-// M14.23: a deity's other names, written on the deity form as an entry's
+// A deity's other names, written on the deity form as an entry's
 // common names are. A save brings the live rows to the list sent; a name is
 // refused twice on one deity, or on two deities of one tradition, and the
 // refusal names the deity holding it; and only a curator or an admin writes

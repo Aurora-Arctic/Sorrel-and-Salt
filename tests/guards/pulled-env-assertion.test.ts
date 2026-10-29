@@ -7,11 +7,9 @@ import {
   validateDatabaseUrl,
 } from '../../scripts/assert-pulled-env';
 
-// What CI prints about a pulled Vercel environment never carries a value
-// (claude-docs/ci/deploy.md, "Deploy"): a secret in a public repo's logs is
-// the one failure of this script an operator cannot take back. The value is
-// masked in CI, so a message quoting it would read `***` there and leak it
-// anywhere else.
+// What CI prints about a pulled Vercel environment never carries a value (claude-docs/ci/deploy.md,
+// "Deploy"): a secret in a public repo's logs cannot be taken back. The value is masked in CI, so a
+// message quoting it would read `***` there and leak it anywhere else.
 
 const NEON =
   'postgresql://sorrel:np_x9Kq2@ep-cool-bird-a1b2c3-pooler.us-east-2.aws.neon.tech/neondb?sslmode=require';

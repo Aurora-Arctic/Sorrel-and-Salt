@@ -103,7 +103,7 @@ const describers = (control: HTMLElement) =>
 const statusesSaying = (text: string) =>
   screen.queryAllByRole('status').filter((status) => status.textContent?.includes(text));
 
-// Invented groups (M1.25), given out of order: the picker sorts them, and
+// Invented groups, given out of order: the picker sorts them, and
 // knows none of them by name, as it knows no group an admin adds.
 const WARDS = { id: 'a3e1c9b2-0d4f-4a8e-9c71-5b2f6e8d0a11', name: 'Wards & Fixtures' };
 const CRAFT = { id: 'b7f2d0c3-1e5a-4b9f-8d82-6c3a7f9e1b22', name: 'Craft of Tests' };
@@ -130,7 +130,7 @@ const CATEGORIES: CategoryNode[] = [
 ];
 /** Opens the picker's list and picks the category, once the categories have been read. */
 const pickCategory = async (name: string) => {
-  // Opened only when shut: a pick leaves the list open for the next (M12.54), and the
+  // Opened only when shut: a pick leaves the list open for the next, and the
   // chevron would shut it.
   if (screen.getByRole('combobox', { name: 'Category' }).getAttribute('aria-expanded') !== 'true')
     fireEvent.click(screen.getByRole('button', { name: 'Show Category suggestions' }));
@@ -145,7 +145,7 @@ const pickCategory = async (name: string) => {
 };
 
 describe('IngredientForm', () => {
-  // The owner's rule for every form (M5.6): a save is offered only when there
+  // The owner's rule for every form: a save is offered only when there
   // is something to save.
   it('keeps both saves off until something is entered, and off again once it is cleared', () => {
     renderForm();
@@ -179,7 +179,7 @@ describe('IngredientForm', () => {
       expect(calls[0].workspaceId).toBe(WORKSPACE_ID);
       // Sent as typed — the kind unanswered — and read by the schema the
       // service parses with as `none`, so the one-field stub is a whole entry.
-      // No element chosen is sent as none, the answer "none" (MB.159).
+      // No element chosen is sent as none, the answer "none".
       expect(calls[0].input).toMatchObject({
         name: 'Testwort',
         nomenclature: null,
@@ -229,12 +229,12 @@ describe('IngredientForm', () => {
         // None picked is sent as none, which an update needs to clear them.
         categoryIds: [],
         references: [],
-        // Its forms alone, never a top-level form (MB.221): variants-field.test.tsx's.
+        // Its forms alone, never a top-level form: variants-field.test.tsx's.
         variants: [],
       });
     });
 
-    // The owner's call during MB.131: Save Ingredient opens what it made,
+    // Save Ingredient opens what it made,
     // and Save & Add Another leaves the form ready for the next ingredient.
     it('asks the page to open what Save Ingredient made, leaving the form as it is', async () => {
       acceptCreate();
@@ -357,7 +357,7 @@ describe('IngredientForm', () => {
       await waitFor(() => expect(textbox('Name')).not.toBeInvalid());
     });
 
-    // Story 31: errors show on leaving a field, not only on submit.
+    // Errors show on leaving a field, not only on submit.
     describe('on leaving a field', () => {
       // A field's error waits for it to be left after the person has edited it,
       // even if the edit put it back to its default.
@@ -567,7 +567,7 @@ describe('IngredientForm', () => {
     });
   });
 
-  // What the form does with the picker (MB.126): the picks sent, and an
+  // What the form does with the picker: the picks sent, and an
   // issue routed to one. The picker's own list, picks, status and error
   // marking are CategoryPicker's (tests/components/CategoryPicker/).
   describe('the categories', () => {
@@ -676,7 +676,7 @@ describe('IngredientForm', () => {
       expect(calls[0].input).toMatchObject({ nomenclature: 'none', canonicalName: '' });
     });
 
-    // An unknown entry takes either (MB.161), so a name typed before the kind
+    // An unknown entry takes either, so a name typed before the kind
     // is settled is kept, and nothing is asked of the field.
     it('keeps the formal name open and optional under Unknown, saving what was typed', async () => {
       const calls = acceptCreate();
@@ -774,14 +774,14 @@ describe('IngredientForm', () => {
       choose('Classification', 'None');
       expect(textbox('Formal Name')).not.toBeRequired();
 
-      // A formal name with no kind saves as unknown (MB.161), so it asks for none.
+      // A formal name with no kind saves as unknown, so it asks for none.
       choose('Classification', 'Unknown');
       type('Formal Name', 'Fixtura testalis');
       expect(select('Classification')).not.toBeRequired();
     });
   });
 
-  // Undo and redo (M12.10): the hook is tested in tests/components/Field; this
+  // Undo and redo: the hook is tested in tests/components/Field; this
   // is its wiring in the form.
   describe('its undo and redo', () => {
     it('undoes a classification pick together with the formal name it emptied, focusing Classification, and redoes both', async () => {
@@ -892,7 +892,7 @@ describe('IngredientForm', () => {
     });
   });
 
-  // Story 16's warning, as only the whole form holds it: the form asks its
+  // The duplicate warning, as only the whole form holds it: the form asks its
   // `check` before it sends and moves the focus to Create Anyway. What the
   // warning says and when it asks is duplicates.test.tsx's.
   describe('the duplicate warning', () => {
@@ -989,7 +989,7 @@ describe('IngredientForm', () => {
     });
   });
 
-  // M12.20: the + (M12.48's, once Use It), as only the whole form sends it.
+  // The + on a duplicate match, as only the whole form sends it.
   describe('using a compendium entry of the name typed', () => {
     const CLAW: DuplicateNode = {
       id: 'claw-1',
@@ -1001,7 +1001,7 @@ describe('IngredientForm', () => {
     /**
      * Adds as the server does in a coven that already calls another entry by the
      * name typed: any label sent is refused as taken, as Rose under "rosemary"
-     * was (the owner's report, M12.48).
+     * was.
      */
     const accept = () => {
       const adds: AddCupboardEntryFromFormMutationVariables[] = [];
@@ -1061,7 +1061,7 @@ describe('IngredientForm', () => {
       expect(creates).toHaveLength(0);
     });
 
-    // The owner's report (M12.48): the lookups' cached answers still said the
+    // The lookups' cached answers still said the
     // entry was not held, so its row stayed under In the Compendium with its +.
     const heldRow = () =>
       within(screen.getByRole('list', { name: 'In This Coven' })).getByRole('link', {
@@ -1086,8 +1086,8 @@ describe('IngredientForm', () => {
       await waitFor(() => expect(heldRow()).toBeInTheDocument());
     });
 
-    // After the add the form stays open (the owner's calls, M12.48, in place of
-    // opening the entry's page). The + turning to the check, then the eye, and the
+    // After the add the form stays open, rather than opening the entry's page. The + turning to
+    // the check, then the eye, and the
     // row moving under In This Coven are NameField's, in duplicates.test.tsx.
     describe('after the + has added', () => {
       /** The form in a coven named Hedge Coven, under the page's status region. */
@@ -1280,7 +1280,7 @@ describe('IngredientForm', () => {
   });
 
   // The save's result carries the new entry's jars for the dialog's status to
-  // name (M8.16). Since M12.27 a save moves none, so only a mock fills it.
+  // name. A save moves none, so only a mock fills it.
   it('hands onSaved the jars the new entry holds', async () => {
     mockGraphQLMutation<
       CreateWorkspaceIngredientMutation,
@@ -1336,7 +1336,7 @@ describe('IngredientForm', () => {
     fireEvent.click(submit);
 
     await waitFor(() => expect(submit).toBeDisabled());
-    // Busy, the owner's call during MB.131; the other is held down beside it.
+    // Busy; the other is held down beside it.
     expect(submit).toHaveAttribute('aria-busy', 'true');
     expect(rest).toBeDisabled();
     expect(rest).not.toHaveAttribute('aria-busy');
@@ -1349,7 +1349,7 @@ describe('IngredientForm', () => {
   });
 });
 
-// Where the focus lands after an undo (M12.10): a list's rows are not inputs,
+// Where the focus lands after an undo: a list's rows are not inputs,
 // only its typing box is, so the box is where a change to the list is shown.
 describe('IngredientForm undo focus', () => {
   const undoFrom = (from: HTMLElement) => {

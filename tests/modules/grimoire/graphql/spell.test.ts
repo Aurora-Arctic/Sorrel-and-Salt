@@ -8,7 +8,7 @@ import { insertSpell } from '../../../support/db/insert-spell';
 import { makeIngredient, makeSpell, makeVariant } from '../../../support/fixtures';
 import { run } from '../../../support/graphql/run';
 
-// The grimoire over the wire (M10.9): `grimoire`'s pages, `spell` and the
+// The grimoire over the wire: `grimoire`'s pages, `spell` and the
 // fields a spell resolves through its loaders, and one refusal per code. Who
 // may read which spell is services/spell-reads.test.ts's; this file holds what
 // the transport adds — the shape, the order, the gaps worked out from the two
@@ -277,7 +277,7 @@ describe('grimoire', () => {
     ]);
   });
 
-  // M13.15 lets a draft go untitled, so the title reads as null rather than
+  // A draft may go untitled, so the title reads as null rather than
   // failing the whole page, and an untitled draft sorts after every title.
   it('reads an untitled draft as a null title, last by title', async () => {
     for (const title of ['Birch Charm', 'Alder Jar']) {

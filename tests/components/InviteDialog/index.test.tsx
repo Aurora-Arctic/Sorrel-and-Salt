@@ -4,9 +4,9 @@ import InviteDialog from '@/components/InviteDialog';
 import type { CreateInvitationMutation, CreateInvitationMutationVariables } from '@/gql/graphql';
 import { mockGraphQLError, mockGraphQLMutation } from '../../support/msw/graphql';
 
-// The owner's invite dialog (M7.4): an address, a role of viewer or member,
+// The invite dialog: an address, a role of viewer or member,
 // and a confirmation naming where the mail went. Render-and-send only: the
-// service behind the mutation is M7.3's and is tested there
+// service behind the mutation is tested in its own module
 // (claude-docs/components/invite-dialog.md).
 
 const router = { push: vi.fn(), replace: vi.fn(), refresh: vi.fn() };
@@ -180,7 +180,7 @@ describe('InviteDialog', () => {
 
   // The guard's own shape is tests/components/Modal's; this is its wiring here.
   // A navigation from inside a modal goes unheld (tests/components/Modal/discard.test.tsx),
-  // so the leave guard here is the tab close and reload (M13.14).
+  // so the leave guard here is the tab close and reload.
   it('asks before Cancel, Escape or a tab close discards what was typed, and closes on Discard Changes', async () => {
     open();
     expect(unload()).toBe(false);

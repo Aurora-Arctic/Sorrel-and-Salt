@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import { listReturnHref } from '@/components/IngredientEntry/back-href';
 
-// MB.271: the entry's way back is the page before it only when that page is this entry's list.
+// The entry's way back is the page before it only when that page is this entry's list.
 const ORIGIN = 'https://sorrel.example';
 const COMPENDIUM = '/compendium';
 const COVEN_LIST = '/coven/fixture-coven/ingredients';

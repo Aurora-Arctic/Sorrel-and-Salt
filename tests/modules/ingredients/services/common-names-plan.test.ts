@@ -48,7 +48,7 @@ function match(statements: Logged[]): Logged {
 
 describe('the common-name suggestion query', () => {
   describe('EXPLAIN', () => {
-    // Seeded once per file (MB.184), inside the describe that plans. As in
+    // Seeded once per file, inside the describe that plans. As in
     // duplicates-plan.test.ts: sequential scans off, distinct (md5) trigrams,
     // and enough rows that the planner's choice is between the GIN probe and
     // a walk of a partial unique index, not a foregone one. The display-name

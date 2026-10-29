@@ -4,7 +4,7 @@ import { NotFound } from '@/lib/errors';
 import { EMPTY_VALUES } from '@/components/IngredientForm/values';
 import { entryDetail } from '../../../support/entry-detail';
 
-// The public entry page (M8.19; MB.80). The cached read and the viewer are
+// The public entry page. The cached read and the viewer are
 // mocked, since what they decide is their own tests'. Here: which outcome of
 // the read becomes which response, who is offered Edit, and when the edit
 // dialog's values are read: only for a curator, and only with `?edit`.

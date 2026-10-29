@@ -8,7 +8,7 @@ import { A, B, D, E, asUser } from '../../../support/as-user';
 import { useTestDatabase } from '../../../support/db/database';
 import type { InvitationFixture } from './types';
 
-// M10.32: the coven invitations addressed to the signed-in account, as the
+// The coven invitations addressed to the signed-in account, as the
 // `/coven` landing lists them. The session is the scope, so a call needs no
 // permission and names no workspace; the repository matches the verified
 // address (tests/db/repository/invitations.test.ts). What this proves is the

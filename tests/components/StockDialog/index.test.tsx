@@ -8,7 +8,7 @@ import { choose, press, typeIn } from '../../support/interact';
 import { graphqlLink, mockGraphQLError, mockGraphQLMutation } from '../../support/msw/graphql';
 import { server } from '../../support/msw/server';
 
-// The Edit Stock dialog on a coven card (M9.9): the jars the coven holds of
+// The Edit Stock dialog on a coven card: the jars the coven holds of
 // the ingredient in a list, the chosen one's fields beside it, a form added
 // or a jar removed in the same dialog, all of it saved as one `saveStock`.
 // The service is the guard and is tested there; this proves what the dialog
@@ -109,7 +109,7 @@ async function sent(calls: SaveStockMutationVariables[]) {
 }
 
 describe('StockDialog', () => {
-  // Opened from a page that is not a coven's (M9.12), the dialog names the coven it writes to in
+  // Opened from a page that is not a coven's, the dialog names the coven it writes to in
   // its accessible name; on a coven's own page it is left out.
   it('puts the coven it writes to in the eyebrow when given one, and only then', () => {
     const { unmount } = render(
@@ -556,7 +556,7 @@ describe('StockDialog openOn (M12.29)', () => {
     await waitFor(() => expect(quantity('Resin')).toHaveFocus());
     // The one new row, not two, and the form is no longer on offer under Add Form.
     expect(inDialog().getAllByRole('button', { name: /^Resin\b/ })).toHaveLength(1);
-    // Opened, the dialog is unedited (the owner, 2026-10-29): the row is a place to fill, not a change.
+    // Opened, the dialog is unedited: the row is a place to fill, not a change.
     expect(save()).toBeDisabled();
 
     typeIn(quantity('Resin'), '12');

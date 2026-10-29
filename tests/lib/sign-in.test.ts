@@ -14,16 +14,15 @@ import {
   unlinkErrorMessage,
 } from '@/lib/sign-in';
 
-// Where a sign-in with no return path lands, decided by the role the account
-// holds once the callback has run (MB.113). Not `/`: `/` is the public front
-// door, and someone who just signed in has been through it already
-// (claude-docs/design-decisions/mb.57-post-sign-in-landing.md).
+// Where a sign-in with no return path lands, decided by the role the account holds once the
+// callback has run. Not `/`: `/` is the public front door, and someone who just signed in has
+// been through it already (claude-docs/design-decisions/mb.57-post-sign-in-landing.md).
 describe('postSignInLanding', () => {
   it('sends an admin to the admin area', () => {
     expect(postSignInLanding('admin')).toBe('/admin');
   });
 
-  // M11.20: a curator's work is in the admin area too.
+  // A curator's work is in the admin area too.
   it('sends a curator to the admin area', () => {
     expect(postSignInLanding('curator')).toBe('/admin');
   });
@@ -91,8 +90,7 @@ describe('safeReturnPath', () => {
     expect(safeReturnPath('/coven/hearth?tab=stock')).toBe('/coven/hearth?tab=stock');
   });
 
-  // No landing stands in for a refused path: which landing is the role's, and
-  // the callback decides it (MB.113).
+  // No landing stands in for a refused path: which landing is the role's, and the callback decides it.
   it('is no return path for undefined or an empty string', () => {
     expect(safeReturnPath(undefined)).toBeUndefined();
     expect(safeReturnPath('')).toBeUndefined();
@@ -144,17 +142,15 @@ describe('signInErrorMessage', () => {
     expect(target.searchParams.get('error')).toBe('sign_in_to_verify');
   });
 
-  // Better Auth's state failures (oauth2/state.mjs folds state_security_mismatch
-  // into state_mismatch). Retrying from the provider's tab replays the dead
-  // state, so the sentence must send the visitor back here instead — one
-  // sentence for the three codes, built once.
+  // Better Auth's state failures (oauth2/state.mjs folds state_security_mismatch into
+  // state_mismatch). Retrying from the provider's tab replays the dead state, so the sentence
+  // sends the visitor back here instead: one sentence for the three codes, built once.
   it('gives a state failure a sentence of its own', () => {
     expect(signInErrorMessage('state_mismatch')).not.toBe(GENERIC_SIGN_IN_ERROR);
   });
 
-  // One sentence whatever the cause — a squatted address or a provider that
-  // never vouches over an existing row share the code — so it confirms
-  // nothing about whether an account holds the address (MB.71's plan).
+  // One sentence whatever the cause (a squatted address, or a provider that never vouches over
+  // an existing row, share the code), so it confirms nothing about whether an account holds the address.
   it('gives account_not_linked a sentence that names no address and no squat', () => {
     const message = signInErrorMessage('account_not_linked');
 

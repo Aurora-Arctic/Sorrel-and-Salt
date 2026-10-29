@@ -14,7 +14,7 @@ import {
   setUpInvitationAcceptance,
 } from '../../../support/db/invitation-acceptance';
 
-// M10.32: the landing's accept, by the id `/coven` lists. The same checks and
+// The landing's accept, by the id `/coven` lists. The same checks and
 // the same acceptance as the token's, over a read that is the session's own:
 // each refusal sits beside the call that succeeds once its refusing fact is
 // gone, so the fact is what refused.

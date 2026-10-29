@@ -9,7 +9,7 @@ import { insertIngredient } from '../../../support/db/insert-ingredient';
 import { makeIngredient } from '../../../support/fixtures';
 import { run } from '../../../support/graphql/run';
 
-// The transport's half of M8.3a: the mutation's arguments, the answer as a
+// The transport's half of the promotion: the mutation's arguments, the answer as a
 // fresh read gives it, and one refusal per error code as the browser reads it.
 // Who may promote at which tier is services/promote-folk-name.test.ts's.
 

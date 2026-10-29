@@ -14,11 +14,11 @@ import { mockGraphQLError, mockGraphQLMutation } from '../../support/msw/graphql
 const router = vi.hoisted(() => ({ push: vi.fn(), replace: vi.fn(), refresh: vi.fn() }));
 vi.mock('next/navigation', () => ({ useRouter: () => router }));
 
-// The Annotate dialog's foot (M8.17; claude-docs/components/ingredient-entry.md):
+// The Annotate dialog's foot (claude-docs/components/ingredient-entry.md):
 // Make It Ours and Remove, each offered only on the member's permission, in a
 // More menu when both are and as a button of its own when one is, and each
 // asked in the form's own question card over it, as Delete asks, not
-// in a second dialog (the owner's call, 2026-10-20).
+// in a second dialog.
 // A remove leaves for where the dialog closes to; Make It Ours for the own
 // entry it writes, warning first when the form holds unsaved changes.
 
@@ -93,7 +93,7 @@ describe('AnnotateDialog: Make It Ours and Remove', () => {
     renderDialog();
 
     expect(choices()).toEqual(['Make It Ours', 'Remove']);
-    // In the one Coven section every More draws (the owner's call, 2026-10-20).
+    // In the one Coven section every More draws.
     const menu = within(dialog()).getByRole('menu', { name: CUPBOARD_MENU_LABEL });
     expect(within(menu).getByRole('group', { name: 'Coven' })).toContainElement(
       within(menu).getByRole('menuitem', { name: 'Remove' }),

@@ -1,7 +1,7 @@
 import { describe, expect, it, vi } from 'vitest';
 import { Forbidden } from '@/lib/errors';
 
-// The Updated column's names (MB.260). Who may read them is
+// The Updated column's names. Who may read them is
 // `editorNamesForCurator`'s, asserted against a database in
 // tests/modules/identity/services/editor-names.test.ts: a curator and an admin are
 // answered, a coven owner is refused. This file holds what the

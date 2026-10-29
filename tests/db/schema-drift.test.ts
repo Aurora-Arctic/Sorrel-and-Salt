@@ -49,7 +49,7 @@ import * as ingredientForms from '@/modules/vocabulary/schema/ingredient-forms';
 // and `name` both the view's (claude-docs/db/expand-contract.md, "Renaming a
 // table"). A pending column the code still declares, as a renamed column is
 // until its old name goes, is compared like any other: only the database side
-// of an undeclared one is set aside (M13.1).
+// of an undeclared one is set aside.
 const PENDING_DROPS: readonly {
   table: string;
   kind: 'column' | 'index' | 'check' | 'foreignKey' | 'table' | 'view';
@@ -205,10 +205,9 @@ async function migrated(name: string) {
     select conname as name from pg_constraint
     where conrelid = ${name}::regclass and contype = 'c'
   `;
-  // An index backing a primary key or unique constraint is the constraint's,
-  // not one the schema file's index list declares. A foreign key records the
-  // index it points at in `conindid` too, so only the table's own key and
-  // unique constraints count: MB.217's composite keys point at
+  // An index backing a primary key or unique constraint is the constraint's, not one the schema file's
+  // index list declares. A foreign key records the index it points at in `conindid` too, so only the
+  // table's own key and unique constraints count: the composite keys point at
   // `ingredient_variants_id_ingredient_id_unique`, a declared index.
   const indexes = await sql<{ name: string; unique: boolean; partial: boolean }[]>`
     select ic.relname as name, i.indisunique as unique, i.indpred is not null as partial

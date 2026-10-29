@@ -3,7 +3,7 @@ import { describe, expect, it } from 'vitest';
 import { FormActions } from '@/components/Field';
 
 // A form's row of actions names its submit "Save <noun>" unless the form says
-// otherwise: an invitation is sent, not saved (MB.119). It also owns two
+// otherwise: an invitation is sent, not saved. It also owns two
 // rules every form relied on, so no form proves them again (rule 6): Save is
 // off until there is something to save, and busy from the press to the answer.
 

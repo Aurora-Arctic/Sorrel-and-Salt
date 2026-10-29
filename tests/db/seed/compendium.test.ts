@@ -41,7 +41,7 @@ import {
 } from './compendium/files-fixture';
 import type { SeedCompendiumEntry } from '@/db/seed/types';
 
-// MB.242: the compendium seed writes each entry whole, once, on the invented
+// The compendium seed writes each entry whole, once, on the invented
 // fixture entries, read from files, against the real tables emptied first. The shape every seed
 // shares — stamps, a second run a no-op, nothing resurrected — is
 // index.test.ts's; the guard's rules are compendium/guard.test.ts's and
@@ -49,7 +49,7 @@ import type { SeedCompendiumEntry } from '@/db/seed/types';
 //
 // The five vocabularies the compendium picks from are seeded once for the
 // file, and each case empties only what the compendium and its cases write
-// (M14.27): re-seeding them per case cost most of the file's time. The cases
+// : re-seeding them per case cost most of the file's time. The cases
 // that need other vocabularies, or none, have describes of their own that
 // put the shared state back when they finish.
 
@@ -226,7 +226,7 @@ describe('seedCompendium', () => {
       ]);
     });
 
-    // M14.1: the two flags are the literal's, each its own, and off where the
+    // The two flags are the literal's, each its own, and off where the
     // literal leaves them out.
     it('flags an entry and a form toxic exactly where the literal says so', async () => {
       const entries = await sql<{ seed_key: string; toxic: boolean }[]>`
@@ -411,7 +411,7 @@ describe('seedCompendium', () => {
     });
   });
 
-  // M14.23: a source's spelling, which the deity seed loads as an other name.
+  // A source's spelling, which the deity seed loads as an other name.
   it('links a deity an entry names by one of its other names, stored under the deity name', async () => {
     const testwort = fileOf(TESTWORT, (file) => file.entry.deities?.push('Ganesh'));
 
@@ -520,7 +520,7 @@ describe('seedCompendium', () => {
   });
 });
 
-// M14.7: a present entry is updated only when its file says so (`seedUpdate`,
+// A present entry is updated only when its file says so (`seedUpdate`,
 // the hash of the file as read) and nobody's work on the site stands in the
 // way. Every case seeds the two fixture entries from files, then runs the
 // seed again on an edited copy, and reads the rows back.
@@ -650,7 +650,7 @@ describe('the update path (M14.7)', () => {
     expect(await compendiumRows()).toEqual(before);
   });
 
-  // M14.23: the edit the entry files waiting on M14.23 make once marked.
+  // The edit the entry files waiting on a later pass make once marked.
   it('links a deity a marked edit adds by one of its other names, under the deity name', async () => {
     const report = await run([
       edited(TESTWORT, (entry) => entry.deities?.push('Woden')),
@@ -774,7 +774,7 @@ describe('the update path (M14.7)', () => {
     expect(await variantIdOf(sql, id, 'Oil')).toBe(oil);
     expect(await compendiumRows()).toEqual(before);
 
-    // M14.26: --force lifts refusals 1 to 4 only; a form in use stays refused.
+    // --force lifts refusals 1 to 4 only; a form in use stays refused.
     const forced = await run(files(), { force: true });
 
     expect(forced.refused).toHaveLength(1);
@@ -894,7 +894,7 @@ describe('the update path (M14.7)', () => {
     expect(await compendiumRows()).toEqual(before);
   });
 
-  // M14.26: `db:seed:compendium -- --force` lifts refusals 1 to 4 for every
+  // `db:seed:compendium -- --force` lifts refusals 1 to 4 for every
   // entry in the run, with no `overwriteEditor` in any file. The mark rule
   // still holds: an edit nobody marked stays pending.
   describe('--force lifts refusals 1 to 4 for every entry', () => {
@@ -1014,7 +1014,7 @@ describe('the update path (M14.7)', () => {
     });
   });
 
-  // M14.1: a row seeded before its file said `toxic: true` can hold the file's
+  // A row seeded before its file said `toxic: true` can hold the file's
   // hash (the conversion manifest's, adopted) without its content. A matching
   // hash skips only a row that matches its file as well.
   describe('a row whose hash matches its file but whose content does not', () => {
@@ -1112,8 +1112,8 @@ describe('the update path (M14.7)', () => {
       expect((await testwortRow()).updated_by).toBe(A_ID);
     });
 
-    // M14.26: the run's --force is the one thing that goes past the quiet skip,
-    // since the owner's rule is that a person's edit stays until a forced refresh.
+    // The run's --force is the one thing that goes past the quiet skip, since a person's edit stays
+    // until a forced refresh.
     describe('under --force', () => {
       it('applies a marked file when a person edited the row, overwriting the edit', async () => {
         await unflag();
@@ -1218,7 +1218,7 @@ describe('the update path (M14.7)', () => {
     },
   );
 
-  // M14.8: the seed never sets the curator mark. A row it inserts, and a row it
+  // The seed never sets the curator mark. A row it inserts, and a row it
   // updates, both come out unreviewed; only a curator's switch marks an entry.
   const markOf = async () => {
     const [row] = await sql<{ at: Date | null; by: string | null }[]>`
@@ -1285,10 +1285,9 @@ describe('the update path (M14.7)', () => {
     expect(await compendiumRows()).toEqual(before);
   });
 
-  // M14.30: an entry M14.29 ruled out stays in every database seeded before,
-  // because the seed never deletes a row whose file is gone. Migration 0090
-  // soft-deletes it by seed key; a file that ever names it again must find it
-  // retired and leave it so.
+  // An entry ruled out as endangered stays in every database seeded before, because the seed never
+  // deletes a row whose file is gone. Migration 0090 soft-deletes it by seed key; a file that ever
+  // names it again must find it retired and leave it so.
   describe('an entry migration 0090 retired', () => {
     const RETIRED = 'Aquilaria malaccensis';
 

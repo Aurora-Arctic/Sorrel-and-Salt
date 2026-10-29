@@ -4,7 +4,7 @@ import { StatusRegionProvider } from '@/components/ClickFeedback/status-region';
 import { GraphQLClientError } from '@/lib/graphql-client-error';
 import { announced, expectRefusalUnder } from '../../support/click-feedback';
 
-// The Change Role control (M6.13): it asks which role in a modal, sends
+// The Change Role control: it asks which role in a modal, sends
 // the change, and closes the modal when the answer comes back, since the
 // member's row survives the re-read and does not replace it.
 
@@ -26,7 +26,7 @@ beforeEach(() => {
 
 describe('RoleControl', () => {
   // The service's sentence alone, with no prefix naming the member: the
-  // callout hangs from that member's row (the owner's call, 2026-10-20).
+  // callout hangs from that member's row.
   it("says the service's refusal under the control, the focus back on it", async () => {
     graphqlRequest.mockRejectedValue(
       new GraphQLClientError({

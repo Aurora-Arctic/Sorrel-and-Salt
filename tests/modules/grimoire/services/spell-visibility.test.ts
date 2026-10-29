@@ -32,7 +32,7 @@ async function cast(
   author: typeof A,
   visibility: SpellVisibility,
   workspaceId: string = WORKSPACE_W_ID,
-  // Complete by default: the one-way rule binds a complete spell (M10.20).
+  // Complete by default: the one-way rule binds a complete spell.
   status: SpellStatus = 'complete',
 ): Promise<string> {
   const session = asUser(author);

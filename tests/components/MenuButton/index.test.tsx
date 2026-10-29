@@ -89,7 +89,7 @@ describe('MenuButton', () => {
     expect(screen.queryByRole('menu')).toBeNull();
   });
 
-  // A disabled item (the owner's call of 2026-10-20: a coven that holds the entry is shown, not
+  // A disabled item (a coven that holds the entry is shown, not
   // left out): the APG menu pattern, so it stays in the roving and is read as unavailable, and
   // choosing it runs nothing and leaves the menu open.
   describe('a disabled item', () => {
@@ -158,7 +158,7 @@ describe('MenuButton', () => {
     expect(screen.queryByRole('menu')).toBeNull();
   });
 
-  // MB.120: the busy button was `disabled`, and a browser drops the focus of a control that is
+  // The busy button was `disabled`, and a browser drops the focus of a control that is
   // disabled under it to the body, so the keyboard lost its place while an add ran. It is
   // `aria-disabled` instead, as the menu's own disabled items are, and refuses a press and
   // ArrowDown itself.
@@ -197,7 +197,7 @@ describe('MenuButton', () => {
     });
   });
 
-  // An icon in place of the words (M8.17's card More): the label still names
+  // An icon in place of the words (the card More): the label still names
   // the button and its menu, read by a screen reader though not shown.
   it("keeps its label as its name and its menu's with an icon in place of the words", () => {
     render(
@@ -223,7 +223,7 @@ describe('MenuButton', () => {
   });
 });
 
-// The green item goes first (the owner's call, 2026-10-20): whatever place a
+// The green item goes first: whatever place a
 // caller gives the item marked `primary`, the menu draws it
 // first and leaves the rest in the caller's order, and the keys follow what is
 // drawn.
@@ -280,7 +280,7 @@ describe('MenuButton green item first', () => {
   });
 });
 
-// Sections (the owner's call, 2026-10-20): a menu that holds both the compendium's choices and
+// Sections: a menu that holds both the compendium's choices and
 // the coven's draws them in labelled groups, the caller putting first the group that belongs to
 // the page the viewer is on. The APG menu pattern: a group named by its visible label, a
 // separator between groups, and the arrows running through every item as one list.
@@ -417,8 +417,8 @@ describe('MenuButton sections', () => {
       expect(sectionsFor({ compendium: [], coven: [] }, 'coven')).toEqual([]);
     });
 
-    // A More menu always draws its labelled section, even for one kind of choice (the owner's
-    // call, 2026-10-20), and an empty side is left out.
+    // A More menu always draws its labelled section, even for one kind of choice,
+    // and an empty side is left out.
     it('hands a More menu the sections even where only one side has items', () => {
       expect(choicesFor(groups, 'coven').sections).toHaveLength(2);
       const lone = choicesFor({ ...groups, compendium: [] }, 'coven');

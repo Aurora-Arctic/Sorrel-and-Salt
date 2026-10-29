@@ -17,7 +17,7 @@ import { fixtureFiles } from './compendium/files-fixture';
 import type { SeedEntry, UserRow } from './types';
 
 // The shape every production seed shares, asserted here once over all of them
-// (MB.183) and in no per-seed file: the bootstrap user inserted and published as the acting user,
+//  and in no per-seed file: the bootstrap user inserted and published as the acting user,
 // every row stamped as it, a second run a no-op, and nothing an admin deleted
 // brought back. The handle is this file's own; that the seed writes through
 // it rather than a client of its own is enforced by lint, not here —
@@ -113,7 +113,7 @@ describe('seed(db, { scenario: "minimal" })', () => {
     await seed(db, { scenario: 'minimal' });
   });
 
-  // MB.58: the system user is a creator, not an admin, so a bare install has none.
+  // The system user is a creator, not an admin, so a bare install has none.
   it('produces exactly one system user and one user, and no admin', async () => {
     const users = await allUsers();
     expect(users.map((u) => u.id)).toEqual([BOOTSTRAP_USER_ID, MINIMAL_USER_ID]);
@@ -135,7 +135,7 @@ describe('resolveScenario', () => {
 
 // Every entry point opens with `beginSeedTransaction`, so each inserts the
 // bootstrap row when it is missing — the reference-data seeds alone, on staging
-// and production. From wherever, it is no admin (MB.58): it has no OAuth
+// and production. From wherever, it is no admin: it has no OAuth
 // account and nobody can sign in as it, so as an admin it would only be a
 // revocable row on /admin/users.
 //
@@ -177,9 +177,9 @@ const SEED_ENTRIES: SeedEntry[] = (
     {
       // On the production list, after everything it picks from and the sources
       // it may share a work with. The fill sweep reads the real files under
-      // `compendium/` (M14.10), so every table it names is proved filled; the
+      // `compendium/`, so every table it names is proved filled; the
       // other three sweeps read the two-entry fixture, since what they prove
-      // does not grow with the files and the real list costs seconds a run (M14.27).
+      // does not grow with the files and the real list costs seconds a run.
       name: 'the compendium seed, after the vocabularies and sources',
       prepare: async (db) => {
         await seedCategories(db);
@@ -311,7 +311,7 @@ describe('the shape every seed shares', () => {
       }
     },
   );
-  // M14.26: the hand-started seed workflow runs each seed with --dry-run
+  // The hand-started seed workflow runs each seed with --dry-run
   // first. A dry run does all its reads and writes, then rolls its
   // transaction back, so every table reads as it did before.
   it.each(SEED_ENTRIES)(

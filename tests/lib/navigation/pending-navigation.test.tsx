@@ -12,9 +12,9 @@ vi.mock('next/navigation', () => ({ useRouter: () => router, usePathname: () => 
 const { NavigationProvider, reportLeaving, useNavigationState, usePendingNavigation } =
   await import('@/lib/navigation');
 
-// The one way the site navigates (M12.33; claude-docs/design-decisions/m12.33-plan.md):
-// each caller's own `pending`, and a site-wide `busy` with the target's
-// region and shape, which the bar and the skeletons read wherever they sit.
+// The one way the site navigates (claude-docs/design-decisions/m12.33-plan.md): each caller's own
+// `pending`, and a site-wide `busy` with the target's region and shape, which the bar and the
+// skeletons read wherever they sit.
 
 const COVEN_CARDS = { region: 'coven', shape: 'cards' } as const;
 
@@ -54,10 +54,7 @@ function Probe() {
   return null;
 }
 
-/**
- * A page that arrives when the test says so. Every page a test leaves on its
- * way arrives after it, so the site-wide state starts idle in the next.
- */
+/** A page that arrives when the test says so. Every page a test leaves arrives after it, so the site-wide state starts idle in the next. */
 const unarrived: (() => void)[] = [];
 function arrival() {
   let arrive = () => {};

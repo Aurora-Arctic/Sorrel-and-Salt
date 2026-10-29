@@ -11,8 +11,8 @@ import StockFields, {
 import { UNITS } from '@/modules/ingredients/schema/units';
 import { choose, typeIn } from '../../support/interact';
 
-// A jar's three amounts, drawn for whichever form holds a jar (M9.9, and
-// M9.12's add dialog). The fields hand their values to the form that draws
+// A jar's three amounts, drawn for whichever form holds a jar (and
+// the add dialog). The fields hand their values to the form that draws
 // them; changing the unit never converts the numbers
 // (claude-docs/components/stock-fields.md).
 

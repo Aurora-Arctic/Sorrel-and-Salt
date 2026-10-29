@@ -25,8 +25,8 @@ import {
   setUpInvitationAcceptance,
 } from '../../../support/db/invitation-acceptance';
 
-// MB.70: the one accept service, `acceptInvitation(session, token)`, with the
-// site tier's branch; M7.5 adds the workspace's. Holding the token names the
+// The one accept service, `acceptInvitation(session, token)`, with the
+// site tier's branch and the workspace's. Holding the token names the
 // invitation, and the session's verified address is what admits: a matching
 // unverified account is sent to the email page, a different address refused.
 // The three dead-link checks run first, for both tiers, one reason per link.
@@ -102,7 +102,7 @@ describe('acceptInvitation, on the site tier', () => {
     ]);
   });
 
-  // M11.20: an admin invitation sent to a curator's address makes them an
+  // An admin invitation sent to a curator's address makes them an
   // admin, a revoke of curator and a grant of admin at one instant.
   it('makes a curator an admin, recorded as a curator revoke and an admin grant via the invitation', async () => {
     await asManualFix(sql, async (tx) => {
@@ -134,7 +134,7 @@ describe('acceptInvitation, on the site tier', () => {
     expect(await ledger()).toEqual([]);
   });
 
-  // M11.20: a site invitation grants the role it names.
+  // A site invitation grants the role it names.
   describe('to the curator role', () => {
     it('makes the verified holder of the address a curator who may create covens, recorded via the invitation with its note', async () => {
       expect(await roleOf(GRANTEE)).toMatchObject({ role: 'user', can_create_workspace: false });
@@ -317,8 +317,8 @@ describe('a link that cannot be used', () => {
       expect(stamped.accepted_at).not.toBeNull();
     });
 
-    // The same checks as the site tier's, before the tier branch (MB.70): the
-    // reader is not a member, so no message may name the coven (story 7).
+    // The same checks as the site tier's, before the tier branch: the
+    // reader is not a member, so no message may name the coven.
     it.each([['revoked', { revoked: true }, 'revoked']] as const)(
       'rejects one %s as %s, seating no one and naming no coven',
       async (_what, state, reason) => {
@@ -494,7 +494,7 @@ describe('while admin changes are paused', () => {
     await pauseAdminRoleChanges(asUser(AS_PRIMARY));
   });
 
-  // The pause holds every site role an invitation grants, the curator's too (M11.20).
+  // The pause holds every site role an invitation grants, the curator's too.
   it.each(['admin'] as const)(
     'refuses another admin’s invitation to %s, naming nobody, and accepts it once resumed',
     async (siteRole) => {

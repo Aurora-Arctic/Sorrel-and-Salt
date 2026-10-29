@@ -46,7 +46,7 @@ describe('the workspace-local ingredient', () => {
 
   // `none` would contradict the name it was given, and `botanical` is the
   // silent guess §5 forbids; `unknown` admits the name without claiming its
-  // system (MB.161).
+  // system.
   it('reads a formal name with no naming system, absent or null, as unknown', () => {
     for (const nomenclature of [undefined, null]) {
       expect(
@@ -222,7 +222,7 @@ describe('the ingredient fields, on the local variant', () => {
       ]);
     });
 
-    // MB.215: a link may name one form of the ingredient it links. Whether
+    // A link may name one form of the ingredient it links. Whether
     // the form is that ingredient's reads the database, so it is the service's.
     it('takes a link naming one of its forms, and refuses a form that is not an id or has no link, beside it', () => {
       const parsed = Schema.parse({
@@ -304,7 +304,7 @@ describe('the ingredient fields, on the local variant', () => {
       ]);
     });
 
-    // MB.154: one locator holds every place a source is cited at, tidied and
+    // One locator holds every place a source is cited at, tidied and
     // with its ranges dashed, as the form shows it once the box is left.
     it('tidies a locator and dashes its ranges, keeping several places in one', () => {
       const parsed = Schema.parse({
@@ -341,7 +341,7 @@ describe('the ingredient fields, on the local variant', () => {
     });
   });
 
-  // MB.125: the categories an ingredient is filed under, by id. Whether an id
+  // The categories an ingredient is filed under, by id. Whether an id
   // names a live category is the service's, which reads the database.
   describe('categoryIds', () => {
     const base = { name: 'Testwort', nomenclature: 'none' };
@@ -381,7 +381,7 @@ describe('the ingredient fields, on the local variant', () => {
     });
   });
 
-  // DESIGN.md §5 (MB.157): a list of the five, in the order chosen, each once.
+  // DESIGN.md §5: a list of the five, in the order chosen, each once.
   describe('elements', () => {
     const base = { name: 'Testwort', nomenclature: 'none' };
 
@@ -413,7 +413,7 @@ describe('the ingredient fields, on the local variant', () => {
 
   // Suggested, not enforced: practices differ on both, so a value off the
   // autofill list is written as readily as one on it.
-  // DESIGN.md §5 (MB.134): celestial bodies, zodiac signs and colours are one list
+  // DESIGN.md §5: celestial bodies, zodiac signs and colours are one list
   // builder, so it runs once, on the celestial bodies.
   describe('celestialBodies', () => {
     const base = { name: 'Testwort', nomenclature: 'none' };
@@ -436,7 +436,7 @@ describe('the ingredient fields, on the local variant', () => {
       });
     });
 
-    // MB.167: as folk names are, case-folded and trimmed, at the row the form
+    // As folk names are, case-folded and trimmed, at the row the form
     // sent it in — blanks counted.
     it('refuses a repeat but for case and spacing, at the repeat', () => {
       const result = Schema.safeParse({ ...base, [field]: ['Vesta', ' ', 'Ceres', ' vESTA '] });
@@ -475,7 +475,7 @@ describe('the ingredient fields, on the local variant', () => {
     });
   });
 
-  // MB.167: each deity links a curated row or names one (DESIGN.md §5,
+  // Each deity links a curated row or names one (DESIGN.md §5,
   // `ingredient_deities`), in the order entered, and an ingredient lists each once.
   describe('deities', () => {
     const base = { name: 'Testwort', nomenclature: 'none' };
@@ -540,7 +540,7 @@ describe('the ingredient fields, on the local variant', () => {
     });
   });
 
-  // MB.215: the forms an ingredient comes in, each a list entry carrying its
+  // The forms an ingredient comes in, each a list entry carrying its
   // own fields and its own substitutes, references and categories. A rule a
   // variant shares with the ingredient runs on one row here, pathed beneath
   // the variant; whether a form's pick, link or category names a live row is
@@ -609,7 +609,7 @@ describe('the ingredient fields, on the local variant', () => {
       ]);
     });
 
-    // Each entry replaces the row it names, so a field left out would clear it (MB.159).
+    // Each entry replaces the row it names, so a field left out would clear it.
     it('refuses a form leaving a field out, beside the field', () => {
       const { description: _left, ...short } = formOf('Herb');
 
@@ -649,7 +649,7 @@ describe('the ingredient fields, on the local variant', () => {
       ).toEqual([['variants', 0, 'formId']]);
     });
 
-    // MB.115, the owner's call: a form stands in for a form, so a variant's
+    // A form stands in for a form, so a variant's
     // link names one; the ingredient's own list may still link it whole.
     it('refuses a variant’s link naming no form, beside its form, which the ingredient’s own list takes', () => {
       const whole = { substitutes: [{ ingredientId: LINKED }] };

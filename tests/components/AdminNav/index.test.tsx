@@ -12,7 +12,7 @@ vi.mock('next/navigation', () => ({
 
 const { default: AdminNav } = await import('@/components/AdminNav');
 
-// The nav the `/admin` layout carries (M5.4): every admin page, and nothing
+// The nav the `/admin` layout carries: every admin page, and nothing
 // else, each linked at its first tab, with the page you are on marked
 // (claude-docs/components/admin-nav.md). Which pages show in the row and
 // which behind More is the stylesheet's, so every page is in the row here.
@@ -20,7 +20,7 @@ const { default: AdminNav } = await import('@/components/AdminNav');
 const nav = () => screen.getByRole('navigation', { name: 'Admin' });
 const row = () => within(nav()).getAllByRole('link');
 
-// Each page linked at its first tab (MB.115), in the sections' order.
+// Each page linked at its first tab, in the sections' order.
 const PAGES = [
   '/admin/compendium',
   '/admin/categories',
@@ -41,7 +41,7 @@ describe('AdminNav', () => {
     expect(hrefs(row())).toEqual(PAGES);
   });
 
-  // M11.20: a curator is shown the curation pages and not People, which every
+  // A curator is shown the curation pages and not People, which every
   // page beneath refuses them anyway (claude-docs/auth/admin-guard.md).
   it('leaves People out for a curator, who manages no one', () => {
     render(<AdminNav managesPeople={false} />);
@@ -51,7 +51,7 @@ describe('AdminNav', () => {
 
   it.each([
     // The index marks none; a page marks its own entry, on any of its tabs
-    // (MB.115).
+    // .
     ['/admin', []],
     ['/admin/categories', ['/admin/categories']],
     ['/admin/category-groups', ['/admin/categories']],

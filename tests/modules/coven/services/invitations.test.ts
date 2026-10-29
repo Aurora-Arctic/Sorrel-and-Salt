@@ -13,7 +13,7 @@ import { asManualFix } from '../../../support/db/privileges';
 import { makeWorkspace, workspaceColumns } from '../../../support/fixtures';
 import type { CovenInvitationStateRow } from './types';
 
-// M7.3: an owner invites an address into a coven as a viewer or a member. The
+// An owner invites an address into a coven as a viewer or a member. The
 // token is `crypto.randomBytes` output that only the mail carries; the row
 // holds its hash. The transport is the test double: the real sender builds the
 // link and hands it to a mocked `send`, so what reaches the address is what the
@@ -55,7 +55,7 @@ const invitations = () => sql<CovenInvitationStateRow[]>`
   from invitations order by created_at
 `;
 
-/** A coven with these members, through the raw client (MB.101). */
+/** A coven with these members, through the raw client. */
 async function insertCoven(
   name: string,
   members: [string, 'owner' | 'member' | 'viewer'][],

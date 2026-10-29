@@ -27,7 +27,7 @@ import {
   variant,
 } from './variants-harness';
 
-// The Variants section on its own (MB.221): a form added from the New Form
+// The Variants section on its own: a form added from the New Form
 // box, refused there, removed by its own button, folded to a line and opened
 // one at a time, each variant's sections folding under its own headings, and
 // a form an admin has renamed settled by the member. Rendered by
@@ -60,7 +60,7 @@ describe('VariantsField', () => {
     save();
 
     await waitFor(() => expect(onSubmit).toHaveBeenCalledTimes(1));
-    // The form's own flag, the ingredient's left off beside it (M11.21).
+    // The form's own flag, the ingredient's left off beside it.
     expect(sent(onSubmit)?.toxic).toBe(false);
     expect(sent(onSubmit)?.variants).toEqual([
       {
@@ -91,7 +91,7 @@ describe('VariantsField', () => {
   });
 
   // Its × asks first, and only removes: an open card stays open until the
-  // answer, and Keep It leaves it so (the owner's call, 2026-10-16).
+  // answer, and Keep It leaves it so.
   it('removes a variant by its own button once confirmed, and sends the rest', async () => {
     const onSubmit = renderVariants({ workspaceId: WORKSPACE_ID });
 
@@ -140,7 +140,7 @@ describe('VariantsField', () => {
     expect(newForm()).toHaveValue('  oIL ');
   });
 
-  // MB.115, the owner's call: each variant one summary line, opened by its
+  // Each variant one summary line, opened by its
   // Edit, one at a time, its fields hidden while closed but kept.
   describe('folded to a line', () => {
     it('opens an entry with every variant closed, its fields out of reach until Edit opens it', () => {
@@ -158,7 +158,7 @@ describe('VariantsField', () => {
       const region = document.getElementById(edit.getAttribute('aria-controls') ?? '');
       expect(region).toBeVisible();
       // The focus goes into the opened fields, to the first: Identity's
-      // heading, its section closed as an edit's are (MB.115).
+      // heading, its section closed as an edit's are.
       expect(sectionOf(variant('Oil'), 'Identity')).toHaveFocus();
       openSectionsIn(variant('Oil'), 'Details & Care');
       expect(within(variant('Oil')).getByRole('textbox', { name: 'Safety Notes' })).toBeVisible();
@@ -180,7 +180,7 @@ describe('VariantsField', () => {
       );
     });
 
-    // MB.115, the owner's call: an open variant's fields in the ingredient's
+    // An open variant's fields in the ingredient's
     // sections, a heading level beneath Variants.
     it('heads an open variant’s sections with the ingredient’s section headings, a level beneath Variants', () => {
       renderVariants({ workspaceId: null, values: twoForms() });
@@ -221,7 +221,7 @@ describe('VariantsField', () => {
       expect(newForm()).toHaveFocus();
     });
 
-    // MB.115, the owner's call: the box heads the section, the newest variant beneath it.
+    // The box heads the section, the newest variant beneath it.
     it('lists a variant added beneath the New Form box, ahead of those before it', () => {
       renderVariants({ workspaceId: WORKSPACE_ID });
 
@@ -236,7 +236,7 @@ describe('VariantsField', () => {
     });
   });
 
-  // MB.115, the owner's ask: an open variant's sections fold as the
+  // An open variant's sections fold as the
   // ingredient's do, under its own headings.
   describe('a variant’s sections', () => {
     it('opens an existing variant with every section closed, each summarising what it holds', () => {
@@ -287,9 +287,9 @@ describe('VariantsField', () => {
     });
   });
 
-  // M5.6a: an admin's rename rewrites nothing of a coven's, so a coven's
+  // An admin's rename rewrites nothing of a coven's, so a coven's
   // variant can open holding "Wax" beside a pick now called "Beeswax", a pair
-  // the service refuses at `form` (MB.167). The member settles it (M8.17).
+  // the service refuses at `form`. The member settles it.
   describe('a form an admin has renamed', () => {
     const WAX_ID = '0b1c2d3e-4f5a-4b6c-8d7e-9f0a1b2c3d4e';
     const renamed = {

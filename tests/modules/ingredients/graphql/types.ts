@@ -50,7 +50,7 @@ export interface IngredientNode {
   categories: { name: string }[];
 }
 
-/** One `IngredientVariant` as ingredient.test.ts selects it (MB.218). */
+/** One `IngredientVariant` as ingredient.test.ts selects it. */
 export interface IngredientVariantNode {
   id: string;
   form: string;
@@ -67,7 +67,7 @@ export interface IngredientVariantNode {
   audit: { createdBy: string; updatedBy: string };
 }
 
-/** One `IngredientDeity`, its curated deity selected by id and tradition (MB.167). */
+/** One `IngredientDeity`, its curated deity selected by id and tradition. */
 export interface IngredientDeityNode {
   name: string;
   deity: { id: string; tradition?: { name: string } } | null;
@@ -112,7 +112,7 @@ export interface ReferenceNode {
   audit: { createdBy: string; updatedBy: string };
 }
 
-/** One `InventoryItem` as stock.test.ts selects it (M9.4). */
+/** One `InventoryItem` as stock.test.ts selects it. */
 export interface InventoryItemNode {
   id: string;
   quantityOnHand: number | null;
@@ -126,7 +126,7 @@ export interface InventoryItemNode {
   audit: { createdBy: string; updatedBy: string };
 }
 
-/** One `CupboardEntry` as cupboard-entries.test.ts selects it (M12.14). */
+/** One `CupboardEntry` as cupboard-entries.test.ts selects it. */
 export interface CupboardEntryNode {
   id: string;
   label: string | null;

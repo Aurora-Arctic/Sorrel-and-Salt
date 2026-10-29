@@ -2,7 +2,7 @@ import { describe, expect, it } from 'vitest';
 import { emptyReport, formatReport, hasRefusals } from '@/db/seed/compendium/report';
 import type { SeedCompendiumReport } from '@/db/seed/compendium/report';
 
-// M14.7: the run's report is what the deploy prints and what fails its seed
+// The run's report is what the deploy prints and what fails its seed
 // step, so the line for each outcome and the exit decision are the contract.
 
 const UPDATED = 'ingredients/botanical/updated-wort.md';

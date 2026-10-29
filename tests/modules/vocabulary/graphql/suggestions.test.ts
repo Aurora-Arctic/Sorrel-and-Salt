@@ -9,7 +9,7 @@ import { run as runOperation } from '../../../support/graphql/run';
 import { makeIngredient } from '../../../support/fixtures';
 import type { AstrologySuggestionConnection } from './types';
 
-// The transport half of MB.94: two connection fields over one type, a page
+// The transport half of the suggestion lookup: two connection fields over one type, a page
 // each, and the compendium-only mode. Who is
 // refused, what each bucket holds and the thresholds are
 // services/suggestions.test.ts's, and a signed-out caller at every field is
@@ -100,7 +100,7 @@ describe('zodiacSuggestions', () => {
   });
 });
 
-// M5.5: the admin's compendium form has no coven to name, so a null
+// The admin's compendium form has no coven to name, so a null
 // workspaceId reads the compendium tier alone — the curated rows, and the
 // values written in the compendium, never a coven's.
 describe.each([

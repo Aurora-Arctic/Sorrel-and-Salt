@@ -11,7 +11,7 @@ import { insertStock } from '../../../support/db/insert-stock';
 import { variantIdOf } from '../../../support/db/read-variants';
 import { makeIngredient, makeVariant } from '../../../support/fixtures';
 
-// The spell builder's Add to Jar (M10.15): a step names an ingredient and the
+// The spell builder's Add to Jar: a step names an ingredient and the
 // form laid, as the ingredient and variant ids, and never the coven's
 // cupboard entry or jar of it. Every assertion reads the rows a save left
 // behind, raw.

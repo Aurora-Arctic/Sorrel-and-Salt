@@ -1,8 +1,8 @@
 import { afterEach, describe, expect, it, vi } from 'vitest';
 
-// The audit projects (M10.25) exist only when asked for, and `npm run e2e`
-// never asks: claude-docs/testing/e2e.md, "The audit". The config reads the
-// environment as it loads, so each case loads it afresh.
+// The audit projects exist only when asked for, and `npm run e2e` never asks
+// (claude-docs/testing/e2e.md, "The audit"). The config reads the environment as it loads, so
+// each case loads it afresh.
 
 const CHROMIUM_PROJECTS = [
   'chromium',
@@ -163,11 +163,9 @@ describe('playwright.workshop.config.ts', () => {
     expect(server?.command).toContain('--port 8502');
   });
 
-  // CI's workshop job has no database and no .env.local, and the config must
-  // still load: it shares nothing with the e2e config that builds the slot
-  // servers' environment, which reads DATABASE_URL as it is imported. The
-  // devcontainer's shell sets DATABASE_URL, so without the stub this case
-  // would pass on a broken config.
+  // CI's workshop job has no database and no .env.local, and the config must still load: it shares
+  // nothing with the e2e config that builds the slot servers' environment, which reads DATABASE_URL
+  // as it is imported. The devcontainer's shell sets DATABASE_URL, so without the stub this case would pass on a broken config.
   it('loads with DATABASE_URL unset, as on CI', async () => {
     vi.resetModules();
     vi.stubEnv('DATABASE_URL', undefined);

@@ -10,7 +10,7 @@ import { FIXTURE_USERS, WORKSPACE_W_ID, WORKSPACE_X_ID } from '@/db/seed/standar
 // compendium entry, and one label per coven, case folded. This file proves
 // what each index is keyed on; the catalogue sweep in
 // partial-unique-indexes.test.ts proves for every index alike that a soft
-// delete frees the slot (M14.27).
+// delete frees the slot.
 
 const AUTHOR = FIXTURE_USERS.A.id;
 

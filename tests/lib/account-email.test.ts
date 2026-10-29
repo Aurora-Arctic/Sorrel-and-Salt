@@ -59,8 +59,8 @@ describe("the email page's paths", () => {
     expect(verifiedLanding('//evil.example')).toBe('/account/email?verified');
   });
 
-  // Continue's landing without one is the role's, so an explicit /coven is
-  // carried like any other: an admin who asked for it still lands on it (MB.113).
+  // Continue's landing without one is the role's, so an explicit /coven is carried like any
+  // other: an admin who asked for it still lands on it.
   it('carries an explicit /coven, which is not the same as none', () => {
     expect(verifiedLanding('/coven')).toBe('/account/email?verified&next=%2Fcoven');
   });

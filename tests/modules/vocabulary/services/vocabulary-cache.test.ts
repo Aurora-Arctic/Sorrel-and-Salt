@@ -17,7 +17,7 @@ import { useTestDatabase } from '../../../support/db/database';
 import { clearDataCache } from '../../../support/next-data-cache';
 import type { CachedVocabulary } from './types';
 
-// M8.6: the curated vocabularies' reads held in the data cache under the
+// The curated vocabularies' reads held in the data cache under the
 // `compendium` tag (DESIGN.md §7). A data cache that holds, as Next's does
 // (tests/support/next-data-cache.ts), so a row changed underneath a read
 // shows whether the repeat read reached Postgres: it did not if the change is

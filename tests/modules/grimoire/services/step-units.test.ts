@@ -12,7 +12,7 @@ import { insertStock } from '../../../support/db/insert-stock';
 import { variantIdOf } from '../../../support/db/read-variants';
 import { makeIngredient, makeSpell, makeVariant } from '../../../support/fixtures';
 
-// Story 77 (M13.2): a step linking a form the coven holds a jar of must be
+// A step linking a form the coven holds a jar of must be
 // measured in a unit the jar's converts to, so that making the spell can take
 // it out of stock. Weight and volume each convert within themselves; a count
 // unit matches only itself. A custom step, and a form with no jar, are not

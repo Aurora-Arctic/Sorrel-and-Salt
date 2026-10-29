@@ -7,7 +7,7 @@ import FacetPanel, { WIDE } from '@/components/FacetPanel';
 import type { FacetPanelFilter, FacetPanelProps } from '@/components/FacetPanel/types';
 import type { CompendiumFacetCounts } from '@/components/CompendiumList/types';
 
-// The Filters button and the panel it opens (M12.4): a dialog that slides down over the
+// The Filters button and the panel it opens: a dialog that slides down over the
 // results from the tablet width up and is a modal sheet below it, rendered inline and open
 // before the script runs (claude-docs/components/facet-panel.md).
 
@@ -296,7 +296,7 @@ describe('FacetPanel', () => {
     expect(sent('categoryMode')).toEqual(['any']);
   });
 
-  // M12.54: the Categories facet keeps its list open after a pick, as Forms and Deities do.
+  // The Categories facet keeps its list open after a pick, as Forms and Deities do.
   it('keeps the Categories list open after a pick, with the focus in the box, and applies the pick', () => {
     stubViewport(true);
     const onChange = vi.fn();
@@ -467,7 +467,7 @@ describe('FacetPanel', () => {
     it('lists the viewer’s covens by name, with no counts, after Forms and Toxic', () => {
       open({ covens: [] }, { covens: COVENS });
       const box = screen.getByRole('combobox', { name: 'In My Covens' });
-      // Forms, then Toxic, then In My Covens, on their line (the owner's call, 2026-10-23).
+      // Forms, then Toxic, then In My Covens, on their line.
       const forms = screen.getByRole('combobox', { name: 'Forms' });
       const toxic = screen.getByRole('group', { name: 'Toxic' });
       expect(forms.compareDocumentPosition(toxic) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy();

@@ -8,7 +8,7 @@ import { useTestDatabase } from '../../support/db/database';
 import type { PageRequest } from '@/lib/types';
 import type { Logged } from '../../support/db/types';
 
-// The plan the grimoire search runs (M10.11), read off the connection's log
+// The plan the grimoire search runs, read off the connection's log
 // and explained, as compendium-search-query.test.ts does for the compendium:
 // each arm of the search starts from the spells' expression index over title
 // and intent, rather than reading every spell in the coven
@@ -61,7 +61,7 @@ describe('the grimoire search plan over ~20,000 spells', () => {
   const FIRST: PageRequest = { limit: 24, inverted: false };
   let page: Logged;
 
-  // Seeded once per file (MB.184): twenty thousand spells in W that share no
+  // Seeded once per file: twenty thousand spells in W that share no
   // word with `hearth`, and six hundred that do, by title or by intent.
   beforeAll(async () => {
     await sql`

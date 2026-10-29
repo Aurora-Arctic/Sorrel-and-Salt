@@ -5,7 +5,7 @@ import { failureOf, useTestDatabase } from '../support/db/database';
 import { ingredientColumns, makeIngredient } from '../support/fixtures';
 import { FIXTURE_USERS } from '@/db/seed/standard';
 
-// Migration 0081 (M14.5): the three columns that let the compendium seed tell
+// Migration 0081: the three columns that let the compendium seed tell
 // a changed file from an unchanged one and keep its hands off a reviewed
 // entry. They are state about the row, not content of it, so the updated_at
 // trigger ignores them (claude-docs/db/updated-at.md, "updated_at is the
