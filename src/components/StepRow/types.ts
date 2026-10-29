@@ -26,8 +26,13 @@ export interface StepRowProps {
   open?: boolean;
   /** The id of the opened fields, which `edit` names in its `aria-controls`. */
   fieldsId?: string;
-  /** A muted phrase after the name while closed, such as the amount and the instruction. */
+  /**
+   * A muted line beneath the name while closed, such as the amount. An instruction-only step's
+   * summary is its text.
+   */
   summary?: ReactNode;
+  /** A second muted line beneath the summary while closed: the instruction. Left out when blank. */
+  bodySummary?: ReactNode;
   /** A small badge straight after the name, such as One-Off. */
   badge?: ReactNode;
   /** A click on the card's own face (not a control or an open field) toggles it; the pencil stays the accessible toggle. */

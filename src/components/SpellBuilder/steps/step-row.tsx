@@ -17,7 +17,7 @@ import { isInstruction, safetyOf, stepNameOf } from './values';
 // One step of the jar (M10.15, M13.3): the handle it is moved by (M10.16), then
 // StepRow's drawing of it with the controls around it. An ingredient's step is a
 // line, open or closed like the ingredient form's variant card: closed it reads
-// "· 2 tsp · Crush first"; open it shows its amount, unit and instruction (and,
+// its amount and its instruction on two muted lines beneath the name; open it shows its amount, unit and instruction (and,
 // for a one-off, its form). An instruction-only step has the instruction alone. See claude-docs/components/spell-builder.md, "Steps".
 
 const ONE_OFF_TIP = 'Used in this spell only; not kept in your cupboard.';
@@ -93,10 +93,10 @@ export function BuilderStepRow({
     (isInstruction(step) && errors.steps?.[index]?.body !== undefined) ||
     errors.steps?.[index]?.name !== undefined;
   const oneOff = !instruction && step.ingredientId === null;
-  const summary = [
-    [quantity, unitChosen].filter(Boolean).join(' '),
-    (bodyTyped ?? '').trim(),
-  ].filter(Boolean);
+  // Two muted lines under a closed ingredient row, as a closed section's summary: the amount,
+  // then the instruction (left out when blank).
+  const amountLine = [quantity, unitChosen].filter(Boolean).join(' ');
+  const bodyLine = (bodyTyped ?? '').trim();
   // Opening by the pencil takes the focus to the first field, as a variant card's Edit does.
   const row = useRef<HTMLLIElement | null>(null);
   useEffect(() => {
@@ -175,10 +175,9 @@ export function BuilderStepRow({
           ? (bodyTyped ?? '').trim() || (
               <span className="step-row__placeholder">Write the step</span>
             )
-          : summary.length > 0
-            ? `· ${summary.join(' · ')}`
-            : null
+          : amountLine || null
       }
+      bodySummary={instruction ? null : bodyLine || null}
       edit={
         <button
           type="button"
