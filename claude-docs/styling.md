@@ -740,7 +740,9 @@ Every spinner button is a `BusyButton`
 `busyLabel` props, so no form writes the markup by hand. The one exception
 is the pager's link while its page loads, an anchor rather than a button.
 
-**Disabled is dashed and faded**, from `disabled` or `aria-disabled`: the
+#### Disabled is dashed and faded
+
+From `disabled` or `aria-disabled`: the
 edge dashes, the fill clears, and the whole button drops to 55%. Neither
 state needs a component to restate it.
 

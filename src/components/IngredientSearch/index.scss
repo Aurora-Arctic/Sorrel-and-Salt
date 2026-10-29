@@ -34,7 +34,7 @@ $page-gutter: space(4);
   padding-block: $stuck-pad 0;
   // The 8px under the row follows the tray's edge, not the tray's 350ms clock, so it opens in 12ms
   // and waits 286ms before rolling up on close (claude-docs/components/ingredient-search.md, "The
-  // sticky row's styling notes").
+  // sticky box").
   transition:
     box-shadow $modal-fade,
     padding-block-end 64ms ease-out 286ms,

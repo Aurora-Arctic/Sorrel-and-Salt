@@ -14,7 +14,7 @@ import { server } from '../../support/msw/server';
 import { ADD, HELD_MARK } from '../../support/cupboard-wording';
 
 // The plus and the held check carry the entry's name in their accessible names, so a screen reader's list of buttons tells one card's plus from the next, as the pencil and the three dots already do.
-// The tip a sighted viewer reads stays short and begins the name, so the words on screen are the words to say (WCAG 2.5.3, Label in Name; claude-docs/components/add-icon.md, "Its name").
+// The tip a sighted viewer reads stays short and begins the name, so the words on screen are the words to say (WCAG 2.5.3, Label in Name; claude-docs/components/add-icon.md, "Props").
 
 const router = vi.hoisted(() => ({ push: vi.fn(), refresh: vi.fn() }));
 vi.mock('next/navigation', () => ({ useRouter: () => router }));
@@ -122,7 +122,7 @@ describe('the holding covens (M12.55)', () => {
 });
 
 // The plus of someone who may write in several covens asks which in a menu: its items are every coven, one holding the entry disabled, and choosing one adds there at once. With one coven, the plus adds there with no menu.
-// A success turns the spinner into a check, which fades back to the plus after a hold unless every coven now holds the entry (claude-docs/components/compendium-cards.md, "The plus").
+// A success turns the spinner into a check, which fades back to the plus after a hold unless every coven now holds the entry (claude-docs/components/add-icon.md, "After an add").
 // These cases render the plus alone; the cards page's choice between the plus and the held check is proved in CompendiumCards/add-icon.test.tsx.
 
 /** The plus, named by its tip and then its entry. */

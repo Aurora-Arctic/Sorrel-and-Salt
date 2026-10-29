@@ -12,7 +12,7 @@ import type { SpellBuilderValues } from './types';
 
 // The categories a spell is assigned (what it intends), picked from every live category as chips in
 // their group's colour; never those its ingredients bring (claude-docs/components/spell-builder.md,
-// "Categories"). The same picker as ../IngredientForm/categories.tsx.
+// "The fields"). The same picker as ../IngredientForm/categories.tsx.
 
 /** Whether two lists of category ids hold the same categories, in any order, a repeat once. */
 export function sameCategories(
