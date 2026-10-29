@@ -216,13 +216,9 @@
   }
 }
 
-// The page you are on, in a bar's nav link that fills the bar's height: weight
-// and the heavy rule along the link's foot, no fill, so it is told by shape and
-// not by colour alone, and a hover still shows. The rule is a border, not a
-// box-shadow, because forced colours drops a shadow and keeps a border, so the
-// mark survives a high-contrast mode (MB.120). The padding above it takes the
-// border's height back, so the label does not climb off the bar's centre.
-// Used for `a[aria-current='page']` in AppShell's and PublicFrame's navs.
+// The current page in a bar's nav link: weight and a heavy rule along the link's foot, told by shape
+// not colour alone. A border, not a box-shadow, as forced colours drops a shadow; the padding above
+// takes its height back. For `a[aria-current='page']` in AppShell's and PublicFrame's navs.
 @mixin nav-current {
   box-sizing: border-box;
   padding-top: $rule-heavy;
@@ -269,13 +265,10 @@
   }
 }
 
-// The full level's three colours, for a chip of any shape. The category chip everywhere
-// (2026-10-19): an 8% wash of the group colour (14% at first; the owner asked for more
-// transparency), a border at 35%, and the label in the colour with 30% of the body ink
-// stirred in. The pure colour on its own wash falls under
-// 4.5:1 for some groups (Mind & Spirit, light: 3.56); with the ink it holds at least
-// 5.37:1 for all eight seeded groups on both surfaces of both themes (styling.md,
-// "Category chips"). The mix is of the pair's members, so a group an admin adds gets it too.
+// The full level's three colours, for a chip of any shape: an 8% wash of the group colour, a 35%
+// border, and a label with 30% body ink mixed in. The pure colour on its wash falls under 4.5:1 for
+// some groups (Mind & Spirit, light: 3.56); mixed it holds at least 5.37:1 for all eight seeded groups
+// on both surfaces of both themes (claude-docs/styling.md, "Category chips").
 @mixin chip-wash($color) {
   background-color: color-mix(in srgb, $color 5%, $surface-card);
   border-color: color-mix(in srgb, $color 35%, $surface-card);
@@ -319,9 +312,8 @@
   @if $state == full {
     @include chip-wash($color);
   } @else if $state == quiet {
-    // The quiet level: neutral ink and a hairline, no group colour at all. Only the card's +N
-    // control wears it; a category is always full. The group colour sits on the full level's
-    // wash, border and label, with no dot (the owner's call, 2026-10-19).
+    // The quiet level: neutral ink and a hairline, no group colour. Only the card's +N control
+    // wears it; a category is always full.
     background-color: transparent;
     border-color: $hairline;
     color: $text-primary;
@@ -340,12 +332,9 @@
   }
 }
 
-// A badge's padding, with the label lowered by its size's optical-drop: the top
-// gains what the bottom loses, so the height holds. Lexend's capitals sit above
-// the centre of its line box, so a centred label read high in every badge, by up
-// to 1.3px (measured 2026-10-20); the owner's call, 2026-10-20, is to centre them
-// optically. Padding rather than text-box-trim, which is past the browser floor.
-// claude-docs/styling.md, "Badge sizes".
+// A badge's padding, the label lowered by its size's optical-drop: Lexend's capitals sit above the
+// centre of the line box, by up to 1.3px, so the top gains what the bottom loses. Padding, not
+// text-box-trim, which is past the browser floor (claude-docs/styling.md, "Badge sizes").
 @mixin badge-padding($name) {
   @include badge-padding-block($name);
   padding-inline: map.get(map.get($badge-sizes, $name), padding-inline);
@@ -413,13 +402,10 @@
   }
 }
 
-// A tip's bubble: drawn as the low-stock badge is, square-cornered at caption
-// size, and faded in and out over 500ms, the owner's pace, rising 2px as it
-// opens. `.is-open` shows it; closed, it takes no pointer once the fade ends.
-// No position or width: InfoTip's and a list entry's tooltip sit differently.
-// `tip-bubble-open` is the open state alone, for a bubble opened another way,
-// fading over `$fade`: IconTip's word passes its quicker `$icon-tip-fade`.
-// claude-docs/components/info-tip.md, "Styling".
+// A tip's bubble: square-cornered at caption size, faded over 500ms and rising 2px as it opens.
+// `.is-open` shows it; closed, it takes no pointer once the fade ends. No position or width.
+// `tip-bubble-open` is the open state alone, fading over `$fade` (IconTip passes its quicker
+// `$icon-tip-fade`). claude-docs/components/info-tip.md, "Styling".
 @mixin tip-bubble {
   $fade: $tip-fade;
 
@@ -510,22 +496,10 @@
   }
 }
 
-// An ingredient entry's body, past a tablet's width, is a grid of two columns (the owner's
-// calls, M12.29, 2026-10-21, and MB.121, 2026-10-23): Stock and Details down the left, one
-// straight after the other, and Details' lists (its side column) down the right, starting level
-// with the top of the first section, Stock where the page has it and else Details' heading.
-//
-// The side column is a grid item of its own spanning both rows, so it can start beside Stock;
-// a float inside Details could only start beside Details. The second row is `1fr`, so a
-// side column longer than both sections grows that row and leaves Stock where it is. Stock's
-// row is empty (no height, no gap) where the page has no Stock. The markup puts the side
-// column straight after the Details section, so a phone and a screen reader read it under
-// Details' text, as before; it sits outside the Details region, a plain `div`.
-//
-// The forms then start on the row below, across both columns, and line up again, each form's
-// lists beside that form's text (a grid per form: `entry-section`). Not from the menu's
-// breakpoint, where the text would be a few words wide.
-// claude-docs/components/ingredient-entry.md, "Layout".
+// An ingredient entry's body past a tablet's width: two columns, Stock and Details down the left,
+// Details' lists (the side column) down the right, a grid item spanning both rows so it starts
+// level with the first section. The forms then take the rows below, each a grid of its own
+// (`entry-section`). claude-docs/components/ingredient-entry.md, "Layout".
 $-entry-tablet: calc(#{$shell-tablet-width} + 0.01rem);
 
 // The box around the sections: a stack on a phone, and past a tablet's width the grid above.
@@ -571,9 +545,8 @@ $-entry-tablet: calc(#{$shell-tablet-width} + 0.01rem);
       margin-block-start: space(6);
     }
 
-    // Dropped by `space(1)` (0.25rem), the owner's value after seeing it live (2026-10-23),
-    // so the side column's first heading sits a little lower than the first section's. The
-    // skeleton's side part takes the same value through this mixin.
+    // Dropped by `space(1)` (0.25rem) so the side column's first heading sits a little lower than
+    // the first section's; the skeleton's side part takes the same value through this mixin.
     > #{$side} {
       grid-column: 2;
       grid-row: 1 / 3;
@@ -582,13 +555,10 @@ $-entry-tablet: calc(#{$shell-tablet-width} + 0.01rem);
   }
 }
 
-// The rule under an entry section's heading (MB.121, the owner's choice of 2026-10-23, shortened
-// the same day, then to 1rem and 0.25rem): a hairline as wide as the heading's own text plus `space(4)` (1rem) past its
-// end, from the heading's left edge, so each section starts on a visible line and Stock, the
-// shortest, reads as a section of its own without a box. The rule is the heading's bottom
-// border the 1rem its end padding and `space(1)` (0.25rem) the gap under the text; `fit-content` sizes the heading to its text and
-// `max-width: 100%` keeps a heading that wraps inside its column. The Stock, Details, Forms and
-// References headings all take it. claude-docs/design-decisions/mb.121-workspace-ingredients-review.md.
+// The rule under an entry section's heading: a hairline as wide as the heading's text plus
+// `space(4)` past its end, so each section starts on a visible line without a box. It is the
+// heading's bottom border; `fit-content` sizes the heading and `max-width: 100%` keeps a wrapped
+// one in its column (claude-docs/design-decisions/mb.121-workspace-ingredients-review.md).
 @mixin entry-heading-rule {
   box-sizing: border-box;
   width: fit-content;
@@ -623,7 +593,7 @@ $-entry-tablet: calc(#{$shell-tablet-width} + 0.01rem);
   @media (min-width: $-entry-tablet) {
     display: grid;
     grid-template-columns: minmax(0, 1fr) $side-column;
-    // A wide gutter between the text and its details (the owner's call).
+    // A wide gutter between the text and its details.
     gap: space(4) space(8);
     align-items: start;
 
@@ -809,14 +779,9 @@ $-entry-tablet: calc(#{$shell-tablet-width} + 0.01rem);
   }
 }
 
-// A skeleton's placeholder shape (MB.115, shared since M9.18): a rounded
-// bar of the muted ink a little way into the card surface, as the combobox's
-// quiet fills are, so both themes carry it on the page and on a card, with a
-// lighter step of the same passing across it (`skeleton-shimmer`,
-// _primitives.scss), which becomes the shared pulse where motion is reduced
-// (`loading-motion`). The
-// tab's list skeleton and the route modal's form skeleton draw their shapes
-// with it.
+// A skeleton's placeholder shape: a rounded bar of the muted ink a little way into the card
+// surface, so both themes carry it on the page and on a card, with a lighter step passing across
+// it (`skeleton-shimmer`) that becomes the shared pulse under reduced motion (`loading-motion`).
 @mixin skeleton-shape {
   display: block;
   height: 1rem;
@@ -831,12 +796,9 @@ $-entry-tablet: calc(#{$shell-tablet-width} + 0.01rem);
   @include loading-motion(skeleton-shimmer $shimmer-duration ease-in-out infinite);
 }
 
-// The two row tweaks a data table's owner asks for, each emitted once as a
-// modifier of the table by `_primitives.scss` (`.data-table--roomy`,
-// `.data-table--nowrap`), which a table takes by class. Roomy: taller rows,
-// centred on their cells, for a chip or a button taller than the text. Only
-// while it is a table: a card's cells already carry its padding. Nest inside
-// the table's selector.
+// The two row tweaks a data table takes by class (`.data-table--roomy`, `.data-table--nowrap`),
+// each emitted once by `_primitives.scss`. Roomy: taller rows, centred on their cells, for a chip or
+// a button taller than the text; only while it is a table. Nest inside the table's selector.
 @mixin data-table-roomy {
   @container data-table not (max-width: #{$table-stack-width}) {
     td {
@@ -879,15 +841,10 @@ $-entry-tablet: calc(#{$shell-tablet-width} + 0.01rem);
   gap: space(2) space(3);
 }
 
-// A stacking table's row action as a column of its own, pinned to the table's right edge while
-// the other columns scroll beneath it (the admin People table's Impersonate, the Compendium
-// table's Edit). Its ground is opaque and follows the row it sits in, the page or a banded row's
-// card, so scrolled text never shows through, and a `$hairline` rule runs down its left. `$layer`
-// is its z-index. At phone width the cell gives up its sticky place and stands at the card's top
-// right on the card's own ground, placed by the grid (`StackColumn.action: 'corner'`). Include it
-// in the class given to the column as both `className` and `headingClassName`. A caller adds a
-// tone through the content block, which lands before the stacked resets so the resets win in a
-// card (`row-action-column` is the red one). claude-docs/styling.md, "Tables at phone width".
+// A stacking table's row action as a column of its own, pinned to the table's right edge while the
+// others scroll beneath it. Its ground is opaque and follows its row so scrolled text never shows
+// through; at phone width it stands at the card's top right (`StackColumn.action: 'corner'`). Use the
+// class as both `className` and `headingClassName`; claude-docs/styling.md, "Tables at phone width".
 @mixin sticky-action-column($layer: 1) {
   position: sticky;
   right: 0;
@@ -923,10 +880,9 @@ $-entry-tablet: calc(#{$shell-tablet-width} + 0.01rem);
   }
 }
 
-// A stacking table's dangerous row action as a column of its own, Impersonate or Remove (MB.115,
-// the owner's call): the pinned column of `sticky-action-column` in red, a red hairline down its
-// left, a faded red tint and red text, since it acts on someone else. The tint is mixed into the
-// band it sits on, so it stays opaque.
+// A stacking table's dangerous row action as a column of its own (Impersonate, Remove): the pinned
+// column of `sticky-action-column` in red, with a red hairline, faded red tint and red text. The
+// tint is mixed into the band it sits on, so it stays opaque.
 @mixin row-action-column($layer: 1) {
   @include sticky-action-column($layer) {
     // A hairline, as the headings' rule is: the red marks it, not the weight.
@@ -987,9 +943,9 @@ $-entry-tablet: calc(#{$shell-tablet-width} + 0.01rem);
     color: $text-primary;
   }
 
-  // A button takes the shared ring; without it Chromium drew its own default one (MB.121).
-  // A link keeps the accent ring the typography gives every link, so the ring is set on a
-  // button alone, `:where()` keeping the selector no heavier than a class and a pseudo-class.
+  // A button takes the shared ring; Chromium otherwise draws its own default one. A link keeps the
+  // accent ring the typography gives every link; `:where()` keeps the selector no heavier than a
+  // class and a pseudo-class.
   &:where(button):focus-visible {
     @include focus-ring;
   }
@@ -1010,16 +966,11 @@ $-entry-tablet: calc(#{$shell-tablet-width} + 0.01rem);
   }
 }
 
-// A chevron in a `$glyph-size` box, turned over while `$open` (a selector
-// for the open state's element) matches an ancestor: a disclosure's marker.
-// Drawn only, so a press on it reaches the control beneath: turned over, it
-// paints above an overlay stretched from a button, and would take the press.
-// With `$flip`, it is flipped about its horizontal edge (`rotateX`) instead of
-// turned in the plane, and the caller names the transition (`transform`).
-// A chevron's open flip, the account menu's for every chevron (the owner's
-// call, M8.16): turned over on open, eased, and still under reduced motion.
-// `$open` is the selector the flip waits on, ending in `>` for a parent;
-// `$props` are any other properties the chevron eases alongside the turn.
+// A chevron in a `$glyph-size` box, turned over while `$open` (a selector for the open state's
+// element) matches an ancestor. Drawn only, so a press reaches the control beneath: turned over,
+// it paints above a stretched overlay and would take the press. With `$flip` it flips about its
+// horizontal edge (`rotateX`) and the caller names the transition. Eased, and still under reduced
+// motion. `$open` ends in `>` for a parent; `$props` ease alongside the turn.
 @mixin chevron-flip($open, $props...) {
   @include theme-transition(transform, $props...);
 
@@ -1047,9 +998,8 @@ $-entry-tablet: calc(#{$shell-tablet-width} + 0.01rem);
   }
 }
 
-// An Edit pencil's ink, the owner's call (MB.115): the accent green, set apart
-// from a ×, and pointed at, focused or open, on a tint of its own green, as a
-// × sits on the wax's. Every Edit control wears it, in a form or a list.
+// An Edit pencil's ink: the accent green, set apart from a ×, on a tint of its own green when
+// pointed at, focused or open, as a × sits on the wax's. Every Edit control wears it.
 @mixin icon-button-edit {
   color: $accent;
 
@@ -1061,8 +1011,8 @@ $-entry-tablet: calc(#{$shell-tablet-width} + 0.01rem);
   }
 }
 
-// Generated from the badge palettes; both theme mixins call this. No group
-// colours: a chip reads its own pair from the row (MB.36).
+// Generated from the badge palettes; both theme mixins call this. No group colours: a chip reads
+// its own pair from the row.
 @mixin semantic-tokens($theme) {
   @each $palette in map.keys($badge-palettes) {
     @each $part in badge-parts($palette) {
@@ -1135,7 +1085,7 @@ $-entry-tablet: calc(#{$shell-tablet-width} + 0.01rem);
   --secondary-hover: #{$wax-deep};
   --warning: #{$ochre-deep};
   --notice-tint: 7%;
-  // Darker than the accent: a button on a warning or an error tint is 4.25:1 and 4.19:1 in it (M12.56).
+  // Darker than the accent: a button on a warning or an error tint is 4.25:1 and 4.19:1 in it.
   --notice-button-ink: #{$sorrel-notice-button};
   --focus-ring-link-strength: #{$focus-ring-link-strength-light};
   --focus-ring-tab-strength: #{$focus-ring-tab-strength-light};
@@ -1168,11 +1118,9 @@ $-entry-tablet: calc(#{$shell-tablet-width} + 0.01rem);
   -moz-osx-font-smoothing: auto;
 }
 
-// An outlined chip (M12.4): no fill, an ink border, and the text and cross in
-// the same ink; hover and focus tint the surface rather than turning it green.
-// The neutral chips of a faceted filter wear it, so a chosen value reads as
-// an applied filter and not as one of the page's coloured category chips.
-// Nest inside the chip's selector; the shape and size stay the chip's own.
+// An outlined chip: no fill, an ink border, and the text and cross in the same ink; hover and focus
+// tint the surface rather than turning it green. The neutral chips of a faceted filter wear it, so
+// a chosen value reads as an applied filter. Nest inside the chip's selector.
 @mixin outlined-chip {
   background-color: transparent;
   color: $text-primary;

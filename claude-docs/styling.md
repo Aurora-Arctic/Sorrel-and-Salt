@@ -1341,3 +1341,13 @@ own `:root`. A real fix puts the fallback **inside** the `var()` —
 `var(--font-body, 'Lexend')` — since the concrete families already trailing
 each stack don't rescue it: an unresolved `var()` invalidates the whole
 declaration at computed-value time, rest of the stack included.
+
+## The top inset
+
+`$top-inset` (`var(--top-inset, 0px)`) is how far chrome above everything else takes the top of the
+window. It is `0px` except on a touch screen (`hover: none`) while an admin impersonates, where the
+impersonation banner stays pinned and `ImpersonationBanner` sets `--top-inset` to its height.
+Anything that pins to the top of the window, or sizes to its height, adds the inset:
+`top: calc(#{$x} + #{$top-inset})`. The fallback is `0px`, not `0`, because it is used inside
+`calc()` and a unitless zero there is invalid. With a pointer the banner tucks away and hovering
+brings it back over the page, so it takes no room and the inset stays `0px`.
