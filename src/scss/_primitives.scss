@@ -75,6 +75,16 @@
     }
   }
 
+  // A heading with a tag at its top right: the name in the first column and the tag in the second,
+  // at the top of the row. A grid cell rather than an inline badge, so the tag stays beside the
+  // name's first line when the name wraps and adds nothing to the heading's line height.
+  .page-title--tagged {
+    display: grid;
+    grid-template-columns: 1fr auto;
+    column-gap: space(2);
+    align-items: start;
+  }
+
   .badges {
     display: flex;
     gap: space(3);

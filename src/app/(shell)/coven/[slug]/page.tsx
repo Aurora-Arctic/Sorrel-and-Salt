@@ -58,8 +58,8 @@ export default async function CovenPage({ params }: CovenLayoutParams) {
     <main className="page-with-nav">
       <div className="header">
         <p className="eyebrow">Coven</p>
-        <h1>
-          {workspace.name}
+        <h1 className={workspace.demo ? 'page-title--tagged' : undefined}>
+          <span>{workspace.name}</span>
           {workspace.demo && (
             <>
               {' '}
