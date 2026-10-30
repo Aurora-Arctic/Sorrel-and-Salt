@@ -12,8 +12,7 @@ exports:
   (load the kept typing into the form) and Discard (drop it). Keep is the one solid button, since it
   loses no typing; Discard is quiet.
 
-The spell builder uses both ([`spell-builder.md`](spell-builder.md), "Saving"). IngredientForm and
-CupboardEntryForm use `SaveStatus`.
+The spell builder and IngredientForm use both ([`spell-builder.md`](spell-builder.md), "Saving"). CupboardEntryForm uses `SaveStatus` alone.
 
 ## Props
 
@@ -39,8 +38,8 @@ CupboardEntryForm use `SaveStatus`.
 | `onKeep`    | Load the kept typing into the form                          |
 | `onDiscard` | Drop the kept typing, leaving the form as the server has it |
 
-The form decides whether to draw `RecoveryNotice`, and where: the spell builder puts it in the
-modal's header note, under the title, as it does the conflict notice.
+The form decides whether to draw `RecoveryNotice`, and where: the spell builder and IngredientForm put it in the
+modal's header note, under the title, as they do the conflict notice.
 
 ## Styling
 
@@ -50,8 +49,8 @@ notice are each the site's warning `Notice`, with the notice's bottom margin rem
 selector so it stays level with Save. The failure is a wrapping row with its triangle centred on the
 row, since Retry makes the row taller than the text. The conflict and the recovery notice share one
 rule (`.save-status__conflict`, `.save-status__recovery`) on classes of their own, since in a dialog
-they are put under the title: a wrapping row, roomier than a notice of text alone, with `space(3)`
-between the sentence and the buttons, which sit in `.save-status__actions`. The live region
+they are put under the title. Both include the `notice-row` mixin (`_mixins.scss`): a wrapping row, roomier than a notice of text alone, with `space(3)`
+between the sentence and the buttons, which sit in `.save-status__actions`, and the triangle placed by the `$notice-mark-size` and `$notice-mark-drop` tokens. The live region
 (`.save-status__announced`) is visually hidden; the line is what shows.
 
 ## Stories

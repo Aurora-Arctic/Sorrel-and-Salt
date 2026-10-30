@@ -1434,7 +1434,7 @@ The form saves itself (M13.24), through `useAutosave` ([`autosave.md`](autosave.
 - **The blur flush is held while Save is submitting.** Pressing Save disables the button, which moves focus out of the form; the form stops that focusout reaching the autosave until the submit ends, so the autosave cannot create the row before Save has asked about duplicates.
 - **`persist` reads whether the write created the row.** The write itself records that it created the row, so the id is handed to `onCreated` only by the write that made it, even when a queued write ran first.
 - **Conflict.** Another tab's save makes this one's refused with "This ingredient was changed elsewhere." **Reload Latest** reloads the page (or calls `onReload`); **Keep My Version** sends the form over the newer revision.
-- **Offline.** A failed save retries after 2, 5 and 15 s, then shows "Couldn't save." with Retry. The form stays in the local mirror, which Retry clears when the save lands. A reopened form with a mirror newer than the row shows the recovery banner.
+- **Offline.** A failed save retries after 2, 5 and 15 s, then shows "Couldn't save." with Retry. The form stays in the local mirror, which Retry clears when the save lands. A reopened form with a mirror newer than the row shows the recovery banner, `RecoveryNotice` ([`save-status.md`](save-status.md)), with Keep and Discard.
 - **No Discard question.** The form no longer uses the unsaved-changes guard: Close saves first ([`modal.md`](modal.md#unsaved-changes)). Older passages here that describe Discard Changes for this form are out of date. A viewer's form has no autosave and writes nothing.
 
 ## After a save

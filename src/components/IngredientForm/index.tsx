@@ -27,8 +27,7 @@ import {
 } from '../../lib/autosave';
 import { GraphQLClientError, StaleWriteError } from '../../lib/graphql-client-error';
 import { useViewerId } from '../../lib/viewer-id';
-import SaveStatus from '../SaveStatus';
-import { clockTime } from '../LastEdit/relative';
+import SaveStatus, { RecoveryNotice } from '../SaveStatus';
 import { useSaveOnClose } from '../SpellBuilder/save-on-close';
 import { PanelChangesContext, usePanelChanges } from './panel-changes';
 import {
@@ -815,32 +814,18 @@ const IngredientForm = ({
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
   const recovery = recovered && (
-    <Notice kind="warn" block>
-      <span>Restored unsaved changes from {clockTime(recovered.at)}</span>
-      <span>
-        <button
-          type="button"
-          className="btn btn--small btn--solid"
-          onClick={() => {
-            reset(recovered.value.fields, { keepDefaultValues: true });
-            setReviewed(recovered.value.reviewed);
-            setRecovered(null);
-          }}
-        >
-          Keep
-        </button>
-        <button
-          type="button"
-          className="btn btn--small btn--quiet"
-          onClick={() => {
-            if (mirror) clearMirror(mirror);
-            setRecovered(null);
-          }}
-        >
-          Discard
-        </button>
-      </span>
-    </Notice>
+    <RecoveryNotice
+      at={recovered.at}
+      onKeep={() => {
+        reset(recovered.value.fields, { keepDefaultValues: true });
+        setReviewed(recovered.value.reviewed);
+        setRecovered(null);
+      }}
+      onDiscard={() => {
+        if (mirror) clearMirror(mirror);
+        setRecovered(null);
+      }}
+    />
   );
 
   /** Reload after a stale save: the page fetches the server's copy, which replaces the form. */
