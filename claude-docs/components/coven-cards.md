@@ -65,3 +65,7 @@ Stories: `States`, drawn inside the app shell with the coven switcher, nav and I
 A coven card's More is the vertical dots beside Annotate, opening a menu downward. On a compendium entry the cupboard holds, it offers Make It Ours and Remove, each asked in place in the dialogs the entry page shares. Choices sit under the one "Coven" label every More draws.
 
 No card carries a bin. The coven's own entry's Delete Ingredient is in its Edit Ingredient dialog, and a lone Remove is in the Annotate dialog, so a card with nothing but a delete or a remove to offer draws none. A write that takes the card away reads the list again and focus goes to the page's heading; a refusal gives More the focus back.
+
+## The demo coven
+
+`CovenCards` is the Ingredients list, not a card for the coven itself, so it draws no Demo badge. The badge sits in the coven page's heading alone, not in the switcher ([`workspace-switcher.md`](workspace-switcher.md)), and the layout's notice says it on this list as on every page of the demo coven ([`notice.md`](notice.md)).

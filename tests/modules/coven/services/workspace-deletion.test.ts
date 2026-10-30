@@ -103,4 +103,26 @@ describe('deleteWorkspace', () => {
 
     await expect(deleteWorkspace(asUser(A), covenId)).rejects.toThrow(Forbidden);
   });
+  it('refuses the demo coven to an owner who holds the delete permission, and still deletes an ordinary one', async () => {
+    const demoId = await insertCoven('Fixture Demo Deletion Coven', [[A.id, 'owner']]);
+    await sql`update workspaces set demo = true where id = ${demoId}`;
+    const ordinaryId = await insertCoven('Fixture Ordinary Deletion Coven', [[A.id, 'owner']]);
+    // Why the refusal is the demo rule's: A holds the delete permission in both.
+    await expect(
+      assertMembership(asUser(A), demoId, { workspace: ['delete'] }),
+    ).resolves.toBeTruthy();
+    await expect(
+      assertMembership(asUser(A), ordinaryId, { workspace: ['delete'] }),
+    ).resolves.toBeTruthy();
+
+    await expect(deleteWorkspace(asUser(A), demoId)).rejects.toThrow(
+      "The demo coven can't be deleted.",
+    );
+    const [kept] = await sql`select deleted_at from workspaces where id = ${demoId}`;
+    expect(kept?.deleted_at).toBeNull();
+
+    await deleteWorkspace(asUser(A), ordinaryId);
+    const [gone] = await sql`select deleted_at from workspaces where id = ${ordinaryId}`;
+    expect(gone?.deleted_at).toBeInstanceOf(Date);
+  });
 });

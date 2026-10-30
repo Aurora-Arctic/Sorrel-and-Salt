@@ -1,7 +1,7 @@
 import 'server-only';
 import { withAudit } from '../../../db/repository';
 import { sameAddress } from '../../../lib/primary-admin';
-import { users } from '../schema/users';
+import { writeSiteRoleGrant } from './user-role';
 import type { Session } from '../../../lib/session';
 import type { PrimaryAdminOutcome, SignInProfile } from '../types';
 
@@ -63,9 +63,7 @@ export async function promotePrimaryAdminAtVerification(
 // write, since the users CHECK refuses an admin without it, and the
 // trigger on `users` records both, by the route declared here.
 async function grantAdmin(session: Session): Promise<void> {
-  await withAudit(
-    session,
-    (write) => write.updateById(users, session.userId, { role: 'admin', canCreateWorkspace: true }),
-    { via: 'bootstrap' },
-  );
+  await withAudit(session, (write) => writeSiteRoleGrant(write, session.userId, 'admin'), {
+    via: 'bootstrap',
+  });
 }

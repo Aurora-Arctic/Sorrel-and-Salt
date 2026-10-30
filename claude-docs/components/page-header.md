@@ -24,6 +24,7 @@ it directly.
 | `eyebrow`   | Optional: the small capitals above the heading, naming the part of the site. A list page in the app leaves it out         |
 | `lede`      | Optional: the muted sentence or two under the heading, in a `p.lede`. A list page in the app leaves it out                |
 | `lead`      | Optional: a mark before the heading, on its line and outside the `h1` (the entry page’s In Your Cupboard shelf)           |
+| `tag`       | Optional: a mark inside the `h1`, at the title’s top right (the demo coven’s Demo badge)                                  |
 | `action`    | Optional: the one primary action, an Add link as `<Link className="btn btn--solid">`, or a control of its own             |
 | `className` | Optional: a class on the head's outer element, for the one caller that lays it out further (the sign-in panel centres it) |
 
@@ -33,6 +34,7 @@ it directly.
 - **Two shapes.** With no eyebrow and no lede, the head is the `.page-header` row. With either, it is a `.header` column (_layout.scss): the eyebrow, the heading, or the `.page-header` row when there is a lead or an action, then the lede, spaced by the column's gap alone.
 - **Who carries an eyebrow and a lede.** The public pages: the public Compendium has both, and the entry page's formal name is its eyebrow, drawn by `FormalName` above the `PageHeader`. The app's list pages (a coven's Ingredients and Grimoire, its Members, the admin Compendium and the other admin lists) have the heading alone. The screens outside the lists keep what they say their purpose with: the coven home's and the coven landing's eyebrow and lede, and the lede of Create Coven, Admin, the sign-in, email and invitation panels, Welcome, Not Authorized and the error pages.
 - **A `lead` stays out of the heading.** With one, the `h1` and the lead share a `.page-header__title` row, so the heading reads as the title alone and the lead keeps its own name; the row takes the place the bare `h1` takes in the header’s layout.
+- **A `tag` sits inside the heading.** With one, the `h1` is a `page-title--tagged` grid: the title in its first column and the tag in the second, at the top of the row, so a wrapped title leaves the tag beside its first line ([`notice.md`](notice.md), "The demo coven’s notice").
 - **The action is the caller's element**: an Add link to the page's `?new`
   address (the admin lists' `AddAction`, which opens its modal at once, and
   the Grimoire's New Spell at `?new=spell`, M10.12), or a client component

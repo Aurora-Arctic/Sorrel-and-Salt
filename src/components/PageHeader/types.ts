@@ -22,6 +22,11 @@ export interface PageHeaderProps {
    */
   lead?: ReactNode;
   /**
+   * A mark inside the `h1`, at the title's top right: the demo coven's Demo
+   * badge. Left out, the heading is the title alone.
+   */
+  tag?: ReactNode;
+  /**
    * The page's one primary action, at the end of the heading's line: an Add
    * link (`<Link className="btn btn--solid">`), or a control such as the user
    * list's Pause Admin Changes. Left out, the heading stands alone.

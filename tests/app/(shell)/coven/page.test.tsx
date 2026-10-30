@@ -27,9 +27,9 @@ const { default: CovenPage } = await import('@/app/(shell)/coven/[slug]/page');
 
 const params = (slug: string) => Promise.resolve({ slug });
 
-async function renderAs(role: WorkspaceRole) {
+async function renderAs(role: WorkspaceRole, demo = false) {
   requireCovenMembership.mockResolvedValue({
-    workspace: { id: 'w', name: 'Fixture Coven', slug: 'fixture-coven' },
+    workspace: { id: 'w', name: 'Fixture Coven', slug: 'fixture-coven', demo },
     membership: { workspaceId: 'w', userId: 'u', role },
   });
   render(await CovenPage({ params: params('fixture-coven') }));
@@ -48,6 +48,16 @@ describe('the /coven/[slug] page', () => {
 
     expect(requireCovenMembership).toHaveBeenCalledExactlyOnceWith('fixture-coven');
     expect(screen.getByRole('heading', { level: 1, name: 'Fixture Coven' })).toBeInTheDocument();
+  });
+
+  it("badges the demo coven's heading as a demo, and no other coven's", async () => {
+    await renderAs('viewer', true);
+    expect(screen.getByRole('heading', { level: 1 })).toHaveTextContent('Demo');
+  });
+
+  it("leaves an ordinary coven's heading unbadged", async () => {
+    await renderAs('viewer');
+    expect(screen.getByRole('heading', { level: 1 })).not.toHaveTextContent('Demo');
   });
 
   it('renders nothing when the guard refuses', async () => {

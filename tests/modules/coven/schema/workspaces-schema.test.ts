@@ -10,7 +10,9 @@ describe('workspaces schema', () => {
   it('has DESIGN.md §5 columns and nothing else', () => {
     const { byName } = tableFacts(workspaces);
 
-    expect(Object.keys(byName).sort()).toEqual(['id', 'name', 'slug', ...AUDIT_COLUMNS].sort());
+    expect(Object.keys(byName).sort()).toEqual(
+      ['id', 'name', 'slug', 'demo', ...AUDIT_COLUMNS].sort(),
+    );
   });
 });
 

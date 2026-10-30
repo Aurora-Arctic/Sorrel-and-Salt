@@ -70,7 +70,7 @@ const STEPS: RecipeStep[] = [
   { kind: 'instruction', id: 'b', body: 'Stir three times, sunwise.' },
 ];
 
-const onPage = () => (
+const onPage = (demoNotice?: string) => (
   <main>
     <h1>Fixture Working</h1>
     <a href="/elsewhere">Elsewhere</a>
@@ -84,6 +84,7 @@ const onPage = () => (
       sealWaxColor={null}
       moonPhase={null}
       dayOfWeek={null}
+      demoNotice={demoNotice}
     />
   </main>
 );
@@ -205,6 +206,20 @@ describe('SpellPreview', () => {
     expect(close.querySelector('.visually-hidden')?.textContent).toBe('Close');
   });
 
+  it('holds the demo notice as a status in the open pane when given one, and none otherwise', () => {
+    const sentence = 'This is a demo coven, fixture words.';
+    render(onPage(sentence));
+    expect(screen.queryByRole('status')).toBeNull();
+    press(opener());
+    expect(within(pane()).getByRole('status')).toHaveTextContent(sentence);
+  });
+
+  it('holds no status in the open pane without a demo notice', () => {
+    render(onPage());
+    press(opener());
+    expect(within(pane()).queryByRole('status')).toBeNull();
+  });
+
   it('adds ?preview to the address on opening, keeping the other parameters', () => {
     render(onPage());
     expect(here()).toBe('/page?tab=a');
@@ -258,6 +273,8 @@ describe('SpellPreview', () => {
     render(onPage());
     press(opener());
     expect(request).toHaveBeenCalledTimes(1);
+    // Asked of the page: a browser refuses full screen for a dialog.
+    expect(request.mock.contexts[0]).toBe(document.documentElement);
     Object.defineProperty(document, 'fullscreenElement', { value: pane(), configurable: true });
     press(within(pane()).getByRole('button', { name: 'Close' }));
     expect(exit).toHaveBeenCalledTimes(1);

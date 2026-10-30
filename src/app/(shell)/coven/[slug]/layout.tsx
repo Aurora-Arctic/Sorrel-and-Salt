@@ -1,5 +1,7 @@
 import type { Metadata } from 'next';
+import { DEMO_NOTICE, DEMO_OWNER_NOTICE } from '@/lib/demo-notice';
 import { rolePermits } from '@/modules/coven';
+import Notice from '../../../../components/Notice';
 import SectionBody from '../../../../components/SectionBody';
 import ContextRow from '../../../../components/ContextRow';
 import CovenNav from '../../../../components/CovenNav';
@@ -29,7 +31,7 @@ export async function generateMetadata({ params }: CovenLayoutParams): Promise<M
 // Every page calls the guard too. The provider carries a page's covens up to the switcher.
 export default async function CovenLayout({ children, params }: CovenLayoutProps) {
   const { slug } = await params;
-  const { membership } = await requireCovenMembership(slug);
+  const { workspace, membership } = await requireCovenMembership(slug);
   const { viewer, workspaces } = await viewerOf();
 
   return (
@@ -37,6 +39,16 @@ export default async function CovenLayout({ children, params }: CovenLayoutProps
       <ContextRow lead={<WorkspaceSwitcher workspaces={workspaces} canCreate={viewer.canCreate} />}>
         <CovenNav slug={slug} canReadMembers={rolePermits(membership.role, { member: ['read'] })} />
       </ContextRow>
+      {workspace.demo && (
+        // A region of its own: axe asks all page content to sit in a landmark, and the pages own the main one.
+        <section aria-label="Demo Coven" className="coven-layout__demo-notice">
+          <Notice kind="warn" quiet>
+            <span className="coven-layout__demo-text">
+              {membership.role === 'owner' ? DEMO_OWNER_NOTICE : DEMO_NOTICE}
+            </span>
+          </Notice>
+        </section>
+      )}
       <SectionBody region="coven" className="coven-layout">
         {children}
       </SectionBody>

@@ -10,7 +10,7 @@ create choice "Create Coven"; code and these docs say workspace.
 ## Props
 
 `workspaces`: `SwitcherWorkspace[]`, every workspace the viewer is a member of,
-in the order to list them. Each is `{ slug, name, canReadMembers, canInvite }`:
+in the order to list them (alphabetical, the demo coven last). Each is `{ slug, name, canReadMembers, canInvite }`:
 the two flags say what the viewer's role there may open (member: read, and
 member: invite, an owner's alone), so the switcher can step back from a people
 page the next coven would 404. The caller already holds the memberships (the
@@ -169,3 +169,7 @@ The variable holds the slug of the coven picked, not a bare yes. A superseded sw
 ## The name as the context row's lead
 
 The chosen name is set as the context row's lead: the display face with a chevron inside a hairline border, so the row reads "Whitethorn Coven" and the name is also the control. The Combobox's select is restyled from `index.scss` rather than given a variant, since every part of it is reached by its own class, and the compound `.input.combobox__control` is outweighed by one more class. It looks the same on a phone as on a desktop. A long name wraps to two lines rather than being cut.
+
+## The demo coven
+
+The demo coven reads as its name alone, "Sorrel & Salt Demo", in its option and in the closed box: the name carries the word. The Demo badge sits in the coven page heading, not here.

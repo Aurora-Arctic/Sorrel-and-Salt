@@ -8,7 +8,7 @@ import { seedSources } from '@/db/seed/sources';
 import { seedReferenceData } from '@/db/seed/reference-data';
 import { entryFilePath } from '@/db/seed/compendium/parse-entry';
 import { REASONS } from '@/db/seed/compendium/update';
-import { identityOf } from '@/db/seed/standard';
+import { identityOf } from '@/db/seed/coven-content';
 import { wordsOf } from './compendium-fixture';
 import {
   SAMPLEWORT,

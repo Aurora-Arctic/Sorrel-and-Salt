@@ -64,6 +64,11 @@ created, and only when that sign-in's provider vouches for the address
   route and stamped as the user; the promotion writes no ledger row itself
   (MB.195; [`db/write-path.md`](../db/write-path.md)). MB.59's grant and
   revoke make the same kind of write, declared `admin`.
+- **Every admin grant also seats the owner of the demo coven**, in the same
+  `withAudit` as the role write (`writeSiteRoleGrant`): the promotion here, the
+  MB.59 grant and an accepted admin invitation. See
+  [`db/demo-coven-seed.md`](../db/demo-coven-seed.md), "How an admin gains and
+  loses the seat".
 - **Changing the variable** and redeploying promotes the new address at
   its next qualifying sign-in or verification, even if that account
   already exists. The previous primary admin keeps `role: 'admin'` and
@@ -638,6 +643,13 @@ tasks that build the rest:
     Postgres's own column defaults apply rather than a second
     `'user'`/`false` literal in application code. It never sets `role`,
     whatever the address.
+- **`databaseHooks.user.create.after`** is the sign-up's second write, under the
+  same exemption: it inserts a `viewer` `workspace_members` row for the new user in
+  the demo coven, stamped by the user as their own row is, with `invited_by`
+  null. It finds the coven through `findDemoWorkspace` and does nothing where
+  there is none (the `minimal` scenario). It never throws: a failed insert is
+  logged with the user id and the demo coven seed's backfill seats the account
+  at its next run. It does not touch `canCreateWorkspace`.
 - **`user.additionalFields`** registers `role`, `canCreateWorkspace`,
   `verificationSentAt`, `createdBy` and `updatedBy` with Better Auth's user
   model: without it the adapter silently drops any key in the hook's data

@@ -4,7 +4,7 @@ import { CATEGORIES } from '../categories';
 import { deitiesNamed } from '../deities';
 import { FORMS } from '../forms';
 import { CELESTIAL_BODIES, ZODIAC_SIGNS } from '../astrology';
-import { identityOf } from '../standard';
+import { identityOf } from '../coven-content';
 import { citationText } from '../../../lib/citation';
 import { ingredientSlug, slugify } from '../../../lib/slugify';
 import { entryFilePath } from './parse-entry';

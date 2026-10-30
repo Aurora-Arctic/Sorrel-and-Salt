@@ -22,7 +22,7 @@ export function e2eDatabaseUrl(database = slotDatabase(currentSlot())): string {
 
 /** Once per run. */
 export async function seedE2eTemplate(): Promise<void> {
-  await seedTemplate(E2E_TEMPLATE);
+  await seedTemplate(E2E_TEMPLATE, { demoCoven: true });
 }
 
 /** Once per run, after the template: every slot's database, the providers server's and the cache server's. */

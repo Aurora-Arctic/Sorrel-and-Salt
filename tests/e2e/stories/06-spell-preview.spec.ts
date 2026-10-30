@@ -123,8 +123,16 @@ test(
   },
 );
 
-// A spell long enough to scroll in the pane at a phone's height.
-async function longSpell(page: Page, slug: string) {
+// The pane asks the window for full screen, and a full-screen window refuses to be resized: a test
+// that changes the viewport closes the pane first and waits for the window to leave full screen.
+async function closePane(page: Page, pane: Locator) {
+  await pane.getByRole('button', { name: 'Close' }).click();
+  await expect(pane).toHaveCount(0);
+  await expect.poll(() => page.evaluate(() => document.fullscreenElement === null)).toBe(true);
+}
+
+// A spell long enough to scroll in the pane at a phone's height, left on its page with the pane shut.
+async function seedLongSpell(page: Page, slug: string) {
   const coven = await seedCoven(page, `Fixture Coven ${slug}`, `${slug}.test`, { A: 'owner' });
   const spellId = await withSql(async (sql) => {
     const held = await localIngredient(sql, coven.id, coven.users.A, {
@@ -148,10 +156,18 @@ async function longSpell(page: Page, slug: string) {
   await page.addInitScript(() => Reflect.deleteProperty(Navigator.prototype, 'wakeLock'));
   await signInAgainAs(page, coven.users.A);
   await page.goto(`/coven/${coven.slug}/grimoire/${spellId}`);
+}
+
+async function openLongPane(page: Page) {
   await page.getByRole('button', { name: /^Preview Spell/ }).click();
   const pane = page.getByRole('dialog', { name: 'Fixture Long Working' });
   await expect(pane).toBeVisible();
   return pane;
+}
+
+async function longSpell(page: Page, slug: string) {
+  await seedLongSpell(page, slug);
+  return openLongPane(page);
 }
 
 const rect = (locator: Locator) =>
@@ -161,12 +177,13 @@ test(
   'the pane ends 2.5rem (40px) above its bottom, at any width',
   { tag: '@story-85' },
   async ({ page }) => {
-    const pane = await longSpell(page, 'story-85-foot');
+    await seedLongSpell(page, 'story-85-foot');
     for (const [width, height] of [
       [1440, 900],
       [390, 844],
     ] as const) {
       await page.setViewportSize({ width, height });
+      const pane = await openLongPane(page);
       await pane.evaluate((el) => el.scrollTo(0, el.scrollHeight));
       const foot =
         (await rect(pane)).bottom - (await rect(pane.locator('.spell-preview__content'))).bottom;
@@ -174,6 +191,7 @@ test(
       await pane.screenshot({
         path: `${process.env.SHOTS ?? 'test-results'}/preview-scroll-foot-${width}.png`,
       });
+      await closePane(page, pane);
     }
   },
 );
@@ -416,14 +434,21 @@ test(
       expect(Math.abs(shown[gap] - printed[gap]), gap).toBeLessThan(0.1);
     }
 
-    // A phone: Ingredients above the steps.
+    // A phone: Ingredients above the steps. The window cannot be resized while the pane holds it
+    // full screen, so each width closes the pane, resizes, and opens it again.
+    await closePane(page, pane);
     await page.setViewportSize({ width: 390, height: 844 });
+    await page.getByRole('button', { name: /^Preview Spell/ }).click();
+    await expect(pane).toBeVisible();
     expect((await box(ingredients)).bottom).toBeLessThanOrEqual((await box(steps)).top);
 
     // The paper behind the pane is the burn hole's spread shadow, whose far corner is rounded by the
     // spread: it must reach past the pane's top-left corner, or a dark cut shows there. A window not
     // much taller than wide is where a short spread fell short.
+    await closePane(page, pane);
     await page.setViewportSize({ width: 862, height: 755 });
+    await page.getByRole('button', { name: /^Preview Spell/ }).click();
+    await expect(pane).toBeVisible();
     const paper = await pane.locator('.spell-preview__face-hole').evaluate((hole) => {
       const rect = hole.getBoundingClientRect();
       const spread = parseFloat(getComputedStyle(hole).boxShadow.split(' ').pop() ?? '0');

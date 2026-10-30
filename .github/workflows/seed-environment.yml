@@ -1,14 +1,14 @@
 name: Seed an environment
 
 # A site admin seeds staging or production by hand, without a deploy (M14.26):
-# the same six reference seeds migrate.yml runs after migrating, in the same
+# the same seven reference seeds migrate.yml runs after migrating, in the same
 # order, against the environment's own database. Started from the Actions tab
 # only. claude-docs/ci/deploy.md, "Seeding an environment by hand" is the
 # walkthrough.
 #
-# One command, db:seed:reference, runs all six in a single transaction, dry
+# One command, db:seed:reference, runs all seven in a single transaction, dry
 # run or not, so each seed reads what the ones before it wrote and a real run
-# lands whole or not at all. Dry run is on by default: the six run in full and
+# lands whole or not at all. Dry run is on by default: the seven run in full and
 # the transaction is rolled back once, so the summary shows what a real run
 # would do and nothing is written. Force is off by default: it passes `--force` to the compendium seed,
 # which then updates every marked entry that refusals 1 to 4 would refuse, and
@@ -178,7 +178,7 @@ jobs:
             echo "- Branch: \`$GIT_BRANCH\`"
             echo
             echo '```text'
-            grep -E '^(UPDATED|REFUSED|ADOPTED|RETIRED|PENDING) |^  differs:|^inserted ' seed.log \
+            grep -E '^(UPDATED|REFUSED|ADOPTED|RETIRED|PENDING|SKIPPED) |^  differs:|^inserted ' seed.log \
               || echo 'The compendium seed listed nothing: it failed first, or wrote no line.'
             echo '```'
           } >> "$GITHUB_STEP_SUMMARY"

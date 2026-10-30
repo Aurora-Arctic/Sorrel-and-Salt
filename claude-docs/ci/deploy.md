@@ -222,9 +222,11 @@ db:seed:categories`, `npm run db:seed:forms`, `npm run db:seed:astrology`
   ingredient form, celestial body (`celestial_bodies`) and zodiac vocabularies and the deity vocabulary
   into the schema they just created, and `npm run db:seed:sources` then the
   sources their seed docs record, linked to the rows those seeds wrote, and
-  `npm run db:seed:compendium` last the compendium's entries, which pick from
-  the vocabularies and may cite a work the sources seed wrote, when the
-  `seed-reference` input says so. One step for all six, sharing a gate, a log
+  `npm run db:seed:compendium` the compendium's entries, which pick from
+  the vocabularies and may cite a work the sources seed wrote, and
+  `npm run db:seed:demo-coven` last the demo coven and a seat in it for every
+  account (`claude-docs/db/demo-coven-seed.md`), when the
+  `seed-reference` input says so. One step for all seven, sharing a gate, a log
   and a summary: a form vocabulary seeded while the categories failed is not a
   state worth reporting separately. It is how any vocabulary reaches staging
   and production at all: deploys are CI-only and there is no shell on either
@@ -261,18 +263,18 @@ db:seed:categories`, `npm run db:seed:forms`, `npm run db:seed:astrology`
   environment deploys from — `staging` or `main` — whichever branch the run
   was started from, so the files seeded are the ones that environment runs.
   It pulls and resolves `DATABASE_URL` as `migrate.yml` does for the two
-  long-lived targets, probes the database, then runs the same six seeds in
+  long-lived targets, probes the database, then runs the same seven seeds in
   the same order, through one command, `npm run db:seed:reference`, which
   runs them in a single transaction. Its job takes the `migrate` concurrency group, the lock
   `deploy.yml` puts on `migrate.yml`: groups are repository-wide, so a run
   started during a migration waits for it, and a deploy waits for the run.
-  A dry run passes `--dry-run`: all six run in full and the one transaction
-  is rolled back at the end. One transaction rather than six because each
+  A dry run passes `--dry-run`: all seven run in full and the one transaction
+  is rolled back at the end. One transaction rather than seven because each
   seed reads what the seeds before it wrote. Run apart, a dry-run deity seed
   would roll its new traditions back before the sources seed looked for them,
   and the sources seed would stop with "which no seed wrote". A real run uses
   the same transaction, so it lands whole or not at all; `migrate.yml` still
-  runs the six apart, each committing on its own. `force` passes `--force` to the
+  runs the seven apart, each committing on its own. `force` passes `--force` to the
   compendium seed (claude-docs/db/compendium-seed/README.md, "Refusals").
   The job summary says whether the run was a dry run and whether it was
   forced, and lists every `UPDATED`, `REFUSED`, `ADOPTED`, `RETIRED` and
@@ -290,7 +292,7 @@ db:seed:categories`, `npm run db:seed:forms`, `npm run db:seed:astrology`
   `*-vocabulary.ts` helpers they write through, `src/db/seed/idempotent.ts`,
   which every seed writes through, `src/db/seed/bootstrap-admin.ts`,
   `src/lib/slugify.ts`, `scripts/db-seed.ts`) and hands `migrate` the answer
-  — one gate for every vocabulary, so a change to any seed runs all six.
+  — one gate for every vocabulary, so a change to any seed runs all seven.
   Every `db:seed:<target>` script has a line in the seed step and its file a
   place in this list, and each helper too: `two-tier-vocabulary.ts` was
   missing from it until MB.129, and `idempotent.ts` until MB.242.

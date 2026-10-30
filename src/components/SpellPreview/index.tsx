@@ -9,6 +9,7 @@ import {
   useId,
   useRef,
 } from 'react';
+import Notice from '../Notice';
 import IconTip, { CloseIcon, MysticEyeIcon, PreviewButton } from '../IconTip';
 import { SpellCardFilters } from '../SpellCard';
 import SpellRecipeBody from '../SpellRecipe/body';
@@ -99,7 +100,7 @@ const Scene = (): ReactElement => (
 );
 
 export default function SpellPreview(props: SpellPreviewProps): ReactElement {
-  const { title, steps } = props;
+  const { title, steps, demoNotice, ...recipe } = props;
   const open = useSearchParams().has(PREVIEW);
   const pane = useRef<HTMLDialogElement>(null);
   const titleId = useId();
@@ -132,10 +133,12 @@ export default function SpellPreview(props: SpellPreviewProps): ReactElement {
     // Measured before showModal(), while the page's scrollbar is still there to be replaced.
     const release = holdPage();
     if (!dialog.open) dialog.showModal();
-    // Past the browser floor on some engines (iPhone Safari has no element full screen): a pure
-    // enhancement behind a `typeof` check, with the dialog covering the window as the fallback.
-    if (typeof dialog.requestFullscreen === 'function') {
-      dialog.requestFullscreen().then(
+    // The page asks, not the dialog: browsers refuse full screen for a `<dialog>` (a TypeError), and the modal
+    // dialog still stands in the top layer over a full-screen page. Past the browser floor on some engines
+    // (iPhone Safari has no element full screen): a pure enhancement behind a `typeof` check, with the dialog
+    // covering the window as the fallback.
+    if (typeof document.documentElement.requestFullscreen === 'function') {
+      document.documentElement.requestFullscreen().then(
         () => {
           inFullscreen.current = true;
         },
@@ -197,11 +200,18 @@ export default function SpellPreview(props: SpellPreviewProps): ReactElement {
         {/* Drawn only while open, so the page holds no second copy of the spell. */}
         {open && (
           <div className="spell-preview__content">
+            {demoNotice && (
+              <Notice kind="warn" quiet className="spell-preview__notice">
+                <span className="spell-preview__notice-text">{demoNotice}</span>
+              </Notice>
+            )}
             <h2 id={titleId} className="spell-preview__title">
               {title}
             </h2>
             <SpellRecipeBody
-              {...props}
+              {...recipe}
+              title={title}
+              steps={steps}
               level={3}
               beforeSteps={<SpellRecipeSummary steps={steps} level={3} />}
             />

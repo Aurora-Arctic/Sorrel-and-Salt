@@ -1,5 +1,5 @@
 import 'server-only';
-import { withAudit } from '../../../db/repository';
+import { findDemoWorkspace, withAudit } from '../../../db/repository';
 import type { AuditWriter } from '../../../db/repository';
 import { Forbidden, NotFound } from '../../../lib/errors';
 import { PRIMARY_ADMIN_REFUSAL } from '../../../lib/primary-admin';
@@ -28,12 +28,34 @@ const ROLE_NOUNS: Record<UserRole, string> = {
  * The grant of a curating role every route but the bootstrap shares, inside the caller's transaction. It sets the creation flag too,
  * since the users CHECK refuses a curator or an admin without it.
  */
-export function writeSiteRoleGrant(
+export async function writeSiteRoleGrant(
   write: AuditWriter,
   userId: string,
   role: 'curator' | 'admin',
 ): Promise<UserRow[]> {
-  return write.updateById(users, userId, { role, canCreateWorkspace: true });
+  const written = await write.updateById(users, userId, { role, canCreateWorkspace: true });
+  // An admin owns the demo coven; the seat is written only when the role was, so a user gone between the read and the write gets none.
+  if (role === 'admin' && written.length > 0) await seatDemoOwner(write, userId);
+  return written;
+}
+
+/**
+ * Seats the user as owner of the demo coven in the caller's transaction, doing nothing where there is no demo coven: a removed seat is
+ * revived, a live one promoted, and a missing one inserted. Identity services hold no membership of that coven, so the writes take none.
+ */
+async function seatDemoOwner(write: AuditWriter, userId: string): Promise<void> {
+  const demo = await findDemoWorkspace();
+  if (!demo) return;
+  const [revived] = await write.reviveMembership(demo.id, userId, 'owner', null);
+  if (revived) return;
+  const [promoted] = await write.setSeatRole(demo.id, userId, 'owner');
+  if (!promoted) await write.insertMembership(demo.id, userId, 'owner');
+}
+
+/** Returns an admin's seat in the demo coven to a viewer's, in the caller's transaction; a user with no live seat is left without one. */
+async function unseatDemoOwner(write: AuditWriter, userId: string): Promise<void> {
+  const demo = await findDemoWorkspace();
+  if (demo) await write.setSeatRole(demo.id, userId, 'viewer');
 }
 
 /**
@@ -66,6 +88,7 @@ async function writeRole(
   // Soft-deleted between the read and the write: the update matches no row,
   // so the trigger never fires and nothing is recorded.
   if (!written) throw new NotFound('No such user');
+  if (user.role === 'admin') await unseatDemoOwner(write, user.id);
   return written;
 }
 

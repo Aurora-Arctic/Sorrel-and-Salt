@@ -14,10 +14,18 @@ const PageHeader = ({
   eyebrow,
   lede,
   lead,
+  tag,
   action,
   className,
 }: PageHeaderProps): ReactElement => {
-  const heading = <h1 id={id}>{title}</h1>;
+  // A tag makes the h1 a two-column grid, so it stays beside the title's first line when the title wraps.
+  const heading = tag ? (
+    <h1 id={id} className="page-title--tagged">
+      <span>{title}</span> {tag}
+    </h1>
+  ) : (
+    <h1 id={id}>{title}</h1>
+  );
   const column = Boolean(eyebrow) || Boolean(lede);
   const line =
     column && !lead && !action ? (

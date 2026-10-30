@@ -75,6 +75,16 @@
     }
   }
 
+  // A heading with a tag at its top right: the name in the first column and the tag in the second,
+  // at the top of the row. A grid cell rather than an inline badge, so the tag stays beside the
+  // name's first line when the name wraps and adds nothing to the heading's line height.
+  .page-title--tagged {
+    display: grid;
+    grid-template-columns: 1fr auto;
+    column-gap: space(2);
+    align-items: start;
+  }
+
   .badges {
     display: flex;
     gap: space(3);
@@ -682,6 +692,26 @@
     @include stack(5);
     margin-inline: auto;
     padding: space(6) space(4);
+  }
+
+  // The demo coven's notice stands in the content column's own edges (same width, centring and
+  // gutter as `.coven-layout`), so its box spans the content while the sentence stops at the reading
+  // measure; the measure is on the text because a box capped at it would end short of the content.
+  .coven-layout__demo-notice {
+    box-sizing: border-box;
+    width: 100%;
+    max-width: $wide-column;
+    margin-inline: auto;
+    padding: space(4) space(4) 0;
+
+    .notice {
+      max-width: none;
+    }
+  }
+
+  .coven-layout__demo-text {
+    display: block;
+    max-width: $measure;
   }
 
   // Inside `:where()`, as `.page-frame`'s width is, so a story or page that

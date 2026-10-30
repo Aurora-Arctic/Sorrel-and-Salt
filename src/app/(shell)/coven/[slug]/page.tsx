@@ -60,6 +60,7 @@ export default async function CovenPage({ params }: CovenLayoutParams) {
       <PageHeader
         eyebrow="Coven"
         title={workspace.name}
+        tag={workspace.demo ? <span className="badge badge--demo">Demo</span> : undefined}
         lede={
           <>
             You are {ROLE_NAME[membership.role]} of this coven.{' '}

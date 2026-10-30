@@ -1,3 +1,4 @@
+import type { Unit } from '../../modules/ingredients/schema/units';
 import type { PostgresJsDatabase } from 'drizzle-orm/postgres-js';
 import type { users } from '../../modules/identity/schema/users';
 import type { workspaceMembers, workspaces } from '../../modules/coven/schema/workspaces';
@@ -139,10 +140,10 @@ export type SeedSpell = Pick<
   // names an untitled spell by its id.
   title: string | null;
   /**
-   * The member who wrote it, for a private spell, which only its author reads.
-   * Absent, the bootstrap user wrote it, as it writes every other seeded row.
+   * Written by the coven's `authorId`, which a private spell needs, since only its author reads it. Absent, the bootstrap
+   * user wrote it, as it writes every other seeded row.
    */
-  author?: string;
+  byAuthor?: true;
   /** §6 categories by name — what the spell *intends*, never what its contents imply (§9). */
   categories: string[];
   steps: SeedStep[];
@@ -487,4 +488,47 @@ export interface SeedWorking {
     unit: 'g';
     shortfall: string;
   }[];
+}
+
+/**
+ * A compendium entry W's cupboard holds, by formal name, with the coven's own say over it: each override is
+ * null (the compendium's value shows) unless set. An entry with none is in the cupboard, not annotated.
+ */
+export interface SeedCupboardEntry {
+  /** The held entry, by its formal name, or by its name alone where it has none (`identityOf`). */
+  entry: { name: string; canonicalName?: string | null };
+  label?: string;
+  description?: string;
+  safetyNotes?: string;
+  elements?: Array<'earth' | 'air' | 'fire' | 'water' | 'spirit'>;
+  celestialBodies?: string[];
+  zodiacSigns?: string[];
+  colors?: string[];
+}
+
+/** A layer's or jar's ingredient that names an entry, in either tier: all but the custom one-off. */
+export type NamedIngredient = Extract<SeedLayerIngredient, { entry: unknown }>;
+
+/**
+ * One jar of stock W holds: the entry, the form (matched without case) and what the row says of it. A `unit`
+ * carries its dimension; an omitted threshold is the dimension's default, as `createStock` fills it. (claude-docs/db/standard-scenario.md, "W's stock")
+ */
+export interface SeedStock {
+  id: string;
+  ingredient: NamedIngredient;
+  form: string;
+  quantity?: string;
+  unit?: Unit;
+  lowStockThreshold?: string;
+  source?: string;
+  acquiredDate?: string;
+}
+
+/**
+ * The coven a content helper fills, and who wrote what it writes: `authorId` stamps the coven's private spells and need not
+ * be a member of it.
+ */
+export interface CovenTarget {
+  workspaceId: string;
+  authorId: string;
 }

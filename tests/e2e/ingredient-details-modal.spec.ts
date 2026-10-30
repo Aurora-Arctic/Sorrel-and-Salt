@@ -446,8 +446,6 @@ test.describe('on the public compendium', () => {
         userId,
       ),
     );
-    // The session rides a header or a cookie (holdSession); both go.
-    await page.context().setExtraHTTPHeaders({});
     await page.context().clearCookies();
     await page.goto(`/compendium?query=${encodeURIComponent(PUBLIC_NAME)}`);
     // Why it is a visitor's: the header offers Sign In.
