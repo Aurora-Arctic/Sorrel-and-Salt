@@ -11,6 +11,7 @@ import { usePendingNavigation } from '../../lib/navigation';
 import BusyButton from '../BusyButton';
 import JarLine from '../JarLine';
 import Notice from '../Notice';
+import Skeleton from '../Skeleton';
 import { stockState } from '../StockBadge/stock-state';
 import { withUnit } from '../StockBadge/stock-words';
 import './index.scss';
@@ -188,7 +189,7 @@ export default function WorkingCompletion({
     <div className="form">
       {failure && <Notice kind="error">{failure}</Notice>}
       {!plan ? (
-        <p role="status">Reading the jars</p>
+        <Skeleton shape="line" />
       ) : (
         <>
           <p>

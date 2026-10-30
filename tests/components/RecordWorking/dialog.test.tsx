@@ -119,6 +119,32 @@ describe('Record a Working', () => {
     expect(screen.getByRole('button', { name: 'Confirm' })).toBeEnabled();
   });
 
+  it('draws the loading skeleton while the deduction preview is read', async () => {
+    const calls = mockRecording();
+    let answer: () => void = () => {};
+    server.use(
+      graphqlLink.query(
+        'WorkingDeductionPreview',
+        () =>
+          new Promise((resolve) => {
+            answer = () =>
+              resolve(
+                HttpResponse.json({
+                  data: { workingDeductionPreview: { deductions: [], warnings: [] } },
+                }),
+              );
+          }),
+      ),
+    );
+    openButton();
+    fireEvent.click(within(dialog()).getByRole('button', { name: 'Complete' }));
+    await waitFor(() => expect(calls).toHaveLength(1));
+    expect(await within(dialog()).findByRole('status')).toHaveTextContent('Loading');
+    expect(within(dialog()).queryByRole('list', { name: 'Deductions' })).toBeNull();
+    answer();
+    expect(await within(dialog()).findByRole('list', { name: 'Deductions' })).toBeInTheDocument();
+  });
+
   it('shuts Participants with the other fields while the save is on its way, so no name is lost', async () => {
     let answer: () => void = () => {};
     server.use(

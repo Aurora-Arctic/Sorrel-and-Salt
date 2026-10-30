@@ -40,7 +40,7 @@ With `working` and a `deleteWorking` prop (`{ name, remove }`), the form also dr
 
 ## Completing a working
 
-`WorkingCompletion` reads `workingDeductionPreview` afresh each time it opens and lists the spell's
+`WorkingCompletion` reads `workingDeductionPreview` afresh each time it opens, drawing a `Skeleton shape="line"` until it arrives, and lists the spell's
 ingredient steps in order, one line each, as the jar the recipe page's In Coven Inventory draws, both through `JarLine`
 ([`jar-line.md`](jar-line.md): the drawing, the `jar-shelf__jar--low|out|empty` paint, the press, the shake and the growing name) beside the step's name (no step number), and these words:
 
