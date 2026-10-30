@@ -28,7 +28,7 @@ export interface WorkingView {
   warnings?: readonly string[];
   /** The viewer recorded it and may delete it. */
   canChange: boolean;
-  /** What the Edit dialog opens on: given to the recorder only, who alone may change a working. */
+  /** What the Edit dialog opens on: given to the recorder and to a member named on the working. */
   editable?: EditableWorking;
 }
 
@@ -36,7 +36,7 @@ export interface SpellWorkingsProps {
   workspaceId: string;
   /** Newest day first, as read. */
   workings: readonly WorkingView[];
-  /** The control that completes a draft working, drawn on the recorder's own draft rows (those carrying `editable`). */
+  /** The control that completes a draft working, drawn on the draft rows the viewer may change (those carrying `editable`). */
   completeAction?: (workingId: string) => ReactNode;
   /** The pencil that opens the Edit dialog on a working, drawn on the rows that carry `editable`. */
   editAction?: (working: EditableWorking, name: string) => ReactNode;

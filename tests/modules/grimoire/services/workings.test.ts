@@ -479,6 +479,84 @@ describe('updateWorking', () => {
   });
 });
 
+describe('a participant who is a coven member', () => {
+  /** A's working with B named on it: B is a participant and not the recorder, proved before any call is made. */
+  async function namedOnB() {
+    const spell = await spellBy(A);
+    const { working } = await record(A, spell, { participants: [{ userId: B.id }] });
+    const [row] = await sql`select created_by from spell_workings where id = ${working.id}`;
+    expect(row.created_by).toBe(A.id);
+    const named =
+      await sql`select 1 from spell_working_participants where working_id = ${working.id} and user_id = ${B.id}`;
+    expect(named).toHaveLength(1);
+    return { spell, id: working.id };
+  }
+
+  it('may update and complete the working', async () => {
+    const { id } = await namedOnB();
+
+    await updateWorking(asUser(B), WORKSPACE_W_ID, id, { workedOn: '2026-10-09', note: 'By B' });
+    expect((await workingRow(id)).note).toBe('By B');
+
+    await completeWorking(asUser(B), WORKSPACE_W_ID, id);
+    expect((await workingRow(id)).status).toBe('complete');
+  });
+
+  it('may not delete it, though the recorder may', async () => {
+    const { id } = await namedOnB();
+
+    const error = await refusal(deleteWorking(asUser(B), WORKSPACE_W_ID, id));
+    expect(error).toBeInstanceOf(Forbidden);
+    expect((error as Error).message).toMatch(/recorded/);
+    expect((await workingRow(id)).deleted_at).toBeNull();
+    await deleteWorking(asUser(A), WORKSPACE_W_ID, id);
+    expect((await workingRow(id)).deleted_at).not.toBeNull();
+  });
+
+  it('is refused to a member who is not named on it, though they can read it', async () => {
+    const spell = await spellBy(A);
+    const { working } = await record(A, spell, { participants: [{ name: 'Typed Name' }] });
+    expect((await getWorking(asUser(B), WORKSPACE_W_ID, working.id)).working.id).toBe(working.id);
+
+    for (const act of [
+      () => updateWorking(asUser(B), WORKSPACE_W_ID, working.id, { workedOn: '2026-10-09' }),
+      () => completeWorking(asUser(B), WORKSPACE_W_ID, working.id),
+    ]) {
+      expect(await refusal(act())).toBeInstanceOf(Forbidden);
+    }
+    expect((await workingRow(working.id)).worked_on).toBe(DAY);
+  });
+
+  it('is refused to a viewer named on it, because viewers write nothing', async () => {
+    const spell = await spellBy(A);
+    const { working } = await record(A, spell, { participants: [{ userId: C.id }] });
+    const named =
+      await sql`select 1 from spell_working_participants where working_id = ${working.id} and user_id = ${C.id}`;
+    expect(named).toHaveLength(1);
+
+    for (const act of [
+      () => updateWorking(asUser(C), WORKSPACE_W_ID, working.id, { workedOn: '2026-10-09' }),
+      () => completeWorking(asUser(C), WORKSPACE_W_ID, working.id),
+    ]) {
+      expect(await refusal(act())).toBeInstanceOf(Forbidden);
+    }
+    expect((await workingRow(working.id)).status).toBe('draft');
+  });
+
+  it('loses the right once an update takes them off the working', async () => {
+    const { id } = await namedOnB();
+    await updateWorking(asUser(B), WORKSPACE_W_ID, id, { workedOn: DAY, participants: [] });
+    const named =
+      await sql`select 1 from spell_working_participants where working_id = ${id} and user_id = ${B.id}`;
+    expect(named).toHaveLength(0);
+
+    expect(
+      await refusal(updateWorking(asUser(B), WORKSPACE_W_ID, id, { workedOn: '2026-10-09' })),
+    ).toBeInstanceOf(Forbidden);
+    expect(await refusal(completeWorking(asUser(B), WORKSPACE_W_ID, id))).toBeInstanceOf(Forbidden);
+  });
+});
+
 describe('deleteWorking', () => {
   it('soft-deletes the working by its recorder and leaves the stock taken', async () => {
     const salt = await stocked('Fixture Salt', '10', 'g');

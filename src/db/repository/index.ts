@@ -34,6 +34,7 @@ export {
   findParticipantsOfWorkings,
   findWorkingsInSpell,
   findWorkingsPage,
+  isParticipantOfWorking,
 } from './workings';
 export {
   findGrimoireCategoryCounts,

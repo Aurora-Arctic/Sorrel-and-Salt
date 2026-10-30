@@ -22,7 +22,7 @@ export async function readWorkingsOf(
   steps: readonly RecipeStep[],
   /** The viewer's role may delete workings; deleting is still the recorder's alone. */
   mayDelete: boolean,
-  /** The viewer's role may change workings; changing is still the recorder's alone. */
+  /** The viewer's role may change workings; changing is the recorder's or a named member's. */
   mayEdit: boolean,
 ): Promise<WorkingView[]> {
   const reports = await allPages((request) =>
@@ -33,8 +33,15 @@ export async function readWorkingsOf(
     reports.map(({ working }) => working.createdBy),
   );
   // What completing would skip is the spell's, not each draft's, so it is read once, and only when a draft of the viewer's is there to complete.
+  const mayChange = (
+    working: { createdBy: string },
+    participants: readonly { userId: string | null }[],
+  ) =>
+    mayEdit &&
+    (working.createdBy === session.userId ||
+      participants.some((person) => person.userId === session.userId));
   const completable = reports.some(
-    ({ working }) => working.status === 'draft' && working.createdBy === session.userId,
+    ({ working, participants }) => working.status === 'draft' && mayChange(working, participants),
   );
   const summary = completable
     ? skipSummary((await previewWorkingDeductions(session, workspaceId, spellId)).warnings.length)
@@ -49,7 +56,7 @@ export async function readWorkingsOf(
     note: working.note,
     recordedBy: recorders[i] ?? null,
     // The recorder is named once, in "Recorded by", so the people who took part leave them out.
-    warnings: working.status === 'draft' && working.createdBy === session.userId ? skips : [],
+    warnings: working.status === 'draft' && mayChange(working, participants) ? skips : [],
     participants: participants
       .filter((person) => person.userId !== working.createdBy)
       .map((person) => person.displayName ?? person.name ?? FORMER_MEMBER),
@@ -73,19 +80,18 @@ export async function readWorkingsOf(
         ];
       }),
     canChange: mayDelete && working.createdBy === session.userId,
-    editable:
-      mayEdit && working.createdBy === session.userId
-        ? {
-            id: working.id,
-            workedOn: working.workedOn,
-            note: working.note,
-            visibility: working.visibility,
-            status: working.status,
-            participants: participants.map((person) => ({
-              userId: person.userId,
-              name: person.displayName ?? person.name ?? FORMER_MEMBER,
-            })),
-          }
-        : undefined,
+    editable: mayChange(working, participants)
+      ? {
+          id: working.id,
+          workedOn: working.workedOn,
+          note: working.note,
+          visibility: working.visibility,
+          status: working.status,
+          participants: participants.map((person) => ({
+            userId: person.userId,
+            name: person.displayName ?? person.name ?? FORMER_MEMBER,
+          })),
+        }
+      : undefined,
   }));
 }
