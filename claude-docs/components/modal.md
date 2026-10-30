@@ -303,6 +303,7 @@ the tab, reloading, and on a page form a link (see the last point below).
   browser's question, through `useLeaveGuard`
   ([`spell-builder.md`](spell-builder.md), "Closing";
   [`design-decisions/m10.12-spell-builder-modal.md`](../design-decisions/m10.12-spell-builder-modal.md)).
+- **The ingredient form saves instead of asking** (M13.24). Close, Escape and a click outside save anything unsaved through `useSaveOnClose`, then close, with no Discard Changes question, the same as the spell builder. Cancel and Close with nothing changed close at once. Two things are not saved and so are not asked about: an open reference panel's draft, and a new entry that was never created (it has near-duplicate matches still showing). Their text stays in the form's local mirror ([`ingredient-form.md`](ingredient-form.md), "Autosave").
 - **Undo can release the guard.** A form with undo and redo ([`field.md`](field.md#undo-and-redo)) that is undone back to its starting values is no longer dirty, so Cancel and the other ways out close at once again. The undo is off while the question is asked.
 - **Leaving the page asks too** (M13.14, story 32). `useDiscardGuard` calls
   `useLeaveGuard(dirty, request)` from `src/lib/navigation/leave-guard.tsx`:
@@ -685,6 +686,8 @@ destination is fixed once the dialog opens: there is no Coven select. With
 nowhere to write the control is not drawn. After Save Ingredient the modal
 closes and the control leaves a status beside it, since the form’s own Saved
 notice goes with the form.
+
+The form creates the ingredient at its first save, once it has a name (M13.24). The dialog then stays open and moves its address from `?new=ingredient-coven-<slug>` to `/coven/<slug>/ingredients?edit=<id>` with `replaceState` (the coven's edit modal is keyed by id, not slug). A reload of that address opens the edit modal over the coven's ingredient list, with the saved text. Closing after a create navigates to `/coven/<slug>/ingredients`. The compendium's dialog does the same with `?edit=<slug>`, and keeps the form's React key stable across the create so the form is not remounted and the focus stays.
 
 A coven's add can end another way (M12.20): when the compendium already bears
 the typed name, the form asks, and a match's + (M12.48; M12.20's Use It)
