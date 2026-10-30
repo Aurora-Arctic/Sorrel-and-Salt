@@ -294,7 +294,7 @@ export const WORKINGS: WorkingView[] = [
     recordedBy: 'Testa Owner',
     participants: ['Testa Owner'],
     deductions: [],
-    warnings: ['Completing it skips 1 step.'],
+    warnings: ['Completing takes nothing from the jars for 1 ingredient.'],
     canChange: true,
     editable: {
       id: 'working-draft',

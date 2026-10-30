@@ -186,9 +186,15 @@ Tokens only, in three stylesheets:
 `src/components/SpellRecipe/index.stories.tsx`, titled "Grimoire / Spell Recipe": `States`, with a
 control that chooses one state:
 
-- Complete: the full page of a complete shared spell, every slot filled.
+- Complete: the full page of a complete shared spell, every slot filled. The steps name their
+  ingredients as plain text; the Quick Look eye is in the side column, The Cupboard, alone.
 - Draft: a draft, with no Record a Working and Workings empty.
 - Private: a private spell.
-- Quick Look: the dialog for a member, with the Edit pencil and the bin beside the title.
+- Quick Look: the dialog for a member, with the Edit pencil beside the title and no badge.
+- Quick Look Draft and Quick Look Private: the same dialog with the Draft or the Private badge under
+  the title.
 - Quick Look Read Only: the dialog for a viewer.
 - Quick Look Read Failed: the dialog when the spell could not be read.
+
+`Phone` draws Complete at 375px: On This Page stands after the intent and categories and over the
+facts, and The Cupboard follows the recipe, before Workings.
