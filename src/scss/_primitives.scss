@@ -676,6 +676,26 @@
     padding: space(6) space(4);
   }
 
+  // The demo coven's notice stands in the content column's own edges (same width, centring and
+  // gutter as `.coven-layout`), so its box spans the content while the sentence stops at the reading
+  // measure; the measure is on the text because a box capped at it would end short of the content.
+  .coven-layout__demo-notice {
+    box-sizing: border-box;
+    width: 100%;
+    max-width: $wide-column;
+    margin-inline: auto;
+    padding: space(4) space(4) 0;
+
+    .notice {
+      max-width: none;
+    }
+  }
+
+  .coven-layout__demo-text {
+    display: block;
+    max-width: $measure;
+  }
+
   // Inside `:where()`, as `.page-frame`'s width is, so a story or page that
   // wants the frame narrower or wider can say so with a single class.
   :where(.page-column, .coven-layout) {
