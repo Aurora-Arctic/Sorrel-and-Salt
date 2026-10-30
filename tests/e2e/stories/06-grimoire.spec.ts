@@ -237,7 +237,7 @@ test(
     const steps = stepList(page).getByRole('listitem');
     await expect(steps.first()).toContainText('Rosemary');
     // Keyboard alone: pick the handle up, move it one place, put it down.
-    const handle = page.getByRole('button', { name: 'Move Mugwort (Herb)' });
+    const handle = page.getByRole('button', { name: 'Move Mugwort (Herb)', exact: true });
     // Each key waits for what the last one said, as a person hears it. dnd-kit
     // starts listening for the moving keys in a timer it sets at the lift, which
     // can run after the lift is said, so the Up also waits one timer behind it.
@@ -281,10 +281,14 @@ test(
     await steps.nth(2).getByRole('button', { name: 'Close New Instruction' }).click();
     await page.getByRole('button', { name: 'Remove New Instruction' }).click();
     await expect(said('Removed New Instruction, from position 3 of 3.')).toBeAttached();
-    await expect(page.getByRole('button', { name: 'Move Rosemary (Herb)' })).toBeFocused();
+    await expect(
+      page.getByRole('button', { name: 'Move Rosemary (Herb)', exact: true }),
+    ).toBeFocused();
     await page.getByRole('button', { name: 'Remove Mugwort (Herb)' }).click();
     await expect(said('Removed Mugwort (Herb), from position 1 of 2.')).toBeAttached();
-    await expect(page.getByRole('button', { name: 'Move Rosemary (Herb)' })).toBeFocused();
+    await expect(
+      page.getByRole('button', { name: 'Move Rosemary (Herb)', exact: true }),
+    ).toBeFocused();
     await page.getByRole('button', { name: 'Remove Rosemary (Herb)' }).click();
     await expect(said('Removed Rosemary (Herb), from position 1 of 1.')).toBeAttached();
     await expect(page.getByRole('button', { name: 'Add Instruction' })).toBeFocused();
@@ -491,7 +495,12 @@ test(
     };
     const listPath = `/coven/${coven.slug}/grimoire`;
     const recipePath = `${listPath}/${gone}`;
-    const bin = page.getByRole('button', { name: 'Delete Spell Doomed Working', exact: true });
+    // Delete Spell is in the page's More menu.
+    const dots = page.getByRole('button', { name: 'More for Doomed Working', exact: true });
+    const askToDelete = async () => {
+      await dots.click();
+      await page.getByRole('menuitem', { name: /^Delete Spell/ }).click();
+    };
     const question = page.getByRole('dialog', { name: 'Delete Spell', exact: true });
 
     // Why the delete could be refused: B is not the author, and the spell is complete and
@@ -501,18 +510,18 @@ test(
     await expect(page.getByRole('heading', { level: 1, name: 'Doomed Working' })).toBeVisible();
 
     await test.step('the Delete asks first, naming the spell, and Cancel changes nothing', async () => {
-      await bin.click();
+      await askToDelete();
       await expect(question).toContainText('Doomed Working');
       await assertNoAccessibilityViolations(page);
       await question.getByRole('button', { name: 'Cancel', exact: true }).click();
 
       await expect(question).toHaveCount(0);
-      await expect(bin).toBeFocused();
+      await expect(dots).toBeFocused();
       expect(await deletedAt('spells', gone)).toBeNull();
     });
 
     await test.step('confirmed, the page leaves for the grimoire, which says so, with the focus on its heading', async () => {
-      await bin.click();
+      await askToDelete();
       await question.getByRole('button', { name: 'Delete', exact: true }).click();
 
       await expect(page).toHaveURL(/\/grimoire\?deleted=/);
@@ -1192,14 +1201,21 @@ test(
     const recipe = `/coven/${coven.slug}/grimoire/${spell}`;
 
     // A viewer may not create a spell, so the recipe page offers no Duplicate.
+    const dots = page.getByRole('button', { name: 'More for Fixture Working', exact: true });
     await signInAgainAs(page, coven.users.C);
     await page.goto(recipe);
-    await expect(page.getByRole('button', { name: 'Duplicate' })).toHaveCount(0);
+    await expect(page.getByRole('heading', { level: 1, name: 'Fixture Working' })).toBeVisible();
+    // The menu is there (it holds Print), so the missing Duplicate is the role's, not the menu's.
+    await dots.click();
+    await expect(page.getByRole('menuitem', { name: 'Print' })).toBeVisible();
+    await expect(page.getByRole('menuitem', { name: 'Duplicate' })).toHaveCount(0);
+    await page.keyboard.press('Escape');
 
     // A member duplicates it and lands in the copy's builder.
     await signInAgainAs(page, coven.users.B);
     await page.goto(recipe);
-    await page.getByRole('button', { name: 'Duplicate' }).click();
+    await dots.click();
+    await page.getByRole('menuitem', { name: 'Duplicate' }).click();
     const builder = page.getByRole('dialog', { name: 'Edit Spell, Fixture Working (Copy)' });
     await expect(builder).toBeVisible();
     await expect(page).toHaveURL(/\/grimoire\/drafts\?edit=[0-9a-f-]{36}$/);
