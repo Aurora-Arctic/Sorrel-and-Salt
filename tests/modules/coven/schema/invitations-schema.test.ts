@@ -149,7 +149,7 @@ async function inviteToSite({ tokenHash = HASH_A, siteRole = 'admin' } = {}) {
 
 describe('invitations table', () => {
   beforeEach(async () => {
-    await sql`truncate invitations`;
+    await sql`truncate card_invitation_attempts, invitations`;
   });
 
   describe('the tier', () => {

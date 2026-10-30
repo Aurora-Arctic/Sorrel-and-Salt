@@ -60,7 +60,7 @@ beforeAll(async () => {
 });
 
 beforeEach(async () => {
-  await sql`truncate invitations`;
+  await sql`truncate card_invitation_attempts, invitations`;
   await sql`update users set email_verified = true where id in (${A.id}, ${B.id})`;
 });
 
@@ -719,7 +719,7 @@ describe('the received invitations', () => {
     });
 
     it('names no inviter for a site invitation, though it is pending and the address matches', async () => {
-      await sql`truncate invitations`;
+      await sql`truncate card_invitation_attempts, invitations`;
       const [site] = await inviteToSite({ token: 'fixture-token-n-site' });
 
       expect(site?.createdBy).toBe(E.id);

@@ -32,7 +32,7 @@ const sha256 = (value: string) => createHash('sha256').update(value).digest('hex
 const cards = () => sql`select * from invitations where kind = 'card' order by created_at, id`;
 
 beforeEach(async () => {
-  await sql`truncate invitations`;
+  await sql`truncate card_invitation_attempts, invitations`;
 });
 
 describe('who may mint, list and revoke', () => {
