@@ -757,6 +757,11 @@ type InvitationCard {
   The account that accepted it; null while it is unaccepted or the account is gone.
   """
   account: User
+
+  """
+  How many times signed-in accounts opened its link and were refused, all accounts and reasons added. Site admins only.
+  """
+  attemptCount: Int!
   audit: AuditInfo!
 
   """The mint that made it, shared by the whole batch."""
@@ -770,6 +775,28 @@ type InvitationCard {
   ownedCovens: [Workspace!]!
   revokedAt: DateTime
   state: InvitationCardState!
+}
+
+"""One account's refused opens of one card for one reason."""
+type InvitationCardAttempt {
+  """The account that opened the link; null if it is gone."""
+  account: User
+
+  """How many times this account was refused for this reason."""
+  attempts: Int!
+  firstAttemptedAt: DateTime!
+  id: ID!
+  lastAttemptedAt: DateTime!
+  reason: InvitationCardAttemptReason!
+}
+
+"""
+Why a card link was refused: withdrawn, past its date, or used by another account.
+"""
+enum InvitationCardAttemptReason {
+  accepted
+  expired
+  revoked
 }
 
 """
@@ -971,6 +998,11 @@ type Mutation {
   Makes a common name the ingredient's display name, and the old display name a common name. A null workspaceId names a compendium entry, under the admin proof.
   """
   promoteFolkName(folkNameId: ID!, id: ID!, workspaceId: ID): Ingredient!
+
+  """
+  Notes that the signed-in account opened this card link and was refused. Takes the token alone: the account is the session's and the reason is worked out here. Answers true whether or not anything was recorded.
+  """
+  recordCardAttempt(token: String!): Boolean!
 
   """Records a working of a complete spell, as a draft."""
   recordWorking(input: WorkingInput!, spellId: ID!, workspaceId: ID!): SpellWorking!
@@ -1378,6 +1410,9 @@ type Query {
     workspaceId: ID!
   ): QueryIngredientSuggestionsConnection!
 
+  """One card's refused opens, latest first. Site admins only."""
+  invitationCardAttempts(after: String, before: String, first: Int, invitationId: ID!, last: Int): QueryInvitationCardAttemptsConnection!
+
   """
   Every card in any state, newest first, optionally one batch. Site admins only.
   """
@@ -1724,6 +1759,16 @@ type QueryIngredientSuggestionsConnectionEdge {
   """
   group: SuggestionGroup!
   node: Ingredient!
+}
+
+type QueryInvitationCardAttemptsConnection {
+  edges: [QueryInvitationCardAttemptsConnectionEdge!]!
+  pageInfo: PageInfo!
+}
+
+type QueryInvitationCardAttemptsConnectionEdge {
+  cursor: String!
+  node: InvitationCardAttempt!
 }
 
 type QueryInvitationCardsConnection {

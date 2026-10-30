@@ -1,16 +1,18 @@
 import { builder } from '../../../graphql/builder';
 import { AuditInfo } from '../../../graphql/schema/audit';
 import { sessionOf } from '../../../graphql/context-helpers';
-import type { CardRow } from '../../../db/repository';
+import type { CardAttemptRow, CardRow } from '../../../db/repository';
 import {
   cardArrivalsCsv,
   cardState,
+  listCardAttempts,
   listCardArrivals,
   listInvitationCards,
   mintInvitationCards,
   revokeInvitationCard,
   revokeInvitationCardBatch,
 } from '../services/invitation-cards';
+import { recordCardAttempt } from '../services/invitation-acceptance';
 import type { CardState, MintedCards } from '../types';
 import { UserRef } from './user';
 
@@ -50,7 +52,38 @@ export const InvitationCardRef = builder.objectRef<CardRow>('InvitationCard').im
       resolve: (row, _args, { loaders }) =>
         row.acceptedBy ? loaders.usersByIdForAdmin.load(row.acceptedBy) : null,
     }),
+    attemptCount: t.int({
+      description:
+        'How many times signed-in accounts opened its link and were refused, all accounts and reasons added. Site admins only.',
+      resolve: (row, _args, { loaders }) => loaders.cardAttemptTotals.load(row.id),
+    }),
     audit: t.field({ type: AuditInfo, resolve: (row) => row }),
+  }),
+});
+
+const ATTEMPT_REASONS = ['revoked', 'expired', 'accepted'] as const;
+
+const AttemptReasonEnum = builder.enumType('InvitationCardAttemptReason', {
+  description: 'Why a card link was refused: withdrawn, past its date, or used by another account.',
+  values: ATTEMPT_REASONS,
+});
+
+const CardAttemptRef = builder.objectRef<CardAttemptRow>('InvitationCardAttempt').implement({
+  description: "One account's refused opens of one card for one reason.",
+  fields: (t) => ({
+    id: t.exposeID('id'),
+    reason: t.field({ type: AttemptReasonEnum, resolve: (row) => row.reason }),
+    attempts: t.exposeInt('attempts', {
+      description: 'How many times this account was refused for this reason.',
+    }),
+    firstAttemptedAt: t.expose('createdAt', { type: 'DateTime' }),
+    lastAttemptedAt: t.expose('lastAttemptedAt', { type: 'DateTime' }),
+    account: t.field({
+      type: UserRef,
+      nullable: true,
+      description: 'The account that opened the link; null if it is gone.',
+      resolve: (row, _args, { loaders }) => loaders.usersByIdForAdmin.load(row.userId),
+    }),
   }),
 });
 
@@ -84,6 +117,17 @@ builder.queryField('cardArrivals', (t) =>
       'The accepted cards, newest first: each with the account that arrived by it. Site admins only.',
     authScopes: { admin: true },
     resolve: (_root, _args, page, context) => listCardArrivals(sessionOf(context), page),
+  }),
+);
+
+builder.queryField('invitationCardAttempts', (t) =>
+  t.pagedConnection({
+    type: CardAttemptRef,
+    description: "One card's refused opens, latest first. Site admins only.",
+    args: { invitationId: t.arg.id({ required: true }) },
+    authScopes: { admin: true },
+    resolve: (_root, { invitationId }, page, context) =>
+      listCardAttempts(sessionOf(context), invitationId, page),
   }),
 );
 
@@ -130,5 +174,18 @@ builder.mutationField('revokeInvitationCardBatch', (t) =>
     authScopes: { admin: true },
     resolve: (_root, { batchId }, context) =>
       revokeInvitationCardBatch(sessionOf(context), batchId),
+  }),
+);
+
+builder.mutationField('recordCardAttempt', (t) =>
+  t.boolean({
+    description:
+      "Notes that the signed-in account opened this card link and was refused. Takes the token alone: the account is the session's and the reason is worked out here. Answers true whether or not anything was recorded.",
+    args: { token: t.arg.string({ required: true }) },
+    authScopes: { signedIn: true },
+    resolve: async (_root, { token }, context) => {
+      await recordCardAttempt(sessionOf(context), token);
+      return true;
+    },
   }),
 );
