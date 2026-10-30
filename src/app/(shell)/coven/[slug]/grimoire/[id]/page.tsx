@@ -68,8 +68,10 @@ export default async function SpellRecipePage({ params, searchParams }: SpellRec
   // Only a complete spell is worked, and on the permission `recordWorking` asserts.
   const canRecord =
     spell.status === 'complete' && rolePermits(membership.role, { working: ['create'] });
-  const roster = canRecord ? await memberRoster(session, workspace) : [];
-  const rosterNames = canRecord
+  // The roll is the one read `memberRoster` asserts (`member: read`), which a viewer lacks.
+  const canListMembers = canRecord && rolePermits(membership.role, { member: ['read'] });
+  const roster = canListMembers ? await memberRoster(session, workspace) : [];
+  const rosterNames = canListMembers
     ? await displayNamesOf(
         session,
         roster.map(({ userId }) => userId),
