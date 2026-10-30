@@ -8,7 +8,7 @@
       Yes, because a root can still have multiple forms and some things have different names for different parts.
 - [x] Ivy tried to click on the ingredient name itself instead of edit. Should go to the page where it can be edited? Or modal?
       It should open a modal.
-- [x] Define password policies and create enforcement.
+- [x] Define password policies and create enforcement. The policy is DESIGN.md §8, "Passwords"; Wave 16 (M16.2–M16.5) builds the enforcement.
 - [x] Icons for forms?
       Yes, one per form group, with a generic salt spoon for a form no group
       covers. The spoon also replaces the flask as the Forms tab mark. Minted
