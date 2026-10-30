@@ -16,12 +16,22 @@
   &:focus {
     outline: none;
   }
+
+  // The page's side gutter on a phone.
+  @media (max-width: $shell-phone-width) {
+    padding: space(4);
+  }
 }
 
-.spell-preview__close {
+// The controls sit in a row above the title, at the end, and stay in view as the steps scroll. A row and
+// not a float, so a long title never wraps around them.
+.spell-preview__bar {
   position: sticky;
   top: 0;
-  float: right;
+  z-index: 1;
+  display: flex;
+  justify-content: flex-end;
+  gap: space(2);
 }
 
 .spell-preview__title {

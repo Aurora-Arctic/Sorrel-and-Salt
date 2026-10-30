@@ -68,9 +68,11 @@ export default function SpellPreview({ title, steps }: SpellPreviewProps): React
           close();
         }}
       >
-        <button type="button" className="btn btn--quiet spell-preview__close" onClick={close}>
-          Close
-        </button>
+        <div className="spell-preview__bar">
+          <button type="button" className="btn btn--quiet" onClick={close}>
+            Close
+          </button>
+        </div>
         <h2 id="spell-preview-title" className="spell-preview__title">
           {title}
         </h2>
