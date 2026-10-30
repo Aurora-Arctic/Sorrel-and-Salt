@@ -69,6 +69,8 @@ beforeEach(async () => {
   await sql`truncate user_privilege_changes`;
   await asManualFix(sql, async (tx) => {
     // A case that acted as one of this file's users stamped the rows it changed with that user; the stamp would refuse the delete.
+    // The trigger drops a write that changes the stamp alone unless the touch is declared.
+    await tx`select set_config('app.touch_row', 'on', true)`;
     await tx`
       update users set updated_by = ${BOOTSTRAP_USER_ID}
       where updated_by in (select id from users where email like ${`%${DOMAIN}`}) and email not like ${`%${DOMAIN}`}`;
