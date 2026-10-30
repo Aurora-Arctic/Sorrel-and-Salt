@@ -310,7 +310,7 @@ describe('SpellRecipe', () => {
         })}
       />,
     );
-    const aside = screen.getByRole('complementary');
+    const aside = screen.getByRole('complementary', { name: 'The Cupboard' });
     expect(within(aside).getByRole('region', { name: 'Fixture Aside' })).toBeInTheDocument();
     const note = screen.getByText('Best at dusk.');
     expect(note.compareDocumentPosition(aside) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy();
@@ -335,7 +335,7 @@ describe('SpellRecipe', () => {
       // The two jar links are nested under one group label, and the group is narrow-only whole.
       const group = within(screen.getByRole('navigation', { name: 'On This Page' })).getByRole(
         'list',
-        { name: 'The Jar' },
+        { name: 'The Cupboard' },
       );
       expect(within(group).getAllByRole('link')).toHaveLength(2);
       expect(group.parentElement).toHaveClass('page-nav__narrow');

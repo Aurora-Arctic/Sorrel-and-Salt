@@ -45,7 +45,7 @@ for (const [name, size] of [
     const workings = await box(page.getByRole('heading', { name: 'Workings' }));
     const steps = await box(page.getByRole('list', { name: 'Steps' }));
     const note = await box(page.getByText('A closing note'));
-    const aside = await box(page.getByRole('complementary', { name: 'The Jar' }));
+    const aside = await box(page.getByRole('complementary', { name: 'The Cupboard' }));
 
     // The rows carry no list marker.
     const marker = await page
@@ -218,15 +218,15 @@ for (const [name, size] of [
         : ['Steps', 'Category Match', 'In the Cupboard', 'Workings'],
     );
     // The group label and its list go with the links on a desktop, and stand over them below it.
-    await expect(nav.getByText('The Jar', { exact: true })).toBeVisible({
+    await expect(nav.getByText('The Cupboard', { exact: true })).toBeVisible({
       visible: name !== 'desktop',
     });
     if (name === 'phone') {
       const top = (label: string) =>
         page
-          .getByRole(label === 'The Jar' ? 'complementary' : 'region', { name: label })
+          .getByRole(label === 'The Cupboard' ? 'complementary' : 'region', { name: label })
           .evaluate((el) => el.getBoundingClientRect().top);
-      expect(await top('The Jar')).toBeLessThan(await top('Workings'));
+      expect(await top('The Cupboard')).toBeLessThan(await top('Workings'));
     }
     if (name === 'desktop') {
       // Left of the body, not above it.

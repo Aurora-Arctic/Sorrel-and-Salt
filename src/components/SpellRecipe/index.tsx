@@ -41,20 +41,20 @@ const SpellRecipe = ({
   // One entry per section drawn, so none links to nothing.
   const entries: PageNavEntry[] = [
     ...(steps.length > 0 ? [{ href: `#${STEPS_ID}` as const, label: 'Steps' }] : []),
-    // The jar stands beside the recipe from a tablet up, so the menu names its two sections only
-    // where it is stacked.
+    // The side column stands beside the recipe from a tablet up, so the menu names its two
+    // sections only where it is stacked.
     ...(aside
       ? [
           {
             href: `#${CATEGORY_MATCH_ID}` as const,
             label: 'Category Match',
-            group: 'The Jar',
+            group: 'The Cupboard',
             narrowOnly: true,
           },
           {
             href: `#${INVENTORY_ID}` as const,
             label: 'In the Cupboard',
-            group: 'The Jar',
+            group: 'The Cupboard',
             narrowOnly: true,
           },
         ]
@@ -99,7 +99,7 @@ const SpellRecipe = ({
         </div>
         {/* Named: an aside inside an article is a landmark only with a name. */}
         {aside && (
-          <aside id={JAR_ID} className="spell-recipe__aside" aria-label="The Jar">
+          <aside id={JAR_ID} className="spell-recipe__aside" aria-label="The Cupboard">
             {aside}
           </aside>
         )}
