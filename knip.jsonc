@@ -14,7 +14,7 @@
     // Swapped in for `postgres` by a Vitest plugin that names it through `new URL(...)`, not an import.
     "tests/support/db/bounded-postgres.ts"
   ],
-  "project": ["src/**/*.{ts,tsx}", "tests/**/*.{ts,tsx}", "scripts/**/*.{mjs,ts}"],
+  "project": ["src/**/*.{ts,tsx,scss,sass}", "tests/**/*.{ts,tsx}", "scripts/**/*.{mjs,ts}"],
   "ignore": [".storybook/public/mockServiceWorker.js", ".design-sync/dist-index.mjs"],
   "ignoreDependencies": ["server-only"],
   "ignoreBinaries": ["flock"],
