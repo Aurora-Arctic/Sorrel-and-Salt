@@ -43,8 +43,6 @@
   max-inline-size: 100%;
 }
 
-// A popover is in the top layer and fixed to the window; the component sets its place as two custom
-// properties. Only a popover gets this class, so the in-flow fallback keeps its margin.
 // A row under the grid, its one button at the end.
 .date-field__footer {
   display: flex;
@@ -52,6 +50,8 @@
   margin-block-start: space(2);
 }
 
+// A popover is in the top layer and fixed to the window; the component sets its place as two custom
+// properties. Only a popover gets this class, so the in-flow fallback keeps its margin.
 .date-field__panel--floating {
   position: fixed;
   inset: auto;
@@ -80,14 +80,14 @@
   padding-inline-end: 4.5rem;
 }
 
-// The two selects are the month and year pickers; the library's own text label for them is spoken twice, so it stays hidden.
+// The month and year pickers, side by side.
 .day-picker__dropdowns {
   display: flex;
   gap: space(2);
 }
 
-// The month and year pickers are the app's select-only boxes, shorter than a field to sit in the caption; the library's own text label for them is not drawn.
 // The month and year pickers are the app's select-only boxes in their compact form (`.field--compact`, as high as a step), as wide as their longest option and no wider.
+// `CaptionDropdown` draws them in place of the library's own, so its text label is never drawn.
 .day-picker__dropdown-root {
   display: inline-grid;
 

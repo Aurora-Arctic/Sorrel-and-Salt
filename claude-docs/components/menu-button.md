@@ -57,7 +57,11 @@ A `MenuButtonItem` has a `key`, a title-case `label` and an optional `destructiv
 
 ## Where it is tested
 
-`tests/components/MenuButton/index.test.tsx`: the keys, the closing, a link choice and the busy state, and the edge the menu hangs from (the end edge, even in the start half of the window). The entry page's choices are in `tests/components/IngredientEntry/cupboard-actions.test.tsx`, and the browser walks in `tests/e2e/cupboard-screens.spec.ts` and `tests/e2e/make-it-ours.spec.ts`; the Annotate dialog's More, staying inside the dialog, its items in its type, and full width at 375px, and a card's More near the window's foot opening above it inside the window at a desktop's width and at 375px, in `tests/e2e/coven-ingredients.spec.ts`. Story: `src/components/MenuButton/index.stories.tsx`.
+`tests/components/MenuButton/index.test.tsx`: the keys, the closing, a link choice and the busy state, and the edge the menu hangs from (the end edge, even in the start half of the window). The entry page's choices are in `tests/components/IngredientEntry/cupboard-actions.test.tsx`, and the browser walks in `tests/e2e/cupboard-screens.spec.ts` and `tests/e2e/make-it-ours.spec.ts`; the Annotate dialog's More, staying inside the dialog, its items in its type, and full width at 375px, and a card's More near the window's foot opening above it inside the window at a desktop's width and at 375px, in `tests/e2e/coven-ingredients.spec.ts`.
+
+## Stories
+
+Forms / Menu Button: States, one story with a control choosing Closed, Pending, Opens Above, Marked Item, Sectioned On A Coven Page or Sectioned On A Compendium Page.
 
 ## The menu-button pattern
 

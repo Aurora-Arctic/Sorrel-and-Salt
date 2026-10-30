@@ -10,6 +10,7 @@
 | `completion.tsx`      | `WorkingCompletion`: the deduction preview and its Confirm                                                                                                  |
 | `complete-action.tsx` | `CompleteWorkingAction`: a Complete button opening `WorkingCompletion` in a dialog                                                                          |
 | `warnings.ts`         | `SKIP_REASON` and `skipSummary`: why a step takes nothing, and the one-line count of items completing leaves out of inventory, in words (no `'use client'`) |
+| `day.ts`              | `completeReason`: why Complete is off for a working dated after today, in words                                                                             |
 | `types.ts`            | The props                                                                                                                                                   |
 
 ## Recording and editing
@@ -70,5 +71,15 @@ server (`plan-deductions.ts`), so the two agree.
 `CompleteWorkingAction` takes `{ workspaceId, spellId, workingId, steps, label?, workedOn? }` and is what a
 draft working's row puts beside its other actions. The recipe page sets `label` to "Complete Working <date>".
 
-Stories: `index.stories.tsx`. Browser flows: stories 76 and 78 in
-`tests/e2e/stories/06-grimoire.spec.ts`.
+Browser flows: stories 76 and 78 in `tests/e2e/stories/06-grimoire.spec.ts`.
+
+## Styling
+
+`index.scss`, tokens only:
+
+- **The form** (`.working-form`) starts Share With the Coven's switch at the line's start, as the spell builder's is, rather than centred as the filter bar's.
+- **The deduction preview** (`.working-deductions`) is a column of `JarLine`s `space(3)` apart with no marker. A long name wraps rather than being cut, and each line's parts wrap whole at `type-size('small')` with tabular figures. A short line (`.working-deductions__short`) is in `$warning`.
+
+## Stories
+
+Grimoire / Record Working: States, one story with a control choosing Closed, Open, Private Spell or Deduction Preview.

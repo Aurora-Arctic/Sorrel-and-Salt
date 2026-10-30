@@ -32,3 +32,18 @@ It replaces the browser's `<input type="date">`, whose look and highlight differ
 - Days are parsed and written in the browser's local calendar, never through `Date.parse`, so no
   timezone shifts the day.
 - Used by the Record a Working form only. The form's Save stays disabled for a date after today.
+
+## Styling
+
+`index.scss`, on the `date-field` block and the `day-picker` classes it hands the library:
+
+- **The button** is a `.input` box (`.input.date-field__button`), as wide as its hidden sizer.
+- **The panel** (`.date-field__panel`) is a card: `$surface-card`, a 1px `$text-muted` border, `radius('surface')` and `space(3)` of padding. `--floating` places it from the two custom properties.
+- **The caption** holds the two month and year boxes (`.day-picker__dropdowns`), with the previous and next steps placed over its end (`.day-picker__nav`).
+- **A step and a day** take `$surface-card-hover` on hover and the `focus-ring` on keyboard focus. Today is told by a `$text-primary` rule, the chosen day by its `$accent` fill, `$text-on-color` ink and weight, so neither rests on colour alone; outside and disabled days are muted.
+
+The calendar's sizes are rems written in the file (the caption's 2.5rem, the steps' 2rem, the days' 2.25rem), not tokens.
+
+## Stories
+
+None: no story draws the field on its own. The workshop's Grimoire / Record Working story draws it inside the open dialog (its Open state).
