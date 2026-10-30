@@ -3,7 +3,7 @@
 import { type ReactElement, useState } from 'react';
 import { flushSync } from 'react-dom';
 import { useController, useFormContext, useFormState } from 'react-hook-form';
-import { SwitchField } from '../Field';
+import { VisibilitySwitch } from '../Field';
 import { ConfirmQuestion } from '../Modal';
 import type { SpellBuilderInput, SpellBuilderValues, SpellVisibilityFieldProps } from './types';
 import type { SpellVisibility } from '@/modules/grimoire';
@@ -11,16 +11,6 @@ import type { SpellVisibility } from '@/modules/grimoire';
 // Who can see a spell: its author alone, or every member of the coven, by the Share With the Coven
 // switch. A new spell starts private. A complete spell's visibility only widens, held by the
 // service. claude-docs/components/spell-builder.md, "Visibility".
-
-/** What each state means, said under the switch. */
-const MEANS = {
-  workspace: 'Every member of the coven can see it. Once the spell is complete, it stays shared.',
-  private: 'Only you can see it, until you share it with the coven.',
-} as const satisfies Record<SpellVisibility, string>;
-
-/** Said under the shut control, and why it is shut in a tip beside it, with the way to a private copy. */
-const SHARED_FOR_GOOD = 'Shared with the coven';
-const SHARED_FOR_GOOD_TIP = 'It cannot be made private again. Duplicate makes a private copy.';
 
 export function SpellVisibilityField({ created, flush }: SpellVisibilityFieldProps): ReactElement {
   const { control, setValue } = useFormContext<SpellBuilderValues, unknown, SpellBuilderInput>();
@@ -58,15 +48,11 @@ export function SpellVisibilityField({ created, flush }: SpellVisibilityFieldPro
 
   return (
     <>
-      <SwitchField
-        label="Share With the Coven"
-        name="visibility"
-        value="workspace"
-        checked={shared || field.value === 'workspace'}
+      <VisibilitySwitch
+        noun="spell"
+        checked={field.value === 'workspace'}
         onChange={choose}
-        disabled={shared}
-        note={shared ? SHARED_FOR_GOOD : MEANS[field.value]}
-        noteTip={shared ? SHARED_FOR_GOOD_TIP : undefined}
+        sharedForGood={shared}
       />
       {asking && (
         <ConfirmQuestion

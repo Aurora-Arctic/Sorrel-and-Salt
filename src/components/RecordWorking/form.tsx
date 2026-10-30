@@ -8,7 +8,7 @@ import { readGraphqlFailure } from '../../lib/graphql-failure';
 import { usePendingNavigation } from '../../lib/navigation';
 import type { Failure } from '../../lib/types';
 import Combobox, { ComboboxEntry } from '../Combobox';
-import { FieldShell, FormActions, RadioGroupField, fieldDescription } from '../Field';
+import { FieldShell, FormActions, VisibilitySwitch, fieldDescription } from '../Field';
 import { DiscardQuestion, useDiscardGuard } from '../Modal';
 import Notice from '../Notice';
 import WorkingCompletion from './completion';
@@ -108,13 +108,8 @@ export default function RecordWorkingForm({
   const dirty = completing === undefined && changed;
   const discard = useDiscardGuard(dirty);
 
-  // Only what the spell allows: never wider than it, and a complete working that is shared stays so.
-  const choices = (['private', 'workspace'] as const).filter(
-    (v) =>
-      (v === 'private'
-        ? spellVisibility === 'private' || !(complete && initial.visibility === 'workspace')
-        : true) && (v === 'workspace' ? spellVisibility === 'workspace' : true),
-  );
+  // Never wider than the spell, and a complete working that is shared stays so.
+  const sharedForGood = complete && initial.visibility === 'workspace';
 
   const dateField = fieldDescription({
     id: `${ids}-date`,
@@ -261,24 +256,15 @@ export default function RecordWorkingForm({
           onChange={(event) => setNote(event.target.value)}
         />
       </FieldShell>
-      <RadioGroupField
-        legend="Visibility"
-        name={`${ids}-visibility`}
-        options={choices.map((value) => ({
-          value,
-          label: value === 'private' ? 'Private' : 'Coven',
-          description:
-            value === 'private' ? 'Only you can see it.' : 'Every member of the coven can see it.',
-        }))}
-        value={visibility}
-        onChange={setVisibility}
-        disabled={submitting}
-        note={
+      <VisibilitySwitch
+        noun="working"
+        checked={visibility === 'workspace'}
+        onChange={(on) => setVisibility(on ? 'workspace' : 'private')}
+        sharedForGood={sharedForGood}
+        heldPrivate={
           spellVisibility === 'private'
             ? 'The spell is private, so its workings are too.'
-            : complete && initial.visibility === 'workspace'
-              ? 'A shared working stays shared.'
-              : undefined
+            : undefined
         }
       />
       <FormActions
