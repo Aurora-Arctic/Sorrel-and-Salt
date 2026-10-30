@@ -1241,3 +1241,21 @@ $-entry-tablet: calc(#{$shell-tablet-width} + 0.01rem);
   inline-size: space(5);
   border-block-start: 1px solid $hairline;
 }
+
+// A notice laid out as a row of sentence and buttons, as a form's conflict and restored-changes
+// notices are under a dialog's title: roomier than a notice of text alone, its triangle moved with
+// the room so it stays clear of the text. Doubled selectors outrank the notice's own margin.
+@mixin notice-row {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: space(3);
+  margin: 0;
+  padding-block: space(3);
+  padding-inline: calc(#{space(4)} + #{$notice-mark-size} + #{space(2)}) space(4);
+
+  &::before {
+    inset-block-start: calc(#{space(3)} + #{$notice-mark-drop});
+    inset-inline-start: space(4);
+  }
+}

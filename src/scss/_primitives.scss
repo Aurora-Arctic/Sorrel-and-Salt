@@ -1038,16 +1038,16 @@
   .notice--warn,
   .notice--caution {
     position: relative;
-    padding-inline-start: calc(#{space(3)} + 1.0125rem + #{space(2)});
+    padding-inline-start: calc(#{space(3)} + #{$notice-mark-size} + #{space(2)});
 
     &::before {
       content: '';
       position: absolute;
       // On the first line of text: the top padding and half the line's room over the triangle.
-      inset-block-start: calc(#{space(2)} + 0.05rem);
+      inset-block-start: calc(#{space(2)} + #{$notice-mark-drop});
       inset-inline-start: space(3);
-      inline-size: 1.0125rem;
-      block-size: 1.0125rem;
+      inline-size: $notice-mark-size;
+      block-size: $notice-mark-size;
       @include warning-mark(var(--notice-icon));
     }
   }

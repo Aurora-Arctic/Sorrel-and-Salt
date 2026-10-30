@@ -1004,3 +1004,8 @@ $radii: (
 
   @return map.get($radii, $role);
 }
+
+// The warning triangle a notice draws in its start padding, and the drop that sets it on the first line
+// of text. Off the spacing scale: the triangle is sized to the body type's cap height.
+$notice-mark-size: 1.0125rem;
+$notice-mark-drop: 0.05rem;

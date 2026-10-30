@@ -106,7 +106,7 @@ $skeleton-fade: 300ms;
   // its icon, and only the sentence stays there.
   .ingredient-form__matches + .btn {
     will-change: transform;
-    margin-inline-start: calc(-1 * (1.0125rem + #{space(2)}));
+    margin-inline-start: calc(-1 * (#{$notice-mark-size} + #{space(2)}));
   }
 
   // The button a step further from the list than the notice's gap.
@@ -142,7 +142,7 @@ $skeleton-fade: 300ms;
       display: grid;
       // The start margin is the gutter pull above, stated here because this
       // rule's own margin would otherwise override it.
-      margin: space(2) 0 space(2) calc(-1 * (1.0125rem + #{space(2)}));
+      margin: space(2) 0 space(2) calc(-1 * (#{$notice-mark-size} + #{space(2)}));
       padding: 0 0 0 1.25rem;
       list-style: none;
       // The rows' offsets are measured against the list for its slide.
@@ -155,7 +155,7 @@ $skeleton-fade: 300ms;
     .ingredient-form__group {
       display: grid;
       grid-template-rows: 0fr;
-      margin: space(2) 0 0 calc(-1 * (1.0125rem + #{space(2)}));
+      margin: space(2) 0 0 calc(-1 * (#{$notice-mark-size} + #{space(2)}));
       transition: grid-template-rows $skeleton-fade ease-in-out;
 
       @include reduced-motion {

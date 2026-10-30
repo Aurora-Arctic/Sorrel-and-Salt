@@ -93,7 +93,7 @@ with transparent so it reads the same on the page and on a card. The tint's
 strength is `--notice-tint`, set per theme in `_mixins.scss`: 7% on light,
 8% on dark, where the same strength reads fainter. The tint is the owner's
 call too, 2026-10-19, lowered from 10% and 12% for a lighter ground. The padding is
-`space(2)` by `space(3)`, the type `small` at weight 400.
+`space(2)` by `space(3)`, the type `small` at weight 400. A notice that leads with the triangle pads its start by the triangle's width, `$notice-mark-size` (1.0125rem, sized to the body type's cap height), and sets it `$notice-mark-drop` down from the first line; the click callout and the ingredient form's notices read the same two tokens.
 
 | Kind      | Bar and tint (`--notice-bar`) | Triangle (`--notice-icon`) | Text               |
 | --------- | ----------------------------- | -------------------------- | ------------------ |
