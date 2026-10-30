@@ -120,7 +120,7 @@
     ul {
       display: grid;
       grid-template-columns: max-content minmax(0, 1fr);
-      column-gap: space(2);
+      column-gap: space(4);
       margin: space(1) 0 0;
       padding-inline-start: 0;
     }
