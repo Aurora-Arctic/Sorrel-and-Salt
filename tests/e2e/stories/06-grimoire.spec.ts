@@ -820,7 +820,16 @@ test(
     await expect(workings.getByText('First brewing')).toBeVisible();
     await expect(workings.getByText('Named rite')).toBeVisible();
     await expect(workings.getByText('Secret rite')).toHaveCount(0);
-    await expect(workings.getByRole('button', { name: 'Complete' })).toHaveCount(1);
+    // Complete shows on each draft B may change: their own, and A's that names them.
+    for (const note of ['Waiting rite', 'Named rite']) {
+      await expect(
+        workings
+          .getByRole('listitem')
+          .filter({ hasText: note })
+          .getByRole('button', { name: 'Complete' }),
+      ).toHaveCount(1);
+    }
+    await expect(workings.getByRole('button', { name: 'Complete' })).toHaveCount(2);
     await expect(workings.getByRole('listitem').filter({ hasText: 'Waiting rite' })).toContainText(
       /Completing does not affect inventory for \d+ items?/,
     );
@@ -839,9 +848,9 @@ test(
     await page.goto(`/coven/${coven.slug}/grimoire`);
     const card = grimoireList(page).getByRole('listitem', { name: /Fixture Working/ });
     await expect(card.getByText('Made 2 Times')).toBeVisible();
-    // The pencil is on B's own workings only, and saves a changed note in place.
+    // The pencil is on the workings B may change, their own two and the draft that names them, and not on A's others; it saves a changed note in place.
     await page.goto(`/coven/${coven.slug}/grimoire/${spellId}`);
-    await expect(workings.getByRole('button', { name: /^Edit Working / })).toHaveCount(2);
+    await expect(workings.getByRole('button', { name: /^Edit Working / })).toHaveCount(3);
     await first.getByRole('button', { name: /^Edit Working / }).click();
     const edit = page.getByRole('dialog', { name: /^Edit (a )?Working$/ });
     await edit.getByRole('textbox', { name: 'Note' }).fill('First brewing, revised');
