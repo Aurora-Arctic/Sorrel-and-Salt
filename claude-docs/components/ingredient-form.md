@@ -1422,6 +1422,17 @@ with `nomenclature: null`, and the service's `LocalIngredientInput` reads
 that as `none`, so story 29's one-field entry is whole. The component test
 parses the sent input with that schema to show it.
 
+## Autosave
+
+The form saves itself (M13.24), through `useAutosave` ([`autosave.md`](autosave.md)): 3 s after the last change, and at least every 30 s while changes keep coming. `SaveStatus` sits beside the main button and shows Saving, Saved, "Couldn't save." with Retry, or the conflict notice.
+
+- **A new ingredient is created at its first save, once it has a name.** The coven gate is the display name; a "none" or "unknown" entry has no formal name, so the name alone opens the gate. The create returns the row's id, slug and revision, the form keeps them, and every later save is an update that sends `expectedRevision`. The host moves the address (`onCreated`): see [`modal.md`](modal.md#add-ingredient) for the coven dialog and the compendium dialog.
+- **A new entry with near-duplicate matches showing is not autosaved** until the matches are dismissed or the name changes (`heldBack` in `values.ts`).
+- **An explicit Save also sends `expectedRevision`.** A stale Save hands over to the autosave's conflict notice. After a create by Save the form is clean, so Save waits for a change.
+- **Conflict.** Another tab's save makes this one's refused with "This ingredient was changed elsewhere." **Reload Latest** reloads the page (or calls `onReload`); **Keep My Version** sends the form over the newer revision.
+- **Offline.** A failed save retries after 2, 5 and 15 s, then shows "Couldn't save." with Retry. The form stays in the local mirror, which Retry clears when the save lands. A reopened form with a mirror newer than the row shows the recovery banner.
+- **No Discard question.** The form no longer uses the unsaved-changes guard: Close saves first ([`modal.md`](modal.md#unsaved-changes)). Older passages here that describe Discard Changes for this form are out of date. A viewer's form has no autosave and writes nothing.
+
 ## After a save
 
 **Two saves** on a new ingredient, the owner's call during MB.131; an edit
