@@ -497,8 +497,9 @@ $skeleton-fade: 300ms;
 // "Locator" and its box on one line, a page reference's width. Nested, to
 // outweigh the `.field__label-row` primitive it also carries, whose tighter
 // gap is a label's beside its ⓘ, not a label's beside its box.
+// The shell's label row and the box on one line, where a field stacks them.
 .ingredient-form .ingredient-form__locator {
-  display: flex;
+  flex-direction: row;
   align-items: center;
   gap: space(2);
 

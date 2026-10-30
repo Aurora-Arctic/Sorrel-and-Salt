@@ -25,7 +25,7 @@ import type { ReferenceSuggestionsQuery } from '../../gql/graphql';
 import Combobox from '../Combobox';
 import IconTip from '../IconTip';
 import InfoTip from '../InfoTip';
-import { FieldError } from '../Field';
+import { FieldError, FieldShell, fieldDescription } from '../Field';
 import { EditIcon, RemoveIcon, SourceEditIcon } from './icons';
 import ReferencePanel from './reference-panel';
 import { RemoveQuestion } from './remove-question';
@@ -133,7 +133,7 @@ export function ReferencesField({
   useEffect(() => {
     if (openRow === null || !focusLocator.current) return;
     focusLocator.current = false;
-    document.getElementById(`${id}-${openRow}-locator`)?.focus();
+    document.getElementById(`${id}-${openRow}-locator-control`)?.focus();
   }, [openRow, id]);
   const focusBox = () => boxElement.current?.focus();
   // The source the panel is editing, and the row it was opened from, whose
@@ -322,8 +322,10 @@ export function ReferencesField({
         <ul className="ingredient-form__references">
           {fields.map((row, index) => {
             const citationId = `${id}-${row.id}`;
-            const locatorId = `${citationId}-locator`;
-            const locatorHintId = `${locatorId}-hint`;
+            const { aria: _aria, ...locatorField } = fieldDescription({
+              id: `${citationId}-locator`,
+              hint: LOCATOR_HINT,
+            });
             const detailId = `${citationId}-detail`;
             const invalid = rowErrors[index] !== undefined;
             const open = openRow === row.id || locatorErrors[index];
@@ -430,18 +432,17 @@ export function ReferencesField({
                   {/* Read with the source it locates, then what a locator is:
                       a column of bare "Locator"s is no help to a screen
                       reader. The tip beside the label, as every field's is. */}
-                  <div className="ingredient-form__locator field__label-row">
-                    <label className="field__label" htmlFor={locatorId}>
-                      Locator
-                    </label>
-                    <InfoTip id={locatorHintId} label="Locator">
-                      {LOCATOR_HINT}
-                    </InfoTip>
+                  <FieldShell
+                    label="Locator"
+                    hint={LOCATOR_HINT}
+                    {...locatorField}
+                    className="ingredient-form__locator"
+                  >
                     <input
-                      id={locatorId}
+                      id={locatorField.controlId}
                       className="input"
                       placeholder="Add a locator"
-                      aria-describedby={[citationId, locatorHintId, invalid && errorId]
+                      aria-describedby={[citationId, locatorField.hintId, invalid && errorId]
                         .filter(Boolean)
                         .join(' ')}
                       aria-invalid={invalid || undefined}
@@ -458,7 +459,7 @@ export function ReferencesField({
                         },
                       })}
                     />
-                  </div>
+                  </FieldShell>
                 </div>
               </li>
             );

@@ -7,7 +7,7 @@ import { graphqlRequest } from '../../lib/graphql-client';
 import { placeServerIssues } from '../../lib/graphql-failure';
 import { usePendingNavigation } from '../../lib/navigation';
 import { ComboboxSelect } from '../Combobox';
-import { FieldError, FormActions } from '../Field';
+import { FieldError, FieldShell, FormActions, fieldDescription } from '../Field';
 import { BinButton, StockIcon } from '../IconTip';
 import Modal, { DiscardQuestion, ModalButton, useDiscardGuard } from '../Modal';
 import Notice from '../Notice';
@@ -195,7 +195,7 @@ const StockDialogForm = ({
   onSaved,
 }: StockDialogFormProps): ReactElement => {
   const { refresh } = usePendingNavigation();
-  const addId = useId();
+  const { aria: _addAria, ...addField } = fieldDescription({ id: useId() });
   // Opened on a form the coven holds no jar of: it starts as a new row among the opening values, so the dialog opens unedited
   // (appended after mounting, it would mark the form changed).
   const [opened] = useState(() => {
@@ -325,14 +325,11 @@ const StockDialogForm = ({
               {/* Gone once every form has a jar: there is nothing left to add. */}
               {addable.length > 0 && (
                 <div className="stock-dialog__add">
-                  <div className="field field--compact">
-                    <label className="field__label" id={`${addId}-label`} htmlFor={addId}>
-                      Add Form
-                    </label>
+                  <FieldShell label="Add Form" {...addField} className="field--compact">
                     <ComboboxSelect
-                      id={addId}
+                      id={addField.controlId}
                       label="Add Form"
-                      labelId={`${addId}-label`}
+                      labelId={addField.labelId}
                       value={adding}
                       placeholder="Choose a form"
                       choices={addable.map((form) => ({
@@ -341,7 +338,7 @@ const StockDialogForm = ({
                       }))}
                       onChange={setAdding}
                     />
-                  </div>
+                  </FieldShell>
                   <button type="button" className="btn btn--small" disabled={!adding} onClick={add}>
                     Add
                   </button>
