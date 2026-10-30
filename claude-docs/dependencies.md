@@ -41,3 +41,7 @@ From a clean checkout, in this order:
 - **esbuild up to 0.24.2, GHSA-67mh-4wv8-2f99**, under `drizzle-kit` and its deprecated `@esbuild-kit/esm-loader`. Accepted in [`db/orm-version.md`](db/orm-version.md); `drizzle-kit@1.0.0-rc` drops `@esbuild-kit`, so it clears with the ORM move above.
 - `tsconfck`, under `vite-tsconfig-paths`, is deprecated as "unmaintained" (seen 2026-10-30). It is upstream's to fix; **revisit when** `vite-tsconfig-paths` moves to another resolver.
 - `node-domexception` is deprecated and reached through `@graphql-codegen/cli` and `sync-fetch` to `node-fetch@3`. It is upstream's to fix.
+
+## `qrcode` draws the cards' codes
+
+`qrcode` supplies the module matrix (`QRCode.create`) for an invitation card's code (M15.19). The repo draws the SVG itself, because the package draws squares only. It is used in the browser, where the admin's page renders each card and builds the batch's PDF, and takes no part in any server path.
