@@ -735,17 +735,23 @@ describe('the spell builder’s safety warning', () => {
     ).toContain('Warning: Toxic.');
   });
 
-  it('marks a step whose form carries notes with Caution, and says so', async () => {
+  it('warns of a form’s notes once: the notes while open, the Caution badge while closed, and says so', async () => {
     suggest(CAREWORT);
     renderBuilder();
 
     await add('Care', /Fixture Carewort/);
 
     const row = stepRow('Fixture Carewort');
-    expect(within(row).getByText('Caution', { selector: '.badge *, .badge' })).toBeInTheDocument();
+    const badge = () => within(row).queryByText('Caution', { selector: '.badge *, .badge' });
     expect(within(row).getByRole('region', { name: 'Caution' })).toHaveTextContent(
       'Wash your hands after.',
     );
+    expect(badge()).toBeNull();
+
+    fireEvent.click(within(row).getByRole('button', { name: 'Close Fixture Carewort' }));
+
+    expect(badge()).toBeInTheDocument();
+    expect(within(row).queryByRole('region', { name: 'Caution' })).toBeNull();
     expect(
       screen
         .getAllByRole('status')

@@ -7,7 +7,7 @@ import { useFormContext, useWatch } from 'react-hook-form';
 import { ChevronIcon, ClearIcon, GripIcon } from '../../Combobox/icons';
 import { EditIcon } from '../../IngredientForm/icons';
 import { SelectField, TextField } from '../../Field';
-import SafetyNote, { SafetyMark } from '../../SafetyNote';
+import SafetyNote, { SafetyMark, ToxicMark } from '../../SafetyNote';
 import StepRow from '../../StepRow';
 import OneOffBadge from '../../StepRow/one-off-badge';
 import { UNIT_OPTIONS } from '../../StockFields';
@@ -149,8 +149,9 @@ export function BuilderStepRow({
       name={instruction ? null : name}
       icon={step.icon}
       // The care the ingredient needs, kept in view beside the step and never in the way of
-      // saving it. A one-off has none to show: it draws nothing, not "safe".
-      marks={safety && <SafetyMark {...safety} />}
+      // saving it. Open, the note below carries the caution, so only Toxic stays: the note never
+      // says it. A one-off has none to show: it draws nothing, not "safe".
+      marks={safety && (open ? <ToxicMark {...safety} /> : <SafetyMark {...safety} />)}
       // The eye comes after every badge, with Edit and Remove in one tight group.
       look={
         look && !instruction && step.ingredientId !== null ? (
