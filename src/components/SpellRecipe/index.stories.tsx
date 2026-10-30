@@ -181,6 +181,8 @@ const Look = ({ member }: { member: boolean }) => (
         closeHref={GRIMOIRE}
         opened={{
           title: TITLE,
+          status: 'complete',
+          visibility: 'workspace',
           lastEdit: LAST_EDIT,
           recipeHref: RECIPE,
           editHref: member ? (`${GRIMOIRE}?edit=${FIXTURE_SPELL}` as Route) : undefined,

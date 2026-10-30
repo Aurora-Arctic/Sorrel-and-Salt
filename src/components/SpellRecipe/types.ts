@@ -7,6 +7,7 @@ import type { GroupColors } from '../../lib/types';
 import type { StockDialogProps } from '../StockDialog/types';
 import type { SafetyMarkProps } from '../SafetyNote/types';
 import type { SpellStatus, SpellVisibility } from '@/modules/grimoire';
+import type { SpellMarksProps } from '../SpellMarks/types';
 import type { VerdictKind } from '../SpellBuilder/verdict-mark';
 import type { IngredientRow } from '@/modules/ingredients';
 
@@ -141,7 +142,7 @@ export interface SpellRecipeSummaryProps {
 }
 
 /** The spell a Quick Look modal is open on; the body arrives as the page's rendered children. */
-export interface SpellLookOpened {
+export interface SpellLookOpened extends SpellMarksProps {
   /** The spell's title; a draft may have none. */
   title: string | null;
   lastEdit: LastEditProps | null;

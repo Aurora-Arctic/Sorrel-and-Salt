@@ -8,13 +8,14 @@ import { RouteModal } from '../Modal';
 import type { ModalHeading } from '../Modal/types';
 import Notice from '../Notice';
 import { SPELL_LOOK_PLACE, UNTITLED_SPELL } from '../SpellCard';
+import SpellMarks from '../SpellMarks';
 import DeleteSpellAction from './delete-spell';
 import type { SpellLookDialogProps } from './types';
 import './index.scss';
 
-// The Quick Look modal a grimoire card's eye opens: the spell body, last edit, Edit's pencil and
-// Delete Spell's bin for roles that may, and a link to the recipe page; a client part for RouteModal
-// (claude-docs/components/spell-recipe.md, "The Quick Look component").
+// The Quick Look modal a grimoire card's eye opens: the spell body, last edit, the Draft and Private
+// badges, Edit and Delete Spell for roles that may, and a link to the recipe page; a client part for
+// RouteModal (claude-docs/components/spell-recipe.md, "The Quick Look component").
 
 export default function SpellLookDialog({
   closeHref,
@@ -57,6 +58,10 @@ export default function SpellLookDialog({
     }),
     ...(opened.lastEdit && {
       aboveName: <LastEdit by={opened.lastEdit.by} at={opened.lastEdit.at} />,
+    }),
+    // Under the title, as the ingredient's Quick Look has its marks; a complete shared spell has none.
+    ...((opened.status === 'draft' || opened.visibility === 'private') && {
+      under: <SpellMarks status={opened.status} visibility={opened.visibility} />,
     }),
   };
   return (

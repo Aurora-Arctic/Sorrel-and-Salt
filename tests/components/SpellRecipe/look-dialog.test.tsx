@@ -24,6 +24,8 @@ const OPENED = {
   title: 'Fixture Working',
   lastEdit: { by: 'Fixture A', at: '2026-09-01T10:30:00.000Z' },
   recipeHref: RECIPE,
+  status: 'complete' as const,
+  visibility: 'workspace' as const,
   children: <p>The recipe body</p>,
 };
 
@@ -53,6 +55,26 @@ describe('SpellLookDialog', () => {
       'href',
       RECIPE,
     );
+  });
+
+  it('marks a draft and a private spell in its head, as the recipe page does, and a complete shared one not at all', () => {
+    const { rerender } = render(
+      <RouteModalProvider>
+        <SpellLookDialog closeHref={LIST} opened={OPENED} />
+      </RouteModalProvider>,
+    );
+    expect(within(dialog()).queryByText('Draft')).not.toBeInTheDocument();
+    expect(within(dialog()).queryByText('Private')).not.toBeInTheDocument();
+    rerender(
+      <RouteModalProvider>
+        <SpellLookDialog
+          closeHref={LIST}
+          opened={{ ...OPENED, status: 'draft', visibility: 'private' }}
+        />
+      </RouteModalProvider>,
+    );
+    expect(within(dialog()).getByText('Draft')).toBeInTheDocument();
+    expect(within(dialog()).getByText('Private')).toBeInTheDocument();
   });
 
   it('calls a spell with no title Untitled Spell', () => {
