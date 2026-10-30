@@ -278,6 +278,7 @@ Work that was not in the original breakdown. `MB.*` exists so a defect or a miss
 | MB.274 | Seeded Compendium Content Stays Stale After a Deploy                                                                     | Bugfixes | —                      |
 | MB.275 | Lint Warnings Pile Up Because Nothing Fails on Them                                                                      | Bugfixes | —                      |
 | MB.276 | An Admin's Compendium Edit Saves Whatever the Autosave Timing                                                            | Bugfixes | —                      |
+| MB.277 | The Unused Code Check Finds Nothing Left to Clear                                                                        | Bugfixes | —                      |
 
 **MB.206 — Repository: the two-tier read scope and the page pair, written once** · 3h
 
@@ -5621,3 +5622,23 @@ _Acceptance criteria:_
 - Story 18 passes first time on CI's runner in two consecutive PR-gate runs, with no retry
 - The chosen behaviour is stated in `claude-docs/components/ingredient-form.md` ("Autosave") and, if the form changes, in that doc's form save rules
 - No other story's timing is changed to make it pass
+
+**MB.277 — The Unused Code Check Finds Nothing Left to Clear** · 4h
+
+_Story:_ As a developer, I want `npm run lint:unused` (knip, the tool that finds unused code) to pass on a clean checkout, so that the non-blocking `checks / unused` comment on a pull request only ever reports what that pull request introduced.
+
+Knip's first run on CI reported its config could not load `drizzle.config.ts` and `playwright.config.ts` (both throw when `DATABASE_URL` is unset, and the `unused` job sets none), which also made four files look unused. It also reported an unused development dependency, one unlisted dependency, three environment names in `.github/workflows/deploy.yml` read as imports, unused exports and unused exported types, mostly re-exports from the module barrels and `src/db/repository/index.ts`.
+
+Found on 2026-10-30 on the `checks / unused` job of PR #1365, which exited 2; it is on `staging` too. A wrong result, every time, under Admin & Compendium (tooling). Steps to reproduce:
+
+1. Check out `staging` with no `DATABASE_URL` set, as the CI job has none
+2. Run `npm run lint:unused`
+
+Actual: exit code 2 with config-load errors and findings. Expected: exit code 0 with no findings.
+
+_Acceptance criteria:_
+
+- `npm run lint:unused` exits 0 on a checkout with no `DATABASE_URL` set, and on the same checkout with one
+- Each genuinely unused file, export, type and dependency is removed, after a search for dynamic and string references; each false positive is recorded in `knip.json` with a narrow entry and a reason, and no blanket ignore is added
+- The tests for what changed pass, and `npm run typecheck` and `npm run lint` are clean
+- `claude-docs/commands.md` names the false positives `knip.json` skips and drops the sentence saying the repo still has findings

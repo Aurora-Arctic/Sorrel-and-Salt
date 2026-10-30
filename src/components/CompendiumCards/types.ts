@@ -1,7 +1,7 @@
 import type { Route } from 'next';
 import type { ModalHeading, RouteModalLink } from '../Modal/types';
 import type { CompendiumCoven } from '../AddIcon/types';
-import type { CompendiumListProps, CompendiumListFilter } from '../CompendiumList/types';
+import type { CompendiumListProps } from '../CompendiumList/types';
 import type { EntryRecency } from '../EntryMarks/types';
 import type { CardCategory } from '../IngredientCard/types';
 import type { CupboardPlace } from '../IngredientEntry/types';
@@ -129,4 +129,3 @@ export interface CompendiumCardsProps extends Pick<
 }
 
 export type { CompendiumCoven };
-export type { CompendiumListFilter };
