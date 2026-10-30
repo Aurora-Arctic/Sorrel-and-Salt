@@ -250,10 +250,10 @@
   display: none;
 }
 
-// The step's Quick Look eye well under the list's size, seven eighths of the form icon's box and
-// glyph, so it sits in the name's line without weight.
+// The step's Quick Look eye: its glyph at seven eighths of the form icon's, so it sits in the name's
+// line without weight, inside the full `$icon-size` box, WCAG 2.2's 24px target.
 .spell-recipe__steps .icon-tip__look {
-  @include icon-button($icon-size * 0.875, $glyph-size * 0.875);
+  @include icon-button($icon-size, $glyph-size * 0.875);
 }
 
 .spell-recipe__steps .step-row__body,

@@ -43,7 +43,7 @@ muted paragraph under its own hairline, drawn only when there is one; the strip 
 capped at the paragraphs' `$measure`, so the two hairlines end together on the page. A spell
 with no steps says so.
 
-- An ingredient's name is plain text; a Quick Look eye beside it, at seven eighths of the form's icon size, opens
+- An ingredient's name is plain text; a Quick Look eye beside it, its glyph at seven eighths of the form's icon size in a full 24px box (the WCAG 2.2 target), opens
   the ingredient's details (`DetailsDialog`, M12.5) over the spell, never leaving it (the owner,
   2026-10-28): the recipe page's own address plus `?entry=<id>`, or in the grimoire's Quick Look
   the tab's address with `?spell=<id>` kept and `&entry=<id>` added. The page and the tab read it

@@ -121,6 +121,27 @@ test('the moon phase sits on one line in the facts strip on a desktop', async ({
   expect(lines).toEqual([1, 1, 1, 1]);
 });
 
+test("a step's Quick Look eye is a 24px target with a smaller glyph", async ({ page }) => {
+  const coven = await seedCoven(page, 'Fixture Coven Eye', 'spell-eye.test', { A: 'owner' });
+  const { A } = coven.users;
+  const spellId = await withSql(async (sql) => {
+    const held = await compendiumVariant(sql, "Cat's Claw", 'Bark', 'Uncaria tomentosa');
+    const id = await insertSpell(sql, coven.id, 'Fixture Eye', 'workspace', A, 'complete');
+    await insertStep(sql, id, held, { quantity: 2, unit: 'g', position: 0 }, A);
+    return id;
+  });
+  await signInAgainAs(page, A);
+  await page.goto(`/coven/${coven.slug}/grimoire/${spellId}`);
+  const eye = page
+    .getByRole('list', { name: 'Steps' })
+    .getByRole('link', { name: "Quick Look Cat's Claw" });
+  const target = await eye.evaluate((el) => el.getBoundingClientRect().toJSON());
+  const glyph = await eye.locator('svg').evaluate((el) => el.getBoundingClientRect().toJSON());
+  expect(target.width).toBeGreaterThanOrEqual(24);
+  expect(target.height).toBeGreaterThanOrEqual(24);
+  expect(glyph.width).toBeLessThan(target.width);
+});
+
 // Each working row's badges sit in their own column and its buttons in a slot at the far right, so
 // the badges start the same distance from the row's right edge whatever the row holds.
 test('the badges of a draft and a complete working start at the same place on a desktop', async ({
