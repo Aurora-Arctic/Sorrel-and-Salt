@@ -199,8 +199,8 @@ head, both built by the page per row, as the other admin lists carry
   who may not yet create a coven has Approve, quiet, named "Approve <name>";
   one who may has the mark alone, since Revoke is the user modal's only
   ([`user-detail.md`](user-detail.md)), so the row is an index into the modal
-  (the owner's call, MB.123 D38). There, Revoke is red, named "Revoke approval
-  for <name>". A curator's or an admin's row has the mark alone, since each holds the flag (MB.177, M11.20): the control shows for a `user` only. Each asks first, in a
+  (the owner's call, MB.123 D38). There, Revoke is quiet, as Approve is, named "Revoke approval
+  for <name>"; the red is its confirmation's Revoke (MB.123). A curator's or an admin's row has the mark alone, since each holds the flag (MB.177, M11.20): the control shows for a `user` only. Each asks first, in a
   `Modal` ([`modal.md`](modal.md)) titled "Approve Coven Creation" or "Revoke
   Coven Creation", on the owner's call, the name in bold: "Let <name> create
   covens?", or "Stop <name> from creating covens? Covens they own stay
