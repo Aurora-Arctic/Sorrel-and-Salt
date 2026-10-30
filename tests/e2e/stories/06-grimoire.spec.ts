@@ -888,7 +888,7 @@ test(
     await assertNoAccessibilityViolations(page);
     await page.goto(`/coven/${coven.slug}/grimoire`);
     const card = grimoireList(page).getByRole('article', { name: /Fixture Working/ });
-    await expect(card.getByText('Made 2 Times')).toBeVisible();
+    await expect(card.getByText('Made 2 times')).toBeVisible();
     // The pencil is on the workings B may change, their own two and the draft that names them, and not on A's others; it saves a changed note in place.
     await page.goto(`/coven/${coven.slug}/grimoire/${spellId}`);
     await expect(workings.getByRole('button', { name: /^Edit Working / })).toHaveCount(3);
@@ -916,7 +916,7 @@ test(
     await expect(workings.getByText('First brewing')).toHaveCount(0);
     await expect(workings.getByRole('listitem')).toHaveCount(2);
     await page.goto(`/coven/${coven.slug}/grimoire`);
-    await expect(card.getByText('Made 1 Time')).toBeVisible();
+    await expect(card.getByText('Made once')).toBeVisible();
   },
 );
 

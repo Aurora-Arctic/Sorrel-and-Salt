@@ -34,15 +34,32 @@ const MORE = {
 };
 
 describe('SpellCard', () => {
-  it('says how many times a spell has been made, in the singular for one and nothing for none', () => {
-    const { rerender } = render(<SpellCard {...BASE} workingCount={2} />);
-    expect(screen.getByText(/^made 2 times$/i)).toBeInTheDocument();
+  it('says how many times a spell has been made, once for one and nothing for none', () => {
+    const { rerender } = render(<SpellCard {...BASE} workingCount={3} />);
+    expect(screen.getByText('Made 3 times')).toBeInTheDocument();
     rerender(<SpellCard {...BASE} workingCount={1} />);
-    expect(screen.getByText(/^made 1 time$/i)).toBeInTheDocument();
+    expect(screen.getByText('Made once')).toBeInTheDocument();
     rerender(<SpellCard {...BASE} workingCount={0} />);
     expect(screen.queryByText(/^made /i)).not.toBeInTheDocument();
     rerender(<SpellCard {...BASE} />);
     expect(screen.queryByText(/^made /i)).not.toBeInTheDocument();
+  });
+
+  // The count is read with the edit line, after it and before the actions, as one line of the foot.
+  it('reads the made count after the edit line and before the actions', () => {
+    render(
+      <SpellCard
+        {...BASE}
+        workingCount={3}
+        lastEdit={{ by: 'Fixture A', at: '2026-09-01T12:00:00.000Z' }}
+        editHref={'/edit' as Route}
+      />,
+    );
+    const made = screen.getByText('Made 3 times');
+    const edited = screen.getByRole('button', { name: /^Edited/ });
+    const edit = screen.getByRole('link', { name: /^Edit Fixture Working/ });
+    expect(edited.compareDocumentPosition(made) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy();
+    expect(made.compareDocumentPosition(edit) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy();
   });
 
   it('draws a Record a Working button only when given what recording needs, and it opens the dialog that records one', async () => {

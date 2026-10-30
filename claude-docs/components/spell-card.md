@@ -5,13 +5,14 @@ shows:
 
 - the spell's title, or "Untitled Spell" when it has none (`UNTITLED_SPELL`), since a draft
   may have no title;
-- its intent, the member's own sentence saying what the spell is for;
+- its intent, the member's own sentence saying what the spell is for, cut to three lines;
 - a Draft badge, on a draft only;
 - a Private badge, on a private spell only (M10.13);
 - the categories its author assigned it, as `CategoryChips`;
-- how many times it has been made, "Made 2 Times", when `workingCount` is above zero (M13.8);
 - who last edited it and when, as `LastEdit` ([last-edit.md](last-edit.md)), in the card's
   foot as an ingredient card's is, when the caller hands in an edit (the owner, 2026-10-27);
+- how many times it has been made, "Made once" or "Made 3 times", when `workingCount` is above
+  zero (M13.8), on the same line as the edit, after a dot: "Edited 5 minutes ago · Made 3 times";
 - its actions, in the foot: the Quick Look eye at the left, and Record a Working, the Edit
   pencil and the More menu at the right, each drawn only when the caller hands in what it
   needs (below).
@@ -30,7 +31,7 @@ The card is presentational: it takes props and works nothing out from the data, 
 | `status`        | `draft` or `complete`                                                                                                                 |
 | `visibility`    | `private` or `workspace`: who can see it                                                                                              |
 | `categories`    | The assigned categories, each with its group's colours. Never the derived ones (DESIGN.md §5)                                         |
-| `workingCount`  | How many complete workings the viewer can see, from the count loader. Zero or none draws no line                                      |
+| `workingCount`  | How many complete workings the viewer can see, from the count loader. Zero or none says nothing on the foot line                      |
 | `lastEdit`      | Who last edited it and when, `{ by, at }`, worked out by the caller. None draws no line                                               |
 | `editHref`      | Where the Edit pencil opens the spell, the tab's own address plus `?edit=<id>`. None draws no pencil                                  |
 | `recordWorking` | What the Record a Working button needs: `{ workspaceId, members, recorderId, steps }`. None draws no button                           |
@@ -104,6 +105,9 @@ The layout is the Foundations specimen (`.specimen` in `_primitives.scss`). The 
 IngredientCard's sibling (the owner's request, 2026-10-28): the same surface, shadow, radius,
 padding, title size, medium badges and category chips. The Draft and Private badges are drawn by `SpellMarks` ([spell-marks.md](spell-marks.md)) and sit under
 the title as an ingredient card's marks sit under its name, the last-edit line is in the foot,
+the intent stops at three lines with an ellipsis (`-webkit-line-clamp`, the unprefixed `line-clamp` beside it
+as an enhancement), and the made count shares the last-edit line: `.spell-card__foot-line` is a wrapping flex row
+in `$last-edit-ink` at caption size, `space(5)` below the chips, with an `aria-hidden` dot between the two,
 and the hover is the same tint and lifted shadow plus the smoulder below, with no drawer.
 Tokens only. The rules the two cards share come from `IngredientCard/_specimen-card.scss`:
 `specimen-card()` gives the title link stretched over the card, the pointer on a card whose

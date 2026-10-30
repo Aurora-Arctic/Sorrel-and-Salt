@@ -93,17 +93,50 @@
 
 // The intent passes a click through to the title link's overlay, as the plain chips do: it is
 // positioned by the content rule above, which paints it over the overlay.
+// Three lines at most and then an ellipsis: the whole of it is the recipe page's.
 .spell-card__intent {
+  display: -webkit-box;
+  overflow: hidden;
   margin: 0;
   color: $text-muted;
   pointer-events: none;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 3;
+  // stylelint-disable-next-line plugin/use-baseline -- enhancement: -webkit-line-clamp above
+  // already clamps, the unprefixed form is for engines that drop the prefix, not yet Baseline
+  line-clamp: 3;
 }
 
-// The made count and the foot pass a click through as well, so a press beside the actions opens the
-// recipe; the actions row takes the pointer back for its controls alone (_primitives.scss).
-.spell-card > .meta,
+// The foot passes a click through as well, so a press beside the actions opens the recipe; the
+// actions row takes the pointer back for its controls alone (_primitives.scss).
 .spell-card > .specimen__foot {
   pointer-events: none;
+}
+
+// Who last edited and how often it has been made, on one line in the edit line's ink, `space(5)`
+// clear of what is above as the edit line alone is; it wraps whole words on a narrow card.
+.spell-card__foot-line {
+  display: flex;
+  flex-wrap: wrap;
+  column-gap: space(2);
+  align-items: baseline;
+  margin-block-start: space(5);
+  color: $last-edit-ink;
+  font-size: type-size('caption');
+
+  // Three classes, over `.meta.last-edit`'s own `space(5)`, which the line already gives.
+  .spell-card & > .last-edit {
+    margin-block-start: 0;
+  }
+
+  > .spell-card__made {
+    color: inherit;
+  }
+}
+
+// The buttons follow the line with no gap of their own, as they follow the edit line alone.
+.specimen__foot > .spell-card__foot-line + .specimen__actions {
+  margin-top: 0;
 }
 
 // The compact look, wherever an ancestor says `data-density="compact"`, unless a stored
