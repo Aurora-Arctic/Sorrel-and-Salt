@@ -183,6 +183,24 @@
   }
 }
 
+// Compact, inside an ancestor that says `data-density="compact"` (the coven lists), unless a
+// stored Regular choice sits on <html>: the narrower column, tighter gap and padding of the compact
+// cards (`.ingredient-card-list`, IngredientCard/_compact.scss), so the list does not jump on arrival.
+[data-density='compact']:not(:root[data-card-density='regular'] *) {
+  .skeleton__cards {
+    grid-template-columns: repeat(
+      auto-fill,
+      minmax(min(100%, #{$ingredient-card-min-compact}), 1fr)
+    );
+    gap: space(3);
+  }
+
+  .skeleton__card {
+    gap: space(2);
+    padding: space(3) space(4);
+  }
+}
+
 // Prev and Next, centred beneath the table as the pager is.
 .skeleton__pager {
   display: flex;

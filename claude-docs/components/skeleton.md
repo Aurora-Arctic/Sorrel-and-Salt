@@ -38,6 +38,13 @@ way (M12.33). It was the tab panel's skeleton (MB.115) and the route modal's
   `loading-pulse` of `$pulse-duration` (2s).
 - It is a size container, so the table's rows turn to cards under the width
   the real table stacks at.
+- **The `cards` shape stands in for a card list**: the public Compendium and the admin Compendium draw it at the
+  regular density; the coven's Ingredients list (`CovenCards`) and the grimoire (`GrimoireList`) draw it compact.
+  Compact is not a prop: inside an ancestor that says `data-density="compact"`, unless a stored Regular choice sits
+  on `<html>` (`data-card-density="regular"`), the column, gap and padding follow the compact cards
+  (`IngredientCard/_compact.scss`), so the list does not jump when it arrives. The two coven lists put that
+  attribute on a wrapper round their search. The skeleton a tab switch or a navigation draws sits outside that
+  wrapper and stays regular.
 
 ## SwapPanel
 
