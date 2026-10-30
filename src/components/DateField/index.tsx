@@ -13,26 +13,14 @@ import { DayPicker, type DropdownProps } from 'react-day-picker';
 import { enGB } from 'react-day-picker/locale';
 import { ComboboxSelect } from '../Combobox/select';
 import { ChevronIcon } from '../Combobox/icons';
+import { dayWords, isoDay, today } from './day';
+import type { DateFieldProps } from './types';
 import './index.scss';
 
 // A day field: a button showing the day in words, opening a calendar. It replaces the browser's date
 // input, whose look and highlight differ by browser. The calendar is a popover in the top layer, so it
 // floats over the fields below and no scrolling ancestor clips it; where the browser has no popover
 // (an older one) it opens in flow beneath the button instead (claude-docs/components/date-field.md).
-
-export interface DateFieldProps {
-  id: string;
-  /** The day, `YYYY-MM-DD`. */
-  value: string;
-  onChange: (value: string) => void;
-  /** The last day that may be picked, `YYYY-MM-DD`. */
-  max?: string;
-  disabled?: boolean;
-  /** The id of the label element, so the button reads "Date, 4 March 2026". */
-  labelledBy: string;
-  'aria-invalid'?: boolean;
-  'aria-describedby'?: string;
-}
 
 const DAY = /^(\d{4})-(\d{2})-(\d{2})$/;
 
@@ -42,11 +30,6 @@ function parse(day: string): Date | undefined {
   if (!match) return undefined;
   const date = new Date(Number(match[1]), Number(match[2]) - 1, Number(match[3]));
   return date.getMonth() === Number(match[2]) - 1 ? date : undefined;
-}
-
-function format(date: Date): string {
-  const pad = (n: number) => String(n).padStart(2, '0');
-  return `${date.getFullYear()}-${pad(date.getMonth() + 1)}-${pad(date.getDate())}`;
 }
 
 // The gap between the button and the calendar, and the margin the calendar keeps from the window.
@@ -116,8 +99,6 @@ function CaptionDropdown({ options, value, onChange, 'aria-label': label }: Drop
 
 const hasPopover = (): boolean =>
   typeof HTMLElement !== 'undefined' && typeof HTMLElement.prototype.showPopover === 'function';
-
-const WORDS = new Intl.DateTimeFormat('en-GB', { day: 'numeric', month: 'long', year: 'numeric' });
 
 export default function DateField({
   id,
@@ -195,6 +176,7 @@ export default function DateField({
         type="button"
         className="input date-field__button"
         aria-labelledby={`${labelledBy} ${id}`}
+        aria-haspopup="dialog"
         aria-expanded={open}
         aria-controls={open ? panelId : undefined}
         disabled={disabled}
@@ -202,14 +184,14 @@ export default function DateField({
         onClick={() => setOpen(!open)}
       >
         <Sizer />
-        <span className="date-field__text">
-          {selected ? WORDS.format(selected) : 'Choose a day'}
-        </span>
+        <span className="date-field__text">{selected ? dayWords(value) : 'Choose a day'}</span>
       </button>
       {open && (
         <div
           ref={panel}
           id={panelId}
+          role="dialog"
+          aria-label="Choose a Day"
           className={
             floating ? 'date-field__panel date-field__panel--floating' : 'date-field__panel'
           }
@@ -240,7 +222,7 @@ export default function DateField({
             endMonth={last ?? new Date(new Date().getFullYear() + YEARS_AHEAD, 11)}
             disabled={last ? { after: last } : undefined}
             onSelect={(day) => {
-              onChange(format(day));
+              onChange(isoDay(day));
               setOpen(false);
               document.getElementById(id)?.focus();
             }}
@@ -265,13 +247,13 @@ export default function DateField({
             }}
           />
           {/* Hidden when max is before today, so a refused day is never offered. */}
-          {(!last || format(last) >= format(new Date())) && (
+          {(!last || isoDay(last) >= today()) && (
             <div className="date-field__footer">
               <button
                 type="button"
                 className="btn btn--quiet btn--small"
                 onClick={() => {
-                  onChange(format(new Date()));
+                  onChange(today());
                   setOpen(false);
                   document.getElementById(id)?.focus();
                 }}

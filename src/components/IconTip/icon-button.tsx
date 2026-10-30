@@ -2,7 +2,7 @@
 
 import type { ReactElement, Ref } from 'react';
 import MenuButton from '../MenuButton';
-import type { MenuButtonChoices } from '../MenuButton/types';
+import type { MenuButtonChoices, MenuButtonProps } from '../MenuButton/types';
 import IconTip from './icon-tip';
 import {
   AnnotateIcon,
@@ -155,10 +155,11 @@ export const MoreMenu = ({
   name,
   ref,
   ...choices
-}: MenuButtonChoices & {
-  name: string;
-  ref?: Ref<HTMLButtonElement>;
-}): ReactElement => (
+}: MenuButtonChoices &
+  Pick<MenuButtonProps, 'busy' | 'busyLabel'> & {
+    name: string;
+    ref?: Ref<HTMLButtonElement>;
+  }): ReactElement => (
   <IconTip tip="More">
     <MenuButton
       ref={ref}

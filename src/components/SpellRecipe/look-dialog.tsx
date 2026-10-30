@@ -30,7 +30,7 @@ export default function SpellLookDialog({
         closeHref={closeHref}
         readingBody
         content={{
-          heading: { title: 'Spell Details' },
+          heading: { title: 'Spell Recipe' },
           body: () => <Notice kind="error">This spell could not be read. Try again.</Notice>,
         }}
       />
@@ -69,7 +69,7 @@ export default function SpellLookDialog({
           heading,
           body: () => <div className="spell-recipe-look">{opened.children}</div>,
           foot: (
-            <div className="ingredient-details-foot spell-look-foot">
+            <div className="ingredient-details-foot">
               <PendingLink className="btn" href={opened.recipeHref}>
                 See Full Recipe
               </PendingLink>

@@ -3,6 +3,7 @@ import BackLink from '../IngredientEntry/back-link';
 import LastEdit from '../LastEdit';
 import LinkHint from '../LinkHint';
 import { UNTITLED_SPELL } from '../SpellCard';
+import SpellMarks from '../SpellMarks';
 import PageNav from '../PageNav';
 import type { PageNavEntry } from '../PageNav/types';
 import SpellRecipeBody from './body';
@@ -11,7 +12,8 @@ import { CATEGORY_MATCH_ID, INVENTORY_ID, JAR_ID, STEPS_ID, WORKINGS_ID } from '
 import type { SpellRecipeProps } from './types';
 
 // A saved spell as a page: purpose, four facts, steps, note (`SpellRecipeBody`, which Quick Look
-// also draws). Read-only; Edit and Delete Spell are the `action` slot's, for roles that may. Its print
+// also draws). Read-only; the page's controls (Record, Edit, Preview, the three dots) are the
+// `action` slot's, for the roles that may. Its print
 // layout is `src/scss/_print.scss` (claude-docs/components/spell-recipe.md).
 
 const SpellRecipe = ({
@@ -70,12 +72,7 @@ const SpellRecipe = ({
         {/* Above the title, as the ingredient entry page places it. */}
         {lastEdit && <LastEdit by={lastEdit.by} at={lastEdit.at} />}
         <h1 id="spell-recipe-title">{name}</h1>
-        {(status === 'draft' || visibility === 'private') && (
-          <div className="specimen__badges">
-            {status === 'draft' && <span className="badge badge--draft">Draft</span>}
-            {visibility === 'private' && <span className="badge badge--private">Private</span>}
-          </div>
-        )}
+        <SpellMarks status={status} visibility={visibility} />
         {action}
       </header>
       <SpellRecipeSummary steps={steps} />

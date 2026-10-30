@@ -2,6 +2,8 @@
 
 The small moon drawn beside a moon phase's name in the spell builder (`src/components/MoonPhaseIcon/`).
 
+`moonPhaseIcon(phase)` (`for-phase.tsx`) returns the drawing for a phase typed as free text, matched to the builder's list ignoring case and surrounding spaces, and `null` for a phase not on it. The builder's Moon Phase field and the grimoire filter's Moon Phase facet both call it, so the list does not import from the builder.
+
 ## Lit parts
 
 Each phase's lit part sits on a disc of radius 8 centred on (12, 12), drawn for the northern hemisphere: a waxing moon is lit on its right and a waning one on its left, and the sides swap in the southern hemisphere. Each crescent and gibbous edge is the half-ellipse from the top of the disc (12, 4) to its foot (12, 20), 4.5 wide. New Moon is the shadowed disc. Dark Moon is the outline alone, with no shadow inside, so it reads apart from New Moon.
@@ -29,3 +31,11 @@ Projected orthographically, north up and east (Mare Crisium) on the right, the v
 - ry = r, rx = r·cosC (foreshortened toward the limb), rotated by atan2(−y, x) in degrees, so rx lies along the radius.
 
 A Gazetteer diameter is a feature's greatest extent, so the ellipse is generous for an irregular mare, Oceanus Procellarum most of all; the disc's edge and the lit part clip it. Left out because each is under 1.5px across at a 20px icon: Mare Nectaris (339.39 km), and the craters Tycho (85 km, Wikipedia, "Tycho (lunar crater)") and Copernicus (93 km, Wikipedia, "Copernicus (lunar crater)").
+
+## Styling
+
+`index.scss`: the icon is 1.25em square and sunk 0.25em, as `FormIcon` is, so it takes the size of the line it sits in, and `flex: none` keeps a flex row from squeezing it. Its three fills are the theme's `--moon-shadow`, `--moon-lit` and `--moon-mare` (`src/scss/_mixins.scss`).
+
+## Stories
+
+Surfaces / Moon Phase Icon: All Phases, every phase in a row.

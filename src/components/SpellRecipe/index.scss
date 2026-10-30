@@ -1,8 +1,8 @@
 @use '../../scss/variables' as *;
 @use '../../scss/mixins' as *;
 
-// A saved spell's page. Tokens only; the layout is a single readable column. Print
-// styles are not set here.
+// A saved spell's page: the body's column, with the side column beside it past a tablet's width.
+// Tokens only. The print layout is `_print.scss`'s.
 .spell-recipe {
   display: flex;
   flex-direction: column;
@@ -162,7 +162,7 @@
   }
 }
 
-// The pencil and the bin on one line at the heading's end, as the
+// The head's icons on one line at the heading's end, as the
 // ingredient entry's icons stand (`.ingredient-entry__cupboard--icons`).
 .spell-recipe__actions {
   display: flex;
@@ -178,15 +178,22 @@
   white-space: pre-line;
 }
 
-// The Instructions heading is for paper and the Preview pane (recipe-columns); the screen's
-// page and Quick Look head the steps with the jump menu and the list's own name, and the section
-// around them is no box at all, so the steps stay the stack's own item.
+// The Steps heading shows on paper and in the Preview pane (recipe-columns); on the screen's page
+// and Quick Look the jump menu heads the steps, so the heading is there for a screen reader alone.
+// The section around them is no box at all, so the steps stay the stack's own item.
 .spell-recipe__instructions {
   display: contents;
 
-  > h2 {
-    display: none;
+  // An h3 where the body sits under a dialog's or pane's h2.
+  > :is(h2, h3) {
+    @include visually-hidden;
   }
+}
+
+// The Ingredients summary is for paper and the Preview pane (recipe-columns): on screen the steps
+// carry the amounts and the side column the stock.
+.spell-recipe__summary {
+  display: none;
 }
 
 .spell-recipe__steps {
@@ -206,7 +213,7 @@
   margin: 0;
 }
 
-// The steps as the Recipe Card mock-up draws them: a 1.5rem position column, the amount leading the
+// The steps as the Recipe Card mock-up draws them: a `$step-position-width` position column, the amount leading the
 // name on the first line, the text and note on lines of their own indented to the name. The
 // position stays a flex item (an absolute one would not share the baseline).
 .spell-recipe__steps .step-row {
@@ -217,7 +224,7 @@
 .spell-recipe__steps .step-row__position {
   order: -2;
   // Room for a two-digit number and its stop, and no more: wider read as an indent.
-  flex: 0 0 1.5rem;
+  flex: 0 0 $step-position-width;
   text-align: end;
   color: $text-muted;
   font-variant-numeric: tabular-nums;
@@ -244,15 +251,15 @@
   display: none;
 }
 
-// The step's Quick Look eye well under the list's size, seven eighths of the form icon's box and
-// glyph, so it sits in the name's line without weight.
+// The step's Quick Look eye: its glyph at seven eighths of the form icon's, so it sits in the name's
+// line without weight, inside the full `$icon-size` box, WCAG 2.2's 24px target.
 .spell-recipe__steps .icon-tip__look {
-  @include icon-button($icon-size * 0.875, $glyph-size * 0.875);
+  @include icon-button($icon-size, $glyph-size * 0.875);
 }
 
 .spell-recipe__steps .step-row__body,
 .spell-recipe__steps .step-row__note {
-  margin-inline-start: calc(1.5rem + #{space(2)});
+  margin-inline-start: calc(#{$step-position-width} + #{space(2)});
 }
 
 // A step's text reads as its note does, `.meta`: caption size, muted,
@@ -279,7 +286,7 @@
 // marks' column left empty. With no amount the name takes the amount's column too.
 .spell-recipe__steps .step-row:not(.spell-recipe__instruction) {
   display: grid;
-  grid-template-columns: 1.5rem auto minmax(0, 1fr) auto;
+  grid-template-columns: $step-position-width auto minmax(0, 1fr) auto;
 
   .step-row__position {
     grid-area: 1 / 1;
@@ -431,9 +438,9 @@
   }
 }
 
-// A jump from the menu lands clear of the shell's sticky bar, as the entry page's sections do.
+// A jump from the menu lands clear of the shell's sticky bar, as the entry page's sections do;
+// Workings gets the same from `.page-frame__section`.
 .spell-recipe .spell-recipe__steps,
-.spell-recipe .spell-workings,
 .spell-recipe .comparison-panel,
 .spell-recipe .spell-inventory {
   scroll-margin-top: calc(#{$top-inset} + #{$shell-bar-height} + #{space(4)});

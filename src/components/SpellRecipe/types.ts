@@ -85,7 +85,7 @@ export interface SpellRecipeProps {
   dayOfWeek?: string | null;
   /** The way back to the grimoire. */
   back: { href: Route; label: string };
-  /** The Edit control, for a role that may update the spell. */
+  /** The head's row of controls, each drawn only for a role that may use it. */
   action?: ReactNode;
   /** The Workings section (`SpellWorkings`), beneath the body; the Quick Look modal gives none. */
   workings?: ReactNode;
@@ -131,6 +131,15 @@ export type SpellRecipeBodyProps = Pick<
   | 'dayOfWeek'
 >;
 
+/** The level of the recipe's Steps and Ingredients headings: 2 under the page's h1, 3 under a dialog's or pane's h2. */
+export type RecipeHeadingLevel = 2 | 3;
+
+export interface SpellRecipeSummaryProps {
+  steps: readonly RecipeStep[];
+  /** The Ingredients heading's level, one below the heading it sits under. Defaults to 2. */
+  level?: RecipeHeadingLevel;
+}
+
 /** The spell a Quick Look modal is open on; the body arrives as the page's rendered children. */
 export interface SpellLookOpened {
   /** The spell's title; a draft may have none. */
@@ -162,14 +171,16 @@ export interface DeleteSpellActionProps {
   name: string;
   /** The grimoire tab the page leaves for, with what was deleted in its address. */
   deletedHref: Route;
+  /** Who loses the spell: the question names the coven only for a shared one, and left out says neither. */
+  visibility?: SpellVisibility;
 }
 
-/** The recipe page's three dots: Duplicate for a role that may create a spell, Delete Spell for one that may delete. */
+/** The three dots: Duplicate for a role that may create a spell, Print on the recipe page, Delete Spell for one that may delete. */
 export interface SpellMoreMenuProps extends DeleteSpellActionProps {
   /** The coven's slug, which the copy's address needs. */
   covenSlug: string;
   canDuplicate: boolean;
   canDelete: boolean;
-  /** Print is the recipe page's alone: a card's menu leaves it out, and with nothing else draws no menu. */
+  /** Print is the recipe page's alone: a card's menu leaves it out, and alone it is a Print button, not a menu. */
   canPrint: boolean;
 }

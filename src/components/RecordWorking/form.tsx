@@ -9,12 +9,13 @@ import { usePendingNavigation } from '../../lib/navigation';
 import type { Failure } from '../../lib/types';
 import Combobox, { ComboboxEntry } from '../Combobox';
 import DateField from '../DateField';
-import { FieldShell, FormActions, VisibilitySwitch, fieldDescription } from '../Field';
-import IconTip, { BinButton } from '../IconTip';
+import { FieldError, FieldShell, FormActions, VisibilitySwitch, fieldDescription } from '../Field';
+import { BinButton } from '../IconTip';
 import { ConfirmQuestion, DiscardQuestion, useDiscardGuard } from '../Modal';
 import Notice from '../Notice';
 import WorkingCompletion from './completion';
-import { completeReason, today } from './day';
+import { today } from '../DateField/day';
+import { completeReason } from './day';
 import './index.scss';
 import { DeleteWorkingQuestion } from '../SpellWorkings/delete-working';
 import type { RecordWorkingDialogProps, WorkingParticipantValue } from './types';
@@ -123,6 +124,7 @@ export default function RecordWorkingForm({
       type="button"
       className="btn"
       disabled={!valid || submitting || waitFor !== undefined}
+      aria-describedby={waitFor ? `${ids}-wait` : undefined}
       onClick={() => void submit(true)}
     >
       Complete
@@ -215,7 +217,8 @@ export default function RecordWorkingForm({
           {...dateField.aria}
         />
       </FieldShell>
-      <div className="fieldset">
+      {/* A fieldset so `disabled` shuts the box, its chevron and every chip's x at once while the save runs. */}
+      <fieldset className="fieldset" aria-labelledby={`${ids}-people-label`} disabled={submitting}>
         <span id={`${ids}-people-label`} className="fieldset__legend">
           Participants
         </span>
@@ -225,12 +228,11 @@ export default function RecordWorkingForm({
           labelId={`${ids}-people-label`}
           value={text}
           onChange={setText}
-          onPick={(value, option) => {
+          onPick={(_value, option) => {
             if (option?.key) {
               setParticipants([...participants, { userId: option.key, name: option.value }]);
               setText('');
             } else addTyped();
-            void value;
           }}
           keepOpen
           onCommit={addTyped}
@@ -242,6 +244,7 @@ export default function RecordWorkingForm({
           placeholder="Add a name"
           noun="member"
           aria-invalid={peopleError ? true : undefined}
+          aria-describedby={peopleError ? `${ids}-people-error` : undefined}
           entries={
             participants.length > 0 && (
               <ul className="combobox__entries">
@@ -257,8 +260,8 @@ export default function RecordWorkingForm({
             )
           }
         />
-        {peopleError && <p className="field__error">{peopleError}</p>}
-      </div>
+        <FieldError id={`${ids}-people-error`} message={peopleError} />
+      </fieldset>
       <FieldShell label="Note" {...noteField}>
         <textarea
           id={noteField.controlId}
@@ -298,9 +301,14 @@ export default function RecordWorkingForm({
           ) : undefined
         }
       >
-        {!complete &&
-          (waitFor ? <IconTip tip={waitFor}>{completeButton}</IconTip> : completeButton)}
+        {!complete && completeButton}
       </FormActions>
+      {/* Text rather than a tip, since a disabled button takes no focus to show one. */}
+      {!complete && waitFor && (
+        <p id={`${ids}-wait`} className="meta">
+          {waitFor}
+        </p>
+      )}
       {discard.asking && <DiscardQuestion guard={discard} />}
       {working && deleteWorking && (
         <ConfirmQuestion

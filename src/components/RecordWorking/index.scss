@@ -15,7 +15,7 @@
 .working-deductions {
   display: flex;
   flex-direction: column;
-  gap: 0.75rem;
+  gap: space(3);
 
   // No ◆ beside the jars: the jar is each line's mark.
   @include list-reset;
@@ -27,8 +27,10 @@
     white-space: normal;
   }
 
+  // The parts wrap whole onto the next line, so on a phone a unit never sits alone under its number.
   .jar-line__words {
-    font-size: 0.875rem;
+    flex-wrap: wrap;
+    font-size: type-size('small');
     font-variant-numeric: tabular-nums;
 
     b {

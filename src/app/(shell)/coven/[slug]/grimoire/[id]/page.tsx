@@ -13,6 +13,7 @@ import CompleteWorkingAction from '@/components/RecordWorking/complete-action';
 import EditWorkingAction from '@/components/SpellWorkings/edit-working';
 import SpellWorkings from '@/components/SpellWorkings';
 import SpellRecipeAside from '@/components/SpellRecipe/aside';
+import { deletedHrefOf } from '@/components/SpellRecipe/deleted-href';
 import { UNTITLED_SPELL } from '@/components/SpellCard';
 import { Forbidden, NotFound } from '@/lib/errors';
 import { RowId } from '@/lib/validation';
@@ -117,7 +118,7 @@ export default async function SpellRecipePage({ params, searchParams }: SpellRec
   );
   const name = spell.title?.trim() || UNTITLED_SPELL;
   const listPath = `/coven/${workspace.slug}/grimoire${spell.status === 'draft' ? '/drafts' : ''}`;
-  const deletedHref = `${listPath}?${new URLSearchParams({ deleted: name })}` as Route;
+  const deletedHref = deletedHrefOf(listPath as Route, spell.title);
   const query = await searchParams;
   const edit = query.edit;
   // An ingredient step's Quick Look eye opens the ingredient's details over the recipe, at this
@@ -151,8 +152,9 @@ export default async function SpellRecipePage({ params, searchParams }: SpellRec
               workspaceId={workspace.id}
               workings={workings}
               headingAction={canRecord ? recordButton : undefined}
-              completeAction={(workingId, workedOn) => (
+              completeAction={(workingId, workedOn, name) => (
                 <CompleteWorkingAction
+                  label={`Complete Working ${name}`}
                   workspaceId={workspace.id}
                   spellId={spell.id}
                   workingId={workingId}
@@ -204,6 +206,7 @@ export default async function SpellRecipePage({ params, searchParams }: SpellRec
                 spellId={spell.id}
                 name={name}
                 deletedHref={deletedHref}
+                visibility={spell.visibility}
                 canDuplicate={canDuplicate}
                 canDelete={canDelete}
                 canPrint

@@ -4,6 +4,7 @@ import type { Route } from 'next';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 import SpellMoreMenu from '@/components/SpellRecipe/more-menu';
 import type {
+  SpellVisibility,
   DeleteSpellMutation,
   DeleteSpellMutationVariables,
   DuplicateSpellMutation,
@@ -24,7 +25,17 @@ const ID = '00000000-0000-4000-8000-000000000002';
 const COPY_ID = '00000000-0000-4000-8000-000000000003';
 const DELETED_HREF = '/coven/fixture-coven/grimoire?deleted=Fixture+Working' as Route;
 
-function renderMenu({ canDuplicate = true, canDelete = true, canPrint = true } = {}) {
+function renderMenu({
+  canDuplicate = true,
+  canDelete = true,
+  canPrint = true,
+  visibility,
+}: {
+  canDuplicate?: boolean;
+  canDelete?: boolean;
+  canPrint?: boolean;
+  visibility?: SpellVisibility;
+} = {}) {
   return render(
     <QueryClientProvider client={makeQueryClient()}>
       <main>
@@ -38,6 +49,7 @@ function renderMenu({ canDuplicate = true, canDelete = true, canPrint = true } =
           canDuplicate={canDuplicate}
           canDelete={canDelete}
           canPrint={canPrint}
+          visibility={visibility}
         />
       </main>
     </QueryClientProvider>,
@@ -84,14 +96,6 @@ describe('SpellMoreMenu', () => {
     ]);
   });
 
-  it('offers only Print to a role that may do neither', async () => {
-    renderMenu({ canDuplicate: false, canDelete: false });
-    press(dots());
-    expect((await screen.findAllByRole('menuitem')).map((item) => item.textContent)).toEqual([
-      'Print',
-    ]);
-  });
-
   it('draws no menu when it holds nothing, as on a card, which does not print', () => {
     renderMenu({ canDuplicate: false, canDelete: false, canPrint: false });
     expect(screen.queryByRole('button', { name: /^More for/ })).not.toBeInTheDocument();
@@ -101,11 +105,36 @@ describe('SpellMoreMenu', () => {
     // jsdom has no `window.print`.
     const print = vi.fn();
     vi.stubGlobal('print', print);
-    renderMenu({ canDuplicate: false, canDelete: false });
+    renderMenu();
     expect(print).not.toHaveBeenCalled();
     choose('Print');
     expect(print).toHaveBeenCalledTimes(1);
     vi.unstubAllGlobals();
+  });
+
+  it('draws Print as its own button, not a menu, for a role that may do nothing else', () => {
+    const print = vi.fn();
+    vi.stubGlobal('print', print);
+    renderMenu({ canDuplicate: false, canDelete: false });
+    expect(screen.queryByRole('button', { name: /^More for/ })).not.toBeInTheDocument();
+    press(screen.getByRole('button', { name: 'Print Fixture Working' }));
+    expect(print).toHaveBeenCalledTimes(1);
+    vi.unstubAllGlobals();
+  });
+
+  it('shows the dots as busy from the choice of Duplicate until the copy opens, so a second cannot run', async () => {
+    mockGraphQLMutation<DuplicateSpellMutation, DuplicateSpellMutationVariables>(
+      'DuplicateSpell',
+      () => ({ duplicateSpell: { id: COPY_ID } }),
+    );
+    renderMenu();
+    expect(dots()).not.toHaveAttribute('aria-busy');
+
+    choose('Duplicate');
+
+    const busy = await screen.findByRole('button', { name: 'Duplicating' });
+    expect(busy).toHaveAttribute('aria-busy', 'true');
+    expect(busy).toHaveAttribute('aria-disabled', 'true');
   });
 
   it("duplicates the spell and leaves for the Drafts tab with the copy's dialog open", async () => {
@@ -161,6 +190,22 @@ describe('SpellMoreMenu', () => {
     await waitFor(() => expect(screen.queryByRole('dialog')).not.toBeInTheDocument());
     expect(dots()).toHaveFocus();
     expect(calls).toEqual([]);
+  });
+
+  it('tells the author of a private spell only what is true of it: no one else loses it', () => {
+    renderMenu({ visibility: 'private' });
+    choose('Delete Spell');
+    const ask = screen.getByRole('dialog', { name: 'Delete Spell' });
+    expect(ask).not.toHaveTextContent(/member/);
+    expect(ask).toHaveTextContent(/gone for good/);
+  });
+
+  it('tells the deleter of a shared spell that the coven loses it', () => {
+    renderMenu({ visibility: 'workspace' });
+    choose('Delete Spell');
+    expect(screen.getByRole('dialog', { name: 'Delete Spell' })).toHaveTextContent(
+      /every member of the coven/,
+    );
   });
 
   it('deletes the spell and replaces the address with the list’s', async () => {

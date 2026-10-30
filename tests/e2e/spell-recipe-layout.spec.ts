@@ -5,6 +5,7 @@ import { signInAgainAs } from './session';
 import {
   insertSpell,
   insertStep,
+  insertStock,
   insertWorking,
   compendiumVariant,
   seedCoven,
@@ -120,9 +121,30 @@ test('the moon phase sits on one line in the facts strip on a desktop', async ({
   expect(lines).toEqual([1, 1, 1, 1]);
 });
 
-// Each working row's badges sit in their own column and its buttons in a slot at the far right, so
-// the badges start the same distance from the row's right edge whatever the row holds.
-test('the badges of a draft and a complete working start at the same place on a desktop', async ({
+test("a step's Quick Look eye is a 24px target with a smaller glyph", async ({ page }) => {
+  const coven = await seedCoven(page, 'Fixture Coven Eye', 'spell-eye.test', { A: 'owner' });
+  const { A } = coven.users;
+  const spellId = await withSql(async (sql) => {
+    const held = await compendiumVariant(sql, "Cat's Claw", 'Bark', 'Uncaria tomentosa');
+    const id = await insertSpell(sql, coven.id, 'Fixture Eye', 'workspace', A, 'complete');
+    await insertStep(sql, id, held, { quantity: 2, unit: 'g', position: 0 }, A);
+    return id;
+  });
+  await signInAgainAs(page, A);
+  await page.goto(`/coven/${coven.slug}/grimoire/${spellId}`);
+  const eye = page
+    .getByRole('list', { name: 'Steps' })
+    .getByRole('link', { name: "Quick Look Cat's Claw" });
+  const target = await eye.evaluate((el) => el.getBoundingClientRect().toJSON());
+  const glyph = await eye.locator('svg').evaluate((el) => el.getBoundingClientRect().toJSON());
+  expect(target.width).toBeGreaterThanOrEqual(24);
+  expect(target.height).toBeGreaterThanOrEqual(24);
+  expect(glyph.width).toBeLessThan(target.width);
+});
+
+// Each working row's badges sit right after its date, whatever else the row holds, so the gap from
+// the date to the first badge is the same on a draft row and a complete one.
+test('the badges of a draft and a complete working sit the same distance after the date on a desktop', async ({
   page,
 }) => {
   const coven = await seedCoven(page, 'Fixture Coven Badges', 'spell-badges.test', { A: 'owner' });
@@ -146,9 +168,12 @@ test('the badges of a draft and a complete working start at the same place on a 
     [0, 1].map((i) =>
       rows
         .nth(i)
-        .locator('.specimen__badges .badge')
-        .first()
-        .evaluate((el) => el.getBoundingClientRect().left),
+        .locator('.spell-workings__head')
+        .evaluate((head) => {
+          const date = head.querySelector('time')!.getBoundingClientRect();
+          const badge = head.querySelector('.specimen__badges .badge')!.getBoundingClientRect();
+          return badge.left - date.right;
+        }),
     ),
   );
   // The draft row has the extra Draft badge and the extra Complete button, the complete row neither.
@@ -402,3 +427,40 @@ for (const [name, size] of [
     expect(await widthOf()).toBe(todayWidth);
   });
 }
+
+test("a short jar's deduction line keeps each part whole at 375px", async ({ page }) => {
+  const coven = await seedCoven(page, 'Fixture Coven Deduction', 'spell-deduction.test', {
+    A: 'owner',
+  });
+  const { A } = coven.users;
+  const spellId = await withSql(async (sql) => {
+    const held = await compendiumVariant(sql, 'Rosemary', 'Herb');
+    await insertStock(sql, coven.id, held, { quantity: 1, unit: 'g', threshold: 0 }, A);
+    const id = await insertSpell(sql, coven.id, 'Fixture Deduction', 'workspace', A, 'complete');
+    await insertStep(sql, id, held, { quantity: 3, unit: 'g', position: 0 }, A);
+    return id;
+  });
+  await signInAgainAs(page, A);
+  await page.setViewportSize({ width: 375, height: 812 });
+  await page.goto(`/coven/${coven.slug}/grimoire/${spellId}`);
+  await page
+    .getByRole('region', { name: 'Workings' })
+    .getByRole('button', { name: 'Record a Working' })
+    .click();
+  const dialog = page.getByRole('dialog', { name: 'Record a Working' });
+  await dialog.getByRole('button', { name: 'Complete' }).click();
+  const words = dialog.getByRole('list', { name: 'Deductions' }).locator('.jar-line__words');
+  await expect(words).toContainText('short by');
+
+  // Every part (takes, have, left, short by) stands on one line, so no unit sits alone under its number.
+  const parts = await words.locator('> span').evaluateAll((spans) =>
+    spans.map((span) => {
+      const range = document.createRange();
+      range.selectNodeContents(span);
+      const tops = new Set([...range.getClientRects()].map((rect) => Math.round(rect.top)));
+      return { text: span.textContent, lines: tops.size };
+    }),
+  );
+  expect(parts).toHaveLength(4);
+  for (const part of parts) expect(part, part.text ?? '').toMatchObject({ lines: 1 });
+});

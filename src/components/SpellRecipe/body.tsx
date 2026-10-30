@@ -9,8 +9,13 @@ import { SafetyMark } from '../SafetyNote';
 import { formLabel } from '../../modules/ingredients/validation/form-label';
 import { UNTITLED_SPELL } from '../SpellCard';
 import { VerdictMark } from '../SpellBuilder/verdict-mark';
-import { STEPS_ID } from './sections';
-import type { IngredientRecipeStep, RecipeStep, SpellRecipeBodyProps } from './types';
+import { STEPS_ID, STEPS_TITLE_ID } from './sections';
+import type {
+  IngredientRecipeStep,
+  RecipeHeadingLevel,
+  RecipeStep,
+  SpellRecipeBodyProps,
+} from './types';
 import './index.scss';
 
 // What a saved spell says, below its head: its intent, categories, a strip of
@@ -29,7 +34,7 @@ export const labelOf = ({ name, form }: IngredientRecipeStep): string =>
 const Name = ({ step }: { step: IngredientRecipeStep }): ReactElement => (
   <>
     <span>{labelOf(step)}</span>
-    {step.formal !== null && <span className="meta spell-recipe__formal"> ({step.formal})</span>}
+    {step.formal !== null && <span className="meta"> ({step.formal})</span>}
     {step.deleted && <span className="meta"> (Deleted)</span>}
     {step.look && (
       <>
@@ -70,10 +75,14 @@ const SpellRecipeBody = ({
   moonPhase,
   dayOfWeek,
   beforeSteps,
+  level = 2,
 }: SpellRecipeBodyProps & {
   /** A section between the facts and the steps; the Preview pane puts the Ingredients summary here. */
   beforeSteps?: ReactNode;
+  /** The Steps heading's level, one below the heading the body sits under. Defaults to 2. */
+  level?: RecipeHeadingLevel;
 }): ReactElement => {
+  const Heading = level === 3 ? 'h3' : 'h2';
   const name = (title ?? '').trim() || UNTITLED_SPELL;
   const purpose = (intent ?? '').trim();
   const facts = (
@@ -120,14 +129,14 @@ const SpellRecipeBody = ({
 
         {beforeSteps}
 
-        {/* The steps under an Instructions heading, the Ingredients summary's twin: shown where the
-            summary is, on paper and in the Preview pane, and hidden on screen as the summary is. */}
+        {/* The steps under their heading, the Ingredients summary's twin: shown where the summary is,
+            on paper and in the Preview pane, and on screen read only by a screen reader. */}
         <section className="spell-recipe__instructions">
-          <h2>Instructions</h2>
+          <Heading id={STEPS_TITLE_ID}>Steps</Heading>
           {steps.length === 0 ? (
             <p className="meta">This spell has no steps yet.</p>
           ) : (
-            <ol id={STEPS_ID} className="spell-recipe__steps" aria-label="Steps">
+            <ol id={STEPS_ID} className="spell-recipe__steps" aria-labelledby={STEPS_TITLE_ID}>
               {steps.map((step: RecipeStep, i) =>
                 step.kind === 'instruction' ? (
                   <StepRow

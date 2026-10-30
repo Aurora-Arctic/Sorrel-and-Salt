@@ -4,6 +4,8 @@ import { describe, expect, it, vi } from 'vitest';
 import SpellRecipeAside from '@/components/SpellRecipe/aside';
 import SpellWorkings from '@/components/SpellWorkings';
 import SpellRecipe from '@/components/SpellRecipe';
+import SpellRecipeBody from '@/components/SpellRecipe/body';
+import SpellRecipeSummary from '@/components/SpellRecipe/summary';
 import type { RecipeStep, SpellRecipeProps } from '@/components/SpellRecipe';
 
 vi.mock('next/navigation', () => ({
@@ -361,5 +363,29 @@ describe('SpellRecipe', () => {
       render(<SpellRecipe {...props({ steps: [instruction('s1', 'Stir.')], workings })} />);
       expect(linksOf().map((link) => link.textContent)).toEqual(['Steps', 'Workings']);
     });
+  });
+});
+
+describe("SpellRecipeBody and SpellRecipeSummary under a dialog's title", () => {
+  it('draw Steps and Ingredients at the level given, one below the title they sit under', () => {
+    const steps = [ingredient('s1')];
+    render(
+      <SpellRecipeBody
+        {...props({ steps })}
+        level={3}
+        beforeSteps={<SpellRecipeSummary steps={steps} level={3} />}
+      />,
+    );
+    expect(screen.getByRole('heading', { level: 3, name: 'Steps' })).toBeInTheDocument();
+    expect(screen.getByRole('heading', { level: 3, name: 'Ingredients' })).toBeInTheDocument();
+  });
+
+  it("draw them at level 2 by default, under the page's h1", () => {
+    const steps = [ingredient('s1')];
+    render(
+      <SpellRecipeBody {...props({ steps })} beforeSteps={<SpellRecipeSummary steps={steps} />} />,
+    );
+    expect(screen.getByRole('heading', { level: 2, name: 'Steps' })).toBeInTheDocument();
+    expect(screen.getByRole('heading', { level: 2, name: 'Ingredients' })).toBeInTheDocument();
   });
 });

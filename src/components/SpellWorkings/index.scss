@@ -1,7 +1,8 @@
 @use '../../scss/variables' as *;
 @use '../../scss/mixins' as *;
 
-// The recipe page's Workings section: a stack of rows, each a plain block under its date.
+// The recipe page's Workings section: a stack of rows, each a plain block under its date. The
+// section's gap is `.page-frame__section`'s; the top margin stays, as the recipe is no `.page-frame` column.
 
 .spell-workings {
   margin-top: space(6);
@@ -20,7 +21,6 @@
 
   &__list {
     display: grid;
-    margin-top: space(4);
     gap: space(5);
 
     // No margin, indent or typography-base's ◆ marker: each row is headed by its date.
