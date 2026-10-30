@@ -40,7 +40,7 @@ movable, on dnd-kit.
 | `leading`          | A caller's own control drawn inside the control box before the text and any entries: a form's submit, say. A slot rather than a built-in, as Combobox knows nothing about forms.                                                                                                                                                                        |
 | `toggle`           | Whether a box with `suggestions` draws its chevron button; `true` unless said. Leave it out (`false`) for a free-text search that opens as you type.                                                                                                                                                                                                    |
 | `listAnchor`       | The element the open list spans and opens beside: a list field's row, its box and its Add together. The control when left out. See "Where the list opens".                                                                                                                                                                                              |
-| `action`           | `{ label, onSelect }`: a last row that does something rather than picking a suggestion, in italics: "New Reference" makes something new (no typed row, there with a blank box too), "See all results." applies a search to its list. See "The action row".                                                                                              |
+| `action`           | `{ label, onSelect }`: a last row that does something rather than picking a suggestion, in italics: "New Reference" makes something new (no typed row, there with a blank box too), "See All Results" applies a search to its list. See "The action row".                                                                                               |
 | `highlightFirst`   | The first row highlighted as the list opens and narrows, so Enter takes it: a closed set's type-ahead. Nothing is highlighted unless said.                                                                                                                                                                                                              |
 | `noun`             | What a row is called, singular: the list's name, its chevron's and its status's count, "Tradition choices", "3 choices". "suggestion" unless said.                                                                                                                                                                                                      |
 | `placeholder`      | Shown, muted, while the box is empty, beside entries too: the prompt for the next, with room kept for it (see "Styling").                                                                                                                                                                                                                               |
@@ -261,11 +261,10 @@ offer; it takes no typed text, so it has no "no match". Both draw the same
 ## The action row
 
 `action` is a last row that does something rather than picking a suggestion.
-It has two users. "See all results." (M8.10, the owner's call 2026-10-16)
-ends the ingredient search's dropdown when there is another page, and applies
-the search to the list; it is reached by the arrow keys like a result, italic
-so it reads as a message and not a match, and sentence case with a full stop
-because it is one. It is no result, so the status does not count it.
+It has two users. "See All Results" ends the ingredient search's dropdown
+when there is another page, and applies the search to the list; it is reached
+by the arrow keys like a result, italic so it reads apart from the matches, and
+title case because it is a command, as a button is. It is no result, so the status does not count it.
 
 The references' box (MB.154) is the other. A list whose entries can only be
 picked has
@@ -1145,7 +1144,7 @@ It is a form group's glyph, decorative, clear of the text, and as tall as the te
 
 - **`leading`** is a slot rather than a built-in because Combobox knows nothing about forms or what the caller wants pressed. A button given here should be styled `combobox__indicator` to match the others. A press on it is inside the box, so it neither closes an open list nor moves the focus.
 
-- **`action`** is a last row that does something rather than picking a suggestion. It is there whatever is typed, in place of the typed row, and set off in italics as the typed row is. Two callers use it: "New Reference" (MB.154; last since MB.115) makes something new for a list whose entries can only be picked, and "See all results." (M8.10) applies the search to the list. It is reached by the arrow keys and picked by Enter or a click, which call `onSelect`. It is no result, so the status does not count it.
+- **`action`** is a last row that does something rather than picking a suggestion. It is there whatever is typed, in place of the typed row, and set off in italics as the typed row is. Two callers use it: "New Reference" (MB.154; last since MB.115) makes something new for a list whose entries can only be picked, and "See All Results" (M8.10) applies the search to the list. It is reached by the arrow keys and picked by Enter or a click, which call `onSelect`. It is no result, so the status does not count it.
 
 - **`offerTyped`**: false for text the caller would refuse, a list's repeat (MB.174). Enter still reaches `onCommit`, which says why.
 
