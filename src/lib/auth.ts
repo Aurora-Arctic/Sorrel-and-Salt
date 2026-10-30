@@ -3,6 +3,7 @@ import type { AuthContext } from '@better-auth/core';
 import { APIError, createAuthMiddleware, getOAuthState, getSessionFromCtx } from 'better-auth/api';
 import { drizzleAdapter } from 'better-auth/adapters/drizzle';
 import { lastLoginMethod } from 'better-auth/plugins';
+import { passkey } from '@better-auth/passkey';
 import {
   defineRequestState,
   getCurrentAuthEndpointContext,
@@ -16,7 +17,13 @@ import { db } from '../db/connection';
 import { workspaceMembers } from '../modules/coven/schema/workspaces';
 import { users } from '../modules/identity/schema/users';
 import { findDemoWorkspace } from '../db/repository';
-import { sessions, accounts, verifications, rateLimits } from '../modules/identity/schema/auth';
+import {
+  sessions,
+  accounts,
+  verifications,
+  rateLimits,
+  passkeys,
+} from '../modules/identity/schema/auth';
 import { SOCIAL_PROVIDERS, isRosterProvider } from './social-providers';
 // Server-only — see social-providers-config.ts's own header.
 // oxlint-disable-next-line no-restricted-imports
@@ -247,6 +254,26 @@ async function requireOwnResend(ctx: HookContext): Promise<void> {
   }
 }
 
+/** The passkey endpoints that verify a ceremony and act on it. */
+const PASSKEY_VERIFY_PATHS = new Set([
+  '/passkey/verify-authentication',
+  '/passkey/verify-registration',
+]);
+
+/**
+ * A passkey ceremony is verified only from a page on the host it is posted to. The plugin expects the request's own
+ * Origin header, which any trusted origin passes, so a subdomain page could otherwise sign in to its parent domain.
+ */
+function pinPasskeyOrigin(ctx: HookContext): void {
+  const origin = ctx.headers?.get('origin');
+  if (origin !== new URL(ctx.context.baseURL).origin) {
+    throw new APIError('FORBIDDEN', {
+      code: 'PASSKEY_ORIGIN_MISMATCH',
+      message: 'Use a passkey from a page on this site.',
+    });
+  }
+}
+
 /** The verification token's claims, decoded and not verified: a caller may only refuse on them. */
 function tokenClaims(token: unknown): { email?: string; updateTo?: string } | undefined {
   const payload = typeof token === 'string' ? token.split('.')[1] : undefined;
@@ -288,7 +315,7 @@ export const auth = betterAuth({
   database: drizzleAdapter(db, {
     provider: 'pg',
     usePlural: true,
-    schema: { users, sessions, accounts, verifications, rateLimits },
+    schema: { users, sessions, accounts, verifications, rateLimits, passkeys },
   }),
   // Better Auth's own default, stated so a bump cannot move it: on in every
   // deploy, off under `next dev` and the test suites. In the database because
@@ -297,12 +324,23 @@ export const auth = betterAuth({
   rateLimit: {
     enabled: process.env.NODE_ENV === 'production',
     storage: 'database',
+    // Sign-in's own rule, for the passkey ceremonies, which ship none. A custom rule replaces every other on its paths,
+    // so the passkey list, rename and remove are held to it too (claude-docs/auth/rate-limiting.md, "Rate limiting").
+    customRules: {
+      '/passkey/*': { window: 10, max: 3 },
+    },
   },
   // Cookie only: `storeInDatabase` would add a users column nothing reads (claude-docs/auth/plugins.md, "Plugins").
   // Impersonation is never constructed at production, nor where the flag is unset, so its endpoints are absent.
   plugins: [
     lastLoginMethod({ cookieName: LAST_USED_PROVIDER_COOKIE }),
     ...(impersonationEnabled() ? [impersonation()] : []),
+    // rpID and origin are left to the plugin, which reads them from the request's own base URL and Origin header,
+    // so a passkey belongs to the host it was made on (claude-docs/auth/plugins.md, "Passkeys").
+    passkey({
+      rpName: 'Sorrel & Salt',
+      schema: { passkey: { fields: { credentialID: 'credentialId' } } },
+    }),
   ],
   advanced: {
     // Absent leaves Better Auth's own rule: `__Secure-` names wherever the base
@@ -428,6 +466,7 @@ export const auth = betterAuth({
     before: createAuthMiddleware(async (ctx) => {
       if (ctx.path === '/verify-email') return gateEmailChange(ctx);
       if (ctx.path === '/send-verification-email') return requireOwnResend(ctx);
+      if (PASSKEY_VERIFY_PATHS.has(ctx.path)) return pinPasskeyOrigin(ctx);
       if (ctx.path !== '/callback/:id') return;
       await sweepQuietly(ctx);
     }),
