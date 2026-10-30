@@ -309,7 +309,7 @@ export function CauldronIcon(): ReactElement {
   );
 }
 
-/** The jar shelf's round flask with a tick on its bulb: Complete a Working. The flask is the shelf's own drawing, read from `SHAPES.flask` (its lid parts, and its body left open at the rim, as the shelf draws it); the tick is the icon's. */
+/** The jar shelf's round flask with a tick on its bulb: Complete Working. The flask is the shelf's own drawing, read from `SHAPES.flask` (its lid parts, and its body left open at the rim, as the shelf draws it); the tick is the icon's. */
 export function CompleteIcon(): ReactElement {
   const { lid, body } = SHAPES.flask;
   return (

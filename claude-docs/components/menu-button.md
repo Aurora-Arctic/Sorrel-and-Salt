@@ -79,4 +79,4 @@ A menu that holds both the compendium's choices and the coven's draws two sectio
 
 A More menu always draws the labelled sections (`choicesFor`), viewer's side first, even where only one side has items. A card's dots, whose choices are all the coven's, still show a lone "Coven" section under its discreet label. The bar's Add Ingredient menu keeps a plain list for one kind of place and draws it flat.
 
-A menu never holds a single choice. A caller whose one choice is a Remove or Delete does not come here: that choice lives in the thing's edit dialog, and a thing with no edit dialog draws a lone bin that asks first (`.claude/rules/components.md`, "Destructive controls").
+A caller whose one choice is a Delete or Remove, and which has an edit dialog, puts that choice in the dialog and does not come here (`.claude/rules/components.md`, "Destructive controls"). The entry pages always draw More. The cupboard's More holds Remove beside Make It Ours, since every role that may remove may also make the entry its own, so a menu of one appears only in a story or a test.
