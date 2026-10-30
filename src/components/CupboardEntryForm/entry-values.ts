@@ -8,13 +8,14 @@ type EntrySide = Pick<
   IngredientRow,
   'name' | 'description' | 'safetyNotes' | 'elements' | 'celestialBodies' | 'zodiacSigns' | 'colors'
 >;
-type CupboardSide = Partial<Pick<CupboardEntryRow, keyof CupboardOverrides>>;
+type CupboardSide = Partial<Pick<CupboardEntryRow, keyof CupboardOverrides | 'revision'>>;
 
 export function cupboardFormValues(
   entry: EntrySide,
   cupboardEntry: CupboardSide | null | undefined,
-): { compendium: CompendiumValues; overrides: CupboardOverrides } {
+): { compendium: CompendiumValues; overrides: CupboardOverrides; revision: number | null } {
   return {
+    revision: cupboardEntry?.revision ?? null,
     compendium: {
       name: entry.name,
       description: entry.description,

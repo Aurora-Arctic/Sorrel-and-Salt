@@ -228,6 +228,11 @@ type CupboardEntry {
 
   """What the coven calls the entry; null is the compendium's name."""
   label: String
+
+  """
+  Raised by one on every save; a save names the revision it was written against.
+  """
+  revision: Int!
   safetyNotes: String
   zodiacSigns: [String!]
 }
@@ -771,7 +776,15 @@ type Mutation {
   """
   Changes the coven's overrides: a field left out keeps its value, null hands it back to the compendium, and a list, even an empty one, is the coven's own.
   """
-  annotateCupboardEntry(ingredientId: ID!, input: CupboardEntryInput!, workspaceId: ID!): CupboardEntry!
+  annotateCupboardEntry(
+    """
+    The revision this save was written against: a newer one refuses it. Left out or null, it writes regardless.
+    """
+    expectedRevision: Int
+    ingredientId: ID!
+    input: CupboardEntryInput!
+    workspaceId: ID!
+  ): CupboardEntry!
 
   """
   Completes a draft working, taking what the recipe used from the coven’s jars. Answers the steps it took nothing for.

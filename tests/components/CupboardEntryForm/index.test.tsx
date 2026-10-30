@@ -66,7 +66,7 @@ function captureSaves(): Variables[] {
     'AnnotateCupboardEntry',
     (variables) => {
       calls.push(variables);
-      return { annotateCupboardEntry: { id: 'fixture' } };
+      return { annotateCupboardEntry: { id: 'fixture', revision: 4 } };
     },
   );
   return calls;

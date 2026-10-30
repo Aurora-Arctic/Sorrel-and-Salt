@@ -3,6 +3,8 @@
 import { usePendingNavigation } from '../../lib/navigation';
 import { useMutation } from '@tanstack/react-query';
 import { type ReactElement, useId, useRef, useState } from 'react';
+import { GraphQLClientError, StaleWriteError } from '../../lib/graphql-client-error';
+import { useAutosave, type SaveContext, type SaveResult } from '../../lib/autosave';
 import { FormProvider, useForm, useWatch } from 'react-hook-form';
 import { graphql } from '../../gql';
 import { graphqlRequest } from '../../lib/graphql-client';
@@ -23,25 +25,41 @@ import {
 } from '../IngredientForm/suggestions';
 import { ELEMENT_OPTIONS } from '../IngredientForm/options';
 import IconTip, { UndoIcon } from '../IconTip';
-import { DiscardQuestion, useDiscardGuard } from '../Modal';
+import { useModalHeaderNote } from '../Modal';
+import SaveStatus from '../SaveStatus';
+import { useSaveOnClose } from '../SpellBuilder/save-on-close';
 import Notice from '../Notice';
 import { FIELDS, differs, baselineOf, changesOf, isOwn, openingValues } from './changes';
 import { fromForm, toForm, type CupboardFormValues } from './form-values';
-import type { CupboardEntryFormProps, CupboardField, TextField } from './types';
+import type {
+  CupboardChanges,
+  CupboardEntryFormProps,
+  CupboardField,
+  CupboardOverrides,
+  TextField,
+} from './types';
 import './index.scss';
 
 // The coven's override form for a compendium entry it holds: seven fields, each with a "Restore
 // Original", on react-hook-form. Null (the compendium's) and an empty list (cleared) are told apart in
-// `changes.ts` (claude-docs/components/cupboard-entry-form.md).
+// `changes.ts` (claude-docs/components/cupboard-entry-form.md). It saves as it is edited, the way the
+// ingredient form does (claude-docs/components/autosave.md).
 
 const AnnotateCupboardEntryDocument = graphql(`
   mutation AnnotateCupboardEntry(
     $workspaceId: ID!
     $ingredientId: ID!
     $input: CupboardEntryInput!
+    $expectedRevision: Int
   ) {
-    annotateCupboardEntry(workspaceId: $workspaceId, ingredientId: $ingredientId, input: $input) {
+    annotateCupboardEntry(
+      workspaceId: $workspaceId
+      ingredientId: $ingredientId
+      input: $input
+      expectedRevision: $expectedRevision
+    ) {
       id
+      revision
     }
   }
 `);
@@ -82,6 +100,10 @@ const placeOf = (
   return { field, at: typeof second === 'number' ? second : undefined };
 };
 
+/** Whether any list's typing box holds text. */
+const hasDrafts = (drafts: Record<string, string>): boolean =>
+  Object.values(drafts).some((text) => text.trim() !== '');
+
 const TEXT_FIELD_NAMES: readonly CupboardField[] = ['label', 'description', 'safetyNotes'];
 const LIST_BOX = ['celestialBodies', 'zodiacSigns', 'colors'] as const;
 
@@ -89,7 +111,8 @@ const CupboardEntryForm = ({
   workspaceId,
   ingredientId,
   compendium,
-  overrides,
+  overrides: opened,
+  revision = null,
   onDone,
   aside,
 }: CupboardEntryFormProps): ReactElement => {
@@ -97,10 +120,14 @@ const CupboardEntryForm = ({
   const { refresh } = usePendingNavigation();
   const form = useRef<HTMLFormElement>(null);
   const baseline = baselineOf(compendium);
+  // What the cupboard row holds now: the overrides the page read, then each save's own.
+  const [overrides, setOverrides] = useState<CupboardOverrides>(opened);
+  const overridesRef = useRef(overrides);
+  const revisionRef = useRef<number | null>(revision);
   const methods = useForm<CupboardFormValues>({
-    defaultValues: toForm(openingValues(baseline, overrides)),
+    defaultValues: toForm(openingValues(baseline, opened)),
   });
-  const { control, register, handleSubmit, setValue, setError, clearErrors, formState } = methods;
+  const { control, register, setValue, getValues, setError, clearErrors, formState } = methods;
   const { errors } = formState;
   const [handedBack, setHandedBack] = useState<ReadonlySet<CupboardField>>(new Set());
   const [alert, setAlert] = useState<string>();
@@ -111,13 +138,125 @@ const CupboardEntryForm = ({
   const handed = new Set([...handedBack].filter((field) => !differs(field, values, baseline)));
   const changes = changesOf(values, baseline, overrides, handed);
   const dirty = Object.keys(changes).length > 0;
-  const discard = useDiscardGuard(dirty);
-  const history = useFormHistory(methods, { root: form, enabled: !discard.asking });
+  const history = useFormHistory(methods, { root: form });
+  const headerNote = useModalHeaderNote();
 
   const save = useMutation({
-    mutationFn: (input: typeof changes) =>
-      graphqlRequest(AnnotateCupboardEntryDocument, { workspaceId, ingredientId, input }),
+    mutationFn: ({
+      input,
+      expectedRevision,
+    }: {
+      input: CupboardChanges;
+      expectedRevision?: number;
+    }) =>
+      graphqlRequest(AnnotateCupboardEntryDocument, {
+        workspaceId,
+        ingredientId,
+        input,
+        expectedRevision,
+      }),
   });
+
+  /** Puts a refusal beside its field, or in the alert when it names none. */
+  const placeRefusal = (error: unknown): void => {
+    const unplaced: string[] = [];
+    let placed = 0;
+    for (const { path, message } of readGraphqlIssues(error)) {
+      const where = placeOf(path);
+      if (!where) {
+        unplaced.push(message);
+        continue;
+      }
+      placed += 1;
+      const { field, at } = where;
+      if (field === 'elements' || TEXT_FIELD_NAMES.includes(field)) setError(field, { message });
+      else if (at !== undefined) setError(`${field}.${at}.value` as never, { message });
+      else setError(`drafts.${field}` as never, { message });
+    }
+    if (unplaced.length > 0) setAlert(unplaced.join(' '));
+    else if (placed === 0) setAlert("That didn't work. Please try again.");
+  };
+
+  /**
+   * The one save the autosave, Save and Close go through. It writes against the revision the server
+   * last answered with; only Keep My Version names another. A refusal lands beside its field and is
+   * thrown for the autosave to report.
+   */
+  const persist = async (sent: CupboardChanges, context: SaveContext): Promise<SaveResult> => {
+    setAlert(undefined);
+    let answer;
+    try {
+      answer = await save.mutateAsync({
+        input: sent,
+        expectedRevision: (context.force ? context.revision : revisionRef.current) ?? undefined,
+      });
+    } catch (error) {
+      if (error instanceof GraphQLClientError && !(error instanceof StaleWriteError)) {
+        placeRefusal(error);
+      }
+      throw error;
+    }
+    revisionRef.current = answer.annotateCupboardEntry.revision;
+    // A null hands the field back to the compendium, which is what the row now holds.
+    overridesRef.current = { ...overridesRef.current, ...sent } as CupboardOverrides;
+    setOverrides(overridesRef.current);
+    refresh();
+    return {
+      revision: answer.annotateCupboardEntry.revision,
+      savedAt: new Date(),
+      id: ingredientId,
+    };
+  };
+
+  const autosave = useAutosave<CupboardChanges>({
+    value: changes,
+    dirty,
+    enabled: true,
+    save: persist,
+    revision,
+    root: form,
+  });
+
+  /**
+   * Everything typed is on the server, or this throws: the pending autosave first, then any text
+   * left in a list's box, which is an entry the person meant to add.
+   */
+  const saveAll = async (): Promise<void> => {
+    await autosave.flush();
+    const held = getValues();
+    const settled = { ...held };
+    let drafted = false;
+    for (const list of LIST_BOX) {
+      const text = held.drafts[list].trim();
+      if (text === '') continue;
+      settled[list] = [...held[list], { value: text }];
+      drafted = true;
+    }
+    if (!drafted) return;
+    const sent = changesOf(fromForm(settled), baseline, overridesRef.current, handed);
+    for (const list of LIST_BOX) {
+      setValue(list, settled[list]);
+      setValue(`drafts.${list}`, '');
+    }
+    if (Object.keys(sent).length === 0) return;
+    await persist(sent, { revision: revisionRef.current, force: false, id: ingredientId });
+  };
+
+  const saveForClose = async (): Promise<boolean> => {
+    try {
+      await saveAll();
+      return true;
+    } catch {
+      return false;
+    }
+  };
+  useSaveOnClose(dirty || hasDrafts(getValues().drafts), saveForClose);
+
+  /** Reload after a stale save: the page reads the server's copy again, which replaces the form. */
+  const reload = async (): Promise<void> => {
+    await autosave.resolveConflict('reload');
+    window.location.reload();
+  };
 
   const handBack = (field: CupboardField): void => {
     setValue(field, toForm(baseline)[field] as never, { shouldDirty: true });
@@ -129,38 +268,14 @@ const CupboardEntryForm = ({
     clearErrors(field);
   };
 
-  const submit = handleSubmit(async (held) => {
-    setAlert(undefined);
-    // Text left in a list's box is an entry the person meant to add.
-    const settled = { ...held };
-    for (const list of LIST_BOX) {
-      const text = held.drafts[list].trim();
-      if (text !== '') settled[list] = [...held[list], { value: text }];
-    }
-    const sent = changesOf(fromForm(settled), baseline, overrides, handed);
+  const submit = async (): Promise<void> => {
     try {
-      await save.mutateAsync(sent);
-      refresh();
+      await saveAll();
       onDone();
-    } catch (error) {
-      const unplaced: string[] = [];
-      let placed = 0;
-      for (const { path, message } of readGraphqlIssues(error)) {
-        const where = placeOf(path);
-        if (!where) {
-          unplaced.push(message);
-          continue;
-        }
-        placed += 1;
-        const { field, at } = where;
-        if (field === 'elements' || TEXT_FIELD_NAMES.includes(field)) setError(field, { message });
-        else if (at !== undefined) setError(`${field}.${at}.value` as never, { message });
-        else setError(`drafts.${field}` as never, { message });
-      }
-      if (unplaced.length > 0) setAlert(unplaced.join(' '));
-      else if (placed === 0) setAlert("That didn't work. Please try again.");
+    } catch {
+      // The refusal is beside its field or in the alert; the form stays open.
     }
-  });
+  };
 
   /** "Restore Original", at the end of a field's label row while the coven says its own. */
   const useCompendium = (field: CupboardField, label: string): ReactElement | undefined =>
@@ -216,7 +331,10 @@ const CupboardEntryForm = ({
         <form
           ref={form}
           className="form cupboard-form"
-          onSubmit={(event) => void submit(event)}
+          onSubmit={(event) => {
+            event.preventDefault();
+            void submit();
+          }}
           noValidate
         >
           {alert && <Notice kind="error">{alert}</Notice>}
@@ -267,10 +385,19 @@ const CupboardEntryForm = ({
             noun="Annotation"
             dirty={dirty}
             submitting={save.isPending}
-            onCancel={() => discard.request(onDone)}
-            aside={aside?.({ onRefused: setAlert, dirty, discardAsking: discard.asking })}
-          />
-          {discard.asking && <DiscardQuestion guard={discard} />}
+            onCancel={() => void saveForClose().then((saved) => saved && onDone())}
+            aside={aside?.({ onRefused: setAlert, dirty, discardAsking: false })}
+          >
+            <SaveStatus
+              status={autosave.status}
+              savedAt={autosave.savedAt}
+              conflictMessage="This entry was changed elsewhere."
+              conflictInto={headerNote}
+              onRetry={autosave.retry}
+              onReload={() => void reload()}
+              onKeepMine={() => void autosave.resolveConflict('keep-mine').catch(() => undefined)}
+            />
+          </FormActions>
         </form>
       </FormHistoryContext.Provider>
     </FormProvider>

@@ -19,7 +19,7 @@ import type {
   DroppedOnConvert,
 } from '../types';
 import { isAnnotated } from '../validation/cupboard-merge';
-import { IngredientElementEnum, IngredientRef } from './ingredient';
+import { EXPECTED_REVISION, IngredientElementEnum, IngredientRef } from './ingredient';
 
 // A coven's cupboard entry over the wire: the coven's own say over one compendium entry, read beside the entry so a client can show both.
 // Who may read it is the service's check, through the loader (claude-docs/graphql/schema.md, "Cupboard entries: CupboardEntry and Ingredient.cupboardEntry").
@@ -39,6 +39,9 @@ export const CupboardEntryRef = builder.objectRef<CupboardEntryNode>('CupboardEn
     celestialBodies: t.exposeStringList('celestialBodies', { nullable: true }),
     zodiacSigns: t.exposeStringList('zodiacSigns', { nullable: true }),
     colors: t.exposeStringList('colors', { nullable: true }),
+    revision: t.exposeInt('revision', {
+      description: 'Raised by one on every save; a save names the revision it was written against.',
+    }),
     annotated: t.boolean({
       description: 'True when the coven has set any of the seven overrides.',
       resolve: (entry) => isAnnotated(entry),
@@ -155,14 +158,25 @@ builder.mutationField('annotateCupboardEntry', (t) =>
       workspaceId: t.arg.id({ required: true }),
       ingredientId: t.arg.id({ required: true }),
       input: t.arg({ type: CupboardEntryInputRef, required: true }),
+      expectedRevision: t.arg.int({ required: false, description: EXPECTED_REVISION }),
     },
     authScopes: { signedIn: true },
     // The name is read through `getIngredient`, which reaches a retired entry
     // the coven still holds (claude-docs/db/workspace-compendium-entries.md,
     // "When the compendium retires the entry"); the loader would miss it.
-    resolve: async (_root, { workspaceId, ingredientId, input }, { loaders, ...context }) =>
+    resolve: async (
+      _root,
+      { workspaceId, ingredientId, input, expectedRevision },
+      { loaders, ...context },
+    ) =>
       nodeOf(
-        await annotateCupboardEntry(sessionOf(context), workspaceId, ingredientId, input),
+        await annotateCupboardEntry(
+          sessionOf(context),
+          workspaceId,
+          ingredientId,
+          input,
+          expectedRevision ?? null,
+        ),
         loaders,
         () => getIngredient(sessionOf(context), ingredientId, workspaceId),
       ),

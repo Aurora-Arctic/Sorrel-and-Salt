@@ -8,13 +8,14 @@ An override is either the coven's own value or nothing, in which case the page s
 
 `CupboardEntryFormProps` (`types.ts`):
 
-| Prop           | What it is                                                                                                 |
-| -------------- | ---------------------------------------------------------------------------------------------------------- |
-| `workspaceId`  | The coven's workspace id                                                                                   |
-| `ingredientId` | The compendium entry annotated                                                                             |
-| `compendium`   | `CompendiumValues`: the entry's own name, description, safety notes, elements, bodies, signs and colours   |
-| `overrides`    | `CupboardOverrides`: the coven's seven values, each `null` where it has none                               |
-| `onDone`       | Called after a save, and on Cancel (after Discard Changes if anything changed); the owner closes the modal |
+| Prop           | What it is                                                                                               |
+| -------------- | -------------------------------------------------------------------------------------------------------- |
+| `workspaceId`  | The coven's workspace id                                                                                 |
+| `ingredientId` | The compendium entry annotated                                                                           |
+| `compendium`   | `CompendiumValues`: the entry's own name, description, safety notes, elements, bodies, signs and colours |
+| `overrides`    | `CupboardOverrides`: the coven's seven values, each `null` where it has none                             |
+| `revision`     | The row's `revision` when opened, or `null` for a coven with no row yet; saves are written against it    |
+| `onDone`       | Called after a save, and on Cancel (after the save-on-close); the owner closes the modal                 |
 
 ## Fields
 
@@ -29,10 +30,10 @@ Seven, in this order: Label, Description, Safety Notes, Elements, Celestial Bodi
 
 ## Contracts
 
-- Save is disabled until something changes, shows a spinner while saving, and Cancel is quiet; leaving a changed form asks first (`useDiscardGuard`).
+- The form autosaves (`useAutosave`, [`autosave.md`](autosave.md)): 3 s after the last change, at most every 30 s while typing. Each save sends `expectedRevision`, the revision the last save returned. A stale one is refused (`STALE_WRITE`), and `SaveStatus` offers Keep Mine and Reload. Save is disabled until something changes and shows a spinner while saving. Close and Cancel save what is unsaved and then close (`useSaveOnClose`), with no discard question; a refused save keeps the form open. The "Did you mean" rule does not apply, since the form has no name field.
 - A `VALIDATION` error lands on its field by the issue's path, a leading `input` stripped; Label is the one the server refuses (another entry of the coven has it). Anything else shows in a `role="alert"` notice above the actions.
-- `aside`, optional, is a render prop for the far end of the actions row (`FormActions`' `aside`), handed the form's `onRefused`, so what it draws can show a refusal in the form's own alert, `dirty`, whether the form holds unsaved changes, and `discardAsking`, whether the unsaved-changes confirmation is asking. The Annotate dialog draws its More menu there, or its lone button (M8.17): Make It Ours reads `dirty` to warn that unsaved changes are lost, and both confirmations step aside while `discardAsking`, since they are drawn in the same card.
-- On success the form calls `router.refresh()` so the page shows the marks and merged values, then `onDone`.
+- `aside`, optional, is a render prop for the far end of the actions row (`FormActions`' `aside`), handed the form's `onRefused`, so what it draws can show a refusal in the form's own alert, `dirty`, whether the form holds changes not yet saved, and `discardAsking`, which is always false now that Close saves. The Annotate dialog draws its More menu there, or its lone button (M8.17): Make It Ours reads `dirty` to warn that unsaved changes are lost.
+- After each save the form calls `router.refresh()` so the page shows the marks and merged values, and merges what it sent into the overrides it holds; `onDone` runs on Save and Close, not after an autosave.
 
 ## Stories
 

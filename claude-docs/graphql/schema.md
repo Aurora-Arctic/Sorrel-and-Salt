@@ -1021,8 +1021,9 @@ answer is a fresh read:
 
 - **`addCupboardEntry(workspaceId, ingredientId, input)`** answers the new
   `CupboardEntry`. `input` is optional.
-- **`annotateCupboardEntry(workspaceId, ingredientId, input)`** answers the
-  row after the change. A field left out keeps its value, `null` hands it back
+- **`annotateCupboardEntry(workspaceId, ingredientId, input, expectedRevision)`**
+  answers the row after the change, with its `revision`. A stale
+  `expectedRevision` is `STALE_WRITE`; leaving it out writes over a newer one. A field left out keeps its value, `null` hands it back
   to the compendium, and a list, even empty, is the coven's own.
 - **`removeCupboardEntry(workspaceId, ingredientId)`** answers the
   `ingredientId`, as the other deletes answer the id. It is refused with
