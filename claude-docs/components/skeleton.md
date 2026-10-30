@@ -70,7 +70,7 @@ transition runs (`ListFrame`, `TabbedPage`).
 
 ## Stories
 
-`Feedback / Skeleton`: `States`, with a control that chooses Table, Table With Filter, Table With Title And Filter, Table With Three Rows, Cards, Cards With Filter, Cards With Title And Filter, Cards With Eight, Form, Page, Page With Menu, Page With Eyebrow Head, Page With Title Head, Tabbed Page, Contents, Contents With Eyebrow Head, Entry With Menu, Swap Panel Pending and Line. Line is one bar the height of a line of text, for a sentence
+`Feedback / Skeleton`: `States`, with a control that chooses Table, Table With Filter, Table With Title And Filter, Table With Three Rows, Cards, Cards With Filter, Cards With Title And Filter, Cards With Eight, Compact Cards (under an ancestor that says `data-density="compact"`), Form, Page, Page With Menu, Page With Eyebrow Head, Page With Title Head, Tabbed Page, Contents, Contents With Eyebrow Head, Entry With Menu, Swap Panel Pending and Line. Line is one bar the height of a line of text, for a sentence
 that loads in place (the substitute summary's); it ignores `count`.
 
 ## Testing

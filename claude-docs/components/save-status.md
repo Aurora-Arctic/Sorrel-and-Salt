@@ -57,9 +57,8 @@ between the sentence and the buttons, which sit in `.save-status__actions`, and 
 
 `index.stories.tsx`, titled "Feedback / Save Status":
 
-- `States` is a grid of every state the line takes: Idle, Pending, Saving, Saved, Draft Saved,
-  Failed and Conflict.
-- `Recovery` is the recovery notice alone.
+`States` is a grid of every state the line takes: Idle, Pending, Saving, Saved, Draft Saved,
+Failed and Conflict, then Recovery Notice, the recovery notice alone.
 
 ## Testing
 
