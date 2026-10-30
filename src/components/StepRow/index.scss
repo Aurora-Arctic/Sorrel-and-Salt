@@ -485,18 +485,28 @@ $step-ink-drop: 0.05rem;
     }
   }
 
-  // An open or closed card keeps its areas; the opened fields stack: Form whole, Quantity and Unit
-  // half each, Instruction whole.
+  // The marks and badge take their own line under the name, so the name, Edit and Remove all fit
+  // on the first line; beside the name they pushed Remove off the card. The opened fields stack:
+  // Form whole, Quantity and Unit half each, Instruction whole.
   .step-row.step-row--card.step-row--closed,
   .step-row.step-row--card.step-row--open {
-    // Two badges stack and keep the right edge, so the name keeps the width they would take.
+    grid-template-areas:
+      'handle position name controls'
+      '. . marks marks'
+      '. . summary summary';
+    grid-template-columns: auto auto minmax(0, 1fr) auto;
+
     .step-row__marks {
-      flex-direction: column;
-      align-items: flex-end;
+      margin-block-start: space(1);
+      margin-inline-start: 0;
+
+      &:empty {
+        display: none;
+      }
     }
 
     .step-row__open {
-      grid-row: 2;
+      grid-row: 3;
       grid-column: name-start / -1;
     }
 
@@ -509,5 +519,15 @@ $step-ink-drop: 0.05rem;
     .step-row__unit {
       flex: 1 1 calc(50% - #{space(2)});
     }
+  }
+
+  // A closed instruction shows two lines here, not one: one line at this width holds two or three
+  // words. The height cap keeps it to two where line-clamp is not drawn.
+  .step-row.step-row--instruction.step-row--folded .step-row__text {
+    display: -webkit-box;
+    max-block-size: calc(#{$step-line} * 2);
+    white-space: normal;
+    -webkit-box-orient: vertical;
+    -webkit-line-clamp: 2;
   }
 }
