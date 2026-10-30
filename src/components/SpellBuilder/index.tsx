@@ -141,7 +141,8 @@ function valuesOf(spell?: Partial<SpellBuilderSpell>): SpellBuilderValues {
       string
     >),
     steps: (spell?.steps ?? []).map(stepValueOf),
-    // A new spell is the coven's unless chosen otherwise (§5).
+    // A new spell starts private: the autosave would otherwise share it seconds after the first
+    // keystroke.
     visibility: spell?.visibility ?? 'private',
     // A new spell is a draft.
     status: spell?.status ?? 'draft',
@@ -209,7 +210,7 @@ const STEPS_FAILED =
   "The spell's steps could not be loaded, so nothing can be saved. Reload the page to try again.";
 
 /** Said on the form when Reload Latest could not read the spell: the conflict stays, to try again. */
-const RELOAD_FAILED = "The latest version couldn't be loaded. Try again.";
+const RELOAD_FAILED = 'The latest version could not be loaded. Try again.';
 
 /** Said on the form when a save is tried while a field holds an error the form shows. */
 const FIX_FIELDS = 'Some fields need fixing before this can be saved.';

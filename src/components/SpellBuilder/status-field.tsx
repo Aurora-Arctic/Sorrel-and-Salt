@@ -1,6 +1,6 @@
 'use client';
 
-import { type ReactElement, useState } from 'react';
+import { type ReactElement, useId, useState } from 'react';
 import { flushSync } from 'react-dom';
 import { useFormContext, useFormState } from 'react-hook-form';
 import BusyButton from '../BusyButton';
@@ -9,7 +9,7 @@ import type { SpellBuilderInput, SpellBuilderValues, SpellStatusFieldProps } fro
 
 // A spell is a draft until Mark Complete saves it as complete; a complete spell has Duplicate
 // where a draft has Mark Complete, which makes a private draft copy and opens it. A complete spell
-// is not reopened here, but the service still accepts complete -> draft.
+// is not reopened here, and the service refuses complete -> draft too.
 // claude-docs/components/spell-builder.md, "Draft and complete".
 
 const DRAFT_SAYS = 'A draft: not yet finished.';
@@ -24,6 +24,7 @@ export function SpellStatusField({
     useFormContext<SpellBuilderValues, unknown, SpellBuilderInput>();
   const { defaultValues } = useFormState({ control });
   const [busy, setBusy] = useState(false);
+  const saysId = useId();
   // The saved spell's status is the last save's, which the form starts from.
   const complete = defaultValues?.status === 'complete';
 
@@ -91,7 +92,7 @@ export function SpellStatusField({
   // The state line is read, not drawn: a button row has no room for a sentence.
   return (
     <>
-      <span id="spell-status-says" className="visually-hidden">
+      <span id={saysId} className="visually-hidden">
         {DRAFT_SAYS}
       </span>
       <BusyButton
@@ -99,7 +100,7 @@ export function SpellStatusField({
         className="btn btn--quiet"
         busy={busy}
         busyLabel="Marking Complete"
-        aria-describedby="spell-status-says"
+        aria-describedby={saysId}
         onClick={change}
       >
         Mark Complete

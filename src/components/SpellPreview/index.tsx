@@ -1,7 +1,14 @@
 'use client';
 
 import { useSearchParams } from 'next/navigation';
-import { type CSSProperties, type ReactElement, useCallback, useEffect, useRef } from 'react';
+import {
+  type CSSProperties,
+  type ReactElement,
+  useCallback,
+  useEffect,
+  useId,
+  useRef,
+} from 'react';
 import IconTip, { CloseIcon, MysticEyeIcon, PreviewButton } from '../IconTip';
 import { SpellCardFilters } from '../SpellCard';
 import SpellRecipeBody from '../SpellRecipe/body';
@@ -12,7 +19,7 @@ import type { Ember, SpellPreviewProps } from './types';
 import { useWakeLock } from './use-wake-lock';
 import './index.scss';
 
-// Spell Preview (M13.12): a Preview button that opens the spell in a pane of its own, with
+// Spell Preview: a Preview button that opens the spell in a pane of its own, with
 // everything the printed spell shows, and no links or controls, so it can be followed without
 // distraction. A native modal `<dialog>` in the top layer, which already covers the
 // window, holds the page inert and gives Escape; true full screen is added on top where the browser
@@ -95,6 +102,7 @@ export default function SpellPreview(props: SpellPreviewProps): ReactElement {
   const { title, steps } = props;
   const open = useSearchParams().has(PREVIEW);
   const pane = useRef<HTMLDialogElement>(null);
+  const titleId = useId();
   // Set once the pane is in full screen, so leaving it (which is Escape's first press there) closes
   // the pane, and a pane that never got full screen is not closed by an unrelated change.
   const inFullscreen = useRef(false);
@@ -158,7 +166,7 @@ export default function SpellPreview(props: SpellPreviewProps): ReactElement {
       <dialog
         ref={pane}
         className="spell-preview"
-        aria-labelledby="spell-preview-title"
+        aria-labelledby={titleId}
         onCancel={(event) => {
           event.preventDefault();
           close();
@@ -189,7 +197,7 @@ export default function SpellPreview(props: SpellPreviewProps): ReactElement {
         {/* Drawn only while open, so the page holds no second copy of the spell. */}
         {open && (
           <div className="spell-preview__content">
-            <h2 id="spell-preview-title" className="spell-preview__title">
+            <h2 id={titleId} className="spell-preview__title">
               {title}
             </h2>
             <SpellRecipeBody {...props} beforeSteps={<SpellRecipeSummary steps={steps} />} />

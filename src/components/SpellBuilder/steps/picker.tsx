@@ -56,8 +56,11 @@ const assignedFirst = <T extends { id: string }>(
   ...categories.filter(({ id }) => !assigned.has(id)),
 ];
 
-/** The chip colours of a category whose group has not loaded (or has none): a neutral grey. */
-const NEUTRAL: GroupColors = { colorDark: '#a1a1aa', colorLight: '#52525b' };
+/**
+ * The chip colours of a category whose group has not loaded (or has none): the theme's muted text
+ * token, which is already the right grey in each theme.
+ */
+const NEUTRAL: GroupColors = { colorDark: 'var(--text-muted)', colorLight: 'var(--text-muted)' };
 
 /**
  * The categories as small print on a row, drawn by CategoryChips (compact size, group colours)
@@ -144,10 +147,7 @@ function pickRows(
             label: `${name} (${formLabel(form)})`,
             // Information only: the row stays pickable, since a form may be laid again.
             badge: inJar.has(variant.id) ? (
-              <span className="badge badge--retired spell-steps__in-jar">
-                <span aria-hidden="true">In Jar</span>
-                <span className="visually-hidden">already in the jar</span>
-              </span>
+              <span className="badge badge--retired spell-steps__in-jar">In Jar</span>
             ) : undefined,
             // The form's categories, else the ingredient's, as small print on that line.
             // The formal name in italics, then the chips, with a dot between the two only.

@@ -23,8 +23,8 @@ export interface ComparisonPanelProps {
   steps: readonly SpellStepValue[];
   /** Each category's group colours by id, so a chip is drawn as the site draws one; a category not in it is left out. */
   groups: ReadonlyMap<string, GroupColors>;
-  /** The heading's level: h5 under the builder's Jar heading, h2 on the recipe page. */
-  heading?: 'h2' | 'h5';
+  /** The heading's level: h4 beside Steps under the builder's Jar heading, h2 on the recipe page. */
+  heading?: 'h2' | 'h4';
   /** The section's id, for a jump link; the recipe page gives one. */
   id?: string;
 }
@@ -85,7 +85,7 @@ export function ComparisonPanel({
   intended,
   steps,
   groups,
-  heading: Heading = 'h5',
+  heading: Heading = 'h4',
   id,
 }: ComparisonPanelProps): ReactElement {
   const headingId = useId();

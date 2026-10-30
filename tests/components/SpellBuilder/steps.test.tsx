@@ -1193,10 +1193,10 @@ describe('the spell builder’s Add to Jar categories', () => {
     const rosewort = await lookUp('Fixture', /Fixture Rosewort/);
     const mockroot = screen.getByRole('option', { name: /Fixture Mockroot/ });
 
-    expect(rosewort).toHaveAccessibleName(/already in the jar/);
+    expect(rosewort).toHaveAccessibleName(/In Jar/);
     expect(within(rosewort).getByText('In Jar')).toBeInTheDocument();
     // Why it could have been marked: Mockroot is a form too, and no step lays it.
-    expect(mockroot).not.toHaveAccessibleName(/already in the jar/);
+    expect(mockroot).not.toHaveAccessibleName(/In Jar/);
     expect(within(mockroot).queryByText('In Jar')).toBeNull();
     // Information only: a repeat is allowed.
     expect(rosewort).not.toHaveAttribute('aria-disabled', 'true');
