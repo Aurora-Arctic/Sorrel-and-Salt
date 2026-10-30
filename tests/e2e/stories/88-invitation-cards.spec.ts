@@ -1,7 +1,6 @@
 import { readFile } from 'node:fs/promises';
-import jsQR from 'jsqr';
-import type { Locator } from '@playwright/test';
 import { test, expect } from '../fixtures';
+import { decodeQr, pickExpiry } from '../cards';
 import { recreateE2eDatabase } from '../database';
 import { signInAgainAs, signInAs } from '../session';
 
@@ -11,37 +10,6 @@ import { signInAgainAs, signInAs } from '../session';
 test.beforeAll(async () => {
   await recreateE2eDatabase();
 });
-
-/**
- * Reads the code back as a phone camera sees it: the picture drawn on a dark ground with a margin, a few pixels to a
- * module. Its round dots stand apart, and the decoder only joins them into a grid at small scales, so it tries a few.
- */
-async function decodeQr(image: Locator): Promise<string | null> {
-  const attempts = await image.evaluate(async (element) => {
-    const img = element as HTMLImageElement;
-    await img.decode();
-    const svg = decodeURIComponent(img.src.slice(img.src.indexOf(',') + 1));
-    const modules = Number(/viewBox="0 0 (\d+) /.exec(svg)?.[1]);
-    return [3, 2, 5].map((scale) => {
-      const margin = 4 * scale;
-      const side = modules * scale + 2 * margin;
-      const canvas = document.createElement('canvas');
-      canvas.width = side;
-      canvas.height = side;
-      const context = canvas.getContext('2d');
-      if (!context) throw new Error('no canvas');
-      context.fillStyle = '#1c1a17';
-      context.fillRect(0, 0, side, side);
-      context.drawImage(img, margin, margin, modules * scale, modules * scale);
-      return { side, data: Array.from(context.getImageData(0, 0, side, side).data) };
-    });
-  });
-  for (const { side, data } of attempts) {
-    const found = jsQR(Uint8ClampedArray.from(data), side, side);
-    if (found) return found.data;
-  }
-  return null;
-}
 
 test.describe('Story 88: A Card Invites a Stranger In', { tag: '@story-88' }, () => {
   test('an admin mints two cards and a stranger scans one and can start a coven', async ({
@@ -62,7 +30,7 @@ test.describe('Story 88: A Card Invites a Stranger In', { tag: '@story-88' }, ()
       await page.getByRole('link', { name: 'Mint Cards' }).click();
       const dialog = page.getByRole('dialog', { name: 'Mint Cards' });
       await dialog.getByLabel(/Number of Cards/).fill('2');
-      await dialog.getByLabel(/Expires On/).fill('2099-01-01');
+      const expiry = await pickExpiry(dialog);
       await dialog.getByRole('button', { name: 'Mint Cards' }).click();
       await expect(dialog.getByText(/cannot be shown again/)).toBeVisible();
 
@@ -94,7 +62,7 @@ test.describe('Story 88: A Card Invites a Stranger In', { tag: '@story-88' }, ()
       const pending = page.getByRole('row', { name: /^Pending / });
       await expect(pending).toHaveCount(2);
       // The day on screen is the day printed on the card: UTC, en-GB.
-      await expect(pending.first()).toContainText('1 January 2099');
+      await expect(pending.first()).toContainText(expiry);
     });
 
     await test.step('an unverified account opening the other card is sent to confirm its email', async () => {

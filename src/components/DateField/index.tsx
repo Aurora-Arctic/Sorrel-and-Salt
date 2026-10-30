@@ -27,6 +27,8 @@ export interface DateFieldProps {
   onChange: (value: string) => void;
   /** The last day that may be picked, `YYYY-MM-DD`. */
   max?: string;
+  /** The first day that may be picked, `YYYY-MM-DD`. */
+  min?: string;
   disabled?: boolean;
   /** The id of the label element, so the button reads "Date, 4 March 2026". */
   labelledBy: string;
@@ -124,6 +126,7 @@ export default function DateField({
   value,
   onChange,
   max,
+  min,
   disabled,
   labelledBy,
   ...aria
@@ -188,6 +191,8 @@ export default function DateField({
   }, [open, id]);
   const selected = parse(value);
   const last = max ? parse(max) : undefined;
+  const first = min ? parse(min) : undefined;
+  const now = new Date();
   return (
     <div className="date-field">
       <button
@@ -224,7 +229,9 @@ export default function DateField({
             locale={enGB}
             weekStartsOn={1}
             selected={selected}
-            defaultMonth={selected ?? last}
+            defaultMonth={
+              selected ?? last ?? (first && format(first) > format(now) ? first : undefined)
+            }
             captionLayout="dropdown"
             components={{
               Dropdown: CaptionDropdown,
@@ -235,10 +242,12 @@ export default function DateField({
               ),
             }}
             startMonth={
-              new Date(Math.min(FIRST_YEAR, (selected ?? last ?? new Date()).getFullYear()), 0)
+              first
+                ? new Date(Math.min(first.getFullYear(), (selected ?? first).getFullYear()), 0)
+                : new Date(Math.min(FIRST_YEAR, (selected ?? last ?? now).getFullYear()), 0)
             }
-            endMonth={last ?? new Date(new Date().getFullYear() + YEARS_AHEAD, 11)}
-            disabled={last ? { after: last } : undefined}
+            endMonth={last ?? new Date(now.getFullYear() + YEARS_AHEAD, 11)}
+            disabled={[...(last ? [{ after: last }] : []), ...(first ? [{ before: first }] : [])]}
             onSelect={(day) => {
               onChange(format(day));
               setOpen(false);
@@ -264,8 +273,8 @@ export default function DateField({
               disabled: 'day-picker__day--disabled',
             }}
           />
-          {/* Hidden when max is before today, so a refused day is never offered. */}
-          {(!last || format(last) >= format(new Date())) && (
+          {/* Hidden when max is before today or min after it, so a refused day is never offered. */}
+          {(!last || format(last) >= format(now)) && (!first || format(first) <= format(now)) && (
             <div className="date-field__footer">
               <button
                 type="button"

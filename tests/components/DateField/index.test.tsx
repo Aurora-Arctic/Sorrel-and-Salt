@@ -9,9 +9,11 @@ import DateField from '@/components/DateField';
 function Harness({
   initial = '2026-03-10',
   max = '2026-03-15',
+  min,
 }: {
   initial?: string;
   max?: string | null;
+  min?: string;
 }) {
   const [value, setValue] = useState(initial);
   return (
@@ -22,6 +24,7 @@ function Harness({
         labelledBy="label"
         value={value}
         max={max ?? undefined}
+        min={min}
         onChange={setValue}
       />
     </>
@@ -58,6 +61,18 @@ describe('DateField', () => {
       'aria-disabled',
       'true',
     );
+  });
+
+  it('refuses a day before min, and offers no year before it', () => {
+    render(<Harness initial="2026-03-12" min="2026-03-10" max="2026-06-15" />);
+    fireEvent.click(screen.getByRole('button', { name: /Date/ }));
+    const grid = screen.getByRole('grid');
+    expect(within(grid).getByRole('button', { name: /, 9 March 2026/ })).toBeDisabled();
+    expect(within(grid).getByRole('button', { name: /, 10 March 2026/ })).toBeEnabled();
+    fireEvent.click(within(grid).getByRole('button', { name: /, 9 March 2026/ }));
+    expect(screen.getByRole('button', { name: /Date.*12 March 2026/ })).toBeInTheDocument();
+    fireEvent.click(screen.getByRole('combobox', { name: /Year/ }));
+    expect(screen.queryByRole('option', { name: '2025' })).toBeNull();
   });
 
   it('moves the calendar to a month and a year chosen from its caption, then picks a day there', () => {

@@ -1,5 +1,6 @@
 import { test, expect } from './fixtures';
 import { assertNoAccessibilityViolations } from './axe';
+import { decodeQr, pickExpiry } from './cards';
 import { recreateE2eDatabase } from './database';
 import { signInAs } from './session';
 
@@ -18,7 +19,7 @@ test('an admin mints a batch of cards and the Cards tab lists it without violati
   await page.getByRole('link', { name: 'Mint Cards' }).click();
   const dialog = page.getByRole('dialog', { name: 'Mint Cards' });
   await dialog.getByLabel(/Number of Cards/).fill('3');
-  await dialog.getByLabel(/Expires On/).fill('2099-01-01');
+  await pickExpiry(dialog);
   await dialog.getByRole('button', { name: 'Mint Cards' }).click();
   await expect(dialog.getByText(/cannot be shown again/)).toBeVisible();
   await dialog.getByRole('button', { name: 'Done' }).click();
@@ -30,4 +31,35 @@ test('an admin mints a batch of cards and the Cards tab lists it without violati
   await page.goto('/admin/arrivals');
   await expect(page.getByText('No one has accepted a card yet.')).toBeVisible();
   await assertNoAccessibilityViolations(page);
+});
+
+test('an admin revokes a whole batch and its links are refused as withdrawn', async ({ page }) => {
+  await signInAs(page, 'cards-admin@admin-cards.test', ['discord'], 'admin');
+  await page.goto('/admin/cards');
+
+  await page.getByRole('link', { name: 'Mint Cards' }).click();
+  const dialog = page.getByRole('dialog', { name: 'Mint Cards' });
+  await dialog.getByLabel(/Number of Cards/).fill('2');
+  await pickExpiry(dialog);
+  await dialog.getByRole('button', { name: 'Mint Cards' }).click();
+  await expect(dialog.getByText(/cannot be shown again/)).toBeVisible();
+  const link = await decodeQr(dialog.getByRole('img', { name: 'Code for Card 1' }));
+  expect(link, 'the first code decodes').not.toBeNull();
+  await dialog.getByRole('button', { name: 'Done' }).click();
+  await expect(dialog).toBeHidden();
+
+  await page
+    .getByRole('listitem')
+    .filter({ hasText: '2 pending' })
+    .getByRole('button', { name: /^Revoke Batch / })
+    .click();
+  await page
+    .getByRole('dialog', { name: 'Revoke Batch' })
+    .getByRole('button', { name: 'Revoke Batch' })
+    .click();
+  await expect(page.getByRole('row', { name: /^Revoked / })).toHaveCount(2);
+
+  await signInAs(page, 'latecomer@admin-cards.test');
+  await page.goto(link as string);
+  await expect(page.getByText(/This invitation was withdrawn/)).toBeVisible();
 });

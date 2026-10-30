@@ -13,7 +13,7 @@ yields one. The rules are [`auth/admin-bootstrap.md`](../auth/admin-bootstrap.md
   that accepted it. **Revoke** shows on a pending card only. Above the table, each batch with a pending
   card on the page has **Revoke Batch**. Both ask first (`ConfirmedAction`).
 - **Mint Cards** (`mint-form.tsx`) is a link to `?mint`, which opens a modal: **Number of Cards**
-  (1 to 500, `MAX_CARDS_PER_BATCH`) and **Expires On** (a date, sent as midnight UTC). The submit stays
+  (1 to 500, `MAX_CARDS_PER_BATCH`) and **Expires On** (a `DateField` whose earliest day is tomorrow in UTC, sent as midnight UTC; with no `max` it ends at the end of next year). The submit stays
   disabled until both are given. The answer carries each token once; the dialog says the codes cannot
   be shown again, and the tokens live only in that dialog's state.
 - **Arrivals** (`arrivals.tsx`): every account that accepted a card, with its email, the date, the
