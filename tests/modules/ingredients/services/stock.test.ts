@@ -903,6 +903,20 @@ describe('saveStock', () => {
     await expect(save(C, {})).rejects.toThrow(Forbidden);
   });
 
+  it('refuses a viewer’s batch by direct id, leaving the jar as it was, though a member’s edits it', async () => {
+    // Why it could have succeeded: C reads the jar, and B makes the same batch below.
+    const id = await seedJar();
+    await expect(getStock(asUser(C), WORKSPACE_W_ID, id)).resolves.toMatchObject({ id });
+    const [before] = await jars();
+    const batch = { update: [{ id, input: { quantityOnHand: 99 } }] };
+
+    await expect(save(C, batch)).rejects.toThrow(Forbidden);
+    expect((await jars())[0]).toEqual(before);
+
+    await save(B, batch);
+    expect((await jars())[0]).not.toEqual(before);
+  });
+
   it('waits for the coven’s stock lock, and writes nothing before it', async () => {
     const holding = async (during: () => Promise<void>) => {
       let release!: () => void;
