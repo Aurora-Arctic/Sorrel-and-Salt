@@ -37,6 +37,9 @@ export async function isEmailHeldByVerifiedAccount(email: string): Promise<boole
   return holder !== undefined && holder.emailVerified;
 }
 
+/** How recently the session must have been created to ask for a new address; the day Better Auth's `freshAge` gives unlinking a provider. */
+export const EMAIL_CHANGE_WINDOW_SECONDS = 24 * 60 * 60;
+
 /** The least time between two verification mails to one account, whichever path sends them. */
 export const RESEND_COOLDOWN_SECONDS = 60;
 
@@ -78,7 +81,8 @@ export async function isEmailHeldByAnother(email: string, userId: string): Promi
  * which the sender guards where it builds the link.
  *
  * @throws {ValidationError} on `email`: malformed, unmailable, held by a
- * live verified account, or mailed within the last minute.
+ * live verified account, mailed within the last minute, or asked for from a
+ * session older than `EMAIL_CHANGE_WINDOW_SECONDS`.
  */
 export async function setEmail(
   session: Session,
@@ -93,6 +97,16 @@ export async function setEmail(
 
   const unchanged = email === me.email;
   if (unchanged && me.emailVerified) return me;
+
+  // A session left open on a borrowed device must not move the account; resending the row's own link moves nothing.
+  if (!unchanged && !(await sender.sessionIsFresh(EMAIL_CHANGE_WINDOW_SECONDS))) {
+    throw new ValidationError([
+      {
+        path: ['email'],
+        message: 'Sign in again to change your email address, then try again',
+      },
+    ]);
+  }
 
   if (!unchanged && (await isEmailHeldByVerifiedAccount(email))) {
     throw new ValidationError([
@@ -114,6 +128,7 @@ export async function setEmail(
   }
 
   await recordVerificationSent(session);
+  await sender.notifyChangeRequested(me.email, email);
   await sender.requestChange(me.email, email, next);
   return me;
 }

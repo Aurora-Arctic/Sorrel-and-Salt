@@ -52,3 +52,12 @@ export interface CovenInvitationProps extends BaseEmailProps {
   /** What the reader will be able to do there once they accept. */
   role: 'viewer' | 'member';
 }
+
+/** A change of address asked for, or finished, told to the address the account is leaving. */
+export interface EmailChangeNoticeProps extends BaseEmailProps {
+  stage: 'requested' | 'completed';
+  /** The domain of the new address, never the address: this mail goes to a mailbox the new address's owner may not control. */
+  newDomain: string;
+  /** When the change was asked for, or finished. */
+  at: Date;
+}
