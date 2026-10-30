@@ -120,14 +120,14 @@ describe('SpellLookDialog', () => {
     ).toBeInTheDocument();
   });
 
-  it('says the spell could not be read, in a Notice, when the read failed', () => {
+  it('says the spell could not be read, in a Notice under the title Spell Recipe, when the read failed', () => {
     render(
       <RouteModalProvider>
         <SpellLookDialog closeHref={LIST} failed />
       </RouteModalProvider>,
     );
-    expect(within(screen.getByRole('dialog')).getByRole('alert')).toHaveTextContent(
-      /could not be read/,
-    );
+    expect(
+      within(screen.getByRole('dialog', { name: 'Spell Recipe' })).getByRole('alert'),
+    ).toHaveTextContent(/could not be read/);
   });
 });

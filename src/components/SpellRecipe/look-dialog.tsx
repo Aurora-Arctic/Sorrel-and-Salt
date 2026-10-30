@@ -30,7 +30,7 @@ export default function SpellLookDialog({
         closeHref={closeHref}
         readingBody
         content={{
-          heading: { title: 'Spell Details' },
+          heading: { title: 'Spell Recipe' },
           body: () => <Notice kind="error">This spell could not be read. Try again.</Notice>,
         }}
       />
