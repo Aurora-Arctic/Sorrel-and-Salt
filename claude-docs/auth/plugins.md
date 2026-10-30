@@ -70,6 +70,12 @@ The client half is `passkeyClient()` in `src/lib/auth-client.ts`, which adds
   `staging.sorrelandsalt.com`. A passkey made on production is refused on
   staging, because the authenticator signs over production's rpID and staging
   expects its own (`tests/db/passkey-hosts.test.ts`).
+  The plugin reads the base URL only when it is a string, and the app's
+  is the `allowedHosts` object; it still gets the host because Better Auth
+  hands every endpoint a per-request copy of its options whose `baseURL` is
+  the resolved origin (`resolveRequestContext` in
+  `better-auth/dist/context/helpers.mjs`). The `rpID` option is one fixed
+  value for every host, so setting it would break staging or production.
 - **A ceremony is verified only from a page on the host it is posted to.**
   WebAuthn lets a page on a subdomain ask for its parent domain's passkey, and
   the plugin accepts any trusted origin, which includes every hotfix host.
