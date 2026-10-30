@@ -41,7 +41,7 @@ shipped defaults ([`design-decisions/mb.74-better-auth-plugins.md`](../design-de
 Email and password, passkeys and two-factor add routes under `/api/auth/*`. The
 limiter counts them the same way, per client address and path, and the rules
 below come from Better Auth's own source (`dist/api/rate-limiter/index.mjs` and
-`dist/plugins/two-factor/index.mjs`, 1.7.12) unless a task is named.
+`dist/plugins/two-factor/index.mjs`) unless a task is named.
 
 | Route                                                         | Limit              | Where the rule comes from                                                                         |
 | ------------------------------------------------------------- | ------------------ | ------------------------------------------------------------------------------------------------- |

@@ -49,7 +49,7 @@ convention) and split across two schema files:
   alters schema at request time.
 - **Don't regenerate this schema with `@better-auth/cli`.** The documented
   path (`npx @better-auth/cli generate`) is the wrong one here: that package
-  is still on 1.4.x/1.5.0-beta, behind the installed 1.7.5 core, so it emits
+  has lagged a major version behind the installed core, so it can emit
   a schema for a different major. M2.2 instead used the generator the
   installed `@better-auth/drizzle-adapter` bundles internally
   (`generateDrizzleSchema`, in its `generate-drizzle-schema-*.mjs` — not in
