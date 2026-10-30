@@ -4,6 +4,9 @@ import type { ResetPasswordPageProps } from './types';
 
 export const metadata: Metadata = {
   title: 'Choose a New Password — Sorrel & Salt',
+  // A second guard beside robots.txt, which leaves this path out of its allow list: a crawler that
+  // fetches the page anyway is told not to list it.
+  robots: { index: false },
 };
 
 // Better Auth's mailed link checks its token and opens this page with `?token=`, or with
