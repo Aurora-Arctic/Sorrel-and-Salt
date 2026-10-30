@@ -64,6 +64,7 @@ Going green is `test.fixme` → `test` and deleting the annotation.
 | `07-admin.spec.ts`           | 17–19        | M9.1                                      |
 | `08-email-and-admin.spec.ts` | 58–62        | M9.1                                      |
 | `09-public.spec.ts`          | 63           | MB.83, MB.85                              |
+| `16-password.spec.ts`        | 70           | M16.2                                     |
 | `87-demo-coven.spec.ts`      | 87           | M15.16                                    |
 
 In `06-grimoire.spec.ts`, each story waits on: 47 M10.12, 48 M10.14, 49 M10.15, 50 M10.15, 51 M10.16, 52 M10.17, 53 M10.18, 54 M10.19, 55 M10.20, 56 M10.11, 57 M10.15, 77 M10.15, 79 M13.8, 80 M13.3, 83 M13.21, 84 M13.22.

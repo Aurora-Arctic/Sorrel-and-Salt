@@ -1,6 +1,6 @@
 # SignInPanel
 
-`src/components/SignInPanel/` — the `/sign-in` page's heading, OAuth buttons,
+`src/components/SignInPanel/` — the `/sign-in` page's heading, OAuth buttons, email and password form,
 error state and unavailable-provider treatment, on a card ground. Server component `src/app/sign-in/page.tsx`
 reads `?next=`/`?error=` and the environment, and hands the results down as
 props; this component does the rendering and the click.
@@ -202,6 +202,41 @@ A failure before the redirect always says `GENERIC_SIGN_IN_ERROR`
 (`src/lib/sign-in.ts`), never `result.error.message` — that string is
 provider- or Better-Auth-internal and unreviewed, the same reasoning
 `signInErrorMessage()` applies to `error_description`.
+
+## Email and password
+
+`password-form.tsx` sits below the provider buttons: "Sign In With Email",
+with a quiet "Create an Account" button that switches the same form to
+sign-up and back ("Sign In Instead"). Sign-up adds a Name field; both have
+Email Address and a [`PasswordField`](password-field.md), `current` for
+sign-in and `new`, with the strength meter, for sign-up. The wiring behind it
+is [`auth/passwords.md`](../auth/passwords.md).
+
+- **The submit is disabled until every field has something in it**, and is
+  a `BusyButton` ("Signing In", "Creating Account") while the request is out.
+  The form is `noValidate`, so every refusal is the server's.
+- **Each refusal is said where it belongs.** A length or address code goes
+  under its field; the breached-list refusal goes under the password with the
+  server's own sentence, which says why. A 401 at sign-in is one sentence,
+  `WRONG_CREDENTIALS`, the same for a wrong password and an unknown address.
+  A 429 is `TOO_MANY_ATTEMPTS`; a 500 at sign-up, the breached-password check
+  unable to answer, is `SIGN_UP_UNAVAILABLE`. Anything else is a generic
+  sentence, never Better Auth's message. Alerts are the shared `Notice`.
+- **Every accepted sign-up gets the same notice**, naming the address: a link
+  has been sent, sign in below, then open the link in this browser within an
+  hour; and, if the address already has an account, that it was written to
+  instead. The form goes back to sign-in with the address kept and the
+  password cleared. A sign-up gets no session, so the person signs in next.
+- **A sign-in does a full load of `/sign-in?next=…`**, after
+  `reportLeaving()`, and the page's own server redirect sends the account on
+  (the top of this page), an unverified one to the email page first.
+- **Last used.** `lastLoginMethod` writes `email` to the same cookie the
+  provider buttons read, so the heading carries the "Last Used" badge when
+  this browser last signed in with a password.
+- **A submit clears the panel's callback error**, through `onStart`, as a
+  provider press does.
+
+`tests/components/SignInPanel/password-form.test.tsx` covers the disabled and busy submit, each refusal, the sign-up notice, the full load carrying `next`, the last-used mark, and that no password hint or security question exists; story 70 walks it in the browser.
 
 ## Styling
 

@@ -375,6 +375,32 @@ cost of every e2e job. The browsers sit in `/ms-playwright`
 (`PLAYWRIGHT_BROWSERS_PATH`) rather than under `$HOME`, because a GitHub
 container job sets `HOME` to a directory the image never saw.
 
+#### A password sign-in in the browser
+
+A password sign-up or sign-in is a real browser post to Better Auth, unlike
+the provider flows above, so two things about the e2e servers make it work.
+
+- **The breached-password check never reaches the real service.** Every e2e
+  server starts with `NODE_OPTIONS=--import tests/e2e/pwned-range-preload.mjs`
+  (an absolute path, set in `tests/e2e/servers.ts`). The preload wraps the
+  server's `fetch` for `https://api.pwnedpasswords.com/range/` alone and answers
+  from `tests/e2e/pwned-range.mjs`: `BREACHED_PASSWORD` is on its list, and every
+  other password is not. Every other request passes through. The check names
+  the service's URL itself (`src/lib/breached-password.ts`), so the fetch is
+  wrapped rather than an address switched by an environment variable in
+  production code.
+- **The browser's origin is trusted.** A production build trusts only the
+  deployed hosts, so Better Auth refuses a post from `localhost:<port>` or
+  `devcontainer:<port>` as "Invalid origin". Under the same
+  `E2E_PLAIN_SESSION_COOKIE` flag as the cookie name above,
+  `e2eTrustedOrigins()` (`src/lib/e2e-session-cookie.ts`) adds those two
+  origins for the server's own `PORT` as `trustedOrigins`. It gives none
+  wherever `VERCEL_ENV` is set, or without the flag; `tests/lib/e2e-session-cookie.test.ts`
+  pins both.
+
+The flow, story 70, is `tests/e2e/stories/16-password.spec.ts`
+([`auth/passwords.md`](../auth/passwords.md)).
+
 #### The audit runs the suite in WebKit, Firefox and as a phone, on demand
 
 (M10.25). CI and `npm run e2e` stay Chromium alone, and the "phone" checks

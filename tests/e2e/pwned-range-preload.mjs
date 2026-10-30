@@ -2,7 +2,7 @@ import { createHash } from 'node:crypto';
 import { BREACHED_PASSWORD } from './pwned-range.mjs';
 
 // Loaded into every e2e server through NODE_OPTIONS (tests/e2e/servers.ts), so a password check answers from here
-// and never reaches the real Have I Been Pwned service. Better Auth's plugin hardcodes the service's URL, so the
+// and never reaches the real Have I Been Pwned service. The check (src/lib/breached-password.ts) names the URL, so the
 // server's fetch is wrapped rather than pointed elsewhere; every other request passes through untouched.
 
 const RANGE = 'https://api.pwnedpasswords.com/range/';

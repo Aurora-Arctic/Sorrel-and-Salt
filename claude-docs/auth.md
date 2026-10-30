@@ -122,11 +122,15 @@ An admin invites an address to become an admin through `createAdminInvitation`, 
 
 ## Plugins (MB.74)
 
-`lastLoginMethod` is registered everywhere, its cookie marking the browser's last provider with no database write, and `admin` outside production for impersonation alone; a table rules on every other plugin and option, with `oAuthProxy` scheduled and `organization` never. [`auth/plugins.md`](auth/plugins.md)
+`lastLoginMethod` is registered everywhere, its cookie marking the browser's last provider with no database write, the project's own `breachedPasswordCheck` everywhere, and `admin` outside production for impersonation alone; a table rules on every other plugin and option, with `oAuthProxy` scheduled and `organization` never. [`auth/plugins.md`](auth/plugins.md)
 
 ### The last-used provider (MB.77)
 
 In [`auth/plugins.md`](auth/plugins.md#the-last-used-provider-mb77).
+
+## Email and password (M16.2)
+
+Sign-up and sign-in by address and password through `emailAndPassword`, 15 to 128 characters, with `requireEmailVerification` off so `requireSession()` holds an unverified account at the email page; the project's own breached-password plugin sends Have I Been Pwned a five-character hash prefix, waits three seconds at most and fails closed; a sign-up to a held address answers as a new one and mails the holder. [`auth/passwords.md`](auth/passwords.md)
 
 ## Impersonation (MB.53)
 

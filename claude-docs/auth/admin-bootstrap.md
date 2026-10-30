@@ -139,7 +139,8 @@ this is the shape.
   ("Linking a second provider" below); it writes nothing to the row.
 - **Offered, never required for a session.** `emailVerification.sendOnSignUp`
   is on, so an OAuth sign-up whose address is unverified is created, mailed
-  and signed in. No provider sets `requireEmailVerification`; what needs a
+  and signed in. No provider sets `requireEmailVerification`, and email and
+  password leaves it off ([`passwords.md`](passwords.md)); what needs a
   verified address checks the column. `requireLocalEmailVerified` stays at
   its default, so a provider cannot link into an unverified row, and the
   owner of a squatted address is refused with `account_not_linked` until
