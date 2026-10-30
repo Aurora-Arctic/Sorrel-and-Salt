@@ -130,6 +130,7 @@ export {
   findReceivedInvitationInviters,
   findReceivedInvitationPage,
   findPendingWorkspaceInvitationCount,
+  findRecentCovenInvitationTimes,
   findPendingWorkspaceInvitationPage,
   findPendingSiteInvitationCount,
   findPendingSiteInvitationPage,
