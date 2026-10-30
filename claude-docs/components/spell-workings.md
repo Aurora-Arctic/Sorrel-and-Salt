@@ -16,7 +16,7 @@ in the spell's step order. They carry no step number: the recipe above says wher
 
 The slots a row takes from the page:
 
-- `completeAction(workingId)`: Complete on a draft row. The page passes lane M13.7's
+- `completeAction(workingId)`: Complete on a draft row that carries `editable`, so on the recorder's own draft only. The page passes lane M13.7's
   `CompleteWorkingAction` (`@/components/RecordWorking/complete-action`).
 - `editAction(editable, name)`: the pencil (`edit-working.tsx`, `EditWorkingAction`), drawn on rows that carry `editable`, which `readWorkingsOf` gives to the recorder whose role may update workings. It opens Record a Working on that working ("Edit Working"), and the pencil is named "Edit Working <date>" like the bin; and the focus returns to the pencil on close.
 - Delete Working, a bin and a confirmation dialog (`delete-working.tsx`), drawn when the working's

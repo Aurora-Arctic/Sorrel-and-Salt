@@ -95,10 +95,24 @@ describe('SpellWorkings', () => {
     expect(screen.queryByText(/Pepper/)).not.toBeInTheDocument();
   });
 
-  it('offers Complete on a draft row only, in the slot the page fills', () => {
-    renderSection([working({ id: 'w1', status: 'draft' }), working({ id: 'w2' })], (id) => (
-      <button type="button">Complete {id}</button>
-    ));
+  it("offers Complete on the recorder's own draft row only, in the slot the page fills", () => {
+    const own: WorkingView['editable'] = {
+      id: 'w1',
+      workedOn: '2026-03-04',
+      note: null,
+      visibility: 'workspace',
+      status: 'draft',
+      participants: [],
+    };
+    renderSection(
+      [
+        working({ id: 'w1', status: 'draft', editable: own }),
+        working({ id: 'w2' }),
+        // Another member's draft: only its recorder may complete it.
+        working({ id: 'w3', status: 'draft' }),
+      ],
+      (id) => <button type="button">Complete {id}</button>,
+    );
     expect(screen.getAllByRole('button', { name: /^Complete / })).toHaveLength(1);
     expect(within(rows()[0]!).getByRole('button', { name: 'Complete w1' })).toBeInTheDocument();
   });
