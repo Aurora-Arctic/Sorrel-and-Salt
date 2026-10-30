@@ -2,7 +2,12 @@ import type { Route } from 'next';
 import { act, cleanup, fireEvent, render, screen, waitFor } from '@testing-library/react';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 import InvitationAcceptance from '@/components/InvitationAcceptance';
-import type { AcceptInvitationMutation, AcceptInvitationMutationVariables } from '@/gql/graphql';
+import type {
+  AcceptInvitationMutation,
+  AcceptInvitationMutationVariables,
+  RecordCardAttemptMutation,
+  RecordCardAttemptMutationVariables,
+} from '@/gql/graphql';
 import { mockGraphQLError, mockGraphQLMutation } from '../../support/msw/graphql';
 
 // `/invite/[token]`'s one panel: the page reads where the visitor
@@ -218,5 +223,49 @@ describe('InvitationAcceptance', () => {
     );
     expect(button).not.toHaveAccessibleDescription();
     await waitFor(() => expect(router.push).toHaveBeenCalledWith('/admin'));
+  });
+});
+
+describe('InvitationAcceptance, recording a refused open', () => {
+  it('sends the token once when the refusal shows, and says nothing of it', async () => {
+    const tokens: string[] = [];
+    mockGraphQLMutation<RecordCardAttemptMutation, RecordCardAttemptMutationVariables>(
+      'RecordCardAttempt',
+      ({ token }) => {
+        tokens.push(token);
+        return { recordCardAttempt: true };
+      },
+    );
+    render(
+      <InvitationAcceptance status="refused" token="abc" message="This card has been revoked." />,
+    );
+
+    await waitFor(() => expect(tokens).toEqual(['abc']));
+    expect(screen.getByText('This card has been revoked.')).toBeInTheDocument();
+  });
+
+  it('keeps the refusal when the record fails', async () => {
+    mockGraphQLError('RecordCardAttempt', { code: 'FORBIDDEN', message: 'Nope' });
+    render(
+      <InvitationAcceptance status="refused" token="abc" message="This card has been revoked." />,
+    );
+
+    await act(async () => {});
+    expect(screen.getByText('This card has been revoked.')).toBeInTheDocument();
+  });
+
+  it('sends nothing for a signed-out visitor', async () => {
+    let sent = 0;
+    mockGraphQLMutation<RecordCardAttemptMutation, RecordCardAttemptMutationVariables>(
+      'RecordCardAttempt',
+      () => {
+        sent += 1;
+        return { recordCardAttempt: true };
+      },
+    );
+    render(<InvitationAcceptance status="signed-out" card signInHref="/sign-in?next=%2Fi%2Fabc" />);
+
+    await act(async () => {});
+    expect(sent).toBe(0);
   });
 });
