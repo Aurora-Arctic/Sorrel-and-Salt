@@ -17,11 +17,11 @@ The five actions under `.github/actions/` — `checkout-to-app`, referenced by i
 
 ## Container jobs
 
-`checks.yml`, `vitest.yml` and `playwright.yml` run inside a GHCR-image `container:` working in `/app`, which is why `shell: bash`, `--user root`, git's `safe.directory=*`, absolute `/app` paths and `checks.yml`'s matrix `name:` are all load-bearing. [`ci/container-jobs.md`](ci/container-jobs.md)
+`checks.yml`, `vitest.yml` and `playwright.yml` run inside a GHCR-image `container:` working in `/app`, which is why `shell: bash`, `--user root`, git's `safe.directory=*`, absolute `/app` paths and the job `name:` that sets each `checks.yml` check's name are all load-bearing. [`ci/container-jobs.md`](ci/container-jobs.md)
 
 ## Reusable checks (`workflow_call`, never triggered directly)
 
-`checks.yml` runs `lint`, `format`, `typecheck`, `build`, `audit`, `destructive-ddl` and `migration-order` as one matrix job with `run-*` path-filter inputs, beside `vitest.yml` and its story step, `playwright.yml` with the `build-only` input `e2e-cache.yml` uses to save the e2e build cache from `staging`, the two image builds and `gitflow.yml`'s branch-source rules. [`ci/reusable-checks.md`](ci/reusable-checks.md)
+`checks.yml` runs `lint`, `format`, `typecheck`, `build`, `audit`, `destructive-ddl` and `migration-order` as eight plain jobs, the path-filtered ones skipped at the job by their `run-*` inputs, beside `vitest.yml` and its story step, `playwright.yml` with the `build-only` input `e2e-cache.yml` uses to save the e2e build cache from `staging`, the two image builds and `gitflow.yml`'s branch-source rules. [`ci/reusable-checks.md`](ci/reusable-checks.md)
 
 ## Aggregating workflows
 
@@ -49,4 +49,4 @@ None remain: the checks exercise every composite action, a sourceless image and 
 
 ## Running CI locally
 
-`.actrc` and the `make act-*` targets run the reusable checks through `act` on a locally built `testing` image, one `make act-check CHECK=<leg>` per `checks.yml` leg, with `build` and `audit` expected to fail and no `act-vitest` or `act-playwright` yet. [`ci/running-ci-locally.md`](ci/running-ci-locally.md)
+`.actrc` and the `make act-*` targets run the reusable checks through `act` on a locally built `testing` image, one `make act-check CHECK=<leg>` per `checks.yml` job, with `build` and `audit` expected to fail and no `act-vitest` or `act-playwright` yet. [`ci/running-ci-locally.md`](ci/running-ci-locally.md)

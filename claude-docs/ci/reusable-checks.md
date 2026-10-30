@@ -1,10 +1,11 @@
 ## Reusable checks (`workflow_call`, never triggered directly)
 
-- **`checks.yml`** (MB.32) — one matrix job running `lint`, `format`,
-  `typecheck`, `build` and `audit`, each reporting as `checks / <name>`. One
-  workflow, because the legs share their inputs, their
-  `container: image: ${{ inputs.image }}` job (`options: --user root`) and
-  their checkout, `job-summary` and `pr-comment` scaffolding, and differ in
+- **`checks.yml`** (MB.32) — eight plain jobs, `lint`, `format`,
+  `typecheck`, `codegen`, `build`, `destructive-ddl`, `migration-order` and
+  `audit`, each reporting as `checks / <name>`. One
+  workflow, because the jobs share their inputs, their
+  `container: image: ${{ inputs.image }}` preamble (`options: --user root`) and
+  the `run-check` composite action's steps, and differ in
   one npm script and one summarising step (MB.32 collapsed the five
   workflows they were).
   - Every leg runs its command under `set -o pipefail` inside a brace group,
@@ -15,17 +16,16 @@
     came from, so what a PR comment says did not change. The brace group is
     what keeps `2>&1 | tee` applying to the whole command rather than to the
     last thing in it.
-  - **`fail-fast: false` is load-bearing.** A cancelled leg reports a
-    cancelled check, which required-status-check protection treats as
-    unsatisfied — so one failing leg would otherwise block the PR on four
-    checks that never got to run.
+  - **The jobs are independent.** There is no matrix, so one failing job
+    cancels no other.
   - **`run-lint` / `run-typecheck` / `run-build` / `run-destructive-ddl` /
-    `run-migration-order` are the path-filter inputs**, one per filtered leg. `format` has none and always runs,
-    since Prettier covers non-code files; `audit` has none because it is
-    non-blocking and PR-only. The first step resolves the five down to one flag
-    for the leg it is running, and treats an empty flag as true — so `act`,
-    which applies no `workflow_call` input defaults, cannot report a check it
-    never ran.
+    `run-migration-order` are the path-filter inputs**, one per filtered job, each read by that job's
+    own `if: ${{ format('{0}', inputs.run-<leg>) != 'false' }}`, so a
+    filtered-off job is skipped before its container is pulled. `format` and
+    `codegen` have none and always run, since Prettier covers non-code files;
+    `audit` has none because it is non-blocking and PR-only. The `format()`
+    wrapper treats an empty input as true — so `act`, which applies no
+    `workflow_call` input defaults, cannot skip a check it should run.
   - **`build`'s extras**: `DATABASE_URL`/`BETTER_AUTH_SECRET`, and
     `npm run workshop:build` chained onto `npm run build` with `&&`, which
     short-circuits the same way separate steps would. It posts no PR comment.

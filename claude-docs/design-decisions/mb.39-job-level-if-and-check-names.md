@@ -1,21 +1,26 @@
 # MB.39 — A job-level `if:` renames the check only on the job that calls a reusable workflow
 
-**Status:** decided, verified by a probe · **Date:** 2026-10-30
+**Status:** decided, verified by two probes, adopted in MB.39 · **Date:** 2026-10-30
 
-The rule this repo's CI filtering was built on said: a job-level `if:` makes GitHub report a differently named, bare check run, so no job may carry one. It had never been tested here. This record tests it. The result is split. The rule is **true for the job that calls a reusable workflow** and **false for a job inside the reusable workflow**. A matrix job cannot carry such an `if:` at all.
+The rule this repo's CI filtering was built on said: a job-level `if:` makes GitHub report a differently named, bare check run, so no job may carry one. It had never been tested here. This record tests it. The result is split. The rule is **true for the job that calls a reusable workflow** and **false for a job inside the reusable workflow**. A matrix job cannot carry such an `if:` at all. A skipped check satisfies a required status check, and a required check that never reports blocks the pull request. MB.39 therefore moves the filtering of `vitest.yml`, `playwright.yml` and `checks.yml` onto job-level `if:` and splits `checks.yml`'s matrix into plain jobs.
 
 A job-level `if:` is an `if:` key directly under a job, as opposed to under one of its steps.
 
 ## Verdict
 
-| Question                                                                                       | Answer                                                                                                                             |
-| ---------------------------------------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------- |
-| 1. An `if:` on the job that **calls** a reusable workflow (`uses:`) that evaluates to false    | **Verified.** One bare check run named after the calling job, `skipped`. No `caller / inner` check runs exist.                     |
-| 2a. An `if:` on a plain job **inside** the reusable workflow, false                            | **Not true.** The check keeps its qualified name, `caller / inner`, with conclusion `skipped`.                                     |
-| 2b. An `if:` on a **matrix** job inside the reusable workflow, written `if: matrix.should-run` | **Impossible.** GitHub rejects the file: `Unrecognized named-value: 'matrix'`. No check runs are created.                          |
-| 3. Whether a `skipped` conclusion satisfies a required status check                            | **Not tested.** It needs a ruleset that requires a check. The owner did not authorise a scratch ruleset, so this stays unanswered. |
+| Question                                                                                       | Answer                                                                                                                                                             |
+| ---------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| 1. An `if:` on the job that **calls** a reusable workflow (`uses:`) that evaluates to false    | **Verified.** One bare check run named after the calling job, `skipped`. No `caller / inner` check runs exist.                                                     |
+| 2a. An `if:` on a plain job **inside** the reusable workflow, false                            | **Not true.** The check keeps its qualified name, `caller / inner`, with conclusion `skipped`.                                                                     |
+| 2b. An `if:` on a **matrix** job inside the reusable workflow, written `if: matrix.should-run` | **Impossible.** GitHub rejects the file: `Unrecognized named-value: 'matrix'`. No check runs are created.                                                          |
+| 3. Whether a `skipped` conclusion satisfies a required status check                            | **Yes.** A required check whose run is `skipped` leaves the pull request `CLEAN` (case A below). A required check that never reports leaves it `BLOCKED` (case B). |
 
-What follows for the design: a skipped inner job keeps its normal name, so it does not by itself strand a required check under a different name. Whether a `skipped` run satisfies the requirement (question 3) still decides whether moving `if:` onto inner jobs is safe, so adoption waits for that answer. Matrix legs cannot use a job-level `if:` on their own matrix values, so `checks.yml`'s legs would need another route (for example a separate job per leg, or a `fromJSON` matrix that leaves out the filtered-off legs). Adoption is not part of MB.39.
+What follows for the design:
+
+- A skipped inner job keeps its normal name and satisfies a required check, so moving `if:` onto inner jobs is safe.
+- A required check that never reports blocks the pull request. Leaving a matrix leg out of a `fromJSON` matrix would strand a required check, so that route is out.
+- A matrix leg cannot skip itself with `if: matrix.*`. The route for `checks.yml` is a plain job per leg, each with `if: inputs.run-<leg>`.
+- A job-level `if:` on a job that calls a reusable workflow still gives a bare check name. No `pr-gate.yml` job that calls a reusable workflow carries one.
 
 ## Provenance of the claim
 
@@ -28,7 +33,7 @@ Traced from this repo's git history only.
 | `ecce1f1fe` | 2026-09-10 | Consolidated the working docs and wrote the rule into `claude-docs/ci.md` as a general rule ("A required-check job must never carry a job-level `if:`").                                                                                                                                                                      |
 | `2e7dcfe85` | 2026-09-17 | MB.32. Collapsed five check workflows into `checks.yml` and extended the sentence to matrix legs.                                                                                                                                                                                                                             |
 
-No ruleset in this repo has ever required a status check, so the symptom could not have been seen. The M0.16, M0.20 and MB.32 decision records are in the frozen archive, which is not read; the commits above are the trace.
+None of this repo's three rulesets requires a status check today, so the symptom could not have been seen. The M0.16, M0.20 and MB.32 decision records are in the frozen archive, which is not read; the commits above are the trace.
 
 ## The probe
 
@@ -148,21 +153,56 @@ Reading it:
 
 The `matrix` context is not available in `jobs.<job_id>.if`, because that expression is evaluated before the matrix is expanded into jobs.
 
+## Question 3: the ruleset probe
+
+A second scratch pull request tested whether a skipped check satisfies a required check. The ruleset write is the one step the `gh` token cannot do: creating a ruleset returned `gh: Resource not accessible by personal access token (HTTP 403)`, and a PUT returned `{"message":"Resource not accessible by personal access token",...,"status":"403"}`. The owner made the ruleset changes in the web UI instead. The UI form also added `deletion` and `non_fast_forward` rules, which do not affect the result.
+
+Probe commit `1256d135282f050c9da6be3ea1398e69335dab98`, pull request #1346 into `scratch/mb39-base`, run `41091224592` (success). Ruleset `mb39-scratch`, id `26221065`, targeted `scratch/mb39-base` only. Read back: `"required_status_checks":[{"context":"call-plain / plain-no","integration_id":15368}]`.
+
+Check runs on the head sha, the same in all three cases:
+
+```json
+{"name":"call-plain / leg (leg-on)","status":"completed","conclusion":"success"}
+{"name":"call-plain / plain-no","status":"completed","conclusion":"skipped"}
+{"name":"call-plain / plain-yes","status":"completed","conclusion":"success"}
+```
+
+| Case | Required check                                                                | Result                                                           |
+| ---- | ----------------------------------------------------------------------------- | ---------------------------------------------------------------- |
+| A    | `call-plain / plain-no` (a plain job, `skipped`)                              | `{"mergeable_state":"clean"}` `{"mergeStateStatus":"CLEAN"}`     |
+| B    | `call-plain / leg (leg-off)` (a matrix leg left out of the matrix, never ran) | `{"mergeable_state":"blocked"}` `{"mergeStateStatus":"BLOCKED"}` |
+| C    | `call-plain / plain-yes` (a job that succeeded, the control)                  | `{"mergeable_state":"clean"}` `{"mergeStateStatus":"CLEAN"}`     |
+
+Case B was read back as `[[{"context":"call-plain / leg (leg-off)"}]]`, case C as `{"updated_at":"2026-10-30T09:44:24.696-07:00","checks":["call-plain / plain-yes"]}`.
+
+## What MB.39 changed
+
+Part 1, in `vitest.yml` and `playwright.yml`:
+
+- `vitest-dom`, `vitest-node` and `vitest-db` carry `if: inputs.should-run`. The merge job `vitest` carries `if: ${{ !cancelled() && inputs.should-run }}`, so it still runs after a failed part but not on a filtered-off run.
+- The `playwright` job carries `if: inputs.should-run`. The step-level `should-run` gating is gone from both files.
+- Check names are unchanged (`vitest / vitest`, `playwright / playwright`). The only other caller of `playwright.yml` is `e2e-cache.yml`'s `warm` job, which relies on the default `should-run: true`.
+- `playwright-coverage` reads only the `playwright` and `stories` results and outputs and uses `!cancelled()`. A skipped inner job leaves the caller's result `success` with empty outputs, so nothing breaks. Nothing `needs:` the vitest job.
+
+Part 2, in `checks.yml`:
+
+- The one matrix job is eight plain jobs: `lint`, `format`, `typecheck`, `codegen`, `build`, `destructive-ddl`, `migration-order` and `audit`. Each job's id and `name:` are the check name, so the check names are identical before and after, in the same order.
+- `lint`, `typecheck`, `build`, `destructive-ddl` and `migration-order` carry `if: ${{ format('{0}', inputs.run-<leg>) != 'false' }}`. `format`, `codegen` and `audit` are not path-filtered and carry none. The `format()` wrapper makes an unset input (the empty string, as `act` leaves it) count as run.
+- The `run-*` inputs and their defaults are kept, so `pr-gate.yml`'s call is unchanged. Nothing `needs:` `checks`.
+- The steps every leg shares live in the composite action `.github/actions/run-check` (run, summarise, job summary, pull request comment). A composite action contributes steps only, so each job repeats the `container:` and `defaults:` preamble.
+- Each job's `env:` is narrowed to what that job reads.
+- `make act-check` runs `-j <leg>` instead of `-j check --matrix name:<leg>`.
+
+`playwright-coverage.yml` and `gitflow.yml` still gate by step and are out of scope.
+
 ## Cleanup
 
-- Pull request #1345 closed. `scratch/mb39-probe` and `scratch/mb39-base` deleted from `origin`; `git ls-remote --heads origin 'scratch/*'` prints nothing.
-- Rulesets before and after, by `id`, `name` and rule `type`, are identical:
+- Pull requests #1345 and #1346 closed. `scratch/mb39-probe` and `scratch/mb39-base` deleted from `origin`; `git ls-remote --heads origin 'scratch/*'` prints nothing.
+- The owner deleted the `mb39-scratch` ruleset. The rulesets diff against the list taken before is identical:
 
 ```
-{"id":22612570,"name":"Main","rules":["deletion","non_fast_forward","pull_request"]}
-{"id":22612931,"name":"Release Branches","rules":["deletion","non_fast_forward"]}
-{"id":22612558,"name":"Staging","rules":["deletion","non_fast_forward","pull_request"]}
+[{"id":22612570,"name":"Main"},{"id":22612931,"name":"Release Branches"},{"id":22612558,"name":"Staging"}]
 ```
 
-- No live GitHub setting was changed. No ruleset requires a status check, which is why question 3 was not tested.
-
-## What this changes
-
-- `claude-docs/ci.md` and `claude-docs/ci/aggregating-workflows.md` state the split result instead of the unverified rule.
-- The comments in `checks.yml`, `pr-gate.yml`, `vitest.yml` and `playwright.yml` no longer claim that any job-level `if:` renames a check. They say what the code does and point here.
-- Job behaviour is unchanged. Moving `if:` onto inner jobs would save the container pull for a filtered-off leg (about 20s to 46s each, measured on run `35301237284`), and is a separate task that first needs question 3 answered.
+- By `id`, `name` and rule `type` the three rulesets are unchanged: Main and Staging hold `deletion`, `non_fast_forward` and `pull_request`, Release Branches holds `deletion` and `non_fast_forward`. None of them requires a status check today.
+- No live GitHub setting is changed.

@@ -156,21 +156,24 @@
     the caller (`checks`, not `checks / lint`), `skipped`. No `checks / lint`
     check run exists. That is why `pr-gate.yml` passes the path filter down as
     `run-*` / `should-run` inputs instead of putting an `if:` on its calling
-    jobs.
+    jobs; the inner jobs then skip themselves on those inputs.
   - **An inner job with a false `if:`** (a plain job inside the reusable
     workflow, such as `vitest.yml`'s `vitest`) keeps its qualified name
     (`caller / inner`) and reports `skipped`. The old claim that it is renamed
-    is false.
+    is false. `vitest.yml`'s four jobs and `playwright.yml`'s job carry
+    `if: inputs.should-run`, and `checks.yml`'s path-filtered jobs carry
+    `if: inputs.run-<leg>`.
   - **A matrix job cannot use one on its own matrix values.** `if: matrix.x` on
     the job is rejected when the file loads: `Unrecognized named-value:
-'matrix'`. `checks.yml`'s legs resolve their flag in a step for that reason.
-  - **Not tested:** whether a `skipped` check satisfies a required status
-    check. No ruleset here requires one, and no scratch ruleset was
-    authorised. Until that is answered, nothing moves `if:` onto an inner job.
-  - **Cost of the current pattern.** A filtered-off leg still pulls its
-    container before its first step decides to do nothing: about 20s on a
-    `checks` leg, 24s on `lint`, 37s on `vitest` and 46s on `playwright`.
-    GitHub's minutes are free on a public repo ([Runner budget](runner-budget.md)).
+'matrix'`. `checks.yml` is a plain job per leg for that reason.
+  - **A `skipped` check satisfies a required status check**, and a required
+    check that never reports leaves the pull request blocked (both tested with
+    a scratch ruleset, MB.39). So a leg is never left out of a matrix: it is a
+    plain job that skips itself. No ruleset here requires a status check today.
+  - **What the job-level `if:` saves.** A filtered-off job no longer pulls its
+    container: about 20s on a `checks` leg, 24s on `lint`, 37s on `vitest` and
+    46s on `playwright`, measured before the change
+    ([Runner budget](runner-budget.md)).
   - **Other `if:` keys in the repo.** `audit / audit` carried one from M0.20
     until MB.32 removed it, and `deploy.yml`'s `resolve-target`, `deploy` and
     `teardown` still carry them. Those are not required checks, so they never
