@@ -45,7 +45,7 @@ const idsFor = async (user: typeof D) =>
   (await listReceivedInvitations(asUser(user), PAGE)).map(({ node }) => node.id);
 
 beforeEach(async () => {
-  await sql`truncate invitations`;
+  await sql`truncate card_invitation_attempts, invitations`;
   await sql`update users set email_verified = true where id in (${A.id}, ${B.id}, ${D.id})`;
   await sql`update users set deleted_at = null, deleted_by = null where id = ${A.id}`;
 });

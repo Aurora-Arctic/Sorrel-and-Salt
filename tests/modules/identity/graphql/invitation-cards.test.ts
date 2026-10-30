@@ -37,7 +37,7 @@ interface Minted {
 }
 
 beforeEach(async () => {
-  await sql`truncate invitations`;
+  await sql`truncate card_invitation_attempts, invitations`;
 });
 
 describe('the card operations', () => {
