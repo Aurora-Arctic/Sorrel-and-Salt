@@ -211,11 +211,11 @@
 - **`playwright-coverage.yml`** (M14.28) — the two Playwright suites'
   coverage, merged, called by `pr-gate.yml`'s `playwright-coverage` job in the
   `testing` image. That job `needs` `playwright` and `stories` and runs after
-  both whatever their result (its `!cancelled()` is the one job-level `if:` in
-  the file, safe because it is no required check; the workflow carries
-  `continue-on-error` too). It is a called workflow, not a job with its own
-  runner, so an edit's run that cancels itself leaves it skipped, as for the
-  other called workflows. Its steps run only when `changes` says a suite ran
+  both whatever their result (its `!cancelled()` keeps a failed suite from skipping it, and it
+  also names the stand-down, which `!cancelled()` would otherwise ignore; it is
+  no required check, and the workflow carries `continue-on-error` too). It is
+  a called workflow, not a job with its own runner, so a run that stands down
+  leaves it skipped, as for the other called workflows. Its steps run only when `changes` says a suite ran
   (`should-run`), and post nothing otherwise. It downloads each coverage artifact
   by name into a folder of its own, `merge-playwright-coverage.mjs` merges the
   `raw/` data that is there, and the job uploads `playwright-coverage-merged`, writes the job

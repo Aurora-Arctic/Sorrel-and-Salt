@@ -20,7 +20,7 @@ What follows for the design:
 - A skipped inner job keeps its normal name and satisfies a required check, so moving `if:` onto inner jobs is safe.
 - A required check that never reports blocks the pull request. Leaving a matrix leg out of a `fromJSON` matrix would strand a required check, so that route is out.
 - A matrix leg cannot skip itself with `if: matrix.*`. The route for `checks.yml` is a plain job per leg, each with `if: inputs.run-<leg>`.
-- A job-level `if:` on a job that calls a reusable workflow still gives a bare check name. No `pr-gate.yml` job that calls a reusable workflow carries one.
+- A job-level `if:` on a job that calls a reusable workflow still gives a bare check name. The only such `if:` in `pr-gate.yml` is the stand-down's (see "PR Gate's stand-down" below).
 
 ## Provenance of the claim
 
@@ -194,6 +194,10 @@ Part 2, in `checks.yml`:
 - `make act-check` runs `-j <leg>` instead of `-j check --matrix name:<leg>`.
 
 `playwright-coverage.yml` and `gitflow.yml` still gate by step and are out of scope.
+
+## PR Gate's stand-down
+
+`pr-gate.yml` used to cancel its own `changes` run on a title or description edit, which left a cancelled `changes` and a cancelled `workshop` check run on the head commit, newer than the real run's successes, so the PR read as UNSTABLE (run `41097615379`). It now stands down: `changes` succeeds and sets a `stand-down` output, and every other job carries an `if:` on it, so each reports skipped. The finding above is what makes a caller-level `if:` safe here. A false `if:` on a calling job reports one bare name (`checks`) and never `checks / lint`, so it cannot overwrite a required inner name. A caller that ran with its inner jobs skipped would overwrite a real `checks / lint` failure with a skipped one, and a skipped required check passes, so no caller runs on a stand-down. A close's run stands down as well, since the other runs of the PR are cancelled by the group and a closed PR has no head commit to protect. Edits that retarget the base, and edits to a head commit no run has gated, still run the full gate. The `cancel-in-progress` expression is unchanged.
 
 ## Cleanup
 

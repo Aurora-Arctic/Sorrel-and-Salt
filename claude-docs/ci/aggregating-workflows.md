@@ -34,18 +34,11 @@
   `imagetools inspect` to find, and the layer cache commits each blob whole
   and writes its index last. The next run just rebuilds.
 - **A closed PR's gate runs are cancelled** (MB.98). `closed` is in the gate's
-  trigger types, and the first step of `changes` cancels its own run when
-  `github.event.pull_request.state == 'closed'`. Closing or merging a PR
-  therefore starts a run in the PR's group, which cancels every queued or
-  in-progress gate run for that PR and then cancels itself. An `edited` event
-  on a closed PR, which GitHub fires as readily as on an open one, cancels
-  itself the same way. The step is step-level, so the job-level `if:` rule
-  below holds. The cancel is asynchronous, so the step then `sleep`s — killed
-  by the cancel, usually within seconds, with 30s as the bound — and `changes`
-  never completes and hands `checks`, `vitest` or `playwright` an output to
-  start on. Since MB.100 the builds and `gitflow` need it too, so nothing else
-  starts. On a fork PR the token is read-only and the cancel
-  fails, but a failed `changes` holds the checks back just the same.
+  trigger types. Closing or merging a PR starts a run in the PR's group, which
+  cancels every queued or in-progress gate run for that PR; the close's own run
+  then stands down (see the next item), as does an `edited` event on a closed
+  PR, which GitHub fires as readily as on an open one. The runs cancelled are the
+  other runs of a PR that is gone, so a cancelled check there blocks nothing.
   - **Why.** On 2026-09-27 a bulk edit of old PR bodies started 130 gate runs
     in five minutes, for PRs merged days or weeks before. Separately, four of
     the twenty most recent merges had a gate run still in flight that ran to
@@ -56,8 +49,8 @@
     other's gate, while the group is keyed by PR number.
   - `deploy.yml`'s own `closed` handler, which tears a hotfix preview down,
     is separate and unaffected.
-- **An edited PR's gate run waits, then cancels itself unless the edit
-  retargeted the base or the PR's head commit is untested** (MB.100). `edited` is in the trigger types so a
+- **An edited PR's gate run waits, then stands down unless the edit
+  retargeted the base or the PR's head commit is untested** (MB.100, MB.39). `edited` is in the trigger types so a
   retarget re-runs the gate against the new base, but an edit to a title or a
   description changes nothing the gate checks, and once its run cancelled the
   one in flight like a push. Blacksmith's [code]smith, while it was installed (until M11.24), appended a
@@ -69,7 +62,7 @@
   `cancel-in-progress` is `github.event.action != 'edited'`: an edit's run
   joins the group and waits — GitHub holds one pending run per group, a later
   edit replacing an earlier — and when the run in flight finishes, the first
-  step of `changes` cancels it unless the payload carries `changes.base`, the
+  step of `changes` stands it down unless the payload carries `changes.base`, the
   one edit the gate cares about, which then gates as any push would. A retarget
   is therefore delayed by one gate rather than cancelling it.
   - **An edit's run also gates a commit no run has tested.** The one pending
@@ -78,7 +71,7 @@
     starts a job. On #1107 that left the head commit with no gate at all, and
     re-running the edit's run only cancelled it again. So before standing
     down, `changes` lists this workflow's runs for the PR's head commit and
-    cancels the edit's run only if another run for the PR finished other than
+    stands the edit's run down only if another run for the PR finished other than
     cancelled or skipped, or is still going. A run that lists no PR counts as
     not covering, so a doubt costs a run rather than an untested commit; the
     same check gates a commit whose gate was cancelled by hand to let the
@@ -87,14 +80,35 @@
     `run-name`, so the Actions list says beside the real gate what each will
     do. A close's run never covers a commit; an edit's covers one only in the
     case above.
-  - **Why every job now `needs: changes`.** A job that had started in a run
-    about to cancel itself leaves a cancelled check run under its own name,
-    newer than the real run's on the same commit, and a required check reads
-    the newest — so once protection names `gitflow / gitflow` or a build, a
-    stray `edited` run would block the PR it had already passed. Holding the
-    builds and `gitflow` behind `changes` costs their start about eight
-    seconds on a gate that takes ten minutes, and leaves a self-cancelled run
-    owning exactly one check run, `changes`, which nothing requires.
+  - **A stand-down ends green; it does not cancel itself** (MB.39). The first
+    step of `changes` sets a `stand-down` output, `true` for a close's run and
+    for an edit's run that is not retargeted and whose commit is covered, and
+    `false` otherwise. The run used to call `gh run cancel` on itself, which
+    left a cancelled `changes` and a cancelled `workshop` check run on the head
+    commit, newer than the real run's successes, so a title edit turned the PR
+    UNSTABLE (run 41097615379 is the example). Now every other job in
+    `pr-gate.yml` has an `if:` on the output and reports skipped, and
+    `changes` itself succeeds. The close's run stands down too rather than
+    cancelling: a closed PR has no head commit to protect, and one rule for
+    both is simpler, while the group's `cancel-in-progress` still cancels the
+    other runs.
+  - **Why the `if:` is on the calling jobs, and safe there.** A false `if:` on a
+    job that calls a reusable workflow reports one bare check (`checks`,
+    skipped) and creates no `checks / lint` check run, so it cannot overwrite a
+    required inner name. A caller that ran with its inner jobs skipped would:
+    an inner skipped `checks / lint` is the newest run of that name and would
+    replace a real failure, and a skipped required check passes. So no caller
+    runs on a stand-down. `playwright-coverage`'s `!cancelled()` ignores skipped
+    needs, so it names the stand-down as well. `workshop` is a plain job and
+    carries the same `if:`. When the output is `false` every `if:` is true and
+    the gate runs in full.
+  - **Why every job `needs: changes`.** A job that started in a run that is
+    standing down would leave a check run under its own name, newer than the
+    real run's on the same commit, and a required check reads the newest.
+    Holding the builds and `gitflow` behind `changes` costs their start about
+    eight seconds on a gate that takes ten minutes, and leaves a run that
+    stands down owning one successful check run, `changes`, and bare skipped
+    names for the rest.
   - Nothing here needs protection to be enabled to be worth doing: the
     wasted gate per PR was real on the metered runner, and the wedge was a PR
     with no CI at all.
@@ -156,7 +170,9 @@
     the caller (`checks`, not `checks / lint`), `skipped`. No `checks / lint`
     check run exists. That is why `pr-gate.yml` passes the path filter down as
     `run-*` / `should-run` inputs instead of putting an `if:` on its calling
-    jobs; the inner jobs then skip themselves on those inputs.
+    jobs for the path filter; the inner jobs then skip themselves on those
+    inputs. The one `if:` its calling jobs do carry is the stand-down's (above),
+    which skips a whole run and so is safe for the same reason.
   - **An inner job with a false `if:`** (a plain job inside the reusable
     workflow, such as `vitest.yml`'s `vitest`) keeps its qualified name
     (`caller / inner`) and reports `skipped`. The old claim that it is renamed
