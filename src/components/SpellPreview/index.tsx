@@ -125,10 +125,12 @@ export default function SpellPreview(props: SpellPreviewProps): ReactElement {
     // Measured before showModal(), while the page's scrollbar is still there to be replaced.
     const release = holdPage();
     if (!dialog.open) dialog.showModal();
-    // Past the browser floor on some engines (iPhone Safari has no element full screen): a pure
-    // enhancement behind a `typeof` check, with the dialog covering the window as the fallback.
-    if (typeof dialog.requestFullscreen === 'function') {
-      dialog.requestFullscreen().then(
+    // The page asks, not the dialog: browsers refuse full screen for a `<dialog>` (a TypeError), and the modal
+    // dialog still stands in the top layer over a full-screen page. Past the browser floor on some engines
+    // (iPhone Safari has no element full screen): a pure enhancement behind a `typeof` check, with the dialog
+    // covering the window as the fallback.
+    if (typeof document.documentElement.requestFullscreen === 'function') {
+      document.documentElement.requestFullscreen().then(
         () => {
           inFullscreen.current = true;
         },

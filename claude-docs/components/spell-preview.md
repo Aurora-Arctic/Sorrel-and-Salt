@@ -44,9 +44,9 @@ full screen, with nothing else on screen. `src/components/SpellPreview/`.
 - The pane is a native modal `<dialog>` (`showModal()`): the browser puts it in the top layer,
   holds the page behind it inert and answers Escape with a `cancel` event. On its own it covers
   the window, which is the fallback where full screen is missing.
-- Where the browser has element full screen, the pane asks for it as it opens. That is past the
+- Where the browser has element full screen, the pane asks for it as it opens, of the page's root element and not of the dialog: browsers refuse full screen for a `<dialog>` with a TypeError, and the modal dialog stays in the top layer over a full-screen page. That is past the
   browser floor on some engines (iPhone Safari has none), so the call sits behind
-  `typeof dialog.requestFullscreen === 'function'` and a refused request is ignored. The pane
+  `typeof document.documentElement.requestFullscreen === 'function'` and a refused request is ignored. The pane
   works the same either way.
 - In full screen the browser takes the first Escape to leave full screen, so the pane closes on
   `fullscreenchange` once it has been in full screen and is no longer. Close leaves full screen

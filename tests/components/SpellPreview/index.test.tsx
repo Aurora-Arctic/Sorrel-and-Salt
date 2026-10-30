@@ -264,6 +264,8 @@ describe('SpellPreview', () => {
     render(onPage());
     press(opener());
     expect(request).toHaveBeenCalledTimes(1);
+    // Asked of the page: a browser refuses full screen for a dialog.
+    expect(request.mock.contexts[0]).toBe(document.documentElement);
     Object.defineProperty(document, 'fullscreenElement', { value: pane(), configurable: true });
     press(within(pane()).getByRole('button', { name: 'Close' }));
     expect(exit).toHaveBeenCalledTimes(1);
