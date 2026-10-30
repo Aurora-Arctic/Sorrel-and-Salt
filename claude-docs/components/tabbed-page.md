@@ -13,12 +13,12 @@ has a Categories tab at `/admin/categories` and a Groups tab at
 
 `TabbedPageProps` (`types.ts`):
 
-| Prop       | What it is                                                                                    |
-| ---------- | --------------------------------------------------------------------------------------------- |
-| `title`    | The page's `h1`, title case, which names the tabs' nav too: "Categories"                      |
-| `tabs`     | Each tab's `href`, short label ("Groups", "Traditions"), `filtered` and `shape`, in row order |
-| `action`   | Optional: the open tab's one action, at the end of the heading's line                         |
-| `children` | The open tab's content                                                                        |
+| Prop       | What it is                                                                                               |
+| ---------- | -------------------------------------------------------------------------------------------------------- |
+| `title`    | The page's `h1`, title case, which names the tabs' nav too: "Categories"                                 |
+| `tabs`     | Each tab's `href`, short label ("Groups", "Traditions"), `filtered`, `shape` and `density`, in row order |
+| `action`   | Optional: the open tab's one action, at the end of the heading's line                                    |
+| `children` | The open tab's content                                                                                   |
 
 Inside, `tab-switch.tsx` holds the client parts the tab row, the action and
 the content area share: `TabSwitchProvider`, `TabAction` (the action's
@@ -30,7 +30,7 @@ shared [`Skeleton`](skeleton.md) that the content area shows while a pressed tab
 to draw a filter row. A list reuses it, with no filter row, while a filter
 or a pager press is on its way ([`list-frame.md`](list-frame.md)), so it
 imports its own stylesheet, `index.scss`, and its shapes are drawn wherever
-it renders. A tab's `shape`, `table` by default, is the skeleton's shape while that tab is on its way: the Grimoire's Spells and Drafts tabs set `cards` (M10.11), so a pressed tab shows cards under the filter rather than a table.
+it renders. A tab's `shape`, `table` by default, is the skeleton's shape while that tab is on its way: the Grimoire's Spells and Drafts tabs set `cards` (M10.11), so a pressed tab shows cards under the filter rather than a table, and `density: 'compact'`, so those cards are the compact ones the list opens at.
 
 ## Contracts
 

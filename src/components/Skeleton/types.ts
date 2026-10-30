@@ -23,6 +23,8 @@ export interface SkeletonProps {
   entry?: boolean;
   /** A `page` or `contents` skeleton's head, drawn at the size of the real one. */
   head?: 'eyebrow' | 'title';
+  /** A `cards` skeleton draws compact cards, as the coven lists open at, unless a stored Regular choice sits on `<html>`. */
+  density?: 'compact';
   /** How many rows, cards, fields or blocks it draws; each shape has its own default. */
   count?: number;
 }
@@ -36,6 +38,8 @@ export interface SwapPanelProps {
   filter?: boolean;
   /** Which skeleton, as `TabPanelLoading`'s. */
   shape?: 'table' | 'cards';
+  /** The density of a `cards` skeleton, as `TabPanelLoading`'s. */
+  density?: 'compact';
   /** A minimum height for the skeleton's wrapper only, so the content it replaces keeps its room; the new content takes none. */
   loadingMinHeight?: number;
   children: ReactNode;

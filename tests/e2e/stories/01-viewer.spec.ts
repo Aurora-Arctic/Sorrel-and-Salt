@@ -27,7 +27,7 @@ test.beforeAll(async () => {
 
 /** The grimoire's list of spells, named after its page as the ingredient list is. */
 function grimoireList(page: Page): Locator {
-  return page.getByRole('list', { name: 'Grimoire' });
+  return page.getByRole('list', { name: 'Spells' });
 }
 
 /**

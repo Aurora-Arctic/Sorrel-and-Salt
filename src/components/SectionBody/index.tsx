@@ -32,6 +32,7 @@ export default function SectionBody({
         menu={target.frame === 'with-nav' || target.frame === 'entry'}
         entry={target.frame === 'entry'}
         head={target.head}
+        density={target.density}
       />
     ) : null;
   // When the wait ends the skeleton stays over the arrived page and fades
