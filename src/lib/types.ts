@@ -225,6 +225,8 @@ export interface PagerHrefs<Href extends string = string> {
 
 /** The signed-in person as the application shell draws them. */
 export interface ShellViewer {
+  /** Their user id, which keys the forms' offline copies to them. */
+  id?: string;
   /** The name the site shows for them; the account button's text and its initials. */
   name: string;
   /** A curator or a site admin: the shell adds the Admin and Your Coven links. */
