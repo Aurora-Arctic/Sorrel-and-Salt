@@ -4,6 +4,9 @@ nomenclature: zoological
 canonicalName: 'Scarabaeus sacer'
 colours:
   - 'black'
+categories:
+  - Warding
+  - Luck
 references:
   - source: wikipedia-scarabaeus-sacer
     nameBasis: stated
@@ -12,6 +15,11 @@ references:
       - nomenclature
       - description
       - colours
+  - source: mcclung-museum-sacred-scarab
+    locator: 'The Sacred Scarab, Occasional Paper'
+    nameBasis: stated
+    supports:
+      - categories
 variants:
   - form: Specimen
     references:
@@ -19,6 +27,7 @@ variants:
         nameBasis: stated
         supports:
           - form
+seedUpdate: c6d9760e82d09f7ca0ace1dc736bc0fb01482249e9b97747bfe6d3bc322dadbc
 ---
 
 # Sacred Scarab

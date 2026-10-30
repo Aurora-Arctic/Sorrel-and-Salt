@@ -4,6 +4,11 @@ nomenclature: botanical
 canonicalName: Datura wrightii
 safetyNotes: All parts of Datura plants contain dangerous levels of anticholinergic tropane alkaloids and may be fatal if eaten by humans, livestock or pets. In this species the roots are the most potent and alkaloid-rich part. In some places buying, selling or growing Datura is prohibited.
 toxic: true
+categories:
+  - Luck
+  - Love
+  - Gambling
+  - Divination
 references:
   - source: wikipedia-datura-wrightii
     nameBasis: stated
@@ -13,6 +18,11 @@ references:
       - description
       - safetyNotes
       - toxic
+  - source: naeb
+    locator: 'Cahuilla, Other: Good Luck Charm; Bean and Saubel 1972, p. 60 (NAEB record 12146); Costanoan, Drug: Love Medicine; Bocek 1984, p. 14 (NAEB record 12158); Paiute, Other: Good Luck Charm; Steward 1933, p. 318 (NAEB record 12221); Cahuilla, Drug: Other; Bean and Saubel 1972, p. 60 (NAEB record 12134); Cahuilla, Drug: Sports Medicine; Bean and Saubel 1972, p. 60 (NAEB record 12138)'
+    nameBasis: stated
+    supports:
+      - categories
 variants:
   - form: Root
     description: The Zuni give the powdered root as an anaesthetic and narcotic for surgery, and rain priests use it in ceremony. The root is the most potent and alkaloid-rich part.
@@ -38,6 +48,7 @@ variants:
           - description
           - safetyNotes
           - toxic
+seedUpdate: 0e1430915ca1d4f9367d4ba45423cccc859a94e679ff81476424d4e289e06dfc
 ---
 
 # Sacred Datura

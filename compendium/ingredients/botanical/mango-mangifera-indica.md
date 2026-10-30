@@ -3,6 +3,9 @@ status: needs-review
 nomenclature: botanical
 canonicalName: 'Mangifera indica'
 safetyNotes: 'The article says urushiols in the fruit peel can trigger contact dermatitis in sensitised individuals, more likely in people exposed to other plants of the family Anacardiaceae such as poison oak and poison ivy.'
+categories:
+  - Protection
+  - Love
 references:
   - source: wikipedia-mangifera-indica
     nameBasis: stated
@@ -18,6 +21,18 @@ references:
     resolvedBy: wikipedia-mangifera-indica
     supports:
       - description
+  - source: quiroz-van-andel-2015
+    locator: 'Additional file 1 (species table), Mangifera indica, Benin row'
+    nameBasis: stated
+    supports:
+      - categories
+  - source: folkard-1884-plant-lore
+    locator: Chapter X, Magical Plants (love-philtre passage)
+    nameBasis: resolved
+    headedAs: Mango
+    resolvedBy: wikipedia-mango
+    supports:
+      - categories
 variants:
   - form: Whole
     references:

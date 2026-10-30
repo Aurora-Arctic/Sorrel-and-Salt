@@ -12,8 +12,11 @@ folkNames:
   - Bija
   - Roucou
   - Aploppas
+categories:
+  - Warding
 references:
   - source: wikipedia-bixa-orellana
+    locator: Traditional uses
     nameBasis: stated
     supports:
       - canonicalName
@@ -21,6 +24,7 @@ references:
       - description
       - folkNames
       - safetyNotes
+      - categories
 variants:
   - form: Seed
     description: The seeds are covered in a thin waxy red aril, which holds the annatto pigment. Cooks heat the seeds in oil or lard to draw out colour and flavour, or grind them, often with other seeds or spices, into a paste or powder.
@@ -30,6 +34,7 @@ variants:
         supports:
           - form
           - description
+seedUpdate: b1d16a0d4193abb309c31b35ec8b4158afa4a8a72495a8b83a5dc36527bd6386
 ---
 
 # Achiote

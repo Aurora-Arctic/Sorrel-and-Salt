@@ -13,6 +13,8 @@ folkNames:
   - Bendu-Chettu
   - Ponguchedi
   - Netti
+categories:
+  - Luck
 references:
   - source: wikipedia-aeschynomene-aspera
     nameBasis: stated
@@ -22,6 +24,11 @@ references:
       - description
       - folkNames
       - colours
+  - source: british-museum-drs-after-the-pre-build-rituals
+    locator: 'Record description (figshare API 28314743)'
+    nameBasis: stated
+    supports:
+      - categories
 variants:
   - form: Stem
     description: The spongy white stem wood is cut into crafts, hats and decorative objects for worship.
@@ -50,6 +57,7 @@ variants:
         supports:
           - form
           - description
+seedUpdate: a77b9fdf3736fc6af9a7fbc5ac25edcde9a875d5200724ab29075e769b459718
 ---
 
 # Sola Pith

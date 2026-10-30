@@ -5,6 +5,8 @@ canonicalName: Cassia fistula
 safetyNotes: The fruit pulp is considered a purgative, and Ayurvedic texts strongly advise against self-medication or any use without medical supervision.
 colours:
   - yellow
+categories:
+  - Luck
 folkNames:
   - Golden Shower
   - Purging Cassia
@@ -25,6 +27,7 @@ references:
       - folkNames
       - colours
       - safetyNotes
+      - categories
 variants:
   - form: Flower
     references:
@@ -40,6 +43,7 @@ variants:
         supports:
           - form
           - safetyNotes
+seedUpdate: 01080951a6ea625bf8a70a89e13792dab19bf10ced462289c4e9c5fb32d982fd
 ---
 
 # Golden Shower Tree

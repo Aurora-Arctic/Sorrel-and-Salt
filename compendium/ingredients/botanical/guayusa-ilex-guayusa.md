@@ -6,6 +6,10 @@ folkNames:
   - Waisa
   - Wayus
   - Wais
+categories:
+  - Prophetic Dreams
+  - Divination
+  - Banishing
 references:
   - source: wikipedia-ilex-guayusa
     nameBasis: stated
@@ -14,6 +18,11 @@ references:
       - nomenclature
       - description
       - folkNames
+  - source: noriega-2025
+    locator: 'Section 2.5, uses of guayusa'
+    nameBasis: stated
+    supports:
+      - categories
 variants:
   - form: Leaf
     description: The leaves are dried and brewed as an infusion, drunk daily by the Kichwa and served in gourds, often with stories and dream interpretations.
@@ -23,6 +32,7 @@ variants:
         supports:
           - form
           - description
+seedUpdate: 1d7f8bfcc53c10dea30a0555f76164cdb348b31ec83f8ae33e6047fb5585e1b4
 ---
 
 # Guayusa

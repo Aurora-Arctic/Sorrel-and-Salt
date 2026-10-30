@@ -2,6 +2,8 @@
 status: approved
 nomenclature: botanical
 canonicalName: 'Vitellaria paradoxa'
+categories:
+  - Protection
 folkNames:
   - 'Shea Tree'
   - 'Shi Tree'
@@ -14,6 +16,11 @@ references:
       - nomenclature
       - description
       - folkNames
+  - source: quiroz-van-andel-2015
+    locator: 'Additional file 1 (species table), Vitellaria paradoxa, Benin row'
+    nameBasis: stated
+    supports:
+      - categories
 variants:
   - form: Seed
     references:
@@ -21,6 +28,7 @@ variants:
         nameBasis: stated
         supports:
           - form
+seedUpdate: dd2d7aef25ccc7c0aea67870fe855d09d3014ddde3b4116fa6ef48e461009b87
 ---
 
 # Shea

@@ -4,12 +4,15 @@ nomenclature: botanical
 canonicalName: 'Strychnos icaja'
 safetyNotes: 'The article says the root, stem and leaves contain indole alkaloids of which strychnine is a main active principle, that the plant has been used as an ordeal poison and an arrow poison, and that because of its toxicity it is usually given only under the supervision of a traditional healer.'
 toxic: true
+categories:
+  - Divination
 folkNames:
   - 'Mbondo'
   - 'Kpwili'
   - 'Boundou'
 references:
   - source: wikipedia-strychnos-icaja
+    locator: Poison
     nameBasis: stated
     supports:
       - canonicalName
@@ -18,6 +21,7 @@ references:
       - folkNames
       - safetyNotes
       - toxic
+      - categories
 variants:
   - form: Bark
     references:
@@ -25,6 +29,7 @@ variants:
         nameBasis: stated
         supports:
           - form
+seedUpdate: 36e8ce42609ae217ec40e0b7d49e337e2ad1eb1cd49c7706146bc3ea34921c96
 ---
 
 # Strychnos icaja

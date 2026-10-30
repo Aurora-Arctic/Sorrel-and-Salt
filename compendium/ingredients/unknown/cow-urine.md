@@ -4,6 +4,8 @@ nomenclature: unknown
 safetyNotes: Consuming cow urine or dung increases the risk of animal-to-human disease transmission, such as E. coli and Mycobacterium paratuberculosis, and raises the risk of fungal infections such as mucormycosis. In Nigeria a concoction of tobacco, garlic and lemon basil juice, rock salt and cow urine given to children for convulsions has caused several deaths from respiratory depression.
 deities:
   - Lakshmi
+categories:
+  - Purification
 references:
   - source: wikipedia-cow-urine
     locator: lead; Hinduism; folk medicine; COVID-19
@@ -12,6 +14,11 @@ references:
       - description
       - deities
       - safetyNotes
+  - source: thurston-1912-omens
+    locator: Chapter II, Animal Superstitions (printed pp. 73-108)
+    nameBasis: stated
+    supports:
+      - categories
 variants:
   - form: Liquid
     references:

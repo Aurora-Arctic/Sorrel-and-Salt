@@ -2,6 +2,8 @@
 status: approved
 nomenclature: botanical
 canonicalName: 'Milicia excelsa'
+categories:
+  - Protection
 folkNames:
   - 'Iroko'
   - 'Ọjị'
@@ -19,6 +21,11 @@ references:
       - nomenclature
       - description
       - folkNames
+  - source: ajao-2021-yoruba
+    locator: 'Table 1, Milicia excelsa row'
+    nameBasis: stated
+    supports:
+      - categories
 variants:
   - form: Bark
     references:
@@ -26,6 +33,7 @@ variants:
         nameBasis: stated
         supports:
           - form
+seedUpdate: 6214b375aa9b7eadefd7851e5ac43bf914ebe22c6fe3ebbae785f7cfe6b8cc90
 ---
 
 # African Teak

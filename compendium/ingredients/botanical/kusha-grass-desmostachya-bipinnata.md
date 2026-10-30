@@ -11,6 +11,8 @@ folkNames:
 deities:
   - Buddha
   - Krishna
+categories:
+  - Warding
 references:
   - source: wikipedia-desmostachya-bipinnata
     locator: lead; Religious significance; Other uses
@@ -20,6 +22,11 @@ references:
       - description
       - folkNames
       - deities
+  - source: era-devi-kumar-sarkaghat
+    locator: annotated table, eth-mr-78
+    nameBasis: stated
+    supports:
+      - categories
 variants:
   - form: Herb
     references:
@@ -27,6 +34,7 @@ variants:
         nameBasis: stated
         supports:
           - form
+seedUpdate: 90b41da0e698c780ee593ce7ec2556e739f4b19ff4ac57aac764e0aaf55cd185
 ---
 
 # Kusha Grass

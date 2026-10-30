@@ -2,6 +2,8 @@
 status: approved
 nomenclature: botanical
 canonicalName: 'Ziziphus mucronata'
+categories:
+  - Banishing
 folkNames:
   - 'umLahlankosi'
   - "Blinkblaar-wag-'n-bietjie"
@@ -13,6 +15,11 @@ references:
       - nomenclature
       - description
       - folkNames
+  - source: sobiecki-2008-plant-use-in-divination
+    locator: 'Appendix 1, Ziziphus mucronata subsp. mucronata row'
+    nameBasis: stated
+    supports:
+      - categories
 variants:
   - form: Stem
     references:
@@ -20,6 +27,7 @@ variants:
         nameBasis: stated
         supports:
           - form
+seedUpdate: e08698d4c5209b468fcbf3e176b87ac7fdac7e862d28594ce467aa45a53b4c09
 ---
 
 # Buffalo Thorn

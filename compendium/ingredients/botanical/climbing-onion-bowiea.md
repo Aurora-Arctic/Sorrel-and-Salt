@@ -4,10 +4,14 @@ nomenclature: botanical
 canonicalName: 'Bowiea'
 safetyNotes: 'The article calls the whole plant highly poisonous because of cardiac glycosides: overdose causes vomiting, hypersalivation, arrhythmia and spasms, and can lead to death within minutes or hours.'
 toxic: true
+categories:
+  - Protection
+  - Warding
 folkNames:
   - 'Climbing Onion'
 references:
   - source: wikipedia-bowiea
+    locator: Magical
     nameBasis: stated
     supports:
       - canonicalName
@@ -16,6 +20,7 @@ references:
       - folkNames
       - safetyNotes
       - toxic
+      - categories
 variants:
   - form: Bulb
     references:

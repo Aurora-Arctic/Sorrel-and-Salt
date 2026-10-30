@@ -10,8 +10,11 @@ folkNames:
   - Yerba de la Pastora
   - Magic Mint
   - Salvia
+categories:
+  - Divination
 references:
   - source: wikipedia-salvia-divinorum
+    locator: lead
     nameBasis: stated
     supports:
       - canonicalName
@@ -19,6 +22,7 @@ references:
       - description
       - folkNames
       - safetyNotes
+      - categories
 variants:
   - form: Leaf
     description: Fresh leaves are crushed for their juice, mixed with water as a tea, or chewed. Smoking and tinctures are modern methods.
@@ -30,6 +34,7 @@ variants:
           - form
           - description
           - safetyNotes
+seedUpdate: f45e4cf1a9773dc9584022bd2147ef52a141de9c0d2f5e745dd1c2441bf31bc0
 ---
 
 # Salvia divinorum

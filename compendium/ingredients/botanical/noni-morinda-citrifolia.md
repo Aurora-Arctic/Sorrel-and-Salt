@@ -5,6 +5,8 @@ canonicalName: Morinda citrifolia
 safetyNotes: Consumption of products such as supplements, beverages, powders, oils or leaves has the risk of causing liver disease through exposure to anthraquinones.
 folkNames:
   - Indian Mulberry
+categories:
+  - Banishing
 references:
   - source: wikipedia-morinda-citrifolia
     nameBasis: stated
@@ -14,6 +16,11 @@ references:
       - description
       - folkNames
       - safetyNotes
+  - source: ntbg-herbarium-ptbg1000073806
+    locator: 'Ethnobotanical Notes, Pohnpei'
+    nameBasis: stated
+    supports:
+      - categories
 variants:
   - form: Fruit
     description: A famine food in Polynesian cultures because of its pungent odour, and processed into juice drinks and powders.
@@ -35,6 +42,7 @@ variants:
           - form
           - description
           - safetyNotes
+seedUpdate: e7da48f4c356890848a3c5571826728ed413616db637574b9e34b17f69db20d5
 ---
 
 # Noni

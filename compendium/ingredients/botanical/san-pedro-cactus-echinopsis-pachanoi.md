@@ -12,14 +12,18 @@ folkNames:
   - Tsuná
   - San Pedro
   - Giganton
+categories:
+  - Divination
 references:
   - source: wikipedia-echinopsis-pachanoi
+    locator: lead
     nameBasis: stated
     supports:
       - canonicalName
       - nomenclature
       - description
       - folkNames
+      - categories
 variants:
   - form: Stem
     description: The green stems, with spines removed, are boiled into the bitter drink cimora. The stem contains mescaline.
@@ -29,6 +33,7 @@ variants:
         supports:
           - form
           - description
+seedUpdate: 9cb1212fbbc0f7542e95c504fb3cbe0aad30256720d34a952ec11202bdaf6c1b
 ---
 
 # San Pedro Cactus

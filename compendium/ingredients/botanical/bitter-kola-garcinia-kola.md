@@ -2,6 +2,8 @@
 status: approved
 nomenclature: botanical
 canonicalName: 'Garcinia kola'
+categories:
+  - Divination
 folkNames:
   - 'Bitter Cola'
   - 'Garcinia Kola'
@@ -13,6 +15,11 @@ references:
       - nomenclature
       - description
       - folkNames
+  - source: quiroz-van-andel-2015
+    locator: 'Additional file 1 (species table), Garcinia kola, Benin row'
+    nameBasis: stated
+    supports:
+      - categories
 variants:
   - form: Seed
     references:
@@ -20,6 +27,7 @@ variants:
         nameBasis: stated
         supports:
           - form
+seedUpdate: 4f06e2b48c0e97a3b2daa7227a346ca537cbd93c9077bb309ef66b044162c075
 ---
 
 # Bitter Kola

@@ -3,14 +3,18 @@ status: approved
 nomenclature: fungal
 canonicalName: Psilocybe
 safetyNotes: Some poisonous mushrooms look very similar to Psilocybe, so identifying one is difficult and can be dangerous, and misidentifying a fruit body could lead to eating a lethal fungus.
+categories:
+  - Divination
 references:
   - source: wikipedia-psilocybe
+    locator: History and ethnography
     nameBasis: stated
     supports:
       - canonicalName
       - nomenclature
       - description
       - safetyNotes
+      - categories
 variants:
   - form: Mushroom
     description: The fruit bodies of the hallucinogenic species have long been used by the native peoples of Mesoamerica for religious communion, divination and healing.
@@ -22,6 +26,7 @@ variants:
           - form
           - description
           - safetyNotes
+seedUpdate: aa71a0f9a7721848ef74f0be5ace1942bd9b5552e05e268b0c2841af8110d4e4
 ---
 
 # Psilocybe Mushrooms

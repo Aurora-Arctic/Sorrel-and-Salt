@@ -13,6 +13,8 @@ deities:
   - Shiva
   - Lakshmi
   - Parvati
+categories:
+  - Warding
 references:
   - source: wikipedia-phyllanthus-emblica
     locator: lead; Hinduism section
@@ -22,6 +24,11 @@ references:
       - description
       - folkNames
       - deities
+  - source: era-devi-kumar-sarkaghat
+    locator: annotated table, eth-mr-41
+    nameBasis: stated
+    supports:
+      - categories
 variants:
   - form: Fruit
     references:
@@ -29,6 +36,7 @@ variants:
         nameBasis: stated
         supports:
           - form
+seedUpdate: 3f8e34add44a0f209e30c9aff2c5a6393c4d3be0d2c8c23a4dd84273720e03e1
 ---
 
 # Amla

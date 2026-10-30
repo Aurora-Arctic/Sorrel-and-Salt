@@ -13,6 +13,10 @@ folkNames:
   - Devil Grass
 deities:
   - Ganesha
+categories:
+  - Prosperity
+  - Warding
+  - Banishing
 references:
   - source: wikipedia-cynodon-dactylon
     locator: lead; religion; toxicity
@@ -23,6 +27,16 @@ references:
       - folkNames
       - deities
       - safetyNotes
+  - source: era-devi-kumar-sarkaghat
+    locator: annotated table, eth-mr-26
+    nameBasis: stated
+    supports:
+      - categories
+  - source: era-uttarakhand-2022
+    locator: Discussion, Cynodon dactylon paragraph (Hajong of Assam, after Sharma et al. 2012)
+    nameBasis: stated
+    supports:
+      - categories
 variants:
   - form: Herb
     references:
@@ -30,6 +44,7 @@ variants:
         nameBasis: stated
         supports:
           - form
+seedUpdate: b51b5dbe839bbd708c0210d6e1b8707a2219754fbd867f43c578110ccb1b6e78
 ---
 
 # Durva Grass

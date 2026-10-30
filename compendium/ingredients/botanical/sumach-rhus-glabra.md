@@ -7,6 +7,8 @@ folkNames:
   - Pennsylvania Sumach
   - Smooth Sumac
   - Scarlet Sumac
+categories:
+  - Purification
 references:
   - source: grieve-sumachs
     locator: under "SUMACH, SMOOTH"
@@ -25,6 +27,11 @@ references:
     nameBasis: stated
     supports:
       - folkNames
+  - source: naeb
+    locator: 'Kiowa, Drug: Other; Vestal and Schultes 1939, p. 37 (NAEB record 32943)'
+    nameBasis: stated
+    supports:
+      - categories
 variants:
   - form: Bark
     description: Grieve gives the bark of branches and root, dried, as a part used. She calls the bark tonic, astringent and antiseptic, says a decoction or syrup has been used for diarrhoea, dysentery and leucorrhoea, and says a free use of the bark will produce catharsis. She gives the fluid extract of bark as 1 to 2 drachms.
@@ -44,6 +51,7 @@ variants:
         supports:
           - form
           - description
+seedUpdate: 1decfe58ed76a5e083d0f471ccadfcddec30b0fcb19062393ea87c8440541502
 ---
 
 # Sumach

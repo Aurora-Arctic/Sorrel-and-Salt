@@ -4,6 +4,10 @@ nomenclature: botanical
 canonicalName: Tsuga heterophylla
 folkNames:
   - Western Hemlock-Spruce
+categories:
+  - Luck
+  - Protection
+  - Purification
 references:
   - source: wikipedia-tsuga-heterophylla
     nameBasis: stated
@@ -12,6 +16,11 @@ references:
       - nomenclature
       - description
       - folkNames
+  - source: naeb
+    locator: "Haisla and Hanaksiala, Other: Good Luck Charm; Compton 1993, p. 180 (NAEB record 40970); Kwakwaka'wakw, Other: Protection; Compton 1993, p. 71 (NAEB record 41023); Haisla and Hanaksiala, Other: Ceremonial Items; Compton 1993, p. 180 (NAEB record 40968); Kwakiutl, Drug: Hunting Medicine; Turner and Bell 1973, p. 270 (NAEB record 41016); Kwakwaka'wakw, Drug: Ceremonial Medicine; Compton 1993, p. 71 (NAEB record 41020); Oweekeno, Drug: Ceremonial Medicine; Compton 1993, p. 71 (NAEB record 41050)"
+    nameBasis: stated
+    supports:
+      - categories
 variants:
   - form: Bark
     description: Cooked into medicinal extracts, boiled for a dark red dye, and used as a source of tannin for tanning leather.
@@ -37,6 +46,7 @@ variants:
         supports:
           - form
           - description
+seedUpdate: 755dcc40017e33116fbf71c01e4dee7bcac6f0fbb872ae586dd71e446c8c5f21
 ---
 
 # Western Hemlock

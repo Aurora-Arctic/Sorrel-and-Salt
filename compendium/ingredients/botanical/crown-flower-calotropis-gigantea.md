@@ -11,6 +11,8 @@ folkNames:
   - Akondo
 deities:
   - Shiva
+categories:
+  - Warding
 references:
   - source: wikipedia-calotropis-gigantea
     locator: lead; religion; poisoning; uses
@@ -23,6 +25,13 @@ references:
       - colours
       - safetyNotes
       - toxic
+  - source: thurston-1912-omens
+    locator: Chapter VI, Charms (printed pp. 180-198)
+    nameBasis: resolved
+    headedAs: arka
+    resolvedBy: wikipedia-calotropis-gigantea
+    supports:
+      - categories
 variants:
   - form: Flower
     safetyNotes: Poisonous; the latex is the main hazard.
@@ -34,6 +43,7 @@ variants:
           - form
           - safetyNotes
           - toxic
+seedUpdate: c1b2245ec7b7b4559d28c86005f7daf94b0e5b716fe349897f475640f0eca953
 ---
 
 # Crown Flower

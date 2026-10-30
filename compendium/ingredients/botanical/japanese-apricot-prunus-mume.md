@@ -10,13 +10,17 @@ folkNames:
   - Flowering Plum
   - Meihua
   - Wumei
+categories:
+  - Warding
 references:
   - source: wikipedia-prunus-mume
     nameBasis: stated
+    locator: Japanese (under Cultural significance)
     supports:
       - canonicalName
       - description
       - folkNames
+      - categories
 variants:
   - form: Fruit
     references:
@@ -24,6 +28,7 @@ variants:
         nameBasis: stated
         supports:
           - form
+seedUpdate: 194983f0c3dc002e885b00009cde9b95ad13d236f7dfc3da85892fac52334f70
 ---
 
 # Japanese Apricot

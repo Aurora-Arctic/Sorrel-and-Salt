@@ -4,11 +4,20 @@ nomenclature: unknown
 folkNames:
   - Musk Pod
   - Musk Grain
+categories:
+  - Nightmare Protection
+  - Warding
+  - Banishing
 references:
   - source: wikipedia-musk
     supports:
       - description
       - folkNames
+  - source: de-groot-religious-system-of-china-v6
+    locator: p. 1083
+    nameBasis: stated
+    supports:
+      - categories
 variants:
   - form: Pod
     references:

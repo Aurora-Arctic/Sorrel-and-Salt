@@ -9,6 +9,9 @@ folkNames:
   - Indian Ginger
   - Coltsfoot
   - Broad-Leaved Asarabacca
+categories:
+  - Protection
+  - Nightmare Protection
 references:
   - source: wikipedia-asarum-canadense
     nameBasis: stated
@@ -18,6 +21,11 @@ references:
       - description
       - folkNames
       - safetyNotes
+  - source: naeb
+    locator: 'Iroquois, Drug: Witchcraft Medicine; Herrick 1977, p. 308 (NAEB record 6015); Iroquois, Drug: Psychological Aid; Herrick 1977, p. 308 (NAEB record 6001)'
+    nameBasis: stated
+    supports:
+      - categories
 variants:
   - form: Root
     description: The long rhizomes were used as a seasoning and as a medicinal herb, and also as a charm.
@@ -39,6 +47,7 @@ variants:
           - form
           - description
           - safetyNotes
+seedUpdate: 38c3a150c6371152de2c1be9678834b599cfcee0f9e9dd557b02d1a595da6012
 ---
 
 # Wild Ginger

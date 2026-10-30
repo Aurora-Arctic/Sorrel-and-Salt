@@ -2,6 +2,8 @@
 status: approved
 nomenclature: botanical
 canonicalName: 'Ziziphus spina-christi'
+categories:
+  - Warding
 folkNames:
   - "Christ's Thorn Jujube"
   - 'Sidr'
@@ -13,6 +15,11 @@ references:
       - nomenclature
       - description
       - folkNames
+  - source: dafni-levy-lev-2005-christs-thorn
+    locator: 'section "Customs related to the tree" (nails in the tree against the evil eye)'
+    nameBasis: stated
+    supports:
+      - categories
 variants:
   - form: Whole
     references:
@@ -20,6 +27,7 @@ variants:
         nameBasis: stated
         supports:
           - form
+seedUpdate: cafc0a7942e82fe3578f1055afa6846cb7a4a59a48a267d8405e106493ac20b7
 ---
 
 # Christ's Thorn

@@ -9,6 +9,10 @@ folkNames:
   - Purple Nut Sedge
   - Purple Nutsedge
   - Red Nut Sedge
+categories:
+  - Cleansing
+  - Protection
+  - Banishing
 references:
   - source: wikipedia-cyperus-rotundus
     locator: lead; Description; Uses; taxobox
@@ -17,6 +21,11 @@ references:
       - canonicalName
       - description
       - folkNames
+  - source: era-devi-kumar-sarkaghat
+    locator: annotated table, eth-mr-22
+    nameBasis: stated
+    supports:
+      - categories
 variants:
   - form: Root
     references:
@@ -24,6 +33,7 @@ variants:
         nameBasis: stated
         supports:
           - form
+seedUpdate: 95cce4e5960cd0c77c1f60f56f8ce22fc96ac813a065b335f0cd1e3c2557ade0
 ---
 
 # Nutgrass
