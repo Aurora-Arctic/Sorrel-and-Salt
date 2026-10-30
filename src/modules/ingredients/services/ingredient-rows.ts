@@ -89,9 +89,12 @@ export function splitChildren<P extends LocalIngredientInput>(parsed: P) {
   };
 }
 
+type IngredientRecord = typeof ingredients.$inferSelect;
+
 /**
  * Writes an ingredient's child rows beside it, in its `withAudit` (claude-docs/db/ingredient-children.md,
- * "Ingredient row writes"): `'add'` for a new row, `'replace'` to bring each list to the input's.
+ * "Ingredient row writes"): `'add'` for a new row, `'replace'` to bring each list to the input's. A replace that changed a list answers
+ * the parent row as the touch left it, whose revision is the one the save ends at.
  *
  * @throws {ValidationError} a forbidden link or reference, a repeated form, or a substitute form of the wrong ingredient.
  */
@@ -101,7 +104,7 @@ export async function writeChildren(
   ingredientId: string,
   children: IngredientChildren,
   mode: 'add',
-): Promise<void>;
+): Promise<undefined>;
 export async function writeChildren(
   write: AuditWriter,
   memberships: readonly Membership[],
@@ -109,7 +112,7 @@ export async function writeChildren(
   children: IngredientChildren,
   mode: 'replace',
   proof: Curator | Membership,
-): Promise<void>;
+): Promise<IngredientRecord | undefined>;
 export async function writeChildren(
   write: AuditWriter,
   memberships: readonly Membership[],
@@ -117,7 +120,7 @@ export async function writeChildren(
   children: IngredientChildren,
   mode: 'add' | 'replace',
   proof?: Curator | Membership,
-): Promise<void> {
+): Promise<IngredientRecord | undefined> {
   const folkNames = children.folkNames ?? [];
   const substitutes = children.substitutes ?? [];
   const references = children.references ?? [];
@@ -133,7 +136,7 @@ export async function writeChildren(
     await addReferenceLinks(write, memberships, parent, references);
     await addCategories(write, parent, categoryIds);
     await addVariants(write, memberships, ingredientId, variants);
-    return;
+    return undefined;
   }
   if (!proof) throw new Error("writeChildren replaces under a proof of the ingredient's tier");
   const changes = watchWrites(write);
@@ -144,9 +147,12 @@ export async function writeChildren(
   await replaceCategories(changes.write, memberships, parent, categoryIds);
   await replaceVariants(changes.write, memberships, ingredientId, variants);
   // A changed child list moves the parent's `updated_at`; a save that changed nothing leaves it.
-  if (!changes.changed()) return;
-  if ('workspaceId' in proof) await write.touchByIdInWorkspace(proof, ingredients, ingredientId);
-  else await write.touchByIdInCompendium(proof, ingredients, ingredientId);
+  if (!changes.changed()) return undefined;
+  const [touched] =
+    'workspaceId' in proof
+      ? await write.touchByIdInWorkspace(proof, ingredients, ingredientId)
+      : await write.touchByIdInCompendium(proof, ingredients, ingredientId);
+  return touched;
 }
 
 /** `write` that notes whether any write through it answered a row. */

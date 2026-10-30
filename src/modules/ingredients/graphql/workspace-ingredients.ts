@@ -6,7 +6,7 @@ import {
   updateWorkspaceIngredient,
 } from '../services/workspace-ingredients';
 import { clearIngredientChildren } from '../loaders/ingredient-children';
-import { IngredientRef } from './ingredient';
+import { EXPECTED_REVISION, IngredientRef } from './ingredient';
 import { ingredientInputFields } from './ingredient-input';
 
 // A coven's own ingredients, written as IngredientForm submits them. Neither
@@ -49,10 +49,24 @@ builder.mutationField('updateIngredient', (t) =>
       workspaceId: t.arg.id({ required: true }),
       id: t.arg.id({ required: true }),
       input: t.arg({ type: IngredientUpdateInput, required: true }),
+      expectedRevision: t.arg.int({
+        required: false,
+        description: EXPECTED_REVISION,
+      }),
     },
     authScopes: { signedIn: true },
-    resolve: async (_root, { workspaceId, id, input }, { loaders, ...context }) => {
-      const row = await updateWorkspaceIngredient(sessionOf(context), workspaceId, id, input);
+    resolve: async (
+      _root,
+      { workspaceId, id, input, expectedRevision },
+      { loaders, ...context },
+    ) => {
+      const row = await updateWorkspaceIngredient(
+        sessionOf(context),
+        workspaceId,
+        id,
+        input,
+        expectedRevision ?? null,
+      );
       clearIngredientChildren(loaders, row);
       return row;
     },

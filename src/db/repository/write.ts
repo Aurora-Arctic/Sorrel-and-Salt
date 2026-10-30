@@ -134,6 +134,8 @@ function writerFor(tx: Transaction, session: AuditSession): AuditWriter {
       insert(table, { ...values, workspaceId: null }),
     updateByIdInCompendium: (_curator, table, id, values) =>
       update(table, values, inCompendiumById(table, id)),
+    updateRevisionedInCompendium: (_curator, table, id, expectedRevision, values) =>
+      updateAtRevision(table, inCompendiumById(table, id), expectedRevision, values),
     // coalesce keeps a mark the entry already has, in the one statement, so two
     // curators switching it on together leave the first's date and name.
     setReviewInCompendium: (curator, id, reviewed) =>

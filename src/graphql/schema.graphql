@@ -409,6 +409,11 @@ type Ingredient {
   When a curator marked a compendium entry reviewed: null while it needs review, and for a coven's own entry. The date only, shown to anyone; who marked it is never a field.
   """
   reviewedAt: DateTime
+
+  """
+  Raised by one on every save; a save names the revision it was written against.
+  """
+  revision: Int!
   safetyNotes: String
   slug: String!
 
@@ -950,6 +955,11 @@ type Mutation {
     Confirms ending another entry's redirect from the address this write takes (MB.82).
     """
     endRedirect: Boolean
+
+    """
+    The revision this save was written against: a newer one refuses it. Left out or null, it writes regardless.
+    """
+    expectedRevision: Int
     id: ID!
     input: CompendiumIngredientUpdateInput!
   ): Ingredient!
@@ -963,7 +973,15 @@ type Mutation {
   Replaces the tradition; the slug follows the name, and so does the slug of every deity under it.
   """
   updateDeityTradition(id: ID!, input: DeityTraditionInput!): DeityTradition!
-  updateIngredient(id: ID!, input: IngredientUpdateInput!, workspaceId: ID!): Ingredient!
+  updateIngredient(
+    """
+    The revision this save was written against: a newer one refuses it. Left out or null, it writes regardless.
+    """
+    expectedRevision: Int
+    id: ID!
+    input: IngredientUpdateInput!
+    workspaceId: ID!
+  ): Ingredient!
 
   """
   Replaces the group; the slug follows the name, and so does the slug of every form under it.

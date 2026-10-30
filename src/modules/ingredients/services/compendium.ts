@@ -165,12 +165,16 @@ export async function createCompendiumEntry(
  *
  * @throws {Forbidden} the caller is neither a curator nor an admin.
  * @throws {ValidationError} as `createCompendiumEntry`.
+ * A save names the revision it read in `expectedRevision`: a newer one refuses it, and null writes whatever the row holds.
+ *
+ * @throws {StaleWrite} `expectedRevision` is not the entry's revision.
  * @throws {NotFound} no live compendium entry has this id.
  */
 export async function updateCompendiumEntry(
   session: Session,
   id: string,
   input: CompendiumWrite,
+  expectedRevision: number | null = null,
 ): Promise<IngredientRow> {
   const curator = assertCurator(session);
   const {
@@ -194,7 +198,13 @@ export async function updateCompendiumEntry(
 
   const written = await withAudit(session, async (write) => {
     await write.deleteLapsedSlugRetirements(curator, at);
-    const [row] = await write.updateByIdInCompendium(curator, ingredients, id, columns);
+    const [row] = await write.updateRevisionedInCompendium(
+      curator,
+      ingredients,
+      id,
+      expectedRevision,
+      columns,
+    );
     if (!row) throw new NotFound('No such compendium entry');
     if (moves) {
       await write.insertInCompendium(curator, retiredIngredientSlugs, {
@@ -203,7 +213,7 @@ export async function updateCompendiumEntry(
         retiredAt: at,
       });
     }
-    await writeChildren(
+    const touched = await writeChildren(
       write,
       [],
       id,
@@ -211,7 +221,7 @@ export async function updateCompendiumEntry(
       'replace',
       curator,
     );
-    return row;
+    return touched ?? row;
   }).catch((error: unknown) => refuseCollision(error, fields, slug, id));
   expireCompendium();
   return written;
