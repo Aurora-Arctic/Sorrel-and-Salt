@@ -11,12 +11,19 @@
   display: none;
 }
 
+// The sheet: A4, with the margin the content width is worked out from (_variables.scss).
+// stylelint-disable-next-line plugin/use-baseline -- enhancement: a browser without `@page` prints on its own default sheet, and the article is capped at the same content width either way
+@page {
+  size: a4;
+  margin: $print-page-margin;
+}
+
 @media print {
   // Paper is light whatever the theme: the light tokens, so text is dark on white.
   html:has(.spell-recipe) {
     @include theme-light;
 
-    font-size: 11pt;
+    font-size: $print-root;
     scroll-padding: 0;
   }
 
@@ -46,8 +53,10 @@
       padding: 0;
     }
 
+    // The sheet's content width: what the paper gives, stated so a print emulation on a wide
+    // window lays the text out as the paper does.
     .spell-recipe {
-      max-width: none;
+      max-width: $print-content-width;
       margin: 0;
       padding: 0;
     }
