@@ -1825,11 +1825,10 @@
       pointer-events: none;
     }
 
-    // Half the segment: the icons are a line drawing, so they need the room to read. A form icon is 1.25em
-    // of its line, so this line's size is set to bring it to 1.5rem.
+    // Half the segment: the icons are a line drawing, so they need the room to read.
     .radio__segment-icon {
       display: flex;
-      font-size: 1.2rem;
+      font-size: $form-icon-line;
       line-height: 1;
     }
 

@@ -738,6 +738,10 @@ $modal-fade: 150ms ease-out;
 // and the user list's icon boxes each wrote 1.5rem.
 $icon-size: 1.5rem;
 
+// The line size that brings a form icon, drawn at 1.25em of its line, to `$icon-size`: a segmented
+// radio's icon.
+$form-icon-line: math.div($icon-size, 1.25);
+
 // The mark inside a `$icon-size` box: InfoTip's ⓘ, Combobox's icons, the
 // user list's marks. Each wrote 1rem.
 $glyph-size: 1rem;

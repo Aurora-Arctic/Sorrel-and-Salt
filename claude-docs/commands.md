@@ -90,9 +90,14 @@ file passed by name, so a staged file under `src/gql/` is not flagged.
 - **Warnings**: `jsx-a11y/aria-role`, set to `ignoreNonDOM` so a component with a `role` prop is not judged as an element, and the advisory rules below.
 - **Advisory, disabled where deliberate**: the React Compiler rules (`react/refs`, `react/immutability`, `react/preserve-manual-memoization`) because the compiler is off in `next.config.ts`; they are off in `tests/**`, where fixtures write and read freely, along with `react/globals` and `react/incompatible-library`. `jsx-a11y/prefer-tag-over-role` is disabled per site where the native tag would change the layout or the meaning.
 
-**Stylelint** (`.stylelintrc.json`, MB.116) carries one binding rule,
-"only `_variables.scss` may name a raw hue" ([`styling.md`](styling.md),
-"Binding rules"): `color-no-hex` and `color-named: "never"`, cleared for
+**Stylelint** (`.stylelintrc.json`, MB.116) carries two binding rules
+([`styling.md`](styling.md), "Binding rules"). "Only `_variables.scss` may
+name a raw hue" is `color-no-hex`, `color-named: "never"`, and a
+`declaration-property-value-disallowed-list` entry refusing a colour function
+(`rgb()`, `hsl()`, `oklch()` and the rest) whose first argument is a
+number. "Type and layers come from the tokens" is a
+`declaration-property-value-allowed-list` for `font-family`, `font`,
+`font-size` and `z-index`. All of them are cleared for
 `src/scss/_variables.scss` alone. A group colour is a hex on its
 `category_groups` row, set inline from data, so the linter never sees it; a
 hex in a comment is not a colour to it either. It extends

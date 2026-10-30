@@ -30,7 +30,17 @@ to.
   colour that is not a token means adding a token, not inlining one.
   Stylelint carries it (`npm run lint:css`, part of `lint`): `color-no-hex` and
   `color-named` refuse a hue anywhere but `_variables.scss`, so a theme mixin
-  takes its hues from there too ([`commands.md`](commands.md), "The app").
+  takes its hues from there too ([`commands.md`](commands.md), "The app"). A
+  colour function whose first argument is a number, `rgb(0 0 0)` or
+  `oklch(0.5 0.1 20)`, is refused the same way; `rgba($ink, 0.5)` on a token
+  is not.
+- **Type and layers come from the tokens too.** Outside `_variables.scss`,
+  stylelint lets `font-family` be a `$font-*` token or `inherit`, `font` only
+  `inherit`, and `font-size` a `$` token, `type-size()`, `heading-size()`, a
+  `calc()` over those, an `em` value, `0` or `inherit`. `z-index` is
+  `layer()`, a `$` variable holding one, or a single digit: the small local
+  index a component keeps inside its own stacking context ("The application
+  shell and the layers").
 - **The seeded group colours live only in `src/db/seed/category-groups.ts`.**
   No Sass token restates them, and retuning one takes a data migration as well
   as the seed edit, because the seed never overwrites a row it finds (M5.6b).
