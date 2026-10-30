@@ -475,7 +475,9 @@ describe('the spell builder over a Grimoire tab', () => {
     await renderTab(DraftsPage, { edit: SPELL_ID });
 
     const dialog = screen.getByRole('dialog', { name: 'Edit Spell, Fixture Working' });
-    expect(within(dialog).getByRole('button', { name: 'Delete Spell' })).toBeInTheDocument();
+    expect(
+      within(dialog).getByRole('button', { name: 'Delete Spell Fixture Working' }),
+    ).toBeInTheDocument();
   });
 
   it('opens a saved spell under ?edit=<id> with the categories its author assigned it picked', async () => {
