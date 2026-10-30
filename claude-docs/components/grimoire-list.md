@@ -183,13 +183,18 @@ One thing in the list exists for the cards' smouldering edge ([spell-card.md](sp
 with a control that chooses one state, each drawn in the Grimoire page's Spells and Drafts tabs
 over the app shell, with the page's own New Spell button:
 
-- Spells and Drafts: four complete spells, and two drafts.
-- No Spells and No Drafts: each tab with nothing in it.
+- Spells and Drafts: four complete spells, and two drafts. A complete card's cauldron opens
+  its dialog, which sits on Loading or shows the error Notice: the workshop serves no
+  `/api/graphql`.
+- No Spells and No Drafts: each tab with nothing in it, as a member sees it.
+- No Spells For A Viewer and No Drafts For A Viewer: the same, with the second line naming who
+  can write a spell.
 - No Matches: a search and filters that match nothing.
 - First Page, Middle Page and Last Page: the pager at each end and between.
 - Facets and Categories Picked: two categories, a moon phase, a day, a visibility and a maker
   picked, with the one spell they match.
-- Filters Open With Picks: the same picks, with the Filters panel open.
+- Filters Open With Picks: the same picks, with the Filters panel open on its Moon Phases, Days
+  of the Week and Coven Members boxes.
 
 The cards themselves are drawn in SpellCard's `Grimoire / Spell Card` stories
 ([spell-card.md](spell-card.md), "Stories").

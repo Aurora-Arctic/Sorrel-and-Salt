@@ -123,19 +123,24 @@ const Page = ({
   </ShellFrame>
 );
 
-/** One tab of the list: Spells unless `drafts`, every spell on one page unless a page is named. */
+/**
+ * One tab of the list: Spells unless `drafts`, every spell on one page unless a page is named,
+ * seen by a member unless `canCreate` is false.
+ */
 const Tab = ({
   drafts = false,
   spells = drafts ? DRAFTS : SPELLS,
   filter = NO_FILTER,
   total = spells.length,
   page,
+  canCreate = true,
 }: {
   drafts?: boolean;
   spells?: readonly GrimoireSpell[];
   filter?: GrimoireListFilter;
   total?: number;
   page?: { at: number; of: number };
+  canCreate?: boolean;
 }): ReactElement => {
   const path = drafts ? DRAFTS_PATH : SPELLS_PATH;
   return (
@@ -145,7 +150,7 @@ const Tab = ({
         workspaceId="fixture-coven"
         covenSlug="fixture-coven"
         status={drafts ? 'draft' : 'complete'}
-        canCreate
+        canCreate={canCreate}
         spells={spells}
         filter={filter}
         categories={CATEGORIES}
@@ -174,6 +179,7 @@ const PICKED: GrimoireListFilter = {
 };
 
 // Filters pressed once drawn, as a person would, on the wide layout (below it the sheet is modal).
+// Its boxes are Moon Phases, Days of the Week and Coven Members.
 const FiltersOpen = (): ReactElement => {
   useSteps([() => document.querySelector<HTMLButtonElement>('.facet-panel__button')?.click()]);
   return (
@@ -184,11 +190,16 @@ const FiltersOpen = (): ReactElement => {
 };
 
 const STATES: Record<string, ReactNode> = {
+  // A complete card's cauldron opens its dialog, which sits on Loading or shows the error Notice
+  // here: the workshop serves no /api/graphql.
   Spells: <Tab />,
   Drafts: <Tab drafts />,
   // No spell on the tab and no filter: the tab says so, and New Spell at the heading is the way in.
   'No Spells': <Tab spells={[]} />,
   'No Drafts': <Tab drafts spells={[]} />,
+  // The same, as a viewer sees it: a second line names who can write a spell.
+  'No Spells For A Viewer': <Tab spells={[]} canCreate={false} />,
+  'No Drafts For A Viewer': <Tab drafts spells={[]} canCreate={false} />,
   // A filter that matched nothing: the hint to widen it, not the empty tab's line.
   'No Matches': <Tab spells={[]} filter={{ ...PICKED, query: 'nothing' }} total={0} />,
   // Next alone, at the right where it is on every other page.
