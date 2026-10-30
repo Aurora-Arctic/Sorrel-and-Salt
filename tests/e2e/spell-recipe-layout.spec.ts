@@ -1,3 +1,4 @@
+import type { Locator } from '@playwright/test';
 import { test, expect } from './fixtures';
 import { recreateE2eDatabase } from './database';
 import { signInAgainAs } from './session';
@@ -59,5 +60,35 @@ for (const [name, size] of [
     // Not in the side column: on a desktop it is beside it, on a phone above it.
     if (name === 'desktop') expect(workings.right).toBeLessThanOrEqual(aside.left);
     else expect(workings.bottom).toBeLessThan(aside.top);
+  });
+}
+
+for (const [name, size] of [
+  ['desktop', { width: 1280, height: 900 }],
+  ['phone', { width: 390, height: 844 }],
+] as const) {
+  test(`the header's icon buttons start level with the title's first line on a ${name}, wrapped title`, async ({
+    page,
+  }) => {
+    const coven = await seedCoven(page, `Fixture Coven Head ${name}`, `spell-head-${name}.test`, {
+      A: 'owner',
+    });
+    const { A } = coven.users;
+    const spellId = await withSql(async (sql) => {
+      const title = 'A Fixture Spell With A Very Long Name That Must Wrap Onto Several Lines Here';
+      return insertSpell(sql, coven.id, title, 'workspace', A, 'complete');
+    });
+    await signInAgainAs(page, A);
+    await page.setViewportSize(size);
+    await page.goto(`/coven/${coven.slug}/grimoire/${spellId}`);
+
+    const title = page.getByRole('heading', { level: 1 });
+    const edit = page.getByRole('link', { name: /^Edit/ }).first();
+    await expect(edit).toBeVisible();
+    const box = (locator: Locator) => locator.evaluate((el) => el.getBoundingClientRect().toJSON());
+    const [titleBox, editBox] = [await box(title), await box(edit)];
+    // The title wraps, and the button sits at its top rather than its middle.
+    expect(titleBox.height).toBeGreaterThan(editBox.height * 1.5);
+    expect(Math.abs(editBox.top - titleBox.top)).toBeLessThanOrEqual(1);
   });
 }

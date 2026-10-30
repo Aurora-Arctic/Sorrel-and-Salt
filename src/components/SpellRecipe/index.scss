@@ -127,7 +127,8 @@ $recipe-column: 48rem;
   display: flex;
   flex-wrap: wrap;
   gap: space(3);
-  align-items: center;
+  // The title can wrap, so the icon row hangs from its first line rather than its middle.
+  align-items: flex-start;
 
   h1 {
     flex: 1 1 0;
