@@ -72,9 +72,7 @@ describe('SpellWorkings', () => {
     renderSection([
       working({
         id: 'w1',
-        deductions: [
-          { id: 'd1', position: 2, name: 'Testwort (Dried Leaf)', quantity: '2', unit: 'g' },
-        ],
+        deductions: [{ id: 'd1', name: 'Testwort (Dried Leaf)', quantity: '2', unit: 'g' }],
       }),
     ]);
     const lines = within(within(rows()[0]!).getByRole('list', { name: 'Deductions' })).getAllByRole(
@@ -84,6 +82,17 @@ describe('SpellWorkings', () => {
     expect(lines[0]).toHaveTextContent('Testwort (Dried Leaf)');
     expect(lines[0]).toHaveTextContent('2');
     expect(lines[0]).toHaveTextContent('g');
+    // The lines carry no step number: the spell, not the working, says where a step stands.
+    expect(lines[0]).toHaveTextContent(/^Testwort/);
+  });
+
+  it('says on a draft row what completing it would skip, and on no complete row', () => {
+    renderSection([
+      working({ id: 'w1', status: 'draft', warnings: ['Completing skips Salt: units differ'] }),
+      working({ id: 'w2', warnings: ['Completing skips Pepper: not in stock'] }),
+    ]);
+    expect(within(rows()[0]!).getByText('Completing skips Salt: units differ')).toBeVisible();
+    expect(screen.queryByText(/Pepper/)).not.toBeInTheDocument();
   });
 
   it('offers Complete on a draft row only, in the slot the page fills', () => {
@@ -107,6 +116,8 @@ describe('SpellWorkings', () => {
     expect(screen.getAllByRole('button', { name: /^Delete Working/ })).toHaveLength(1);
     press(screen.getByRole('button', { name: /^Delete Working/ }));
     const dialog = await screen.findByRole('dialog', { name: 'Delete Working' });
+    // The dialog says the stock the working took is not given back.
+    expect(dialog).toHaveTextContent(/stays taken/);
     expect(calls).toHaveLength(0);
     press(within(dialog).getByRole('button', { name: 'Delete' }));
     await waitFor(() => expect(calls).toEqual([{ id: 'w1', workspaceId: WORKSPACE_ID }]));

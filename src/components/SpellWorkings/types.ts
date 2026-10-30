@@ -5,8 +5,6 @@ import type { SpellStatus, SpellVisibility } from '@/modules/grimoire';
 /** What a complete working took for one ingredient step, in the jar's own unit. */
 export interface WorkingDeductionView {
   id: string;
-  /** The step's place in the spell, counting from 1. */
-  position: number;
   /** The ingredient and form as the step names them. */
   name: string;
   quantity: string;
@@ -26,6 +24,8 @@ export interface WorkingView {
   /** Each participant, a member under the name they last held or a typed name. */
   participants: readonly string[];
   deductions: readonly WorkingDeductionView[];
+  /** What completing a draft would skip, one line each, as the Complete dialog words it; none on a complete working. */
+  warnings?: readonly string[];
   /** The viewer recorded it and may delete it. */
   canChange: boolean;
   /** What the Edit dialog opens on: given to the recorder only, who alone may change a working. */

@@ -34,4 +34,10 @@
     padding: 0;
     list-style: none;
   }
+
+  &__deduction {
+    display: flex;
+    justify-content: space-between;
+    gap: space(3);
+  }
 }

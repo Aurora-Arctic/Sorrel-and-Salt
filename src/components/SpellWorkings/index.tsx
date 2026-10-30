@@ -1,5 +1,4 @@
 import type { ReactElement } from 'react';
-import StepRow from '../StepRow';
 import DeleteWorkingAction from './delete-working';
 import type { SpellWorkingsProps, WorkingView } from './types';
 import './index.scss';
@@ -47,6 +46,12 @@ const Working = ({
           <DeleteWorkingAction workspaceId={workspaceId} workingId={working.id} name={day} />
         )}
       </div>
+      {working.status === 'draft' &&
+        working.warnings?.map((line) => (
+          <p key={line} className="meta spell-workings__warning">
+            {line}
+          </p>
+        ))}
       <p className="meta">
         {working.recordedBy ? `Recorded by ${working.recordedBy}` : 'Recorded'}
         {working.participants.length > 0 && ` · With ${working.participants.join(', ')}`}
@@ -55,13 +60,12 @@ const Working = ({
       {working.deductions.length > 0 && (
         <ol className="spell-workings__deductions" aria-label="Deductions">
           {working.deductions.map((line) => (
-            <StepRow
-              key={line.id}
-              position={line.position}
-              name={<span>{line.name}</span>}
-              quantity={line.quantity}
-              unit={line.unit}
-            />
+            <li key={line.id} className="spell-workings__deduction">
+              <span>{line.name}</span>
+              <span>
+                {line.quantity} {line.unit}
+              </span>
+            </li>
           ))}
         </ol>
       )}

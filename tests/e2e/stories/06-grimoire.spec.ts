@@ -774,6 +774,9 @@ test(
       );
       const id = await insertSpell(sql, coven.id, 'Fixture Working', 'workspace', B, 'complete');
       const step = await insertStep(sql, id, rosemary, { quantity: 2, unit: 'g', position: 1 }, B);
+      // A step the coven holds no jar of, which a draft says it would skip.
+      const oil = await compendiumVariant(sql, 'Rosemary', 'Oil');
+      await insertStep(sql, id, oil, { quantity: 1, unit: 'g', position: 2 }, B);
       // B's own, with A named beside them, and the jar's deduction.
       const mine = await insertWorking(sql, id, B, {
         workedOn: '2026-03-04',
@@ -796,6 +799,12 @@ test(
         note: 'Named rite',
         participants: [A, B],
       });
+      // B's own draft: it says what completing it would skip.
+      await insertWorking(sql, id, B, {
+        workedOn: '2025-11-01',
+        status: 'draft',
+        note: 'Waiting rite',
+      });
       return id;
     });
     await signInAgainAs(page, B);
@@ -804,7 +813,10 @@ test(
     await expect(workings.getByText('First brewing')).toBeVisible();
     await expect(workings.getByText('Named rite')).toBeVisible();
     await expect(workings.getByText('Secret rite')).toHaveCount(0);
-    await expect(workings.getByRole('button', { name: 'Complete' })).toHaveCount(1);
+    await expect(workings.getByRole('button', { name: 'Complete' })).toHaveCount(2);
+    await expect(workings.getByRole('listitem').filter({ hasText: 'Waiting rite' })).toContainText(
+      /Completing skips Rosemary.*not in stock/,
+    );
     const first = workings.getByRole('listitem').filter({ hasText: 'First brewing' });
     // The recorder is not listed again among the people who took part.
     await expect(first).toContainText('Recorded by Fixture B');
@@ -820,11 +832,11 @@ test(
     await page.goto(`/coven/${coven.slug}/grimoire`);
     const card = grimoireList(page).getByRole('listitem', { name: /Fixture Working/ });
     await expect(card.getByText('Made 2 Times')).toBeVisible();
-    // The pencil is on B's own working only, and saves a changed note in place.
+    // The pencil is on B's own workings only, and saves a changed note in place.
     await page.goto(`/coven/${coven.slug}/grimoire/${spellId}`);
-    await expect(workings.getByRole('button', { name: /^Edit / })).toHaveCount(1);
-    await first.getByRole('button', { name: /^Edit / }).click();
-    const edit = page.getByRole('dialog', { name: 'Edit a Working' });
+    await expect(workings.getByRole('button', { name: /^Edit Working / })).toHaveCount(2);
+    await first.getByRole('button', { name: /^Edit Working / }).click();
+    const edit = page.getByRole('dialog', { name: /^Edit (a )?Working$/ });
     await edit.getByRole('textbox', { name: 'Note' }).fill('First brewing, revised');
     await edit.getByRole('button', { name: 'Save Working' }).click();
     await expect(workings.getByText('First brewing, revised')).toBeVisible();
@@ -836,7 +848,7 @@ test(
       .getByRole('button', { name: 'Delete' })
       .click();
     await expect(workings.getByText('First brewing')).toHaveCount(0);
-    await expect(workings.getByRole('listitem')).toHaveCount(2);
+    await expect(workings.getByRole('listitem')).toHaveCount(3);
     await page.goto(`/coven/${coven.slug}/grimoire`);
     await expect(card.getByText('Made 1 Time')).toBeVisible();
   },

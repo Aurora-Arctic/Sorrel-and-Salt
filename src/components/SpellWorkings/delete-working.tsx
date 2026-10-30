@@ -71,8 +71,8 @@ export default function DeleteWorkingAction({
           {(close) => (
             <>
               <p>
-                Delete the working of <strong>{name}</strong>? It leaves the spell&rsquo;s history
-                and the count. Nothing in stock changes.
+                Delete the working of <strong>{name}</strong>? It is removed from the spell&rsquo;s
+                history and from the count. What it took from the jars stays taken.
               </p>
               <div className="modal__actions">
                 <BusyButton

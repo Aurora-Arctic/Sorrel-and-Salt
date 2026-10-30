@@ -18,7 +18,7 @@ export default function EditWorkingAction({
   const trigger = useRef<HTMLButtonElement>(null);
   return (
     <>
-      <EditButton ref={trigger} name={name} onClick={() => setOpen(true)} />
+      <EditButton ref={trigger} name={`Working ${name}`} onClick={() => setOpen(true)} />
       {open && (
         <RecordWorkingDialog
           {...dialog}
