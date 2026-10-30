@@ -309,3 +309,29 @@ for (const [name, size] of [
     expect(heading.left).toBeLessThanOrEqual(sectionBox.left + 1);
   });
 }
+
+// The menu stands as far from the page as the ingredient entry page's does (a `space(6)`, 32px).
+for (const width of [1280, 800]) {
+  test(`the jump menu stands at least 32px clear of the page at ${width}px`, async ({ page }) => {
+    const coven = await seedCoven(page, `Fixture Gap ${width}`, `spell-gap-${width}.test`, {
+      A: 'owner',
+    });
+    const { A } = coven.users;
+    const spellId = await withSql(async (sql) => {
+      const held = await compendiumVariant(sql, "Cat's Claw", 'Bark', 'Uncaria tomentosa');
+      const id = await insertSpell(sql, coven.id, 'Fixture Gap', 'workspace', A, 'complete');
+      await insertStep(sql, id, held, { quantity: 2, unit: 'g', position: 0 }, A);
+      return id;
+    });
+    await signInAgainAs(page, A);
+    await page.setViewportSize({ width, height: 900 });
+    await page.goto(`/coven/${coven.slug}/grimoire/${spellId}`);
+    const navRight = await page
+      .getByRole('navigation', { name: 'On This Page' })
+      .evaluate((el) => el.getBoundingClientRect().right);
+    const headLeft = await page
+      .locator('.spell-recipe__head')
+      .evaluate((el) => el.getBoundingClientRect().left);
+    expect(headLeft - navRight).toBeGreaterThanOrEqual(32);
+  });
+}

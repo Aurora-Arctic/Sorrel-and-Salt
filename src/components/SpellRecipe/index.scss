@@ -409,6 +409,9 @@
   .spell-recipe--with-nav {
     @include entry-nav-grid;
 
+    // The ingredient page's menu gap, which it gets from its flex `gap`; this page's `gap` is smaller.
+    column-gap: space(6);
+
     > .page-nav {
       grid-row: 2 / span 2;
     }
