@@ -1,10 +1,13 @@
-import { type ReactElement, type ReactNode, useMemo } from 'react';
+import { type ReactElement, type ReactNode, useLayoutEffect, useMemo, useState } from 'react';
 import { AppRouterContext } from 'next/dist/shared/lib/app-router-context.shared-runtime.js';
-import { PathnameContext } from 'next/dist/shared/lib/hooks-client-context.shared-runtime.js';
+import {
+  PathnameContext,
+  SearchParamsContext,
+} from 'next/dist/shared/lib/hooks-client-context.shared-runtime.js';
 
 // What `next/navigation` reads in the workshop. The framework (@storybook/nextjs-vite) wraps every
 // story in the App Router's contexts, with a router that goes nowhere and `usePathname` reading
-// `parameters.nextjs.navigation.pathname` (preview.tsx). The two providers below put a different
+// `parameters.nextjs.navigation.pathname` (preview.tsx). The providers below put a different
 // value in the same contexts (claude-docs/workshop.md, ".storybook/").
 
 /**
@@ -47,3 +50,53 @@ export const WorkshopNavigation = {
     return <AppRouterContext.Provider value={router}>{children}</AppRouterContext.Provider>;
   },
 };
+
+/**
+ * The address's query as `useSearchParams` reads it, following the story's own
+ * `history.pushState`, `replaceState` and Back as Next's router does on a page. For a component
+ * whose open state is a search parameter, such as Spell Preview's `?preview`. `initial`'s
+ * parameters are added to the frame's address as it mounts, so the component reads the same query
+ * from `window.location`; unmounted, it puts the methods and the address back as it found them.
+ */
+export function WorkshopSearch({
+  initial = '',
+  children,
+}: {
+  initial?: string;
+  children?: ReactNode;
+}): ReactElement {
+  const [search, setSearch] = useState(() => withParams(window.location.href, initial).search);
+  useLayoutEffect(() => {
+    const { pushState, replaceState } = HISTORY;
+    const before = window.location.href;
+    // Written here rather than while rendering, after the state it replaces put its address back.
+    replaceState.call(window.history, window.history.state, '', withParams(before, initial));
+    const follow = (): void => setSearch(window.location.search);
+    window.history.pushState = (...args) => {
+      pushState.apply(window.history, args);
+      follow();
+    };
+    window.history.replaceState = (...args) => {
+      replaceState.apply(window.history, args);
+      follow();
+    };
+    window.addEventListener('popstate', follow);
+    return () => {
+      window.history.pushState = pushState;
+      window.history.replaceState = replaceState;
+      window.removeEventListener('popstate', follow);
+      replaceState.call(window.history, window.history.state, '', before);
+    };
+  }, [initial]);
+  const params = useMemo(() => new URLSearchParams(search), [search]);
+  return <SearchParamsContext.Provider value={params}>{children}</SearchParamsContext.Provider>;
+}
+
+// The frame's own methods, kept before any story patches them.
+const HISTORY = { pushState: window.history.pushState, replaceState: window.history.replaceState };
+
+function withParams(href: string, initial: string): URL {
+  const url = new URL(href);
+  for (const [key, value] of new URLSearchParams(initial)) url.searchParams.set(key, value);
+  return url;
+}

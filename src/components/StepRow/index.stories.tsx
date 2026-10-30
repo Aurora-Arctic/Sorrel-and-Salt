@@ -1,10 +1,19 @@
 import type { Meta, StoryObj } from '@storybook/nextjs-vite';
-import type { ReactNode } from 'react';
+import { fn } from 'storybook/test';
+import { type ReactNode, useState } from 'react';
+import { FormProvider, useForm } from 'react-hook-form';
 import { StatesGrid } from '../../../.storybook/states-grid';
+import { ChevronIcon, ClearIcon, GripIcon } from '../Combobox/icons';
+import { SelectField, TextField } from '../Field';
+import { EditIcon } from '../IngredientForm/icons';
+import SafetyNote, { SafetyMark, ToxicMark } from '../SafetyNote';
+import { UNIT_OPTIONS } from '../StockFields';
 import StepRow from '.';
+import OneOffBadge from './one-off-badge';
 
-// Render-only; what shows and when is asserted in tests/components/StepRow.
-// The editing controls are the spell builder's (SpellBuilder / Spell Builder).
+// Render-only; what shows and when is asserted in tests/components/StepRow. The builder's own
+// row (SpellBuilder / Spell Builder, With Steps) wires these slots to the spell's form; here the
+// slots hold the same fields and buttons with nothing behind them.
 const meta = {
   title: 'Grimoire / Step Row',
 } satisfies Meta;
@@ -14,6 +23,99 @@ type Story = StoryObj;
 const List = ({ children }: { children: ReactNode }) => (
   <ol style={{ listStyle: 'none', margin: 0, padding: 0 }}>{children}</ol>
 );
+
+const NAME = 'Testwort (Dried Leaf)';
+const SAFETY = { toxic: true, safetyNotes: 'Keep away from the skin; wash hands after use.' };
+
+interface Values {
+  quantity: string;
+  unit: string;
+  body: string;
+}
+
+const EditButton = ({ open, onClick }: { open: boolean; onClick: () => void }) => (
+  <button
+    type="button"
+    className={['step-row__edit', open && 'step-row__edit--close'].filter(Boolean).join(' ')}
+    aria-label={`${open ? 'Close' : 'Edit'} ${NAME}`}
+    aria-expanded={open}
+    aria-controls="story-step-fields"
+    onClick={onClick}
+  >
+    {open ? <ChevronIcon /> : <EditIcon />}
+  </button>
+);
+
+// A card that opens and closes from its pencil or its face, as the builder's does.
+function Card({ initiallyOpen, editing }: { initiallyOpen: boolean; editing?: boolean }) {
+  const [open, setOpen] = useState(initiallyOpen);
+  const methods = useForm<Values>({
+    defaultValues: { quantity: '2', unit: 'tsp', body: 'Crush it first' },
+  });
+  const toggle = () => setOpen((was) => !was);
+  return (
+    <FormProvider {...methods}>
+      <List>
+        <StepRow
+          open={open}
+          fieldsId="story-step-fields"
+          onToggle={toggle}
+          position={2}
+          name={NAME}
+          icon="botanical"
+          summary="2 tsp · Crush it first"
+          edit={<EditButton open={open} onClick={toggle} />}
+          handle={
+            editing ? (
+              <button type="button" className="spell-step__handle" aria-label={`Move ${NAME}`}>
+                <GripIcon />
+              </button>
+            ) : undefined
+          }
+          quantityField={
+            <TextField<Values>
+              name="quantity"
+              label="Quantity"
+              labelSuffix={NAME}
+              type="number"
+              placeholder="Amount"
+            />
+          }
+          unitField={
+            <SelectField<Values>
+              name="unit"
+              label="Unit"
+              labelSuffix={NAME}
+              options={UNIT_OPTIONS}
+            />
+          }
+          bodyField={
+            <TextField<Values>
+              name="body"
+              label="Instruction"
+              labelSuffix={NAME}
+              placeholder="Add an instruction"
+              multiline
+              rows={2}
+            />
+          }
+          actions={
+            editing && !open ? (
+              <button
+                type="button"
+                className="step-row__remove"
+                aria-label={`Remove ${NAME}`}
+                onClick={fn()}
+              >
+                <ClearIcon />
+              </button>
+            ) : null
+          }
+        />
+      </List>
+    </FormProvider>
+  );
+}
 
 export const States: Story = {
   render: () => (
@@ -27,20 +129,14 @@ export const States: Story = {
         ),
         'Ingredient Only': (
           <List>
-            <StepRow
-              position={2}
-              name="Rosemary (Dried Leaf)"
-              icon="botanical"
-              quantity="2"
-              unit="tsp"
-            />
+            <StepRow position={2} name={NAME} icon="botanical" quantity="2" unit="tsp" />
           </List>
         ),
         'Ingredient With Instruction': (
           <List>
             <StepRow
               position={3}
-              name="Rosemary (Dried Leaf)"
+              name={NAME}
               icon="botanical"
               quantity="2"
               unit="tsp"
@@ -50,9 +146,38 @@ export const States: Story = {
         ),
         'One-Off Without Amount': (
           <List>
-            <StepRow position={4} name="Testwort" />
+            <StepRow position={4} name="Fixture Candle" badge={<OneOffBadge />} />
           </List>
         ),
+        Toxic: (
+          <List>
+            <StepRow
+              position={5}
+              name="Mockleaf (Oil)"
+              icon="fluid"
+              quantity="30"
+              unit="ml"
+              marks={<SafetyMark {...SAFETY} />}
+              note={<p className="meta">Dilute before use</p>}
+            />
+          </List>
+        ),
+        'Toxic, Open': (
+          <List>
+            <StepRow
+              open
+              fieldsId="story-toxic-fields"
+              position={5}
+              name="Mockleaf (Oil)"
+              icon="fluid"
+              marks={<ToxicMark {...SAFETY} />}
+              note={<SafetyNote level={5} compact {...SAFETY} />}
+            />
+          </List>
+        ),
+        Folded: <Card initiallyOpen={false} />,
+        Unfolded: <Card initiallyOpen />,
+        Editing: <Card initiallyOpen={false} editing />,
       }}
     />
   ),

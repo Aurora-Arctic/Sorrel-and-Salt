@@ -2,7 +2,11 @@ import type { Meta, StoryObj } from '@storybook/nextjs-vite';
 import type { RequestHandler } from 'msw';
 import type { Route } from 'next';
 import { type ReactNode, useEffect, useState } from 'react';
-import { CATEGORIES_ANSWER, namedCategories } from '../../../.storybook/grimoire-fixtures';
+import {
+  BUILDER_STEPS as STEPS,
+  CATEGORIES_ANSWER,
+  namedCategories,
+} from '../../../.storybook/grimoire-fixtures';
 import {
   answerOperations,
   answerQuery,
@@ -42,116 +46,6 @@ const SAVED: SpellDialogSpell = {
   note: null,
   visibility: 'workspace',
 };
-
-type Jar = NonNullable<SpellBuilderStep['ingredient']>['stock'][number];
-
-/** A step of an ingredient's form, against the coven's jar of that form. */
-const formStep = (
-  id: string,
-  name: string,
-  form: string,
-  { quantity, unit }: Pick<SpellBuilderStep, 'quantity' | 'unit'>,
-  {
-    categories,
-    jar,
-    toxic = false,
-    safetyNotes = null,
-  }: {
-    categories: string[];
-    jar: Omit<Jar, 'variant'>;
-    toxic?: boolean;
-    safetyNotes?: string | null;
-  },
-): SpellBuilderStep => ({
-  id,
-  name,
-  form,
-  quantity,
-  unit,
-  body: null,
-  ingredient: {
-    id: `ingredient-${id}`,
-    toxic: false,
-    safetyNotes: null,
-    categories: namedCategories(...categories),
-    stock: [{ ...jar, variant: { id: `variant-${id}` } }],
-  },
-  variant: {
-    id: `variant-${id}`,
-    toxic,
-    safetyNotes,
-    categories: [],
-    formChoice: { group: { icon: 'botanical' } },
-  },
-});
-
-// One step of each kind: ingredient forms, a toxic one among them, an instruction and a one-off.
-// Each form has a jar in the coven's stock. Between them they carry Protection
-// and Clarity, and nine categories past those.
-const STEPS: SpellBuilderStep[] = [
-  formStep(
-    'step-1',
-    'Testwort',
-    'Dried Leaf',
-    { quantity: 2, unit: 'tsp' },
-    {
-      categories: ['Protection', 'Fire', 'Banishing'],
-      jar: { unit: 'g', quantityOnHand: 40, lowStockThreshold: 5 },
-    },
-  ),
-  formStep(
-    'step-2',
-    'Mockleaf',
-    'Oil',
-    { quantity: 30, unit: 'ml' },
-    {
-      categories: ['Clarity', 'Water', 'Calm'],
-      jar: { unit: 'ml', quantityOnHand: 10, lowStockThreshold: 5 },
-      toxic: true,
-      safetyNotes: 'Never on the skin undiluted.',
-    },
-  ),
-  {
-    id: 'step-3',
-    name: null,
-    form: null,
-    quantity: null,
-    unit: null,
-    body: 'Stir the oil into the leaf three times, sunwise.',
-    ingredient: null,
-    variant: null,
-  },
-  {
-    id: 'step-4',
-    name: 'Fixture Candle',
-    form: null,
-    quantity: 1,
-    unit: 'piece',
-    body: null,
-    ingredient: null,
-    variant: null,
-  },
-  formStep(
-    'step-5',
-    'Stubroot',
-    'Root',
-    { quantity: 5, unit: 'g' },
-    {
-      categories: ['Earth', 'Luck', 'Courage'],
-      jar: { unit: 'g', quantityOnHand: 0, lowStockThreshold: 10 },
-    },
-  ),
-  formStep(
-    'step-6',
-    'Testmoss',
-    'Dried',
-    { quantity: 1, unit: 'g' },
-    {
-      categories: ['Air', 'Dreams'],
-      jar: { unit: 'g', quantityOnHand: 20, lowStockThreshold: 25 },
-    },
-  ),
-];
 
 /** Comparison's assigned categories: two the jar carries, and Healing, which it does not. */
 const ASSIGNED = namedCategories('Protection', 'Clarity', 'Healing').map(({ id }) => id);
