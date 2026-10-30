@@ -151,7 +151,8 @@
   // The way back and the Edited line each take a row above the title.
   > .spell-recipe__back,
   > .last-edit {
-    flex-basis: 100%;
+    flex: 0 0 100%;
+    max-width: 100%;
   }
 
   h1 {

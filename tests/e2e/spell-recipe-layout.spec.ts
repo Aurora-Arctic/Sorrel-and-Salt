@@ -208,3 +208,48 @@ for (const [name, size] of [
     await expect(nav).toBeHidden();
   });
 }
+
+for (const [name, size] of [
+  ['desktop', { width: 1280, height: 900 }],
+  ['tablet', { width: 800, height: 900 }],
+  ['phone', { width: 390, height: 844 }],
+] as const) {
+  test(`the title takes the head's row with its action icons beside it on a ${name}`, async ({
+    page,
+  }) => {
+    const coven = await seedCoven(page, `Fixture Head ${name}`, `spell-head-${name}.test`, {
+      A: 'owner',
+    });
+    const { A } = coven.users;
+    const spellId = await withSql(async (sql) => {
+      const held = await compendiumVariant(sql, "Cat's Claw", 'Bark', 'Uncaria tomentosa');
+      const id = await insertSpell(
+        sql,
+        coven.id,
+        'Fixture Layout With A Fairly Long Title',
+        'workspace',
+        A,
+        'complete',
+      );
+      await insertStep(sql, id, held, { quantity: 2, unit: 'g', position: 0 }, A);
+      return id;
+    });
+    await signInAgainAs(page, A);
+    await page.setViewportSize(size);
+    await page.goto(`/coven/${coven.slug}/grimoire/${spellId}`);
+
+    const box = (locator: ReturnType<typeof page.locator>) =>
+      locator.evaluate((el) => el.getBoundingClientRect().toJSON());
+    const head = await box(page.locator('.spell-recipe__head'));
+    const title = await box(page.getByRole('heading', { level: 1 }));
+    const actions = await box(page.locator('.spell-recipe__actions'));
+    const edited = await box(page.locator('.spell-recipe__head .last-edit'));
+    // The Edited line stands over the title, not beside it, and the title keeps most of the row
+    // with the icons at its end, on the title's first line.
+    expect(edited.bottom).toBeLessThanOrEqual(title.top + 1);
+    expect(title.width).toBeGreaterThan(head.width / 2);
+    expect(title.left).toBeLessThanOrEqual(head.left + 1);
+    expect(actions.left).toBeGreaterThanOrEqual(title.right - 1);
+    expect(actions.top).toBeLessThan(title.top + 60);
+  });
+}
