@@ -227,7 +227,7 @@ With the Coven, a click saves the whole form with the status `complete` at once,
 the status is never a pick left pending. A complete spell shows no button and
 no sentence (the owner, 2026-10-29); the missing button and the locked Visibility switch carry the state. Once
 complete, its workings are recorded against it and its visibility lock has
-started, so reopening would undo both. The Copy as Draft button below is the way
+started, so reopening would undo both. The Duplicate button below is the way
 to vary a complete spell, and the service refuses complete to draft too.
 
 - **A new spell** is a draft (`valuesOf` reads a missing status as one).
@@ -633,7 +633,7 @@ The builder autosaves (`./autosave.ts`): a change saves 3 s after the last, Save
 
 **Status.** A spell is a draft until it is marked complete. A draft shows one button, Mark Complete. A click saves everything the form holds as complete, as Share With the Coven does, so the status is never a pick left pending. A complete spell needs a title (a database CHECK), so its absence is said on the title field before anything is sent. Marking complete flushes the autosave with the other status, which carries every unsaved change in the same save.
 
-A complete spell shows its statement and no button: there is no Reopen as Draft. Once complete, a spell's workings are recorded against it and its visibility lock has started, so reopening would undo both. To vary a complete spell, the copy (Duplicate a Spell) is the way. A complete spell has a **Copy as Draft** button here instead, for a member who may create a spell: it saves the form, calls `duplicateSpell` and opens the copy in the Drafts tab's builder (`?edit=<id>`). The service refuses complete to draft as well (M13.20, amended 2026-10-29 by the owner).
+A complete spell shows its statement and no button: there is no Reopen as Draft. Once complete, a spell's workings are recorded against it and its visibility lock has started, so reopening would undo both. To vary a complete spell, the copy (Duplicate a Spell) is the way. A complete spell has a **Duplicate** button here instead, for a member who may create a spell: it saves the form, calls `duplicateSpell` and opens the copy in the Drafts tab's builder (`?edit=<id>`). The service refuses complete to draft as well (M13.20, amended 2026-10-29 by the owner).
 
 **Visibility.** A spell is seen by its author alone, or by every member of the coven. The control is a switch, Share With the Coven, on for the coven and off for private, with a line under it saying what its state means. A new spell starts private, because the autosave would otherwise share it 3 s after the first keystroke. It takes either, and the choice goes out with its first save.
 

@@ -7,7 +7,7 @@ import BusyButton from '../BusyButton';
 import { useDuplicateSpell } from '../SpellRecipe/duplicate-spell';
 import type { SpellBuilderInput, SpellBuilderValues, SpellStatusFieldProps } from './types';
 
-// A spell is a draft until Mark Complete saves it as complete; a complete spell has Copy as Draft
+// A spell is a draft until Mark Complete saves it as complete; a complete spell has Duplicate
 // where a draft has Mark Complete, which makes a private draft copy and opens it. A complete spell
 // is not reopened here, but the service still accepts complete -> draft.
 // claude-docs/components/spell-builder.md, "Draft and complete".
@@ -83,7 +83,7 @@ export function SpellStatusField({
         disabled={busy}
         onClick={copy}
       >
-        Copy as Draft
+        Duplicate
       </BusyButton>
     );
   }

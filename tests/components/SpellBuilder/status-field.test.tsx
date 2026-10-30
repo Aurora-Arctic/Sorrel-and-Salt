@@ -116,10 +116,10 @@ describe('SpellBuilder status', () => {
 
     expect(screen.queryByRole('button', { name: 'Mark Complete' })).toBeNull();
     expect(screen.queryByRole('button', { name: /reopen/i })).toBeNull();
-    expect(screen.queryByRole('button', { name: 'Copy as Draft' })).toBeNull();
+    expect(screen.queryByRole('button', { name: 'Duplicate' })).toBeNull();
   });
 
-  describe('Copy as Draft', () => {
+  describe('Duplicate', () => {
     const complete = { ...SPELL, status: 'complete' as const };
     const copiedHrefOf = (id: string) => `/coven/fixture-coven/grimoire/drafts?edit=${id}` as Route;
 
@@ -134,7 +134,7 @@ describe('SpellBuilder status', () => {
       );
       renderBuilder({ spell: complete, copiedHrefOf });
 
-      fireEvent.click(screen.getByRole('button', { name: 'Copy as Draft' }));
+      fireEvent.click(screen.getByRole('button', { name: 'Duplicate' }));
 
       await waitFor(() =>
         expect(router.push).toHaveBeenCalledWith(
@@ -146,11 +146,11 @@ describe('SpellBuilder status', () => {
 
     it('is not drawn for a draft, nor where the member may not create a spell', () => {
       const draft = renderBuilder({ spell: SPELL, copiedHrefOf });
-      expect(screen.queryByRole('button', { name: 'Copy as Draft' })).toBeNull();
+      expect(screen.queryByRole('button', { name: 'Duplicate' })).toBeNull();
       draft.unmount();
 
       renderBuilder({ spell: complete });
-      expect(screen.queryByRole('button', { name: 'Copy as Draft' })).toBeNull();
+      expect(screen.queryByRole('button', { name: 'Duplicate' })).toBeNull();
     });
 
     it('says why when the copy is refused, and stays on the spell', async () => {
@@ -160,7 +160,7 @@ describe('SpellBuilder status', () => {
       });
       renderBuilder({ spell: complete, copiedHrefOf });
 
-      fireEvent.click(screen.getByRole('button', { name: 'Copy as Draft' }));
+      fireEvent.click(screen.getByRole('button', { name: 'Duplicate' }));
 
       expect(await screen.findByText(/not allowed to create/i)).toBeVisible();
       expect(router.push).not.toHaveBeenCalled();
