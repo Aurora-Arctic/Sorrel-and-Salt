@@ -171,25 +171,26 @@ head, both built by the page per row, as the other admin lists carry
   the modal and says "You couldn't impersonate <name>. Please try again." in
   a callout under Impersonate, which has the focus back, and the page stays.
   The endpoint is the guard: the button only puts it where an admin looks.
-  The column, heading and cells, has a red rule down its left, and its
-  heading's hairline is red where every other is the muted ink, with a faded
-  red tint and red text (kept at MB.115 on the owner's call). It is sticky at the table's right edge, so on a narrow
+  The column, heading and cells, has the neutral hairline down its left, as
+  the Compendium's Edit column has, and no tint: the red is the confirm's own
+  (MB.123). It is sticky at the table's right edge, so on a narrow
   frame the other columns scroll beneath it (on the owner's call, during
   MB.59), until the table stacks into cards at phone width, where it sits at the
   card's top right instead (Styling, below), placed by the table primitive's `data-table__card-action` grid. Its ground is therefore opaque: the
-  tint mixed into the band it sits on, the page or a banded row's card. Every tip
+  band it sits on, the page or a banded row's card. Every tip
   in the table sits one layer above it (`$tip-layer`, the column's
   `$sticky-column-layer` plus one): a tip reaches into its own row, whose
   Impersonate cell comes later in the DOM, and at the same layer the cell
   painted over the tip's corner (fixed in MB.63's PR; presentation, so
   no test pins the layers). The table's
   borders are separate rather than the primitive's collapsed ones, so each
-  rule belongs to its cell and the headings' hairline scrolls beneath the red
-  one rather than being drawn across it. No cell wraps: the table scrolls
+  rule belongs to its cell and the headings' hairline scrolls beneath the
+  column's own rather than being drawn across it. No cell wraps: the table scrolls
   instead, and only a tip's text wraps, within its bubble.
   Its
-  button is `.btn--destructive`, on the owner's call: it is the one control
-  that acts as someone else.
+  button is `btn btn--quiet btn--small`, plain as the row's other controls are:
+  acting as someone else destroys nothing, and the red is kept for the
+  confirmation's Impersonate.
 - **Coven Creation holds its control** (M5.8,
   [`auth/admin-users.md`](../auth/admin-users.md), "Approving workspace
   creation"), from `creation-control.tsx`, beside the mark it changes: one
@@ -383,11 +384,8 @@ width the seven columns keep their order, restyled at MB.115's sign-off.
   from their left edge; and a locked control's reason is the button's
   description, re-announced as an alert and placed against the viewport,
   where IconTip's word is decoration hidden from a screen reader.
-- **The Impersonate column** is the shared `row-action-column` mixin
-  (`src/scss/_mixins.scss`; its pinning and card resets are `sticky-action-column`, which the red layer wraps), which MemberList's Remove column includes too, and has a 1px red rule down its left, red text and
-  a wax tint mixed into its opaque ground: 6% into the page, 5% into a banded
-  row's `$surface-card`, since at 6% the dark card leaves the wax label at
-  4.48:1, under the text floor (`tests/scss/tokens.test.ts` holds both). It
+- **The Impersonate column** is the shared `sticky-action-column` mixin
+  (`src/scss/_mixins.scss`: its pinning, neutral hairline, opaque ground and card resets), which MemberList's Remove column and the Compendium's Edit column include too. It
   is sticky at the table's right edge (above). The ground stays with the admin
   column at 80rem, since the seven columns need about 77rem of frame before
   they stop scrolling, so any window narrower than that, above the stacking
@@ -526,4 +524,4 @@ The filter sits in the shared `FilterForm`. Only the search text is held in the 
 
 The user list's own rules cover its cells' alignment, the marks and logos with their tips, the history link, the role and creation cells, the sticky Impersonate column and how it gives way when the table stacks into cards, and the pause beside the page's heading. The column, filter, table and pager are primitives (`.list-frame`, `.filter-row`, `.data-table` with `--stack`, `.pager`). Above the stacking width the seven columns keep their order, restyled: rows a step taller, the read-only facts muted at the caption size, every control at the end of its cell.
 
-No cell wraps, heading or body, since the table scrolls inside its frame. A row stays one line however narrow the screen, and its rows are a step taller (`.data-table--nowrap` and `--roomy`, through DataTable). Borders are separate, not the primitive's collapsed ones, so each rule belongs to its own cell. A collapsed rule belongs to the table's grid, and the headings' muted hairline was drawn across the sticky Impersonate heading's red one as the columns scrolled beneath it.
+No cell wraps, heading or body, since the table scrolls inside its frame. A row stays one line however narrow the screen, and its rows are a step taller (`.data-table--nowrap` and `--roomy`, through DataTable). Borders are separate, not the primitive's collapsed ones, so each rule belongs to its own cell. A collapsed rule belongs to the table's grid, and the headings' muted hairline was drawn across the sticky Impersonate heading's own as the columns scrolled beneath it.

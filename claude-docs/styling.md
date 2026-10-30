@@ -1337,8 +1337,7 @@ heavier than the reverse; light reverts to the browser default.
   modifiers a table takes by class; `value-and-control` (a cell's value on
   the left and the control that changes it on the right); and
   `sticky-action-column($layer)` (a stacking table's pinned row-action
-  column on a neutral `$hairline` rule: the Compendium's Edit and the members' Remove, and its card placement) and
-  `row-action-column($layer)` (the same column in red, over a `@content` block: Impersonate).
+  column on a neutral `$hairline` rule: the Compendium's Edit, the members' Remove and the users' Impersonate, and its card placement).
 - **Three `*-base` mixins**, each emitting nothing on its own `@use` and
   `@include`d at exactly one site, `globals.scss`'s `body`:
   - `_typography.scss` → `typography-base` — headings, body copy capped at

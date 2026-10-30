@@ -67,7 +67,8 @@ A `UserCoven` is `workspaceId`, `name`, `slug`, the user's `role` there and
   `/`, the question busy until it opens; a refusal closes the question and
   shows an error notice.
 - **Tokens only**: spacing from `space()`; the button row is the page's own
-  `btn btn--destructive`. No styling past the tokens before the section's
+  `btn btn--quiet`, plain since impersonating destroys nothing; the
+  question's Impersonate is the destructive one. No styling past the tokens before the section's
   design review.
 
 ## Stories
