@@ -15,7 +15,9 @@
 
 ## Recording and editing
 
-`RecordWorkingButton` takes `{ workspaceId, spellId, spellVisibility, members, recorderId, steps }`. The recipe
+`RecordWorkingButton` takes `{ workspaceId, spellId, spellName, spellVisibility, members, recorderId, steps }`;
+`spellName` ends the button's name, "Record a Working of <spell>", as the Preview and More buttons beside it end with
+the spell's name. The recipe
 page shows it to a role that may create a working (owner and member) on a complete spell, and
 passes `members` (`{ userId, name }`, from `memberRoster` and `displayNamesOf`, since a member may
 not list members themselves) and `steps` (`{ id, name }` for each ingredient step).

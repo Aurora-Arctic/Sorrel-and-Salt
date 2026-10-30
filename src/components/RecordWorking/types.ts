@@ -81,4 +81,7 @@ export interface RecordWorkingDialogProps {
 export type RecordWorkingButtonProps = Omit<
   RecordWorkingDialogProps,
   'working' | 'onClose' | 'returnTo'
->;
+> & {
+  /** The spell's name as shown, which the button's name ends with, as Preview's and More's do. */
+  spellName: string;
+};

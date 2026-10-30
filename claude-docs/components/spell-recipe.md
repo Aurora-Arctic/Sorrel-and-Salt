@@ -174,7 +174,7 @@ The Delete Spell item in the three-dots menu (`more-menu.tsx`), with its dialog 
 
 Tokens only, in three stylesheets:
 
-- **`SpellRecipe/index.scss`** lays the page out: the head, the body's boxes, the side column beside the text past a tablet's width and under it on a phone, Workings pinned to the text column's last row, and the Recipe Card look of each `StepRow` (a `$step-position-width` number column, right-aligned). It hides the Ingredients summary on screen and keeps each jump target clear of the shell's sticky bar.
+- **`SpellRecipe/index.scss`** lays the page out: the head (its back link in the shared `.back-bar` row, as the ingredient entry page's is), the body's boxes, the side column beside the text past a tablet's width and under it on a phone, Workings pinned to the text column's last row, and the Recipe Card look of each `StepRow` (a `$step-position-width` number column, right-aligned). It hides the Ingredients summary on screen and keeps each jump target clear of the shell's sticky bar.
 - **`src/scss/_recipe-columns.scss`** is the printed layout, shared with the Spell Preview pane: the Ingredients summary in a `$recipe-summary-width` column beside the steps, its heading and the Steps heading at `$recipe-heading-size`.
 - **`src/scss/_print.scss`** is the paper: what print hides ("Print", above) and the white ground.
 

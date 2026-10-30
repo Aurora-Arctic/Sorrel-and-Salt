@@ -74,6 +74,7 @@ function openButton(visibility: 'private' | 'workspace' = 'workspace') {
       <RecordWorkingButton
         workspaceId={WORKSPACE}
         spellId={SPELL}
+        spellName="Testwort Tonic"
         spellVisibility={visibility}
         members={MEMBERS}
         recorderId="u1"
@@ -81,7 +82,7 @@ function openButton(visibility: 'private' | 'workspace' = 'workspace') {
       />,
     ),
   );
-  fireEvent.click(screen.getByRole('button', { name: 'Record a Working' }));
+  fireEvent.click(screen.getByRole('button', { name: 'Record a Working of Testwort Tonic' }));
 }
 
 describe('Record a Working', () => {
@@ -258,7 +259,7 @@ describe('Record a Working', () => {
     openButton();
     fireEvent.click(within(dialog()).getByRole('button', { name: 'Cancel' }));
     expect(screen.queryByRole('dialog')).toBeNull();
-    fireEvent.click(screen.getByRole('button', { name: 'Record a Working' }));
+    fireEvent.click(screen.getByRole('button', { name: 'Record a Working of Testwort Tonic' }));
     fireEvent.change(within(dialog()).getByRole('textbox', { name: 'Note' }), {
       target: { value: 'x' },
     });

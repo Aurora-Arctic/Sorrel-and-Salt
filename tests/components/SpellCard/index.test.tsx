@@ -59,7 +59,7 @@ describe('SpellCard', () => {
         <SpellCard {...BASE} recordWorking={recordWorking} />
       </QueryClientProvider>,
     );
-    press(screen.getByRole('button', { name: 'Record a Working' }));
+    press(screen.getByRole('button', { name: 'Record a Working of Fixture Working' }));
     expect(await screen.findByRole('dialog', { name: 'Record a Working' })).toBeInTheDocument();
   });
 
@@ -135,7 +135,9 @@ describe('SpellCard', () => {
       </QueryClientProvider>,
     );
     const title = screen.getByRole('link', { name: /^Fixture Working/ });
-    expect(title.contains(screen.getByRole('button', { name: 'Record a Working' }))).toBe(false);
+    expect(title.contains(screen.getByRole('button', { name: /^Record a Working of / }))).toBe(
+      false,
+    );
     expect(title.contains(screen.getByRole('button', { name: /^More for / }))).toBe(false);
   });
 

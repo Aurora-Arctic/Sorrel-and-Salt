@@ -106,17 +106,18 @@ export default async function SpellRecipePage({ params, searchParams }: SpellRec
   // Only a complete spell is worked, and on the permission `recordWorking` asserts.
   const canRecord =
     spell.status === 'complete' && rolePermits(membership.role, { working: ['create'] });
+  const name = spell.title?.trim() || UNTITLED_SPELL;
   const recordButton = (
     <RecordWorkingButton
       workspaceId={workspace.id}
       spellId={spell.id}
+      spellName={name}
       spellVisibility={spell.visibility}
       members={members}
       recorderId={membership.userId}
       steps={ingredientSteps}
     />
   );
-  const name = spell.title?.trim() || UNTITLED_SPELL;
   const listPath = `/coven/${workspace.slug}/grimoire${spell.status === 'draft' ? '/drafts' : ''}`;
   const deletedHref = deletedHrefOf(listPath as Route, spell.title);
   const query = await searchParams;

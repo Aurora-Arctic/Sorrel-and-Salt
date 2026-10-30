@@ -115,7 +115,12 @@ const SpellCard = ({
                 </span>
               )}
               {recordWorking && (
-                <RecordWorkingButton {...recordWorking} spellId={id} spellVisibility={visibility} />
+                <RecordWorkingButton
+                  {...recordWorking}
+                  spellId={id}
+                  spellName={name}
+                  spellVisibility={visibility}
+                />
               )}
               {editHref && (
                 <EditLink

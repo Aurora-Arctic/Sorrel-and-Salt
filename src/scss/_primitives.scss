@@ -934,6 +934,15 @@
     }
   }
 
+  // The row a detail page opens with: the way back at the left, anything the page adds at the
+  // right, on one centre line. The ingredient entry page and the spell recipe page both draw it.
+  .back-bar {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: space(3);
+  }
+
   // A sentence about the whole view rather than one field: a form's root error, a sent confirmation.
   // The role (`alert`, or `<output>`'s status) is the markup's, since only it knows whether the text
   // arrived late. No box: a 3px bar down the start edge and a tint of the bar's colour (`--notice-tint`,

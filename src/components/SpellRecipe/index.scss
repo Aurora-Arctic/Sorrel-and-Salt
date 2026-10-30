@@ -19,7 +19,7 @@
 
 // The way back stands a clear step off the Edited line and the title. Its look is the back
 // link's own (IngredientEntry/back-link.scss).
-.spell-recipe__back {
+.spell-recipe__bar {
   margin-block-end: space(2);
 }
 
@@ -149,7 +149,7 @@
   align-items: flex-start;
 
   // The way back and the Edited line each take a row above the title.
-  > .spell-recipe__back,
+  > .spell-recipe__bar,
   > .last-edit {
     flex: 0 0 100%;
     max-width: 100%;

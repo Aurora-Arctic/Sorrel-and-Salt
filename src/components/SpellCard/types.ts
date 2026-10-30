@@ -20,7 +20,7 @@ export interface SpellCardProps {
    * signed-in member and the spell's ingredient steps. Built by the page for a complete spell and a
    * role that may record a working; none draws no button. The spell's id and visibility are the card's own.
    */
-  recordWorking?: Omit<RecordWorkingButtonProps, 'spellId' | 'spellVisibility'>;
+  recordWorking?: Omit<RecordWorkingButtonProps, 'spellId' | 'spellVisibility' | 'spellName'>;
   /**
    * What the More menu needs: the coven, its slug and where a delete lands, with whether the role
    * may duplicate and delete. Built by the page; none draws no menu, and a menu with neither

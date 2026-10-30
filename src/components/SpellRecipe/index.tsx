@@ -66,9 +66,11 @@ const SpellRecipe = ({
       <header className="spell-recipe__head">
         {/* The ingredient entry's own back link: the chevron, and the
             way back through history to the list as it was, the Drafts tab counted as the list. */}
-        <BackLink className="spell-recipe__back" href={back.href} also={[`${back.href}/drafts`]}>
-          Back to {back.label} <LinkHint />
-        </BackLink>
+        <div className="back-bar spell-recipe__bar">
+          <BackLink href={back.href} also={[`${back.href}/drafts`]}>
+            Back to {back.label} <LinkHint />
+          </BackLink>
+        </div>
         {/* Above the title, as the ingredient entry page places it. */}
         {lastEdit && <LastEdit by={lastEdit.by} at={lastEdit.at} />}
         <h1 id="spell-recipe-title">{name}</h1>

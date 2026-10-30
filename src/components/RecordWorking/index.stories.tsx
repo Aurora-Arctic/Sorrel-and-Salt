@@ -56,11 +56,12 @@ const Driven = ({
   visibility?: 'private' | 'workspace';
 }): ReactElement => {
   useMockHandlers(ANSWERS);
-  useSteps([() => press('Record a Working'), ...steps], 120);
+  useSteps([() => press('Record a Working of Testwort Tonic'), ...steps], 120);
   return (
     <RecordWorkingButton
       workspaceId={WORKSPACE}
       spellId={SPELL}
+      spellName="Testwort Tonic"
       spellVisibility={visibility}
       members={MEMBERS}
       steps={STEPS}
@@ -73,6 +74,7 @@ const STATES: Record<string, ReactNode> = {
     <RecordWorkingButton
       workspaceId={WORKSPACE}
       spellId={SPELL}
+      spellName="Testwort Tonic"
       spellVisibility="workspace"
       members={MEMBERS}
       steps={STEPS}

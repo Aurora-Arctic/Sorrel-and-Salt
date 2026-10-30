@@ -50,13 +50,9 @@ $jump-link-line: 1.25;
   padding-block-start: space(4);
 }
 
-// The row holding the back link (left) and the New / Updated marker (right), on one centre line
-// (claude-docs/components/ingredient-entry.md, "Styling").
+// The `.back-bar` holding the back link (left) and the New / Updated marker (right), raised into the
+// page's top padding (claude-docs/components/ingredient-entry.md, "Styling").
 .ingredient-entry__bar {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: space(3);
   position: relative;
   top: calc(-1 * #{space(4)});
   margin-block-end: space(3);
