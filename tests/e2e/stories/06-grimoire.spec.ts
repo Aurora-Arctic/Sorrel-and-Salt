@@ -549,6 +549,13 @@ test(
       await page.goto(`${listPath}/${kept}`);
       // Why it could be offered: the viewer reads the page the member could delete from.
       await expect(page.getByRole('heading', { level: 1, name: 'Kept Working' })).toBeVisible();
+      // Print stands alone because nothing else is offered: a Delete Spell would put both in the dots' menu.
+      await expect(
+        page.getByRole('button', { name: 'Print Kept Working', exact: true }),
+      ).toBeVisible();
+      await expect(
+        page.getByRole('button', { name: 'More for Kept Working', exact: true }),
+      ).toHaveCount(0);
       await expect(page.getByRole('main').getByRole('button', { name: /^Delete/ })).toHaveCount(0);
 
       const answer = await graphqlFromPage(
@@ -1205,11 +1212,12 @@ test(
     await signInAgainAs(page, coven.users.C);
     await page.goto(recipe);
     await expect(page.getByRole('heading', { level: 1, name: 'Fixture Working' })).toBeVisible();
-    // The menu is there (it holds Print), so the missing Duplicate is the role's, not the menu's.
-    await dots.click();
-    await expect(page.getByRole('menuitem', { name: 'Print' })).toBeVisible();
-    await expect(page.getByRole('menuitem', { name: 'Duplicate' })).toHaveCount(0);
-    await page.keyboard.press('Escape');
+    // The head's controls are drawn (Print stands alone), and a menu holding Duplicate would draw the dots.
+    await expect(
+      page.getByRole('button', { name: 'Print Fixture Working', exact: true }),
+    ).toBeVisible();
+    await expect(dots).toHaveCount(0);
+    await expect(page.getByRole('main').getByRole('button', { name: /^Duplicate/ })).toHaveCount(0);
 
     // A member duplicates it and lands in the copy's builder.
     await signInAgainAs(page, coven.users.B);
