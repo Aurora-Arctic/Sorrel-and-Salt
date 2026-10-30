@@ -153,9 +153,14 @@
   border-radius: radius('control');
   background-color: $surface-card;
 
-  .combobox__control {
+  // Both classes, to outrank the Combobox's own ring on the box, so the frame's is the one ring.
+  .input.combobox__control {
     border: 0;
     border-radius: radius('control');
+
+    &:has(.combobox__input:focus-visible) {
+      outline: none;
+    }
   }
 
   &:has(.combobox__input:focus-visible) {
