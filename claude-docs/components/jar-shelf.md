@@ -81,7 +81,7 @@ The owner's call (2026-10-21): when the pointer is over a jar the coven can edit
 - `tests/components/IngredientEntry/`: a press on a jar opens the dialog with that form chosen, a press on an empty jar adds the form, and a viewer gets no jar buttons.
 - `tests/components/StockDialog/`: `openOn` and `StockJarButton`.
 - `tests/e2e/entry-stock.spec.ts` presses a jar by keyboard.
-- Storybook (`Ingredients / Jar Shelf`): a viewer's shelf of six forms (full, low, out, unmeasured, no threshold and empty), the editable shelf, and a single form.
+- Storybook (`Ingredients / Jar Shelf`): a viewer's shelf of six forms (full, low, out, unmeasured, no threshold and empty), the editable shelf, and a single form. Every Shape draws each vessel in `SHAPES`, empty and part-full, grouped as Jars, Bottles and Add Stock.
 
 ## What the shelf shows
 
