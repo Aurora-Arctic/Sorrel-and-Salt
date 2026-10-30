@@ -38,7 +38,7 @@ optionally:
 | ------------------ | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | `action`           | An action column, whose cells carry no label as a card and span it. `'corner'` also stands the cell at the card's top right (`.data-table__card-action`), as Edit and Impersonate do; `'foot'` leaves it across the card's foot, as the invitations' Revoke is |
 | `hiddenHeading`    | The heading is read by a screen reader and drawn nowhere, as the pencil column's "Edit" is                                                                                                                                                                     |
-| `headingClassName` | A class on the heading, for a column styled as a whole: Impersonate's pinned rule                                                                                                                                                                              |
+| `headingClassName` | A class on the heading, for a column styled as a whole: Impersonate's red rule                                                                                                                                                                                 |
 | `className`        | A class on each cell: a description held to the reading measure, a muted fact                                                                                                                                                                                  |
 
 A column that only some pages show, the value lists' group or the user
