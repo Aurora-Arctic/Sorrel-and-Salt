@@ -1053,8 +1053,10 @@ is the page's: the coven index sits in the narrow column with a jump menu at
 its side (`.page-with-nav`, "The page frame", above), and its sections are
 plain `.page-frame__section`s rather than panels, the shape the admin
 index uses. The index's table of contents is the `.admin-contents` list the
-admin index draws, in `_primitives.scss` for both. The admin area's
-page-header rules stay scoped to `.page-column`.
+admin index draws, in `_primitives.scss` for both. Its links are in the
+body ink whether or not they have been followed, so the two overviews read
+the same whatever the browser's history. The admin area's page-header rules
+stay scoped to `.page-column`.
 
 ## Tables at phone width
 

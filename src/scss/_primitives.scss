@@ -709,6 +709,18 @@
     > li {
       @include stack(1);
     }
+
+    // The links in the body ink, followed or not: the list reads as a table of contents, and the
+    // default unvisited accent would make the admin and coven overviews differ by browser history.
+    // Hover is every link's; this rule matches the global hover's weight and follows it, so it
+    // restates it.
+    a {
+      color: $text-primary;
+
+      &:hover {
+        color: $accent-hover;
+      }
+    }
   }
 
   // Not a `<p>`, so it takes the measure itself (claude-docs/styling.md,
