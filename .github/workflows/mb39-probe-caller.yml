@@ -1,0 +1,7 @@
+name: probe-caller
+on:
+  pull_request:
+    branches: ['scratch/**']
+jobs:
+  call-plain:
+    uses: ./.github/workflows/mb39-probe-plain.yml

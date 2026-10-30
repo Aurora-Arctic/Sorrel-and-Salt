@@ -1,0 +1,31 @@
+name: probe-plain
+on:
+  workflow_call:
+    inputs:
+      run-yes:
+        type: boolean
+        default: true
+      run-no:
+        type: boolean
+        default: false
+      legs:
+        type: string
+        default: '{"include":[{"name":"leg-on"}]}'
+jobs:
+  plain-yes:
+    if: inputs.run-yes
+    runs-on: ubuntu-latest
+    steps:
+      - run: echo yes
+  plain-no:
+    if: inputs.run-no
+    runs-on: ubuntu-latest
+    steps:
+      - run: echo no
+  leg:
+    runs-on: ubuntu-latest
+    strategy:
+      matrix: ${{ fromJSON(inputs.legs) }}
+    name: leg (${{ matrix.name }})
+    steps:
+      - run: echo ${{ matrix.name }}
