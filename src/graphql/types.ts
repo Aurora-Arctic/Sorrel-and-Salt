@@ -6,7 +6,7 @@ import type {
   ObjectRef,
 } from '@pothos/core';
 import type { FieldAuthScopes } from '@pothos/plugin-scope-auth';
-import type { EmailVerificationSender, InvitationSender } from '@/modules/identity';
+import type { EmailVerificationSender, InvitationSender, PasswordSetter } from '@/modules/identity';
 import type { Session } from '../lib/session';
 import type { Cursor, PageCount, PageEntry, PageRequest, ValidationIssue } from '../lib/types';
 import type { Loaders } from './loaders';
@@ -20,6 +20,8 @@ export interface Context {
   emailVerification: EmailVerificationSender;
   /** Bound to this request's host: an admin invitation's link goes out through it. */
   invitations: InvitationSender;
+  /** Bound to this request's cookie: the account page's first password is set through it. */
+  passwords: PasswordSetter;
 }
 
 export interface SchemaTypes {

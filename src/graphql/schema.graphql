@@ -965,6 +965,7 @@ type Mutation {
   setCompendiumEntryReviewed(id: ID!, reviewed: Boolean!): Ingredient!
   setEmail(email: String!, next: String): User!
   setName(name: String!): User!
+  setPassword(newPassword: String!): Boolean!
 
   """
   Gives a user a site role, user, curator or admin, with an optional reason for the record. Refused for a role already held, for moving the primary admin or the last admin off admin, and for a curator.

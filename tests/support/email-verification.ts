@@ -1,4 +1,4 @@
-import type { EmailVerificationSender, InvitationSender } from '@/modules/identity';
+import type { EmailVerificationSender, InvitationSender, PasswordSetter } from '@/modules/identity';
 
 // The sender for a hand-built GraphQL context in a test that sends nothing:
 // a call is the test's mistake, so it throws rather than passing silently.
@@ -14,4 +14,8 @@ export const noSender: EmailVerificationSender = {
 export const noInvitationSender: InvitationSender = {
   siteInvitation: async () => unexpected('mail an invitation'),
   workspaceInvitation: async () => unexpected('mail a coven invitation'),
+};
+
+export const noPasswordSetter: PasswordSetter = {
+  set: async () => unexpected('set a password'),
 };

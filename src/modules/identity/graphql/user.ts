@@ -5,6 +5,7 @@ import { userRole } from '../schema/users';
 import { pauseAdminRoleChanges, resumeAdminRoleChanges } from '../services/admin-role-pause';
 import { setEmail } from '../services/email';
 import { setName } from '../services/name';
+import { setPassword } from '../services/password';
 import { getMe } from '../services/profile';
 import { listUsers } from '../services/user-list';
 import { setUserRole } from '../services/user-role';
@@ -57,6 +58,18 @@ builder.mutationField('setEmail', (t) =>
     authScopes: { signedIn: true },
     resolve: (_root, { email, next }, context) =>
       setEmail(sessionOf(context), email, context.emailVerification, next ?? undefined),
+  }),
+);
+
+// The account page's Password section, for an account with no password yet: a
+// change goes to Better Auth's own `/change-password`, which asks for the
+// current one. A refusal is `VALIDATION` on `newPassword`.
+builder.mutationField('setPassword', (t) =>
+  t.boolean({
+    args: { newPassword: t.arg.string({ required: true }) },
+    authScopes: { signedIn: true },
+    resolve: (_root, { newPassword }, context) =>
+      setPassword(sessionOf(context), newPassword, context.passwords),
   }),
 );
 

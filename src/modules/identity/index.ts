@@ -9,6 +9,7 @@ export * from './services/editor-names';
 export * from './services/email';
 export * from './services/invitation-acceptance';
 export * from './services/name';
+export * from './services/password';
 export * from './services/privilege-changes';
 export * from './services/primary-admin';
 export * from './services/profile';
