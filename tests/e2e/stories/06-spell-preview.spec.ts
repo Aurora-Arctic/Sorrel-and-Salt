@@ -157,6 +157,26 @@ test(
       );
     await page.emulateMedia({ reducedMotion: 'no-preference' });
     expect(await running()).toBeGreaterThan(0);
+    // An ember crosses a stop on its path at one speed: the same distance in the hundredth of its
+    // life before the stop as after it. Checked by setting the animation's time, not by sampling.
+    const stride = await pane
+      .locator('.spell-preview__ember--edge')
+      .first()
+      .evaluate((el) => {
+        const flight = el.getAnimations().find((a) => (a.effect as KeyframeEffect).target === el);
+        if (!flight) throw new Error('the ember has no flight animation');
+        const { delay, duration } = flight.effect!.getTiming() as {
+          delay: number;
+          duration: number;
+        };
+        flight.pause();
+        const yAt = (fraction: number): number => {
+          flight.currentTime = delay + duration * fraction;
+          return el.getBoundingClientRect().top;
+        };
+        return [yAt(0.29) - yAt(0.3), yAt(0.3) - yAt(0.31)];
+      });
+    expect(Math.abs(stride[0] - stride[1])).toBeLessThan(0.5);
     await page.emulateMedia({ reducedMotion: 'reduce' });
     expect(await running()).toBe(0);
     // Off releases the lock; on asks again.

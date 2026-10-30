@@ -432,6 +432,8 @@ $preview-hearth-duration: 11s;
 
 // An ember: an irregular fragment placed and timed by the custom properties `embers.ts` sets. The
 // body is the cooled fragment; `::before` is its heat, fading over the rise.
+// The path runs `linear`: an easing applies between each pair of keyframes, so `ease-in` would
+// bring the ember to a stop at every stop on its path and set it off again, as if it had caught.
 .spell-preview__ember {
   position: absolute;
   inset: auto auto -2% var(--x);
@@ -440,7 +442,7 @@ $preview-hearth-duration: 11s;
   border-radius: var(--br);
   opacity: 0;
   will-change: transform, opacity;
-  animation: spell-preview-float var(--d) ease-in var(--delay) infinite;
+  animation: spell-preview-float var(--d) linear var(--delay) infinite;
 }
 
 .spell-preview__ember--hot {
