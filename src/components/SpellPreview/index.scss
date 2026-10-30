@@ -543,9 +543,10 @@ $preview-hearth-duration: 11s;
   }
 }
 
-// The demo coven's notice over the title: in the row the page gives its Edited line, which the pane
-// leaves out, across both columns. The box spans the sheet and the sentence stops at the reading measure.
-.spell-preview__notice {
+// The demo coven's notice over the title: its own band in row 1, which the pane gives it because the page's Edited
+// line, which the pane leaves out, would stand there. The box spans the sheet and the sentence stops at the reading
+// measure. Both classes, to outrank `.notice`'s `max-width` and zero margin, which come later in the cascade.
+.notice.spell-preview__notice {
   grid-row: 1;
   grid-column: 1 / -1;
   max-width: none;
