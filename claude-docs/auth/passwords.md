@@ -153,6 +153,9 @@ in `sign_in_failures` (DESIGN.md §8, "Passwords"), by
   A completed reset deletes it, in `onPasswordReset`, and so does a passkey
   sign-in, in the after hook on `/passkey/verify-authentication`, since a
   passkey proves the owner as the password would.
+- **Two-factor codes are not counted here.** A wrong code at the second step
+  goes to the `twoFactor` plugin's own lockout, and the password row never
+  hears of it ([`two-factor.md`](two-factor.md), "Wrong codes").
 - **Outside `withAudit`.** A failed sign-in has no session to audit; the
   counter is the third identity bootstrap in CLAUDE.md rule 3.
 

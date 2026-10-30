@@ -240,6 +240,28 @@ is [`auth/passwords.md`](../auth/passwords.md).
 
 `tests/components/SignInPanel/password-form.test.tsx` covers the disabled and busy submit, each refusal, the sign-up notice, the full load carrying `next`, the last-used mark, and that no password hint or security question exists; story 70 walks it in the browser.
 
+## Two-factor
+
+When the account has two-factor on, a right password does not sign in: the
+answer carries `twoFactorRedirect`, and the form clears the password and
+shows `two-factor-step.tsx` in its place ([`auth/two-factor.md`](../auth/two-factor.md)).
+
+- **The step** is "Enter Your Code", with "Code From Your App"
+  (`autocomplete="one-time-code"`, spaces dropped) focused, a "Trust This
+  Device for 30 Days" switch, and Verify (`twoFactor.verifyTotp`). "Use a
+  Backup Code" swaps the field for "Backup Code" (`twoFactor.verifyBackupCode`)
+  and back. "Start Again" returns to the password.
+- **Refusals.** A wrong code is `WRONG_CODE` under the field. The plugin's
+  lock is `CODE_LOCKED` in the alert region. An expired challenge, or one
+  that has had too many codes, returns to the password with
+  `CHALLENGE_EXPIRED` as the alert, since only a new password step starts a
+  new challenge. Anything else is `GENERIC_CODE_ERROR`.
+- **Success** leaves the way a password sign-in does: `reportLeaving()`, then
+  a full load of `/sign-in?next=…`.
+
+`tests/components/SignInPanel/two-factor-step.test.tsx` covers each of these;
+story 75 walks it in the browser.
+
 ## Passkey
 
 Below the provider buttons, "Sign In with a Passkey" (`passkey-button.tsx`)

@@ -84,12 +84,55 @@ evil.example.com` — the first two resolve correctly, the third falls
   that looks like its own ciphertext (a `$ba$` prefix, or an even-length hex
   string) and returns anything else as it is, so a row written before the switch
   keeps reading. A plaintext token that happened to be even-length hex would
-  be misread; none of the four providers' token formats is. Rotating the
-  secret makes every stored token unreadable; the next sign-in with each
-  provider writes a fresh one.
+  be misread; none of the four providers' token formats is. A token
+  is encrypted under the current versioned key, so a new key leaves it
+  readable ("Rotating the secret", below).
 - **Session lifetimes are Better Auth's defaults, pinned by test** (MB.76).
   DESIGN.md sets none, so `src/lib/auth.ts` sets none: a session lasts seven
   days, is extended at most once a day while in use, and counts as fresh for a
   day. `tests/lib/auth.test.ts` reads the resolved values off `auth.$context`,
   so a dependency bump that moves a default fails there rather than changing
   how long someone stays signed in.
+
+### Rotating the secret
+
+Better Auth signs cookies and links with the auth secret, and encrypts the
+providers' tokens and the two-factor secrets and backup codes under it
+([`two-factor.md`](two-factor.md)). Replacing the one value would make every
+encrypted row unreadable, so the secret is **versioned**: `secrets` in
+`src/lib/auth.ts` comes from `authSecrets()` (`src/lib/auth-secrets.ts`).
+
+- **Unset `BETTER_AUTH_SECRETS`**, the default everywhere today:
+  `BETTER_AUTH_SECRET` is version 1, and every value encrypted starts
+  `$ba$1$`.
+- **`BETTER_AUTH_SECRETS`**, Better Auth's own format,
+  `<version>:<secret>` entries separated by commas, newest first. The first
+  key signs and encrypts everything new; every listed key still decrypts what
+  was written under its version. `BETTER_AUTH_SECRET`, passed as `secret`, is
+  Better Auth's legacy key, read only for a value with no version: a provider
+  token written before versions existed, as bare hex.
+
+To rotate:
+
+1. Generate the new key (`openssl rand -base64 32`).
+2. Set `BETTER_AUTH_SECRETS="2:<new>,1:<old>"` in Vercel, for both
+   environments, since they share the secret ([`secrets.md`](../secrets.md)).
+   Leave `BETTER_AUTH_SECRET` as the old value, so
+   unversioned tokens stay readable.
+3. Deploy. Cookies are now signed with the new key, so **everyone is signed
+   out** and signs in again; an email-verification link mailed before the
+   deploy no longer verifies, since it is checked against the current key
+   alone. Two-factor enrolments and provider tokens keep working.
+4. Retire version 1 only once no row holds a `$ba$1$` value: a person who
+   turns two-factor off and on again, or a provider sign-in, rewrites theirs
+   under version 2. Removing a version while rows still name it makes those
+   rows unreadable, so those people must turn two-factor on again.
+
+After a key has **leaked**, rotating is not enough: the old key still opens
+every row written under it. Remove it at once and ask everyone with
+two-factor on to turn it on again.
+
+`tests/db/two-factor.test.ts` proves the procedure: an enrolment made under
+version 1 still verifies with `2:<new>,1:<old>`, a new enrolment is written
+`$ba$2$`, and with version 1 gone the old enrolment fails. The e2e servers
+never set `BETTER_AUTH_SECRETS`.

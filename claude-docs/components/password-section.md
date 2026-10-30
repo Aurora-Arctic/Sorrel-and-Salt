@@ -12,9 +12,10 @@ first password".
 
 `PasswordSectionProps` (`types.ts`):
 
-| Prop          | What it is                                                         |
-| ------------- | ------------------------------------------------------------------ |
-| `hasPassword` | Whether the account holds a password, which picks the form it gets |
+| Prop               | What it is                                                                          |
+| ------------------ | ----------------------------------------------------------------------------------- |
+| `hasPassword`      | Whether the account holds a password, which picks the form it gets                  |
+| `twoFactorEnabled` | Whether two-factor is on, read from `users.two_factor_enabled`; false when left out |
 
 The section's heading, "Password", and its lede, which differs between the
 two forms, are the page's.
@@ -52,11 +53,37 @@ Both submits are disabled until every field has something in it, and are a
 `BusyButton` ("Changing Password", "Setting Password") while the request is
 out ([`busy-button.md`](busy-button.md)).
 
+## Two-factor
+
+`two-factor.tsx`, "Two-Factor Sign-In", sits below the change form and is
+shown only when the account holds a password, since two-factor guards
+password sign-ins alone ([`auth/two-factor.md`](../auth/two-factor.md)).
+
+- **Off**, it asks for the password and offers "Turn On Two-Factor"
+  (`twoFactor.enable`). The answer opens three steps: a QR code for the
+  authenticator app (Ark UI's `QrCode`, `role="img"`), the key the code
+  holds for typing in instead, and the ten backup codes, said to be shown
+  once. "Code From Your App" and "Confirm and Turn On" (`twoFactor.verifyTotp`)
+  turn it on; Cancel leaves it off. Two-factor is not on until that code is
+  confirmed.
+- **On**, it asks for the password and offers "Turn Off Two-Factor"
+  (`twoFactor.disable`), a destructive button.
+- **Refusals.** A wrong password (`INVALID_PASSWORD`) is `WRONG_PASSWORD`
+  under the Password field; a wrong code is the sign-in step's `WRONG_CODE`
+  under the code field; a 429 is `TOO_MANY_ATTEMPTS`, anything else
+  `GENERIC_TWO_FACTOR_ERROR`.
+- **Success** says two-factor is on or off in a success notice.
+
+Each submit is disabled until its field has something in it, and is a
+`BusyButton` ("Turning On", "Turning Off") while the request is out.
+
 ## Styling
 
 `.password-section` is a column with the standard gap, on the section's
 `.panel` inside the account page's `.page-frame--narrow`. Nothing past the
-tokens.
+tokens. `.two-factor` draws the QR code in `$text-primary` on `$surface-card`,
+so it is light on dark in the dark theme; the design review should check that
+common authenticator apps scan the inverted code.
 
 ## Stories
 
@@ -69,4 +96,6 @@ mocked: a submit in the workshop fails into the alert region.
 
 `tests/components/PasswordSection/index.test.tsx`: which form each prop gives,
 the calls each makes, each refusal and where it lands, and the switch to the
-change form after a first password is set.
+change form after a first password is set. `tests/components/PasswordSection/two-factor.test.tsx`:
+the section shown only with a password, the setup steps, turning on only with a
+confirmed code, turning off, and each refusal. Story 75 walks it in the browser.

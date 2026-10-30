@@ -68,5 +68,5 @@ locks the password, for 1, 5 and 15 minutes and then 1 hour each time, the count
 starts over after 24 hours with no failure, and nothing disables it for good
 (DESIGN.md §8, "Passwords"; [`passwords.md`](passwords.md), "Lockout"). The `twoFactor` plugin also locks an
 account after repeated wrong codes (10 failures for 900 seconds by default,
-`accountLockout` in its options); whether M16.5's count or that one governs wrong
-codes is M16.10's decision.
+`accountLockout` in its options), and that lock, not M16.5's count, governs
+wrong codes ([`two-factor.md`](two-factor.md), "Wrong codes").

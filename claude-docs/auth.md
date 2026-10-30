@@ -132,6 +132,10 @@ In [`auth/plugins.md`](auth/plugins.md#the-last-used-provider-mb77).
 
 Sign-up and sign-in by address and password through `emailAndPassword`, 15 to 128 characters, with `requireEmailVerification` off so `requireSession()` holds an unverified account at the email page; the project's own breached-password plugin sends Have I Been Pwned a five-character hash prefix, waits three seconds at most and fails closed; a sign-up to a held address answers as a new one and mails the holder. A forgotten password is reset by a single-use link that lasts 15 minutes and is mailed to a verified address only, and signs out every session; a change asks for the current password and signs out every other session; an account with providers only sets a first password through the GraphQL `setPassword`; each mails a notice (M16.3). [`auth/passwords.md`](auth/passwords.md)
 
+## Two-factor (M16.10)
+
+An account with a password can add a code from an authenticator app through `twoFactor`: turning it on takes the password and a right code, and shows ten backup codes once; a password sign-in then asks for the code or a backup code, and a trusted browser skips it for 30 days; provider and passkey sign-ins are never asked. Wrong codes have the plugin's own lockout, and the encrypted secrets survive a new auth key through versioned `secrets`. [`auth/two-factor.md`](auth/two-factor.md)
+
 ## Impersonation (MB.53)
 
 An admin signs in as a non-admin user wherever `ENABLE_IMPERSONATION` is set and `VERCEL_ENV` is not `production`, through the `admin` plugin narrowed to its two impersonation endpoints. Writes stamp the user, `app.impersonated_by` names the admin, and a banner on every page carries Stop. [`auth/impersonation.md`](auth/impersonation.md)
