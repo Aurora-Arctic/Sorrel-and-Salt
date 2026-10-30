@@ -57,8 +57,21 @@
   min-width: 0;
 }
 
-// The card: the ingredient form's variant card look. Its grid is the open-and-closed one below, or
-// the instruction step's (claude-docs/components/step-row.md, "The card").
+// A step's name takes a paragraph's line height (1.65).
+$step-line: type-size('body') * 1.65;
+// A name's lettering (mostly lowercase) sits a little below the middle of its line, measured
+// at 0.8px under 16px type, so an icon centred on the line looks high beside it. Each icon
+// on the first line (the handle, the marks, the pencil and Remove) takes this one drop.
+$step-ink-drop: 0.05rem;
+
+// A closed ingredient row opens on a click anywhere on its face (the pencil still does too).
+.step-row.step-row--card.step-row--closed:not(.step-row--instruction),
+.step-row.step-row--instruction.step-row--folded {
+  cursor: pointer;
+}
+
+// The card: the ingredient form's variant card look. Its grid is the open-and-closed one at the
+// end of this block, or the instruction step's (claude-docs/components/step-row.md, "The card").
 .step-row.step-row--card {
   display: grid;
   gap: 0 space(3);
@@ -109,24 +122,10 @@
     @include icon-button;
     @include icon-button-remove;
   }
-}
 
-// Open and closed, like the ingredient form's variant card: closed is one line (name, muted
-// summary, marks, pencil, Remove); open adds Form, Quantity and Unit on one line where they fit and
-// the Instruction beneath. The name takes a paragraph's line height (1.65).
-$step-line: type-size('body') * 1.65;
-// A name's lettering (mostly lowercase) sits a little below the middle of its line, measured
-// at 0.8px under 16px type, so an icon centred on the line looks high beside it. Each icon
-// on the first line (the handle, the marks, the pencil and Remove) takes this one drop.
-$step-ink-drop: 0.05rem;
-
-// A closed ingredient row opens on a click anywhere on its face (the pencil still does too).
-.step-row.step-row--card.step-row--closed:not(.step-row--instruction),
-.step-row.step-row--instruction.step-row--folded {
-  cursor: pointer;
-}
-
-.step-row.step-row--card {
+  // Open and closed, like the ingredient form's variant card: closed is one line (name, muted
+  // summary, marks, pencil, Remove); open adds Form, Quantity and Unit on one line where they fit
+  // and the Instruction beneath.
   &.step-row--closed,
   &.step-row--open {
     // The name's line, then the amount and the instruction on one muted line beneath it, in the

@@ -22,12 +22,19 @@ $preview-foot: 2.5rem;
   padding: $preview-edge;
   padding-bottom: $preview-foot;
   border: 0;
+  // The dialog paints nothing: the face layer is the page colour everywhere but the burn, where
+  // the backdrop, the table under the page, shows through ("The background", below).
+  background: transparent;
   overflow-y: auto;
   // stylelint-disable-next-line plugin/use-baseline -- enhancement: a browser without it lets a scroll past the pane's end reach the page behind, which is held still anyway, not yet Baseline
   overscroll-behavior: contain;
 
   &:focus {
     outline: none;
+  }
+
+  &::backdrop {
+    background: $drawer-slot;
   }
 
   // The page's side gutter on a phone.
@@ -95,15 +102,6 @@ $preview-foot: 2.5rem;
 // (claude-docs/components/spell-preview.md, "The background"). The burn is the card's, layer for
 // layer, from its smoulder partial; the ember rim and glow breathe by `opacity` here rather than
 // the card's `box-shadow` and `filter` frames, which repaint every frame on a phone kept awake.
-// The dialog itself paints nothing: the face layer is the page colour everywhere but the burn,
-// where the backdrop, the table under the page, shows through.
-.spell-preview {
-  background: transparent;
-
-  &::backdrop {
-    background: $drawer-slot;
-  }
-}
 
 $preview-ember-opacity: 0.4;
 // The pane's burn is bigger than a card's: it runs twice as far along the bottom and eats half as
