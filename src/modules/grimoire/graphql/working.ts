@@ -96,6 +96,13 @@ const PlannedDeductionRef = builder.objectRef<PlannedDeduction>('PlannedDeductio
     quantity: t.exposeFloat('quantity'),
     unit: t.expose('unit', { type: InventoryUnitEnum }),
     shortfall: t.exposeFloat('shortfall'),
+    before: t.exposeFloat('before', {
+      description: 'What the jar held before this take, in the jar unit.',
+    }),
+    lowStockThreshold: t.exposeFloat('lowStockThreshold', {
+      nullable: true,
+      description: 'The jar Low mark, in the jar unit.',
+    }),
   }),
 });
 

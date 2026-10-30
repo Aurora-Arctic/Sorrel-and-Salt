@@ -22,7 +22,9 @@ export const WorkingDeductionPreviewDocument = graphql(`
   query WorkingDeductionPreview($workspaceId: ID!, $spellId: ID!) {
     workingDeductionPreview(workspaceId: $workspaceId, spellId: $spellId) {
       deductions {
+        before
         inventoryItemId
+        lowStockThreshold
         quantity
         shortfall
         stepId

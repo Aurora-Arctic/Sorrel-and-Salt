@@ -103,4 +103,8 @@ export interface PlannedDeduction {
   quantity: number;
   unit: Unit;
   shortfall: number;
+  /** What the jar held before this take, in the jar's unit. */
+  before: number;
+  /** The jar's Low mark, which its drawing reads its level against. */
+  lowStockThreshold: number | null;
 }

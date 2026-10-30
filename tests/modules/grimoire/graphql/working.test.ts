@@ -56,7 +56,7 @@ const COMPLETE = `mutation ($workspaceId: ID!, $id: ID!) {
 const DELETE = `mutation ($workspaceId: ID!, $id: ID!) { deleteWorking(workspaceId: $workspaceId, id: $id) }`;
 const PREVIEW = `query ($workspaceId: ID!, $spellId: ID!) {
   workingDeductionPreview(workspaceId: $workspaceId, spellId: $spellId) {
-    deductions { stepId inventoryItemId quantity unit shortfall }
+    deductions { stepId inventoryItemId quantity unit shortfall before lowStockThreshold }
     warnings { stepId reason }
   }
 }`;
@@ -66,7 +66,12 @@ const SPELLS = `query ($workspaceId: ID!) {
   }
 }`;
 
-async function stocked(name: string, quantity: string | null, unit: Unit | null) {
+async function stocked(
+  name: string,
+  quantity: string | null,
+  unit: Unit | null,
+  lowStockThreshold: string | null = null,
+) {
   const ingredientId = await insertIngredient(
     sql,
     makeIngredient({ workspaceId: null, name, nomenclature: 'none', variants: [makeVariant()] }),
@@ -75,7 +80,14 @@ async function stocked(name: string, quantity: string | null, unit: Unit | null)
   const variantId = await variantIdOf(sql, ingredientId, 'Testform');
   const jarId = await insertStock(
     sql,
-    { workspaceId: WORKSPACE_W_ID, ingredientId, variantId, quantityOnHand: quantity, unit },
+    {
+      workspaceId: WORKSPACE_W_ID,
+      ingredientId,
+      variantId,
+      quantityOnHand: quantity,
+      unit,
+      lowStockThreshold,
+    },
     A.id,
   );
   return { ingredientId, jarId };
@@ -205,6 +217,33 @@ describe('workingDeductionPreview', () => {
     expect(preview.data!.workingDeductionPreview.warnings).toEqual(
       done.data!.completeWorking.warnings,
     );
+  });
+
+  it('says what each jar held before the take and its Low mark, from the one batched read', async () => {
+    const jar = await stocked('Fixture Wort', '10', 'g', '3');
+    const line = { ingredientId: jar.ingredientId, quantity: '4', unit: 'g' as const };
+    const one = await spellBy(B, { steps: [line] });
+    const two = await spellBy(B, { steps: [line, line] });
+    type Preview = {
+      workingDeductionPreview: {
+        deductions: { before: number; lowStockThreshold: number | null }[];
+      };
+    };
+
+    for (const spy of Object.values(repository)) spy.mockClear();
+    await run<Preview>(asUser(B), PREVIEW, vars({ spellId: one }));
+    const readsForOne = reads();
+    for (const spy of Object.values(repository)) spy.mockClear();
+    const preview = await run<Preview>(asUser(B), PREVIEW, vars({ spellId: two }));
+
+    expect(preview.errors).toBeUndefined();
+    // The second line sees what the first left, which is why the two differ.
+    expect(preview.data!.workingDeductionPreview.deductions).toEqual([
+      expect.objectContaining({ before: 10, lowStockThreshold: 3 }),
+      expect.objectContaining({ before: 6, lowStockThreshold: 3 }),
+    ]);
+    // A second line costs no further read: the stock came in one batch.
+    expect(reads()).toBe(readsForOne);
   });
 
   it('takes nothing from the jars', async () => {

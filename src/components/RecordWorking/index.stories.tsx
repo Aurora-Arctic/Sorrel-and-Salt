@@ -33,7 +33,15 @@ const ANSWERS = [
   answerQuery(WorkingDeductionPreviewDocument, () => ({
     workingDeductionPreview: {
       deductions: [
-        { inventoryItemId: 'i1', quantity: 2, shortfall: 0, stepId: 's1', unit: 'g' as const },
+        {
+          inventoryItemId: 'i1',
+          quantity: 2,
+          shortfall: 0,
+          stepId: 's1',
+          unit: 'g' as const,
+          before: 10,
+          lowStockThreshold: 3,
+        },
       ],
       warnings: [],
     },

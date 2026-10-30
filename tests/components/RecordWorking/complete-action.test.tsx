@@ -32,8 +32,24 @@ function open() {
   mockGraphQLQuery<WorkingDeductionPreviewQuery>('WorkingDeductionPreview', () => ({
     workingDeductionPreview: {
       deductions: [
-        { inventoryItemId: 'i1', quantity: 2, shortfall: 0, stepId: 's1', unit: 'g' },
-        { inventoryItemId: 'i3', quantity: 5, shortfall: 1.5, stepId: 's3', unit: 'ml' },
+        {
+          inventoryItemId: 'i1',
+          quantity: 2,
+          shortfall: 0,
+          stepId: 's1',
+          unit: 'g',
+          before: 10,
+          lowStockThreshold: 3,
+        },
+        {
+          inventoryItemId: 'i3',
+          quantity: 5,
+          shortfall: 1.5,
+          stepId: 's3',
+          unit: 'ml',
+          before: 3.5,
+          lowStockThreshold: null,
+        },
       ],
       warnings: WARNINGS,
     },
