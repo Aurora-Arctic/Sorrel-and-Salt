@@ -659,6 +659,13 @@
       "when": 1793339120442,
       "tag": "0093_cupboard-entries-revision",
       "breakpoints": true
+    },
+    {
+      "idx": 94,
+      "version": "7",
+      "when": 1793379183819,
+      "tag": "0094_workspaces-demo-flag",
+      "breakpoints": true
     }
   ]
 }

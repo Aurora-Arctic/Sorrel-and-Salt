@@ -1,6 +1,6 @@
 import { and, isNotNull, isNull } from 'drizzle-orm';
 import { requireFrom } from '../idempotent';
-import { identityOf } from '../standard';
+import { identityOf } from '../coven-content';
 import { deitiesNamed } from '../deities';
 import { citationText } from '../../../lib/citation';
 import { ingredientSlug, slugify } from '../../../lib/slugify';

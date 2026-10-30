@@ -255,6 +255,7 @@ jobs:
           npm run db:seed:deities 2>&1 | tee -a seed.log
           npm run db:seed:sources 2>&1 | tee -a seed.log
           npm run db:seed:compendium -- --adopt 2>&1 | tee -a seed.log
+          npm run db:seed:demo-coven 2>&1 | tee -a seed.log
 
       # The compendium seed's per-entry lines (report.ts's formatReport), each
       # with its `  differs:` line, go into the job summary on every run, in a
@@ -266,9 +267,9 @@ jobs:
         if: always() && steps.guard.outputs.enabled == 'true' && inputs.seed-reference
         run: |
           touch seed.log
-          grep -E '^(UPDATED|PENDING|REFUSED|ADOPTED|RETIRED) |^  differs: ' seed.log > seed-entries.log || true
+          grep -E '^(UPDATED|PENDING|REFUSED|ADOPTED|RETIRED|SKIPPED) |^  differs: ' seed.log > seed-entries.log || true
           totals=$(grep -E '^inserted [0-9]+, skipped [0-9]+' seed.log | tail -n 1 || true)
-          count=$(grep -cE '^(UPDATED|PENDING|REFUSED|ADOPTED|RETIRED) ' seed-entries.log || true)
+          count=$(grep -cE '^(UPDATED|PENDING|REFUSED|ADOPTED|RETIRED|SKIPPED) ' seed-entries.log || true)
           {
             if [ "$count" -gt 0 ]; then
               echo "<details><summary>Compendium entries: $count listed${totals:+ ($totals)}</summary>"

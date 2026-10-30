@@ -154,6 +154,7 @@ export function membershipWrites({
   | 'insertMembership'
   | 'lockLiveMembers'
   | 'reviveMembership'
+  | 'setSeatRole'
   | 'softDeleteMembership'
   | 'updateMembershipRole'
 > {
@@ -171,6 +172,12 @@ export function membershipWrites({
         workspaceMembers,
         { role },
         and(scopedTo(membership, workspaceMembers), eq(workspaceMembers.userId, userId)),
+      ),
+    setSeatRole: (workspaceId, userId, role) =>
+      update(
+        workspaceMembers,
+        { role },
+        and(eq(workspaceMembers.workspaceId, workspaceId), eq(workspaceMembers.userId, userId)),
       ),
     insertMembership: (workspaceId, userId, role, invitedBy) =>
       insert(workspaceMembers, { workspaceId, userId, role, invitedBy }),

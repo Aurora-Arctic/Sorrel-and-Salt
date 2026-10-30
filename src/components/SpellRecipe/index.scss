@@ -160,6 +160,14 @@
     margin: 0;
     overflow-wrap: anywhere;
   }
+
+  // As tall as this row's icon buttons (`$icon-size-large`, not the larger action box) and centred in that height,
+  // so the badges' middle is the buttons' middle wherever the row wraps them; the group's bottom margin would push them off it.
+  > .specimen__badges {
+    align-items: center;
+    min-block-size: $icon-size-large;
+    margin-block-end: 0;
+  }
 }
 
 // The pencil and the bin on one line at the heading's end, as the

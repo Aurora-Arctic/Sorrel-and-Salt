@@ -6,7 +6,7 @@ query (DESIGN.md §11, "Acceptance tests — story traceability";
 `claude-docs/design-decisions/m9.1-stories-are-browser-flows.md`).
 
 `npm run test:stories` (or `make test-stories`) runs only this directory, with
-`playwright.stories.config.ts`, and prints a checklist of the 63 v1 stories.
+`playwright.stories.config.ts`, and prints a checklist of the 64 v1 stories.
 A story with no test reads "no test yet". CI runs it as the `stories` job of
 `.github/workflows/pr-gate.yml`, never a required check, so a red scaffold is
 never on the merge path.
@@ -64,6 +64,7 @@ Going green is `test.fixme` → `test` and deleting the annotation.
 | `07-admin.spec.ts`           | 17–19        | M9.1                                      |
 | `08-email-and-admin.spec.ts` | 58–62        | M9.1                                      |
 | `09-public.spec.ts`          | 63           | MB.83, MB.85                              |
+| `87-demo-coven.spec.ts`      | 87           | M15.16                                    |
 
 In `06-grimoire.spec.ts`, each story waits on: 47 M10.12, 48 M10.14, 49 M10.15, 50 M10.15, 51 M10.16, 52 M10.17, 53 M10.18, 54 M10.19, 55 M10.20, 56 M10.11, 57 M10.15, 77 M10.15, 79 M13.8, 80 M13.3, 83 M13.21, 84 M13.22.
 

@@ -236,6 +236,71 @@ describe('sign-up hook', () => {
   });
 });
 
+// The sign-up hook's second write: a viewer seat in the demo coven, on the same raw client and outside withAudit. The finder and the
+// client are doubles here; tests/db/email-verification.test.ts runs it against a real database.
+describe('sign-up hook seat', () => {
+  afterEach(() => {
+    vi.doUnmock('@/db/repository');
+    vi.doUnmock('@/db/connection');
+    vi.restoreAllMocks();
+  });
+
+  async function afterHookWith(demo: { id: string } | undefined, insert: () => Promise<undefined>) {
+    vi.resetModules();
+    const values = vi.fn(insert);
+    const real = await vi.importActual<typeof import('@/db/connection')>('@/db/connection');
+    vi.doMock('@/db/connection', () => ({
+      ...real,
+      db: { ...real.db, insert: () => ({ values }) },
+    }));
+    const realRepository =
+      await vi.importActual<typeof import('@/db/repository')>('@/db/repository');
+    vi.doMock('@/db/repository', () => ({
+      ...realRepository,
+      findDemoWorkspace: async () => demo,
+    }));
+    const { auth } = await import('@/lib/auth');
+    const hook = auth.options.databaseHooks?.user?.create?.after;
+    if (!hook) throw new Error('databaseHooks.user.create.after is not configured');
+    return { hook, values };
+  }
+
+  it('seats the new user as a viewer of the demo coven, stamped by themselves', async () => {
+    const { hook, values } = await afterHookWith({ id: 'demo-id' }, async () => undefined);
+
+    await hook({ id: 'new-user' } as never, null);
+
+    expect(values).toHaveBeenCalledWith({
+      workspaceId: 'demo-id',
+      userId: 'new-user',
+      role: 'viewer',
+      invitedBy: null,
+      createdBy: 'new-user',
+      updatedBy: 'new-user',
+    });
+  });
+
+  it('writes nothing where there is no demo coven', async () => {
+    const { hook, values } = await afterHookWith(undefined, async () => undefined);
+
+    await hook({ id: 'new-user' } as never, null);
+
+    expect(values).not.toHaveBeenCalled();
+  });
+
+  it('logs a failed insert with the user id and does not throw', async () => {
+    const error = vi.spyOn(console, 'error').mockImplementation(() => {});
+    const { hook, values } = await afterHookWith({ id: 'demo-id' }, async () => {
+      throw new Error('insert refused');
+    });
+
+    await expect(hook({ id: 'new-user' } as never, null)).resolves.toBeUndefined();
+
+    expect(values).toHaveBeenCalled();
+    expect(error.mock.calls[0][0]).toContain('new-user');
+  });
+});
+
 // Everything the primary admin's protection rests on holds only while the
 // variable is set, so a deployed build refuses to start without it; the check
 // keys on NODE_ENV=production, as BETTER_AUTH_SECRET's does.

@@ -13,7 +13,9 @@ import { appendQueryParams } from '@better-auth/core/utils/url';
 // this cannot go through withAudit — claude-docs/db/client-imports.md, "Who may import the client".
 // oxlint-disable-next-line no-restricted-imports
 import { db } from '../db/connection';
+import { workspaceMembers } from '../modules/coven/schema/workspaces';
 import { users } from '../modules/identity/schema/users';
+import { findDemoWorkspace } from '../db/repository';
 import { sessions, accounts, verifications, rateLimits } from '../modules/identity/schema/auth';
 import { SOCIAL_PROVIDERS, isRosterProvider } from './social-providers';
 // Server-only — see social-providers-config.ts's own header.
@@ -492,6 +494,28 @@ export const auth = betterAuth({
               updatedBy: id,
             },
           };
+        },
+        // The sign-up hook's second write, outside `withAudit` for the same reason: a viewer seat in the demo coven, stamped by the
+        // new user as their own row is. It never throws, as Better Auth cannot roll the user row back and a half-failed sign-up is
+        // worse than a missing seat; the demo coven seed's backfill repairs it.
+        after: async (user, ctx) => {
+          try {
+            const demo = await findDemoWorkspace();
+            if (!demo) return;
+            await db.insert(workspaceMembers).values({
+              workspaceId: demo.id,
+              userId: user.id,
+              role: 'viewer',
+              invitedBy: null,
+              createdBy: user.id,
+              updatedBy: user.id,
+            });
+          } catch (error) {
+            (ctx?.context.logger ?? console).error(
+              `demo coven seat failed: user ${user.id}`,
+              error,
+            );
+          }
         },
       },
       update: {

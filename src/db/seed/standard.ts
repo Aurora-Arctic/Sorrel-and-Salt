@@ -1,17 +1,13 @@
-import { and, eq, inArray, isNull, max, ne, or } from 'drizzle-orm';
+import { and, eq, inArray, isNull, max, ne } from 'drizzle-orm';
 import { applyAudit } from '../audit';
+import { BOOTSTRAP_USER_ID } from '../bootstrap';
 import { BOOTSTRAP_SESSION } from './bootstrap-admin';
 import { users } from '../../modules/identity/schema/users';
 import { workspaceMembers, workspaces } from '../../modules/coven/schema/workspaces';
 import { ingredients } from '../../modules/ingredients/schema/ingredients';
-import { workspaceCompendiumEntries } from '../../modules/ingredients/schema/workspace-compendium-entries';
 import { ingredientDeities } from '../../modules/ingredients/schema/ingredient-deities';
 import { ingredientFolkNames } from '../../modules/ingredients/schema/ingredient-folk-names';
 import { ingredientCategories } from '../../modules/ingredients/schema/ingredient-categories';
-import { ingredientVariants } from '../../modules/ingredients/schema/ingredient-variants';
-import { inventoryItems } from '../../modules/ingredients/schema/inventory-items';
-import { type Unit, dimensionOf } from '../../modules/ingredients/schema/units';
-import { defaultThreshold } from '../../modules/ingredients/validation/default-threshold';
 import { retiredIngredientSlugs } from '../../modules/ingredients/schema/retired-ingredient-slugs';
 import { deities } from '../../modules/vocabulary/schema/deities';
 import { ingredientForms } from '../../modules/vocabulary/schema/ingredient-forms';
@@ -28,14 +24,23 @@ import {
   insertMissingReturningIds,
   requireFrom,
 } from './idempotent';
+import {
+  identityOf,
+  ingredientIdByIdentity,
+  insertMissingCupboardEntries,
+  insertMissingStock,
+  insertMissingVariants,
+  pickOf,
+} from './coven-content';
 import type { PickedTable } from '../vocabularies';
 import type {
   FixtureUser,
+  NamedIngredient,
+  SeedCupboardEntry,
   SeedDatabase,
   SeedIngredient,
-  SeedLayerIngredient,
-  SeedVariant,
   SeedMembership,
+  SeedStock,
   SeedTransaction,
   SeedWorkspace,
 } from './types';
@@ -122,22 +127,6 @@ const MEMBERSHIPS: SeedMembership[] = [
   // workspace", and a curator none, is only assertable against one in none.
 ];
 
-/**
- * A compendium entry W's cupboard holds, by formal name, with the coven's own say over it: each override is
- * null (the compendium's value shows) unless set. An entry with none is in the cupboard, not annotated.
- */
-export interface SeedCupboardEntry {
-  /** The held entry, by its formal name, or by its name alone where it has none (`identityOf`). */
-  entry: { name: string; canonicalName?: string | null };
-  label?: string;
-  description?: string;
-  safetyNotes?: string;
-  elements?: Array<'earth' | 'air' | 'fire' | 'water' | 'spirit'>;
-  celestialBodies?: string[];
-  zodiacSigns?: string[];
-  colors?: string[];
-}
-
 export const STANDARD_CUPBOARD: SeedCupboardEntry[] = [
   // Rosemary the coven grows, under its own label and its own description.
   {
@@ -174,54 +163,6 @@ export const STANDARD_CUPBOARD: SeedCupboardEntry[] = [
     colors: ['grey', 'white'],
   },
 ];
-
-/**
- * W's cupboard rows, keyed by coven and entry and ignoring `deleted_at`, so a removed row is not put back.
- * `demo` calls it with a superset of `STANDARD_CUPBOARD`.
- */
-export async function insertMissingCupboardEntries(
-  tx: SeedTransaction,
-  held: readonly SeedCupboardEntry[],
-): Promise<void> {
-  const compendium = await tx
-    .select({ id: ingredients.id, identityKey: ingredients.identityKey })
-    .from(ingredients)
-    .where(and(isNull(ingredients.workspaceId), isNull(ingredients.deletedAt)));
-  const ids = new Map(compendium.map((row) => [row.identityKey, row.id]));
-
-  await insertMissingBy(
-    tx,
-    workspaceCompendiumEntries,
-    held.map(({ entry, ...overrides }) => ({
-      workspaceId: WORKSPACE_W_ID,
-      ingredientId: requireFrom(
-        ids,
-        identityOf(entry),
-        () => `W's cupboard holds "${entry.name}", which is not in the compendium.`,
-      ),
-      ...overrides,
-    })),
-    { columns: ['workspaceId', 'ingredientId'], toRow: (row) => row },
-  );
-}
-
-/** A layer's or jar's ingredient that names an entry, in either tier: all but the custom one-off. */
-export type NamedIngredient = Extract<SeedLayerIngredient, { entry: unknown }>;
-
-/**
- * One jar of stock W holds: the entry, the form (matched without case) and what the row says of it. A `unit`
- * carries its dimension; an omitted threshold is the dimension's default, as `createStock` fills it. (claude-docs/db/standard-scenario.md, "W's stock")
- */
-export interface SeedStock {
-  id: string;
-  ingredient: NamedIngredient;
-  form: string;
-  quantity?: string;
-  unit?: Unit;
-  lowStockThreshold?: string;
-  source?: string;
-  acquiredDate?: string;
-}
 
 /** A compendium entry by its formal name, for a jar. */
 const held = (name: string, canonicalName: string): NamedIngredient => ({
@@ -291,111 +232,6 @@ export const STANDARD_STOCK: SeedStock[] = [
     source: 'Bought by the sack',
   },
 ];
-
-/** A layer's lookup key: the tier it names, and the identity within it. */
-export const tierKey = (tier: 'compendium' | 'workspace', identity: string) =>
-  `${tier}|${identity}`;
-
-/**
- * The id a jar or layer's named ingredient points at. Unreachable today, but a
- * silent `undefined` would make a null `ingredient_id` — a *custom* row under
- * the CHECK — so the failure would be a blank-named row rather than an error.
- */
-export function namedIngredientId(
-  ingredient: NamedIngredient,
-  ingredientIds: Map<string, string>,
-): string {
-  return requireFrom(
-    ingredientIds,
-    tierKey(ingredient.tier, identityOf(ingredient.entry)),
-    () => `"${ingredient.entry.name}" is named by a layer or jar and is not in the database.`,
-  );
-}
-
-/**
- * Every live id a jar or layer could name, keyed by its tier and `identityOf`,
- * so it finds the row of the tier it names.
- */
-export async function ingredientIdByIdentity(tx: SeedTransaction): Promise<Map<string, string>> {
-  const rows = await tx
-    .select({
-      id: ingredients.id,
-      identityKey: ingredients.identityKey,
-      workspaceId: ingredients.workspaceId,
-    })
-    .from(ingredients)
-    .where(
-      and(
-        or(isNull(ingredients.workspaceId), eq(ingredients.workspaceId, WORKSPACE_W_ID)),
-        isNull(ingredients.deletedAt),
-      ),
-    );
-  return new Map(
-    rows.map((row) => [
-      tierKey(row.workspaceId === null ? 'compendium' : 'workspace', row.identityKey),
-      row.id,
-    ]),
-  );
-}
-
-/**
- * W's jars, keyed on the coven and form pair the live-unique index guards, ignoring `deleted_at`, so a
- * discarded jar is not put back and an edited one not overwritten. A jar the coven added itself for the same form
- * is met, not collided with. The threshold is the dimension's default unless the jar sets one.
- */
-export async function insertMissingStock(
-  tx: SeedTransaction,
-  jars: readonly SeedStock[],
-  ingredientIds: Map<string, string>,
-): Promise<void> {
-  const variants = await tx
-    .select({
-      id: ingredientVariants.id,
-      ingredientId: ingredientVariants.ingredientId,
-      form: ingredientVariants.form,
-    })
-    .from(ingredientVariants)
-    .where(isNull(ingredientVariants.deletedAt));
-  const variantIdByForm = new Map(
-    variants.map((row) => [`${row.ingredientId}|${row.form.toLowerCase()}`, row.id]),
-  );
-
-  const wanted = jars.map((stock) => {
-    const ingredientId = namedIngredientId(stock.ingredient, ingredientIds);
-    return {
-      stock,
-      workspaceId: WORKSPACE_W_ID,
-      ingredientId,
-      variantId: requireFrom(
-        variantIdByForm,
-        `${ingredientId}|${stock.form.toLowerCase()}`,
-        () =>
-          `A jar names "${stock.ingredient.entry.name}" in "${stock.form}", which has no such form.`,
-      ),
-    };
-  });
-
-  await insertMissingBy(tx, inventoryItems, wanted, {
-    columns: ['workspaceId', 'variantId'],
-    where: eq(inventoryItems.workspaceId, WORKSPACE_W_ID),
-    toRow: ({ stock, workspaceId, ingredientId, variantId }) => {
-      const unit = stock.unit ?? null;
-      const threshold = stock.lowStockThreshold ?? defaultThreshold(unit);
-      return {
-        id: stock.id,
-        workspaceId,
-        ingredientId,
-        variantId,
-        quantityOnHand: stock.quantity ?? null,
-        unit,
-        unitDimension: unit === null ? null : dimensionOf(unit),
-        lowStockThreshold: threshold === null ? null : String(threshold),
-        source: stock.source ?? null,
-        acquiredDate: stock.acquiredDate ?? null,
-      };
-    },
-  });
-}
 
 /**
  * Every entry declares a `nomenclature`. The awkward ones are the point: five "Cat's Claw" rows told apart
@@ -728,8 +564,9 @@ export async function seedStandardContent(
   await insertMissingFolkNames(tx, ingredientIds);
   await insertMissingDeities(tx, ingredientIds, restoreDeletedDeityPicks);
   await insertMissingCategoryAssignments(tx, ingredientIds, await categoryIdByName(tx));
-  await insertMissingCupboardEntries(tx, STANDARD_CUPBOARD);
-  await insertMissingStock(tx, STANDARD_STOCK, await ingredientIdByIdentity(tx));
+  const coven = { workspaceId: WORKSPACE_W_ID, authorId: BOOTSTRAP_USER_ID };
+  await insertMissingCupboardEntries(tx, coven, STANDARD_CUPBOARD);
+  await insertMissingStock(tx, coven, STANDARD_STOCK, await ingredientIdByIdentity(tx, coven));
 }
 
 /**
@@ -757,14 +594,6 @@ async function pickedIdByName(
 
 /** A name as the unique indexes on `lower(name)` compare it. */
 const lowerCase = (name: string) => name.toLowerCase();
-
-function pickOf(ids: Map<string, string>, name: string, what: string): string {
-  return requireFrom(
-    ids,
-    name.toLowerCase(),
-    () => `The seed picks the ${what} "${name}", which no one live row is called.`,
-  );
-}
 
 // Idempotent the way seedCategories is: inserts what is missing by identity,
 // ignoring `deleted_at` so a soft-deleted entry is not quietly restored, and
@@ -803,15 +632,6 @@ async function insertMissingMemberships(tx: SeedTransaction): Promise<void> {
     columns: ['workspaceId', 'userId'],
     toRow: (membership) => membership,
   });
-}
-
-/**
- * An entry's identity as the seed keys it: the formal name, or the label without one, lower-cased (what
- * `identity_key` holds). Keyed on that, a relabelled entry is still the one the seed wrote. A literal is folded
- * here, where JavaScript's lower-casing agrees with Postgres's on ASCII; build the map from one tier's rows.
- */
-export function identityOf(entry: { name: string; canonicalName?: string | null }): string {
-  return (entry.canonicalName ?? entry.name).toLowerCase();
 }
 
 /**
@@ -968,37 +788,6 @@ export async function insertMissingRetiredSlugs(
     toRow: ({ ingredientId, slug }) => ({ ingredientId, workspaceId: null, slug }),
   });
 }
-
-/**
- * Each entry's forms as variants. `formIds` picks a form by name from the curated rows, as an admin's form is;
- * without it the form is typed, as a coven's may be. Keyed as the unique index keys it: a variant an admin
- * removed counts as present and is not restored.
- */
-export async function insertMissingVariants(
-  tx: SeedTransaction,
-  entries: readonly { ingredientId: string; variants: readonly SeedVariant[] }[],
-  formIds?: Map<string, string>,
-): Promise<void> {
-  if (entries.length === 0) return;
-  const wanted = entries.flatMap(({ ingredientId, variants }) =>
-    variants.map((variant) => ({
-      ...variant,
-      ingredientId,
-      formId: formIds ? pickOf(formIds, variant.form, 'form') : null,
-    })),
-  );
-
-  await insertMissingBy(tx, ingredientVariants, wanted, {
-    columns: ['ingredientId', 'form'],
-    fold: { form: (form) => form.trim().toLowerCase() },
-    where: inArray(
-      ingredientVariants.ingredientId,
-      entries.map((entry) => entry.ingredientId),
-    ),
-    toRow: (variant) => ({ ...variant, form: variant.form.trim() }),
-  });
-}
-
 function ingredientIdFor(entry: SeedIngredient, ingredientIds: Map<string, string>): string {
   return requireFrom(
     ingredientIds,

@@ -73,11 +73,16 @@ function run(script: string, url: string, env: Record<string, string> = {}): voi
  * `name` as a clone of the extensions-only base with every migration applied and the `standard` scenario
  * seeded, which the fixture cast and the invented-names rule are written against. Around a second.
  */
-export async function seedTemplate(name: string): Promise<void> {
+export async function seedTemplate(
+  name: string,
+  { demoCoven = false }: { demoCoven?: boolean } = {},
+): Promise<void> {
   await cloneDatabase(name, BASE_TEMPLATE);
   const url = databaseUrl(name);
   run('db:migrate', url);
   run('db:seed', url, { SEED_SCENARIO: 'standard' });
+  // `standard` leaves the demo coven out, as production seeds it as reference data; a browser spec about it asks for it.
+  if (demoCoven) run('db:seed:demo-coven', url);
 }
 
 /**

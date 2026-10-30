@@ -31,7 +31,7 @@ describe('the stock decrement path', () => {
       WRITER,
       'src/db/repository/types.ts',
       'src/modules/grimoire/services/workings.ts',
-      'src/db/seed/demo-workings.ts',
+      'src/db/seed/coven-content.ts',
     ];
     expect(decrementing.filter((file) => !allowed.includes(file))).toEqual([]);
     expect(decrementing).toContain(WRITER);

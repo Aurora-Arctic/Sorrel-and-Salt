@@ -19,6 +19,10 @@ badge (M10.20) has to have both to show, and one layer carries no quantity at
 all — a sprig laid on top is not a measurement, and `quantity`/`unit` are
 nullable precisely so it does not have to be one.
 
+### The content helpers
+
+The helpers that write a coven's content live in `src/db/seed/coven-content.ts`, not in `demo.ts`: `insertMissingWorkspaceIngredients`, `insertMissingVariants`, `insertMissingCupboardEntries`, `insertMissingSpells`, `insertMissingSteps`, `insertMissingSpellCategories`, `insertMissingStock` and `insertMissingWorkings`. Each takes the coven it fills as `{ workspaceId, authorId }` (`CovenTarget`, in `types.ts`) and the data arrays to write, and reads no constant of W's, so any coven can be filled with them. `authorId` stamps the coven's private spells and need not be a member of it. `demo.ts` keeps W's data and calls them with W and B.
+
 ### The grimoire shelf
 
 Beside the two jars, `demo` seeds 54 more spells in W (ids `…0003` to
@@ -40,7 +44,7 @@ Both the Spells and the Drafts tabs run past one page for every member.
   Hearth Vow and Quiet Nerves Jar (complete), Hearth Ward of My Own and Letter
   to the Sea (drafts). Only B reads them. A, the owner, does not, so signing in
   as A shows what an ordinary member sees. A private spell is written as its
-  author, so its `created_by` is B; every other spell is the bootstrap user's.
+  author, so its `created_by` is the `authorId` the helper is given (B for W), marked `byAuthor` in the data; every other spell is the bootstrap user's.
 - **Categories.** The assigned categories are spread across several groups, so
   the category filter has more than one group to offer.
 
@@ -119,7 +123,7 @@ is numbered from 1 — what M10.16's reorder rewrites and M10.9's read orders by
 **W's own entries have variants too (MB.216, MB.222).** Each of W's two
 literals lists its forms as `variants`, as the compendium's do
 ([standard-scenario.md](standard-scenario.md)). After W's entries,
-`insertMissingVariants` from `standard.ts` writes them, typed rather than
+`insertMissingVariants` from `coven-content.ts` writes them, typed rather than
 picked, lower-case as the literals spell them (Hearth Ash is `ash`, Cat's
 Claw `bark`). A linked layer lays its ingredient's first live variant in form
 order, read back after the variants are written; every ingredient a jar names

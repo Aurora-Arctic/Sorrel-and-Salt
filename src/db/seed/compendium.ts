@@ -1,7 +1,7 @@
 import { isNull } from 'drizzle-orm';
 import { beginSeedTransaction, insertStamped, requireFrom } from './idempotent';
 import { insertMissingReferences } from './reference-rows';
-import { identityOf } from './standard';
+import { identityOf } from './coven-content';
 import { checkCompendiumFiles } from './compendium/guard';
 import { loadCompendium, readConversionManifest, type LoadedCompendium } from './compendium/load';
 import { emptyReport, type SeedCompendiumReport } from './compendium/report';

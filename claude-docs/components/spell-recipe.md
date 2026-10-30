@@ -19,7 +19,7 @@ holds the presentational body; `src/app/(shell)/coven/[slug]/grimoire/[id]/` hol
 Back link (the ingredient entry's `BackLink`, [`ingredient-entry.md`](ingredient-entry.md):
 the chevron, and the way back through history to the grimoire as it was, either tab counted
 as the list: the owner, 2026-10-29), `LastEdit` (above the title, where the ingredient entry
-page puts it: the owner, 2026-10-29), title (Draft and Private badges), then the shared body, the "Recipe Card"
+page puts it: the owner, 2026-10-29), title (Draft and Private badges, centred on the action icons’ middle line), then the shared body, the "Recipe Card"
 layout (M13.21), top to bottom: the intent (muted), `CategoryChips` with `showAll` (every
 chip, no +N fold: the owner, 2026-10-28), a facts strip, the steps and the note. The facts strip
 is a `dl` under a hairline with up to four cells, Jar (`jarDescription`), Seal Wax

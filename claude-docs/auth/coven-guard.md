@@ -209,6 +209,18 @@ owner and a member get the dialog under either address, a viewer gets
 neither and nothing is read; an owner and a member get New Spell, a viewer
 does not).
 
+## A new account's landing
+
+A new account is seated as a viewer in the demo coven at sign-up
+(`databaseHooks.user.create.after`, [`admin-bootstrap.md`](admin-bootstrap.md)), so
+it has a first coven and `signedInLanding` sends it to `/coven/sorrel-and-salt-demo`
+rather than to `/coven`, because the demo coven is its only coven. An account with
+a coven of its own lands there, and the demo coven never outranks it: `byCovenName`
+lists the demo coven last, and both `signedInLanding` and `/coven` take the first.
+Where no demo coven exists, or the seat failed to write,
+the landing is `/coven` as before. The seat is not `canCreateWorkspace`: the
+account still cannot create a coven.
+
 ## The create page (M9.16)
 
 `/coven/new` is where someone holding `canCreateWorkspace` names a new

@@ -518,6 +518,16 @@ export interface AuditWriter {
     role: WorkspaceRole,
   ): Promise<(typeof workspaceMembers.$inferSelect)[]>;
   /**
+   * Set the role of one live member of a workspace named by id, under no proof, as `insertMembership` is: a site admin's seat in the demo
+   * coven is written by an identity service that holds no membership of it. An empty result means no such live member.
+   * The caller has decided the seat may change.
+   */
+  setSeatRole(
+    workspaceId: string,
+    userId: string,
+    role: WorkspaceRole,
+  ): Promise<(typeof workspaceMembers.$inferSelect)[]>;
+  /**
    * Soft-delete one live member of the proof's workspace, for a removal and a leave alike, stamped from the session; an empty result means
    * no such live member. The caller has checked the permission (or that the row is its own) and run the last-owner guard.
    */

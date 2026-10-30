@@ -7,6 +7,8 @@ import type { SpellRecipeBodyProps } from '../SpellRecipe/types';
 export type SpellPreviewProps = SpellRecipeBodyProps & {
   /** The spell's name as the page shows it. */
   title: string;
+  /** The demo coven's sentence, drawn as a quiet warning above the recipe; absent in any other coven. */
+  demoNotice?: string;
 };
 
 /** One ember behind the pane: a glowing fragment (`hot`) or a flake of ash. Units in `embers.ts`. */

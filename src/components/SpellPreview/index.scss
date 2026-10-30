@@ -542,3 +542,19 @@ $preview-hearth-duration: 11s;
     @include recipe-columns('.spell-preview__title', $columns: false);
   }
 }
+
+// The demo coven's notice over the title: its own band in row 1, which the pane gives it because the page's Edited
+// line, which the pane leaves out, would stand there. The box spans the sheet and the sentence stops at the reading
+// measure. Both classes, to outrank `.notice`'s `max-width` and zero margin, which come later in the cascade.
+.notice.spell-preview__notice {
+  grid-row: 1;
+  grid-column: 1 / -1;
+  max-width: none;
+  // Clear of the eye and the close X above it, whose boxes end where the content begins.
+  margin-block: space(2);
+}
+
+.spell-preview__notice-text {
+  display: block;
+  max-width: $measure;
+}

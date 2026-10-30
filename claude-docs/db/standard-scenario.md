@@ -151,7 +151,7 @@ Chamomile to W's rows ([demo-scenario.md](demo-scenario.md)).
 
 ### W's stock
 
-`standard` seeds seven jars of stock for W (`STANDARD_STOCK` in `src/db/seed/standard.ts`, written by `insertMissingStock`), so the ingredients page's jar lines and Edit Stock button (M9.9) have something to show. Every jar sits on an entry in W's cupboard above, since a jar on a compendium variant needs its entry's cupboard row (M12.13, decision 11). Their ids are fixed in a block of their own, `…0003-…`; `demo` keeps `…0001`, `…0002`, `…0005` and `…0006` for its own jars ([demo-scenario.md](demo-scenario.md), "W's stock").
+`standard` seeds seven jars of stock for W (`STANDARD_STOCK` in `src/db/seed/standard.ts`, written by `insertMissingStock` in `src/db/seed/coven-content.ts`), so the ingredients page's jar lines and Edit Stock button (M9.9) have something to show. Every jar sits on an entry in W's cupboard above, since a jar on a compendium variant needs its entry's cupboard row (M12.13, decision 11). Their ids are fixed in a block of their own, `…0003-…`; `demo` keeps `…0001`, `…0002`, `…0005` and `…0006` for its own jars ([demo-scenario.md](demo-scenario.md), "W's stock").
 
 | Ingredient (form) | Id      | Quantity | Why it is there                                                                 |
 | ----------------- | ------- | -------- | ------------------------------------------------------------------------------- |

@@ -1,8 +1,10 @@
 import { afterAll, afterEach, beforeAll, beforeEach, describe, expect, it, vi } from 'vitest';
 import postgres from 'postgres';
+import { drizzle } from 'drizzle-orm/postgres-js';
 import { setupServer } from 'msw/node';
 import { createEmailVerificationToken } from 'better-auth/api';
-import { BOOTSTRAP_USER_ID } from '@/db/bootstrap';
+import { BOOTSTRAP_USER_ID, DEMO_WORKSPACE_ID } from '@/db/bootstrap';
+import { seedDemoCoven } from '@/db/seed/demo-coven';
 import {
   ORIGIN,
   cookieHeader,
@@ -55,6 +57,7 @@ beforeEach(async () => {
   // only a truncate empties it.
   await sql`truncate user_privilege_changes`;
   const mine = sql`select id from users where email like ${`%${DOMAIN}`}`;
+  await sql`delete from workspace_members where user_id in (${mine})`;
   await sql`delete from sessions where user_id in (${mine})`;
   await sql`delete from accounts where user_id in (${mine})`;
   await sql`delete from users where email like ${`%${DOMAIN}`}`;
@@ -393,5 +396,85 @@ describe('the primary admin is promoted at first-party verification', () => {
       updated_by: before.id,
     });
     expect(await roleOf(OWNER)).toBe('admin');
+  });
+});
+
+describe('a new account is seated in the demo coven', () => {
+  async function seatOf(email: string) {
+    const [row] = await sql`
+      select m.role::text as role, m.invited_by, m.created_by, m.updated_by, u.id as user_id, u.can_create_workspace
+      from users u
+      left join workspace_members m
+        on m.user_id = u.id and m.workspace_id = ${DEMO_WORKSPACE_ID} and m.deleted_at is null
+      where u.email = ${email}
+    `;
+    return row;
+  }
+
+  // Every case starts from no demo coven, whether or not the template holds one.
+  async function removeDemoCoven() {
+    // The coven's contents reference its row, so they go first; the cascade also empties the tables that hang off them.
+    await sql`truncate spell_workings, spells, inventory_items, workspace_compendium_entries, ingredients cascade`;
+    await sql`delete from workspace_members where workspace_id = ${DEMO_WORKSPACE_ID}`;
+    await sql`delete from workspaces where id = ${DEMO_WORKSPACE_ID}`;
+  }
+
+  beforeEach(removeDemoCoven);
+
+  afterEach(async () => {
+    await sql`drop trigger if exists refuse_demo_seat on workspace_members`;
+    await sql`drop function if exists refuse_demo_seat()`;
+    await removeDemoCoven();
+  });
+
+  it('gives a sign-up a viewer seat and leaves canCreateWorkspace false', async () => {
+    await seedDemoCoven(drizzle(sql));
+    // The preconditions: the coven exists and holds no seat for an account that does not exist yet.
+    expect(
+      await sql`select 1 from workspaces where id = ${DEMO_WORKSPACE_ID} and demo`,
+    ).toHaveLength(1);
+    expect(await userRow(OWNER)).toBeUndefined();
+
+    const response = await signIn('google', { sub: 'g-demo-1', email: OWNER, verified: true });
+
+    // Their first coven is the demo coven, so that is where they land.
+    expect(response.status).toBe(302);
+    expect(landingOf(response)).toBe('/coven/sorrel-and-salt-demo');
+
+    const seat = await seatOf(OWNER);
+    expect(seat).toMatchObject({
+      role: 'viewer',
+      invited_by: null,
+      created_by: seat.user_id,
+      updated_by: seat.user_id,
+      can_create_workspace: false,
+    });
+  });
+
+  it('seats no one where there is no demo coven', async () => {
+    expect(await sql`select 1 from workspaces where demo`).toHaveLength(0);
+
+    expectSignedIn(await signIn('google', { sub: 'g-demo-2', email: OWNER, verified: true }));
+
+    expect((await seatOf(OWNER)).role).toBeNull();
+  });
+
+  it('still signs in, and logs the failure, when the seat cannot be written', async () => {
+    await seedDemoCoven(drizzle(sql));
+    await sql.unsafe(`
+      create function refuse_demo_seat() returns trigger language plpgsql as \$\$
+      begin raise exception 'seat refused'; end \$\$;
+      create trigger refuse_demo_seat before insert on workspace_members
+        for each row execute function refuse_demo_seat();
+    `);
+    const logged = vi.spyOn(console, 'error').mockImplementation(() => {});
+
+    const response = await signIn('google', { sub: 'g-demo-3', email: OWNER, verified: true });
+
+    expectSignedIn(response);
+    const seat = await seatOf(OWNER);
+    expect(seat.role).toBeNull();
+    expect(JSON.stringify(logged.mock.calls)).toContain(seat.user_id);
+    logged.mockRestore();
   });
 });

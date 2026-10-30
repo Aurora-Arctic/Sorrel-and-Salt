@@ -4,7 +4,7 @@ import postgres from 'postgres';
 import type { UserRole } from '@/lib/session';
 import { e2eDatabaseUrl } from './database';
 import { SESSION_COOKIE, signed } from './session-cookie';
-import { browserUrl, plainSessionCookie } from './slots';
+import { browserUrl } from './slots';
 
 // A signed-in browser without a provider round trip, which CI cannot make: the rows a Discord sign-in
 // would leave go straight to this worker's slot database, with a session cookie signed by the build's
@@ -17,16 +17,11 @@ import { browserUrl, plainSessionCookie } from './slots';
 export const PRIMARY_ADMIN_EMAIL = 'placeholder@admin-bootstrap.invalid';
 
 /**
- * Gives `page` the session cookie. A browser never sends a `Secure` cookie to a plain-http remote origin, so
- * Chromium gets a request header; WebKit sends no such header either, so under the audit the cookie goes in
- * the context's jar, plain-named. Cookies ignore ports, so the host alone serves any slot.
+ * Gives `page` the session cookie, in the context's jar so a followed redirect keeps it and every engine sends it. The
+ * e2e servers name it without `__Secure-` (tests/e2e/servers.ts), since no browser sends a `Secure` cookie to a
+ * plain-http origin. Cookies ignore ports, so the host alone serves any slot.
  */
 async function holdSession(page: Page, value: string): Promise<void> {
-  if (!plainSessionCookie) {
-    // On the context, so a tab the page opens (a link with target=_blank) is signed in too.
-    await page.context().setExtraHTTPHeaders({ cookie: `${SESSION_COOKIE}=${value}` });
-    return;
-  }
   await page.context().addCookies([
     {
       name: SESSION_COOKIE,

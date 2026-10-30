@@ -32,11 +32,16 @@ export async function membershipsOf(
 }
 
 /**
- * The order the coven switcher lists in: alphabetical by name. The service's
- * own order is the database's, which looks random.
+ * The order the coven switcher lists in: alphabetical by name, the demo coven
+ * last. The service's own order is the database's, which looks random. The
+ * demo goes last so a coven of the user's own is always the landing; a row
+ * with no `demo` sorts by name alone.
  */
-export function byCovenName(a: { name: string }, b: { name: string }): number {
-  return a.name.localeCompare(b.name);
+export function byCovenName(
+  a: { name: string; demo?: boolean },
+  b: { name: string; demo?: boolean },
+): number {
+  return Number(a.demo ?? false) - Number(b.demo ?? false) || a.name.localeCompare(b.name);
 }
 
 /** The slug of the first coven the switcher lists for this account, or `undefined` for one in none. */
