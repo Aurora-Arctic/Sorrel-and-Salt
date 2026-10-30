@@ -1,4 +1,3 @@
-@use 'sass:map';
 @use '../../scss/variables' as *;
 @use '../../scss/mixins' as *;
 
@@ -11,7 +10,7 @@
     gap: space(2);
   }
 
-  // Title: h4's size, two steps under the card's h2.
+  // Title: h4's size, one step under the regular card's h3.
   .spell-card__title {
     font-size: heading-size(4);
     line-height: 1.15;

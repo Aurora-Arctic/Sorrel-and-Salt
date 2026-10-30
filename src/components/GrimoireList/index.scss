@@ -14,3 +14,9 @@
   display: block;
   color: $text-muted;
 }
+
+// The filter row is the positioned ancestor the facet panel opens under
+// (claude-docs/components/facet-panel.md).
+.grimoire-list__row {
+  position: relative;
+}

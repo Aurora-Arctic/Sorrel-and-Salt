@@ -82,7 +82,7 @@ export function CategoryLine({
           <CategoryPicker
             legend="Categories"
             entry="Category"
-            placeholder="Add Category"
+            placeholder="Add a category"
             removeNoun="Category"
             hideZeros
             loading={loading}
