@@ -126,7 +126,7 @@ describe("IngredientForm editing a coven's own entry", () => {
     renderEdit({ onDeleted });
 
     press('Delete Ingredient');
-    expect(screen.getByText(/Testwort/, { selector: 'p' })).toBeInTheDocument();
+    expect(screen.getByRole('group', { name: /Testwort/ })).toBeInTheDocument();
     expect(button('Cancel')).toHaveFocus();
     press('Cancel');
     noButton('Delete');
