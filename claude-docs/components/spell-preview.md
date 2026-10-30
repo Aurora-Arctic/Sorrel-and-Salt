@@ -16,9 +16,16 @@ full screen, with nothing else on screen. `src/components/SpellPreview/`.
   the page's actions. The page cuts the recipe's steps down with `previewStepsOf`
   (`preview-steps.ts`, on the server), so the pane's props carry no Quick Look links, safety marks
   or stock verdicts.
-- The content is one column centred in the pane, at most `$recipe-column` (48rem) wide: the width of
-  the recipe page's own reading column, so a wide window leaves margins and lines stay readable.
-- Two controls at the end of the bar, both plain icon buttons (`icon-tip__edit icon-tip__edit--plain`, a visually hidden name, no border, background or visible label): Screen Awake and Close (`CloseIcon`, an X, named "Close"). There is no site header, navigation, link or editing control.
+- The content is laid out as the printed page is, through the `recipe-columns` mixin
+  (`src/scss/_recipe-columns.scss`) that `_print.scss` and the pane both use, so the two cannot drift:
+  the title and the lead across the top, the facts strip over both columns, Ingredients in a 17em
+  column beside the steps, the note under them, and print's spacing throughout (the grid's
+  `space(2)` gap, the head's `space(4)` under it, the facts strip's `space(2) space(3)` margins).
+  The column is centred and at most `$shell-tablet-width` (56rem) wide, the width past which the
+  app sets things side by side; under that width the pane stacks, Ingredients above the steps, with
+  the same rows and spacing (`$columns: false`). The bar holding the controls is the same width and
+  centred the same way, so the close X ends where the content does.
+- Two controls at the end of the bar (sticky at the top, no wider than the content), both plain icon buttons (`icon-tip__edit icon-tip__edit--plain`, a visually hidden name, no border, background or visible label): Screen Awake and Close (`CloseIcon`, an X, named "Close"). There is no site header, navigation, link or editing control.
 
 ## How it opens and closes
 

@@ -1,3 +1,4 @@
+import type { Locator } from '@playwright/test';
 import { test, expect } from '../fixtures';
 import { assertNoAccessibilityViolations } from '../axe';
 import { recreateE2eDatabase } from '../database';
@@ -190,5 +191,84 @@ test(
     await pane.getByRole('button', { name: 'Close' }).click();
     await expect(page.getByRole('dialog')).toHaveCount(0);
     expect(await counts()).toEqual({ requests: 2, releases: 2 });
+  },
+);
+
+test(
+  'the pane sets the Ingredients beside the steps and spaces the parts as the printed page does',
+  { tag: '@story-85' },
+  async ({ page }) => {
+    const coven = await seedCoven(page, 'Fixture Coven Columns', 'preview-columns.test', {
+      A: 'owner',
+    });
+    const { A } = coven.users;
+    const spellId = await withSql(async (sql) => {
+      const first = await localIngredient(sql, coven.id, A, {
+        name: 'Fixture Columnwort',
+        nomenclature: 'none',
+        variants: [makeVariant({ form: 'Root' })],
+      });
+      const second = await localIngredient(sql, coven.id, A, {
+        name: 'Fixture Rowbane',
+        nomenclature: 'none',
+        variants: [makeVariant({ form: 'Leaf' })],
+      });
+      const id = await insertSpell(sql, coven.id, 'Fixture Columns', 'workspace', A, 'complete');
+      await sql`update spells set intent = 'To set things side by side', jar_description = '4 oz jar', note = 'Seal it well.' where id = ${id}`;
+      await insertStep(sql, id, first, { quantity: 2, unit: 'g', position: 0 }, A);
+      await insertStep(sql, id, second, { quantity: 3, unit: 'g', position: 1 }, A);
+      return id;
+    });
+    await signInAgainAs(page, A);
+    await page.setViewportSize({ width: 1280, height: 900 });
+    await page.goto(`/coven/${coven.slug}/grimoire/${spellId}`);
+
+    // The gaps the two layouts share, in rem so paper's smaller type does not count: from the
+    // title to the lead, and from one step to the next.
+    const gaps = () =>
+      page.evaluate(() => {
+        const pane = document.querySelector('.spell-preview[open]');
+        const root = pane ?? document;
+        const rem = parseFloat(getComputedStyle(document.documentElement).fontSize);
+        const box = (sel: string) => root.querySelector(sel)!.getBoundingClientRect();
+        const title = box(pane ? '.spell-preview__title' : '.spell-recipe__head h1');
+        const lead = box('.spell-recipe__lead');
+        const [one, two] = [...root.querySelector('ol[aria-label="Steps"]')!.children].map((el) =>
+          el.getBoundingClientRect(),
+        );
+        return {
+          headToLead: (lead.top - title.bottom) / rem,
+          stepToStep: (two!.top - one!.bottom) / rem,
+        };
+      });
+    await page.emulateMedia({ media: 'print' });
+    const printed = await gaps();
+    await page.emulateMedia({ media: 'screen' });
+
+    const box = (locator: Locator) =>
+      locator.evaluate((el) => el.getBoundingClientRect().toJSON() as DOMRect);
+    await page.getByRole('button', { name: /^Preview Spell/ }).click();
+    const pane = page.getByRole('dialog', { name: 'Fixture Columns' });
+    await expect(pane).toBeVisible();
+    const heading = pane.getByRole('heading', { name: 'Ingredients' });
+    const ingredients = pane.getByRole('list', { name: 'Ingredients' });
+    const steps = pane.getByRole('list', { name: 'Steps' });
+    const firstStep = steps.getByRole('listitem').first();
+
+    // Wide: Ingredients to the left of the steps, its heading level with the first step.
+    expect((await box(ingredients)).right).toBeLessThanOrEqual((await box(steps)).left);
+    expect(Math.abs((await box(heading)).top - (await box(firstStep)).top)).toBeLessThanOrEqual(1);
+    // The close X ends where the content does.
+    const close = await box(pane.getByRole('button', { name: 'Close' }));
+    const content = await box(pane.locator('.spell-preview__content'));
+    expect(Math.abs(close.right - content.right)).toBeLessThanOrEqual(1);
+    // The pane's gaps are the printed page's.
+    const shown = await gaps();
+    expect(Math.abs(shown.headToLead - printed.headToLead)).toBeLessThan(0.05);
+    expect(Math.abs(shown.stepToStep - printed.stepToStep)).toBeLessThan(0.05);
+
+    // A phone: Ingredients above the steps.
+    await page.setViewportSize({ width: 390, height: 844 });
+    expect((await box(ingredients)).bottom).toBeLessThanOrEqual((await box(steps)).top);
   },
 );
