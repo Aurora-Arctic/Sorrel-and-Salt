@@ -638,6 +638,13 @@ tasks that build the rest:
     Postgres's own column defaults apply rather than a second
     `'user'`/`false` literal in application code. It never sets `role`,
     whatever the address.
+- **`databaseHooks.user.create.after`** is the sign-up's second write, under the
+  same exemption: it inserts a `viewer` `workspace_members` row for the new user in
+  the demo coven, stamped by the user as their own row is, with `invited_by`
+  null. It finds the coven through `findDemoWorkspace` and does nothing where
+  there is none (the `minimal` scenario). It never throws: a failed insert is
+  logged with the user id and the demo coven seed's backfill seats the account
+  at its next run. It does not touch `canCreateWorkspace`.
 - **`user.additionalFields`** registers `role`, `canCreateWorkspace`,
   `verificationSentAt`, `createdBy` and `updatedBy` with Better Auth's user
   model: without it the adapter silently drops any key in the hook's data
