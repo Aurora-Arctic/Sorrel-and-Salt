@@ -321,12 +321,7 @@ describe('SpellRecipe', () => {
       within(screen.getByRole('navigation', { name: 'On This Page' })).getAllByRole('link');
     const aside = <SpellRecipeAside steps={[]} doors={[]} intended={[]} groups={[]} />;
     const workings = (
-      <SpellWorkings
-        workspaceId="w"
-        workings={[]}
-        completeAction={() => null}
-        editAction={() => null}
-      />
+      <SpellWorkings workings={[]} completeAction={() => null} editAction={() => null} />
     );
 
     it('lists the sections the page draws, each link pointing at one that exists', () => {

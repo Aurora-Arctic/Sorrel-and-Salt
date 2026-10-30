@@ -150,7 +150,6 @@ export default async function SpellRecipePage({ params, searchParams }: SpellRec
           steps={recipe.steps}
           workings={
             <SpellWorkings
-              workspaceId={workspace.id}
               workings={workings}
               headingAction={canRecord ? recordButton : undefined}
               completeAction={(workingId, workedOn, name) => (

@@ -906,13 +906,15 @@ test(
     await waitingEdit.getByRole('button', { name: 'Delete', exact: true }).click();
     await expect(waitingEdit).toHaveCount(0);
     await expect(workings.getByText('Waiting rite')).toHaveCount(0);
-    // Deleting B's own working takes it out of the list and the count.
+    // A row carries no bin: deleting B's own working goes through its Edit dialog, and takes it out
+    // of the list and the count.
     await page.goto(`/coven/${coven.slug}/grimoire/${spellId}`);
-    await first.getByRole('button', { name: /^Delete Working/ }).click();
-    await page
-      .getByRole('dialog', { name: 'Delete Working' })
-      .getByRole('button', { name: 'Delete' })
-      .click();
+    await expect(workings.getByRole('button', { name: /^Delete Working/ })).toHaveCount(0);
+    await first.getByRole('button', { name: /^Edit Working / }).click();
+    const firstEdit = page.getByRole('dialog', { name: /^Edit (a )?Working$/ });
+    await firstEdit.getByRole('button', { name: /^Delete Working/ }).click();
+    await firstEdit.getByRole('button', { name: 'Delete', exact: true }).click();
+    await expect(firstEdit).toHaveCount(0);
     await expect(workings.getByText('First brewing')).toHaveCount(0);
     await expect(workings.getByRole('listitem')).toHaveCount(2);
     await page.goto(`/coven/${coven.slug}/grimoire`);

@@ -2,22 +2,20 @@ import type { ReactElement } from 'react';
 import { dayWords } from '../DateField/day';
 import SpellMarks from '../SpellMarks';
 import { WORKINGS_ID, WORKINGS_TITLE_ID } from '../SpellRecipe/sections';
-import DeleteWorkingAction from './delete-working';
 import type { SpellWorkingsProps, WorkingView } from './types';
 import './index.scss';
 
 // A spell's history on its recipe page: one row per working, newest day first. A working is not a
 // step, so the row is its own, and a complete working's deduction lines are plain lines beneath it.
-// Complete on a draft row is the page's to give (`completeAction`).
+// Complete on a draft row is the page's to give (`completeAction`); a row carries no bin, since the
+// Edit dialog holds Delete Working beside the working it shows.
 
 const Working = ({
   working,
-  workspaceId,
   completeAction,
   editAction,
 }: {
   working: WorkingView;
-  workspaceId: string;
   completeAction: SpellWorkingsProps['completeAction'];
   editAction: SpellWorkingsProps['editAction'];
 }): ReactElement => {
@@ -34,9 +32,6 @@ const Working = ({
           {showsComplete && completeAction?.(working.id, working.workedOn, day)}
           {working.editable &&
             editAction?.(working.editable, day, showsComplete, working.canChange)}
-          {working.canChange && (
-            <DeleteWorkingAction workspaceId={workspaceId} workingId={working.id} name={day} />
-          )}
         </div>
       </div>
       {working.status === 'draft' &&
@@ -67,7 +62,6 @@ const Working = ({
 };
 
 const SpellWorkings = ({
-  workspaceId,
   workings,
   completeAction,
   editAction,
@@ -90,7 +84,6 @@ const SpellWorkings = ({
           <Working
             key={working.id}
             working={working}
-            workspaceId={workspaceId}
             completeAction={completeAction}
             editAction={editAction}
           />
