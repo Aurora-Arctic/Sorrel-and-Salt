@@ -349,6 +349,12 @@ proved. Stories 58 and 59; the plan is
 component [`components/email-form.md`](../components/email-form.md), and
 the tests [`tests.md`](tests.md).
 
+- **The API refuses an unverified account too.** The session built from the
+  request headers carries `emailUnverified` while the address is unverified,
+  and `assertMembership` refuses such a session with an explaining
+  `Forbidden`, so no coven data is reachable through `/api/graphql` by
+  skipping the page redirect. `me`, `setEmail` and sign-out take no
+  membership and still work.
 - **One rule: an address becomes the account's at verification, never
   before.** `setEmail(session, email, sender, next?)` in
   `src/modules/identity/services/email.ts` writes nothing to `users.email`.

@@ -43,7 +43,7 @@ export type Membership = {
  * A site admin gets no bypass: admins curate the compendium and reach no
  * workspace (CLAUDE.md's domain invariants), so `session.role` is not read.
  *
- * @throws {Forbidden} the user holds no live membership of `workspaceId` —
+ * @throws {Forbidden} the session's email address is unverified, with a message that says to verify it; or the user holds no live membership of `workspaceId` —
  * an id that is not a uuid included — or holds one whose role does not carry
  * `permission`.
  */
@@ -55,6 +55,13 @@ export async function assertMembership(
   // An empty request authorizes vacuously and would admit any member to anything, so `{}` is a bug in the caller, not a refusal.
   if (Object.keys(permission).length === 0) {
     throw new Error('assertMembership requires a permission to check');
+  }
+
+  // The same rule the pages enforce by redirect: an unverified account reaches the email page and nothing of a coven.
+  if (session.emailUnverified) {
+    throw new Forbidden(
+      'Verify your email address before using a coven. Open the email page from your account to finish.',
+    );
   }
 
   // An id is whatever string the client sent: one that cannot name a workspace is refused as a stranger, not sent to the driver.
