@@ -20,7 +20,7 @@ const ALL_PROVIDERS = ['discord', 'google', 'facebook', 'microsoft'] as const;
 
 // The panel reads the last-used mark from the workshop's own cookie, which
 // outlives the story that wrote it, so every story sets or clears it first.
-function lastUsed(provider: (typeof ALL_PROVIDERS)[number] | null): void {
+function lastUsed(provider: (typeof ALL_PROVIDERS)[number] | 'email' | null): void {
   if (provider) document.cookie = `${LAST_USED_PROVIDER_COOKIE}=${provider}; path=/`;
   else authClient.clearLastUsedLoginMethod();
 }
@@ -45,6 +45,13 @@ const LastUsedView = () => {
   return <Page next="/" configured={ALL_PROVIDERS} />;
 };
 const lastUsedNode = <LastUsedView />;
+
+// A browser that last signed in with a password: the email form carries the mark.
+const PasswordLastUsedView = () => {
+  lastUsed('email');
+  return <Page next="/" configured={ALL_PROVIDERS} />;
+};
+const passwordLastUsedNode = <PasswordLastUsedView />;
 
 // `error` reads the real mapping rather than a copied string, so this story
 // cannot go stale the way a hardcoded copy of the sentence did.
@@ -90,6 +97,7 @@ export const Failed: Story = {
 const STATES_STATES: Record<string, ReactNode> = {
   Default: defaultNode,
   'Last Used': lastUsedNode,
+  'Password Last Used': passwordLastUsedNode,
   'With Error': withErrorNode,
   'Some Unavailable': someUnavailableNode,
 };

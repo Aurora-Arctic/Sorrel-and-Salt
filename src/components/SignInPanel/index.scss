@@ -115,3 +115,28 @@
   left: -1.25rem;
   box-shadow: $shadow-floating;
 }
+
+// The email and password form, under the provider buttons and at their width: a column of the
+// primitives' fields, its notices wrapping at the column's width rather than widening it.
+.sign-in-panel__password {
+  display: flex;
+  flex-direction: column;
+  gap: space(3);
+  margin-top: space(4);
+
+  > .notice {
+    box-sizing: border-box;
+    width: 0;
+    min-width: 100%;
+  }
+}
+
+.sign-in-panel__password-heading {
+  margin: 0;
+  text-align: center;
+}
+
+.sign-in-panel__switch {
+  margin: 0;
+  text-align: center;
+}

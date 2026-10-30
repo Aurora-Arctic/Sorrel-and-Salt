@@ -16,3 +16,6 @@ export const authClient = createAuthClient({
 export const { signIn, signOut, linkSocial, unlinkAccount, getLastUsedLoginMethod, useSession } =
   authClient;
 export const { impersonateUser, stopImpersonating } = authClient.admin;
+
+// Email and password sign-up; its sign-in is `signIn.email` above.
+export const { signUp } = authClient;

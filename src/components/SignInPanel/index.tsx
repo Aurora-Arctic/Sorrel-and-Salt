@@ -6,6 +6,7 @@ import { GENERIC_SIGN_IN_ERROR, socialSignInTarget } from '../../lib/sign-in';
 import { SOCIAL_PROVIDERS } from '../../lib/social-providers';
 import { reportLeaving } from '../../lib/navigation';
 import Notice from '../Notice';
+import PasswordForm from './password-form';
 import ProviderButton from './provider-button';
 import type { ProviderId } from '../../lib/types';
 import type { SignInPanelProps } from './types';
@@ -23,6 +24,9 @@ const getLastUsedProvider = (): ProviderId | null => {
   return SOCIAL_PROVIDERS.find((provider) => provider.id === value)?.id ?? null;
 };
 
+// The same cookie, for the password form: Better Auth's lastLoginMethod writes `email` for it.
+const getLastUsedPassword = (): boolean => getLastUsedLoginMethod() === 'email';
+
 const SignInPanel = ({ next, error, configured }: SignInPanelProps): ReactElement => {
   // The server-rendered callback error, the page's own, until a press starts
   // a new attempt. A failure of that press is said under its own button
@@ -32,6 +36,7 @@ const SignInPanel = ({ next, error, configured }: SignInPanelProps): ReactElemen
   // `document`, so rendering the mark there and here would disagree
   // (claude-docs/components/sign-in-panel.md, "Last used").
   const lastUsed = useSyncExternalStore(noSubscription, getLastUsedProvider, () => null);
+  const lastUsedPassword = useSyncExternalStore(noSubscription, getLastUsedPassword, () => false);
 
   // The provider whose hop is under way. The page is left for the provider's own, so on
   // success it stays set until the browser goes; a return from the back-forward cache (the
@@ -89,6 +94,7 @@ const SignInPanel = ({ next, error, configured }: SignInPanelProps): ReactElemen
           />
         ))}
       </div>
+      <PasswordForm next={next} lastUsed={lastUsedPassword} onStart={() => setMessage(undefined)} />
     </div>
   );
 };

@@ -300,6 +300,8 @@ export const rules = {
       const ALLOWED = {
         'src/components/NameForm/index.tsx': 'one short field, the account name (M13.14)',
         'src/components/EmailForm/index.tsx': 'one short field, the account address (M13.14)',
+        'src/components/SignInPanel/password-form.tsx':
+          'sign-in credentials, which the browser’s password manager holds: nothing typed is lost by leaving',
         'src/components/FilterForm/index.tsx':
           'a list filter that applies as it changes: nothing typed waits on a Save',
         'src/components/IngredientForm/reference-panel.tsx':

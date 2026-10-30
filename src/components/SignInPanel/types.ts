@@ -20,3 +20,12 @@ export interface ProviderButtonProps {
   /** Starts the sign-in; resolves to the failure's sentence, or nothing once the redirect starts. */
   onSignIn: (providerId: ProviderId) => Promise<string | undefined>;
 }
+
+export interface PasswordFormProps {
+  /** Where a successful sign-in returns to, as the panel's `next`. */
+  next?: string;
+  /** Whether this browser last signed in with a password. */
+  lastUsed: boolean;
+  /** Called at each submit, so the panel clears its own error. */
+  onStart?: () => void;
+}
