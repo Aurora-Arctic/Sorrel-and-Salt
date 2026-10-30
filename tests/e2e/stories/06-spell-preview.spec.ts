@@ -12,7 +12,7 @@ test.beforeAll(async () => {
 });
 
 test(
-  'a member or viewer opens a spell full screen with only its title, ingredients and steps',
+  'a member or viewer opens a spell full screen with everything the printed spell shows',
   { tag: '@story-85' },
   async ({ page }) => {
     const coven = await seedCoven(page, 'Fixture Coven Eighty-Five', 'story-85.test', {
@@ -55,9 +55,14 @@ test(
       await preview.click();
       const pane = page.getByRole('dialog', { name: 'Fixture Working' });
       await expect(pane).toBeVisible();
-      await expect(pane.getByRole('listitem')).toHaveCount(1);
-      await expect(pane.getByRole('listitem')).toContainText('Fixture Previewwort');
-      await expect(pane.getByRole('listitem')).toContainText('2 g');
+      const steps = pane.getByRole('list', { name: 'Steps' }).getByRole('listitem');
+      await expect(steps).toHaveCount(1);
+      await expect(steps).toContainText('Fixture Previewwort');
+      await expect(steps).toContainText('2 g');
+      // The Ingredients section the printed spell keeps, with the amount beside the name.
+      await expect(
+        pane.getByRole('list', { name: 'Ingredients' }).getByRole('listitem'),
+      ).toContainText('Fixture Previewwort');
       // Nothing but Close to press, and nothing to follow away.
       await expect(pane.getByRole('button')).toHaveCount(1);
       await expect(pane.getByRole('link')).toHaveCount(0);

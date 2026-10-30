@@ -69,6 +69,19 @@ with no steps says so.
 - No `PageNav`: the sections fit one screen. The Print menu item and the print layout are M10.22's ("Print" below).
 - Steps are drawn by `StepRow` (M13.3) with no editing controls, so the page and the Quick Look modal read them the same way as the builder draws them. The body keeps no step renderer of its own. The ingredient's name is passed to `StepRow` as markup (the name, the formal name, the Deleted mark and the Quick Look eye), and its marks as `marks`.
 
+## The jump menu
+
+The page carries the shared `PageNav` ("On This Page", claude-docs/components/page-nav.md), placed and
+sized as the ingredient entry page places it: after the head, a sticky column left of the page from a
+phone’s width up, stacked above the sections below it, with the page-nav styles unchanged. Its entries are
+Steps, Workings, Category Match and In Coven Inventory, each present only where its section is drawn: Steps
+with at least one step, Workings with the `workings` slot, the other two with the `aside` slot, and the menu
+is left out when none is. The ids are `sections.ts`’s constants, which the steps list, `SpellWorkings` and the
+two panels (their optional `id` prop) carry, each with a scroll margin under the shell’s bar. The Quick Look
+modal has no menu. Print hides it (`.page-nav` in `_print.scss`) and the nav column is a screen-only rule, so the
+printed sheet is unchanged. `tests/components/SpellRecipe/index.test.tsx` checks that each link has a target;
+`tests/e2e/spell-recipe-layout.spec.ts` checks the column, a jump and print.
+
 ## Print
 
 M10.22. `SpellRecipe` does not draw Print: it is the "Print" item of the page's `SpellMoreMenu` (`more-menu.tsx`, calling `window.print()`), for every role that can read the page. `summary.tsx` draws an Ingredients list, one line per form in the order of its first step, with the total amount (`needOf`, in the first step’s unit when the form’s units are of one dimension, otherwise listed with "+"), label and, where two ingredients share a label, the formal name, between the intent and categories and the facts and steps. It is `display: none` on screen, so the screen has no second list, and shows in print only. `src/scss/_print.scss`, the one print stylesheet, sits behind `:has(.spell-recipe)`, the page's own article, so no other page changes (a browser without `:has()` prints the screen layout). In print it uses the light tokens whatever the theme, and hides the shell's bar, the back link, the actions, the side column, the Workings section (`.spell-workings`), the Quick Look eyes, the badges and any dialog. The shell's context row stays as the page's head: the coven's name as plain text, with no box, chevron, section nav or line under it. The sheet is a grid of two columns under a head that runs across (the owner picked mock C, 2026-10-30, with the facts moved out of the side column): the Edited line and title, the intent and categories, the four facts across the top over both columns, then the Ingredients summary in a 17em column (its lines flush with the heading, no indent and no ◆) beside the steps, then the note. The columns, main and rest wrappers dissolve (`display: contents`), so the article is the one grid and each part is placed by row and column. `tests/e2e/spell-print.spec.ts` checks that a viewer can choose Print from the menu, one printed page, the controls gone, that the context row prints as plain text with no line under it, that the intent and categories lead and the facts sit above the Ingredients column and the steps, that the Ingredients column is left of the steps and level with them, that the summary is flush with its heading and that Workings is absent. At phone width the summary is not on screen; where it goes is MB.123's (moved from M10.22, 2026-10-29).

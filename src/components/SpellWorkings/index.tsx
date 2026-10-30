@@ -1,4 +1,5 @@
 import type { ReactElement } from 'react';
+import { WORKINGS_ID } from '../SpellRecipe/sections';
 import DeleteWorkingAction from './delete-working';
 import type { SpellWorkingsProps, WorkingView } from './types';
 import './index.scss';
@@ -40,11 +41,13 @@ const Working = ({
             <span className="badge badge--private">Private</span>
           )}
         </div>
-        {working.status === 'draft' && working.editable && completeAction?.(working.id)}
-        {working.editable && editAction?.(working.editable, day)}
-        {working.canChange && (
-          <DeleteWorkingAction workspaceId={workspaceId} workingId={working.id} name={day} />
-        )}
+        <div className="spell-workings__actions">
+          {working.status === 'draft' && working.editable && completeAction?.(working.id)}
+          {working.editable && editAction?.(working.editable, day)}
+          {working.canChange && (
+            <DeleteWorkingAction workspaceId={workspaceId} workingId={working.id} name={day} />
+          )}
+        </div>
       </div>
       {working.status === 'draft' &&
         working.warnings?.map((line) => (
@@ -79,7 +82,7 @@ const SpellWorkings = ({
   completeAction,
   editAction,
 }: SpellWorkingsProps): ReactElement => (
-  <section className="spell-workings" aria-labelledby="spell-workings-title">
+  <section id={WORKINGS_ID} className="spell-workings" aria-labelledby="spell-workings-title">
     <h2 id="spell-workings-title">Workings</h2>
     {workings.length === 0 ? (
       <p className="meta">This spell has not been worked yet.</p>

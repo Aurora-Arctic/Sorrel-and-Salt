@@ -16,6 +16,8 @@ recorded it and who took part, its note, and, on a complete working, its deducti
 and each participant are names the page resolved with `displayNamesOf`, so a removed member reads
 under the name they last held; a participant with no readable name reads "A former member".
 
+At a tablet width and up the head is three columns: the date, the badges in a column of their own (so they start at the same place on every row, whatever the row holds), and a slot at the far right for the buttons (`spell-workings__actions`, sized for Complete, Edit and Delete). Below that the badges and buttons wrap under the date.
+
 The row does not use `LastEdit`: a working is recorded once, and `LastEdit` says who edited a row last.
 Its deduction lines are plain items (name, then amount and unit) inside an `ol` named Deductions,
 in the spell's step order. They carry no step number: the recipe above says where a step stands.
@@ -28,7 +30,7 @@ The slots a row takes from the page:
 - Delete Working, a bin and a confirmation dialog (`delete-working.tsx`), drawn when the working's
   `canChange` is true: the viewer's role may delete and the viewer is the recorder.
 
-A draft row also lists what completing it would skip (`warnings`), one line each, such as "Completing skips Salt: units differ", beside its Complete. The wording is `skipLine` in `@/components/RecordWorking/warnings`, the same the Complete dialog uses. `readWorkingsOf` reads the preview once per page, only when a draft of the viewer's own is there, and gives the lines to the viewer's own drafts; they are the spell's stock as it stands now.
+A draft row also lists what completing it would skip (`warnings`), as one line giving the count, such as "Completing skips 4 steps", beside its Complete; the reasons stay in the Complete dialog's confirm step. The wording is `skipSummary` in `@/components/RecordWorking/warnings`. It carries no shortfalls. `readWorkingsOf` reads the preview once per page, only when a draft of the viewer's own is there, and gives the lines to the viewer's own drafts; they are the spell's stock as it stands now.
 
 An empty list reads "This spell has not been worked yet."
 

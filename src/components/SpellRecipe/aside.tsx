@@ -6,6 +6,7 @@ import { DETAILS_PLACE, detailsHeading } from '../IngredientEntry/details';
 import { ComparisonPanel } from '../SpellBuilder/comparison-panel';
 import { InCovenInventory, type LineDoors } from '../SpellBuilder/inventory';
 import type { SpellStepValue } from '../SpellBuilder/steps/types';
+import { CATEGORY_MATCH_ID, INVENTORY_ID } from './sections';
 import type { SpellRecipeAsideProps } from './types';
 // The two panels' own styles live with the builder, whose index.tsx loads them; the page
 // mounts the builder's dialog too, but the column loads them itself rather than by that chance.
@@ -42,8 +43,14 @@ export default function SpellRecipeAside({
   return (
     <>
       {/* Category Match first, over the inventory: the builder's order reversed. */}
-      <ComparisonPanel intended={intended} steps={steps} groups={colours} heading="h2" />
-      <InCovenInventory steps={steps} doorsOf={doorsOf} />
+      <ComparisonPanel
+        intended={intended}
+        steps={steps}
+        groups={colours}
+        heading="h2"
+        id={CATEGORY_MATCH_ID}
+      />
+      <InCovenInventory id={INVENTORY_ID} steps={steps} doorsOf={doorsOf} />
     </>
   );
 }

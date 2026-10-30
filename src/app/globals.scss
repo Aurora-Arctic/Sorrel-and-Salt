@@ -64,10 +64,10 @@ body {
   }
 }
 
-// Highlighted text takes the accent with the page colour on it (as a solid button does), so it reads
-// the same on every browser in both themes.
+// Highlighted text swaps the page's two colours (the ink as the ground, the page as the ink), so it
+// holds the page's own contrast in both themes and is never green.
 // stylelint-disable-next-line plugin/use-baseline -- enhancement: a browser without it keeps its own highlight, not yet Baseline
 ::selection {
-  background-color: $accent;
+  background-color: $text-primary;
   color: $text-on-color;
 }

@@ -1,19 +1,26 @@
 import { act, render, screen, within, fireEvent } from '@testing-library/react';
 import { afterEach, describe, expect, it, vi } from 'vitest';
 import SpellPreview from '@/components/SpellPreview';
-import type { PreviewStep } from '@/components/SpellPreview/types';
+import type { RecipeStep } from '@/components/SpellRecipe/types';
 import { press } from '../../support/interact';
 
 // The Preview pane: a button on the recipe page opens the spell full screen, with only the title,
 // the ingredients with their amounts and the steps (claude-docs/components/spell-preview.md).
 
-const STEPS: PreviewStep[] = [
+const STEPS: RecipeStep[] = [
   {
     kind: 'ingredient',
     id: 'a',
-    name: 'Testwort (Dried Leaf)',
+    name: 'Testwort',
+    form: 'dried leaf',
+    formal: null,
+    variantId: 'v1',
     quantity: '2',
     unit: 'tsp',
+    look: null,
+    safety: null,
+    oneOff: false,
+    deleted: false,
     body: null,
   },
   { kind: 'instruction', id: 'b', body: 'Stir three times, sunwise.' },
@@ -23,7 +30,17 @@ const onPage = () => (
   <main>
     <h1>Fixture Working</h1>
     <a href="/elsewhere">Elsewhere</a>
-    <SpellPreview title="Fixture Working" steps={STEPS} />
+    <SpellPreview
+      title="Fixture Working"
+      intent="Keeps the hearth warm."
+      categories={[]}
+      note="Best on a cold night."
+      steps={STEPS}
+      jarDescription="Squat Amber Jar"
+      sealWaxColor={null}
+      moonPhase={null}
+      dayOfWeek={null}
+    />
   </main>
 );
 
@@ -72,12 +89,25 @@ describe('SpellPreview', () => {
     expect(screen.queryByRole('dialog')).toBeNull();
   });
 
-  it('opens a pane of the title, the ingredients with amounts and the steps, and no controls but Close', () => {
+  it('opens a pane of everything the printed spell shows, and no controls but Close', () => {
     render(onPage());
     press(opener());
     const dialog = pane();
     expect(within(dialog).getByRole('heading', { name: 'Fixture Working' })).toBeTruthy();
-    const items = within(dialog).getAllByRole('listitem');
+    expect(within(dialog).getByText('Keeps the hearth warm.')).toBeTruthy();
+    expect(within(dialog).getByText('Squat Amber Jar')).toBeTruthy();
+    expect(within(dialog).getByText('Best on a cold night.')).toBeTruthy();
+    // The Ingredients section: the amount in a cell of its own, beside the name.
+    expect(within(dialog).getByRole('heading', { name: 'Ingredients' })).toBeTruthy();
+    const needs = within(within(dialog).getByRole('list', { name: 'Ingredients' })).getAllByRole(
+      'listitem',
+    );
+    expect(needs).toHaveLength(1);
+    expect(needs[0]?.textContent).toContain('2 tsp');
+    expect(needs[0]?.textContent).toContain('Testwort (Dried Leaf)');
+    const items = within(within(dialog).getByRole('list', { name: 'Steps' })).getAllByRole(
+      'listitem',
+    );
     expect(items).toHaveLength(2);
     expect(items[0]?.textContent).toContain('Testwort (Dried Leaf)');
     expect(items[0]?.textContent).toContain('2 tsp');
@@ -86,8 +116,10 @@ describe('SpellPreview', () => {
     expect(
       within(dialog)
         .getAllByRole('button')
-        .map((b) => b.textContent),
+        .map((b) => b.getAttribute('aria-label') ?? b.textContent),
     ).toEqual(['Close']);
+    // An X, not the word.
+    expect(within(dialog).getByRole('button', { name: 'Close' }).textContent).toBe('×');
   });
 
   it('closes on Close (the browser then gives the focus back to Preview, which the story proves)', () => {

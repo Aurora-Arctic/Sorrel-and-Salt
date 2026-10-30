@@ -1,6 +1,8 @@
 import type { Route } from 'next';
 import { render, screen, within } from '@testing-library/react';
 import { describe, expect, it, vi } from 'vitest';
+import SpellRecipeAside from '@/components/SpellRecipe/aside';
+import SpellWorkings from '@/components/SpellWorkings';
 import SpellRecipe from '@/components/SpellRecipe';
 import type { RecipeStep, SpellRecipeProps } from '@/components/SpellRecipe';
 
@@ -314,5 +316,43 @@ describe('SpellRecipe', () => {
     expect(within(aside).getByRole('region', { name: 'Fixture Aside' })).toBeInTheDocument();
     const note = screen.getByText('Best at dusk.');
     expect(note.compareDocumentPosition(aside) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy();
+  });
+
+  describe('jump menu', () => {
+    const linksOf = () =>
+      within(screen.getByRole('navigation', { name: 'On This Page' })).getAllByRole('link');
+    const aside = <SpellRecipeAside steps={[]} doors={[]} intended={[]} groups={[]} />;
+    const workings = (
+      <SpellWorkings
+        workspaceId="w"
+        workings={[]}
+        completeAction={() => null}
+        editAction={() => null}
+      />
+    );
+
+    it('lists the sections the page draws, each link pointing at one that exists', () => {
+      render(<SpellRecipe {...props({ steps: [instruction('s1', 'Stir.')], aside, workings })} />);
+      expect(linksOf().map((link) => link.textContent)).toEqual([
+        'Steps',
+        'Workings',
+        'Category Match',
+        'In Coven Inventory',
+      ]);
+      for (const link of linksOf()) {
+        const target = document.getElementById(link.getAttribute('href')!.slice(1));
+        expect(target, link.textContent ?? '').not.toBeNull();
+      }
+    });
+
+    it('leaves out an entry whose section is not drawn', () => {
+      render(<SpellRecipe {...props({ steps: [] })} />);
+      expect(screen.queryByRole('navigation', { name: 'On This Page' })).toBeNull();
+    });
+
+    it('keeps Steps and Workings when there is no side column', () => {
+      render(<SpellRecipe {...props({ steps: [instruction('s1', 'Stir.')], workings })} />);
+      expect(linksOf().map((link) => link.textContent)).toEqual(['Steps', 'Workings']);
+    });
   });
 });

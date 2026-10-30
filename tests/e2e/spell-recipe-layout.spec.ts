@@ -92,3 +92,110 @@ for (const [name, size] of [
     expect(Math.abs(editBox.top - titleBox.top)).toBeLessThanOrEqual(1);
   });
 }
+
+// The facts strip gives the moon phase's cell the room its name and drawing need, so the phase never
+// wraps at desktop width.
+test('the moon phase sits on one line in the facts strip on a desktop', async ({ page }) => {
+  const coven = await seedCoven(page, 'Fixture Coven Moon', 'spell-moon.test', { A: 'owner' });
+  const { A } = coven.users;
+  const spellId = await withSql(async (sql) => {
+    const id = await insertSpell(sql, coven.id, 'Fixture Moon', 'workspace', A, 'complete');
+    await sql`update spells set jar_description = '4 oz jar', seal_wax_color = 'Black', moon_phase = 'Waxing Gibbous', day_of_week = 'Wednesday' where id = ${id}`;
+    return id;
+  });
+  await signInAgainAs(page, A);
+  await page.setViewportSize({ width: 1280, height: 900 });
+  await page.goto(`/coven/${coven.slug}/grimoire/${spellId}`);
+  // The text alone, not the drawing beside it: one rect top per line it sets.
+  const lines = await page.locator('.spell-recipe__facts dd').evaluateAll((cells) =>
+    cells.map((cell) => {
+      const range = document.createRange();
+      range.selectNodeContents(cell.lastChild!);
+      return new Set([...range.getClientRects()].map((rect) => Math.round(rect.top))).size;
+    }),
+  );
+  expect(lines).toEqual([1, 1, 1, 1]);
+});
+
+// Each working row's badges sit in their own column and its buttons in a slot at the far right, so
+// the badges start the same distance from the row's right edge whatever the row holds.
+test('the badges of a draft and a complete working start at the same place on a desktop', async ({
+  page,
+}) => {
+  const coven = await seedCoven(page, 'Fixture Coven Badges', 'spell-badges.test', { A: 'owner' });
+  const { A } = coven.users;
+  const spellId = await withSql(async (sql) => {
+    const id = await insertSpell(sql, coven.id, 'Fixture Badges', 'workspace', A, 'complete');
+    await insertWorking(sql, id, A, {
+      workedOn: '2026-03-04',
+      status: 'draft',
+      visibility: 'private',
+    });
+    await insertWorking(sql, id, A, { workedOn: '2026-03-01', visibility: 'private' });
+    return id;
+  });
+  await signInAgainAs(page, A);
+  await page.setViewportSize({ width: 1280, height: 900 });
+  await page.goto(`/coven/${coven.slug}/grimoire/${spellId}`);
+  const rows = page.getByRole('list', { name: 'Workings' }).getByRole('listitem');
+  await expect(rows).toHaveCount(2);
+  const [draft, complete] = await Promise.all(
+    [0, 1].map((i) =>
+      rows
+        .nth(i)
+        .locator('.specimen__badges .badge')
+        .first()
+        .evaluate((el) => el.getBoundingClientRect().left),
+    ),
+  );
+  // The draft row has the extra Draft badge and the extra Complete button, the complete row neither.
+  await expect(rows.nth(0).locator('.badge')).toHaveCount(2);
+  await expect(rows.nth(1).locator('.badge')).toHaveCount(1);
+  expect(Math.abs(draft! - complete!)).toBeLessThanOrEqual(1);
+});
+
+for (const [name, size] of [
+  ['desktop', { width: 1280, height: 900 }],
+  ['phone', { width: 390, height: 844 }],
+] as const) {
+  test(`the jump menu stands beside the page and jumps to a section on a ${name}`, async ({
+    page,
+  }) => {
+    const coven = await seedCoven(page, `Fixture Nav ${name}`, `spell-nav-${name}.test`, {
+      A: 'owner',
+    });
+    const { A } = coven.users;
+    const spellId = await withSql(async (sql) => {
+      const held = await compendiumVariant(sql, "Cat's Claw", 'Bark', 'Uncaria tomentosa');
+      const id = await insertSpell(sql, coven.id, 'Fixture Nav', 'workspace', A, 'complete');
+      await insertStep(sql, id, held, { quantity: 2, unit: 'g', position: 0 }, A);
+      await insertWorking(sql, id, A, { workedOn: '2026-03-04' });
+      return id;
+    });
+    await signInAgainAs(page, A);
+    await page.setViewportSize(size);
+    await page.goto(`/coven/${coven.slug}/grimoire/${spellId}`);
+
+    const nav = page.getByRole('navigation', { name: 'On This Page' });
+    await expect(nav.getByRole('link')).toHaveText([
+      'Steps',
+      'Workings',
+      'Category Match',
+      'In Coven Inventory',
+    ]);
+    if (name === 'desktop') {
+      // Left of the body, not above it.
+      const navBox = await nav.evaluate((el) => el.getBoundingClientRect().toJSON());
+      const stepsBox = await page
+        .getByRole('list', { name: 'Steps' })
+        .evaluate((el) => el.getBoundingClientRect().toJSON());
+      expect(navBox.right).toBeLessThanOrEqual(stepsBox.left + 1);
+    }
+    await nav.getByRole('link', { name: 'Workings' }).click();
+    await expect(page).toHaveURL(/#spell-workings$/);
+    await expect(page.getByRole('heading', { name: 'Workings' })).toBeInViewport();
+
+    await page.emulateMedia({ media: 'print' });
+    await expect(nav).toBeHidden();
+  });
+}

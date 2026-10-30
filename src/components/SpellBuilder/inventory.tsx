@@ -103,8 +103,11 @@ function HoldLine({
 export function InCovenInventory({
   steps,
   doorsOf,
+  id,
 }: {
   steps: readonly SpellStepValue[];
+  /** The section's id, for a jump link; the recipe page gives one. */
+  id?: string;
   /** A line's doors, where the page offers them. */
   doorsOf?: (step: SpellStepValue) => LineDoors | undefined;
 }): ReactElement {
@@ -117,7 +120,7 @@ export function InCovenInventory({
       ingredients.findIndex((other) => other.variantId === step.variantId) === index,
   );
   return (
-    <section className="spell-inventory" aria-labelledby="spell-inventory-heading">
+    <section id={id} className="spell-inventory" aria-labelledby="spell-inventory-heading">
       <h2 id="spell-inventory-heading">In Coven Inventory</h2>
       {lines.length === 0 ? (
         <p className="spell-aside__empty">Nothing in the jar yet.</p>

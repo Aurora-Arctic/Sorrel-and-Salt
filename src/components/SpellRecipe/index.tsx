@@ -3,8 +3,11 @@ import BackLink from '../IngredientEntry/back-link';
 import LastEdit from '../LastEdit';
 import LinkHint from '../LinkHint';
 import { UNTITLED_SPELL } from '../SpellCard';
+import PageNav from '../PageNav';
+import type { PageNavEntry } from '../PageNav/types';
 import SpellRecipeBody from './body';
 import SpellRecipeSummary from './summary';
+import { CATEGORY_MATCH_ID, INVENTORY_ID, STEPS_ID, WORKINGS_ID } from './sections';
 import type { SpellRecipeProps } from './types';
 
 // A saved spell as a page: purpose, four facts, steps, note (`SpellRecipeBody`, which Quick Look
@@ -30,9 +33,20 @@ const SpellRecipe = ({
   workings,
 }: SpellRecipeProps): ReactElement => {
   const name = (title ?? '').trim() || UNTITLED_SPELL;
+  // One entry per section drawn, so none links to nothing.
+  const entries: PageNavEntry[] = [
+    ...(steps.length > 0 ? [{ href: `#${STEPS_ID}` as const, label: 'Steps' }] : []),
+    ...(workings ? [{ href: `#${WORKINGS_ID}` as const, label: 'Workings' }] : []),
+    ...(aside
+      ? [
+          { href: `#${CATEGORY_MATCH_ID}` as const, label: 'Category Match' },
+          { href: `#${INVENTORY_ID}` as const, label: 'In Coven Inventory' },
+        ]
+      : []),
+  ];
   return (
     <article
-      className={`spell-recipe${aside ? ' spell-recipe--with-aside' : ''}`}
+      className={`spell-recipe${aside ? ' spell-recipe--with-aside' : ''}${entries.length > 0 ? ' spell-recipe--with-nav' : ''}`}
       aria-labelledby="spell-recipe-title"
     >
       {/* The ingredient entry's own back link: the chevron, and the
@@ -53,6 +67,7 @@ const SpellRecipe = ({
         {action}
       </header>
       <SpellRecipeSummary steps={steps} />
+      {entries.length > 0 && <PageNav label="On This Page" entries={entries} />}
       <div className="spell-recipe__columns">
         <div className="spell-recipe__main">
           <SpellRecipeBody

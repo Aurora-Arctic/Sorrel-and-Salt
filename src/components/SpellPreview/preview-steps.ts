@@ -1,21 +1,10 @@
-import { formLabel } from '../../modules/ingredients/validation/form-label';
 import type { RecipeStep } from '../SpellRecipe/types';
-import type { PreviewStep } from './types';
 
 /**
- * The recipe's steps cut down to what the preview pane draws: the label, the amount and the text.
- * Done on the server so the pane's props carry no Quick Look links, safety or stock verdicts.
+ * The recipe's steps with what the preview pane leaves out taken off: the Quick Look link, the
+ * safety marks and the stock verdict. Done on the server so the pane's props never carry them.
  */
-export const previewStepsOf = (steps: readonly RecipeStep[]): PreviewStep[] =>
+export const previewStepsOf = (steps: readonly RecipeStep[]): RecipeStep[] =>
   steps.map((step) =>
-    step.kind === 'instruction'
-      ? { kind: 'instruction', id: step.id, body: step.body }
-      : {
-          kind: 'ingredient',
-          id: step.id,
-          name: step.form ? `${step.name} (${formLabel(step.form)})` : step.name,
-          quantity: step.quantity,
-          unit: step.unit,
-          body: step.body,
-        },
+    step.kind === 'instruction' ? step : { ...step, look: null, safety: null, supply: null },
   );

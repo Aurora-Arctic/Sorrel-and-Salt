@@ -1,4 +1,4 @@
-import type { ReactElement } from 'react';
+import type { ReactElement, ReactNode } from 'react';
 import CategoryChips from '../CategoryChips';
 import { QuickLookLink } from '../IconTip';
 import { DETAILS_PLACE, detailsHeading } from '../IngredientEntry/details';
@@ -9,6 +9,7 @@ import { SafetyMark } from '../SafetyNote';
 import { formLabel } from '../../modules/ingredients/validation/form-label';
 import { UNTITLED_SPELL } from '../SpellCard';
 import { VerdictMark } from '../SpellBuilder/verdict-mark';
+import { STEPS_ID } from './sections';
 import type { IngredientRecipeStep, RecipeStep, SpellRecipeBodyProps } from './types';
 import './index.scss';
 
@@ -68,7 +69,11 @@ const SpellRecipeBody = ({
   sealWaxColor,
   moonPhase,
   dayOfWeek,
-}: SpellRecipeBodyProps): ReactElement => {
+  beforeSteps,
+}: SpellRecipeBodyProps & {
+  /** A section between the facts and the steps; the Preview pane puts the Ingredients summary here. */
+  beforeSteps?: ReactNode;
+}): ReactElement => {
   const name = (title ?? '').trim() || UNTITLED_SPELL;
   const purpose = (intent ?? '').trim();
   const facts = (
@@ -102,7 +107,7 @@ const SpellRecipeBody = ({
               {facts.map(({ label, text }) => (
                 <div key={label}>
                   <dt>{label}</dt>
-                  <dd>
+                  <dd className={label === 'Moon Phase' ? 'spell-recipe__moon' : undefined}>
                     {/* The builder's drawing beside the phase; a phase outside its list draws nothing. */}
                     {label === 'Moon Phase' && <MoonPhaseIcon phase={text} />}
                     {text}
@@ -113,10 +118,12 @@ const SpellRecipeBody = ({
           </div>
         )}
 
+        {beforeSteps}
+
         {steps.length === 0 ? (
           <p className="meta">This spell has no steps yet.</p>
         ) : (
-          <ol className="spell-recipe__steps" aria-label="Steps">
+          <ol id={STEPS_ID} className="spell-recipe__steps" aria-label="Steps">
             {steps.map((step: RecipeStep, i) =>
               step.kind === 'instruction' ? (
                 <StepRow
