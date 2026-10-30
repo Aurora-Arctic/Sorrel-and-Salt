@@ -9,7 +9,7 @@ import { usePendingNavigation } from '../../lib/navigation';
 import type { Failure } from '../../lib/types';
 import Combobox, { ComboboxEntry } from '../Combobox';
 import DateField from '../DateField';
-import { FieldShell, FormActions, VisibilitySwitch, fieldDescription } from '../Field';
+import { FieldError, FieldShell, FormActions, VisibilitySwitch, fieldDescription } from '../Field';
 import IconTip, { BinButton } from '../IconTip';
 import { ConfirmQuestion, DiscardQuestion, useDiscardGuard } from '../Modal';
 import Notice from '../Notice';
@@ -215,7 +215,8 @@ export default function RecordWorkingForm({
           {...dateField.aria}
         />
       </FieldShell>
-      <div className="fieldset">
+      {/* A fieldset so `disabled` shuts the box, its chevron and every chip's x at once while the save runs. */}
+      <fieldset className="fieldset" aria-labelledby={`${ids}-people-label`} disabled={submitting}>
         <span id={`${ids}-people-label`} className="fieldset__legend">
           Participants
         </span>
@@ -242,6 +243,7 @@ export default function RecordWorkingForm({
           placeholder="Add a name"
           noun="member"
           aria-invalid={peopleError ? true : undefined}
+          aria-describedby={peopleError ? `${ids}-people-error` : undefined}
           entries={
             participants.length > 0 && (
               <ul className="combobox__entries">
@@ -257,8 +259,8 @@ export default function RecordWorkingForm({
             )
           }
         />
-        {peopleError && <p className="field__error">{peopleError}</p>}
-      </div>
+        <FieldError id={`${ids}-people-error`} message={peopleError} />
+      </fieldset>
       <FieldShell label="Note" {...noteField}>
         <textarea
           id={noteField.controlId}

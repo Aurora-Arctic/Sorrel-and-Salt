@@ -20,7 +20,7 @@ passes `members` (`{ userId, name }`, from `memberRoster` and `displayNamesOf`, 
 not list members themselves) and `steps` (`{ id, name }` for each ingredient step).
 
 The dialog holds a date (today by default), participants (a `Combobox` of the members with chips;
-a typed name is added as a name chip), a note, and visibility. Visibility never exceeds the
+a typed name is added as a name chip), a note, and visibility. Participants is a `<fieldset>`, so while a save runs it shuts with the other fields, chips and all, and a refused name describes the box through `FieldError`. Visibility never exceeds the
 spell's, and is the same Share With the Coven switch the spell builder uses (`VisibilitySwitch`, in `Field`), start-aligned by `.working-form .switch` as `.spell-builder .switch` does: on a private spell it is off and shut, with a line saying why. A new working opens with the recorder (`recorderId`) as a chip, who may remove themselves; the dialog always sends `participants`. A Workings row says "Recorded by" the recorder and lists only the others after "With", so a stored recorder is never named twice (`workings-read.ts` filters them out).
 
 Save as Draft keeps a draft, closes the dialog and refreshes the page, where the draft is a row of the

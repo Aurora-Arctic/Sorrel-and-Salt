@@ -10,7 +10,14 @@ import type {
   WorkingDeductionPreviewQuery,
 } from '@/gql/graphql';
 import { makeQueryClient } from '@/lib/graphql-client';
-import { mockGraphQLMutation, mockGraphQLQuery } from '../../support/msw/graphql';
+import { HttpResponse } from 'msw';
+import {
+  graphqlLink,
+  mockGraphQLError,
+  mockGraphQLMutation,
+  mockGraphQLQuery,
+} from '../../support/msw/graphql';
+import { server } from '../../support/msw/server';
 
 const router = vi.hoisted(() => ({ push: vi.fn(), replace: vi.fn(), refresh: vi.fn() }));
 vi.mock('next/navigation', () => ({ useRouter: () => router }));
@@ -110,6 +117,62 @@ describe('Record a Working', () => {
     await waitFor(() => expect(calls).toHaveLength(1));
     expect(await screen.findByRole('list', { name: 'Deductions' })).toHaveTextContent('Testwort');
     expect(screen.getByRole('button', { name: 'Confirm' })).toBeEnabled();
+  });
+
+  it('shuts Participants with the other fields while the save is on its way, so no name is lost', async () => {
+    let answer: () => void = () => {};
+    server.use(
+      graphqlLink.mutation('RecordWorking', ({ variables }) => {
+        const workedOn = (variables as RecordWorkingMutationVariables).input.workedOn;
+        return new Promise((resolve) => {
+          answer = () =>
+            resolve(
+              HttpResponse.json({
+                data: {
+                  recordWorking: {
+                    id: 'w1',
+                    status: 'draft',
+                    note: null,
+                    workedOn,
+                    visibility: 'workspace',
+                    participants: [],
+                  },
+                },
+              }),
+            );
+        });
+      }),
+    );
+    openButton();
+    const people = within(dialog()).getByRole('combobox', { name: 'Participants' });
+    const removeRecorder = within(dialog()).getByRole('button', { name: /Remove.*Testa Owner/ });
+    expect(people).toBeEnabled();
+    expect(removeRecorder).toBeEnabled();
+
+    fireEvent.click(within(dialog()).getByRole('button', { name: 'Save as Draft' }));
+
+    await waitFor(() =>
+      expect(within(dialog()).getByRole('textbox', { name: 'Note' })).toBeDisabled(),
+    );
+    expect(people).toBeDisabled();
+    expect(removeRecorder).toBeDisabled();
+    answer();
+    await waitFor(() => expect(screen.queryByRole('dialog')).toBeNull());
+  });
+
+  it('describes Participants by the service’s refusal of a name', async () => {
+    mockGraphQLError('RecordWorking', {
+      code: 'VALIDATION',
+      fieldErrors: [{ path: ['participants', 0], message: 'Choose a member of this coven' }],
+    });
+    openButton();
+    const people = within(dialog()).getByRole('combobox', { name: 'Participants' });
+    expect(people).not.toHaveAccessibleDescription();
+
+    fireEvent.click(within(dialog()).getByRole('button', { name: 'Save as Draft' }));
+
+    await waitFor(() => expect(people).toHaveAttribute('aria-invalid', 'true'));
+    expect(people).toHaveAccessibleDescription('Choose a member of this coven');
   });
 
   it('adds a typed name as a chip and sends it as a name', async () => {
