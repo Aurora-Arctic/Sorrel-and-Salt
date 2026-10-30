@@ -38,7 +38,16 @@ vi.mock('@/app/compendium-reads', () => ({
 const readSpell = vi.fn();
 const stepsOfSpells = vi.fn();
 const assignedCategoriesOf = vi.fn();
-vi.mock('@/modules/grimoire', () => ({ readSpell, stepsOfSpells, assignedCategoriesOf }));
+// No workings: the recipe page's Workings list is read through these and is tested on its own.
+const listWorkingsPage = vi.fn(async () => []);
+const previewWorkingDeductions = vi.fn(async () => ({ deductions: [], warnings: [] }));
+vi.mock('@/modules/grimoire', () => ({
+  readSpell,
+  stepsOfSpells,
+  assignedCategoriesOf,
+  listWorkingsPage,
+  previewWorkingDeductions,
+}));
 const none = async (_s: unknown, refs: unknown[]): Promise<unknown[][]> => refs.map(() => []);
 const categoriesOf = vi.fn(none);
 const categoriesOfVariants = vi.fn(none);
@@ -50,6 +59,12 @@ vi.mock('@/modules/ingredients', async (importOriginal) => ({
   categoriesOfVariants,
   stockOf,
   variantsOf,
+}));
+// The coven roster Record a Working lists: nobody, by default.
+const memberRoster = vi.fn(async () => []);
+vi.mock('@/modules/coven', async (importOriginal) => ({
+  ...(await importOriginal<typeof import('@/modules/coven')>()),
+  memberRoster,
 }));
 const displayNamesOf = vi.fn();
 vi.mock('@/modules/identity', async (importOriginal) => ({
@@ -257,12 +272,12 @@ describe('the spell recipe page', () => {
     const as = (role: 'owner' | 'member' | 'viewer') =>
       requireCovenMembership.mockResolvedValue({ workspace: COVEN, membership: { role } });
 
-    it('gives a member a Delete Spell bin beside Edit, which asks in a dialog naming the spell', async () => {
+    it('gives a member Delete Spell in the More menu, which asks in a dialog naming the spell', async () => {
       as('member');
       await draw();
-      const bin = screen.getByRole('button', { name: 'Delete Spell Fixture Working' });
       expect(screen.queryByRole('dialog')).not.toBeInTheDocument();
-      fireEvent.click(bin);
+      fireEvent.click(screen.getByRole('button', { name: 'More for Fixture Working' }));
+      fireEvent.click(await screen.findByRole('menuitem', { name: 'Delete Spell' }));
       expect(screen.getByRole('dialog', { name: 'Delete Spell' })).toHaveTextContent(
         'Fixture Working',
       );
@@ -274,7 +289,9 @@ describe('the spell recipe page', () => {
       expect(
         screen.getByRole('heading', { level: 1, name: 'Fixture Working' }),
       ).toBeInTheDocument();
-      expect(screen.queryByRole('button', { name: /^Delete / })).not.toBeInTheDocument();
+      fireEvent.click(screen.getByRole('button', { name: 'More for Fixture Working' }));
+      expect(await screen.findByRole('menuitem', { name: 'Print' })).toBeInTheDocument();
+      expect(screen.queryByRole('menuitem', { name: 'Delete Spell' })).not.toBeInTheDocument();
     });
   });
 
