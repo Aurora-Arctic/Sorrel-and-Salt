@@ -30,14 +30,16 @@ function renderMenu({
   canDelete = true,
   canPrint = true,
   visibility,
+  queryClient = makeQueryClient(),
 }: {
   canDuplicate?: boolean;
   canDelete?: boolean;
   canPrint?: boolean;
   visibility?: SpellVisibility;
+  queryClient?: ReturnType<typeof makeQueryClient>;
 } = {}) {
   return render(
-    <QueryClientProvider client={makeQueryClient()}>
+    <QueryClientProvider client={queryClient}>
       <main>
         <h1>Fixture Working</h1>
         <SpellMoreMenu
@@ -208,7 +210,7 @@ describe('SpellMoreMenu', () => {
     );
   });
 
-  it('deletes the spell and replaces the address with the list’s', async () => {
+  it("deletes the spell, replaces the address with the list's, and gives the list's heading the focus", async () => {
     const calls: DeleteSpellMutationVariables[] = [];
     mockGraphQLMutation<DeleteSpellMutation, DeleteSpellMutationVariables>(
       'DeleteSpell',
@@ -217,13 +219,30 @@ describe('SpellMoreMenu', () => {
         return { deleteSpell: String(variables.id) };
       },
     );
-    renderMenu();
+    const queryClient = makeQueryClient();
+    const view = renderMenu({ queryClient });
 
     choose('Delete');
     press(within(screen.getByRole('dialog')).getByRole('button', { name: 'Delete' }));
 
     await waitFor(() => expect(router.replace).toHaveBeenCalledWith(DELETED_HREF));
     expect(calls).toEqual([{ id: ID, workspaceId: WORKSPACE_ID }]);
+    expect(router.push).not.toHaveBeenCalled();
+    // Busy until the list arrives, so the focus is not handed back to the page first.
+    expect(
+      within(screen.getByRole('dialog')).getByRole('button', { name: /Delet/ }),
+    ).toBeDisabled();
+
+    view.rerender(
+      <QueryClientProvider client={queryClient}>
+        <main>
+          <h1>Grimoire</h1>
+        </main>
+      </QueryClientProvider>,
+    );
+    await waitFor(() =>
+      expect(screen.getByRole('heading', { level: 1, name: 'Grimoire' })).toHaveFocus(),
+    );
   });
 
   it('shows the service’s refusal of a delete and gives the dots the focus back', async () => {

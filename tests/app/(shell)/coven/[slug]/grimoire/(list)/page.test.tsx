@@ -437,7 +437,7 @@ describe('the spell builder over a Grimoire tab', () => {
     ['owner', 1],
     ['member', 1],
     ['viewer', 0],
-  ] as const)('draws a Delete Spell bin on each card for a coven %s: %i', async (role, count) => {
+  ] as const)('offers Delete in each card’s More menu to a coven %s: %i', async (role, count) => {
     as(role);
     await renderTab(DraftsPage, { query: 'fixture' });
     expect(screen.getAllByRole('link', { name: /^Quick Look / }).length).toBeGreaterThan(0);
@@ -758,24 +758,24 @@ describe('Quick Look over a Grimoire tab', () => {
   });
 
   it.each([
-    ['member', 2],
+    ['member', 1],
     ['viewer', 0],
   ] as const)(
-    'offers Delete Spell on a card and in the open Quick Look to a coven %s: %i',
+    'offers Delete in a card’s More menu to a coven %s, and none in the open Quick Look, which has Edit: %i',
     async (role, count) => {
       as(role);
       await renderTab(SpellsPage, { query: 'fixture', spell: SPELL_ID });
 
       const dialog = screen.getByRole('dialog', { name: 'Fixture Working' });
-      expect(
-        within(dialog).queryAllByRole('button', { name: 'Delete Spell Fixture Working' }),
-      ).toHaveLength(count / 2);
-      // The card’s own Delete Spell sits in its More menu.
+      expect(within(dialog).queryAllByRole('link', { name: 'Edit Fixture Working' })).toHaveLength(
+        count,
+      );
+      expect(within(dialog).queryByRole('button', { name: /^Delete/ })).not.toBeInTheDocument();
       const more = screen.queryAllByRole('button', {
         name: 'More for Fixture Working',
         hidden: true,
       });
-      expect(more).toHaveLength(count / 2);
+      expect(more).toHaveLength(count);
       if (count > 0) {
         press(more[0]!);
         expect(

@@ -150,8 +150,6 @@ export interface SpellLookOpened extends SpellMarksProps {
   recipeHref: Route;
   /** Where Edit Spell opens the spell in the builder, for a role that may update it; none draws no Edit Spell. */
   editHref?: Route;
-  /** What Delete Spell needs, for a role that may delete the spell; none draws no bin. */
-  deleteSpell?: Omit<DeleteSpellActionProps, 'name'>;
   children: ReactNode;
 }
 
@@ -164,7 +162,7 @@ export interface SpellLookDialogProps {
   failed?: boolean;
 }
 
-/** Delete Spell's bin and dialog on the recipe page. */
+/** What deleting a spell needs, from the More menu or the Edit Spell dialog. */
 export interface DeleteSpellActionProps {
   workspaceId: string;
   spellId: string;

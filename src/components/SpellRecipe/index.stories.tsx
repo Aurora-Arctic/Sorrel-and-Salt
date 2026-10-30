@@ -186,14 +186,6 @@ const Look = ({ member }: { member: boolean }) => (
           lastEdit: LAST_EDIT,
           recipeHref: RECIPE,
           editHref: member ? (`${GRIMOIRE}?edit=${FIXTURE_SPELL}` as Route) : undefined,
-          deleteSpell: member
-            ? {
-                workspaceId: FIXTURE_WORKSPACE,
-                spellId: FIXTURE_SPELL,
-                deletedHref: deletedHrefOf(GRIMOIRE, TITLE),
-                visibility: 'workspace',
-              }
-            : undefined,
           children: (
             <SpellRecipeBody
               title={TITLE}

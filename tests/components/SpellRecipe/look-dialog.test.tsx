@@ -1,9 +1,6 @@
-import { QueryClientProvider } from '@tanstack/react-query';
 import { render, screen, within } from '@testing-library/react';
 import type { Route } from 'next';
 import { describe, expect, it, vi } from 'vitest';
-import { makeQueryClient } from '@/lib/graphql-client';
-import { press } from '../../support/interact';
 
 vi.mock('next/navigation', () => ({
   useRouter: () => ({ push: vi.fn(), replace: vi.fn(), refresh: vi.fn() }),
@@ -106,40 +103,6 @@ describe('SpellLookDialog', () => {
     expect(within(foot).getAllByRole('link')).toHaveLength(1);
     expect(foot).not.toContainElement(edit);
     expect(within(dialog()).queryByRole('link', { name: 'Edit Spell' })).toBeNull();
-  });
-
-  it('draws Delete Spell only when given what deleting needs, and it asks in a dialog over the Quick Look', async () => {
-    const { rerender } = render(
-      <RouteModalProvider>
-        <SpellLookDialog closeHref={LIST} opened={OPENED} />
-      </RouteModalProvider>,
-    );
-    expect(
-      within(dialog()).queryByRole('button', { name: /^Delete Spell/ }),
-    ).not.toBeInTheDocument();
-    rerender(
-      <QueryClientProvider client={makeQueryClient()}>
-        <RouteModalProvider>
-          <SpellLookDialog
-            closeHref={LIST}
-            opened={{
-              ...OPENED,
-              deleteSpell: {
-                workspaceId: 'w1',
-                spellId: 's1',
-                deletedHref: '/coven/fixture-coven/grimoire?deleted=Fixture+Working' as Route,
-              },
-            }}
-          />
-        </RouteModalProvider>
-      </QueryClientProvider>,
-    );
-    press(within(dialog()).getByRole('button', { name: 'Delete Spell Fixture Working' }));
-    expect(
-      within(await screen.findByRole('dialog', { name: 'Delete Spell' })).getByText(
-        'Fixture Working',
-      ),
-    ).toBeInTheDocument();
   });
 
   it('says the spell could not be read, in a Notice under the title Spell Recipe, when the read failed', () => {
