@@ -35,3 +35,32 @@ shipped defaults ([`design-decisions/mb.74-better-auth-plugins.md`](../design-de
 - **What staging carries.** Vercel documents all three headers as the
   client's single public address (its "Request headers" reference).
   <!-- MB.76: replace with what staging's requests were observed to carry. -->
+
+## Rules the first-party sign-in routes add (Wave 16)
+
+Email and password, passkeys and two-factor add routes under `/api/auth/*`. The
+limiter counts them the same way, per client address and path, and the rules
+below come from Better Auth's own source (`dist/api/rate-limiter/index.mjs` and
+`dist/plugins/two-factor/index.mjs`, 1.7.12) unless a task is named.
+
+| Route                                                         | Limit              | Where the rule comes from                                                                         |
+| ------------------------------------------------------------- | ------------------ | ------------------------------------------------------------------------------------------------- |
+| `/sign-up/*`, `/change-password`, `/change-email`             | 3 per 10 seconds   | Better Auth's built-in rule, with `/sign-in/*`                                                    |
+| `/request-password-reset`, `/forget-password*`                | 3 per 60 seconds   | Better Auth's built-in rule, with `/send-verification-email`                                      |
+| `/reset-password` and `/reset-password/:token`                | 100 per 10 seconds | No special rule, so the every-other-path default; the token's 15-minute life (M16.3) is its guard |
+| `/two-factor/*`                                               | 3 per 10 seconds   | The `twoFactor` plugin's own rule                                                                 |
+| `/passkey/*`, which includes `/passkey/verify-authentication` | 3 per 10 seconds   | A `customRules` entry M16.7 adds, because the passkey plugin ships no rate rule                   |
+
+A plugin's rule replaces the built-in one for its paths, and an entry in
+`rateLimit.customRules` replaces both. The `haveIBeenPwned` plugin has no rate
+rule of its own and adds no route: it checks inside the routes above, with one
+request to the Have I Been Pwned service per password set.
+
+**The limiter slows an address; the lockout slows an account.** Guessing a
+password from many addresses stays under the per-address count, so M16.5 counts
+failed password sign-ins per account in `sign_in_failures`: 5 failures lock the
+password for 1 minute, 10 for 5 minutes, 20 for 1 hour, and 100 disable it until
+a reset (DESIGN.md §8, "Passwords"). The `twoFactor` plugin also locks an
+account after repeated wrong codes (10 failures for 900 seconds by default,
+`accountLockout` in its options); whether M16.5's count or that one governs wrong
+codes is M16.10's decision.
