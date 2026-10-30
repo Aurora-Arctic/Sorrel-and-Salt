@@ -253,3 +253,20 @@ for (const [name, size] of [
     expect(actions.top).toBeLessThan(title.top + 60);
   });
 }
+
+test('the Workings heading has a Record a Working button that opens the dialog, with or without workings', async ({
+  page,
+}) => {
+  const coven = await seedCoven(page, 'Fixture Coven Record', 'spell-record.test', { A: 'owner' });
+  const { A } = coven.users;
+  const spellId = await withSql((sql) =>
+    insertSpell(sql, coven.id, 'Fixture Record', 'workspace', A, 'complete'),
+  );
+  await signInAgainAs(page, A);
+  await page.goto(`/coven/${coven.slug}/grimoire/${spellId}`);
+  const section = page.getByRole('region', { name: 'Workings' });
+  await expect(section.getByText('This spell has not been worked yet.')).toBeVisible();
+  const button = section.getByRole('button', { name: 'Record a Working' });
+  await button.click();
+  await expect(page.getByRole('dialog', { name: 'Record a Working' })).toBeVisible();
+});

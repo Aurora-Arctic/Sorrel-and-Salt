@@ -82,9 +82,13 @@ const SpellWorkings = ({
   workings,
   completeAction,
   editAction,
+  headingAction,
 }: SpellWorkingsProps): ReactElement => (
   <section id={WORKINGS_ID} className="spell-workings" aria-labelledby="spell-workings-title">
-    <h2 id="spell-workings-title">Workings</h2>
+    <div className="spell-workings__title">
+      <h2 id="spell-workings-title">Workings</h2>
+      {headingAction}
+    </div>
     {workings.length === 0 ? (
       <p className="meta">This spell has not been worked yet.</p>
     ) : (

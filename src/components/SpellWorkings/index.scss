@@ -6,6 +6,17 @@
 .spell-workings {
   margin-top: space(6);
 
+  // The heading with its Record a Working button at its end.
+  &__title {
+    display: flex;
+    align-items: center;
+    gap: space(2);
+
+    h2 {
+      margin: 0;
+    }
+  }
+
   &__list {
     display: grid;
     gap: space(4);
