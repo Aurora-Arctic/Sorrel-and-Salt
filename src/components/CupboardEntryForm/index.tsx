@@ -385,7 +385,6 @@ const CupboardEntryForm = ({
             noun="Annotation"
             dirty={dirty}
             submitting={save.isPending}
-            onCancel={() => void saveForClose().then((saved) => saved && onDone())}
             aside={aside?.({ onRefused: setAlert, dirty, discardAsking: false })}
           >
             <SaveStatus

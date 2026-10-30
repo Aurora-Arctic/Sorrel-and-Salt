@@ -151,9 +151,9 @@ test(
         }
 
         // Untouched, so Escape closes at once, and the focus goes back to the button.
-        // From Cancel, which has no tip: the walk above can end on an ⓘ, whose tip
+        // From Close, which has no tip: the walk above can end on an ⓘ, whose tip
         // opens on focus and takes the first Escape for itself (info-tip.md).
-        await dialog.getByRole('button', { name: 'Cancel' }).focus();
+        await dialog.getByRole('button', { name: 'Close', exact: true }).focus();
         await page.keyboard.press('Escape');
         await expect(dialog).toHaveCount(0);
         await expect(page).not.toHaveURL(/[?&]new/);

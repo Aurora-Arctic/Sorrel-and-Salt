@@ -40,7 +40,7 @@ export default function EntryDialog({
         opened &&
         entry && {
           heading: editHeading(entry, editEyebrow(edit)),
-          body: (done) =>
+          body: () =>
             coven ? (
               <IngredientForm
                 key={opened.id}
@@ -59,7 +59,6 @@ export default function EntryDialog({
                   navigate(deletedHref, { replace: true });
                   refresh();
                 }}
-                onCancel={done}
                 duplicateHref={(match) => `${coven.ingredientsHref}/${match.id}`}
                 // Only a compendium entry has a page by its slug.
                 entryHref={({ slug, isGlobal }) => (isGlobal ? publicAddress(slug) : undefined)}
@@ -83,7 +82,6 @@ export default function EntryDialog({
                 }}
                 // Not `done`, which would go back to this page: it is gone.
                 onDeleted={() => navigate(deletedHref, { replace: true })}
-                onCancel={done}
                 duplicateHref={({ slug }) => publicAddress(slug)}
                 // A linked substitute's summary opens its entry in a new tab, every substitute here
                 // being a compendium entry.

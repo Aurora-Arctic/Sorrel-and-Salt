@@ -235,6 +235,13 @@ describe('AnnotateDialog: Make It Ours and Remove', () => {
     expect(within(asked(OURS)).getByRole('alert')).toHaveTextContent(UNSAVED_CHANGES_LOST);
   });
 
+  it("has no Cancel button of its own, only the dialog's Close", () => {
+    renderDialog();
+
+    expect(within(dialog()).queryByRole('button', { name: 'Cancel' })).toBeNull();
+    expect(within(dialog()).getByRole('button', { name: 'Close' })).toBeInTheDocument();
+  });
+
   // The form autosaves, so Close saves what is unsaved instead of asking.
   it("saves the form's unsaved changes on Close and closes", async () => {
     const calls: unknown[] = [];
