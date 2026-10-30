@@ -128,11 +128,10 @@
   }
 }
 
-// The Impersonate column: the shared dangerous-action column (`row-action-column`), red since it
-// acts as someone else. Still sticky with the admin column at 80rem, since the frame scrolls only
-// from about 77rem of table.
+// The Impersonate column, pinned right on the neutral rule (`sticky-action-column`). Still sticky
+// with the admin column at 80rem, since the frame scrolls only from about 77rem of table.
 .user-list__impersonate {
-  @include row-action-column($sticky-column-layer);
+  @include sticky-action-column($sticky-column-layer);
 }
 
 // The creation cell: the Yes or No on the left, the control that changes it

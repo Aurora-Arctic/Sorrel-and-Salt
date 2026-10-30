@@ -916,35 +916,6 @@ $-entry-tablet: calc(#{$shell-tablet-width} + 0.01rem);
   }
 }
 
-// A stacking table's dangerous row action as a column of its own (Impersonate, Remove): the pinned
-// column of `sticky-action-column` in red, with a red hairline, faded red tint and red text. The
-// tint is mixed into the band it sits on, so it stays opaque.
-@mixin row-action-column($layer: 1) {
-  @include sticky-action-column($layer) {
-    // A hairline, as the headings' rule is: the red marks it, not the weight.
-    box-shadow: inset 1px 0 0 $secondary;
-    background-color: color-mix(in srgb, $secondary 6%, $surface-page);
-    color: $secondary;
-
-    @at-root .data-table tbody tr:nth-child(even) #{&} {
-      // 5% rather than 6%: the dark card is lighter, and at 6% the wax label
-      // falls to 4.48:1, under the text floor (tests/scss/tokens.test.ts).
-      background-color: color-mix(in srgb, $secondary 5%, $surface-card);
-    }
-
-    // Its heading's hairline red too, where every other column's is the muted
-    // ink; scoped past the primitive's own `thead th` rule. Drawn as a shadow, which travels
-    // with the cell as the left hairline does; the collapsed grey border beneath it, which stays
-    // put as the columns scroll, is made transparent so only the red shows.
-    @at-root .data-table thead th#{&} {
-      border-bottom-color: transparent;
-      box-shadow:
-        inset 1px 0 0 $secondary,
-        inset 0 -1px 0 $secondary;
-    }
-  }
-}
-
 // A square icon control, a pencil or a ×: no text, a WCAG 2.2 target around
 // its mark, in the muted ink until pointed at or focused. `$icon-size`
 // around `$glyph-size` by default; a list row's pencil takes the large pair

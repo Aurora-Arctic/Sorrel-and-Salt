@@ -34,7 +34,7 @@ The long form of `CLAUDE.md`'s components and styling convention. `CLAUDE.md` wi
 
 ## Destructive controls
 
-- **A thing's Delete or Remove lives in its edit dialog, where it has one**: nowhere on its row or card, and not in its Quick Look, as a bin or as a button beside Edit. A thing with no edit dialog keeps a lone bin that asks before it acts. A More menu that already holds other choices may list Delete or Remove among them, asking in place (claude-docs/components/icon-tip.md, "The controls built on it"; claude-docs/components/coven-cards.md).
+- **A thing's Delete or Remove lives in its edit dialog, where it has one**: nowhere on its row or card, and not in its Quick Look, as a bin or as a button beside Edit. A thing with no edit dialog keeps a lone bin that asks before it acts. The rule is about a lone bin on a row or card: a More menu that already holds other choices may still list Delete or Remove among them, asking in place (claude-docs/components/icon-tip.md, "The controls built on it"; claude-docs/components/coven-cards.md).
 - **A row's Remove or Revoke is drawn plain** (`btn btn--quiet btn--small`), as the row's other controls are. The red is the confirm's own: the button that carries the act out, in the question that names the thing (claude-docs/components/member-list.md).
 
 ## Copy
