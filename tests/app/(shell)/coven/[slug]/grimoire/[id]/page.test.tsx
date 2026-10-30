@@ -236,6 +236,19 @@ describe('the spell recipe page', () => {
       ).toBeInTheDocument();
     });
 
+    it('gives a member the Delete Spell bin in the edit dialog, and a viewer, who gets no dialog, none', async () => {
+      as('member');
+      readSpell.mockResolvedValue(SAVED);
+      const { unmount } = await draw(SPELL_ID, { edit: SPELL_ID });
+      expect(
+        screen.getByRole('button', { name: 'Delete Spell Fixture Working' }),
+      ).toBeInTheDocument();
+      unmount();
+      as('viewer');
+      await draw(SPELL_ID, { edit: SPELL_ID });
+      expect(screen.queryByRole('button', { name: /^Delete Spell/ })).not.toBeInTheDocument();
+    });
+
     it('shows a viewer no Edit link and opens no dialog under ?edit, though they read the same spell', async () => {
       as('viewer');
       await draw(SPELL_ID, { edit: SPELL_ID });

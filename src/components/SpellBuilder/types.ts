@@ -122,6 +122,8 @@ export interface SpellDialogProps {
   canCreate: boolean;
   /** Whether this member may delete a spell (`spell: delete`); the builder then has a Delete. */
   canDelete?: boolean;
+  /** Where a delete leaves for, when not `closeHref`: the recipe page, which the deleted spell's own address cannot stay on. */
+  deletedFromHref?: Route;
   /** Whether this member may create a spell (`spell: create`); the builder of a complete spell then has a Duplicate. */
   canDuplicate?: boolean;
   /** The signed-in member; the builder keeps its browser copy of a draft under this id. */
