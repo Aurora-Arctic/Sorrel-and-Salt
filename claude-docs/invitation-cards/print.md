@@ -41,7 +41,7 @@ The front also carries the QR code on the right and the salt picture behind it. 
 
 **The back** carries the wordmark, a sentence about the site, and `BY INVITATION ONLY.`, with the sorrel picture at the top right.
 
-**A headline never runs to three lines.** `layout.ts` breaks every headline itself, as CSS `text-wrap: balance` does, measuring with the embedded font's own advances and kerning, and never relies on a renderer's wrapping. At 52 px all nine headlines fit in two lines or fewer. The tightest line is "Three Times", at 289.5 of 290 px. `headline.test.ts` holds every headline in `FRONT_COPY` to two lines at the size the builder uses, so a headline added later that needs three lines fails the test.
+**A headline never runs to three lines.** `layout.ts` breaks every headline itself, as CSS `text-wrap: balance` does, measuring with the embedded font's own advances and kerning, and never relies on a renderer's wrapping. The owner approved the headlines at 52 px with these measured line breaks after seeing the rendered sample cards, and the size is final. At 52 px all nine headlines fit in two lines or fewer. The tightest line is "Three Times", at 289.5 of 290 px. `headline.test.ts` holds every headline in `FRONT_COPY` to two lines at the size the builder uses, so a headline added later that needs three lines fails the test.
 
 **Text is placed as the browser places it.** Line heights and baselines follow CSS's half-leading rule. Kerning goes into each line as a PDF `TJ` array, and letter spacing as the `Tc` operator.
 
@@ -63,7 +63,7 @@ A PDF has no CSS mask, so the script writes the canvas's edge fade into each pic
 
 Both are below the 300 dpi usual for print. They are soft, low-contrast pictures behind the text, so the shortfall shows less than it would on a sharp picture. A sharper card needs larger source illustrations.
 
-The salt's right and bottom edges sit on the trim. A neighbouring card therefore shows the salt only if the cut lands off the line.
+The salt sits where the canvas's `Main` artboard puts it: in the artboard's bottom-right corner, its right and bottom edges 1/8 in past the trim. Every picture on a sheet is drawn before any card's words or QR code, and the only clip is the block's outer edge. So the card beside and the card below each show a strip of salt under their words, and a card on the block's edge keeps that strip in the bleed, which the guillotine cuts away. `pdf.test.ts` pins the salt to that corner.
 
 ## Fonts
 

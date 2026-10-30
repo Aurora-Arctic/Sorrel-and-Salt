@@ -118,6 +118,7 @@
     "drizzle-kit": "^0.31.11",
     "github-slugger": "^2.0.0",
     "happy-dom": "21.0.4",
+    "jsqr": "^1.4.0",
     "lighthouse": "13.6.0",
     "lint-staged": "^17.6.0",
     "monocart-coverage-reports": "^3.1.0",

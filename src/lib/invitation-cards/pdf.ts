@@ -1,4 +1,4 @@
-import * as fontkit from '@pdf-lib/fontkit';
+import * as fontkitModule from '@pdf-lib/fontkit';
 import {
   appendBezierCurve,
   beginText,
@@ -261,6 +261,10 @@ function drawPage(
   ops.push(popGraphicsState(), ...cropMarkOperators(), popGraphicsState());
   page.pushOperators(...ops);
 }
+// The browser bundle gives the ES build's API on `default` only; Node's gives it on the namespace.
+const fontkit = (
+  'default' in fontkitModule ? fontkitModule.default : fontkitModule
+) as typeof fontkitModule;
 
 async function embedAssets(doc: PDFDocument, assets: CardAssets): Promise<Embedded> {
   doc.registerFontkit(fontkit);
