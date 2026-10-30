@@ -48,9 +48,10 @@ import { draftOf, sourceTierOf } from './values';
 /**
  * What the form holds of a source: its id and tier, its full citation, and the fields its short
  * form is made from. One fragment for the search and the panel's two saves. Defined before its
- * first use, as codegen reads the documents in order.
+ * first use, as codegen reads the documents in order. Called bare: codegen reads the text, and the
+ * queries spread it by name.
  */
-const ReferenceRowFragment = graphql(`
+graphql(`
   fragment ReferenceRow on Reference {
     id
     citation

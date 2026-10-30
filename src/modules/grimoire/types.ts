@@ -8,19 +8,15 @@ import type {
 import type { NotDeductedReason } from './plan-deductions';
 import type { IngredientVariantRow } from '@/modules/ingredients';
 import type { spellSteps } from './schema/spell-steps';
-import type { GRIMOIRE_ORDERS, spells } from './schema/spells';
+import type { spells } from './schema/spells';
 import type { z } from 'zod';
 import type {
   SpellInput as SpellInputSchema,
   UpdateSpellInput as UpdateSpellInputSchema,
 } from './validation/spell';
-import type { SpellStepInput as SpellRecipeStepSchema } from './validation/spell-step';
 
 /** `'draft' | 'complete'`, read off the column rather than restated. */
 export type SpellStatus = (typeof spells.$inferSelect)['status'];
-
-/** How a grimoire page is ordered: `'UPDATED_DESC' | 'CREATED_DESC' | 'TITLE_ASC'`. */
-export type GrimoireOrder = (typeof GRIMOIRE_ORDERS)[number];
 
 /** `'private' | 'workspace'`, read off the column rather than restated. */
 export type SpellVisibility = (typeof spells.$inferSelect)['visibility'];
@@ -38,9 +34,6 @@ export type SpellInput = z.input<typeof SpellInputSchema>;
 
 /** A save of a spell: the same fields, each left out unchanged, and the revision it was written against (null overwrites). */
 export type SpellUpdate = z.input<typeof UpdateSpellInputSchema>;
-
-/** One step of a recipe as a save sends it: a saved one names its `id`. */
-export type SpellRecipeStep = z.input<typeof SpellRecipeStepSchema>;
 
 /** A step `addSpellStep` adds: a one-off ingredient or an instruction. A linked ingredient is written by a save. */
 export type SpellStepInput = {

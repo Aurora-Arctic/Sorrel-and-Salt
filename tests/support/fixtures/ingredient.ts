@@ -13,20 +13,6 @@ import type {
 // test.
 
 /**
- * §5's seven values, in its order, written out because `nomenclatureKind.enumValues` is a runtime drizzle-orm
- * import; `Nomenclature` is the table's, so a value missing here is a type error.
- */
-const NOMENCLATURE_KINDS = [
-  'botanical',
-  'fungal',
-  'zoological',
-  'mineral',
-  'chemical',
-  'unknown',
-  'none',
-] as const satisfies readonly Nomenclature[];
-
-/**
  * The formal name each nomenclature comes with: `null` for `none`, which must not have one under
  * `ingredients_nomenclature_declares_canonical_name`, and for `unknown`, which may go either way.
  * Every name is invented (CLAUDE.md, Testing); ingredient.test.ts checks them against the seed as a backstop.

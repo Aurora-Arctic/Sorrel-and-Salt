@@ -17,10 +17,4 @@ export * from './loaders/member-emails';
 export * from './loaders/memberships-by-user';
 export * from './graphql/invitations';
 export * from './graphql/workspace';
-export type {
-  CovenMembership,
-  MemberEmail,
-  MembershipWithWorkspace,
-  WorkspaceRole,
-  WorkspaceRow,
-} from './types';
+export type { CovenMembership, WorkspaceRole, WorkspaceRow } from './types';

@@ -11,7 +11,7 @@
     "lighthouse:seo": "node scripts/lighthouse-seo.mjs",
     "lint": "oxlint . && npm run lint:css",
     "lint:css": "stylelint \"src/**/*.scss\" \".storybook/**/*.scss\"",
-    "lint:unused": "knip --no-progress",
+    "lint:unused": "DATABASE_URL=${DATABASE_URL:-postgres://knip:knip@localhost:5432/knip} knip --no-progress",
     "lint:fix": "oxlint . --fix",
     "format": "prettier --write .",
     "format:check": "prettier --check .",
