@@ -78,6 +78,8 @@ export function BuilderStepRow({
   const focusOnOpen = useRef(false);
   const sortable = useSortable({ id });
   const unit = `steps.${index}.unit` as const;
+  // The one name the handle, the pencil and Remove all give the row, as the drag messages say it:
+  // an ingredient with its form, an instruction by its opening words.
   const name = stepNameOf(step);
   const instruction = isInstruction(step);
   const safety = safetyOf(step);
@@ -188,7 +190,7 @@ export function BuilderStepRow({
           // One disclosure button in one place (second design review): the pencil while the row is
           // closed, the up chevron, light, once it is open. It keeps the focus when it flips.
           className={['step-row__edit', open && 'step-row__edit--close'].filter(Boolean).join(' ')}
-          aria-label={`${open ? 'Close' : 'Edit'} ${instruction ? `step ${index + 1}` : step.name}`}
+          aria-label={`${open ? 'Close' : 'Edit'} ${name}`}
           aria-expanded={open}
           aria-controls={fieldsId}
           onClick={() => {
@@ -254,7 +256,7 @@ export function BuilderStepRow({
           <button
             type="button"
             className="step-row__remove"
-            aria-label={instruction ? `Remove step ${index + 1}` : `Remove ${step.name}`}
+            aria-label={`Remove ${name}`}
             onClick={onRemove}
           >
             {/* The × a variant card's Remove is, so the row keeps its width for the name. */}

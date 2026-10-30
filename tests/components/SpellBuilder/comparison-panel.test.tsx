@@ -294,7 +294,7 @@ describe('the panel in the builder', () => {
     );
     expect(row('Missing')).toHaveTextContent('Testward');
 
-    fireEvent.click(screen.getByRole('button', { name: 'Remove Fixture Rosewort' }));
+    fireEvent.click(screen.getByRole('button', { name: 'Remove Fixture Rosewort (Dried Leaf)' }));
     await waitFor(() => expect(row('Extra')).toBeNull());
     expect(row('Missing')).toHaveTextContent('Testward');
   });
