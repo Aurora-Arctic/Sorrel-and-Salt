@@ -23,6 +23,7 @@ export * from './services/workspace-creation';
 export * from './graphql/user';
 export * from './graphql/co-member';
 export * from './graphql/invitations';
+export * from './graphql/invitation-cards';
 export * from './graphql/privilege-changes';
 export * from './loaders/providers-by-user';
 export * from './loaders/users-by-id';

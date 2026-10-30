@@ -1,4 +1,4 @@
-import { InvitationRef } from '@/modules/identity';
+import { InvitationCardRef, InvitationRef } from '@/modules/identity';
 import { builder } from '../../../graphql/builder';
 import { sessionOf } from '../../../graphql/context-helpers';
 import { createInvitation, revokeWorkspaceInvitation } from '../services/invitations';
@@ -66,5 +66,19 @@ builder.mutationField('revokeInvitation', (t) =>
     authScopes: { signedIn: true },
     resolve: (_root, { workspaceId, id }, context) =>
       revokeWorkspaceInvitation(sessionOf(context), workspaceId, id),
+  }),
+);
+
+// On `InvitationCard` from here, as `Invitation.workspace` is: identity may import no module. A site admin reads which
+// covens an account belongs to, by name and role only (the same read as `User.memberships`).
+builder.objectField(InvitationCardRef, 'ownedCovens', (t) =>
+  t.field({
+    type: [WorkspaceRef],
+    description: 'The covens the accepting account owns now; empty while the card is unaccepted.',
+    resolve: async (card, _args, { loaders }) => {
+      if (!card.acceptedBy) return [];
+      const seats = await loaders.membershipsByUser.load(card.acceptedBy);
+      return seats.filter((seat) => seat.role === 'owner').map((seat) => seat.workspace);
+    },
   }),
 );

@@ -748,9 +748,55 @@ type Invitation {
 }
 
 """
+An invitation card bound to no address, coven or role. Its token is never answered.
+"""
+type InvitationCard {
+  acceptedAt: DateTime
+
+  """
+  The account that accepted it; null while it is unaccepted or the account is gone.
+  """
+  account: User
+  audit: AuditInfo!
+
+  """The mint that made it, shared by the whole batch."""
+  batchId: ID!
+  expiresAt: DateTime!
+  id: ID!
+
+  """
+  The covens the accepting account owns now; empty while the card is unaccepted.
+  """
+  ownedCovens: [Workspace!]!
+  revokedAt: DateTime
+  state: InvitationCardState!
+}
+
+"""
+Where a card stands now: an accepted card stays accepted whatever became of its date.
+"""
+enum InvitationCardState {
+  accepted
+  expired
+  pending
+  revoked
+}
+
+"""
 A local date string (i.e., with no associated timezone) in `YYYY-MM-DD` format, e.g. `2020-01-01`.
 """
 scalar LocalDate
+
+"""
+A batch just minted. The tokens are answered this once, to the admin who minted it, and are stored nowhere.
+"""
+type MintedInvitationCards {
+  batchId: ID!
+  expiresAt: DateTime!
+
+  """One token per card, in no order that matters."""
+  tokens: [String!]!
+}
 
 type Mutation {
   """
@@ -819,6 +865,11 @@ type Mutation {
   Invites an address into a coven as a viewer or member, mailing it the link; answers the invitation, never the link. Owners only.
   """
   createInvitation(email: String!, role: InvitableRole!, workspaceId: ID!): Invitation!
+
+  """
+  Mints `count` cards sharing one batch and one expiry, and answers each token once. Site admins only; a batch holds at most 500.
+  """
+  createInvitationCards(count: Int!, expiresAt: DateTime!): MintedInvitationCards!
 
   """A null workspaceId writes the compendium's, under the admin proof."""
   createReference(input: ReferenceInput!, workspaceId: ID): Reference!
@@ -948,6 +999,14 @@ type Mutation {
   Withdraws a pending invitation of a coven, so its link says so; the row is kept. Refused for an invitation already accepted, which is a member to remove. Owners only.
   """
   revokeInvitation(id: ID!, workspaceId: ID!): Invitation!
+
+  """Withdraws one pending card. Site admins only."""
+  revokeInvitationCard(id: ID!): InvitationCard!
+
+  """
+  Withdraws every pending card of a batch, answering the cards it withdrew. Site admins only.
+  """
+  revokeInvitationCardBatch(batchId: ID!): [InvitationCard!]!
 
   """
   Stops a user creating covens; those they own stay theirs. Refused for an admin, and for a user who cannot.
@@ -1142,6 +1201,16 @@ enum PrivilegeRoute {
 
 type Query {
   """
+  The accepted cards, newest first: each with the account that arrived by it. Site admins only.
+  """
+  cardArrivals(after: String, before: String, first: Int, last: Int): QueryCardArrivalsConnection!
+
+  """
+  Every arrival as CSV text: account name, email, accepted date and batch. Site admins only.
+  """
+  cardArrivalsCsv: String!
+
+  """
   The live categories by name, each under a live group: those whose name holds `query`, case-insensitively, and those filed under `groupId`, when given.
   """
   categories(after: String, before: String, first: Int, groupId: ID, last: Int, query: String): QueryCategoriesConnection!
@@ -1308,6 +1377,11 @@ type Query {
     query: String
     workspaceId: ID!
   ): QueryIngredientSuggestionsConnection!
+
+  """
+  Every card in any state, newest first, optionally one batch. Site admins only.
+  """
+  invitationCards(after: String, batchId: ID, before: String, first: Int, last: Int): QueryInvitationCardsConnection!
   me: User!
   ok: Boolean!
   possibleDuplicates(after: String, before: String, first: Int, last: Int, name: String!, workspaceId: ID): QueryPossibleDuplicatesConnection!
@@ -1455,6 +1529,16 @@ type Query {
   """
   zodiacSigns(after: String, before: String, first: Int, last: Int, query: String): QueryZodiacSignsConnection!
   zodiacSuggestions(after: String, before: String, first: Int, last: Int, query: String, workspaceId: ID): QueryZodiacSuggestionsConnection!
+}
+
+type QueryCardArrivalsConnection {
+  edges: [QueryCardArrivalsConnectionEdge!]!
+  pageInfo: PageInfo!
+}
+
+type QueryCardArrivalsConnectionEdge {
+  cursor: String!
+  node: InvitationCard!
 }
 
 type QueryCategoriesConnection {
@@ -1640,6 +1724,16 @@ type QueryIngredientSuggestionsConnectionEdge {
   """
   group: SuggestionGroup!
   node: Ingredient!
+}
+
+type QueryInvitationCardsConnection {
+  edges: [QueryInvitationCardsConnectionEdge!]!
+  pageInfo: PageInfo!
+}
+
+type QueryInvitationCardsConnectionEdge {
+  cursor: String!
+  node: InvitationCard!
 }
 
 type QueryPossibleDuplicatesConnection {
