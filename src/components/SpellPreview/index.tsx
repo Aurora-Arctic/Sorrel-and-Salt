@@ -200,7 +200,11 @@ export default function SpellPreview(props: SpellPreviewProps): ReactElement {
             <h2 id={titleId} className="spell-preview__title">
               {title}
             </h2>
-            <SpellRecipeBody {...props} beforeSteps={<SpellRecipeSummary steps={steps} />} />
+            <SpellRecipeBody
+              {...props}
+              level={3}
+              beforeSteps={<SpellRecipeSummary steps={steps} level={3} />}
+            />
           </div>
         )}
       </dialog>

@@ -80,7 +80,7 @@ export function SpellStatusField({
         type="button"
         className="btn btn--quiet"
         busy={busy}
-        busyLabel="Copying"
+        busyLabel="Duplicating"
         disabled={busy}
         onClick={copy}
       >

@@ -160,6 +160,15 @@ describe('SpellPreview', () => {
     expect(screen.queryByText('Keeps the hearth warm.')).toBeNull();
   });
 
+  it("draws Steps and Ingredients one level below the pane's h2 title", () => {
+    render(onPage());
+    press(opener());
+    const dialog = pane();
+    expect(within(dialog).getByRole('heading', { level: 2, name: 'Fixture Working' })).toBeTruthy();
+    expect(within(dialog).getByRole('heading', { level: 3, name: 'Steps' })).toBeTruthy();
+    expect(within(dialog).getByRole('heading', { level: 3, name: 'Ingredients' })).toBeTruthy();
+  });
+
   it('opens a pane of everything the printed spell shows, and no controls but Close', () => {
     render(onPage());
     press(opener());

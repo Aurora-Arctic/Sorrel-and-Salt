@@ -241,7 +241,7 @@ spell; the service refuses complete to draft too.
   database's `spells_complete_has_title` check (M13.15). Focus goes to the title.
 - **Autosave:** Mark Complete sets the status, then flushes the autosave, so the one save it
   sends carries the status and every unsaved change. Duplicate flushes the same way before it
-  copies.
+  copies, and shows itself busy as Duplicating until the copy opens, so a second press cannot run.
 - **The list** shows status already: the Drafts tab, and a Draft badge on each
   draft's card (M10.11).
 - The stock check's `unitConvert` refusals are shown as text by the stock

@@ -234,6 +234,7 @@ export async function grimoireTab({
                     moonPhase={looked.spell.moonPhase}
                     dayOfWeek={looked.spell.dayOfWeek}
                     steps={looked.recipe.steps}
+                    level={3}
                   />
                 ),
               }

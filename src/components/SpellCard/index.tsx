@@ -6,6 +6,7 @@ import LastEdit from '../LastEdit';
 import { EditLink, QuickLookLink } from '../IconTip';
 import LinkHint from '../LinkHint';
 import RecordWorkingButton from '../RecordWorking';
+import SpellMarks from '../SpellMarks';
 import SpellMoreMenu from '../SpellRecipe/more-menu';
 import type { SpellCardProps } from './types';
 import './index.scss';
@@ -75,17 +76,8 @@ const SpellCard = ({
               <span className="spell-card__title-text">{name}</span>
             )}
           </Heading>
-          {/* Only a draft is marked: complete is the default, so a Complete badge would
-              say nothing. Likewise only a private spell: the
-              coven is the default, and a private one lists to its author alone, so
-              the badge tells them no one else sees it. Under the title, as the
-              marks sit under an ingredient card's name. */}
-          {(status === 'draft' || visibility === 'private') && (
-            <div className="specimen__badges">
-              {status === 'draft' && <span className="badge badge--draft">Draft</span>}
-              {visibility === 'private' && <span className="badge badge--private">Private</span>}
-            </div>
-          )}
+          {/* Under the title, as the marks sit under an ingredient card's name. */}
+          <SpellMarks status={status} visibility={visibility} />
         </div>
       </div>
       {purpose !== '' && <p className="spell-card__intent">{purpose}</p>}

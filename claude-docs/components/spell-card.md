@@ -102,7 +102,7 @@ the address, and closing returns there with focus back on the eye. What the moda
 
 The layout is the Foundations specimen (`.specimen` in `_primitives.scss`). The card is
 IngredientCard's sibling (the owner's request, 2026-10-28): the same surface, shadow, radius,
-padding, title size, medium badges and category chips. The Draft and Private badges sit under
+padding, title size, medium badges and category chips. The Draft and Private badges are drawn by `SpellMarks` ([spell-marks.md](spell-marks.md)) and sit under
 the title as an ingredient card's marks sit under its name, the last-edit line is in the foot,
 and the hover is the same tint and lifted shadow plus the smoulder below, with no drawer.
 Tokens only. The rules the two cards share come from `IngredientCard/_specimen-card.scss`:

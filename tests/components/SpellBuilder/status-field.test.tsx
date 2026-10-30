@@ -144,6 +144,19 @@ describe('SpellBuilder status', () => {
       expect(calls).toEqual([{ workspaceId: 'w1', id: 's3' }]);
     });
 
+    it('shows itself busy as Duplicating until the copy opens, so a second cannot run', async () => {
+      mockGraphQLMutation<DuplicateSpellMutation, DuplicateSpellMutationVariables>(
+        'DuplicateSpell',
+        () => ({ duplicateSpell: { id: 'copy-1' } }),
+      );
+      renderBuilder({ spell: complete, copiedHrefOf });
+
+      fireEvent.click(screen.getByRole('button', { name: 'Duplicate' }));
+
+      const busy = await screen.findByRole('button', { name: 'Duplicating' });
+      expect(busy).toHaveAttribute('aria-busy', 'true');
+    });
+
     it('is not drawn for a draft, nor where the member may not create a spell', () => {
       const draft = renderBuilder({ spell: SPELL, copiedHrefOf });
       expect(screen.queryByRole('button', { name: 'Duplicate' })).toBeNull();
