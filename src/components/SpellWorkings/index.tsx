@@ -44,7 +44,8 @@ const Working = ({
         </div>
         <div className="spell-workings__actions">
           {showsComplete && completeAction?.(working.id)}
-          {working.editable && editAction?.(working.editable, day, showsComplete)}
+          {working.editable &&
+            editAction?.(working.editable, day, showsComplete, working.canChange)}
           {working.canChange && (
             <DeleteWorkingAction workspaceId={workspaceId} workingId={working.id} name={day} />
           )}

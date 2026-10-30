@@ -40,8 +40,13 @@ export interface SpellWorkingsProps {
   headingAction?: ReactNode;
   /** The control that completes a draft working, drawn on the draft rows the viewer may change (those carrying `editable`). */
   completeAction?: (workingId: string) => ReactNode;
-  /** The pencil that opens the Edit dialog on a working, drawn on the rows that carry `editable`; `plain` is true on a row that also shows Complete, where the pencil wears the text ink. */
-  editAction?: (working: EditableWorking, name: string, plain: boolean) => ReactNode;
+  /** The pencil that opens the Edit dialog on a working, drawn on the rows that carry `editable`; `plain` is true on a row that also shows Complete, where the pencil wears the text ink; `canDelete` is whether the viewer may delete it, which the Edit dialog's bin follows. */
+  editAction?: (
+    working: EditableWorking,
+    name: string,
+    plain: boolean,
+    canDelete: boolean,
+  ) => ReactNode;
 }
 
 export interface DeleteWorkingActionProps {

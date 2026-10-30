@@ -252,6 +252,24 @@ describe('Edit Working', () => {
     await waitFor(() => expect(onClose).toHaveBeenCalled());
   });
 
+  it('draws no Delete Working when recording a new working', () => {
+    render(
+      wrap(
+        <RecordWorkingDialog
+          workspaceId={WORKSPACE}
+          spellId={SPELL}
+          spellVisibility="workspace"
+          members={MEMBERS}
+          steps={STEPS}
+          deleteWorking={{ name: '1 October 2026', remove: () => Promise.resolve() }}
+          onClose={() => {}}
+        />,
+      ),
+    );
+    expect(screen.getByRole('dialog', { name: 'Record a Working' })).toBeInTheDocument();
+    expect(within(dialog()).queryByRole('button', { name: /^Delete Working/ })).toBeNull();
+  });
+
   it('keeps a shared complete working shared', () => {
     render(
       wrap(

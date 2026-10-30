@@ -21,6 +21,28 @@ export const DeleteWorkingDocument = graphql(`
   }
 `);
 
+/** The Delete Working write; the page is read again once it lands, so the row and the card's count drop the working. */
+export function useDeleteWorking({
+  workspaceId,
+  workingId,
+}: Pick<DeleteWorkingActionProps, 'workspaceId' | 'workingId'>) {
+  const { refresh } = usePendingNavigation();
+  return useMutation({
+    mutationFn: () => graphqlRequest(DeleteWorkingDocument, { id: workingId, workspaceId }),
+    onSuccess: refresh,
+  });
+}
+
+/** The question naming the working by its day, asked by the row's dialog and by the Edit dialog. */
+export function DeleteWorkingQuestion({ name }: { name: string }): ReactElement {
+  return (
+    <>
+      Delete the working of <strong>{name}</strong>? It is removed from the spell&rsquo;s history
+      and from the count. What it took from the jars stays taken.
+    </>
+  );
+}
+
 export default function DeleteWorkingAction({
   workspaceId,
   workingId,
@@ -37,18 +59,7 @@ export default function DeleteWorkingAction({
     },
     [anchorRef],
   );
-  const { refresh } = usePendingNavigation();
-  const remove = useMutation({
-    mutationFn: () => graphqlRequest(DeleteWorkingDocument, { id: workingId, workspaceId }),
-    onSuccess: () => {
-      setAsking(false);
-      refresh();
-    },
-    onError: (error) => {
-      setAsking(false);
-      feedback.report(readGraphqlFailure(error).alert ?? GENERIC_FAILURE);
-    },
-  });
+  const remove = useDeleteWorking({ workspaceId, workingId });
 
   return (
     <>
@@ -71,8 +82,7 @@ export default function DeleteWorkingAction({
           {(close) => (
             <>
               <p>
-                Delete the working of <strong>{name}</strong>? It is removed from the spell&rsquo;s
-                history and from the count. What it took from the jars stays taken.
+                <DeleteWorkingQuestion name={name} />
               </p>
               <div className="modal__actions">
                 <BusyButton
@@ -80,7 +90,15 @@ export default function DeleteWorkingAction({
                   busy={remove.isPending}
                   busyLabel="Deleting"
                   disabled={remove.isPending}
-                  onClick={() => remove.mutate()}
+                  onClick={() =>
+                    remove.mutate(undefined, {
+                      onSuccess: () => setAsking(false),
+                      onError: (error) => {
+                        setAsking(false);
+                        feedback.report(readGraphqlFailure(error).alert ?? GENERIC_FAILURE);
+                      },
+                    })
+                  }
                 >
                   Delete
                 </BusyButton>

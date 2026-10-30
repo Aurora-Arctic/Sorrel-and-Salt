@@ -35,6 +35,8 @@ Working", calls `updateWorking` and closes on Save. Only the recorder or a membe
 refuses anyone else), and a complete working that is shared holds the switch on and shut, since a
 complete working's visibility only widens.
 
+With `working` and a `deleteWorking` prop (`{ name, remove }`), the form also draws a bin named "Delete Working <date>" beside the Save buttons. It asks the same question as the row bin (`DeleteWorkingQuestion`, in `SpellWorkings/delete-working.tsx`) through `ConfirmQuestion`, runs `remove` (the shared `useDeleteWorking` mutation), then closes. The form no longer counts as changed once it is removed, so closing does not ask to discard it. `EditWorkingAction` passes `deleteWorking` only when the row's `canChange` is true, and a new working never has one.
+
 ## Completing a working
 
 `WorkingCompletion` reads `workingDeductionPreview` afresh each time it opens and lists the spell's

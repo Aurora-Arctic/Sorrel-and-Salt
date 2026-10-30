@@ -210,3 +210,68 @@ describe('SpellWorkings', () => {
     await waitFor(() => expect(router.refresh).toHaveBeenCalled());
   });
 });
+
+describe('Delete Working in the Edit dialog', () => {
+  const editable: WorkingView['editable'] = {
+    id: 'w1',
+    workedOn: '2026-03-04',
+    note: null,
+    visibility: 'workspace',
+    status: 'complete',
+    participants: [],
+  };
+  const bin = async () =>
+    within(await screen.findByRole('dialog', { name: 'Edit Working' })).queryByRole('button', {
+      name: /^Delete Working/,
+    });
+  function renderEditable(canChange: boolean) {
+    renderSection(
+      [working({ id: 'w1', canChange, editable })],
+      undefined,
+      (working, name, plain, canDelete) => (
+        <EditWorkingAction
+          name={name}
+          plain={plain}
+          canDelete={canDelete}
+          workspaceId={WORKSPACE_ID}
+          spellId="s1"
+          spellVisibility="workspace"
+          members={[]}
+          steps={[]}
+          working={working}
+        />
+      ),
+    );
+    press(screen.getByRole('button', { name: /^Edit Working/ }));
+  }
+
+  it('is drawn for a viewer who may delete the working', async () => {
+    renderEditable(true);
+    expect(await bin()).toBeInTheDocument();
+  });
+
+  it('is not drawn for a viewer who may only edit the working', async () => {
+    renderEditable(false);
+    expect(await bin()).toBeNull();
+  });
+
+  it('asks first, then deletes the working and closes the dialog', async () => {
+    const calls: DeleteWorkingMutationVariables[] = [];
+    mockGraphQLMutation<DeleteWorkingMutation, DeleteWorkingMutationVariables>(
+      'DeleteWorking',
+      (variables) => {
+        calls.push(variables);
+        return { deleteWorking: String(variables.id) };
+      },
+    );
+    renderEditable(true);
+    press((await bin())!);
+    const question = (await screen.findByRole('button', { name: 'Keep It' })).closest('fieldset')!;
+    expect(question).toHaveTextContent(/stays taken/);
+    expect(calls).toHaveLength(0);
+    press(within(question).getByRole('button', { name: 'Delete' }));
+    await waitFor(() => expect(calls).toEqual([{ id: 'w1', workspaceId: WORKSPACE_ID }]));
+    await waitFor(() => expect(screen.queryByRole('dialog', { name: 'Edit Working' })).toBeNull());
+    expect(router.refresh).toHaveBeenCalled();
+  });
+});
