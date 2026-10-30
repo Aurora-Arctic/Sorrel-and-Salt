@@ -94,6 +94,15 @@ The client half is `passkeyClient()` in `src/lib/auth-client.ts`, which adds
   `canCreateWorkspace`, change the role or add a seat, and it cannot create
   an account: a passkey is added only by an account that is already signed
   in.
+- **The last way in stays (M16.8).** The plugin's rename and remove
+  (`/passkey/update-passkey`, `/passkey/delete-passkey`) take a passkey id
+  and refuse one the session's account does not own. A `hooks.before` check
+  in `src/lib/auth.ts` (`keepAWayIn`) also refuses removing the account's
+  only passkey, with `LAST_SIGN_IN_METHOD`, when the account has no provider
+  and no password: it would leave no way to sign in. Another account's id
+  passes the check untouched and the plugin refuses it
+  (`tests/db/passkey-account.test.ts`). The account page's list is
+  [`components/passkeys.md`](../components/passkeys.md).
 - **Rate limit.** The plugin ships no rate rule, so `rateLimit.customRules`
   sets `/passkey/*` to three per ten seconds (["Rate limiting"](rate-limiting.md)).
 

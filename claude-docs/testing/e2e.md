@@ -380,10 +380,11 @@ container job sets `HOME` to a directory the image never saw.
 A browser offers WebAuthn only in a secure context, and the one plain-http
 host that counts as one is `localhost`. Every other spec reaches its slot
 server at `devcontainer:<port>` when the browser is remote, where
-`PublicKeyCredential` is undefined. So `tests/e2e/stories/73-passkeys.spec.ts`
-reaches its slot server at `localhost` in two ways:
+`PublicKeyCredential` is undefined. So the passkey stories (`73-passkeys.spec.ts`
+and `74-passkeys-on-the-account-page.spec.ts`, sharing `passkeys-setup.ts`)
+reach their slot server at `localhost` in two ways:
 
-- **The browser.** The spec connects to the browser server with
+- **The browser.** Each spec connects to the browser server with
   `exposeNetwork: '<loopback>'`, which routes the remote browser's
   `localhost` back to the runner, and overrides the `baseURL` fixture with
   `serverUrl(slotPort(slot))`.
@@ -406,6 +407,11 @@ with `WebAuthn.addCredential`, rpID `localhost`, so the sign-in is the
 browser's own ceremony against the server's own verification. CDP is
 Chromium's alone, so these stories do not run in the audit's WebKit and
 Firefox projects.
+
+Story 74 signs in that way, then clears the authenticator's credentials
+(`WebAuthn.clearCredentials`) before Add a Passkey: a registration lists the
+account's existing keys as excluded, and an authenticator holding one of them
+refuses to make another.
 
 #### The audit runs the suite in WebKit, Firefox and as a phone, on demand
 
