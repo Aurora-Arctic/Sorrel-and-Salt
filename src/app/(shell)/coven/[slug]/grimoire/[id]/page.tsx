@@ -204,6 +204,7 @@ export default async function SpellRecipePage({ params, searchParams }: SpellRec
                 spellId={spell.id}
                 name={name}
                 deletedHref={deletedHref}
+                visibility={spell.visibility}
                 canDuplicate={canDuplicate}
                 canDelete={canDelete}
                 canPrint

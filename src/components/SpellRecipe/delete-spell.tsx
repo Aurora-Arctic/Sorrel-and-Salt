@@ -12,6 +12,7 @@ import { useClickFeedback } from '../ClickFeedback';
 import { BinButton } from '../IconTip';
 import Modal from '../Modal';
 import type { DeleteSpellActionProps } from './types';
+import type { SpellVisibility } from '@/modules/grimoire';
 
 // Delete Spell: the bin beside the Edit pencil, which asks in a dialog naming the spell before
 // `deleteSpell` runs. Confirmed, the page leaves for the grimoire list, replacing the history
@@ -56,12 +57,14 @@ export function useDeleteSpell({
 /** The question naming the spell, which gives the focus to `returnTo()` once it closes. */
 export function DeleteSpellDialog({
   name,
+  visibility,
   pending,
   onConfirm,
   onClose,
   returnTo,
 }: {
   name: string;
+  visibility?: SpellVisibility;
   pending: boolean;
   onConfirm: () => void;
   onClose: () => void;
@@ -72,7 +75,10 @@ export function DeleteSpellDialog({
       {(close) => (
         <>
           <p>
-            Delete <strong>{name}</strong>? It leaves the grimoire for every member of the coven.
+            Delete <strong>{name}</strong>?{' '}
+            {visibility === 'workspace'
+              ? 'It leaves the grimoire for every member of the coven.'
+              : 'It is gone for good.'}{' '}
             Nothing in stock changes.
           </p>
           <div className="modal__actions">
@@ -100,6 +106,7 @@ export default function DeleteSpellAction({
   spellId,
   name,
   deletedHref,
+  visibility,
 }: DeleteSpellActionProps): ReactElement {
   const [asking, setAsking] = useState(false);
   // The bin, where the focus goes back to once the dialog closes; once the delete has led
@@ -137,6 +144,7 @@ export default function DeleteSpellAction({
       {asking && (
         <DeleteSpellDialog
           name={name}
+          visibility={visibility}
           pending={pending}
           onConfirm={() => remove()}
           onClose={() => setAsking(false)}

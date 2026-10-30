@@ -162,6 +162,8 @@ export interface DeleteSpellActionProps {
   name: string;
   /** The grimoire tab the page leaves for, with what was deleted in its address. */
   deletedHref: Route;
+  /** Who loses the spell: the question names the coven only for a shared one, and left out says neither. */
+  visibility?: SpellVisibility;
 }
 
 /** The recipe page's three dots: Duplicate for a role that may create a spell, Delete Spell for one that may delete. */

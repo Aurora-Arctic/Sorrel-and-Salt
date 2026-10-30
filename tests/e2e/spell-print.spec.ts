@@ -11,7 +11,7 @@ import {
   withSql,
 } from './stories/coven-ingredients';
 
-// The spell recipe page's print layout (M10.22): a Print menu item any role can choose, and
+// The spell recipe page's print layout (M10.22): Print for any role, its own button for a viewer, and
 // under print media a one-page sheet with the Ingredients summary, the steps, formal names on shared
 // labels, and none of the page's controls or the shell's bar.
 
@@ -39,11 +39,12 @@ test('a viewer prints a one-page recipe with the summary beside the steps and no
   await signInAgainAs(page, C);
   await page.goto(`/coven/${coven.slug}/grimoire/${spellId}`);
 
-  // On screen: the menu is there for a viewer, reachable by keyboard, and Print in it prints.
-  const more = page.getByRole('button', { name: /^More for/ });
-  await expect(more).toBeVisible();
-  await more.focus();
-  await expect(more).toBeFocused();
+  // On screen: a viewer's Print is its own button, not a menu of one, and the keyboard reaches it.
+  await expect(page.getByRole('button', { name: /^More for/ })).toHaveCount(0);
+  const print = page.getByRole('button', { name: 'Print Fixture Working' });
+  await expect(print).toBeVisible();
+  await print.focus();
+  await expect(print).toBeFocused();
   await page.evaluate(() => {
     (window as unknown as { printed: number }).printed = 0;
     window.print = () => {
@@ -51,12 +52,11 @@ test('a viewer prints a one-page recipe with the summary beside the steps and no
     };
   });
   await page.keyboard.press('Enter');
-  await page.getByRole('menuitem', { name: 'Print' }).click();
   expect(await page.evaluate(() => (window as unknown as { printed: number }).printed)).toBe(1);
 
   // In print: the controls and the shell's bar are gone, the summary shows the formal names.
   await page.emulateMedia({ media: 'print' });
-  await expect(more).toBeHidden();
+  await expect(print).toBeHidden();
   await expect(page.getByRole('banner')).toBeHidden();
   await expect(page.getByRole('link', { name: /Back to Grimoire/ })).toBeHidden();
   const summary = page.getByRole('list', { name: 'Ingredients' });

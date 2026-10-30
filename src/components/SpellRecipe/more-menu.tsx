@@ -7,12 +7,13 @@ import type { MenuButtonItem } from '../MenuButton/types';
 import { copiedHrefOf } from './copied-href';
 import { DeleteSpellDialog, useDeleteSpell } from './delete-spell';
 import { useDuplicateSpell } from './duplicate-spell';
+import PrintButton from './print-button';
 import type { SpellMoreMenuProps } from './types';
 
 // The three dots on the recipe page and on a spell's card: Duplicate, which makes a private draft copy and
 // leaves for it, Print (the page's alone), which opens the browser's print dialog, and Delete Spell,
-// which asks in a dialog first. A menu with nothing in it is not drawn
-// (claude-docs/components/spell-recipe.md, "Duplicate", "Print" and "Delete Spell").
+// which asks in a dialog first. Print alone is its own button rather than a menu of one, and a
+// menu with nothing in it is not drawn (claude-docs/components/spell-recipe.md, "Duplicate", "Print" and "Delete Spell").
 
 export default function SpellMoreMenu({
   workspaceId,
@@ -23,6 +24,7 @@ export default function SpellMoreMenu({
   canDuplicate,
   canDelete,
   canPrint,
+  visibility,
 }: SpellMoreMenuProps): ReactElement | null {
   const [asking, setAsking] = useState(false);
   // The dots, where the focus goes back to once the dialog closes; once the delete has led away
@@ -37,7 +39,7 @@ export default function SpellMoreMenu({
     },
     [anchorRef],
   );
-  const { duplicate } = useDuplicateSpell(
+  const { duplicate, duplicating } = useDuplicateSpell(
     workspaceId,
     (id) => copiedHrefOf(covenSlug, id),
     feedback.report,
@@ -80,13 +82,21 @@ export default function SpellMoreMenu({
   ];
 
   if (items.length === 0) return null;
+  if (items.length === 1 && items[0]!.key === 'print') return <PrintButton name={name} />;
   return (
     <>
-      <MoreMenu ref={triggerRef} name={name} items={items} />
+      <MoreMenu
+        ref={triggerRef}
+        name={name}
+        items={items}
+        busy={duplicating}
+        busyLabel="Duplicating"
+      />
       {feedback.feedback}
       {asking && (
         <DeleteSpellDialog
           name={name}
+          visibility={visibility}
           pending={pending}
           onConfirm={() => remove()}
           onClose={() => setAsking(false)}
