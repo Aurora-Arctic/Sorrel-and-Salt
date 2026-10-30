@@ -44,17 +44,20 @@ const norm = (id) => canonical.get(id.toUpperCase()) ?? id.toUpperCase();
 //   branch  `Merge pull request #156 from org/feature/m2.6-build-…`
 //   lead    `M2.4/M2.5/M0.27 — OAuth provider wiring…`
 //   tail    `Stop branch skills setting the base branch as upstream (MB.13)`
+// A tail names exactly one id, and only an id with a heading in the breakdown:
+// a list of ids (`(M10.22, MB.6, MB.123)`) marks every task a doc edit touched,
+// and a bracketed code that is no task (`(P9)`) would count as a task at 0h.
 const BRANCH = /from [^/\s]+\/(?:feature|hotfix)\/(?:backlog-)?(m[a-z]*[0-9]*(?:\.[a-z0-9]+)+?)-/i;
 const LEAD = new RegExp(String.raw`^((?:${ID})(?:\s*/\s*${ID})*)\s+[—-]\s`);
-const TAIL = new RegExp(String.raw`\(((?:${ID})(?:\s*[,/]\s*${ID})*)\)\s*$`);
+const TAIL = new RegExp(String.raw`\((${ID})\)\s*$`);
 const done = new Set();
 for (const subject of git('log', ref, '--format=%s').split('\n')) {
   const b = BRANCH.exec(subject);
   if (b) done.add(norm(b[1]));
-  for (const re of [LEAD, TAIL]) {
-    const m = re.exec(subject);
-    if (m) for (const id of m[1].split(/\s*[,/]\s*/)) done.add(norm(id));
-  }
+  const l = LEAD.exec(subject);
+  if (l) for (const id of l[1].split(/\s*[,/]\s*/)) done.add(norm(id));
+  const t = TAIL.exec(subject);
+  if (t && plan.has(norm(t[1]))) done.add(norm(t[1]));
 }
 
 // Completed without a commit that names them in one of the three forms above —
