@@ -36,8 +36,8 @@ const BASE = {
 };
 
 // Everything the grimoire's list gives a member who may record, edit and delete: the title
-// link, the made count, the last edit, and the foot's Quick Look eye, Record a Working, the
-// Edit pencil and the More menu.
+// link, the made count, the last edit (its tip opens on hover), and the foot's Quick Look eye,
+// Record a Working, the Edit pencil and the More menu, whose items are Duplicate and Delete.
 const LISTED = {
   href: route('/coven/fixture-coven/grimoire/story'),
   lookHref: route('/coven/fixture-coven/grimoire?spell=story'),

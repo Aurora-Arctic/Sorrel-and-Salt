@@ -199,5 +199,6 @@ Draft, Untitled, No Intent, No Categories, Made Once, Made Several Times, Edited
 Long Title, Held (the finished hovered look, drawn with no pointer), Hover It (a card at rest to
 hover), Compact and Compact Private Draft (each under `data-density="compact"`).
 
-The foot's buttons open their dialogs, but nothing they write is answered in this story; Record
-a Working's own story answers its writes.
+Every cell with a last edit opens the line's tip on hover. The More menu's items are the bare
+verbs Duplicate and Delete; the card has no Print. The foot's buttons open their dialogs, but
+nothing they write is answered in this story; Record a Working's own story answers its writes.
