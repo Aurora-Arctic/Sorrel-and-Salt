@@ -39,8 +39,7 @@ complete working's visibility only widens.
 
 `WorkingCompletion` reads `workingDeductionPreview` afresh each time it opens and lists the spell's
 ingredient steps in order, one line each, as the jar the recipe page's In Coven Inventory draws, both through `JarLine`
-([`jar-line.md`](jar-line.md): the drawing, the `jar-shelf__jar--low|out|empty` paint, the press, the shake and the growing name) beside "n. Name", n being
-the step's place among all the recipe's steps, and these words:
+([`jar-line.md`](jar-line.md): the drawing, the `jar-shelf__jar--low|out|empty` paint, the press, the shake and the growing name) beside the step's name (no step number), and these words:
 
 - A take: "takes X · have Y · left Z", all in the jar's unit, with "short by N" in the warning colour
   when the jar cannot cover it. `have` is what the jar held before this line's take, so two lines on

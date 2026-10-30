@@ -166,7 +166,7 @@ describe('recipeStepsOf', () => {
 });
 
 describe('workingStepsOf', () => {
-  it('numbers each ingredient by its place among all the steps and hands each its jar door', () => {
+  it('hands each its jar door', () => {
     const door = { ingredientName: 'Testwort' } as never;
     const steps = workingStepsOf(
       [
@@ -181,7 +181,6 @@ describe('workingStepsOf', () => {
       {
         id: 'step-a',
         name: 'Testwort',
-        number: 2,
         form: 'dried leaf',
         seed: 'a',
         oneOff: false,
@@ -190,7 +189,6 @@ describe('workingStepsOf', () => {
       {
         id: 'o',
         name: 'Oddment',
-        number: 3,
         form: 'ash',
         seed: 'Oddment',
         oneOff: true,

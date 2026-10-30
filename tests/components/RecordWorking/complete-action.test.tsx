@@ -33,10 +33,10 @@ const STOCK: StockDialogProps = {
   openOn: 'v1',
 };
 const STEPS = [
-  { id: 's1', name: 'Testwort', number: 1, form: 'leaf', seed: 'ing1' },
-  { id: 's2', name: 'Mockroot', number: 3, form: null, seed: 'ing2' },
-  { id: 's3', name: 'Fixtureleaf', number: 4, form: 'oil', seed: 'ing3' },
-  { id: 's4', name: 'Oddment', number: 5, form: null, seed: 'Oddment', oneOff: true },
+  { id: 's1', name: 'Testwort', form: 'leaf', seed: 'ing1' },
+  { id: 's2', name: 'Mockroot', form: null, seed: 'ing2' },
+  { id: 's3', name: 'Fixtureleaf', form: 'oil', seed: 'ing3' },
+  { id: 's4', name: 'Oddment', form: null, seed: 'Oddment', oneOff: true },
 ];
 const WARNINGS = [
   { position: 2, reason: 'UNITS_DIFFER' as const, stepId: 's2', stepName: 'Mockroot' },
@@ -87,19 +87,22 @@ function open(steps: readonly WorkingStep[] = STEPS) {
 }
 
 describe('Complete on a working', () => {
-  it('lists each step by its number with what is taken, held and left, or why nothing is', async () => {
+  it('lists each step by its name, with no step number, with what is taken, held and left, or why nothing is', async () => {
     open();
     const list = await screen.findByRole('list', { name: 'Deductions' });
     const rows = within(list).getAllByRole('listitem');
     expect(rows).toHaveLength(4);
-    expect(rows[0]).toHaveTextContent('1. Testwort');
+    // The line's name is the step's name alone: a number before it would stop this matching.
+    for (const [i, name] of ['Testwort', 'Mockroot', 'Fixtureleaf', 'Oddment'].entries())
+      expect(within(rows[i]!).getByText(name, { exact: true })).toBeVisible();
+    expect(rows[0]).toHaveTextContent(/^Testwort/);
     expect(rows[0]).toHaveTextContent('takes 2 g · have 10 g · left 8 g');
-    expect(rows[1]).toHaveTextContent('3. Mockroot');
+    expect(rows[1]).toHaveTextContent(/^Mockroot/);
     expect(rows[1]).toHaveTextContent('units differ · takes nothing');
-    expect(rows[2]).toHaveTextContent('4. Fixtureleaf');
+    expect(rows[2]).toHaveTextContent(/^Fixtureleaf/);
     expect(rows[2]).toHaveTextContent('takes 5 ml · have 3.5 ml · left 0 ml');
     expect(rows[2]).toHaveTextContent('short by 1.5 ml');
-    expect(rows[3]).toHaveTextContent('5. Oddment');
+    expect(rows[3]).toHaveTextContent(/^Oddment/);
     expect(rows[3]).toHaveTextContent('one-off · not kept');
   });
 
