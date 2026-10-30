@@ -6,6 +6,7 @@ import EditWorkingAction from '@/components/SpellWorkings/edit-working';
 import type { SpellWorkingsProps, WorkingView } from '@/components/SpellWorkings/types';
 import type { DeleteWorkingMutation, DeleteWorkingMutationVariables } from '@/gql/graphql';
 import { makeQueryClient } from '@/lib/graphql-client';
+import { answer } from '../../support/discard-guard';
 import { press } from '../../support/interact';
 import { mockGraphQLMutation } from '../../support/msw/graphql';
 
@@ -300,7 +301,7 @@ describe('Delete Working in the Edit dialog', () => {
     );
     renderEditable(true);
     press((await bin())!);
-    const question = (await screen.findByRole('button', { name: 'Keep It' })).closest('fieldset')!;
+    const question = (await waitFor(() => answer('Cancel'))).closest('fieldset')!;
     expect(question).toHaveTextContent(/stays taken/);
     expect(calls).toHaveLength(0);
     press(within(question).getByRole('button', { name: 'Delete' }));
