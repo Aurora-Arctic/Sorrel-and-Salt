@@ -163,7 +163,7 @@ describe('a save that does not get through', () => {
     type('Name', 'Mockwort');
     await wait(30000);
 
-    expect(await screen.findByText(/Couldn.t save\./)).toBeInTheDocument();
+    expect(await screen.findByText(/Could not save\./)).toBeInTheDocument();
     expect(
       readMirror(mirrorKey({ entity: 'ingredient', id: ENTRY_ID, userId: USER })),
     ).not.toBeNull();
@@ -177,7 +177,7 @@ describe('a save that does not get through', () => {
         readMirror(mirrorKey({ entity: 'ingredient', id: ENTRY_ID, userId: USER })),
       ).toBeNull(),
     );
-    expect(screen.queryByText(/Couldn.t save\./)).toBeNull();
+    expect(screen.queryByText(/Could not save\./)).toBeNull();
   });
 });
 

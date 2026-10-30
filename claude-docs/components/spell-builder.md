@@ -46,7 +46,7 @@ most while typing, with the status (`SaveStatus`) beside Save. Every way of
 saving (the autosave, Save, Close, Mark Complete and Share) goes through one
 function, `persist` in `index.tsx`, which checks the form, calls
 `saveSpell` (`autosave.ts`) and rebases the form on the answer. A refusal
-skips the engine's retries, so the status stops at "Couldn't save" with Retry.
+skips the engine's retries, so the status stops at "Could not save" with Retry.
 Save flushes at once, is off when nothing is unsaved, and spins while saving.
 The autosave is held back while a step's unit is refused or a saved spell's
 steps are still being read.
@@ -559,7 +559,7 @@ The row's own look, the card, is in [`step-row.md`](step-row.md), "The card".
 `index.stories.tsx`, titled "Grimoire / Spell Builder": `States`, with a
 control that chooses Empty, Title Typed, Saved Spell (shared with the coven,
 its visibility shut), Private Spell, Share Question, Phase Outside the List
-or Refused After Saving (the status reads Couldn't save, with Retry), each in its `SpellDialog` over the app shell, with
+or Refused After Saving (the status reads Could not save, with Retry), each in its `SpellDialog` over the app shell, with
 Open Again to look once more after Close.
 
 ## Testing

@@ -407,7 +407,7 @@ describe('the spell builder’s Add to Jar', () => {
     submit();
 
     await waitFor(() =>
-      expect(name()).toHaveAccessibleDescription('This ingredient is already in the jar'),
+      expect(name()).toHaveAccessibleDescription('This ingredient is already in the jar.'),
     );
   });
 

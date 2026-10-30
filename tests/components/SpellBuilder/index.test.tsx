@@ -318,7 +318,7 @@ describe('SpellBuilder', () => {
     );
     // Only the save status speaks; no notice repeats the field’s error.
     expect(
-      screen.queryAllByRole('alert').filter((a) => !/Couldn.t save/.test(a.textContent ?? '')),
+      screen.queryAllByRole('alert').filter((a) => !/Could not save/.test(a.textContent ?? '')),
     ).toEqual([]);
     expect(save()).toBeEnabled();
   });

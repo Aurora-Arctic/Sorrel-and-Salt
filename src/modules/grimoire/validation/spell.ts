@@ -78,7 +78,7 @@ function distinctSteps(spell: { steps?: StepIdentity[] }, context: z.RefinementC
     }
     if (step.ingredientId == null && step.name != null) {
       const name = step.name.toLowerCase();
-      if (seen.name.has(name)) flag(index, 'name', 'This ingredient is already in the jar');
+      if (seen.name.has(name)) flag(index, 'name', 'This ingredient is already in the jar.');
       seen.name.add(name);
     }
   });

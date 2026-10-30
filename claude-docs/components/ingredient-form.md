@@ -1424,7 +1424,7 @@ parses the sent input with that schema to show it.
 
 ## Autosave
 
-The form saves itself (M13.24), through `useAutosave` ([`autosave.md`](autosave.md)): 3 s after the last change, and at least every 30 s while changes keep coming. `SaveStatus` sits beside the main button and shows Saving, Saved, "Couldn't save." with Retry, or the conflict notice.
+The form saves itself (M13.24), through `useAutosave` ([`autosave.md`](autosave.md)): 3 s after the last change, and at least every 30 s while changes keep coming. `SaveStatus` sits beside the main button and shows Saving, Saved, "Could not save." with Retry, or the conflict notice.
 
 - **A new ingredient is created at its first save, once it has a name.** The coven gate is the display name; a "none" or "unknown" entry has no formal name, so the name alone opens the gate. The create returns the row's id, slug and revision, the form keeps them, and every later save is an update that sends `expectedRevision`. The host moves the address (`onCreated`): see [`modal.md`](modal.md#add-ingredient) for the coven dialog and the compendium dialog.
 - **A new entry with near-duplicate matches showing is not autosaved** until the matches are dismissed or the name changes (`heldBack` in `values.ts`).
@@ -1434,7 +1434,7 @@ The form saves itself (M13.24), through `useAutosave` ([`autosave.md`](autosave.
 - **The blur flush is held while Save is submitting.** Pressing Save disables the button, which moves focus out of the form; the form stops that focusout reaching the autosave until the submit ends, so the autosave cannot create the row before Save has asked about duplicates.
 - **`persist` reads whether the write created the row.** The write itself records that it created the row, so the id is handed to `onCreated` only by the write that made it, even when a queued write ran first.
 - **Conflict.** Another tab's save makes this one's refused with "This ingredient was changed elsewhere." **Reload Latest** reloads the page (or calls `onReload`); **Keep My Version** sends the form over the newer revision.
-- **Offline.** A failed save retries after 2, 5 and 15 s, then shows "Couldn't save." with Retry. The form stays in the local mirror, which Retry clears when the save lands. A reopened form with a mirror newer than the row shows the recovery banner, `RecoveryNotice` ([`save-status.md`](save-status.md)), with Keep and Discard.
+- **Offline.** A failed save retries after 2, 5 and 15 s, then shows "Could not save." with Retry. The form stays in the local mirror, which Retry clears when the save lands. A reopened form with a mirror newer than the row shows the recovery banner, `RecoveryNotice` ([`save-status.md`](save-status.md)), with Keep and Discard.
 - **No Discard question.** The form no longer uses the unsaved-changes guard: Close saves first ([`modal.md`](modal.md#unsaved-changes)). Older passages here that describe Discard Changes for this form are out of date. A viewer's form has no autosave and writes nothing.
 
 ## After a save

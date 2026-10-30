@@ -209,7 +209,7 @@ describe('the spell builder’s saves', () => {
     // Nothing was sent, and nothing is said.
     expect(updated).toHaveLength(0);
     expect(screen.queryByText('Write the instruction, or remove it')).toBeNull();
-    expect(screen.queryByText(/Couldn.t save/i)).toBeNull();
+    expect(screen.queryByText(/Could not save/i)).toBeNull();
 
     fireEvent.click(save());
     expect(await screen.findByText('Write the instruction, or remove it')).toBeInTheDocument();

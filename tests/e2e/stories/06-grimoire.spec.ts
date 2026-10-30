@@ -987,7 +987,7 @@ test(
     // Offline, the save fails after its retries and says so; back online, Retry saves it.
     await reopened.getByRole('textbox', { name: 'Intent' }).fill('To see clearly, offline');
     await page.context().setOffline(true);
-    await expect(reopened.getByText(/Couldn.t save/)).toBeVisible({ timeout: 45_000 });
+    await expect(reopened.getByText(/Could not save/)).toBeVisible({ timeout: 45_000 });
     await page.context().setOffline(false);
     await reopened.getByRole('button', { name: 'Retry' }).click();
     await expect(reopened.getByRole('status').filter({ hasText: /^Draft saved/ })).toBeVisible();

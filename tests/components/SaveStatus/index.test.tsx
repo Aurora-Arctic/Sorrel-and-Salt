@@ -59,7 +59,7 @@ describe('SaveStatus', () => {
     expect(screen.getByRole('status')).toHaveTextContent('Saved 2:05 pm');
   });
 
-  it('shows Couldn’t save with Retry as an alert that stays until a save succeeds', () => {
+  it('shows Could not save with Retry as an alert that stays until a save succeeds', () => {
     const { update, onRetry } = setup({ status: 'saved', savedAt: at(2) });
 
     update({ status: 'failed' });

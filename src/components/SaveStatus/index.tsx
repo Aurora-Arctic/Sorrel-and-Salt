@@ -89,7 +89,7 @@ const SaveStatus = ({
         conflict
       ) : next.failing ? (
         <Notice kind="warn" block className="save-status__failed">
-          <span>Couldn&rsquo;t save.</span>
+          <span>Could not save.</span>
           <button
             type="button"
             className="btn btn--small"
