@@ -25,6 +25,7 @@ import { displayNamesOf } from '@/modules/identity';
 import { readRecipeOf } from '../recipe-read';
 import { workingStepsOf } from '../[id]/recipe-steps';
 import { readStepSuppliesOf } from '../[id]/recipe-supply';
+import { FORMER_MEMBER } from '../[id]/workings-read';
 import type { SpellDialogSpell } from '@/components/SpellBuilder/types';
 
 // The grimoire tab's read, twin of the Ingredients page's `reads.ts`. Read through the services as
@@ -152,7 +153,7 @@ export const readGrimoireCategoryCounts = cache(
 /**
  * How many spells each Moon Phase, Day of Week, Visibility and Coven Member holds under the
  * filter: one grouped read each, dropping its own picks so another can be added. Makers are named
- * in one `displayNamesOf` batch; one the viewer cannot name reads Unknown Member.
+ * in one `displayNamesOf` batch; one the viewer cannot name reads A former member.
  */
 export const readGrimoireFacetCounts = cache(
   async (workspaceId: string, variables: string, status: SpellStatus) => {
@@ -175,7 +176,7 @@ export const readGrimoireFacetCounts = cache(
       makers: makers.map((value, i) => ({
         // One the viewer cannot name is still offered, unnamed, so its spells can be filtered.
         value,
-        label: names[i] ?? 'Unknown Member',
+        label: names[i] ?? FORMER_MEMBER,
         count: counted.get(value) ?? 0,
       })),
     };
@@ -243,7 +244,7 @@ export async function readRecordingOf(
     }),
   );
   return {
-    members: roster.map(({ userId }, i) => ({ userId, name: names[i] ?? 'A former member' })),
+    members: roster.map(({ userId }, i) => ({ userId, name: names[i] ?? FORMER_MEMBER })),
     stepsById,
   };
 }

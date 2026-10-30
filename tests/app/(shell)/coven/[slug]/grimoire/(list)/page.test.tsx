@@ -307,7 +307,7 @@ describe('the Grimoire tabs', () => {
     expect(edited('Testwort Charm')).toHaveAccessibleDescription('Last edited on 1 September 2026');
   });
 
-  it('offers a maker the viewer cannot name as Unknown Member, so the facet is never empty of them', async () => {
+  it('offers a maker the viewer cannot name as A former member, so the facet is never empty of them', async () => {
     const STRANGER = '00000000-0000-4000-8000-0000000000bb';
     countGrimoireFacets.mockResolvedValue({
       moonPhases: [],
@@ -323,7 +323,7 @@ describe('the Grimoire tabs', () => {
     const { makers } = await readGrimoireFacetCounts(COVEN.id, '{}', 'complete');
     expect(makers).toEqual([
       { value: MAKER, label: 'Fixture Maker', count: 3 },
-      { value: STRANGER, label: 'Unknown Member', count: 52 },
+      { value: STRANGER, label: 'A former member', count: 52 },
     ]);
   });
 
