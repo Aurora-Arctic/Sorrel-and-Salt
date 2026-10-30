@@ -85,8 +85,15 @@ Remove: removal needs no credentials.
 "Remove &lt;Provider&gt;" is offered only while two or more are linked and
 the session is fresh. Better Auth refuses the last one anyway
 (`allowUnlinkingAll` is pinned off), so the rule only keeps the page honest,
-and the last row's greyed Remove says why in its description. It calls
-`unlinkAccount({ accountId })`. On success the row leaves the component's own
+and the last row's greyed Remove says why in its description. Remove asks
+first, in a modal titled Remove Sign-In Method: "Remove **&lt;Provider&gt;**
+from your sign-in methods? You can no longer sign in with it until you add it
+again.", the provider in bold with no quotes, over a red Remove and Cancel
+(the confirm shape every destructive question takes). Cancel sends nothing
+and gives the focus back to the row's Remove. The dialog's Remove calls
+`unlinkAccount({ accountId })` and stays open, busy, until the answer; then
+it closes, and the focus goes back to the row's control, the Add that
+replaced the Remove on a success. On success the row leaves the component's own
 copy of the list and the provider's Add returns, which is what is seen; the
 page's status region says "&lt;Provider&gt; was removed from your sign-in
 methods." (`announce`, [`click-feedback.md`](click-feedback.md), M12.31). There is no reload, so a list changed in another tab shows only
@@ -95,7 +102,7 @@ after one. On a refusal the error's `code` goes through
 `SESSION_NOT_FRESH` (the session grew stale while the page was open, or in
 another tab: sign in again), or the generic sentence, which a dropped
 connection also takes. The refusal is a callout under the Remove that
-stayed, the focus left on it. While a removal is in flight every other
+stayed, the focus back on it. While a removal is in flight every other
 Remove is `disabled`, so two cannot race to leave none; the pressed one is
 `aria-disabled` instead, so it keeps the focus, and refuses a second press
 itself. `.btn` greys out under
