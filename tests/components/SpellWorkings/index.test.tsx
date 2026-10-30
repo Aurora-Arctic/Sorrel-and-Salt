@@ -31,7 +31,7 @@ const working = (over: Partial<WorkingView> & Pick<WorkingView, 'id'>): WorkingV
 
 function renderSection(
   workings: WorkingView[],
-  complete?: (id: string) => React.ReactNode,
+  complete?: SpellWorkingsProps['completeAction'],
   edit?: SpellWorkingsProps['editAction'],
   headingAction?: React.ReactNode,
 ) {
@@ -152,6 +152,40 @@ describe('SpellWorkings', () => {
     );
     expect(screen.getAllByRole('button', { name: /^Complete / })).toHaveLength(1);
     expect(within(rows()[0]!).getByRole('button', { name: 'Complete w1' })).toBeInTheDocument();
+  });
+
+  it('hands Complete the day it names, so two drafts have two different Complete buttons', () => {
+    const own = (id: string, workedOn: string): WorkingView['editable'] => ({
+      id,
+      workedOn,
+      note: null,
+      visibility: 'workspace',
+      status: 'draft',
+      participants: [],
+    });
+    renderSection(
+      [
+        working({
+          id: 'w1',
+          status: 'draft',
+          workedOn: '2026-03-04',
+          editable: own('w1', '2026-03-04'),
+        }),
+        working({
+          id: 'w2',
+          status: 'draft',
+          workedOn: '2026-03-01',
+          editable: own('w2', '2026-03-01'),
+        }),
+      ],
+      (_id, _workedOn, name) => <button type="button">Complete Working {name}</button>,
+    );
+    expect(
+      within(rows()[0]!).getByRole('button', { name: 'Complete Working 4 March 2026' }),
+    ).toBeInTheDocument();
+    expect(
+      within(rows()[1]!).getByRole('button', { name: 'Complete Working 1 March 2026' }),
+    ).toBeInTheDocument();
   });
 
   it("takes the Edit pencil's ink from the text only on a row that shows Complete", () => {

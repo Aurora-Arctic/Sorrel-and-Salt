@@ -24,8 +24,8 @@ in the spell's step order. They carry no step number: the recipe above says wher
 
 The slots a row takes from the page:
 
-- `completeAction(workingId)`: Complete on a draft row that carries `editable`, so on a draft the viewer recorded or is named on. The page passes lane M13.7's
-  `CompleteWorkingAction` (`@/components/RecordWorking/complete-action`).
+- `completeAction(workingId, workedOn, name)`: Complete on a draft row that carries `editable`, so on a draft the viewer recorded or is named on. `name` is the row's day in words, as the pencil and the bin have it. The page passes
+  `CompleteWorkingAction` (`@/components/RecordWorking/complete-action`), named "Complete Working <date>" so two drafts' buttons are told apart.
 - `editAction(editable, name)`: the pencil (`edit-working.tsx`, `EditWorkingAction`), drawn on rows that carry `editable`, which `readWorkingsOf` gives to the recorder, or a member named on the working, whose role may update workings. It opens Record a Working on that working ("Edit Working"), and the pencil is named "Edit Working <date>" like the bin; and the focus returns to the pencil on close. On a row that also shows Complete the pencil takes the text ink (`icon-tip__edit--plain`, through `editAction`'s `plain`); Complete stays green.
 - Delete Working, a bin and a confirmation dialog (`delete-working.tsx`), drawn when the working's
   `canChange` is true: the viewer's role may delete and the viewer is the recorder. The same mutation and question (`useDeleteWorking`, `DeleteWorkingQuestion`) serve the bin in the Edit Working dialog; `editAction` receives `canChange` as its fourth argument for it.

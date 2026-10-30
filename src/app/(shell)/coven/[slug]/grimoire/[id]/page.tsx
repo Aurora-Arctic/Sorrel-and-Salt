@@ -151,8 +151,9 @@ export default async function SpellRecipePage({ params, searchParams }: SpellRec
               workspaceId={workspace.id}
               workings={workings}
               headingAction={canRecord ? recordButton : undefined}
-              completeAction={(workingId, workedOn) => (
+              completeAction={(workingId, workedOn, name) => (
                 <CompleteWorkingAction
+                  label={`Complete Working ${name}`}
                   workspaceId={workspace.id}
                   spellId={spell.id}
                   workingId={workingId}

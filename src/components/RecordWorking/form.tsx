@@ -10,7 +10,7 @@ import type { Failure } from '../../lib/types';
 import Combobox, { ComboboxEntry } from '../Combobox';
 import DateField from '../DateField';
 import { FieldError, FieldShell, FormActions, VisibilitySwitch, fieldDescription } from '../Field';
-import IconTip, { BinButton } from '../IconTip';
+import { BinButton } from '../IconTip';
 import { ConfirmQuestion, DiscardQuestion, useDiscardGuard } from '../Modal';
 import Notice from '../Notice';
 import WorkingCompletion from './completion';
@@ -123,6 +123,7 @@ export default function RecordWorkingForm({
       type="button"
       className="btn"
       disabled={!valid || submitting || waitFor !== undefined}
+      aria-describedby={waitFor ? `${ids}-wait` : undefined}
       onClick={() => void submit(true)}
     >
       Complete
@@ -300,9 +301,14 @@ export default function RecordWorkingForm({
           ) : undefined
         }
       >
-        {!complete &&
-          (waitFor ? <IconTip tip={waitFor}>{completeButton}</IconTip> : completeButton)}
+        {!complete && completeButton}
       </FormActions>
+      {/* Text rather than a tip, since a disabled button takes no focus to show one. */}
+      {!complete && waitFor && (
+        <p id={`${ids}-wait`} className="meta">
+          {waitFor}
+        </p>
+      )}
       {discard.asking && <DiscardQuestion guard={discard} />}
       {working && deleteWorking && (
         <ConfirmQuestion

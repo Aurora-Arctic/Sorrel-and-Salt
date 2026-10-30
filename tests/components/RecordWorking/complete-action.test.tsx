@@ -234,7 +234,26 @@ describe('Complete on a draft dated ahead', () => {
       </QueryClientProvider>,
     );
     const button = screen.getByRole('button', { name: 'Complete' });
-    if (off) expect(button).toBeDisabled();
-    else expect(button).toBeEnabled();
+    if (off) expect(button).toHaveAttribute('aria-disabled', 'true');
+    else expect(button).not.toHaveAttribute('aria-disabled');
+  });
+
+  it('keeps an early Complete in the tab order, says why it is off, and opens nothing on a press', () => {
+    render(
+      <QueryClientProvider client={makeQueryClient()}>
+        <CompleteWorkingAction
+          workspaceId={WORKSPACE}
+          spellId={SPELL}
+          workingId={WORKING}
+          steps={STEPS}
+          workedOn="2999-01-01"
+        />
+      </QueryClientProvider>,
+    );
+    const button = screen.getByRole('button', { name: 'Complete' });
+    expect(button).toBeEnabled();
+    expect(button).toHaveAccessibleDescription('Complete on or after 1 January 2999');
+    fireEvent.click(button);
+    expect(screen.queryByRole('dialog')).toBeNull();
   });
 });

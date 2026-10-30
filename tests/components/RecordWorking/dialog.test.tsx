@@ -339,6 +339,13 @@ describe('Edit Working', () => {
     const complete = within(dialog()).getByRole('button', { name: 'Complete' });
     if (enabled) expect(complete).toBeEnabled();
     else expect(complete).toBeDisabled();
+    // The reason is written under the buttons, where a keyboard or touch reader finds it without the tip.
+    const reason = within(dialog()).queryByText('Complete on or after 1 January 2999');
+    if (enabled) expect(reason).toBeNull();
+    else {
+      expect(reason).toBeVisible();
+      expect(complete).toHaveAccessibleDescription('Complete on or after 1 January 2999');
+    }
     // A draft dated ahead still saves.
     expect(within(dialog()).getByRole('button', { name: 'Save as Draft' })).toBeInTheDocument();
   });

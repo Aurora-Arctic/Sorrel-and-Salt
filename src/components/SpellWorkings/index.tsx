@@ -43,7 +43,7 @@ const Working = ({
           )}
         </div>
         <div className="spell-workings__actions">
-          {showsComplete && completeAction?.(working.id, working.workedOn)}
+          {showsComplete && completeAction?.(working.id, working.workedOn, day)}
           {working.editable &&
             editAction?.(working.editable, day, showsComplete, working.canChange)}
           {working.canChange && (

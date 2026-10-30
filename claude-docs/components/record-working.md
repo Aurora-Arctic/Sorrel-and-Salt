@@ -25,8 +25,8 @@ spell's, and is the same Share With the Coven switch the spell builder uses (`Vi
 
 Save as Draft keeps a draft, closes the dialog and refreshes the page, where the draft is a row of the
 Workings list. Complete in the form saves first, then shows the preview. The date is a `DateField` day picker. A working may be dated ahead and saved as a draft, but Complete
-is off, with a tip "Complete on or after <day>", while the date is after the browser's today; the Complete beside a
-draft's Edit pencil on the recipe page (`CompleteWorkingAction`, given `workedOn`) is off the same way. The service refuses it too. Closing with unsaved changes asks first.
+is off while the date is after the browser's today, with "Complete on or after <day>" written under the buttons and describing it, since a disabled button takes no focus to show a tip. The Complete beside a
+draft's Edit pencil on the recipe page (`CompleteWorkingAction`, given `workedOn`) is `aria-disabled` instead: it keeps the focus, a press does nothing, and the same words are its tip (shown on focus, hover or press) and its description. The service refuses it too. Closing with unsaved changes asks first.
 What completing a draft would skip is read from the preview query, since `SpellWorking.warnings`
 is empty outside a completion; `skipSummary` words the draft row's count.
 
@@ -67,8 +67,8 @@ Confirm runs `completeWorking`, reads the page again and shows the same list, so
 before and after. The preview and the completion share one plan on the
 server (`plan-deductions.ts`), so the two agree.
 
-`CompleteWorkingAction` takes `{ workspaceId, spellId, workingId, steps, label? }` and is what a
-draft working's row puts beside its other actions.
+`CompleteWorkingAction` takes `{ workspaceId, spellId, workingId, steps, label?, workedOn? }` and is what a
+draft working's row puts beside its other actions. The recipe page sets `label` to "Complete Working <date>".
 
 Stories: `index.stories.tsx`. Browser flows: stories 76 and 78 in
 `tests/e2e/stories/06-grimoire.spec.ts`.

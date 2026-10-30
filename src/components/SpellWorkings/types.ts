@@ -38,8 +38,8 @@ export interface SpellWorkingsProps {
   workings: readonly WorkingView[];
   /** The control drawn beside the section heading (Record a Working), given only to a viewer who may record. */
   headingAction?: ReactNode;
-  /** The control that completes a draft working, drawn on the draft rows the viewer may change (those carrying `editable`). */
-  completeAction?: (workingId: string, workedOn: string) => ReactNode;
+  /** The control that completes a draft working, drawn on the draft rows the viewer may change (those carrying `editable`); `name` is the row's day in words, as `editAction` has it. */
+  completeAction?: (workingId: string, workedOn: string, name: string) => ReactNode;
   /** The pencil that opens the Edit dialog on a working, drawn on the rows that carry `editable`; `plain` is true on a row that also shows Complete, where the pencil wears the text ink; `canDelete` is whether the viewer may delete it, which the Edit dialog's bin follows. */
   editAction?: (
     working: EditableWorking,
