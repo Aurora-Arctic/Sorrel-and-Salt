@@ -120,7 +120,9 @@ that a closed tab, a crash or a failed save loses nothing.
 ## `SaveStatus`
 
 `src/components/SaveStatus/`: the line beside the form's primary action that
-says where the save is. Never a toast. Its props are the hook's `status` and
+says where the save is. Never a toast. [`save-status.md`](save-status.md) is the
+component's own page, with its styling, its stories and `RecoveryNotice`, the
+banner that offers back typing this browser kept. Its props are the hook's `status` and
 `savedAt`, `draft` (say "Draft saved"), `conflictMessage` (the caller's
 words, so the component names no entity), `onRetry`, `onReload` and
 `onKeepMine`, and `conflictInto`: an element the conflict notice is put in

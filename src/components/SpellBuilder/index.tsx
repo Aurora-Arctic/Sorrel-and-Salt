@@ -24,16 +24,17 @@ import {
   TextField,
   useFormHistory,
 } from '../Field';
-import { clockTime } from '../LastEdit/relative';
 import { moonPhaseIcon } from './moon-phase-icon';
 import { BinButton } from '../IconTip';
 import { ConfirmQuestion, useModalHeaderNote } from '../Modal';
 import { useDeleteSpell } from '../SpellRecipe/delete-spell';
 import { UNTITLED_SPELL } from '../SpellCard';
+import { VISIBILITY_LABELS } from '../GrimoireList/params';
 import Notice from '../Notice';
-import SaveStatus from '../SaveStatus';
+import SaveStatus, { RecoveryNotice } from '../SaveStatus';
 import Skeleton from '../Skeleton';
-import { SpellCategoriesField, sameCategories, useCategoryName } from './categories-field';
+import { SpellCategoriesField, sameCategories } from './categories-field';
+import { useCategoryIndex } from './category-index';
 import { SpellComparison } from './comparison-panel';
 import { JarDetails } from './jar-details';
 import { DAYS_OF_THE_WEEK, MOON_PHASES } from './constants';
@@ -118,7 +119,7 @@ function lineOfField(
     case 'categoryIds':
       return (values.categoryIds ?? []).flatMap((id) => named(id) ?? []).join(', ');
     case 'visibility':
-      return values.visibility === 'workspace' ? 'Shared' : 'Private';
+      return VISIBILITY_LABELS[values.visibility ?? 'private'];
     case 'steps': {
       // The steps that lay something: an instruction step has no name.
       const laid = (values.steps ?? []).filter((step) => step.name !== null).length;
@@ -141,7 +142,8 @@ function valuesOf(spell?: Partial<SpellBuilderSpell>): SpellBuilderValues {
       string
     >),
     steps: (spell?.steps ?? []).map(stepValueOf),
-    // A new spell is the coven's unless chosen otherwise (§5).
+    // A new spell starts private: the autosave would otherwise share it seconds after the first
+    // keystroke.
     visibility: spell?.visibility ?? 'private',
     // A new spell is a draft.
     status: spell?.status ?? 'draft',
@@ -209,7 +211,7 @@ const STEPS_FAILED =
   "The spell's steps could not be loaded, so nothing can be saved. Reload the page to try again.";
 
 /** Said on the form when Reload Latest could not read the spell: the conflict stays, to try again. */
-const RELOAD_FAILED = "The latest version couldn't be loaded. Try again.";
+const RELOAD_FAILED = 'The latest version could not be loaded. Try again.';
 
 /** Said on the form when a save is tried while a field holds an error the form shows. */
 const FIX_FIELDS = 'Some fields need fixing before this can be saved.';
@@ -270,7 +272,7 @@ const SpellBuilder = ({
   const status = useWatch({ control, name: 'status' });
   const steps = useWatch({ control, name: 'steps' });
   const values = useWatch({ control }) as SpellBuilderValues;
-  const categoryName = useCategoryName();
+  const { names: categoryNames } = useCategoryIndex();
   // The autosave never sends a blank new instruction: it stays in the form, unsaved and
   // unmentioned.
   const sendable = steps.filter((step) => !isBlankNewInstruction(step));
@@ -302,7 +304,7 @@ const SpellBuilder = ({
     });
   const lineOf = (name: SectionName): string =>
     SECTIONS[name]
-      .map((field) => lineOfField(field, values, categoryName))
+      .map((field) => lineOfField(field, values, (id) => categoryNames.get(id)))
       .filter(Boolean)
       .join(' · ') || 'Nothing yet';
   /** Opens each section one of whose fields now holds an error, so the error is seen. */
@@ -630,18 +632,7 @@ const SpellBuilder = ({
   // modal they stay in the form's flow.
   const headerNote = useModalHeaderNote();
   const recovery = recovered && jarReady && (
-    <Notice kind="warn" block className="spell-builder__restored">
-      <span>Restored unsaved changes from {clockTime(recovered.at)}</span>
-      <span className="spell-builder__recovered">
-        {/* One primary: Keep, the choice that loses no typing; Discard sits back, quiet. */}
-        <button type="button" className="btn btn--small btn--solid" onClick={keepRecovered}>
-          Keep
-        </button>
-        <button type="button" className="btn btn--small btn--quiet" onClick={discardRecovered}>
-          Discard
-        </button>
-      </span>
-    </Notice>
+    <RecoveryNotice at={recovered.at} onKeep={keepRecovered} onDiscard={discardRecovered} />
   );
 
   /**
@@ -813,8 +804,11 @@ const SpellBuilder = ({
             asked={deleting}
             question={
               <>
-                Delete {name}? It leaves the grimoire for every member of the coven. Nothing in
-                stock changes.
+                Delete {name}?
+                {/* A private spell was only ever its author's, so only a shared one leaves the coven. */}
+                {defaultValues?.visibility === 'workspace' &&
+                  ' It leaves the grimoire for every member of the coven.'}{' '}
+                Nothing in stock changes.
               </>
             }
             busy={removed}
