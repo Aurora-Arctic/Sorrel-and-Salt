@@ -30,13 +30,13 @@ afterAll(async () => {
   await sql.end();
 });
 
-async function run(set: PasswordSetter['set']) {
+async function run(set: PasswordSetter['set'], fresh = true) {
   const setter = vi.fn(set);
   const result = await runOperation(
     asUser(B),
     SET_PASSWORD,
     { newPassword: NEW },
-    { passwords: { set: setter } },
+    { passwords: { set: setter, sessionIsFresh: async () => fresh } },
   );
   return { result, setter };
 }
@@ -71,6 +71,16 @@ describe('the setPassword mutation', () => {
     const { result, setter } = await run(async () => {});
 
     expect(result.errors?.[0]).toMatchObject({ extensions: { code: 'FORBIDDEN' } });
+    expect(setter).not.toHaveBeenCalled();
+  });
+
+  // Why it could have been set: the first test, the same account and setter, reaches the setter from a fresh session.
+  it('refuses a session that is not fresh, saying to sign in again, and sets nothing', async () => {
+    const { result, setter } = await run(async () => {}, false);
+
+    expect(result.data).toBeNull();
+    expect(result.errors?.[0]).toMatchObject({ extensions: { code: 'FORBIDDEN' } });
+    expect(result.errors?.[0].message).toMatch(/sign in again/i);
     expect(setter).not.toHaveBeenCalled();
   });
 });

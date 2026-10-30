@@ -147,10 +147,15 @@ through the GraphQL mutation `setPassword(newPassword: String!)`:
 
 - The service `setPassword` (`src/modules/identity/services/password.ts`)
   refuses an account whose address is unverified, as every service but `me`
-  and `setEmail` does, then calls the setter it is handed.
+  and `setEmail` does. It then refuses a session older than Better Auth's
+  `freshAge` (one day), with a `Forbidden` that says to sign out and sign in
+  again, the check Better Auth makes before adding a passkey: whoever holds a
+  stolen or forgotten session cannot give the account a password that outlives
+  it. Only then does it call the setter it is handed.
 - The setter is `passwordSetter(request)` (`src/lib/password-setter.ts`),
   put on the GraphQL context as `context.passwords`, because a service may
-  not import `auth`. It calls `auth.api.setPassword` with the request's own
+  not import `auth`. Its `sessionIsFresh` reads the request's session from
+  Better Auth for the service's freshness check. It calls `auth.api.setPassword` with the request's own
   headers, so the only account it can name is the caller's. It runs the call
   inside `withBreachedCheck`, so the breached-password check holds here too
   ("The breached-password check" above), and words every refusal of the
@@ -175,9 +180,11 @@ following the mailed link gives it its first password the same way.
   endpoints: the same answer for every address, the link working once and not
   after 15 minutes, every session signed out by a reset, every other one by a
   change, the rules for a new password, each notice, the current password a
-  change needs, a first password set without one, and no periodic change.
+  change needs, a first password set without one and refused from a session
+  older than a day, and no periodic change.
 - `tests/modules/identity/graphql/set-password.test.ts`: the mutation's
-  refusals and that it sets the caller's own password.
+  refusals, a stale session among them, and that it sets the caller's own
+  password.
 - `tests/e2e/stories/16-password.spec.ts`, story 70: the browser flow, with
   the e2e servers' stand-in for the range API
   ([`testing/e2e.md`](../testing/e2e.md), "A password sign-in in the browser"),

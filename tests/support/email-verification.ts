@@ -18,4 +18,5 @@ export const noInvitationSender: InvitationSender = {
 
 export const noPasswordSetter: PasswordSetter = {
   set: async () => unexpected('set a password'),
+  sessionIsFresh: async () => unexpected('read a session'),
 };

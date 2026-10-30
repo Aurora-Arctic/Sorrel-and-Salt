@@ -10,6 +10,7 @@ import { emailPagePath, isEmailPage } from './account-email';
 import { RETURN_PATH_HEADER, safeReturnPath, signInPath } from './sign-in';
 import { isRosterProvider } from './social-providers';
 import { toUserRole } from './session-role';
+import { isFreshSession } from './session-fresh';
 import type { LinkedAccount } from './types';
 
 // Where the request becomes a service-level `Session`: server components and
@@ -23,9 +24,7 @@ import type { LinkedAccount } from './types';
  * tests/lib/auth.test.ts); 0 turns the check off, as there.
  */
 async function isFresh(createdAt: Date | string): Promise<boolean> {
-  const { freshAge } = (await auth.$context).sessionConfig;
-  if (freshAge === 0) return true;
-  return Date.now() - new Date(createdAt).getTime() < freshAge * 1000;
+  return isFreshSession(createdAt, (await auth.$context).sessionConfig.freshAge);
 }
 
 async function stateFromHeaders(requestHeaders: Headers): Promise<SessionState> {

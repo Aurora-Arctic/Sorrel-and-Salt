@@ -8,12 +8,16 @@ import type { PasswordSetter } from '../types';
 // hashes it, so the write is its own, through the setter, and outside `withAudit` as every write to its
 // `accounts` table is (claude-docs/auth/passwords.md, "Setting a first password").
 
+const STALE_SESSION =
+  'Adding a password needs a recent sign-in. Sign out and sign in again, then set your password.';
+
 /**
  * Gives the session's own account `newPassword`, through `setter`, which is bound to this request's cookie, so
  * the only account a caller can name is their own. A provisional account is refused, as it is by every
  * service but `me` and `setEmail`.
  *
- * @throws {Forbidden} the account's address is not yet verified — checked before the setter is called.
+ * @throws {Forbidden} the account's address is not yet verified, or the session is older than Better Auth's
+ *   `freshAge`, as adding a passkey requires — both checked before the setter is called.
  * @throws {ValidationError} on `newPassword`, from the setter.
  */
 export async function setPassword(
@@ -23,6 +27,7 @@ export async function setPassword(
 ): Promise<boolean> {
   const me = await getMe(session);
   if (!me.emailVerified) throw new Forbidden('Confirm your email address first');
+  if (!(await setter.sessionIsFresh())) throw new Forbidden(STALE_SESSION);
   await setter.set(newPassword);
   return true;
 }
