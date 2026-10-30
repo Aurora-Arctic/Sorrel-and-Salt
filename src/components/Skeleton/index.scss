@@ -1,8 +1,8 @@
 @use '../../scss/variables' as *;
 @use '../../scss/mixins' as *;
 
-// The shared loading skeleton: `table`, `cards`, `form` and `page`, drawn by the tab panel and the
-// route modal. Each shape is the shared `skeleton-shape` (_mixins.scss), a quiet fill with a
+// The shared loading skeleton in each of its shapes, drawn wherever a page part is on its way.
+// Each shape is the shared `skeleton-shape` (_mixins.scss), a quiet fill with a
 // lighter band, and a single slow pulse under reduced motion.
 
 // Shown at once with a short fade: the press has taken the old content away, so holding the

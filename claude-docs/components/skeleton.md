@@ -46,6 +46,20 @@ way (M12.33). It was the tab panel's skeleton (MB.115) and the route modal's
   attribute on a wrapper round their search. The skeleton a tab switch or a navigation draws sits outside that
   wrapper and stays regular.
 
+## Styling
+
+`index.scss`, built from the tokens and the shared mixins:
+
+- Every bar is a `span` inside `.skeleton__shapes`, drawn by the `skeleton-shape` mixin (`_mixins.scss`): the quiet
+  fill, the band and the reduced-motion pulse.
+- The block classes name the part each bar stands in for: `skeleton__header`, `__title`, `__tabs` and `__action` for
+  the heading row; `__filter`, `__field` and `__count` for the filter row; `__head`, `__row` and `__pager` for the
+  table; `__cards` and `__card` for the cards; `__intro`, `__eyebrow`, `__lede`, `__menu` and the `__entry-*`
+  classes for the pages.
+- The cards' column is `$ingredient-card-min`, or `$ingredient-card-min-compact` under the compact selector (see
+  Contracts). The table turns to cards under `$table-stack-width`, through the `skeleton` size container.
+- `.skeleton-frame` is the class `MainBody` adds to a `main` wait, which draws it from the top rather than centred.
+
 ## SwapPanel
 
 `swap-panel.tsx` lives here too: it swaps a panel for the skeleton while a
