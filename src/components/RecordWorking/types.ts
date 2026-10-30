@@ -32,6 +32,8 @@ export interface CompleteWorkingActionProps extends Omit<
 > {
   /** Names the working in the button's accessible name when a page lists several. */
   label?: string;
+  /** The working's day: a draft dated after today has Complete off. */
+  workedOn?: string;
 }
 
 /** A coven member the participants box suggests. */

@@ -10,10 +10,11 @@ import type { Failure } from '../../lib/types';
 import Combobox, { ComboboxEntry } from '../Combobox';
 import DateField from '../DateField';
 import { FieldShell, FormActions, VisibilitySwitch, fieldDescription } from '../Field';
-import { BinButton } from '../IconTip';
+import IconTip, { BinButton } from '../IconTip';
 import { ConfirmQuestion, DiscardQuestion, useDiscardGuard } from '../Modal';
 import Notice from '../Notice';
 import WorkingCompletion from './completion';
+import { completeReason, today } from './day';
 import './index.scss';
 import { DeleteWorkingQuestion } from '../SpellWorkings/delete-working';
 import type { RecordWorkingDialogProps, WorkingParticipantValue } from './types';
@@ -58,13 +59,6 @@ const UpdateWorkingDocument = graphql(`
 `);
 
 const FIELDS = ['workedOn', 'note', 'participants', 'visibility'];
-
-/** Today in the browser's own calendar, as the date input reads it. */
-function today(): string {
-  const now = new Date();
-  const pad = (n: number) => String(n).padStart(2, '0');
-  return `${now.getFullYear()}-${pad(now.getMonth() + 1)}-${pad(now.getDate())}`;
-}
 
 const DAY = /^\d{4}-\d{2}-\d{2}$/;
 
@@ -115,12 +109,25 @@ export default function RecordWorkingForm({
       (p, i) =>
         p.userId !== initial.participants[i]?.userId || p.name !== initial.participants[i]?.name,
     );
-  const valid = DAY.test(workedOn) && workedOn <= today();
+  const valid = DAY.test(workedOn);
+  // A draft may be dated ahead; it is completed only once its day has come.
+  const waitFor = completeReason(workedOn);
   const dirty = completing === undefined && changed && !removed;
   const discard = useDiscardGuard(dirty);
 
   // Never wider than the spell, and a complete working that is shared stays so.
   const sharedForGood = complete && initial.visibility === 'workspace';
+
+  const completeButton = (
+    <button
+      type="button"
+      className="btn"
+      disabled={!valid || submitting || waitFor !== undefined}
+      onClick={() => void submit(true)}
+    >
+      Complete
+    </button>
+  );
 
   const dateField = fieldDescription({
     id: `${ids}-date`,
@@ -203,7 +210,6 @@ export default function RecordWorkingForm({
           id={dateField.controlId}
           labelledBy={dateField.labelId}
           value={workedOn}
-          max={today()}
           disabled={submitting}
           onChange={setWorkedOn}
           {...dateField.aria}
@@ -292,16 +298,8 @@ export default function RecordWorkingForm({
           ) : undefined
         }
       >
-        {!complete && (
-          <button
-            type="button"
-            className="btn"
-            disabled={!valid || submitting}
-            onClick={() => void submit(true)}
-          >
-            Complete
-          </button>
-        )}
+        {!complete &&
+          (waitFor ? <IconTip tip={waitFor}>{completeButton}</IconTip> : completeButton)}
       </FormActions>
       {discard.asking && <DiscardQuestion guard={discard} />}
       {working && deleteWorking && (

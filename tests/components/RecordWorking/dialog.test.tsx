@@ -112,20 +112,6 @@ describe('Record a Working', () => {
     expect(screen.getByRole('button', { name: 'Confirm' })).toBeEnabled();
   });
 
-  it('cannot date a working in the future', () => {
-    openButton();
-    fireEvent.click(within(dialog()).getByRole('button', { name: /Date/ }));
-    const tomorrow = new Date();
-    tomorrow.setDate(tomorrow.getDate() + 1);
-    const day = within(screen.getByRole('grid')).queryByRole('button', {
-      name: new RegExp(
-        tomorrow.toLocaleDateString('en-GB', { day: 'numeric', month: 'long', year: 'numeric' }),
-      ),
-    });
-    // Tomorrow is either not drawn (a later month, which cannot be reached) or drawn and disabled.
-    if (day) expect(day).toBeDisabled();
-  });
-
   it('adds a typed name as a chip and sends it as a name', async () => {
     const calls = mockRecording();
     openButton();
@@ -268,6 +254,30 @@ describe('Edit Working', () => {
     );
     expect(screen.getByRole('dialog', { name: 'Record a Working' })).toBeInTheDocument();
     expect(within(dialog()).queryByRole('button', { name: /^Delete Working/ })).toBeNull();
+  });
+
+  it.each([
+    ['a future day', '2999-01-01', false],
+    ['today', new Date().toLocaleDateString('en-CA'), true],
+  ])('has Complete %s: enabled is %s', (_name, workedOn, enabled) => {
+    render(
+      wrap(
+        <RecordWorkingDialog
+          workspaceId={WORKSPACE}
+          spellId={SPELL}
+          spellVisibility="workspace"
+          members={MEMBERS}
+          steps={STEPS}
+          working={{ ...working, workedOn }}
+          onClose={() => {}}
+        />,
+      ),
+    );
+    const complete = within(dialog()).getByRole('button', { name: 'Complete' });
+    if (enabled) expect(complete).toBeEnabled();
+    else expect(complete).toBeDisabled();
+    // A draft dated ahead still saves.
+    expect(within(dialog()).getByRole('button', { name: 'Save as Draft' })).toBeInTheDocument();
   });
 
   it('keeps a shared complete working shared', () => {

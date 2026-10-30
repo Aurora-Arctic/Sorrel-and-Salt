@@ -216,3 +216,25 @@ describe('Complete on a working', () => {
     expect(rows[1]).toHaveTextContent('units differ · takes nothing');
   });
 });
+
+describe('Complete on a draft dated ahead', () => {
+  it.each([
+    ['a future day', '2999-01-01', true],
+    ['today', new Date().toLocaleDateString('en-CA'), false],
+  ])('is off for %s: %s', (_name, workedOn, off) => {
+    render(
+      <QueryClientProvider client={makeQueryClient()}>
+        <CompleteWorkingAction
+          workspaceId={WORKSPACE}
+          spellId={SPELL}
+          workingId={WORKING}
+          steps={STEPS}
+          workedOn={workedOn}
+        />
+      </QueryClientProvider>,
+    );
+    const button = screen.getByRole('button', { name: 'Complete' });
+    if (off) expect(button).toBeDisabled();
+    else expect(button).toBeEnabled();
+  });
+});
