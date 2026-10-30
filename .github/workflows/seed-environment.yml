@@ -178,7 +178,7 @@ jobs:
             echo "- Branch: \`$GIT_BRANCH\`"
             echo
             echo '```text'
-            grep -E '^(UPDATED|REFUSED|ADOPTED|RETIRED|PENDING) |^  differs:|^inserted ' seed.log \
+            grep -E '^(UPDATED|REFUSED|ADOPTED|RETIRED|PENDING|SKIPPED) |^  differs:|^inserted ' seed.log \
               || echo 'The compendium seed listed nothing: it failed first, or wrote no line.'
             echo '```'
           } >> "$GITHUB_STEP_SUMMARY"

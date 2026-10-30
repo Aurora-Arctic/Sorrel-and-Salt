@@ -3,6 +3,7 @@ import { categoryIdByName } from './categories';
 import { assertCompendiumValid, seedCompendiumContent } from './compendium';
 import { loadCompendium } from './compendium/load';
 import { seedDemoCovenSeats } from './demo-coven';
+import { seedDemoCovenContent } from './demo-coven-content';
 import { DEMO_WORKINGS } from './demo-workings';
 import {
   identityOf,
@@ -1163,6 +1164,7 @@ export async function seedDemo(db: SeedDatabase): Promise<void> {
     await seedCompendiumContent(tx, CURATED_FILES);
     // Reference data on every environment, so the scenario shows it too; `standard` leaves it out.
     await seedDemoCovenSeats(tx);
+    await seedDemoCovenContent(tx);
 
     await insertMissingWorkspaceIngredients(tx, W_COVEN, WORKSPACE_W_INGREDIENTS);
     const own = await workspaceIngredientIds(tx, W_COVEN, WORKSPACE_W_INGREDIENTS);

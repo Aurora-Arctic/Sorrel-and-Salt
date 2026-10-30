@@ -123,6 +123,7 @@ jobs:
             src/db/seed/reference-rows.ts \
             src/db/seed/compendium.ts \
             src/db/seed/demo-coven.ts \
+            src/db/seed/demo-coven-content.ts \
             src/db/bootstrap.ts \
             src/db/seed/compendium/ \
             compendium/ \
