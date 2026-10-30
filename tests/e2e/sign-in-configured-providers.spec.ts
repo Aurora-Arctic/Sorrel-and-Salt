@@ -69,7 +69,7 @@ for (const colorScheme of ['dark', 'light'] as const) {
     await context.addCookies([{ name: LAST_USED_PROVIDER_COOKIE, value: 'google', url: baseURL }]);
     await page.goto('/sign-in');
 
-    const button = page.getByRole('button', { name: 'Continue with Google, last used' });
+    const button = page.getByRole('button', { name: 'Continue with Google Last Used' });
     await expect(button).toBeVisible();
     await expect(button).not.toHaveAttribute('aria-disabled');
     await assertNoAccessibilityViolations(page);

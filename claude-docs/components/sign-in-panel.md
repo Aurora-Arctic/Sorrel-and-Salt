@@ -130,12 +130,10 @@ rather than relying on the DOM attribute to stop it.
 ## Last used
 
 The button for the provider this browser last signed in with carries a "Last
-Used" badge hanging off its top-left corner. Its accessible name is an
-`aria-label`, "Continue with Discord, last used": the name built from the
-button's text would run the label into the badge ("Discord Last Used"), and the
-comma gives a screen reader a pause without displaying anything. The badge's
-word is title case, as a label is; inside the sentence of the name it is lower
-case. Only the marked
+Used" badge hanging off its top-left corner. Its accessible name is the button's
+own text, "Continue with Discord Last Used": a space sits before the badge, and
+there is no `aria-label`, because a name that rewords the visible words (a comma
+for a pause) fails axe's `label-content-name-mismatch` (WCAG 2.5.3). Only the marked
 button carries one. The provider comes from the
 `better-auth.last_used_login_method` cookie, which Better Auth's `lastLoginMethod` plugin sets on a callback that
 signs the browser in (`auth/plugins.md`, "The last-used provider"). It exists so that
