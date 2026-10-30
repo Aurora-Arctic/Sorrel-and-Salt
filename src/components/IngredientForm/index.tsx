@@ -1190,7 +1190,7 @@ const IngredientForm = ({
                     asked={deleting}
                     question={
                       <>
-                        Delete &quot;{entry?.values.name}&quot;? It leaves the{' '}
+                        Delete <strong>{entry?.values.name}</strong>? It leaves the{' '}
                         {compendium ? 'compendium' : 'coven'}, but any spell that uses it keeps it.
                       </>
                     }

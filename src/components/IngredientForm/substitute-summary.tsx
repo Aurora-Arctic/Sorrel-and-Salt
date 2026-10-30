@@ -145,7 +145,7 @@ export function SubstituteSummary({
       {href && (
         // A new tab, so the form and its unsaved changes stay where they are.
         <a className="entry-summary__link" href={href} target="_blank" rel="noopener noreferrer">
-          Open Entry
+          See Entry
           <NewTabHint />
         </a>
       )}

@@ -203,7 +203,7 @@ Tokens and three mixins in `_mixins.scss`, so every Edit matches:
 - **Sizes**: the ingredient form keeps the 24px box and 1rem icon beside
   its fields' text; a list row's `EditLink` (`.icon-tip__edit`) takes
   `$icon-size-large` around `$glyph-size-large`, 2rem around 1.25rem,
-  and so does a list card's lone bin (`.icon-tip__remove`), in the remove
+  and so does a lone bin (`.icon-tip__remove`), in the remove
   answer's colours. The Quick Look eye keeps that box but draws its glyph at 4/3 of the
   pencil's.
 - **Contrast**: the accent on the page, on the card (banded rows, stacked
@@ -261,12 +261,12 @@ The tip is `fixed`, so a table frame's sideways scroll clips nothing. It fades i
 - Edit in Compendium, on a compendium entry for an admin or a curator, is named and tipped "Edit in Compendium" so it cannot be taken for a coven's own choice.
 - Annotate in a coven's list wears `AnnotateIcon`, an open book with a pencil, not Edit's pencil, since it writes the coven's notes over a compendium entry. Its stroke is 1.25 rather than the set's 1.5 so the lines sit apart at 16px, and the pencil is filled.
 - `QuickLookLink` is the eye beside an entry's name, in its own class as it sits in the name's line. `QuickLookButton` serves where the details open in the page rather than at an address, such as over the Add Ingredient form's held duplicates.
-- `MoreButton` is the three dots: a menu of further choices, as flat items (a spell's) or in labelled sections (an entry's Compendium and Coven). A lone Delete or Remove is the bin instead. A More drawn with words keeps its chevron.
+- `MoreButton` is the three dots: a menu of further choices, as flat items (a spell's) or in labelled sections (an entry's Compendium and Coven). A Delete or Remove of something that has an edit dialog is in that dialog and is not drawn beside More; only a thing with no edit dialog draws a lone bin, which asks first ([`.claude/rules/components.md`](../../.claude/rules/components.md), "Destructive controls"). A More drawn with words keeps its chevron.
 - The icon controls that are buttons rather than links are shared by the coven cards' foot, the entry page and the Quick Look window so the places cannot differ.
 
 ## The icons
 
-Every line icon on a 16-unit box is drawn at stroke 1.5 unless its drawing needs another, and then the icon's comment says why. The exceptions are the eye's outline at 1, the jar at 1.2, and Annotate, the cauldron and the Complete flask at 1.25. The stock badge's marks, the spell builder's supply marks, the source form's page and pencil, and the InfoTip ring are 1.5 like the rest. The icons on a 24-unit box (the section nav's and the form icons, at 1.6) and the shelf mark on a 32-unit box (1.2) keep their own strokes.
+Every line icon on a 16-unit box is drawn at stroke 1.5 unless its drawing needs another, and then the icon's comment says why. The exceptions are the eye's outline at 1, the jar at 1.2, and Annotate and the cauldron at 1.25. The stock badge's marks, the spell builder's supply marks, the source form's page and pencil, and the InfoTip ring are 1.5 like the rest. The icons on a 24-unit box (the section nav's and the form icons, at 1.6) and the shelf mark on a 32-unit box (1.2) keep their own strokes.
 
 The mystic eye (Quick Look) is an almond eye whose iris is a tilted waxing crescent with a four-point star. The copy icon is two overlapping sheets, for Restore Original and Copy From Ingredient. The undo and redo icons are mirror images on the same 16-unit box, sized by attribute since a bare `svg` in a `.btn` has no size of its own. The jar icon is a jar with a cloth tied over its mouth, the cloth's hem wavy, worn by Edit Stock in place of the pencil. Its stroke is 1.2 as the jar is drawn larger.
 

@@ -153,10 +153,23 @@
     max-width: 100%;
   }
 
-  h1 {
-    flex: 1 1 0;
+  // The title's line is PageHeader's, as the head's own row: its icons hang from the title's
+  // first line at every width, where a page's head would bring them down to its letters or
+  // send them under a long title.
+  > .page-header {
+    flex: 0 0 100%;
+    align-items: flex-start;
+    gap: space(3);
     margin: 0;
-    overflow-wrap: anywhere;
+
+    > :not(h1) {
+      top: 0;
+    }
+
+    > h1 {
+      flex: 1 1 0;
+      overflow-wrap: anywhere;
+    }
   }
 }
 

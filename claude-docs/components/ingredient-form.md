@@ -1158,7 +1158,7 @@ compendium page opens the match's own modal, `?edit=<slug>` — and the shell's 
 reaches compendium and coven entries alike. It opens in a new tab, so the
 form and what is typed in it stay where they are (the owner's call at
 MB.115's review), and its name ends "(opens in a new tab)" for a screen
-reader, as the substitute summary's Open Entry does. It is a plain anchor,
+reader, as the substitute summary's See Entry does. It is a plain anchor,
 since the caller hands back a plain string, where a typed `<Link>` wants a route
 the build contains. Nothing refuses the create on the server: the warning is the
 form's alone.
@@ -1603,10 +1603,9 @@ site admin's, through the compendium mutations
   whole entry, sends them all, so categories left alone stay
   ([`design-decisions/m5.5-admin-compendium.md`](../design-decisions/m5.5-admin-compendium.md)).
 - **Delete Ingredient** stands apart at the far end of an edit's actions,
-  `.btn--destructive`. Pressed, it asks `Delete
-"Testwort"? It leaves the compendium, but any spell that uses it keeps it.`, or
-  on a coven's own entry `Delete "Testwort"? It leaves the coven, but any spell
-that uses it keeps it.`, with
+  `.btn--destructive`. Pressed, it asks "Delete **Testwort**? It leaves the compendium, but any spell that
+  uses it keeps it.", or on a coven's own entry "Delete **Testwort**? It leaves
+  the coven, but any spell that uses it keeps it.", the name in bold, with
   Delete, destructive, and Cancel, quiet, as
   [`GroupedValueForm`](grouped-value-form.md) asks: on a card over the form,
   centred in the part in view however far the long form is scrolled, the

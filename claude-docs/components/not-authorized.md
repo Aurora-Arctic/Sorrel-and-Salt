@@ -36,7 +36,7 @@ The page draws the frame: `forbidden.tsx`'s `main` is `.page-frame`, which
 centres the column without an AppShell and stops it at the reading measure,
 `$measure` ([`styling.md`](../styling.md), "The page frame"). The
 component's own column follows `Welcome`'s: a flex column with a `space(5)`
-gap, its heading and reason a `.header` with the reason as the `.lede`.
+gap, its heading and reason a `PageHeader` ([`page-header.md`](page-header.md)) with the reason as its `lede`.
 Function used: `space()`.
 
 ## Stories

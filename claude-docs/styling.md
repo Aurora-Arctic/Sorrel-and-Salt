@@ -1192,6 +1192,17 @@ What each section review (MB.115 to MB.124) designs to:
   of a refusal, or one pathless issue carrying the same sentence.
 - **A section head is `.header`** with an `.eyebrow`, the heading, and a
   `.lede` where the section needs saying what it is for.
+- **A page head is a `PageHeader`, always.** No page and no component writes
+  its own `h1`: `tests/guards/page-heads.test.ts` fails one that does, bar
+  the loading covers' hidden heading. Only the public pages carry an eyebrow
+  and a lede: the public Compendium has both, and its entry page has the
+  formal name as its eyebrow. The app's list pages (a coven's Ingredients and
+  Grimoire, its Members, the admin Compendium and the other admin lists)
+  have the heading alone, with its action beside it. The screens outside the
+  lists, such as the coven home, Create Coven, the sign-in, email and
+  invitation panels and the error pages, keep the eyebrow or lede they say
+  their purpose with, drawn by `PageHeader` too
+  ([`components/page-header.md`](components/page-header.md)).
 - **The copy has one voice.** Speak to the reader as "you", in plain words.
   A message says what happened in one sentence and what to do in the next.
   "Please try again." goes only where trying again can help, so a refusal
@@ -1202,7 +1213,7 @@ What each section review (MB.115 to MB.124) designs to:
 - **Use the shared pieces rather than their markup.** A field is `Field`'s
   `TextField` or `SelectField`, or its `FieldShell` around a control of
   the form's own; a button with a spinner is a `BusyButton`; a list's filter
-  is a `FilterForm`; a page's heading and its action are a `PageHeader`, and
+  is a `FilterForm`; a page's head, its heading and its action, is a `PageHeader`, and
   a page in tabs is a `TabbedPage` with each tab's action from its route
   group's `@action` slot;
   and a modal opened by its page's address, or at once by a press, is a `RouteModal`

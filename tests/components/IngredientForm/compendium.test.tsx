@@ -621,8 +621,8 @@ describe('IngredientForm on the compendium', () => {
       });
 
       fireEvent.click(button('Delete Ingredient'));
-      // The question names it: a paragraph, the closed Identity's summary line naming it too.
-      expect(screen.getByText(/Testwort/, { selector: 'p' })).toBeInTheDocument();
+      // The question names it, as the group it draws is named by the question.
+      expect(screen.getByRole('group', { name: /Testwort/ })).toBeInTheDocument();
       await act(async () => {
         fireEvent.click(button('Delete'));
       });

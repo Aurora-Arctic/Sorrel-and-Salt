@@ -319,15 +319,15 @@ export function CompleteIcon(): ReactElement {
       focusable="false"
       fill="none"
       stroke="currentColor"
-      strokeWidth="1.25"
+      strokeWidth="1.5"
       strokeLinecap="round"
       strokeLinejoin="round"
     >
-      {/* The shelf's 48-unit box scaled to fit the 16, its stroke widened to come out at 1.25. */}
-      <g transform="translate(-1 0) scale(.375)" strokeWidth="3.33">
+      {/* The shelf's 48-unit box scaled to fit the 16, its stroke widened to come out at the set's 1.5. */}
+      <g transform="translate(-1 0) scale(.375)" strokeWidth="4">
         {lid.map((part, i) => createElement(part.el, { key: i, ...part.attrs }))}
         <path d={body.replace(/z$/, '')} />
-        <path d="M16.8 28.5l5 5 9.6-10.5" strokeWidth="4" />
+        <path d="M16.8 28.5l5 5 9.6-10.5" />
       </g>
     </svg>
   );

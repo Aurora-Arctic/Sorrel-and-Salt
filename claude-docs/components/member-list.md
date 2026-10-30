@@ -29,7 +29,8 @@ through `Workspace.members`.
 - **Remove has a column of its own**, as Impersonate has, from the same
   `row-action-column` mixin: last, ruled in red,
   sticky at the right edge while the table scrolls, and at the card's top
-  right at phone width. Its button is `btn btn--destructive btn--small`.
+  right at phone width. Its button is `btn btn--quiet btn--small`, plain as
+  Change Role is: the red is the confirm's own, on the Remove that removes.
 - **Roles are told apart by their word**, from `workspaceRoleLabel`
   (`UserDetail/roles.ts`). An owner is
   also bold, as the user list sets an admin, but weight is never the only cue.

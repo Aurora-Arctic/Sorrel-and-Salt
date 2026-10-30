@@ -22,6 +22,7 @@ import { pagerHrefs } from '../../../lib/list-href';
 import { readPageCursors } from '../../../lib/numbered-page';
 import { CARD_PAGE_SIZE } from '../../../lib/pagination';
 import { single } from '../../../lib/search-params';
+import PageHeader from '../../../components/PageHeader';
 import ReviewMark from '../../../components/IngredientEntry/review-mark';
 import { getSession } from '../../../lib/request-session';
 import { viewerIfSignedIn } from '../../../lib/viewer';
@@ -253,17 +254,13 @@ export default async function CompendiumPage({ searchParams }: PublicCompendiumP
           dangerouslySetInnerHTML={{ __html: listJsonLd() }}
         />
       )}
-      {/* A head as the coven pages carry: the eyebrow names the section, the lede says
-          what it is for. A `header` inside `main` is no banner landmark, and takes the layout's
-          space beneath it. */}
-      <header className="header">
-        <p className="eyebrow">Reference</p>
-        <h1>Compendium</h1>
-        <p className="lede">
-          Ingredients for spellwork: their formal and folk names, categories, deities and forms,
-          with the sources behind them.
-        </p>
-      </header>
+      {/* A public page, so its head carries an eyebrow naming the section and a lede saying
+          what it is for, where the app's list pages have the heading alone. */}
+      <PageHeader
+        eyebrow="Reference"
+        title="Compendium"
+        lede="Ingredients for spellwork: their formal and folk names, categories, deities and forms, with the sources behind them."
+      />
       {missing && <MissingNotice noun="compendium entry" />}
       <CompendiumCards
         entries={entries}

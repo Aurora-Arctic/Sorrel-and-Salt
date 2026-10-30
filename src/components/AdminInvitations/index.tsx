@@ -59,7 +59,7 @@ const Revoke = ({ invitation, locked }: RevokeInvitationProps): ReactElement => 
       <LockedControl
         label="Revoke"
         accessibleName={accessibleName}
-        className="btn btn--destructive btn--small"
+        className="btn btn--quiet btn--small"
         reason={locked}
       />
     );
@@ -68,7 +68,7 @@ const Revoke = ({ invitation, locked }: RevokeInvitationProps): ReactElement => 
     <ConfirmedAction
       label="Revoke"
       accessibleName={accessibleName}
-      openClass="btn btn--destructive btn--small"
+      openClass="btn btn--quiet btn--small"
       title="Revoke Invitation"
       question={
         <>
