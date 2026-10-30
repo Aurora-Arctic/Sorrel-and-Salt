@@ -270,3 +270,36 @@ test('the Workings heading has a Record a Working button that opens the dialog, 
   await button.click();
   await expect(page.getByRole('dialog', { name: 'Record a Working' })).toBeVisible();
 });
+
+for (const [name, size] of [
+  ['desktop', { width: 1280, height: 900 }],
+  ['tablet', { width: 800, height: 900 }],
+  ['phone', { width: 390, height: 844 }],
+] as const) {
+  test(`the Workings heading's button ends at the section's right edge on a ${name}`, async ({
+    page,
+  }) => {
+    const coven = await seedCoven(page, `Fixture Right ${name}`, `spell-right-${name}.test`, {
+      A: 'owner',
+    });
+    const { A } = coven.users;
+    const spellId = await withSql(async (sql) => {
+      const id = await insertSpell(sql, coven.id, 'Fixture Right', 'workspace', A, 'complete');
+      await insertWorking(sql, id, A, { workedOn: '2026-03-04' });
+      return id;
+    });
+    await signInAgainAs(page, A);
+    await page.setViewportSize(size);
+    await page.goto(`/coven/${coven.slug}/grimoire/${spellId}`);
+    const section = page.getByRole('region', { name: 'Workings' });
+    const sectionBox = await section.evaluate((el) => el.getBoundingClientRect().toJSON());
+    const heading = await section
+      .getByRole('heading', { name: 'Workings' })
+      .evaluate((el) => el.getBoundingClientRect().toJSON());
+    const button = await section
+      .getByRole('button', { name: 'Record a Working' })
+      .evaluate((el) => el.getBoundingClientRect().toJSON());
+    expect(Math.abs(button.right - sectionBox.right)).toBeLessThanOrEqual(1);
+    expect(heading.left).toBeLessThanOrEqual(sectionBox.left + 1);
+  });
+}
