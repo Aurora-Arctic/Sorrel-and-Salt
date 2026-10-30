@@ -105,14 +105,18 @@ IngredientCard's sibling (the owner's request, 2026-10-28): the same surface, sh
 padding, title size, medium badges and category chips. The Draft and Private badges sit under
 the title as an ingredient card's marks sit under its name, the last-edit line is in the foot,
 and the hover is the same tint and lifted shadow plus the smoulder below, with no drawer.
-Tokens only.
+Tokens only. The rules the two cards share come from `IngredientCard/_specimen-card.scss`:
+`specimen-card()` gives the title link stretched over the card, the pointer on a card whose
+title links, the title block, the badge row, the medium badge size and the plain chips passing
+a click through. It is included with `$ring: false`, as this card draws its focus ring on the
+article's own `::after`, which paints over the burnt corner where the link's overlay would not.
 
 ## Compact
 
 Under a list's `data-density="compact"`, unless a stored Regular choice sits on `<html>`
 (`data-card-density`, [card-density-switch.md](card-density-switch.md)), `_compact.scss`
-mirrors `IngredientCard/_compact.scss`: padding `space(3) space(4)`, gap `space(2)`, the
-title at h4's size, small badges, overline chips and a tighter foot. The card takes no
+includes IngredientCard's shared `specimen-card-compact()`: padding `space(3) space(4)`, gap `space(2)`, the
+title at h4's size, small badges, overline chips and a tighter foot, and the intent a step smaller. The card takes no
 density prop, so the look can switch before React runs.
 
 ## The smouldering edge

@@ -969,6 +969,10 @@ $jar-cell-min-narrow: 4.6rem;
 // forms, forms to the jar rule): one token, so the two stay equal. 16px in all.
 $ingredient-card-forms-air: space(1);
 
+// A category chip's inner padding on a compact card, between the chip's regular and compact sizes
+// (`chip()`): a hair of height, the regular sides less a little. Off the spacing scale, as a chip's is.
+$chip-padding-compact-card: 0.0625rem 0.5rem;
+
 // Written after `space()` above: a Sass function is not in scope before its
 // definition, and inside `calc()` an unknown name is left as plain CSS text,
 // which is invalid and drops the declaration.

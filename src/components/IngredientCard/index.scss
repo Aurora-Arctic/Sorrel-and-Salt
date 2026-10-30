@@ -2,6 +2,7 @@
 @use '../../scss/variables' as *;
 @use '../../scss/mixins' as *;
 @use 'compact' as *;
+@use 'specimen-card' as *;
 
 // The Foundations specimen (`.specimen` in _primitives.scss) carries the layout; this adds the surface,
 // which `.modal` gives the specimen there but a list item should not have, and the forms line's spacing.
@@ -15,13 +16,11 @@
   // Its own stacking context at rest, so the raised actions and tips inside it
   // (z-index 1 above) stay inside the card instead of painting over the next card.
   isolation: isolate;
-  cursor: pointer;
 }
 
-// The whole card is the link, so the Low badge's button can sit inside it.
-.ingredient-card .ingredient-card__name a {
-  @include card-link;
-}
+// The whole card is the name's link, so the Low badge's button can sit inside it; the title block,
+// the badge row and the plain chips are the shared part (_specimen-card.scss).
+@include specimen-card('.ingredient-card', '.ingredient-card__heading', '.ingredient-card__name');
 
 // The slot: the hole in the cabinet the card's face sits in. It never moves or resizes, so a row of cards
 // ends on one line, and is a wrapper so the card has no clipping ancestor: a `clip-path` or `overflow`
@@ -154,21 +153,8 @@
 }
 
 // The name block and safety badge share the top row until the name's first word no longer fits beside the
-// badge. Other words may break anywhere (`overflow-wrap: anywhere`), the first only when it overflows
-// (`break-word`, `hyphens: manual`), and `max-width` lets an over-wide first word break. Baseline.
-.ingredient-card__heading {
-  flex: 1 1 0;
-  max-width: 100%;
-  overflow-wrap: anywhere;
-}
-
-// The pending dot takes only its start margin on the line, its width hanging into the gap beside the
-// safety badge, so it never wraps alone under a name that just fits. Hidden but for a slow navigation.
-// No no-break space: Chrome breaks before the dot anyway.
-.ingredient-card__name .link-hint {
-  margin-inline-end: -0.6em;
-}
-
+// badge. Other words may break anywhere (the shared heading rule), the first only when it overflows
+// (`break-word`, `hyphens: manual`). No no-break space before the pending dot: Chrome breaks before it anyway.
 .ingredient-card__first {
   overflow-wrap: break-word;
   hyphens: manual;
@@ -189,17 +175,6 @@
 // the overlay. The mark is words, not a button or a tip, so nothing is lost.
 .ingredient-card .recency-mark {
   pointer-events: none;
-}
-
-// The other badges, a row under the formal name. Its zero width and full minimum
-// keep it the block's width while adding nothing to the block's narrowest width, so
-// a wide badge never pushes the safety badge down.
-.ingredient-card .ingredient-card__heading > .specimen__badges {
-  inline-size: 0;
-  min-inline-size: 100%;
-  margin-block: space(2) 0;
-  // Centred across, should New or Updated be moved in beside the badges (`RECENCY_AT`).
-  align-items: center;
 }
 
 .ingredient-card__name {
@@ -246,24 +221,11 @@
   pointer-events: none;
 }
 
-// The plain category chips pass a click through to the name link's overlay, as the forms line explains.
-// Only the chips' `li`s, not the row: the +N item keeps its press, hover and focus (raised in
-// CategoryChips). A plain chip is text, so nothing is lost.
-.ingredient-card .specimen__chips > li:not(.category-more-item) {
-  pointer-events: none;
-}
-
 .ingredient-card__item,
 .ingredient-card__form {
   display: inline-flex;
   align-items: center;
   gap: space(1);
-}
-
-// The badges (the marks, Caution, Toxic, Low and Out of Stock are all `.badge`) at the medium
-// badge size, which holds them 24px tall. The chips and their +N button are CategoryChips'.
-.ingredient-card .badge {
-  @include badge-size('medium');
 }
 
 // The corner centred on the name's first line, as the forms line's icons are: the specimen tops them

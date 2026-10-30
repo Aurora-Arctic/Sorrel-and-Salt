@@ -474,7 +474,8 @@
 // A card whose name's one link is the whole card: plain ink, an empty `::after` stretched over the
 // card (which must be positioned), and the focus ring drawn on that overlay so it rounds the card. Not
 // an `<a>` around the card, which a screen reader would read whole and which cannot hold a button.
-@mixin card-link {
+// `$ring: false` leaves the ring to the card, for one whose layers would paint over the overlay's.
+@mixin card-link($ring: true) {
   color: $text-primary;
   text-decoration: none;
 
@@ -492,8 +493,10 @@
   &:focus-visible {
     outline: none;
 
-    &::after {
-      @include focus-ring;
+    @if $ring {
+      &::after {
+        @include focus-ring;
+      }
     }
   }
 }

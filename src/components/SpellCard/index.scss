@@ -2,6 +2,7 @@
 @use '../../scss/mixins' as *;
 @use 'smoulder' as *;
 @use 'compact' as *;
+@use '../IngredientCard/specimen-card' as *;
 
 // The Foundations specimen (`.specimen` in _primitives.scss) carries the layout;
 // this adds IngredientCard's padding, and the title's size. Tokens only. The card's face
@@ -30,11 +31,6 @@
   }
 }
 
-// The pointer promises a press only on a card whose title links somewhere.
-.spell-card:has(.spell-card__title a) {
-  cursor: pointer;
-}
-
 // The hover, on pointers that can hover only, so a tap on a phone does not leave a card
 // burning: IngredientCard's tint and lifted shadow, and the smouldering edge (_smoulder.scss).
 @media (hover: hover) {
@@ -60,26 +56,9 @@
   position: static;
 }
 
-.spell-card .spell-card__title a {
-  color: $text-primary;
-  text-decoration: none;
-
-  &:hover {
-    color: $text-primary;
-  }
-
-  &::after {
-    content: '';
-    position: absolute;
-    inset: 0;
-    border-radius: radius('surface');
-  }
-
-  // The ring goes round the card, drawn on the article below.
-  &:focus-visible {
-    outline: none;
-  }
-}
+// The title link, the title block, the badge row, the badge size and the plain chips are
+// IngredientCard's (_specimen-card.scss). The ring goes round the card, drawn on the article below.
+@include specimen-card('.spell-card', '.spell-card__heading', '.spell-card__title', $ring: false);
 
 // The focus ring, on the article's own `::after`: it comes after the burn layers in the markup,
 // so it paints over the burnt corner, which the title link's overlay, earlier, does not.
@@ -105,13 +84,6 @@
   pointer-events: none;
 }
 
-// The title block fills the top row; a long word breaks anywhere rather than widen the card.
-.spell-card__heading {
-  flex: 1 1 0;
-  max-width: 100%;
-  overflow-wrap: anywhere;
-}
-
 // h3's size, as an ingredient card's name: one of many in a grid.
 .spell-card__title {
   margin: 0;
@@ -119,33 +91,11 @@
   hyphens: auto;
 }
 
-// The pending dot hangs into the gap, as the ingredient card's does.
-.spell-card__title .link-hint {
-  margin-inline-end: -0.6em;
-}
-
-// The badges, a row under the title, as the marks sit under an ingredient card's name.
-.spell-card .spell-card__heading > .specimen__badges {
-  inline-size: 0;
-  min-inline-size: 100%;
-  margin-block: space(2) 0;
-  align-items: center;
-}
-
-.spell-card .badge {
-  @include badge-size('medium');
-}
-
-// The intent and the category chips pass a click through to the title link's overlay: each
-// is positioned by the content rule above, which paints it over the overlay. Only the chips'
-// `li`s, so the +N button keeps its press, hover and focus.
+// The intent passes a click through to the title link's overlay, as the plain chips do: it is
+// positioned by the content rule above, which paints it over the overlay.
 .spell-card__intent {
   margin: 0;
   color: $text-muted;
-  pointer-events: none;
-}
-
-.spell-card .specimen__chips > li:not(.category-more-item) {
   pointer-events: none;
 }
 
