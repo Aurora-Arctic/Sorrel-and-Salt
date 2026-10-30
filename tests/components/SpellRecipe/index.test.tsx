@@ -333,12 +333,7 @@ describe('SpellRecipe', () => {
 
     it('lists the sections the page draws, each link pointing at one that exists', () => {
       render(<SpellRecipe {...props({ steps: [instruction('s1', 'Stir.')], aside, workings })} />);
-      expect(linksOf().map((link) => link.textContent)).toEqual([
-        'Steps',
-        'Workings',
-        'Category Match',
-        'In Coven Inventory',
-      ]);
+      expect(linksOf().map((link) => link.textContent)).toEqual(['Steps', 'The Jar', 'Workings']);
       for (const link of linksOf()) {
         const target = document.getElementById(link.getAttribute('href')!.slice(1));
         expect(target, link.textContent ?? '').not.toBeNull();

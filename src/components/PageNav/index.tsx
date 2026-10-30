@@ -1,6 +1,6 @@
 'use client';
 
-import { type ReactElement, useEffect, useId, useState } from 'react';
+import { type ReactElement, useEffect, useId, useRef, useState } from 'react';
 import type { PageNavEntry, PageNavItem, PageNavProps } from './types';
 import './index.scss';
 
@@ -22,6 +22,7 @@ function itemsOf(entries: readonly PageNavEntry[]): PageNavItem[] {
 export default function PageNav({ label, entries }: PageNavProps): ReactElement {
   const [current, setCurrent] = useState(entries[0]?.href);
   const groupId = useId();
+  const nav = useRef<HTMLElement>(null);
 
   useEffect(() => {
     // No observer (an old browser): the server's mark stays.
@@ -39,7 +40,11 @@ export default function PageNav({ label, entries }: PageNavProps): ReactElement 
           if (change.isIntersecting) visible.add(change.target.id);
           else visible.delete(change.target.id);
         }
-        const first = entries.find((entry) => visible.has(entry.href.slice(1)));
+        // An entry the width hides has no box, so it is never the current one.
+        const shown = (entry: PageNavEntry) =>
+          !entry.narrowOnly ||
+          (nav.current?.querySelector(`a[href="${entry.href}"]`)?.getClientRects().length ?? 0) > 0;
+        const first = entries.find((entry) => visible.has(entry.href.slice(1)) && shown(entry));
         if (first) setCurrent(first.href);
       },
       // A band across the upper part of the window: a section counts once its
@@ -53,7 +58,14 @@ export default function PageNav({ label, entries }: PageNavProps): ReactElement 
   // `apart` is drawn by whatever stands at the top level: the entry's own item,
   // or for a group its item, never the entry again inside the group.
   const link = (entry: PageNavEntry, apart = entry.apart) => (
-    <li key={entry.href} className={apart ? 'page-nav__apart' : undefined}>
+    <li
+      key={entry.href}
+      className={
+        [apart && 'page-nav__apart', entry.narrowOnly && 'page-nav__narrow']
+          .filter(Boolean)
+          .join(' ') || undefined
+      }
+    >
       <a href={entry.href} aria-current={entry.href === current ? 'location' : undefined}>
         {entry.label}
       </a>
@@ -64,6 +76,7 @@ export default function PageNav({ label, entries }: PageNavProps): ReactElement 
   // nests a group, its label naming its list.
   return (
     <nav
+      ref={nav}
       className={
         entries.some((entry) => entry.group !== undefined)
           ? 'page-nav page-nav--grouped'

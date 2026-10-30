@@ -15,6 +15,11 @@ export type PageNavEntry = {
    * takes it from its first entry, so the rest of the group's entries need not repeat it.
    */
   apart?: boolean;
+  /**
+   * Drawn only below a tablet's width, where the section it names stands under the text and
+   * not beside it: from a tablet up the entry is hidden (and never marked current).
+   */
+  narrowOnly?: boolean;
 };
 
 export type PageNavProps = {
