@@ -77,7 +77,11 @@ const SpellWorkings = ({
   editAction,
   headingAction,
 }: SpellWorkingsProps): ReactElement => (
-  <section id={WORKINGS_ID} className="spell-workings" aria-labelledby="spell-workings-title">
+  <section
+    id={WORKINGS_ID}
+    className="spell-workings page-frame__section"
+    aria-labelledby="spell-workings-title"
+  >
     <div className="spell-workings__title">
       <h2 id="spell-workings-title">Workings</h2>
       {headingAction}

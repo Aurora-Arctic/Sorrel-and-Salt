@@ -16,7 +16,7 @@ recorded it and who took part, its note, and, on a complete working, its deducti
 and each participant are names the page resolved with `displayNamesOf`, so a removed member reads
 under the name they last held; a participant with no readable name reads "A former member".
 
-At a tablet width and up the head is three columns: the date, the badges in a column of their own (so they start at the same place on every row, whatever the row holds), and a slot at the far right for the buttons (`spell-workings__actions`, sized for Complete, Edit and Delete). Below that the badges and buttons wrap under the date.
+The head is one wrapping row: the date, its badges right after it, and the buttons pushed to the far right (`spell-workings__actions`). When the row is full, as on a phone, the buttons wrap under the date.
 
 The row does not use `LastEdit`: a working is recorded once, and `LastEdit` says who edited a row last.
 Its deduction lines are plain items (name, then amount and unit) inside an `ol` named Deductions,
@@ -33,6 +33,20 @@ The slots a row takes from the page:
 A draft row also lists what completing it would skip (`warnings`), as one line giving the count, such as "Completing does not affect inventory for 4 items", beside its Complete; the reasons stay in the Complete dialog's confirm step. The wording is `skipSummary` in `@/components/RecordWorking/warnings`. It carries no shortfalls. `readWorkingsOf` reads the preview once per page, only when a draft of the viewer's own is there, and gives the lines to the viewer's own drafts; they are the spell's stock as it stands now.
 
 An empty list reads "This spell has not been worked yet."
+
+## Styling
+
+`index.scss`, on the `spell-workings` block, tokens only:
+
+- **The section** is a `.page-frame__section` (`_primitives.scss`): its `space(3)` gap spaces the heading row from the list, and it takes the shell's scroll margin, so a jump from the menu lands the heading clear of the sticky bar. It keeps its own `space(6)` top margin, since the recipe is not a `.page-frame` column whose gap would space it.
+- **The heading row** (`__title`) is the Workings heading with Record a Working at its end.
+- **The list** (`__list`) is a grid with `space(5)` between rows and no marker (`list-reset`).
+- **A row's date** is an `h3` at `heading-size(4)`.
+- **The deductions** (`__deductions`) sit `space(3)` under the note, each line its name at the start and its amount at the end.
+
+## Stories
+
+None: no story draws the section on its own. The workshop's Grimoire / Spell Recipe stories draw the recipe without it.
 
 ## Reading
 
