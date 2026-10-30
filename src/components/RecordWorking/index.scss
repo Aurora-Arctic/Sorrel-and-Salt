@@ -1,12 +1,5 @@
 @use '../../scss/variables' as *;
 
-// The cauldron before the button's label, a large glyph beside the label's text.
-.record-working__button svg {
-  flex: none;
-  width: $glyph-size-large;
-  height: $glyph-size-large;
-}
-
 // The Share With the Coven switch, start-aligned as the spell builder's is rather than centred as the
 // primitive's filter-bar switch is.
 .working-form .switch {

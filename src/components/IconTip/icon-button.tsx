@@ -7,6 +7,7 @@ import IconTip from './icon-tip';
 import {
   AnnotateIcon,
   BinIcon,
+  CauldronIcon,
   DotsIcon,
   MysticEyeIcon,
   PencilIcon,
@@ -133,6 +134,22 @@ export const PrintButton = ({
     <button type="button" className="icon-tip__edit" onClick={onClick}>
       <PrintIcon />
       <span className="visually-hidden">Print Spell {name}</span>
+    </button>
+  </IconTip>
+);
+
+/** Record a Working as a button: a spell's cauldron, named and tipped "Record a Working", opening the dialog that records one. */
+export const RecordButton = ({
+  onClick,
+  ref,
+}: {
+  onClick: () => void;
+  ref?: Ref<HTMLButtonElement>;
+}): ReactElement => (
+  <IconTip tip="Record a Working">
+    <button ref={ref} type="button" className="icon-tip__edit" onClick={onClick}>
+      <CauldronIcon />
+      <span className="visually-hidden">Record a Working</span>
     </button>
   </IconTip>
 );
