@@ -219,6 +219,8 @@ export default async function SpellRecipePage({ params, searchParams }: SpellRec
           closeHref={recipePath}
           opened={saved && { spell: saved }}
           canCreate={false}
+          canDelete={canDelete}
+          deletedFromHref={listPath as Route}
           canDuplicate={canDuplicate}
           userId={membership.userId}
         />

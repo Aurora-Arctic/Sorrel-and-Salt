@@ -45,6 +45,7 @@ export default function SpellDialog({
   opened: read,
   canCreate,
   canDelete = false,
+  deletedFromHref = closeHref,
   canDuplicate = false,
   userId,
 }: SpellDialogProps): ReactElement | null {
@@ -85,7 +86,9 @@ export default function SpellDialog({
               workspaceId={workspaceId}
               covenSlug={covenSlug}
               userId={userId}
-              deletedHrefOf={canDelete ? (title) => deletedHrefOf(closeHref, title) : undefined}
+              deletedHrefOf={
+                canDelete ? (title) => deletedHrefOf(deletedFromHref, title) : undefined
+              }
               copiedHrefOf={canDuplicate ? (id) => copiedHrefOf(covenSlug, id) : undefined}
               spell={spell && { ...spell, steps: steps ?? [] }}
               stepsRead={
