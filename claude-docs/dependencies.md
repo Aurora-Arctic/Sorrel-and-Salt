@@ -42,6 +42,10 @@ From a clean checkout, in this order:
 - `tsconfck`, under `vite-tsconfig-paths`, is deprecated as "unmaintained" (seen 2026-10-30). It is upstream's to fix; **revisit when** `vite-tsconfig-paths` moves to another resolver.
 - `node-domexception` is deprecated and reached through `@graphql-codegen/cli` and `sync-fetch` to `node-fetch@3`. It is upstream's to fix.
 
-## `qrcode` draws the cards' codes
+## Added since the audit
 
-`qrcode` supplies the module matrix (`QRCode.create`) for an invitation card's code (M15.19). The repo draws the SVG itself, because the package draws squares only. It is used in the browser, where the admin's page renders each card and builds the batch's PDF, and takes no part in any server path.
+The invitation card print sheets (M15.19, [`invitation-cards/print.md`](invitation-cards/print.md)) added four packages, so the repo has 80 direct dependencies, 38 runtime and 42 dev:
+
+- `qrcode` supplies the QR module matrix (`QRCode.create`); the card draws the SVG itself, because the package draws square modules only. It runs in the browser, where the admin page renders each card and builds the batch PDF, and takes no part in any server path. `@types/qrcode` (dev) types it.
+- `pdf-lib` builds the print PDF in the browser. Its `latest` is 1.17.1, published in November 2021, and it has no open advisory; it is small, has no native code, and the format it writes has not changed. **Revisit when** an advisory names it, or a browser change breaks a sheet.
+- `@pdf-lib/fontkit` lets `pdf-lib` embed and subset the cards' TrueType fonts.
