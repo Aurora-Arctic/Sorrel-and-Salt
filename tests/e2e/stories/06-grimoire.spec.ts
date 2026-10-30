@@ -797,6 +797,14 @@ test(
     await page.goto(`/coven/${coven.slug}/grimoire`);
     const card = grimoireList(page).getByRole('listitem', { name: /Fixture Working/ });
     await expect(card.getByText('Made 2 Times')).toBeVisible();
+    // The pencil is on B's own working only, and saves a changed note in place.
+    await page.goto(`/coven/${coven.slug}/grimoire/${spellId}`);
+    await expect(workings.getByRole('button', { name: /^Edit / })).toHaveCount(1);
+    await first.getByRole('button', { name: /^Edit / }).click();
+    const edit = page.getByRole('dialog', { name: 'Edit a Working' });
+    await edit.getByRole('textbox', { name: 'Note' }).fill('First brewing, revised');
+    await edit.getByRole('button', { name: 'Save Working' }).click();
+    await expect(workings.getByText('First brewing, revised')).toBeVisible();
     // Deleting B's own working takes it out of the list and the count.
     await page.goto(`/coven/${coven.slug}/grimoire/${spellId}`);
     await first.getByRole('button', { name: /^Delete Working/ }).click();

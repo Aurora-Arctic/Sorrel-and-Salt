@@ -4,7 +4,7 @@ import type { ReactElement, Ref } from 'react';
 import MenuButton from '../MenuButton';
 import type { MenuButtonChoices } from '../MenuButton/types';
 import IconTip from './icon-tip';
-import { AnnotateIcon, BinIcon, DotsIcon, MysticEyeIcon } from './icons';
+import { AnnotateIcon, BinIcon, DotsIcon, MysticEyeIcon, PencilIcon } from './icons';
 
 // The icon controls that are a button rather than a link, shared by the coven cards' foot, the entry page and the Quick Look window so the places cannot differ
 // (claude-docs/components/icon-tip.md).
@@ -29,6 +29,24 @@ export const BinButton = ({
       <span className="visually-hidden">
         {verb} {name}
       </span>
+    </button>
+  </IconTip>
+);
+
+/** The pencil as a button, where Edit opens a dialog in the page rather than going to an address. */
+export const EditButton = ({
+  name,
+  onClick,
+  ref,
+}: {
+  name: string;
+  onClick: () => void;
+  ref?: Ref<HTMLButtonElement>;
+}): ReactElement => (
+  <IconTip tip="Edit">
+    <button ref={ref} type="button" className="icon-tip__edit" onClick={onClick}>
+      <PencilIcon />
+      <span className="visually-hidden">Edit {name}</span>
     </button>
   </IconTip>
 );

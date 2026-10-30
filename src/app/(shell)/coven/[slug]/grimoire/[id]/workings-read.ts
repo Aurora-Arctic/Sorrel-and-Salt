@@ -21,6 +21,8 @@ export async function readWorkingsOf(
   steps: readonly RecipeStep[],
   /** The viewer's role may delete workings; deleting is still the recorder's alone. */
   mayDelete: boolean,
+  /** The viewer's role may change workings; changing is still the recorder's alone. */
+  mayEdit: boolean,
 ): Promise<WorkingView[]> {
   const reports = await allPages((request) =>
     listWorkingsPage(session, workspaceId, spellId, request),
@@ -53,5 +55,19 @@ export async function readWorkingsOf(
       ];
     }),
     canChange: mayDelete && working.createdBy === session.userId,
+    editable:
+      mayEdit && working.createdBy === session.userId
+        ? {
+            id: working.id,
+            workedOn: working.workedOn,
+            note: working.note,
+            visibility: working.visibility,
+            status: working.status,
+            participants: participants.map((person) => ({
+              userId: person.userId,
+              name: person.displayName ?? person.name ?? FORMER_MEMBER,
+            })),
+          }
+        : undefined,
   }));
 }

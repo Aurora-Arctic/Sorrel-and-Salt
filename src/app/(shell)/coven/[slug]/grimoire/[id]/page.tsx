@@ -8,12 +8,14 @@ import SpellDialog from '@/components/SpellBuilder/spell-dialog';
 import DeleteSpellAction from '@/components/SpellRecipe/delete-spell';
 import SpellRecipe from '@/components/SpellRecipe';
 import CompleteWorkingAction from '@/components/RecordWorking/complete-action';
+import EditWorkingAction from '@/components/SpellWorkings/edit-working';
 import SpellWorkings from '@/components/SpellWorkings';
 import SpellRecipeAside from '@/components/SpellRecipe/aside';
 import { UNTITLED_SPELL } from '@/components/SpellCard';
 import { Forbidden, NotFound } from '@/lib/errors';
 import { RowId } from '@/lib/validation';
-import { rolePermits } from '@/modules/coven';
+import { memberRoster, rolePermits } from '@/modules/coven';
+import { displayNamesOf } from '@/modules/identity';
 import { requireCovenMembership, requireSession } from '@/lib/request-session';
 import { readSpell } from '@/modules/grimoire';
 import { readEditedSpell } from '../(list)/reads';
@@ -70,7 +72,17 @@ export default async function SpellRecipePage({ params, searchParams }: SpellRec
     spell.id,
     recipe.steps,
     rolePermits(membership.role, { working: ['delete'] }),
+    rolePermits(membership.role, { working: ['update'] }),
   );
+  const roster = await memberRoster(session, workspace);
+  const memberNames = await displayNamesOf(
+    session,
+    roster.map(({ userId }) => userId),
+  );
+  const members = roster.map(({ userId }, i) => ({
+    userId,
+    name: memberNames[i] ?? 'A former member',
+  }));
   const ingredientSteps = recipe.steps.flatMap((step) =>
     step.kind === 'ingredient' ? [{ id: step.id, name: step.name }] : [],
   );
@@ -119,7 +131,17 @@ export default async function SpellRecipePage({ params, searchParams }: SpellRec
                   steps={ingredientSteps}
                 />
               )}
-              // SPOT (M13.7): the pencil that opens Record a Working on the row is given here once the dialog opens on an existing working.
+              editAction={(editable, name) => (
+                <EditWorkingAction
+                  name={name}
+                  workspaceId={workspace.id}
+                  spellId={spell.id}
+                  spellVisibility={spell.visibility}
+                  members={members}
+                  steps={ingredientSteps}
+                  working={editable}
+                />
+              )}
             />
           }
           aside={<SpellRecipeAside {...aside} />}

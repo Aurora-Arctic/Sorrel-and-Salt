@@ -21,10 +21,12 @@ const Working = ({
   working,
   workspaceId,
   completeAction,
+  editAction,
 }: {
   working: WorkingView;
   workspaceId: string;
   completeAction: SpellWorkingsProps['completeAction'];
+  editAction: SpellWorkingsProps['editAction'];
 }): ReactElement => {
   const day = dayOf(working.workedOn);
   return (
@@ -40,6 +42,7 @@ const Working = ({
           )}
         </div>
         {working.status === 'draft' && completeAction?.(working.id)}
+        {working.editable && editAction?.(working.editable, day)}
         {working.canChange && (
           <DeleteWorkingAction workspaceId={workspaceId} workingId={working.id} name={day} />
         )}
@@ -70,6 +73,7 @@ const SpellWorkings = ({
   workspaceId,
   workings,
   completeAction,
+  editAction,
 }: SpellWorkingsProps): ReactElement => (
   <section className="spell-workings" aria-labelledby="spell-workings-title">
     <h2 id="spell-workings-title">Workings</h2>
@@ -83,6 +87,7 @@ const SpellWorkings = ({
             working={working}
             workspaceId={workspaceId}
             completeAction={completeAction}
+            editAction={editAction}
           />
         ))}
       </ul>
