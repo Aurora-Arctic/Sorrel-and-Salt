@@ -66,7 +66,7 @@ const RecordWorkingMembersDocument = graphql(`
   query RecordWorkingMembers($workspaceId: ID!, $query: String, $first: Int) {
     workspace(id: $workspaceId) {
       id
-      members(first: $first, search: $query) {
+      members(first: $first, query: $query) {
         edges {
           node {
             user {

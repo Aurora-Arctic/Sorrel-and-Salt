@@ -129,16 +129,16 @@ describe('Workspace.members', () => {
   });
 });
 
-describe('Workspace.members(search:)', () => {
-  it('hands the search to the service, which answers only the members it matches', async () => {
+describe('Workspace.members(query:)', () => {
+  it('hands the query to the service, which answers only the members it matches', async () => {
     const result = await run<{
       workspace: { members: { edges: { node: { user: { id: string } } }[] } };
     }>(
       asUser(A),
-      `query ($id: ID!, $search: String) {
-        workspace(id: $id) { members(first: 10, search: $search) { edges { node { user { id } } } } }
+      `query ($id: ID!, $query: String) {
+        workspace(id: $id) { members(first: 10, query: $query) { edges { node { user { id } } } } }
       }`,
-      { id: WORKSPACE_W_ID, search: B.name.slice(-3).toUpperCase() },
+      { id: WORKSPACE_W_ID, query: B.name.slice(-3).toUpperCase() },
     );
 
     expect(result.errors).toBeUndefined();

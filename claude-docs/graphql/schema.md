@@ -115,12 +115,12 @@ a user sits in the covens they joined, and no more.
 `Workspace.members` is a coven's live members, in the order they joined, and
 is a paged connection rather than a bare list, because a coven's roll grows
 with every invitation and nothing about its parent bounds it (CLAUDE.md rule
-8; M6.11). Its service, `listMembers(session, workspace, page, search?)` in
+8; M6.11). Its service, `listMembers(session, workspace, page, query?)` in
 `src/modules/coven/services/members.ts`, checks `member: read`, which the
 owner holds and, from M6.13, the member too, and reads one page through the
-repository's `findMemberPage`. The optional `search: String` argument narrows
+repository's `findMemberPage`. The optional `query: String` argument narrows
 the page to the members whose name holds the text, case-insensitively and with
-`%` and `_` read literally, in SQL; blank is no search. A coven at a time, not batched across covens by
+`%` and `_` read literally, in SQL; blank is no filter. A coven at a time, not batched across covens by
 a loader: no page lists two covens' members at once
 ([`m6.11-members-without-a-loader.md`](../design-decisions/m6.11-members-without-a-loader.md)).
 `WorkspaceMember.user` is a `CoMember`, an `id` and a nullable `name`, and
