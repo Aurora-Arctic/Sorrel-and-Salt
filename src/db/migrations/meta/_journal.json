@@ -652,6 +652,13 @@
       "when": 1793317071544,
       "tag": "0092_ingredients-revision",
       "breakpoints": true
+    },
+    {
+      "idx": 93,
+      "version": "7",
+      "when": 1793339120442,
+      "tag": "0093_cupboard-entries-revision",
+      "breakpoints": true
     }
   ]
 }

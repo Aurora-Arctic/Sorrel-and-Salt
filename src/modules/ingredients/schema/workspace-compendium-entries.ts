@@ -1,7 +1,7 @@
 import { sql } from 'drizzle-orm';
 import { index, pgTable, text, uniqueIndex, uuid } from 'drizzle-orm/pg-core';
 import { ingredientElement, ingredients } from './ingredients';
-import { auditColumns } from '../../identity/schema/users';
+import { auditColumns, revisionColumn } from '../../identity/schema/users';
 import { workspaces } from '../../coven/schema/workspaces';
 import { idColumn, liveUnique } from '../../../db/schema-parts';
 
@@ -27,6 +27,8 @@ export const workspaceCompendiumEntries = pgTable(
     celestialBodies: text('celestial_bodies').array(),
     zodiacSigns: text('zodiac_signs').array(),
     colors: text('colors').array(),
+    // Counts saves so an autosave naming the revision it read is refused once the row has moved on (bump_revision trigger).
+    revision: revisionColumn(),
     ...auditColumns,
   },
   (table) => [

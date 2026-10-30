@@ -2,14 +2,15 @@
 
 One row says "this coven's cupboard holds this compendium entry". It is the stated fact that M12.12's rule used to guess, by matching a coven's own ingredient to a compendium entry on name. The row carries the coven's own say over the entry too: seven columns that each read as the compendium's value while null.
 
-| Column                                                   | Meaning                                                                                                              |
-| -------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------- |
-| `id`                                                     | the row's own key                                                                                                    |
-| `workspace_id`                                           | the coven whose cupboard holds the entry, required                                                                   |
-| `ingredient_id`                                          | the entry held, required                                                                                             |
-| `label`, `description`, `safety_notes`                   | the coven's own wording; null means the compendium's                                                                 |
-| `elements`, `celestial_bodies`, `zodiac_signs`, `colors` | the coven's own lists, typed as `ingredients` types them; null means the compendium's, `[]` means cleared on purpose |
-| `created_*`, `updated_*`, `deleted_*`                    | `...auditColumns`, with the `set_updated_at` trigger the migration adds                                              |
+| Column                                                   | Meaning                                                                                                                                        |
+| -------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------- |
+| `id`                                                     | the row's own key                                                                                                                              |
+| `workspace_id`                                           | the coven whose cupboard holds the entry, required                                                                                             |
+| `ingredient_id`                                          | the entry held, required                                                                                                                       |
+| `label`, `description`, `safety_notes`                   | the coven's own wording; null means the compendium's                                                                                           |
+| `elements`, `celestial_bodies`, `zodiac_signs`, `colors` | the coven's own lists, typed as `ingredients` types them; null means the compendium's, `[]` means cleared on purpose                           |
+| `created_*`, `updated_*`, `deleted_*`                    | `...auditColumns`, with the `set_updated_at` trigger the migration adds                                                                        |
+| `revision`                                               | `integer NOT NULL DEFAULT 1` (M13.24), raised by one by the `bump_revision` trigger on every update, so an autosave names the revision it read |
 
 A null and an empty array are different answers, as `none` and `unknown` are for a nomenclature: null defers to the compendium, `[]` says the coven wants none shown.
 
