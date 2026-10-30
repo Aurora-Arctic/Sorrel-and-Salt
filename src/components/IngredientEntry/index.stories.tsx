@@ -772,7 +772,7 @@ const detailsFromCompendiumForCuratorNode = (
 );
 // Sparse: only what is recorded shows. One element and a folk name; the empty
 // correspondence rows, the categories and the safety note are left out, where
-// the page would say "None recorded".
+// the page would say "No elements recorded.".
 const detailsSparseNode = (
   <Details
     detail={{

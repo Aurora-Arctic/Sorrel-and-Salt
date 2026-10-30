@@ -104,8 +104,8 @@ the pause (`invitations/lock.ts`), and hands them down. The rules are
   this component's state, set by the form before it closes, so the notice
   outlasts `?invite` without the address riding in the URL; opening the
   form again clears it. No link is ever shown: the mutation answers none.
-- **No invitation waiting is a sentence**: "No admin invitations are
-  waiting." Under a filter it names the filters in use, as the user list's
+- **No invitation waiting is a sentence**: "There are no admin
+  invitations yet." Under a filter it names the filters in use, as the user list's
   and the compendium's do, through the one wording `noMatchText`
   (`src/lib/text.ts`): "No invitations match “fern” and Expires in 24 Hrs.
   Change or clear the filter to see more."

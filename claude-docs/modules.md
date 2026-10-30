@@ -520,6 +520,11 @@ see more: "No users match “ada” and the role Admin. Change or clear the filt
 to see more." With none, the list itself is empty and `emptyText` is the caller's
 own sentence.
 
+That sentence starts from `emptyList(things)`, "There are no users yet.", which every
+list with no rows at all uses, filtered or not, and a list may add a sentence after it
+saying how to begin ("Add one with Add Category."). An empty field says "No … recorded."
+instead ("No folk names recorded."), since a field is filled in rather than added to.
+
 `noun` is the plural, matched by a plural verb. One wording serves all six lists;
 before it the compendium said "No entry matches", the invitations "No invitation
 matches", the users "No users match", the group and value lists "No category

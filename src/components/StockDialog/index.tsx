@@ -320,7 +320,7 @@ const StockDialogForm = ({
                   })}
                 </ul>
               ) : (
-                <p className="stock-dialog__empty">No stock yet. Add a form to start.</p>
+                <p className="stock-dialog__empty">There is no stock yet. Add a form to start.</p>
               )}
               {/* Gone once every form has a jar: there is nothing left to add. */}
               {addable.length > 0 && (

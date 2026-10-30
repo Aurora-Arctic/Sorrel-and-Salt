@@ -381,7 +381,11 @@ describe('IngredientEntry', () => {
     const body = details.parentElement!;
 
     expect(within(body).getByRole('heading', { name: 'Correspondences' })).toBeInTheDocument();
-    expect(within(body).getAllByText('None recorded')).toHaveLength(5);
+    expect(
+      within(body).getAllByText(
+        /^No (elements|celestial bodies|zodiac signs|colours|deities) recorded\.$/,
+      ),
+    ).toHaveLength(5);
     expect(within(body).getByText('No folk names recorded.')).toBeInTheDocument();
     expect(within(body).getByText('No categories recorded.')).toBeInTheDocument();
   });

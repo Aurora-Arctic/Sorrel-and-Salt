@@ -2,7 +2,7 @@ import type { ReactElement, ReactNode } from 'react';
 import { chipColors } from '../../lib/chip-colors';
 import { capitalise } from '../../lib/text';
 import type { CategoryDetail, DeityDetail, IngredientRow } from '@/modules/ingredients';
-// Holds `.ingredient-entry__empty`, which these blocks say "None recorded" in.
+// Holds `.ingredient-entry__empty`, which these blocks say "No elements recorded." in.
 import './index.scss';
 
 // The entry page's blocks, drawn by its Details, its form sections and the details modal's summary:
@@ -121,7 +121,7 @@ export function CorrespondenceBlock({
             {row.values.length > 0 ? (
               <dd>{row.values.join(', ')}</dd>
             ) : (
-              <dd className="ingredient-entry__empty">None recorded</dd>
+              <dd className="ingredient-entry__empty">{`No ${row.label.toLowerCase()} recorded.`}</dd>
             )}
           </div>
         ))}

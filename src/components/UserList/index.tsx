@@ -13,7 +13,7 @@ import ListFrame, { ListBody } from '../ListFrame';
 import Pager from '../Pager';
 import StackTable from '../DataTable';
 import type { StackColumn } from '../DataTable/types';
-import { noMatchText } from '../../lib/text';
+import { emptyList, noMatchText } from '../../lib/text';
 import type { UserListEntry, UserListFilterProps, UserListProps } from './types';
 import './index.scss';
 
@@ -33,7 +33,7 @@ function noMatch({ query, role, awaitingApproval }: UserListFilterProps): string
     role && `the role ${roleLabel(role)}`,
     awaitingApproval && 'Needs Approval',
   ].filter((filter): filter is string => Boolean(filter));
-  return noMatchText('users', filters, 'There are no users yet.');
+  return noMatchText('users', filters, emptyList('users'));
 }
 
 /**
