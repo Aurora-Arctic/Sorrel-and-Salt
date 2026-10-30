@@ -134,6 +134,7 @@ viewer's bar, the skip link's target, and the viewer's invitation count reaching
 the account menu's link. `tests/lib/shell-home.test.ts` and
 `tests/lib/viewer.test.ts` cover the two helpers, the latter including the count
 (read for a verified viewer, never queried for an unverified one).
+`tests/e2e/menu-button-edge.spec.ts` scans the page for accessibility with the Add Ingredient menu open, at a desktop width.
 
 ## The Add Ingredient button
 
