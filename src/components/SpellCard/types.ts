@@ -39,6 +39,8 @@ export interface SpellCardProps {
    * a page's editors in one batch); none draws no line.
    */
   lastEdit?: LastEditProps | null;
+  /** How many complete workings of the spell the viewer can see; none or 0 draws no line. */
+  workingCount?: number;
   /** The heading level, 2 by default, as IngredientCard's. */
   level?: 2 | 3;
 }

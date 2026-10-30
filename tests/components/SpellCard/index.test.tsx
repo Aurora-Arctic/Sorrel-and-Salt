@@ -26,6 +26,17 @@ const BASE = {
 };
 
 describe('SpellCard', () => {
+  it('says how many times a spell has been made, in the singular for one and nothing for none', () => {
+    const { rerender } = render(<SpellCard {...BASE} workingCount={2} />);
+    expect(screen.getByText('Made 2 Times')).toBeInTheDocument();
+    rerender(<SpellCard {...BASE} workingCount={1} />);
+    expect(screen.getByText('Made 1 Time')).toBeInTheDocument();
+    rerender(<SpellCard {...BASE} workingCount={0} />);
+    expect(screen.queryByText(/^Made /)).not.toBeInTheDocument();
+    rerender(<SpellCard {...BASE} />);
+    expect(screen.queryByText(/^Made /)).not.toBeInTheDocument();
+  });
+
   it('draws a Delete Spell bin named for the spell only when given what deleting needs, and it asks in a dialog naming the spell', async () => {
     const deleteSpell = {
       workspaceId: 'workspace-1',

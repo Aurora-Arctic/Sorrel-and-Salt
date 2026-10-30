@@ -34,6 +34,7 @@ const SpellCard = ({
   visibility,
   categories,
   lastEdit,
+  workingCount,
   level = 2,
 }: SpellCardProps): ReactElement => {
   const Heading = `h${level}` as const;
@@ -87,6 +88,12 @@ const SpellCard = ({
       </div>
       {purpose !== '' && <p className="spell-card__intent">{purpose}</p>}
       <CategoryChips categories={categories} label={name} />
+      {/* How often it has been made: none draws nothing, as a spell never worked has nothing to say. */}
+      {workingCount != null && workingCount > 0 && (
+        <p className="meta spell-card__made">
+          Made {workingCount} {workingCount === 1 ? 'Time' : 'Times'}
+        </p>
+      )}
       {/* In the foot, as IngredientCard's, so cards in one grid row end on the same line. */}
       {(lastEdit != null || lookHref || editHref || deleteSpell) && (
         // The foot, as IngredientCard's: who last edited, then the actions on one row, the

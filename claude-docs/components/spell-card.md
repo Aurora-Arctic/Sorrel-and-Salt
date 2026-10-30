@@ -1,7 +1,7 @@
 # SpellCard
 
 `src/components/SpellCard/` draws one spell in the grimoire's list (M10.11, story 56). It
-shows six things:
+shows seven things:
 
 - the spell's title, or "Untitled Spell" when it has none (`UNTITLED_SPELL`), since a draft
   may have no title;
@@ -9,6 +9,7 @@ shows six things:
 - a Draft badge, on a draft only;
 - a Private badge, on a private spell only (M10.13);
 - the categories its author assigned it, as `CategoryChips`;
+- how many times it has been made, "Made 2 Times", when `workingCount` is above zero (M13.8);
 - who last edited it and when, as `LastEdit` ([last-edit.md](last-edit.md)), in the card's
   foot as an ingredient card's is, when the caller hands in an edit (the owner, 2026-10-27).
 
@@ -17,19 +18,20 @@ The card is presentational: it takes props and works nothing out from the data, 
 
 ## Props
 
-| Prop          | What it is                                                                                            |
-| ------------- | ----------------------------------------------------------------------------------------------------- |
-| `id`          | The spell's id. It names the title heading, `spellTitleId(id)`                                        |
-| `title`       | The title, or null. Null or blank lists as "Untitled Spell"                                           |
-| `intent`      | The intent, or null. Without one the card draws no paragraph                                          |
-| `status`      | `draft` or `complete`                                                                                 |
-| `visibility`  | `private` or `workspace`: who can see it                                                              |
-| `categories`  | The assigned categories, each with its group's colours. Never the derived ones (DESIGN.md §5)         |
-| `lastEdit`    | Who last edited it and when, `{ by, at }`, worked out by the caller. None draws no line               |
-| `editHref`    | Where the Edit pencil opens the spell, the tab's own address plus `?edit=<id>`. None draws no pencil  |
-| `deleteSpell` | What the Delete Spell bin needs: `{ workspaceId, deletedHref }`. None draws no bin (M13.11)           |
-| `lookHref`    | Where the Quick Look eye opens the spell, the tab's own address plus `?spell=<id>`. None draws no eye |
-| `level`       | The title's heading level, 2 by default                                                               |
+| Prop           | What it is                                                                                            |
+| -------------- | ----------------------------------------------------------------------------------------------------- |
+| `id`           | The spell's id. It names the title heading, `spellTitleId(id)`                                        |
+| `title`        | The title, or null. Null or blank lists as "Untitled Spell"                                           |
+| `intent`       | The intent, or null. Without one the card draws no paragraph                                          |
+| `status`       | `draft` or `complete`                                                                                 |
+| `visibility`   | `private` or `workspace`: who can see it                                                              |
+| `categories`   | The assigned categories, each with its group's colours. Never the derived ones (DESIGN.md §5)         |
+| `workingCount` | How many complete workings the viewer can see, from the count loader. Zero or none draws no line      |
+| `lastEdit`     | Who last edited it and when, `{ by, at }`, worked out by the caller. None draws no line               |
+| `editHref`     | Where the Edit pencil opens the spell, the tab's own address plus `?edit=<id>`. None draws no pencil  |
+| `deleteSpell`  | What the Delete Spell bin needs: `{ workspaceId, deletedHref }`. None draws no bin (M13.11)           |
+| `lookHref`     | Where the Quick Look eye opens the spell, the tab's own address plus `?spell=<id>`. None draws no eye |
+| `level`        | The title's heading level, 2 by default                                                               |
 
 ## Its name
 
