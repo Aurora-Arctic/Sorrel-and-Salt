@@ -9,6 +9,7 @@ import { GENERIC_FAILURE, readGraphqlFailure } from '../../lib/graphql-failure';
 import { usePendingNavigation } from '../../lib/navigation';
 import BusyButton from '../BusyButton';
 import Notice from '../Notice';
+import './index.scss';
 import type { WorkingCompletionProps } from './types';
 import { NOT_DEDUCTED } from './warnings';
 
@@ -113,7 +114,6 @@ export default function WorkingCompletion({
     ? plan.warnings.filter((warning) => !steps.some((step) => step.id === warning.stepId))
     : [];
   const done = complete.isSuccess;
-  const left = complete.data?.completeWorking.warnings ?? [];
   return (
     <div className="form">
       {failure && <Notice kind="error">{failure}</Notice>}
@@ -131,26 +131,32 @@ export default function WorkingCompletion({
               <li key={row.id}>
                 <strong>{row.name}</strong>{' '}
                 {'taken' in row ? (
-                  <>
+                  <span className="working-deductions__amount">
                     {amount(row.taken.quantity, row.taken.unit)}
                     {row.taken.shortfall > 0 && (
-                      <> (the jar is short by {amount(row.taken.shortfall, row.taken.unit)})</>
+                      <span className="working-deductions__short">
+                        {' '}
+                        jar short by {amount(row.taken.shortfall, row.taken.unit)}
+                      </span>
                     )}
-                  </>
+                  </span>
                 ) : (
-                  NOT_DEDUCTED[row.skipped.reason]
+                  <span className="working-deductions__amount working-deductions__none">
+                    {NOT_DEDUCTED[row.skipped.reason]}
+                  </span>
                 )}
               </li>
             ))}
             {orphans.map((warning) => (
               <li key={warning.stepId}>
                 <strong>{warning.stepName ?? 'A removed step'}</strong>{' '}
-                {NOT_DEDUCTED[warning.reason]}
+                <span className="working-deductions__amount working-deductions__none">
+                  {NOT_DEDUCTED[warning.reason]}
+                </span>
               </li>
             ))}
           </ul>
           {rows.length + orphans.length === 0 && <p>Nothing will be taken from any jar.</p>}
-          {done && left.length > 0 && <p>{left.length} step(s) took nothing, as listed above.</p>}
         </>
       )}
       <div className="modal__actions">

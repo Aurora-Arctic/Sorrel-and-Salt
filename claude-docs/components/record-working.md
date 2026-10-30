@@ -39,9 +39,11 @@ complete working's visibility only widens.
 ## Completing a working
 
 `WorkingCompletion` reads `workingDeductionPreview` afresh each time it opens and lists the spell's
-ingredient steps in order: the amount to be taken in the jar's unit, the shortfall if the jar is
-short, or why nothing is taken ("Not deducted: units differ"). Confirm runs `completeWorking`, reads
-the page again and says what was taken. The preview and the completion share one plan on the
+ingredient steps in order, as a list laid out in two columns: the step's name, then its amount to be
+taken in the jar's unit against the right edge in tabular figures, with "jar short by" beneath it in
+the warning colour if the jar is short, or why nothing is taken ("Not deducted: units differ", muted).
+Confirm runs `completeWorking`, reads the page again and shows the same list, so it reads the same
+before and after. The preview and the completion share one plan on the
 server (`plan-deductions.ts`), so the two agree.
 
 `CompleteWorkingAction` takes `{ workspaceId, spellId, workingId, steps, label? }` and is what a

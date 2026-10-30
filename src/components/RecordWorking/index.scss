@@ -1,0 +1,33 @@
+@use '../../scss/variables' as *;
+
+// The deduction preview: each step's name, then its amount against the right edge in figures of one
+// width so the amounts line up. The list stays a list for assistive technology.
+.working-deductions {
+  display: grid;
+  gap: 0.5rem;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+
+  > li {
+    display: flex;
+    justify-content: space-between;
+    align-items: baseline;
+    gap: 1rem;
+  }
+}
+
+.working-deductions__amount {
+  text-align: right;
+  font-variant-numeric: tabular-nums;
+}
+
+// A line that took nothing: quieter than one that took something, before and after Confirm alike.
+.working-deductions__none {
+  color: $text-muted;
+}
+
+.working-deductions__short {
+  display: block;
+  color: $warning;
+}
