@@ -15,6 +15,7 @@ import type { TypedDocumentNode as DocumentNode } from '@graphql-typed-document-
  */
 type Documents = {
     "\n  query CardArrivalsCsv {\n    cardArrivalsCsv\n  }\n": typeof types.CardArrivalsCsvDocument,
+    "\n  query InvitationCardAttempts($invitationId: ID!, $first: Int!, $after: String) {\n    invitationCardAttempts(invitationId: $invitationId, first: $first, after: $after) {\n      edges {\n        node {\n          id\n          reason\n          attempts\n          lastAttemptedAt\n          account {\n            id\n            name\n          }\n        }\n      }\n      pageInfo {\n        hasNextPage\n        endCursor\n      }\n    }\n  }\n": typeof types.InvitationCardAttemptsDocument,
     "\n  mutation RevokeInvitationCard($id: ID!) {\n    revokeInvitationCard(id: $id) {\n      id\n    }\n  }\n": typeof types.RevokeInvitationCardDocument,
     "\n  mutation RevokeInvitationCardBatch($batchId: ID!) {\n    revokeInvitationCardBatch(batchId: $batchId) {\n      id\n    }\n  }\n": typeof types.RevokeInvitationCardBatchDocument,
     "\n  mutation CreateInvitationCards($count: Int!, $expiresAt: DateTime!) {\n    createInvitationCards(count: $count, expiresAt: $expiresAt) {\n      batchId\n      expiresAt\n      tokens\n    }\n  }\n": typeof types.CreateInvitationCardsDocument,
@@ -117,6 +118,7 @@ type Documents = {
 };
 const documents: Documents = {
     "\n  query CardArrivalsCsv {\n    cardArrivalsCsv\n  }\n": types.CardArrivalsCsvDocument,
+    "\n  query InvitationCardAttempts($invitationId: ID!, $first: Int!, $after: String) {\n    invitationCardAttempts(invitationId: $invitationId, first: $first, after: $after) {\n      edges {\n        node {\n          id\n          reason\n          attempts\n          lastAttemptedAt\n          account {\n            id\n            name\n          }\n        }\n      }\n      pageInfo {\n        hasNextPage\n        endCursor\n      }\n    }\n  }\n": types.InvitationCardAttemptsDocument,
     "\n  mutation RevokeInvitationCard($id: ID!) {\n    revokeInvitationCard(id: $id) {\n      id\n    }\n  }\n": types.RevokeInvitationCardDocument,
     "\n  mutation RevokeInvitationCardBatch($batchId: ID!) {\n    revokeInvitationCardBatch(batchId: $batchId) {\n      id\n    }\n  }\n": types.RevokeInvitationCardBatchDocument,
     "\n  mutation CreateInvitationCards($count: Int!, $expiresAt: DateTime!) {\n    createInvitationCards(count: $count, expiresAt: $expiresAt) {\n      batchId\n      expiresAt\n      tokens\n    }\n  }\n": types.CreateInvitationCardsDocument,
@@ -236,6 +238,10 @@ export function graphql(source: string): unknown;
  * The graphql function is used to parse GraphQL queries into a document that can be used by GraphQL clients.
  */
 export function graphql(source: "\n  query CardArrivalsCsv {\n    cardArrivalsCsv\n  }\n"): (typeof documents)["\n  query CardArrivalsCsv {\n    cardArrivalsCsv\n  }\n"];
+/**
+ * The graphql function is used to parse GraphQL queries into a document that can be used by GraphQL clients.
+ */
+export function graphql(source: "\n  query InvitationCardAttempts($invitationId: ID!, $first: Int!, $after: String) {\n    invitationCardAttempts(invitationId: $invitationId, first: $first, after: $after) {\n      edges {\n        node {\n          id\n          reason\n          attempts\n          lastAttemptedAt\n          account {\n            id\n            name\n          }\n        }\n      }\n      pageInfo {\n        hasNextPage\n        endCursor\n      }\n    }\n  }\n"): (typeof documents)["\n  query InvitationCardAttempts($invitationId: ID!, $first: Int!, $after: String) {\n    invitationCardAttempts(invitationId: $invitationId, first: $first, after: $after) {\n      edges {\n        node {\n          id\n          reason\n          attempts\n          lastAttemptedAt\n          account {\n            id\n            name\n          }\n        }\n      }\n      pageInfo {\n        hasNextPage\n        endCursor\n      }\n    }\n  }\n"];
 /**
  * The graphql function is used to parse GraphQL queries into a document that can be used by GraphQL clients.
  */

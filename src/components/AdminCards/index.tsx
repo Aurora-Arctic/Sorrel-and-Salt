@@ -10,6 +10,7 @@ import ListFrame, { ListBody } from '../ListFrame';
 import { useOpenModalClick } from '../Modal';
 import Pager from '../Pager';
 import ConfirmedAction from '../UserList/confirmed-action';
+import CardAttempts from './attempts';
 import { batchName, summariseBatches } from './batches';
 import { cardsHref } from './href';
 import MintForm, { MINT_TITLE } from './mint-form';
@@ -108,6 +109,15 @@ const AdminCards = ({
               heading: 'Account',
               cell: (card) =>
                 card.accountName ?? <span className="admin-cards__none">Not accepted</span>,
+            },
+            {
+              heading: 'Attempts',
+              cell: (card) => (
+                <span className="admin-cards__attempts">
+                  {card.attemptCount}
+                  {card.attemptCount > 0 && <CardAttempts cardId={card.id} />}
+                </span>
+              ),
             },
             {
               heading: 'Revoke',

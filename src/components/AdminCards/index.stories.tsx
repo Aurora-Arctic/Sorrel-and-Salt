@@ -13,16 +13,38 @@ type Story = StoryObj;
 const BATCH = '5b1c0000-0000-4000-8000-000000000001';
 const FUTURE = new Date('2099-01-01T00:00:00Z');
 const CARDS: CardEntry[] = [
-  { id: 'c1', batchId: BATCH, state: 'pending', expiresAt: FUTURE, accountName: null },
-  { id: 'c2', batchId: BATCH, state: 'accepted', expiresAt: FUTURE, accountName: 'Fixture Wort' },
+  {
+    id: 'c1',
+    batchId: BATCH,
+    state: 'pending',
+    expiresAt: FUTURE,
+    accountName: null,
+    attemptCount: 0,
+  },
+  {
+    id: 'c2',
+    batchId: BATCH,
+    state: 'accepted',
+    expiresAt: FUTURE,
+    accountName: 'Fixture Wort',
+    attemptCount: 3,
+  },
   {
     id: 'c3',
     batchId: BATCH,
     state: 'expired',
     expiresAt: new Date('2026-01-01T00:00:00Z'),
     accountName: null,
+    attemptCount: 0,
   },
-  { id: 'c4', batchId: BATCH, state: 'revoked', expiresAt: FUTURE, accountName: null },
+  {
+    id: 'c4',
+    batchId: BATCH,
+    state: 'revoked',
+    expiresAt: FUTURE,
+    accountName: null,
+    attemptCount: 0,
+  },
 ];
 const ARRIVALS: ArrivalEntry[] = [
   {
