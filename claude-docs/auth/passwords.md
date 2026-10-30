@@ -37,11 +37,16 @@ differs in three things:
   count that is not a whole number all refuse the password with a 500 and
   "We couldn't check your password just now. Please try again later." A
   password the check could not see is never accepted.
-- **Its paths.** `BREACHED_CHECK_PATHS` is `/sign-up/email`,
-  `/change-password`, `/reset-password` and `/set-password`: every endpoint
-  where a person chooses a password. Better Auth's list also names the
-  `email-otp`, `phone-number` and `admin` plugins' endpoints, none of which
-  is registered here, and leaves out `/set-password`.
+- **Its endpoints.** `BREACHED_CHECK_PATHS` is `/sign-up/email`,
+  `/change-password` and `/reset-password`, and `setPassword` is checked
+  too: every endpoint where a person chooses a password. `setPassword`
+  answers only on the server and has no route, and Better Auth gives its
+  handler no path or name to match, so its one caller, `passwordSetter`
+  ("Setting a first password" below), runs it inside `withBreachedCheck`,
+  which turns the check on for every hash in that call. Better Auth's list
+  also names the `email-otp`, `phone-number` and `admin` plugins'
+  endpoints, none of which is registered here, and leaves out setting a
+  first password.
 
 Only the first five characters of the password's upper-case SHA-1 hash leave
 the server, with `Add-Padding: true` so the answer's size says nothing about

@@ -40,6 +40,8 @@ import { breachedPasswordCheck } from './breached-password';
 import { primaryAdminEmail } from './primary-admin';
 import { verifyEmailMessage } from '../emails/verify-email';
 import { accountExistsMessage } from '../emails/account-exists';
+import { resetPasswordMessage } from '../emails/reset-password';
+import { mailPasswordChanged } from './password-notice';
 import {
   promotePrimaryAdmin,
   promotePrimaryAdminAtVerification,
@@ -310,6 +312,48 @@ async function mailExistingHolder({ user }: { user: { id: string; email: string 
   );
 }
 
+/** The page a reset link opens, whatever page the request for it named. */
+const RESET_PASSWORD_PAGE = '/reset-password';
+
+/** This request's site origin, for a link in a mail sent from inside one of Better Auth's endpoints. */
+function endpointOrigin(): string {
+  return new URL(getCurrentAuthEndpointContext().context.baseURL).origin;
+}
+
+/**
+ * Mails a reset link to a verified address. An unverified one gets nothing, so a reset never reaches an
+ * inbox the account has not proved; the request answers the same either way. The link always opens the
+ * reset page, so a request cannot point it anywhere else.
+ */
+async function mailResetLink({
+  user,
+  url,
+}: {
+  user: { email: string; emailVerified: boolean };
+  url: string;
+}) {
+  if (!user.emailVerified || isPlaceholderEmail(user.email)) return;
+  const link = new URL(url);
+  link.searchParams.set('callbackURL', RESET_PASSWORD_PAGE);
+  await send(await resetPasswordMessage({ to: user.email, url: link.toString() }));
+}
+
+/**
+ * Changes `/change-password` to sign out every other session whatever the request asks, so a change always
+ * shuts out whoever else held the old password.
+ */
+function revokeOtherSessions(ctx: HookContext) {
+  return { context: { body: { ...ctx.body, revokeOtherSessions: true } } };
+}
+
+/** Tells the account a change on its account page replaced its password. */
+async function mailChangeNotice(ctx: HookContext) {
+  const returned = ctx.context.returned;
+  if (isAPIError(returned) || returned instanceof Response) return;
+  const email = ctx.context.session?.user.email;
+  if (email) await mailPasswordChanged(email, new URL(ctx.context.baseURL).origin, 'change');
+}
+
 function emailAndPassword(): BetterAuthOptions['emailAndPassword'] {
   return {
     enabled: true,
@@ -321,6 +365,11 @@ function emailAndPassword(): BetterAuthOptions['emailAndPassword'] {
     // Off, which is what makes a sign-up to a held address answer as a new one and call the hook below.
     autoSignIn: false,
     onExistingUserSignUp: mailExistingHolder,
+    // Short, because Better Auth stores the reset token unhashed in `verifications`.
+    resetPasswordTokenExpiresIn: 15 * 60,
+    revokeSessionsOnPasswordReset: true,
+    sendResetPassword: mailResetLink,
+    onPasswordReset: ({ user }) => mailPasswordChanged(user.email, endpointOrigin(), 'reset'),
   };
 }
 
@@ -489,11 +538,13 @@ export const auth = betterAuth({
     before: createAuthMiddleware(async (ctx) => {
       if (ctx.path === '/verify-email') return gateEmailChange(ctx);
       if (ctx.path === '/send-verification-email') return requireOwnResend(ctx);
+      if (ctx.path === '/change-password') return revokeOtherSessions(ctx);
       if (ctx.path !== '/callback/:id' && ctx.path !== '/sign-up/email') return;
       await sweepQuietly(ctx);
     }),
     after: createAuthMiddleware(async (ctx) => {
       if (ctx.path === '/sign-up/email') return sameSignUpAnswer(ctx);
+      if (ctx.path === '/change-password') return mailChangeNotice(ctx);
       const newSession = ctx.context.newSession;
       if (ctx.path !== '/callback/:id' || !newSession) return;
 

@@ -61,3 +61,17 @@ export interface AccountExistsProps extends BaseEmailProps {
   /** Whether the account already has a password. */
   hasPassword: boolean;
 }
+
+export interface ResetPasswordProps extends BaseEmailProps {
+  /** Better Auth's reset link, which checks the token and opens `/reset-password` carrying it. */
+  url: string;
+}
+
+/** Which way a password was replaced: by a reset link, by a change on the account page, or set for the first time. */
+export type PasswordChange = 'reset' | 'change' | 'set';
+
+export interface PasswordChangedProps extends BaseEmailProps {
+  /** `/forgot-password`, which the mail's one action opens for a reader who made no change. */
+  url: string;
+  how: PasswordChange;
+}

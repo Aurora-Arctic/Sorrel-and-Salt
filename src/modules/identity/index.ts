@@ -33,6 +33,7 @@ export type {
   InvitationRefusal,
   InvitationSender,
   InvitationStanding,
+  PasswordSetter,
   PrimaryAdminOutcome,
   PrivilegeChangeFilter,
   PrivilegeChangeRow,

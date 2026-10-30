@@ -1,3 +1,4 @@
+import { AsyncLocalStorage } from 'node:async_hooks';
 import { createHash } from 'node:crypto';
 import { getCurrentAuthEndpointContext } from '@better-auth/core/context';
 import { APIError, type BetterAuthPlugin } from 'better-auth';
@@ -11,13 +12,18 @@ export const BREACHED_CHECK_TIMEOUT_MS = 3_000;
 
 const RANGE = 'https://api.pwnedpasswords.com/range/';
 
-/** Every endpoint that hashes a password a person chose, `/set-password` included. */
-export const BREACHED_CHECK_PATHS = [
-  '/sign-up/email',
-  '/change-password',
-  '/reset-password',
-  '/set-password',
-];
+/** Every route that hashes a password a person chose. */
+export const BREACHED_CHECK_PATHS = ['/sign-up/email', '/change-password', '/reset-password'];
+
+const checkedCall = new AsyncLocalStorage<true>();
+
+/**
+ * Runs `call` with every password it hashes checked, for an endpoint with no route, such as `setPassword`:
+ * Better Auth gives such an endpoint's handler no path or name to match against `BREACHED_CHECK_PATHS`.
+ */
+export function withBreachedCheck<T>(call: () => Promise<T>): Promise<T> {
+  return checkedCall.run(true, call);
+}
 
 const UNCHECKED_MESSAGE = "We couldn't check your password just now. Please try again later.";
 
@@ -48,7 +54,7 @@ async function breachCount(password: string): Promise<number> {
 }
 
 /**
- * Checks each password Better Auth hashes on one of `BREACHED_CHECK_PATHS`, refusing a breached one with
+ * Checks each password Better Auth hashes on one of `BREACHED_CHECK_PATHS`, or inside `withBreachedCheck`, refusing a breached one with
  * `message` and the code PASSWORD_COMPROMISED. Wrapping the hash, rather than hooking each endpoint's body,
  * reaches every call of those endpoints, from the browser or from `auth.api` alike.
  */
@@ -62,8 +68,11 @@ export const breachedPasswordCheck = ({ message }: { message: string }) =>
           password: {
             ...ctx.password,
             async hash(password: string) {
-              const path = getCurrentAuthEndpointContext().path;
-              if (path && BREACHED_CHECK_PATHS.includes(path) && (await breachCount(password)) > 0)
+              const { path } = getCurrentAuthEndpointContext() as { path?: string };
+              const checked =
+                checkedCall.getStore() ??
+                (path !== undefined && BREACHED_CHECK_PATHS.includes(path));
+              if (checked && (await breachCount(password)) > 0)
                 throw new APIError('BAD_REQUEST', { message, code: 'PASSWORD_COMPROMISED' });
               return hash(password);
             },
