@@ -74,7 +74,7 @@ test('a viewer prints a one-page recipe with the summary first and no controls',
   expect(pdf.match(/\/Type\s*\/Page[^s]/g)).toHaveLength(1);
 });
 
-test('the printed recipe names the coven over a rule, leads with the intent and categories, indents the summary and leaves out Workings', async ({
+test('the printed recipe names the coven with no line under it, leads with the intent and categories, sets the summary flush and leaves out Workings', async ({
   page,
 }) => {
   const coven = await seedCoven(page, 'Fixture Coven Layout', 'spell-print-layout.test', {
@@ -102,7 +102,7 @@ test('the printed recipe names the coven over a rule, leads with the intent and 
   await expect(workings).toBeHidden();
   await expect(page.getByText('Worked under a waxing moon')).toBeHidden();
 
-  // The coven's name stands as plain text (no box) with a rule beneath it.
+  // The coven's name stands as plain text (no box) and nothing draws a line under it.
   const row = page.getByRole('region', { name: 'Context' });
   const selector = row.getByRole('combobox', { name: 'Coven' });
   await expect(selector).toBeVisible();
@@ -116,13 +116,18 @@ test('the printed recipe names the coven over a rule, leads with the intent and 
     };
   });
   expect(edges.box).toBe(0);
-  expect(edges.rule).toBeGreaterThan(0);
-  const ruleBelow = await row.evaluate(
-    (el) =>
-      el.getBoundingClientRect().bottom -
-      el.querySelector('[role="combobox"]')!.getBoundingClientRect().bottom,
-  );
-  expect(ruleBelow).toBeGreaterThanOrEqual(0);
+  expect(edges.rule).toBe(0);
+  const lineUnder = await row.evaluate((el) => {
+    const style = getComputedStyle(el);
+    return {
+      shadow: style.boxShadow,
+      image: style.backgroundImage,
+      after: getComputedStyle(el, '::after').content,
+    };
+  });
+  expect(lineUnder.shadow).toBe('none');
+  expect(lineUnder.image).toBe('none');
+  expect(['none', 'normal']).toContain(lineUnder.after);
 
   // The intent and the categories come first, then the summary, then the steps.
   const tops = await Promise.all(
@@ -136,7 +141,7 @@ test('the printed recipe names the coven over a rule, leads with the intent and 
   expect(tops).toEqual([...tops].sort((a, b) => a - b));
   expect(new Set(tops).size).toBe(4);
 
-  // The summary's lines sit in from the heading.
+  // The summary's lines start flush with the heading.
   const indent = await page.evaluate(() => {
     const heading = [...document.querySelectorAll('h2')].find(
       (h) => h.textContent === 'Ingredients',
@@ -144,5 +149,5 @@ test('the printed recipe names the coven over a rule, leads with the intent and 
     const line = heading.parentElement!.querySelector('li')!;
     return line.getBoundingClientRect().left - heading.getBoundingClientRect().left;
   });
-  expect(indent).toBeGreaterThanOrEqual(24);
+  expect(Math.abs(indent)).toBeLessThanOrEqual(1);
 });

@@ -50,10 +50,10 @@
       gap: space(2);
     }
 
-    // The coven's name stands as plain text over a rule: no box, no chevron, no ground. The
-    // section nav beside it is gone, so the divider that told them apart goes too.
+    // The coven's name stands as plain text with nothing under it: no box, no chevron, no ground,
+    // no rule. The section nav beside it is gone, so the divider that told them apart goes too.
     .context-row {
-      border-bottom: 1px solid $hairline;
+      border-bottom: 0;
       background: none;
     }
 
@@ -117,7 +117,12 @@
 
       ul {
         margin: space(1) 0 0;
-        padding-inline-start: 2em;
+        padding-inline-start: 0;
+      }
+
+      // The ◆ hangs in the gutter the padding gave up, so with no gutter it goes too.
+      li::before {
+        content: none;
       }
     }
 
