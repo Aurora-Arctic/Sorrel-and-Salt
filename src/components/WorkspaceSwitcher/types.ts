@@ -6,8 +6,6 @@ export interface SwitcherWorkspace {
   canReadMembers: boolean;
   /** The viewer's role there may invite (an owner's alone); false sends a switch from invitations to the members page. */
   canInvite: boolean;
-  /** The demo coven: its option reads "(Demo)" after the name. */
-  demo?: boolean;
 }
 
 export interface WorkspaceSwitcherProps {

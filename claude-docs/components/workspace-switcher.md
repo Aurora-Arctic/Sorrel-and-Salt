@@ -172,4 +172,4 @@ The chosen name is set as the context row's lead: the display face with a chevro
 
 ## The demo coven
 
-A workspace with `demo: true` (the one demo coven) reads "Name (Demo)" in its option and in the closed box. The select-only Combobox draws no qualifier, so the word is part of the label; the choice's value, the slug, is unchanged. Tests: the demo option is marked and an ordinary coven's is not. The story has a Demo Coven state.
+The demo coven reads as its name alone, "Sorrel & Salt Demo", in its option and in the closed box: the name carries the word. The Demo badge sits in the coven page heading, not here.
