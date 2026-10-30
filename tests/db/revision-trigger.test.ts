@@ -3,8 +3,10 @@ import type postgres from 'postgres';
 import { WORKSPACE_W_ID } from '@/db/seed/standard';
 import { A, B } from '../support/as-user';
 import { useTestDatabase } from '../support/db/database';
+import { insertIngredient } from '../support/db/insert-ingredient';
 import { insertSpell } from '../support/db/insert-spell';
 import { makeSpell } from '../support/fixtures';
+import { makeIngredient } from '../support/fixtures/ingredient';
 
 // `revision` is a counter the database adds one to on every UPDATE, so a save can name the revision it read and be refused if the row moved
 // (claude-docs/db/grimoire.md, "Revision"). Each table carrying the column adds its own trigger line to `bump_revision()`, as `set_updated_at` does.
@@ -31,7 +33,7 @@ async function revisionOf(id: string): Promise<number> {
 describe('the catalogue', () => {
   // Read from the catalogue on both sides, so a later table that takes the
   // column and forgets its trigger line reddens without this file being edited.
-  it('attaches bump_revision to every table carrying a revision, and spells carries one', async () => {
+  it('attaches bump_revision to every table carrying a revision, and spells and ingredients carry one', async () => {
     // Tables alone: a view has no trigger of its own to carry.
     const carrying = await sql<{ table_name: string }[]>`
       select c.table_name from information_schema.columns c
@@ -48,7 +50,9 @@ describe('the catalogue', () => {
     `;
 
     // Why the comparison is not two empty lists agreeing: spells is in it.
-    expect(carrying.map((row) => row.table_name)).toContain('spells');
+    expect(carrying.map((row) => row.table_name)).toEqual(
+      expect.arrayContaining(['spells', 'ingredients']),
+    );
     expect(triggered.map((row) => row.relname)).toEqual(carrying.map((row) => row.table_name));
   });
 });
@@ -112,5 +116,48 @@ describe('a spell’s revision', () => {
 
     const [after] = await sql`select updated_at, updated_by, revision from spells where id = ${id}`;
     expect(after).toEqual({ ...before, revision: 2 });
+  });
+});
+
+// `ingredients` holds a coven's own entries and the compendium's alike, so one column guards both forms (M13.23).
+describe('an ingredient’s revision', () => {
+  const ingredient = (workspaceId: string | null) =>
+    insertIngredient(sql, makeIngredient({ workspaceId, nomenclature: 'none' }), A.id);
+
+  beforeEach(async () => {
+    await sql`truncate ingredients cascade`;
+  });
+
+  async function ingredientRevision(id: string): Promise<number> {
+    const [row] = await sql<
+      { revision: number }[]
+    >`select revision from ingredients where id = ${id}`;
+    return row.revision;
+  }
+
+  it.each([
+    ['a coven’s own entry', WORKSPACE_W_ID],
+    ['a compendium entry', null],
+  ])('starts at 1 and rises by one on each update of %s', async (_label, workspaceId) => {
+    const id = await ingredient(workspaceId);
+    expect(await ingredientRevision(id)).toBe(1);
+
+    await sql`update ingredients set description = 'One' where id = ${id}`;
+    await sql`update ingredients set revision = 100, description = 'Two' where id = ${id}`;
+
+    expect(await ingredientRevision(id)).toBe(3);
+  });
+
+  it('moves alone on an update that changes nothing, leaving updated_by where it was', async () => {
+    const id = await ingredient(WORKSPACE_W_ID);
+    await sql`update ingredients set created_at = '2000-01-01', updated_at = '2000-01-01' where id = ${id}`;
+    const [before] = await sql`select updated_at, updated_by from ingredients where id = ${id}`;
+    expect(before.updated_by).toBe(A.id);
+
+    await sql`update ingredients set name = name, updated_by = ${B.id} where id = ${id}`;
+
+    const [after] =
+      await sql`select updated_at, updated_by, revision from ingredients where id = ${id}`;
+    expect(after).toEqual({ ...before, revision: 3 });
   });
 });

@@ -20,7 +20,10 @@ What follows describes all three as built.
   columns (`description`, `elements[]`, `celestialBodies[]`, `zodiacSigns[]`,
   `colors[]`, `safetyNotes`), `toxic` (M11.21; a yes/no, default no, and
   each form carries its own, which never unions with this one — DESIGN.md
-  §5), `seedKey` (MB.241), + audit. `seedKey` is the
+  §5), `seedKey` (MB.241), `revision` (M13.23; `integer NOT NULL DEFAULT 1`, raised by
+  one by the `bump_revision` trigger on every update, the same counter and
+  function `spells` uses, ["Revision (M13.15)"](grimoire.md); one column guards the
+  whole ingredient form, children included), + audit. `seedKey` is the
   key the compendium seed (MB.242) gives an entry it writes, so an entry an
   admin renames is not seeded again beside itself; it is null on every other
   row, the `standard` fixture's included (DESIGN.md §5, "`seedKey`"). `name` is the display label —
