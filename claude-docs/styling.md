@@ -58,8 +58,7 @@ to.
 - **A length with a role of its own is a token**, under "Motion and layout"
   in `_variables.scss`, so the components that share the role share the
   number (MB.115): `$wide-column` (the admin area's column, 80rem),
-  `$dialog-column` and `$dialog-column-wide` (a dialog's content, 32rem and
-  48rem), `$icon-size` (a small control's 1.5rem square, WCAG 2.2's 24px
+  `$dialog-column` (a dialog's content, 32rem), `$icon-size` (a small control's 1.5rem square, WCAG 2.2's 24px
   target) around a `$glyph-size` mark (1rem), `$glyph-size-small` (0.875rem,
   a click callout's arrow and a round mark's icon), `$icon-size-large` around
   `$glyph-size-large` (2rem around 1.25rem, a list row's Edit pencil, larger

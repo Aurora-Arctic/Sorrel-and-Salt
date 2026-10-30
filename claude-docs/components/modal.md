@@ -26,20 +26,20 @@ is the wrapper every admin page opens it through (below).
 
 `ModalProps` (`types.ts`):
 
-| Prop                                                                  | What it is                                                                                                                               |
-| --------------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------- |
-| `title`                                                               | The heading: what the dialog is for, or the entry an edit dialog edits                                                                   |
-| `eyebrow`                                                             | An edit dialog's small line over the title, "Edit Ingredient"; absent on an add                                                          |
-| `destination`                                                         | Where an add lands, "Whitethorn Coven", in the eyebrow's place over the title and spoken after it: "Add Ingredient to Whitethorn Coven"  |
-| `qualifier`                                                           | After the title, quieter: an ingredient's formal name, a deity's tradition                                                               |
-| `formalName`, `topEnd`, `formalActions`, `actionsUnderClose`, `under` | The quick-look head's extras ("A title with its own end", "Controls beneath the ×"); absent on every other dialog                        |
-| `onClose`                                                             | Asked for by the Close button, Escape and a click outside                                                                                |
-| `size`                                                                | `'wide'` for a long form or two columns (unused now), `'listed'` for the default column with a list beside it; absent, the default width |
-| `readingBody`                                                         | A body only to read, with nothing to fill in (M12.5's details): Tab stops on the body itself, so a keyboard can scroll it                |
-| `loading`                                                             | The contents are on the way: the body is marked `aria-busy` (M9.18)                                                                      |
-| `children`                                                            | The body: a form, a confirmation, whatever the owner puts here                                                                           |
-| `foot`                                                                | A bar under the body, outside what scrolls ("The foot"); absent on every dialog but the details                                          |
-| `returnTo`                                                            | Where the focus goes as it closes when what opened it is gone: a function of that gone element, returning the place                      |
+| Prop                                                                  | What it is                                                                                                                              |
+| --------------------------------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------- |
+| `title`                                                               | The heading: what the dialog is for, or the entry an edit dialog edits                                                                  |
+| `eyebrow`                                                             | An edit dialog's small line over the title, "Edit Ingredient"; absent on an add                                                         |
+| `destination`                                                         | Where an add lands, "Whitethorn Coven", in the eyebrow's place over the title and spoken after it: "Add Ingredient to Whitethorn Coven" |
+| `qualifier`                                                           | After the title, quieter: an ingredient's formal name, a deity's tradition                                                              |
+| `formalName`, `topEnd`, `formalActions`, `actionsUnderClose`, `under` | The quick-look head's extras ("A title with its own end", "Controls beneath the ×"); absent on every other dialog                       |
+| `onClose`                                                             | Asked for by the Close button, Escape and a click outside                                                                               |
+| `size`                                                                | `'listed'` for the default column with a list beside it; absent, the default width                                                      |
+| `readingBody`                                                         | A body only to read, with nothing to fill in (M12.5's details): Tab stops on the body itself, so a keyboard can scroll it               |
+| `loading`                                                             | The contents are on the way: the body is marked `aria-busy` (M9.18)                                                                     |
+| `children`                                                            | The body: a form, a confirmation, whatever the owner puts here                                                                          |
+| `foot`                                                                | A bar under the body, outside what scrolls ("The foot"); absent on every dialog but the details                                         |
+| `returnTo`                                                            | Where the focus goes as it closes when what opened it is gone: a function of that gone element, returning the place                     |
 
 ## Contracts
 
@@ -895,12 +895,9 @@ reach.
 **On a phone it stays inset**, the same gap on every side, rather than
 becoming a full-height sheet: the owner's M5.5 call, kept at MB.115's review.
 
-`size="wide"` adds `.modal-dialog--wide`, a 55rem column (928px with the padding) (`$dialog-column-wide`), for a form that sets two columns side by side. The spell builder took it from 2026-10-28 and no longer does (the owner's call, 2026-10-29: with In Coven Inventory gone, one column in the default-width dialog), so nothing uses it now. It was 48rem and unused before that, since MB.115, when the compendium form went back to the default column because the form caps itself at that width; M8.16's IngredientForm modal takes the default too. It changes only the width; the body scrolls
-within the viewport's height either way.
-
 `size="listed"` adds `.modal-dialog--listed`, for the default column with a list down its side, a
 third of the body to the list and two to the column: half `$dialog-column` again plus a
-`space(4)` gap, 49rem, so the column keeps the width it has in a dialog of its own. The Edit
+`space(4)` gap, 49rem, so the column keeps the width it has in a dialog of its own. It changes only the width: the body scrolls within the viewport's height at either size. The Edit
 Stock dialog takes it (M9.9, the owner's call of 2026-10-20; [`stock-dialog.md`](stock-dialog.md)).
 
 ## Stories
@@ -937,13 +934,13 @@ test puts spies on the prototype that do the same and can be asserted on. A clic
 where the press began and ended, happy-dom laying nothing out: pressed and
 released on the backdrop closes it; its contents, and a press inside let go
 outside, do not. Its own padding is inside its box, which only a real layout
-shows, as does the wide size. The fade asks the owner once its transition
+shows. The fade asks the owner once its transition
 ends, once however many ways it was asked, after a limit if no end comes, and
 at once under reduced motion. The e2e spec (`admin.spec.ts`)
 opens the category modal in a real browser, closes it with Escape, and runs
 axe against it while it is open, and again with a category group's Move and
 Delete question open over its form. `admin-compendium.spec.ts` closes one by a
-click on the backdrop, holds the wide one to its gap on a desktop and at
+click on the backdrop, holds it to its gap on a desktop and at
 375px, and the page behind still while it is open and scrolling again once it
 closes.
 

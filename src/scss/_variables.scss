@@ -723,11 +723,8 @@ $control-height-compact: 2rem;
 // scrolling in their frame, and the privilege ledger has seven too.
 $wide-column: 80rem;
 
-// A dialog's content column, and the wide one for a form with nested panels or two columns side by
-// side, such as the ingredient form or the spell builder's jar (55rem: its step list at 30rem or
-// more beside an 18rem aside). The modal adds its padding and caps both at the window.
+// A dialog's content column. The modal adds its padding and caps it at the window.
 $dialog-column: 32rem;
-$dialog-column-wide: 55rem;
 
 // The page's ground at three quarters over what lies behind: a dialog's backdrop over the page, and
 // a question's scrim over the form it asks about. The Filters sheet shares it.

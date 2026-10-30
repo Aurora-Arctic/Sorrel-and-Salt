@@ -30,8 +30,8 @@ export interface ModalProps extends ModalHeading {
   onClose: () => void;
   /** Where the focus goes as the modal closes when its opener is gone or held none (a click in WebKit focuses no button), given the opener already out of the page, or null (claude-docs/components/modal.md, "Giving the focus back"). */
   returnTo?: (gone: Element | null) => HTMLElement | null | undefined;
-  /** The width: 32rem by default; `wide`, 48rem, for a long form; `listed`, the default column with an 11rem list beside it. */
-  size?: 'wide' | 'listed';
+  /** The width: 32rem by default; `listed`, the default column with an 11rem list beside it. */
+  size?: 'listed';
   /** A body with nothing to fill in, only to read: Tab stops on the body itself so a keyboard can scroll it. Off by default, as a form's fields already reach every part. */
   readingBody?: boolean;
   /** Its contents are on their way: the body is marked busy, and the focus moves to their first field on arrival. */
