@@ -29,3 +29,10 @@ export interface PasswordFormProps {
   /** Called at each submit, so the panel clears its own error. */
   onStart?: () => void;
 }
+
+export interface PasskeyButtonProps {
+  /** Where a successful sign-in returns to, as SignInPanelProps' `next`. */
+  next?: string;
+  /** Whether this browser last signed in with a passkey. */
+  lastUsed: boolean;
+}

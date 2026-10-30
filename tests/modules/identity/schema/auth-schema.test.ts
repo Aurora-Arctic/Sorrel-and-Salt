@@ -1,10 +1,12 @@
+import { randomUUID } from 'node:crypto';
 import { describe, expect, it, vi } from 'vitest';
 import type postgres from 'postgres';
 import type { BetterAuthOptions } from 'better-auth';
 import type { DBAdapter } from '@better-auth/core/db/adapter';
 import { failureOf, useTestDatabase } from '../../../support/db/database';
 import { tableFacts } from '../../../support/db/table-metadata';
-import { rateLimits, signInFailures } from '@/modules/identity/schema/auth';
+import { passkey } from '@better-auth/passkey';
+import { passkeys, rateLimits, signInFailures } from '@/modules/identity/schema/auth';
 import { warmImport } from '../../../support/warm-import';
 
 warmImport(() => import('@/lib/auth'));
@@ -133,5 +135,78 @@ describe('sign_in_failures in the migrated database', () => {
       where constraint_name = 'sign_in_failures_user_id_users_id_fk'
     `;
     expect(rule).toBe('CASCADE');
+  });
+});
+
+// Better Auth's `passkey` model, `passkeys` under `usePlural`; the plugin is not registered, so only its declared fields bind the table.
+describe('passkeys schema', () => {
+  const { columns, indexes, foreignKeyByColumn, byName } = tableFacts(passkeys);
+
+  it('has a column for every field the plugin declares', () => {
+    const fields = Object.keys(passkey().schema.passkey.fields);
+    // The plugin spells one field `credentialID`; the column and its property are `credentialId`.
+    const properties = fields.map((field) => (field === 'credentialID' ? 'credentialId' : field));
+
+    // Precondition: the plugin declared its fields.
+    expect(properties).toHaveLength(10);
+    expect(properties.every((property) => property in passkeys)).toBe(true);
+    expect(columns.map((column) => column.name).sort()).toEqual([
+      'aaguid',
+      'backed_up',
+      'counter',
+      'created_at',
+      'credential_id',
+      'device_type',
+      'id',
+      'name',
+      'public_key',
+      'transports',
+      'user_id',
+    ]);
+  });
+
+  it('indexes the account and the credential id', () => {
+    expect(indexes.map((index) => index.config.name).sort()).toEqual([
+      'passkeys_credentialId_idx',
+      'passkeys_userId_idx',
+    ]);
+  });
+
+  it('belongs to an account and goes with it', () => {
+    expect(byName.user_id.notNull).toBe(true);
+    expect(foreignKeyByColumn.user_id.foreignColumnNames).toEqual(['id']);
+  });
+});
+
+describe('passkeys in the migrated database', () => {
+  let sql: postgres.Sql;
+  useTestDatabase((client) => {
+    sql = client;
+  });
+
+  it('cascades from users on delete', async () => {
+    const [{ delete_rule: rule }] = await sql<{ delete_rule: string }[]>`
+      select delete_rule from information_schema.referential_constraints
+      where constraint_name = 'passkeys_user_id_users_id_fk'
+    `;
+    expect(rule).toBe('CASCADE');
+  });
+
+  it('holds a credential id once, as sign-in looks a passkey up by it alone', async () => {
+    const id = randomUUID();
+    await sql`
+      insert into users (id, name, email, email_verified, role, created_by, updated_by)
+      values (${id}, 'Fixture Keyholder', ${`${id}@passkey-schema.test`}, true, 'user', ${id}, ${id})
+    `;
+    const insertKey = () => sql`
+      insert into passkeys (public_key, user_id, credential_id, counter, device_type, backed_up)
+      values ('fixture-key', ${id}, 'fixture-credential', 0, 'singleDevice', false)
+    `;
+    // Precondition: the first row is accepted.
+    await insertKey();
+
+    const error = await failureOf(insertKey());
+
+    expect(error.constraint_name).toBe('passkeys_credentialId_idx');
   });
 });

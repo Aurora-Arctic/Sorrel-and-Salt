@@ -51,6 +51,11 @@ below come from Better Auth's own source (`dist/api/rate-limiter/index.mjs` and
 | `/two-factor/*`                                               | 3 per 10 seconds   | The `twoFactor` plugin's own rule                                                                 |
 | `/passkey/*`, which includes `/passkey/verify-authentication` | 3 per 10 seconds   | A `customRules` entry M16.7 adds, because the passkey plugin ships no rate rule                   |
 
+The `/passkey/*` rule counts every passkey route, so it also limits listing,
+renaming and removing passkeys on the account page, three a path per ten
+seconds. Each path counts on its own, and a person renaming one passkey makes
+one request, so the limit does not get in the way of the account page.
+
 A plugin's rule replaces the built-in one for its paths, and an entry in
 `rateLimit.customRules` replaces both. The `haveIBeenPwned` plugin has no rate
 rule of its own and adds no route: it checks inside the routes above, with one

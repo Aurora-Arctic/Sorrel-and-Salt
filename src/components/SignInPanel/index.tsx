@@ -8,6 +8,7 @@ import { reportLeaving } from '../../lib/navigation';
 import Notice from '../Notice';
 import PasswordForm from './password-form';
 import ProviderButton from './provider-button';
+import PasskeyButton from './passkey-button';
 import type { ProviderId } from '../../lib/types';
 import type { SignInPanelProps } from './types';
 import './index.scss';
@@ -26,6 +27,8 @@ const getLastUsedProvider = (): ProviderId | null => {
 
 // The same cookie, for the password form: Better Auth's lastLoginMethod writes `email` for it.
 const getLastUsedPassword = (): boolean => getLastUsedLoginMethod() === 'email';
+// Whether the cookie names a passkey sign-in, which is not a roster provider.
+const getLastUsedPasskey = (): boolean => getLastUsedLoginMethod() === 'passkey';
 
 const SignInPanel = ({ next, error, configured }: SignInPanelProps): ReactElement => {
   // The server-rendered callback error, the page's own, until a press starts
@@ -37,6 +40,7 @@ const SignInPanel = ({ next, error, configured }: SignInPanelProps): ReactElemen
   // (claude-docs/components/sign-in-panel.md, "Last used").
   const lastUsed = useSyncExternalStore(noSubscription, getLastUsedProvider, () => null);
   const lastUsedPassword = useSyncExternalStore(noSubscription, getLastUsedPassword, () => false);
+  const passkeyLastUsed = useSyncExternalStore(noSubscription, getLastUsedPasskey, () => false);
 
   // The provider whose hop is under way. The page is left for the provider's own, so on
   // success it stays set until the browser goes; a return from the back-forward cache (the
@@ -93,6 +97,7 @@ const SignInPanel = ({ next, error, configured }: SignInPanelProps): ReactElemen
             onSignIn={signInWith}
           />
         ))}
+        <PasskeyButton next={next} lastUsed={passkeyLastUsed} />
       </div>
       <PasswordForm next={next} lastUsed={lastUsedPassword} onStart={() => setMessage(undefined)} />
     </div>

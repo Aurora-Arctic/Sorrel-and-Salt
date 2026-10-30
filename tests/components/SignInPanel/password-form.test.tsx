@@ -7,6 +7,7 @@ import {
   TOO_MANY_ATTEMPTS,
   WRONG_CREDENTIALS,
 } from '@/components/SignInPanel/password-form';
+import { PASSKEY_AUTOCOMPLETE } from '@/components/SignInPanel/passkey-autofill';
 import { LAST_USED_PROVIDER_COOKIE } from '@/lib/sign-in';
 
 // Story 70's form. Better Auth's client is mocked at the two calls it makes, so each test sets the
@@ -117,6 +118,15 @@ describe('SignInPanel, email and password', () => {
     await press(submit('Sign In'));
 
     expect(screen.getByRole('alert')).toHaveTextContent(TOO_MANY_ATTEMPTS);
+  });
+
+  // The browser offers saved passkeys only in a field marked for them, and this is the panel's one address field.
+  it('offers saved passkeys in the sign-in address field, and not in the sign-up one', async () => {
+    expect(field('Email Address')).toHaveAttribute('autocomplete', PASSKEY_AUTOCOMPLETE);
+
+    await press(screen.getByRole('button', { name: 'Create an Account' }));
+
+    expect(field('Email Address')).toHaveAttribute('autocomplete', 'email');
   });
 
   it('asks a sign-up for a name too, and offers a new password with the meter', async () => {

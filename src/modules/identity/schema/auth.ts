@@ -6,6 +6,7 @@ import {
   pgTable,
   text,
   timestamp,
+  uniqueIndex,
   uuid,
 } from 'drizzle-orm/pg-core';
 import { users } from './users';
@@ -102,3 +103,28 @@ export const signInFailures = pgTable('sign_in_failures', {
   lockedUntil: timestamp('locked_until'),
   passwordDisabled: boolean('password_disabled').default(false).notNull(),
 });
+
+// The `passkey` plugin's model, named `passkeys` by `usePlural`. Its field `credentialID` is `credentialId` here, and the
+// plugin's `schema` option in src/lib/auth.ts maps one to the other.
+export const passkeys = pgTable(
+  'passkeys',
+  {
+    id: idColumn(),
+    name: text('name'),
+    publicKey: text('public_key').notNull(),
+    userId: uuid('user_id')
+      .notNull()
+      .references(() => users.id, { onDelete: 'cascade' }),
+    credentialId: text('credential_id').notNull(),
+    counter: integer('counter').notNull(),
+    deviceType: text('device_type').notNull(),
+    backedUp: boolean('backed_up').notNull(),
+    transports: text('transports'),
+    createdAt: timestamp('created_at').defaultNow().notNull(),
+    aaguid: text('aaguid'),
+  },
+  (table) => [
+    index('passkeys_userId_idx').on(table.userId),
+    uniqueIndex('passkeys_credentialId_idx').on(table.credentialId),
+  ],
+);

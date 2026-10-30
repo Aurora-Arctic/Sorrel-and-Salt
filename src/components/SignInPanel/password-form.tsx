@@ -9,6 +9,7 @@ import BusyButton from '../BusyButton';
 import { FieldShell, fieldDescription } from '../Field';
 import Notice from '../Notice';
 import PasswordField from '../PasswordField';
+import { PASSKEY_AUTOCOMPLETE } from './passkey-autofill';
 import type { PasswordFormProps } from './types';
 
 // The email and password half of the panel: sign in, or switch to create an account. Every refusal is
@@ -162,7 +163,7 @@ const PasswordForm = ({ next, lastUsed, onStart }: PasswordFormProps): ReactElem
             id={emailField.controlId}
             className="input"
             type="email"
-            autoComplete={signingUp ? 'email' : 'username'}
+            autoComplete={signingUp ? 'email' : PASSKEY_AUTOCOMPLETE}
             placeholder="Your email"
             value={email}
             onChange={(event) => setEmail(event.target.value)}
